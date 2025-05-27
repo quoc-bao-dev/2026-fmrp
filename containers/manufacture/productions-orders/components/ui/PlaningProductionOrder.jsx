@@ -1,4 +1,3 @@
-import ContainerPagination from "@/components/UI/common/ContainerPagination/ContainerPagination";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import {
   ColumnTable,
@@ -7,17 +6,15 @@ import {
   RowTable,
 } from "@/components/UI/common/Table";
 import Loading from "@/components/UI/loading/loading";
-import Image from "next/image";
-import React, { memo, useContext, useState } from "react";
-import { twMerge } from "tailwind-merge";
-import { StateContext } from "@/context/_state/productions-orders/StateContext";
-import { useListBomProductPlan } from "@/managers/api/productions-order/useListBomProductPlan";
 import NoData from "@/components/UI/noData/nodata";
 import ProgressBar from "@/components/common/progress/ProgressBar";
+import { StateContext } from "@/context/_state/productions-orders/StateContext";
 import useSetingServer from "@/hooks/useConfigNumber";
+import { useListBomProductPlan } from "@/managers/api/productions-order/useListBomProductPlan";
+import { memo, useContext, useState } from "react";
 
-import formatNumberConfig from "@/utils/helpers/formatnumber";
 import Cardtable from "@/components/common/card/Cardtable";
+import formatNumberConfig from "@/utils/helpers/formatnumber";
 
 
 const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
@@ -33,7 +30,6 @@ const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
       quantity_import: +item.quantity_import < 0 ? 0 : +item.quantity_import,
     }
   })
-
 
   const formatNumber = (number) => {
     return formatNumberConfig(+number, dataSeting);
@@ -105,12 +101,12 @@ const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
                 </ColumnTable>
               )}
               <ColumnTable
-                colSpan={1}
+                colSpan={2}
                 textAlign={"center"}
                 className={`border-none  normal-case  px-0  leading-2 text-typo-gray-1 std:!text-[13px] xl:text-[11px]
                                     }`}
               >
-                {dataLang?.materials_planning_held || " Đã giữ"}
+                {dataLang?.materials_planning_held || " Đã giữ"}{typeTable === "materials" ? "/Mua" : ""}
               </ColumnTable>
               <ColumnTable
                 colSpan={1}
@@ -121,12 +117,12 @@ const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
                 {dataLang?.materials_planning_lack || " Thiếu"}
               </ColumnTable>
               <ColumnTable
-                colSpan={3}
+                colSpan={2}
                 textAlign={"center"}
                 className={`border-none normal-case leading-2 text-typo-gray-1 std:!text-[12px] xl:text-[11px]
                                     }`}
               >
-                Tiến độ mua hàng
+                Tiến độ
               </ColumnTable>
             </HeaderTable>
             {dataFormat && dataFormat?.length > 0 ? (
@@ -226,7 +222,7 @@ const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
                           </RowItemTable>
                         )}
                         <RowItemTable
-                          colSpan={1}
+                          colSpan={2}
                           textAlign={"center"}
                           textSize={`"!text-sm"`}
                           className="font-semibold  leading-2 text-typo-black-1 std:text-[12px] xl:text-[11px]"
@@ -285,7 +281,7 @@ const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
                           )}
                         </RowItemTable>
                         <RowItemTable
-                          colSpan={3}
+                          colSpan={2}
                           textAlign={"start"}
                           // textSize={`"!text-sm"`}
                           className={

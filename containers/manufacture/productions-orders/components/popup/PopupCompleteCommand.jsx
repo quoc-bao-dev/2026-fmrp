@@ -600,11 +600,10 @@ const PopupCompleteCommand = ({ onClose }) => {
                 <div className="flex items-center gap-1">
                   <WarningIcon className="size-5" />
                   <h3 className="text-sm font-normal text-neutral-07">
-                    Thiếu{" "}
                     <span className="font-semibold text-[#EE1E1E]">
                       {errorNVLData.items.length}
                     </span>{" "}
-                    nguyên vật liệu
+                    nguyên vật liệu dưới đây chưa được xuất kho, vui lòng xuất trước khi hoàn thành!
                   </h3>
                 </div>
                 <CloseXIcon

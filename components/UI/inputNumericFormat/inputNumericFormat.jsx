@@ -6,7 +6,7 @@ const InPutNumericFormat = ({ className,
     decimalScale, thousandSeparator, onChange,
     ref,
     decimalSeparator, disabled, placeholder }) => {
-        console.log("🚀 ~ value:", value)
+        // console.log("🚀 ~ value:", value)
         
     const dataSeting = useSetingServer()
     return <NumericFormatCore

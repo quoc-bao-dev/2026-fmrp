@@ -31,7 +31,10 @@ const Popup = (props) => {
                 // repositionOnResiz={props.repositionOnResiz}
                 className={`${props.className} popup-edit`}
             >
-                <div className={`${deca.className} bg-[#ffffff] ${props?.classNameModeltime} p-4 shadow-xl rounded-xl w-full`}>
+                <div 
+                    onClick={(e) => e.stopPropagation()}
+                    className={`${deca.className} bg-[#ffffff] ${props?.classNameModeltime} p-4 shadow-xl rounded-xl w-full`}
+                >
                     <div className={`${props.classNameTittle ? props.classNameTittle : "items-center"} flex justify-between`}>
                         <div className={`flex items-center gap-4 w-full ${props?.classNameTittle}`}>
                             <h1 className="text-[#101828] font-medium !text-base !capitalize">

@@ -1,3 +1,4 @@
+import formatNumber from "@/utils/helpers/formatnumber";
 import React, { useMemo } from "react";
 
 const ProgressStageBar = ({ total = 4, done = 0, quantity = 5, name_active }) => {
@@ -15,7 +16,7 @@ const ProgressStageBar = ({ total = 4, done = 0, quantity = 5, name_active }) =>
     }, [done, total]);
 
     return (
-        <div className="flex items-center gap-2 w-full 3xl:max-w-sm xl:max-w-[80%] max-w-full">
+        <div className="flex items-center gap-2 w-full">
             <div
                 className="relative w-full 3xl:h-7 h-6 rounded-full overflow-hidden"
                 style={{ background: backgroundBar }}
@@ -40,7 +41,7 @@ const ProgressStageBar = ({ total = 4, done = 0, quantity = 5, name_active }) =>
                     {
                         name_active &&
                         <span className={`text-white`}>
-                            {name_active}: {quantity}
+                            {name_active}: {formatNumber(Number(quantity))}
                         </span>
                     }
                     <span className={`${isDoneAll ? "text-white" : "text-[#9295A4]"}`}>

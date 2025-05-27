@@ -122,7 +122,7 @@ const TabPlan = ({ dataTable, isFetching, dataLang }) => {
                             {dataLang?.materials_planning_change || "materials_planning_change"}
                         </h4>
                         <h4 className="col-span-1  text-center flex items-center justify-center gap-2 text-[#344054] font-normal text-xs capitalize">
-                            {dataLang?.materials_planning_held || "materials_planning_held"}
+                            {dataLang?.materials_planning_held || "materials_planning_held"}/Mua
                         </h4>
                         <h4 className="col-span-1  text-center flex items-center justify-center gap-2 text-[#344054] font-normal text-xs capitalize">
                             {dataLang?.materials_planning_lack || "materials_planning_lack"}

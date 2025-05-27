@@ -399,8 +399,6 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
       listLsxTab?.length > 0 &&
       !isStateProvider?.productionsOrders?.isTabList
     ) {
-      console.log("check");
-
       queryStateProvider({
         productionsOrders: {
           ...isStateProvider?.productionsOrders,
@@ -823,8 +821,6 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     </button>
   );
 
-  console.log("stateFilterDropdown?.open", stateFilterDropdown?.openDropdownId);
-
   // trigger của bộ lọc trạng thái
   const triggerFilterStatus = (
     <button
@@ -1026,6 +1022,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                 // refreshData();
               }}
               code={isStateProvider.productionsOrders.dataProductionOrderDetail.title}
+              id={isStateProvider?.productionsOrders?.idDetailProductionOrder}
             />
           ),
         },
@@ -1527,7 +1524,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
       </div>
 
       <div className="flex items-start w-full gap-4 overflow-y-hidden  3xl:gap-6">
-        <div className="2xl:max-w-[15%] xl:max-w-[18%] max-w-[22%] size-full space-y-4 border-none border-[#D0D5DD] border">
+        <div className="2xl:max-w-[15%] xl:max-w-[15%] max-w-[22%] size-full space-y-4 border-none border-[#D0D5DD] border">
           <Customscrollbar
             className="h-full"
             style={{
@@ -1702,7 +1699,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
           </div>
         </div>
 
-        <div className="2xl:max-w-[85%] xl:max-w-[82%] max-w-[78%] size-full space-y-4 border-none border-[#D0D5DD] border overflow-y-hidden">
+        <div className="2xl:max-w-[85%] xl:max-w-[85%] max-w-[78%] size-full space-y-4 border-none border-[#D0D5DD] border overflow-y-hidden">
           {!isLoadingProductionOrderDetail &&
             dataProductionOrderDetail?.listPOItems?.length > 0 &&
             isStateProvider?.productionsOrders?.isTabList?.type ==

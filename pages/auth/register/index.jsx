@@ -22,6 +22,7 @@ import { useForm } from "react-hook-form";
 import { FiRefreshCcw } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import "sweetalert2/src/sweetalert2.scss";
+import Script from "next/script";
 
 
 const formatPhone = (phone) => {
@@ -281,6 +282,15 @@ const Register = React.memo((props) => {
             <Head>
                 <title>Đăng ký</title>
             </Head>
+            <Script id="gtm-script" strategy="afterInteractive">
+                {`
+                    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+                    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+                    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+                    })(window,document,'script','dataLayer','GTM-M7HZ95L2');
+                `}
+            </Script>
             <div className="grid w-screen h-screen grid-cols-5 overflow-hidden">
                 <div className="col-span-2 bg-[#11315B] h-screen relative">
                     <Image

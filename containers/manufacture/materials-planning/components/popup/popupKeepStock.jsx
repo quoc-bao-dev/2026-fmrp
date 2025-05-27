@@ -302,16 +302,17 @@ const PopupKeepStock = ({
                     findValue.arrayItem
                         .find((e) => e.id === item.id)
                         ?.quantityNeed.replace(/,/g, "") || 0
-                ); // Chuyển đổi quantityNeed thành số
-                let remainingQuantity = quantityNeed; // Khởi tạo số lượng còn lại
+                    ); // Chuyển đổi quantityNeed thành số
+                let quantityKeepp = parseFloat(item.quantityKeepp.replace(/,/g, ''));
+                let remainingQuantity = quantityNeed - quantityKeepp;
                 const newData = findValue.arrayItem.map((e) => {
                     if (e.id === item.id) {
                         const location = data?.locationsWarehouse?.map((i) => {
                             const quantityWarehouse =
-                                parseFloat(i?.quantity_warehouse.replace(/,/g, "")) -
-                                +e?.quantityKeepp; // Đảm bảo là số
+                            parseFloat(i?.quantity_warehouse.replace(/,/g, ""))
+                            //  -
+                            // +e?.quantityKeepp; // Đảm bảo là số
                             let newValue = 0; // Khởi tạo newValue
-
                             // Tính toán newValue dựa trên remainingQuantity và quantityWarehouse
                             if (remainingQuantity > 0) {
                                 if (remainingQuantity > quantityWarehouse) {

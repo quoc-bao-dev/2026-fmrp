@@ -28,7 +28,18 @@ const DropdownIndicator = (props) => (
 
 // Custom Clear Indicator
 const ClearIndicator = (props) => (
-    <components.ClearIndicator {...props}>
+    <components.ClearIndicator
+        {...props}
+        innerProps={{
+            ...props.innerProps,
+            onMouseDown: (e) => {
+                e.stopPropagation();
+                if (props.innerProps && props.innerProps.onMouseDown) {
+                    props.innerProps.onMouseDown(e);
+                }
+            },
+        }}
+    >
         <CloseXIcon className="w-4 h-4 text-[#9295A4]" />
     </components.ClearIndicator>
 );
@@ -167,6 +178,7 @@ const SelectComponent = ({
                     MenuList: CustomMenuList,
                     DropdownIndicator, // ← Custom arrow indicator
                     IndicatorSeparator: () => null, // ← Bỏ đường thẳng
+                    ClearIndicator,
                 }}
                 maxShowMuti={maxShowMuti}
                 noOptionsMessage={noOptionsMessage ? noOptionsMessage : configSelectFillter.noOptionsMessage}
