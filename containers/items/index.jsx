@@ -492,10 +492,11 @@ const Items = (props) => {
                               dataMaterialExpiry={dataMaterialExpiry}
                               id={e?.id}
                               dataLang={dataLang}
+                              classNameBtn="w-full"
                             >
-                              <button className=" text-[#0F4F9E] hover:opacity-70 w-fit outline-none">
+                              <p className="w-full text-left text-[#0F4F9E] hover:opacity-70 outline-none break-words">
                                 {e?.code}
-                              </button>
+                              </p>
                             </Popup_Detail>
                           </RowItemTable>
                           <RowItemTable colSpan={2} textAlign={"left"} className={`truncate`}>
@@ -624,6 +625,7 @@ const Popup_Detail = React.memo((props) => {
       onClickOpen={_ToggleModal.bind(this, true)}
       open={open}
       onClose={_ToggleModal.bind(this, false)}
+      classNameBtn={props.classNameBtn}
     >
       <div className="py-4 w-[800px] space-y-5">
         <div className="flex items-center space-x-4 border-[#E7EAEE] border-opacity-70 border-b-[1px]">

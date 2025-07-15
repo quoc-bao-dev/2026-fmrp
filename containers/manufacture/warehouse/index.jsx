@@ -719,7 +719,7 @@ const Warehouse = (props) => {
                                                                                     : e.item_name}
                                                                             </h6>
 
-                                                                            <h6 className="w-full font-medium text-left responsive-text-sm text-zinc-500">
+                                                                            <h6 className="w-full font-medium text-left responsive-text-sm text-zinc-500 break-words">
                                                                                 {e.item_code == null
                                                                                     ? "-"
                                                                                     : e.item_code}
@@ -797,7 +797,7 @@ const Warehouse = (props) => {
                                                                                     : e.item_name}
                                                                             </h6>
 
-                                                                            <h6 className="w-full font-medium text-left responsive-text-sm text-zinc-500">
+                                                                            <h6 className="w-full font-medium text-left responsive-text-sm text-zinc-500 break-words">
                                                                                 {e.item_code == null
                                                                                     ? "-"
                                                                                     : e.item_code}

@@ -524,10 +524,11 @@ const Products = (props) => {
                                                             dataProduct={e}
                                                             dataProductExpiry={dataProductExpiry}
                                                             dataLang={dataLang}
+                                                            classNameBtn="w-full"
                                                         >
-                                                            <button className=" text-[#0F4F9E] hover:text-blue-500 transition-all ease-linear w-fit outline-none">
+                                                            <p className="w-full text-[#0F4F9E] hover:text-blue-500 transition-all ease-linear outline-none break-words">
                                                                 {e?.code}
-                                                            </button>
+                                                            </p>
                                                         </Popup_Detail>
                                                     </RowItemTable>
                                                     <RowItemTable
@@ -540,10 +541,11 @@ const Products = (props) => {
                                                             dataProduct={e}
                                                             dataProductExpiry={dataProductExpiry}
                                                             dataLang={dataLang}
+                                                            classNameBtn="w-full"
                                                         >
-                                                            <button className=" text-[#0F4F9E] hover:text-blue-500 transition-all ease-linear w-fit outline-none  text-left">
+                                                            <p className="w-full text-left text-[#0F4F9E] hover:text-blue-500 transition-all ease-linear outline-none break-words">
                                                                 {e?.name}
-                                                            </button>
+                                                            </p>
                                                         </Popup_Detail>
                                                         {/* <h6 className="flex items-center gap-1"> */}
                                                         <TagColorProduct
