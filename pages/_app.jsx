@@ -22,6 +22,7 @@ import ReusableSheet from "@/components/common/sheet/ReusableSheet";
 import { StateContext, StateProvider } from "@/context/_state/productions-orders/StateContext";
 import { SocketProvider } from "@/context/socket/SocketContext";
 import { VersionProvider } from "@/context/_state/version-application/VersionContext";
+import { LanguageProvider } from "@/context/ui/LanguageContext";
 
 // const t = Lark
 const deca = Lexend_Deca({
@@ -54,10 +55,12 @@ const Index = (props) => {
                                 {/* <main style={{ fontFamily: "LarkHackSafariFont, LarkEmojiFont, LarkChineseQuote, -apple-system, BlinkMacSystemFont, Helvetica Neue, Tahoma, PingFang SC, Microsoft Yahei, Arial, Hiragino Sans GB, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji" }}> */}
                                 <VersionProvider>
                                     <StateProvider>
-                                        <SheetProvider {...props}>
-                                            {/* <main className={deca.className}> */}
-                                            <MainPage {...props} />
-                                        </SheetProvider>
+                                        <LanguageProvider>
+                                            <SheetProvider {...props}>
+                                                {/* <main className={deca.className}> */}
+                                                <MainPage {...props} />
+                                            </SheetProvider>
+                                        </LanguageProvider>
                                     </StateProvider>
                                 </VersionProvider>
                             </main>

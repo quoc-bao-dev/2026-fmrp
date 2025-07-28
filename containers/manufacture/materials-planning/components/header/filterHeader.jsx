@@ -1,7 +1,5 @@
-import DatePicker from "react-datepicker";
-import SelectComponent from "@/components/UI/filterComponents/selectComponent";
-import { ArrowDown2 } from "iconsax-react";
 import DateToDateComponent from "@/components/UI/filterComponents/dateTodateComponent";
+import SelectComponent from "@/components/UI/filterComponents/selectComponent";
 
 const FilterHeader = ({
     dataLang,

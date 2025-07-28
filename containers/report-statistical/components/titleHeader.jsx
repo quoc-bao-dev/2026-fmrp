@@ -1,11 +1,15 @@
-import { TbFileReport } from "react-icons/tb"
+import Breadcrumb from '@/components/UI/breadcrumb/BreadcrumbCustom'
+import Head from 'next/head'
 
-const TitleHeader = (props) => {
-    return <div className="flex items-center mt-1 mr-2 gap-2">
-        <TbFileReport size={20} className='text-[#52575E]' />
-        <h2 className=" 2xl:text-lg text-base text-[#52575E] capitalize">
-            {props.title}
-        </h2>
+const TitleHeader = ({ breadcrumbItems, title }) => {
+  return (
+    <div className="flex flex-col gap-1 h-fit">
+      <Head>
+        <title>{title}</title>
+      </Head>
+      <Breadcrumb items={breadcrumbItems} className="3xl:text-sm 2xl:text-xs xl:text-[10px] lg:text-[10px]" />
+      <h2 className="text-title-section text-neutral-04 capitalize font-medium">{title}</h2>
     </div>
+  )
 }
 export default TitleHeader

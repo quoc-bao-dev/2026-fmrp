@@ -56,16 +56,14 @@ const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
               <ColumnTable
                 colSpan={1}
                 textAlign={"center"}
-                className={`normal-case leading-2 text-typo-gray-1 3xl:!text-[14px] xl:text-[11px]
-                                    }`}
+                className={`normal-case leading-2 text-typo-gray-1 3xl:!text-[14px] xl:text-[11px]`}
               >
                 STT
               </ColumnTable>
               <ColumnTable
                 colSpan={3}
                 textAlign={"left"}
-                className={`border-none normal-case leading-2 text-typo-gray-1 3xl:px-3 px-1 std:!text-[13px] xl:text-[11px]
-                                    }`}
+                className={`border-none normal-case leading-2 text-typo-gray-1 3xl:px-3 px-1 std:!text-[13px] xl:text-[11px]`}
               >
                 {typeTable === "products"
                   ? dataLang?.materials_planning_semi
@@ -75,8 +73,7 @@ const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
                 <ColumnTable
                   colSpan={2}
                   textAlign={"center"}
-                  className={`border-none  normal-case leading-2 text-typo-gray-1 std:!text-[13px] xl:text-[11px]
-                                        }`}
+                  className={`border-none  normal-case leading-2 text-typo-gray-1 std:!text-[13px] xl:text-[11px]`}
                 >
                   {dataLang?.category_unit || "Đơn vị tính"}
                 </ColumnTable>
@@ -84,8 +81,7 @@ const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
               <ColumnTable
                 colSpan={1}
                 textAlign={"center"}
-                className={`px-0 border-none normal-case leading-2 text-typo-gray-1 std:!text-[13px] xl:text-[11px]
-                                    }`}
+                className={`px-0 border-none normal-case leading-2 text-typo-gray-1 std:!text-[13px] xl:text-[11px]`}
               >
                 {/* {dataLang?.materials_planning_use || "Sử dụng"} */}
                 SL
@@ -94,8 +90,7 @@ const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
                 <ColumnTable
                   colSpan={2}
                   textAlign={"center"}
-                  className={`border-none normal-case leading-2 text-typo-gray-1 std:!text-[13px] xl:text-[11px]
-                                        }`}
+                  className={`border-none normal-case leading-2 text-typo-gray-1 std:!text-[13px] xl:text-[11px]`}
                 >
                   {dataLang?.materials_planning_change || "Quy đổi"}
                 </ColumnTable>
@@ -103,24 +98,21 @@ const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
               <ColumnTable
                 colSpan={2}
                 textAlign={"center"}
-                className={`border-none  normal-case  px-0  leading-2 text-typo-gray-1 std:!text-[13px] xl:text-[11px]
-                                    }`}
+                className={`border-none  normal-case  px-0  leading-2 text-typo-gray-1 std:!text-[13px] xl:text-[11px]`}
               >
                 {dataLang?.materials_planning_held || " Đã giữ"}{typeTable === "materials" ? "/Mua" : ""}
               </ColumnTable>
               <ColumnTable
                 colSpan={1}
                 textAlign={"center"}
-                className={`border-none normal-case leading-2 text-typo-gray-1 px-0 std:!text-[13px] xl:text-[11px]
-                                    }`}
+                className={`border-none normal-case leading-2 text-typo-gray-1 px-0 std:!text-[13px] xl:text-[11px]`}
               >
                 {dataLang?.materials_planning_lack || " Thiếu"}
               </ColumnTable>
               <ColumnTable
                 colSpan={2}
                 textAlign={"center"}
-                className={`border-none normal-case leading-2 text-typo-gray-1 std:!text-[12px] xl:text-[11px]
-                                    }`}
+                className={`border-none normal-case leading-2 text-typo-gray-1 std:!text-[12px] xl:text-[11px]`}
               >
                 Tiến độ
               </ColumnTable>
@@ -290,7 +282,7 @@ const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
                         >
                           <ProgressBar
                             current={formatNumber(item.quantity_import)}
-                            total={formatNumber(item.quantity_rest)}
+                            total={formatNumber(item.quantity_rest_process)}
                             name={item.unit_name_primary}
                             typeProgress="tablePlaning"
                           />

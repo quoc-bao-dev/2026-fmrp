@@ -12,6 +12,7 @@ export const useSupplierList = (params) => {
 
             return { rResult, output }
         },
+        staleTime: 5 * 60 * 1000, // Cache 5 phút
         placeholderData: keepPreviousData,
         ...optionsQuery
     })

@@ -4,7 +4,7 @@ import Datepicker from "react-tailwindcss-datepicker";
 import CalendarBlankIcon from "@/components/icons/common/CalendarBlankIcon";
 import DropdownFilledIcon from "@/components/icons/common/DropdownFilledIcon";
 
-const DateToDateComponent = ({ value, onChange, colSpan, className }) => {
+const DateToDateComponent = ({ placeholder, value, onChange, colSpan, className }) => {
   return (
     <div
       id="parentDatepicker"
@@ -20,7 +20,7 @@ const DateToDateComponent = ({ value, onChange, colSpan, className }) => {
         {...styleDatePicker}
         value={value}
         onChange={onChange}
-        placeholder="dd/mm/yyyy → dd/mm/yyyy"
+        placeholder={placeholder || 'dd/mm/yyyy → dd/mm/yyyy'}
         inputClassName={`${styleDatePicker.inputClassName} px-8 w-full`}
         toggleClassName="hidden"
       />

@@ -123,11 +123,6 @@ const General = (props) => {
             formData.append(`settings[number_day_warehouse]`, numberDays);
         });
 
-        // 👉 Log FormData
-        for (let pair of formData.entries()) {
-            console.log(pair[0] + ": " + pair[1]);
-        }
-
         try {
             const { isSuccess, message } = await apiGeneral.apiHanding(formData);
             if (isSuccess) {

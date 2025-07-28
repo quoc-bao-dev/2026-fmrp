@@ -202,9 +202,6 @@ const TabMaterialReturn = ({ dataLang, ...props }) => {
         },
     ];
 
-    console.log('dataMaterialReturn', dataMaterialReturn);
-    console.log('flagMaterialReturn', flagMaterialReturn);
-
     return (
         <div className='flex flex-col 3xl:gap-6 gap-4'>
             <div className='flex items-center justify-end gap-3'>

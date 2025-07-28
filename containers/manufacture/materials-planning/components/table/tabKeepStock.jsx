@@ -8,8 +8,6 @@ import useFeature from "@/hooks/useConfigFeature";
 import useSetingServer from "@/hooks/useConfigNumber";
 import { formatMoment } from "@/utils/helpers/formatMoment";
 import formatNumberConfig from "@/utils/helpers/formatnumber";
-import { motion } from "framer-motion";
-import { TickCircle } from "iconsax-react";
 import { useState } from "react";
 import ModalImage from "react-modal-image";
 

@@ -12,7 +12,6 @@ import TimelineChartStage from "./components/TimelineChartStage";
 
 const TabSemi = memo(
     ({ handShowItem, isLoadingRight, dataLang, typePageMoblie }) => {
-        console.log("🚀 ~ TabSemi ~ dataLang:", dataLang);
         const dataSeting = useSetingServer();
 
         const formatNumber = (num) => formatNumberConfig(+num, dataSeting);

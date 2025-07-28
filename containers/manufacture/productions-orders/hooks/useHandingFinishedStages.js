@@ -91,6 +91,9 @@ export const useHandingFinishedStages = () => {
 
                 formData.append(`boms[${index}][type_products]`, element?.type_products ?? "")
                 formData.append(`boms[${index}][type_item]`, element?.type_item ?? "")
+                formData.append(`boms[${index}][type_bom]`, element?.type_bom ?? "")
+                formData.append(`boms[${index}][stage_id]`, element?.stage_id ?? "")
+                formData.append(`boms[${index}][stage_name]`, element?.stage_name ?? "")
                 formData.append(`boms[${index}][item_id]`, element?.item_id ?? "")
                 formData.append(`boms[${index}][item_variation_option_value_id]`, element?.item_variation_option_value_id ?? "")
                 formData.append(`boms[${index}][item_code]`, element?.item_code ?? "")

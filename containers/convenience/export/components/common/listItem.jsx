@@ -1,7 +1,6 @@
 import { TiTick, TiTimes, TiArrowRight } from "react-icons/ti";
 import Zoom from "./zoomElement";
 const ListItem = ({ dataColumnNew, type, dataLang, HandlePushItem, isShow, dataEmty, sDataEmty }) => {
-    console.log("dataColumnNew", dataColumnNew);
 
     return (
         <div className="h-full overflow-y-auto">

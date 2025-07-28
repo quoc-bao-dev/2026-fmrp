@@ -47,14 +47,12 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting }) => {
     const [isLastMessageAnimationDone, setIsLastMessageAnimationDone] =
         useState(false);
     const authState = useSelector((state) => state.auth);
-    console.log("🚀 ~ authState:", authState)
 
     const { data: dataNewChatAI, isLoadingNewChatAi } = useStartMessageAI({
         type: PRODUCT_ANALYSIS,
         enable: openChatBox && !hasFetchedFirstMessage.current,
         authState : authState
     });
-    console.log("🚀 ~ BoxChatAI ~ dataNewChatAI:", dataNewChatAI)
 
     const { messenger, options, chatScenariosId, sessionId, step, response } =
         useSelector((state) => state.stateBoxChatAi);
@@ -217,7 +215,6 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting }) => {
     };
 
     const onRedirect = () => {
-        console.log("123");
         dispatch({ type: "chatbot/openBoxChatAi", payload: false })
         router.push("/products");
     };

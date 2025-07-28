@@ -5,7 +5,7 @@ export const RowTable = ({ children, gridCols, className, display, ref }) => {
         : `repeat(24, minmax(0, 0.5fr))`;
 
     return (
-        <h6
+        <div
             ref={ref || undefined}
             style={{
                 display: display ? display : "grid",
@@ -14,6 +14,6 @@ export const RowTable = ({ children, gridCols, className, display, ref }) => {
             className={`${className} relative grid items-center py-2.5 px-2 hover:bg-slate-100/40`}
         >
             {children}
-        </h6>
+        </div>
     );
 };

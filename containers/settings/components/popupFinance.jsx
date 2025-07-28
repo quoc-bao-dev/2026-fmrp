@@ -73,7 +73,6 @@ const PopupFinance = (props) => {
         } else if (type == "methodMe") {
             sMethodMe(value.target?.value);
         } else if (type == "balanceMe") {
-            // console.log(value.target.value);
             sBalanceMe(Number(value.value));
         } else if (type == "descriptionMe") {
             sDescriptionMe(value.target?.value);

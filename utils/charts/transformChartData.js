@@ -7,7 +7,6 @@ export function transformChartData(data) {
     const dataSeting = useSetingServer();
 
     const formatNumber = useCallback((num) => formatNumberConfig(+num, dataSeting), [dataSeting]);
-    console.log('data transformChart: ', data);
 
     const chartData = [];
 

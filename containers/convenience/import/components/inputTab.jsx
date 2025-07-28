@@ -3,8 +3,8 @@ import React from "react";
 
 const ImportFileTemplate = ({ dataLang, tabPage }) => {
     const file = {
-        fileTab5: "/file/products/import_stages.xlsx",
-        fileTab6: "/file/products/import_bom.xlsx?vs=1.1",
+        fileTab5: `/file/products/import_stages.xlsx?vs=${Date.now()}`,
+        fileTab6: `/file/products/import_bom.xlsx?vs=${Date.now()}`,
     };
     return (
         <React.Fragment>
@@ -26,9 +26,9 @@ const ImportFileTemplate = ({ dataLang, tabPage }) => {
                         xmlns="http://www.w3.org/2000/svg"
                     >
                         <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
                             d="M14 5l7 7m0 0l-7 7m7-7H3"
                         ></path>
                     </svg>

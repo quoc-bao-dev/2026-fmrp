@@ -4,7 +4,7 @@ import React from "react";
 const Breadcrumb = ({ items, className }) => (
   <React.Fragment>
     <div className={`flex space-x-1 mt-3 ${className || ""}`}>
-      {items.map((item, index) => (
+      {items?.map((item, index) => (
         <div key={index} className="flex items-center space-x-1 cursor-pointer">
           {item.href ? (
             <Link href={item.href}>

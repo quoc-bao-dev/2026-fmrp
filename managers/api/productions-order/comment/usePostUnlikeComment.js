@@ -6,7 +6,6 @@ export const usePostUnlikeComment = () => {
 
     const postUnlikeCommentMutation = useMutation({
         mutationFn: async (idComment) => {
-            console.log('idComment', idComment);
 
             const { data: r } = await apiProductionsOrders.apiPostUnlikeComment({ idComment: idComment });
             return r;
@@ -37,8 +36,6 @@ export const usePostUnlikeComment = () => {
 
     const onSubmit = async (idComment) => {
         try {
-            console.log('idComment  idComment',idComment);
-            
             postUnlikeCommentMutation.mutate(idComment);
         } catch (error) {
             throw error;

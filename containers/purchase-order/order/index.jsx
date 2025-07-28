@@ -488,13 +488,13 @@ const Order = (props) => {
                                         Số Kế hoạch
                                         {/* {dataLang?.purchase_order_table_number || "purchase_order_table_number"} */}
                                     </ColumnTable>
-                                    <ColumnTable colSpan={1} textAlign={"left"}>
+                                    <ColumnTable colSpan={1} textAlign={"right"}>
                                         {dataLang?.purchase_order_table_total || "purchase_order_table_total"}
                                     </ColumnTable>
-                                    <ColumnTable colSpan={1} textAlign={"left"}>
+                                    <ColumnTable colSpan={1} textAlign={"right"}>
                                         {dataLang?.purchase_order_table_totalTax || "purchase_order_table_totalTax"}
                                     </ColumnTable>
-                                    <ColumnTable colSpan={1} textAlign={"left"}>
+                                    <ColumnTable colSpan={1} textAlign={"right"}>
                                         {dataLang?.purchase_order_table_intoMoney || "purchase_order_table_intoMoney"}
                                     </ColumnTable>
                                     <ColumnTable colSpan={1} textAlign={"center"}>
@@ -507,7 +507,7 @@ const Order = (props) => {
                                         {dataLang?.purchase_order_table_branch || "purchase_order_table_branch"}
                                     </ColumnTable>
                                     <ColumnTable colSpan={1} textAlign={"left"}>
-                                        {dataLang?.purchase_order_table_operations || "purchase_order_table_operations"}
+                                        {dataLang?.import_action || "purchase_order_table_operations"}
                                     </ColumnTable>
                                 </HeaderTable>
                                 {isFetching ? (
@@ -586,13 +586,13 @@ const Order = (props) => {
                                                             </React.Fragment>
                                                         ))} */}
                                                 </RowItemTable>
-                                                <RowItemTable colSpan={1} textAlign={"left"}>
+                                                <RowItemTable colSpan={1} textAlign={"right"}>
                                                     {renderMoneyOrDash(e.total_price)}
                                                 </RowItemTable>
-                                                <RowItemTable colSpan={1} textAlign={"left"}>
+                                                <RowItemTable colSpan={1} textAlign={"right"}>
                                                     {renderMoneyOrDash(e.total_tax_price)}
                                                 </RowItemTable>
-                                                <RowItemTable colSpan={1} textAlign={"left"}>
+                                                <RowItemTable colSpan={1} textAlign={"right"}>
                                                     {renderMoneyOrDash(e.total_amount)}
                                                 </RowItemTable>
                                                 <RowItemTable
@@ -652,19 +652,19 @@ const Order = (props) => {
                         </RowItemTable>
                         <RowItemTable
                             colSpan={0.5}
-                            textAlign={"left"}
+                            textAlign={"right"}
                         >
                             {renderMoneyOrDash(data?.rTotal?.total_price)}
                         </RowItemTable>
                         <RowItemTable
                             colSpan={0.5}
-                            textAlign={"left"}
+                            textAlign={"right"}
                         >
                             {renderMoneyOrDash(data?.rTotal?.total_tax_price)}
                         </RowItemTable>
                         <RowItemTable
                             colSpan={0.5}
-                            textAlign={"left"}
+                            textAlign={"right"}
                         >
                             {renderMoneyOrDash(data?.rTotal?.total_amount)}
                         </RowItemTable>

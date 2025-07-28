@@ -1,6 +1,7 @@
 import apiReceipts from "@/Api/apiAccountant/apiReceipts";
 import EditIcon from "@/components/icons/common/EditIcon";
 import PlusIcon from "@/components/icons/common/PlusIcon";
+import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import InPutMoneyFormat from "@/components/UI/inputNumericFormat/inputMoneyFormat";
 import MultiValue from "@/components/UI/mutiValue/multiValue";
 import PopupCustom from "@/components/UI/popup";
@@ -85,6 +86,9 @@ const Popup_dspt = (props) => {
 
     const [currentFloatValue, setCurrentFloatValue] = useState(0);
 
+    // Thêm state để theo dõi quá trình tải dữ liệu chi tiết
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+
     const _ToggleModal = (e) => sOpen(e);
 
     const updateFetch = (update) => sFetch((e) => ({ ...e, ...update }));
@@ -94,6 +98,9 @@ const Popup_dspt = (props) => {
     const updateError = (update) => sError((e) => ({ ...e, ...update }));
 
     const { is_admin: role, permissions_current: auth } = useSelector((state) => state.auth);
+    
+    // Thêm authState để lấy thông tin chi nhánh
+    const authState = useSelector((state) => state.auth);
 
     const { checkAdd, checkEdit } = useActionRole(auth, "receipts");
 
@@ -118,9 +125,18 @@ const Popup_dspt = (props) => {
     const { data: dataListTypeofDoc = [] } = useVoucherListPayPaySlip(param, listValue.searchListTypeofDoc)
 
     const initstialState = () => {
+        // Không reset price và currentFloatValue khi khởi tạo lại form
+        const currentPrice = listValue.price;
+        const currentFloatVal = currentFloatValue;
+        
         sListValue(inistialValue);
         sError(inistialError);
-        setCurrentFloatValue(0);
+        
+        // Khôi phục lại giá trị price và currentFloatValue
+        if (currentPrice && currentFloatVal) {
+            updateListValue({ price: currentPrice });
+            setCurrentFloatValue(currentFloatVal);
+        }
     };
 
     const formatNumber = (number) => {
@@ -128,13 +144,50 @@ const Popup_dspt = (props) => {
     };
 
     useEffect(() => {
-        open && initstialState();
+        if (open) {
+            initstialState();
+            
+            if (props?.id) {
+                // Đánh dấu đang tải chi tiết để ngăn việc tự động chọn chi nhánh đầu tiên
+                setIsLoadingDetails(true);
+            } else if (authState.branch?.length > 0) {
+                // Chỉ tự động chọn chi nhánh đầu tiên khi tạo mới
+                setTimeout(() => {
+                    updateListValue({
+                        branch: {
+                            value: authState.branch[0].id,
+                            label: authState.branch[0].name,
+                        }
+                    });
+                }, 0);
+            }
+        }
     }, [open]);
+
+    // Thêm useEffect riêng để xử lý trường hợp chi nhánh không được đặt sau khi mở popup
+    useEffect(() => {
+        if (open && !listValue.branch && !props?.id && !isLoadingDetails && authState.branch?.length > 0) {
+            updateListValue({
+                branch: {
+                    value: authState.branch[0].id,
+                    label: authState.branch[0].name,
+                }
+            });
+        }
+    }, [open, listValue.branch, authState.branch, isLoadingDetails]);
+
+    // Thêm useEffect để cập nhật trạng thái sau khi tải xong chi tiết
+    useEffect(() => {
+        if (!fetch.onFetchingDetail && isLoadingDetails) {
+            setIsLoadingDetails(false);
+        }
+    }, [fetch.onFetchingDetail]);
 
     useQuery({
         queryKey: ["api_detail_receipts_form", id],
         queryFn: async () => {
             const result = await apiReceipts.apiReceiptsDetail(id);
+            console.log(result)
             updateListValue({
                 date: moment(result?.date).toDate(),
                 code: result?.code,
@@ -144,11 +197,14 @@ const Popup_dspt = (props) => {
                     ? { label: result?.object_text, value: result?.object_text }
                     : { label: dataLang[result?.object_text] || result?.object_text, value: result?.objects_id },
                 typeOfDocument: result?.type_vouchers ? { label: dataLang[result?.type_vouchers] || result?.type_vouchers, value: result?.type_vouchers } : null,
-                listTypeOfDocument: result?.type_vouchers ? result?.voucher?.map(({ code, id, money }) => ({
-                    label: code,
-                    value: id,
-                    money: money,
-                })) : [],
+                listTypeOfDocument: result?.type_vouchers ? result?.voucher?.map(({ code, id, money, total }) => {
+                    return {
+                        label: code,
+                        value: id,
+                        money: money,
+                        total: total || money, // Fallback to money if total is not available
+                    };
+                }) : [],
                 price: +result?.total,
                 method: { label: result?.payment_mode_name, value: result?.payment_mode_id },
                 note: result?.note,
@@ -215,34 +271,75 @@ const Popup_dspt = (props) => {
             case "listTypeOfDocument":
                 updateListValue({ listTypeOfDocument: value });
                 if (value && value.length > 0) {
-                    const formattedTotal = parseFloat(
-                        value.reduce((total, item) => total + parseFloat(item.money || 0), 0)
-                    );
-                    updateListValue({ price: formattedTotal });
-                    
-                    // Khởi tạo adjustedDocuments với giá trị ban đầu giống với money
-                    const initialAdjustedDocs = value.map(item => ({
+                    // Đảm bảo mỗi item đều có total
+                    const processedDocuments = value.map(item => ({
                         ...item,
-                        adjustedMoney: parseFloat(item.money || 0)
+                        total: parseFloat(item.total || item.money || 0),
+                        money: parseFloat(item.money || item.total || 0)
                     }));
-                    updateListValue({ adjustedDocuments: initialAdjustedDocs });
+
+                    const formattedTotal = parseFloat(
+                        processedDocuments.reduce((total, item) => total + (item.total || item.money || 0), 0)
+                    );
+
+                    updateListValue({ 
+                        listTypeOfDocument: processedDocuments,
+                        price: formattedTotal 
+                    });
+                    
+                    // Khởi tạo adjustedDocuments với giá trị total
+                    const initialAdjustedDocs = processedDocuments.map(item => ({
+                        ...item,
+                        adjustedMoney: item.total || item.money,
+                        total: item.total || item.money
+                    }));
+
+                    updateListValue({ 
+                        adjustedDocuments: initialAdjustedDocs 
+                    });
                 } else {
-                    updateListValue({ price: "", adjustedDocuments: [] });
+                    updateListValue({ 
+                        price: "", 
+                        listTypeOfDocument: [],
+                        adjustedDocuments: [] 
+                    });
                 }
                 break;
             case "price":
-                const priceChange = value?.target.value;
-                if (priceChange) {
-                    if (listValue.listTypeOfDocument.length > 0 && priceChange > totalMoney) {
+                const priceChange = parseFloat(value?.target.value.replace(/,/g, ""));
+                if (!isNaN(priceChange)) {
+                    if (listValue.listTypeOfDocument.length > 0 && listValue.object?.value != "other" && priceChange > totalMoney) {
                         showToat("error", dataLang?.payment_err_aler || "payment_err_aler");
                         updateListValue({ price: totalMoney });
+                        setCurrentFloatValue(totalMoney);
                         isExceedTotal = true;
                     } else {
                         updateListValue({ price: priceChange });
+                        setCurrentFloatValue(priceChange);
+                        
+                        // Cập nhật tỷ lệ số tiền cho từng chứng từ khi tổng số tiền thay đổi
+                        if (listValue.listTypeOfDocument?.length > 0) {
+                            const originalTotal = listValue.listTypeOfDocument.reduce(
+                                (total, item) => total + parseFloat(item.money || 0),
+                                0
+                            );
+                            
+                            if (originalTotal > 0 && priceChange > 0) {
+                                const ratio = priceChange / originalTotal;
+                                
+                                // Tạo bản sao mới của listTypeOfDocument với số tiền đã điều chỉnh
+                                const updatedListTypeOfDocument = listValue.listTypeOfDocument.map(item => ({
+                                    ...item,
+                                    adjustedMoney: parseFloat((parseFloat(item.money) * ratio).toFixed(2))
+                                }));
+                                
+                                // Cập nhật state
+                                updateListValue({ 
+                                    adjustedDocuments: updatedListTypeOfDocument
+                                });
+                            }
+                        }
                     }
-                }
-                if (isExceedTotal) {
-                    updateListValue({ price: totalMoney });
                 }
                 break;
             case "method":
@@ -278,7 +375,8 @@ const Popup_dspt = (props) => {
             });
             showToat("error", `${props.dataLang?.required_field_null || "required_field_null"}`);
         } else {
-            updateListValue({ price: currentFloatValue });
+            // Không cập nhật lại price từ currentFloatValue vì có thể gây reset
+            // updateListValue({ price: currentFloatValue });
             updateFetch({ onSending: true });
         }
     };
@@ -303,20 +401,41 @@ const Popup_dspt = (props) => {
     ]);
 
     const handleSelectAll = () => {
+        // Lấy toàn bộ danh sách từ dataListTypeofDoc
+        const allDocuments = [...dataListTypeofDoc].map(doc => ({
+            ...doc,
+            total: parseFloat(doc.total || doc.money || 0), // Đảm bảo luôn có total
+            money: parseFloat(doc.money || doc.total || 0)  // Đảm bảo luôn có money
+        }));
+
+        // Tính tổng tiền từ tất cả chứng từ
+        const totalMoney = allDocuments.reduce((total, item) => {
+            return total + (parseFloat(item.total) || 0);
+        }, 0);
+
+        // Cập nhật danh sách và số tiền
         updateListValue({
-            listTypeOfDocument: [...dataListTypeofDoc],
-            price: [...dataListTypeofDoc].reduce((total, item) => {
-                if (item.money) {
-                    return total + parseFloat(item.money);
-                } else {
-                    return total;
-                }
-            }, 0),
+            listTypeOfDocument: allDocuments,
+            price: totalMoney,
+            // Khởi tạo adjustedDocuments với giá trị ban đầu từ total
+            adjustedDocuments: allDocuments.map(item => ({
+                ...item,
+                adjustedMoney: item.total,
+                total: item.total
+            }))
         });
+        
+        // Cập nhật currentFloatValue
+        setCurrentFloatValue(totalMoney);
     };
 
     const handleDeselectAll = () => {
-        updateListValue({ price: "", listTypeOfDocument: [] });
+        updateListValue({ 
+            price: "", 
+            listTypeOfDocument: [],
+            adjustedDocuments: []
+        });
+        setCurrentFloatValue(0);
     };
 
     const MenuList = (props) => {
@@ -348,7 +467,7 @@ const Popup_dspt = (props) => {
             return await apiReceipts.apiHandingReceipts(id, data);
         }
     })
-
+console.log(currentFloatValue)
     const _ServerSending = () => {
         let formData = new FormData();
 
@@ -357,7 +476,8 @@ const Popup_dspt = (props) => {
         formData.append("branch_id", listValue.branch?.value);
         formData.append("objects", listValue.object?.value);
         formData.append("type_vouchers", listValue.typeOfDocument ? listValue.typeOfDocument?.value : "");
-        formData.append("total", listValue.price);
+        // Sử dụng currentFloatValue thay vì listValue.price
+        formData.append("total", currentFloatValue);
         formData.append("payment_modes", listValue.method?.value);
 
         if (listValue.object?.value == "other") {
@@ -375,6 +495,10 @@ const Popup_dspt = (props) => {
             if (e.adjustedMoney !== undefined) {
                 formData.append(`voucher_money[${index}]`, e.adjustedMoney);
             }
+            // Thêm dòng này để gửi total
+            // if (e.total !== undefined) {
+            //     formData.append(`voucher_money[${index}]`, e.total);
+            // }
         });
         
         formData.append("note", listValue.note ? listValue.note : "");
@@ -392,9 +516,9 @@ const Popup_dspt = (props) => {
                 isShow("error", `${dataLang[message] || message}`);
             },
             onError: (err) => {
-
+                console.error("Error submitting form:", err);
             }
-        })
+        });
         updateFetch({ onSending: false });
     };
 
@@ -418,398 +542,448 @@ const Popup_dspt = (props) => {
                             className="size-5"
                         />
                     </div>
-                ) :
-                    <div onClick={() => {
-                        if (role || checkAdd) {
-                            sOpen(true);
-                        } else {
-                            isShow("error", WARNING_STATUS_ROLE);
-                        }
-                    }}
-                    className="flex items-center gap-x-2"
+                ) : (
+                    <div
+                        className="flex items-center p-1 gap-2 text-white rounded-md transition-all duration-300 cursor-pointer"
                     >
-                        <PlusIcon />
-                        {props.dataLang?.branch_popup_create_new || "branch_popup_create_new"}
+                        <PlusIcon className="w-4 h-4" />
+                        <span className="font-medium">{props.dataLang?.branch_popup_create_new || "branch_popup_create_new"}</span>
                     </div>
+                )
             }
             open={open}
+            onClickOpen={() => {
+                    if (role || checkAdd) {
+                        sOpen(true);
+                    } else {
+                        isShow("error", WARNING_STATUS_ROLE);
+                    }
+            }}
             onClose={_ToggleModal.bind(this, false)}
             classNameBtn={props.className}
         >
-            <div className="flex items-center space-x-4 3xl:my-3 2xl:my-1 my-1 border-[#E7EAEE] border-opacity-70 border-b-[1px]"></div>
-            <h2 className="font-normal bg-[#ECF0F4] p-1 2xl:text-[12px] xl:text-[13px] text-[12px]  ">
-                {props.dataLang?.payment_general_information || "payment_general_information"}
-            </h2>
-            <div className="w-[40vw]">
-                <form onSubmit={_HandleSubmit.bind(this)} className="">
-                    <div className="">
-                        <div className="grid items-center grid-cols-12 gap-1 ">
-                            <div className="col-span-12 grid grid-cols-12 items-center gap-1 overflow-auto 3xl:max-h-[400px] xxl:max-h-[300px] 2xl:max-h-[350px] xl:max-h-[300px] lg:max-h-[280px] max-h-[300px] scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
-                                <div className="relative col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] mb-1 ">
-                                        {dataLang?.serviceVoucher_day_vouchers}{" "}
-                                    </label>
-                                    <div className="flex flex-row custom-date-picker ">
-                                        <DatePicker
-                                            blur
-                                            fixedHeight
-                                            showTimeSelect
-                                            selected={listValue.date}
-                                            onSelect={(date) => _HandleChangeInput("date", date)}
-                                            onChange={(e) => _HandleChangeInput("date", e)}
-                                            placeholderText="DD/MM/YYYY HH:mm:ss"
-                                            dateFormat="dd/MM/yyyy h:mm:ss aa"
-                                            timeInputLabel={"Time: "}
-                                            placeholder={dataLang?.price_quote_system_default || "price_quote_system_default"}
-                                            className={`border  focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full z-[999] bg-[#ffffff] rounded text-[#52575E] font-normal p-2 outline-none cursor-pointer `}
-                                        />
-                                        {listValue.date && (
-                                            <MdClear
-                                                onClick={() => _HandleChangeInput("clear")}
-                                                className="absolute right-0 -translate-x-[320%] translate-y-[1%] h-10 text-[#CCCCCC] hover:text-[#999999] scale-110 cursor-pointer"
-                                            />
-                                        )}
-                                        <BsCalendarEvent className="absolute right-0 -translate-x-[75%] translate-y-[70%] text-[#CCCCCC] scale-110 cursor-pointer" />
-                                    </div>
-                                </div>
-                                <div className="col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] mb-1 ">
-                                        {dataLang?.serviceVoucher_voucher_code || "serviceVoucher_voucher_code"}
-                                    </label>
-                                    <input
-                                        value={listValue.code}
-                                        onChange={_HandleChangeInput.bind(this, "code")}
-                                        placeholder={props.dataLang?.payment_systemDefaul || "payment_systemDefaul"}
-                                        type="text"
-                                        className="focus:border-[#92BFF7] border-[#d0d5dd] 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded-[5.5px] text-[#52575E] font-normal p-2.5 border outline-none "
+            <div className="flex flex-col w-[60vw] gap-4">
+                {/* Header section with styling */}
+                <div className="border-b border-[#E7EAEE]">
+                    <h2 className="mt-4 font-medium text-[#1A3353] bg-[#F1F5F9] px-3 py-2 rounded-md text-base mb-3">
+                        {props.dataLang?.payment_general_information || "payment_general_information"}
+                    </h2>
+                </div>
+                <form onSubmit={_HandleSubmit.bind(this)} className="space-y-4">
+                    <Customscrollbar className="max-h-[70vh] overflow-auto pr-2 custom-scrollbar">
+                        <div className="grid grid-cols-12 gap-4 mb-4">
+                            <div className="col-span-4">
+                                <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                    {dataLang?.serviceVoucher_day_vouchers || "Ngày chứng từ"}
+                                </label>
+                                <div className="relative">
+                                    <DatePicker
+                                        blur
+                                        fixedHeight
+                                        showTimeSelect
+                                        selected={listValue.date}
+                                        onSelect={(date) => _HandleChangeInput("date", date)}
+                                        onChange={(e) => _HandleChangeInput("date", e)}
+                                        placeholderText="DD/MM/YYYY HH:mm:ss"
+                                        dateFormat="dd/MM/yyyy h:mm:ss aa"
+                                        timeInputLabel={"Time: "}
+                                        placeholder={dataLang?.price_quote_system_default || "price_quote_system_default"}
+                                        className="w-full text-sm px-3 py-2.5 bg-white border border-[#d0d5dd] rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#003DA0] focus:border-[#003DA0] transition-all duration-200"
                                     />
-                                </div>
-                                <div className="col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] ">
-                                        {props.dataLang?.payment_branch || "payment_branch"}{" "}
-                                        <span className="text-red-500">*</span>
-                                    </label>
-                                    <SelectCore
-                                        placeholder={props.dataLang?.payment_branch || "payment_branch"}
-                                        options={dataBranch}
-                                        onChange={_HandleChangeInput.bind(this, "branch")}
-                                        value={listValue.branch}
-                                        closeMenuOnSelect={true}
-                                        {...configSelectPopup}
-                                        className={`${error.errBranch ? "border-red-500" : "border-transparent"
-                                            }  placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px]  font-normal outline-none border `}
-                                    />
-                                    {error.errBranch && (
-                                        <label className="mb-2  2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
-                                            {props.dataLang?.payment_errBranch || "payment_errBranch"}
-                                        </label>
-                                    )}
-                                </div>
-                                <div className="col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] ">
-                                        {props.dataLang?.payment_method || "payment_method"}{" "}
-                                        <span className="text-red-500">*</span>
-                                    </label>
-                                    <SelectCore
-                                        placeholder={props.dataLang?.payment_method || "payment_method"}
-                                        options={dataMethod}
-                                        onChange={_HandleChangeInput.bind(this, "method")}
-                                        value={listValue.method}
-                                        maxMenuHeight="200px"
-                                        closeMenuOnSelect={true}
-                                        {...configSelectPopup}
-                                        className={`${error.errMethod ? "border-red-500" : "border-transparent"} placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px]  font-normal outline-none border `}
-                                    />
-                                    {error.errMethod && (
-                                        <label className="mb-2  2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
-                                            {props.dataLang?.payment_errMethod || "payment_errMethod"}
-                                        </label>
-                                    )}
-                                </div>
-                                <div className="col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] ">
-                                        {props.dataLang?.payment_ob || "payment_ob"}{" "}
-                                        <span className="text-red-500">*</span>
-                                    </label>
-                                    <SelectCore
-                                        placeholder={props.dataLang?.payment_ob || "payment_ob"}
-                                        options={dataObject}
-                                        onChange={_HandleChangeInput.bind(this, "object")}
-                                        value={listValue.object}
-                                        {...configSelectPopup}
-                                        menuPortalTarget={document.body}
-                                        onMenuOpen={handleMenuOpen}
-                                        closeMenuOnSelect={true}
-                                        className={`${error.errObject ? "border-red-500" : "border-transparent"} 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E]  font-normal outline-none border `}
-                                    />
-                                    {error.errObject && (
-                                        <label className="mb-2  2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
-                                            {props.dataLang?.payment_errOb || "payment_errOb"}
-                                        </label>
-                                    )}
-                                </div>
-                                <div className="col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] ">
-                                        {props.dataLang?.payment_listOb || "payment_listOb"}{" "}
-                                        <span className="text-red-500">*</span>
-                                    </label>
-                                    {listValue.object?.value == "other" ? (
-                                        <CreatableSelectCore
-                                            options={dataObjectList}
-                                            placeholder={props.dataLang?.payment_listOb || "payment_listOb"}
-                                            onChange={_HandleChangeInput.bind(this, "listObject")}
-                                            isClearable={true}
-                                            value={listValue.listObject}
-                                            classNamePrefix="Select"
-                                            className={`${error.errListObject ? "border-red-500" : "border-transparent"} Select__custom removeDivide  placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] font-normal outline-none border `}
-                                            isSearchable={true}
-                                            noOptionsMessage={() => `Chưa có gợi ý`}
-                                            formatCreateLabel={(value) => `Tạo "${value}"`}
-                                            menuPortalTarget={document.body}
-                                            onMenuOpen={handleMenuOpen}
-                                            style={{
-                                                border: "none",
-                                                boxShadow: "none",
-                                                outline: "none",
-                                            }}
-                                            theme={(theme) => ({
-                                                ...theme,
-                                                colors: {
-                                                    ...theme.colors,
-                                                    primary25: "#EBF5FF",
-                                                    primary50: "#92BFF7",
-                                                    primary: "#0F4F9E",
-                                                },
-                                            })}
-                                            styles={{
-                                                placeholder: (base) => ({
-                                                    ...base,
-                                                    color: "#cbd5e1",
-                                                }),
-                                                menuPortal: (base) => ({
-                                                    ...base,
-                                                    zIndex: 9999,
-                                                    position: "absolute",
-                                                }),
-                                                control: (base, state) => ({
-                                                    ...base,
-                                                    boxShadow: "none",
-                                                    ...(state.isFocused && {
-                                                        border: "0 0 0 1px #92BFF7",
-                                                    }),
-                                                }),
-                                                dropdownIndicator: (base) => ({
-                                                    ...base,
-                                                    display: "none",
-                                                }),
-                                            }}
-                                        />
-                                    ) : (
-                                        <SelectCore
-                                            placeholder={props.dataLang?.payment_listOb || "payment_listOb"}
-                                            options={dataObjectList}
-                                            onChange={_HandleChangeInput.bind(this, "listObject")}
-                                            value={listValue.listObject}
-                                            {...configSelectPopup}
-                                            menuPortalTarget={document.body}
-                                            onMenuOpen={handleMenuOpen}
-                                            closeMenuOnSelect={true}
-                                            className={`${error.errListObject ? "border-red-500" : "border-transparent"} placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] font-normal outline-none border `}
+                                    {listValue.date && (
+                                        <MdClear
+                                            onClick={() => _HandleChangeInput("clear")}
+                                            className="absolute right-9 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer transition-colors"
                                         />
                                     )}
-                                    {error.errListObject && (
-                                        <label className="mb-2  2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
-                                            {props.dataLang?.payment_errListOb || "payment_errListOb"}
-                                        </label>
-                                    )}
+                                    <BsCalendarEvent className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                 </div>
-                                <div className="col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] ">
-                                        {props.dataLang?.payment_typeOfDocument || "payment_typeOfDocument"}
-                                    </label>
-                                    <SelectCore
-                                        placeholder={props.dataLang?.payment_typeOfDocument || "payment_typeOfDocument"}
-                                        options={dataTypeofDoc}
-                                        onChange={_HandleChangeInput.bind(this, "typeOfDocument")}
-                                        value={listValue.typeOfDocument}
-                                        closeMenuOnSelect={true}
-                                        {...configSelectPopup}
-                                        menuPortalTarget={document.body}
-                                        onMenuOpen={handleMenuOpen}
-                                        className={`border-transparent placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] font-normal outline-none border `}
-                                    />
-                                </div>
-                                <div className="col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] ">
-                                        {props.dataLang?.payment_listOfDoc || "payment_listOfDoc"}
-                                    </label>
+                            </div>
 
-                                    <SelectCore
-                                        placeholder={props.dataLang?.payment_listOfDoc || "payment_listOfDoc"}
-                                        options={dataListTypeofDoc}
-                                        closeMenuOnSelect={false}
-                                        hideSelectedOptions={false}
-                                        onInputChange={(event) => {
-                                            _HandleSeachApi(event);
-                                        }}
-                                        onChange={_HandleChangeInput.bind(this, "listTypeOfDocument")}
-                                        value={listValue.listTypeOfDocument}
-                                        components={{ MenuList, MultiValue }}
-                                        {...configSelectPopup}
-                                        isMulti
+                            <div className="col-span-4">
+                                <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                    {dataLang?.serviceVoucher_voucher_code || "Mã chứng từ"}
+                                </label>
+                                <input
+                                    value={listValue.code}
+                                    onChange={_HandleChangeInput.bind(this, "code")}
+                                    placeholder={props.dataLang?.payment_systemDefaul || "payment_systemDefaul"}
+                                    type="text"
+                                    className="w-full text-sm px-3 py-2.5 bg-white border border-[#d0d5dd] rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#003DA0] focus:border-[#003DA0] transition-all duration-200 placeholder:text-gray-400"
+                                />
+                            </div>
+
+                            <div className="col-span-4">
+                                <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                    {props.dataLang?.payment_branch || "Chi nhánh"}{" "}
+                                    <span className="text-red-500">*</span>
+                                </label>
+                                <SelectCore
+                                    closeMenuOnSelect={true}
+                                    placeholder={props.dataLang?.payment_branch || "Chi nhánh"}
+                                    options={dataBranch}
+                                    isSearchable={true}
+                                    onChange={_HandleChangeInput.bind(this, "branch")}
+                                    value={listValue.branch}
+                                    LoadingIndicator
+                                    noOptionsMessage={() => "Không có dữ liệu"}
+                                    maxMenuHeight="200px"
+                                    isClearable={true}
+                                    menuPortalTarget={document.body}
+                                    onMenuOpen={handleMenuOpen}
+                                    theme={(theme) => ({
+                                        ...theme,
+                                        colors: {
+                                            ...theme.colors,
+                                            primary25: "#EBF5FF",
+                                            primary50: "#92BFF7",
+                                            primary: "#003DA0",
+                                        },
+                                    })}
+                                    styles={{
+                                        control: (base, state) => ({
+                                            ...base,
+                                            minHeight: '42px',
+                                            boxShadow: state.isFocused ? '0 0 0 1px #003DA0' : 'none',
+                                            borderColor: error.errBranch ? '#f43f5e' : state.isFocused ? '#003DA0' : '#d0d5dd',
+                                            '&:hover': {
+                                                borderColor: state.isFocused ? '#003DA0' : '#64748b',
+                                            },
+                                        }),
+                                        placeholder: (base) => ({
+                                            ...base,
+                                            color: '#94a3b8',
+                                        }),
+                                        menuPortal: (base) => ({
+                                            ...base,
+                                            zIndex: 9999,
+                                        }),
+                                        indicatorSeparator: () => null,
+                                        clearIndicator: (base) => ({
+                                            ...base,
+                                            marginRight: '-6px',
+                                        }),
+                                    }}
+                                    className="text-sm"
+                                />
+                                {error.errBranch && (
+                                    <p className="mt-1 text-xs text-red-500">
+                                        {props.dataLang?.payment_errBranch || "Vui lòng chọn chi nhánh"}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="col-span-4">
+                                <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                    {props.dataLang?.payment_method || "Phương thức"}{" "}
+                                    <span className="text-red-500">*</span>
+                                </label>
+                                <SelectCore
+                                    placeholder={props.dataLang?.payment_method || "Phương thức"}
+                                    options={dataMethod}
+                                    onChange={_HandleChangeInput.bind(this, "method")}
+                                    value={listValue.method}
+                                    maxMenuHeight="200px"
+                                    closeMenuOnSelect={true}
+                                    {...configSelectPopup}
+                                    className={`${error.errMethod ? "border-red-500" : "border-transparent"} placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px]  font-normal outline-none border `}
+                                />
+                                {error.errMethod && (
+                                    <label className="mb-2  2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
+                                        {props.dataLang?.payment_errMethod || "payment_errMethod"}
+                                    </label>
+                                )}
+                            </div>
+
+                            <div className="col-span-4">
+                                <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                    {props.dataLang?.payment_ob || "Đối tượng"}{" "}
+                                    <span className="text-red-500">*</span>
+                                </label>
+                                <SelectCore
+                                    placeholder={props.dataLang?.payment_ob || "Đối tượng"}
+                                    options={dataObject}
+                                    onChange={_HandleChangeInput.bind(this, "object")}
+                                    value={listValue.object}
+                                    {...configSelectPopup}
+                                    menuPortalTarget={document.body}
+                                    onMenuOpen={handleMenuOpen}
+                                    closeMenuOnSelect={true}
+                                    className={`${error.errObject ? "border-red-500" : "border-transparent"} 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E]  font-normal outline-none border `}
+                                />
+                                {error.errObject && (
+                                    <label className="mb-2  2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
+                                        {props.dataLang?.payment_errOb || "payment_errOb"}
+                                    </label>
+                                )}
+                            </div>
+
+                            <div className="col-span-4">
+                                <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                    {props.dataLang?.payment_listOb || "Danh sách đối tượng"}{" "}
+                                    <span className="text-red-500">*</span>
+                                </label>
+                                {listValue.object?.value == "other" ? (
+                                    <CreatableSelectCore
+                                        options={dataObjectList}
+                                        placeholder={props.dataLang?.payment_listOb || "Danh sách đối tượng"}
+                                        onChange={_HandleChangeInput.bind(this, "listObject")}
+                                        isClearable={true}
+                                        value={listValue.listObject}
+                                        classNamePrefix="Select"
+                                        className={`${error.errListObject ? "border-red-500" : "border-transparent"} Select__custom removeDivide  placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] font-normal outline-none border `}
+                                        isSearchable={true}
+                                        noOptionsMessage={() => `Chưa có gợi ý`}
+                                        formatCreateLabel={(value) => `Tạo "${value}"`}
                                         menuPortalTarget={document.body}
                                         onMenuOpen={handleMenuOpen}
-                                        className={`${error.errListTypeDoc && listValue.typeOfDocument != null && listValue.listTypeOfDocument?.length == 0
-                                            ? "border-red-500"
-                                            : "border-transparent"
-                                            } 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E]  font-normal outline-none border `}
+                                        style={{
+                                            border: "none",
+                                            boxShadow: "none",
+                                            outline: "none",
+                                        }}
+                                        theme={(theme) => ({
+                                            ...theme,
+                                            colors: {
+                                                ...theme.colors,
+                                                primary25: "#EBF5FF",
+                                                primary50: "#92BFF7",
+                                                primary: "#0F4F9E",
+                                            },
+                                        })}
+                                        styles={{
+                                            placeholder: (base) => ({
+                                                ...base,
+                                                color: "#cbd5e1",
+                                            }),
+                                            menuPortal: (base) => ({
+                                                ...base,
+                                                zIndex: 9999,
+                                                position: "absolute",
+                                            }),
+                                            control: (base, state) => ({
+                                                ...base,
+                                                boxShadow: "none",
+                                                ...(state.isFocused && {
+                                                    border: "0 0 0 1px #92BFF7",
+                                                }),
+                                            }),
+                                            dropdownIndicator: (base) => ({
+                                                ...base,
+                                                display: "none",
+                                            }),
+                                        }}
                                     />
-                                    {error.errListTypeDoc && listValue.typeOfDocument != null && listValue.listTypeOfDocument?.length == 0 && (
-                                        <label className="2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
-                                            {props.dataLang?.payment_errlistOfDoc || "payment_errlistOfDoc"}
-                                        </label>
-                                    )}
-                                </div>
-                                <div className="col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] ">
-                                        {props.dataLang?.payment_amountOfMoney || "payment_amountOfMoney"}{" "}
-                                        <span className="text-red-500">*</span>
+                                ) : (
+                                    <SelectCore
+                                        placeholder={props.dataLang?.payment_listOb || "Danh sách đối tượng"}
+                                        options={dataObjectList}
+                                        onChange={_HandleChangeInput.bind(this, "listObject")}
+                                        value={listValue.listObject}
+                                        {...configSelectPopup}
+                                        menuPortalTarget={document.body}
+                                        onMenuOpen={handleMenuOpen}
+                                        closeMenuOnSelect={true}
+                                        className={`${error.errListObject ? "border-red-500" : "border-transparent"} placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] font-normal outline-none border `}
+                                    />
+                                )}
+                                {error.errListObject && (
+                                    <label className="mb-2  2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
+                                        {props.dataLang?.payment_errListOb || "payment_errListOb"}
                                     </label>
-                                    <InPutMoneyFormat
-                                        value={listValue.price}
-                                        disabled={listValue.object === null || listValue.listObject === null}
-                                        onChange={_HandleChangeInput.bind(this, "price")}
-                                        allowNegative={false}
-                                        placeholder={
-                                            ((listValue.object == null || listValue.listObject == null) && (props.dataLang?.payment_errObList || "payment_errObList"))
-                                            ||
-                                            (listValue.object != null && props.dataLang?.payment_amountOfMoney)
-                                            ||
-                                            "payment_amountOfMoney"
-                                        }
-                                        isAllowed={(values) => {
-                                            if (!values.value) return true;
-                                            const { floatValue } = values;
-                                            if (listValue.object?.value && listValue.listTypeOfDocument?.length > 0) {
-                                                if (listValue.object?.value != "other") {
-                                                    let totalMoney = listValue.listTypeOfDocument.reduce(
-                                                        (total, item) => total + parseFloat(item.money || 0),
-                                                        0
-                                                    );
-                                                    if (floatValue > totalMoney) {
-                                                        isShow("error", `${props.dataLang?.payment_errPlease || "payment_errPlease"} ${formatNumber(totalMoney)}`);
-                                                        return false;
-                                                    }
-                                                }
-                                            }
-                                            setCurrentFloatValue(floatValue);
-                                            
-                                            // Cập nhật tỷ lệ số tiền cho từng chứng từ khi tổng số tiền thay đổi
-                                            if (listValue.listTypeOfDocument?.length > 0) {
-                                                const originalTotal = listValue.listTypeOfDocument.reduce(
-                                                    (total, item) => total + parseFloat(item.money || 0),
+                                )}
+                            </div>
+
+                            <div className="col-span-4">
+                                <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                    {props.dataLang?.payment_typeOfDocument || "Loại chứng từ"}
+                                </label>
+                                <SelectCore
+                                    placeholder={props.dataLang?.payment_typeOfDocument || "Loại chứng từ"}
+                                    options={dataTypeofDoc}
+                                    onChange={_HandleChangeInput.bind(this, "typeOfDocument")}
+                                    value={listValue.typeOfDocument}
+                                    closeMenuOnSelect={true}
+                                    {...configSelectPopup}
+                                    menuPortalTarget={document.body}
+                                    onMenuOpen={handleMenuOpen}
+                                    className={`border-transparent placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] font-normal outline-none border `}
+                                />
+                            </div>
+
+                            <div className="col-span-4">
+                                <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                    {props.dataLang?.payment_listOfDoc || "Danh sách loại chứng từ"}
+                                </label>
+
+                                <SelectCore
+                                    placeholder={props.dataLang?.payment_listOfDoc || "Danh sách loại chứng từ"}
+                                    options={dataListTypeofDoc}
+                                    closeMenuOnSelect={false}
+                                    hideSelectedOptions={false}
+                                    onInputChange={(event) => {
+                                        _HandleSeachApi(event);
+                                    }}
+                                    onChange={_HandleChangeInput.bind(this, "listTypeOfDocument")}
+                                    value={listValue.listTypeOfDocument}
+                                    components={{ MenuList, MultiValue }}
+                                    {...configSelectPopup}
+                                    isMulti
+                                    menuPortalTarget={document.body}
+                                    onMenuOpen={handleMenuOpen}
+                                    className={`${error.errListTypeDoc && listValue.typeOfDocument != null && listValue.listTypeOfDocument?.length == 0
+                                        ? "border-red-500"
+                                        : "border-transparent"
+                                        } 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E]  font-normal outline-none border `}
+                                />
+                                {error.errListTypeDoc && listValue.typeOfDocument != null && listValue.listTypeOfDocument?.length == 0 && (
+                                    <label className="2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
+                                        {props.dataLang?.payment_errlistOfDoc || "payment_errlistOfDoc"}
+                                    </label>
+                                )}
+                            </div>
+
+                            <div className="col-span-4">
+                                <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                    {props.dataLang?.payment_amountOfMoney || "Số tiền"}{" "}
+                                    <span className="text-red-500">*</span>
+                                </label>
+                                <InPutMoneyFormat
+                                    value={listValue.price}
+                                    disabled={listValue.object === null || listValue.listObject === null}
+                                    onChange={_HandleChangeInput.bind(this, "price")}
+                                    allowNegative={false}
+                                    placeholder={
+                                        ((listValue.object == null || listValue.listObject == null) && (props.dataLang?.payment_errObList || "payment_errObList"))
+                                        ||
+                                        (listValue.object != null && props.dataLang?.payment_amountOfMoney)
+                                        ||
+                                        "Số tiền"
+                                    }
+                                    isAllowed={(values) => {
+                                        if (!values.value) return true;
+                                        const { floatValue } = values;
+                                        if (listValue.object?.value && listValue.listTypeOfDocument?.length > 0) {
+                                            if (listValue.object?.value != "other") {
+                                                console.log(listValue.listTypeOfDocument)
+                                                let totalMoney = listValue.listTypeOfDocument.reduce(
+                                                    (total, item) => total + parseFloat(item.total || 0),
                                                     0
                                                 );
-                                                
-                                                if (originalTotal > 0 && floatValue > 0) {
-                                                    const ratio = floatValue / originalTotal;
-                                                    
-                                                    // Tạo bản sao mới của listTypeOfDocument với số tiền đã điều chỉnh
-                                                    const updatedListTypeOfDocument = listValue.listTypeOfDocument.map(item => ({
-                                                        ...item,
-                                                        adjustedMoney: parseFloat((parseFloat(item.money) * ratio).toFixed(2))
-                                                    }));
-                                                    
-                                                    // Cập nhật state
-                                                    updateListValue({ 
-                                                        adjustedDocuments: updatedListTypeOfDocument
-                                                    });
+                                                console.log(floatValue, totalMoney)
+                                                if (floatValue > totalMoney) {
+                                                    isShow("error", `${props.dataLang?.payment_errPlease || "payment_errPlease"} ${formatNumber(totalMoney)}`);
+                                                    return false;
                                                 }
                                             }
-                                            
-                                            return true;
-                                        }}
-                                        className={`${error.errPrice && (listValue.price == null || listValue.price == "")
-                                            ? "border-red-500"
-                                            : "focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300"
-                                            } 3xl:placeholder:text-[13px] 2xl:placeholder:text-[12px] xl:placeholder:text-[10px] placeholder:text-[9px] placeholder:text-slate-300  w-full disabled:bg-slate-100 bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px]  font-normal outline-none border p-[9.5px]`}
-                                    />
-                                    {error.errPrice && (
-                                        <label className="2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
-                                            {props.dataLang?.payment_errAmount || "payment_errAmount"}
-                                        </label>
-                                    )}
-                                </div>
-                                <div className="col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] mb-1 ">
-                                        {props.dataLang?.payment_note || "payment_note"}
-                                    </label>
-                                    <input
-                                        value={listValue.note}
-                                        onChange={_HandleChangeInput.bind(this, "note")}
-                                        placeholder={props.dataLang?.payment_note || "payment_note"}
-                                        type="text"
-                                        className="focus:border-[#92BFF7] border-[#d0d5dd] 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded-[5.5px] text-[#52575E] font-normal p-2.5 border outline-none "
-                                    />
-                                </div>
-                            </div>
-                            <h2 className="font-normal bg-[#ECF0F4] p-1 2xl:text-[12px] xl:text-[13px] text-[12px]  w-full col-span-12 mt-0.5">
-                                {props.dataLang?.receipts_info || "receipts_info"}
-                            </h2>
-                            <div className="grid items-center grid-cols-12 col-span-12 border border-t-0 border-l-0 border-r-0 divide-x">
-                                <h1 className="text-center text-xs p-1.5 text-zinc-800 font-semibold col-span-2">
-                                    {"#"}
-                                </h1>
-                                <h1 className="text-center text-xs p-1.5 text-zinc-800 font-semibold col-span-5">
-                                    {props.dataLang?.receipts_code || "receipts_code"}
-                                </h1>
-                                <h1 className="text-center text-xs p-1.5 text-zinc-800 font-semibold col-span-5">
-                                    {props.dataLang?.receipts_money || "receipts_money"}
-                                </h1>
-                            </div>
-                            {listValue.listTypeOfDocument.length > 0 && (
-                                <div className="col-span-12 transition-all duration-200 ease-linear border border-b-0 rounded">
-                                    <div className={`${listValue.listTypeOfDocument.length > 5 ? " h-[170px] overflow-auto" : ""} scrollbar-thin cursor-pointer scrollbar-thumb-slate-300 scrollbar-track-slate-100`}  >
-                                        {(listValue.adjustedDocuments?.length > 0 ? listValue.adjustedDocuments : listValue.listTypeOfDocument).map((e, index) => {
-                                            return (
-                                                <div
-                                                    key={e.value}
-                                                    className="grid items-center grid-cols-12 col-span-12 border-b divide-x"
-                                                >
-                                                    <h1 className="col-span-2 p-2 text-xs text-center">
-                                                        <span className="px-2 py-1 text-purple-500 bg-purple-200 rounded-xl animate-pulse">
-                                                            {index + 1}
-                                                        </span>
-                                                    </h1>
-                                                    <h1 className="col-span-5 p-2 text-xs text-center ">
-                                                        <span className="px-2 py-1 text-purple-500 bg-purple-200 rounded-xl">
-                                                            {e.label}
-                                                        </span>
-                                                    </h1>
-                                                    <h1 className="col-span-5 p-2 text-xs text-right">
-                                                        {formatNumber(e.adjustedMoney !== undefined ? e.adjustedMoney : e.money)}
-                                                    </h1>
-                                                </div>
+                                        }
+                                        setCurrentFloatValue(floatValue);
+                                        
+                                        // Cập nhật tỷ lệ số tiền cho từng chứng từ khi tổng số tiền thay đổi
+                                        if (listValue.listTypeOfDocument?.length > 0) {
+                                            const originalTotal = listValue.listTypeOfDocument.reduce(
+                                                (total, item) => total + parseFloat(item.money || 0),
+                                                0
                                             );
-                                        })}
+                                            console.log(originalTotal)
+                                            if (originalTotal > 0 && floatValue > 0) {
+                                                const ratio = floatValue / originalTotal;
+                                                
+                                                // Tạo bản sao mới của listTypeOfDocument với số tiền đã điều chỉnh
+                                                const updatedListTypeOfDocument = listValue.listTypeOfDocument.map(item => ({
+                                                    ...item,
+                                                    adjustedMoney: parseFloat((parseFloat(item.money) * ratio).toFixed(2))
+                                                }));
+                                                
+                                                // Cập nhật state
+                                                updateListValue({ 
+                                                    adjustedDocuments: updatedListTypeOfDocument
+                                                });
+                                            }
+                                        }
+                                        
+                                        return true;
+                                    }}
+                                    className={`${error.errPrice && (listValue.price == null || listValue.price == "")
+                                        ? "border-red-500"
+                                        : "focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300"
+                                        } 3xl:placeholder:text-[13px] 2xl:placeholder:text-[12px] xl:placeholder:text-[10px] placeholder:text-[9px] placeholder:text-slate-300  w-full disabled:bg-slate-100 bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px]  font-normal outline-none border p-[9.5px]`}
+                                />
+                                {error.errPrice && (
+                                    <label className="2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
+                                        {props.dataLang?.payment_errAmount || "payment_errAmount"}
+                                    </label>
+                                )}
+                            </div>
+
+                            <div className="col-span-12">
+                                <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                    {props.dataLang?.payment_note || "Ghi chú"}
+                                </label>
+                                <input
+                                    value={listValue.note}
+                                    onChange={_HandleChangeInput.bind(this, "note")}
+                                    placeholder={props.dataLang?.payment_note || "Ghi chú"}
+                                    type="text"
+                                    className="w-full text-sm px-3 py-2.5 bg-white border border-[#d0d5dd] rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#003DA0] focus:border-[#003DA0] transition-all duration-200 placeholder:text-gray-400"
+                                />
+                            </div>
+                        </div>
+                        <h2 className="font-normal bg-[#ECF0F4] p-1 2xl:text-[12px] xl:text-[13px] text-[12px]  w-full col-span-12 mt-0.5">
+                            {props.dataLang?.receipts_info || "Thông tin chứng từ"}
+                        </h2>
+                        {listValue.listTypeOfDocument.length > 0 && (
+                            <div className="col-span-12 mt-4">
+                                <div className="bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden">
+                                    <div className="grid grid-cols-12 bg-gray-50 border-b">
+                                        <h3 className="col-span-2 p-2.5 text-xs font-medium text-gray-600 text-center">
+                                            #
+                                        </h3>
+                                        <h3 className="col-span-5 p-2.5 text-xs font-medium text-gray-600 text-center border-l">
+                                            {props.dataLang?.receipts_code || "Mã chứng từ"}
+                                        </h3>
+                                        <h3 className="col-span-5 p-2.5 text-xs font-medium text-gray-600 text-center border-l">
+                                            {props.dataLang?.receipts_money || "Số tiền"}
+                                        </h3>
+                                    </div>
+                                    <div className={`${listValue.listTypeOfDocument.length > 5 ? "max-h-[170px] overflow-y-auto" : ""}`}>
+                                        {(listValue.adjustedDocuments?.length > 0 ? listValue.adjustedDocuments : listValue.listTypeOfDocument).map((e, index) => (
+                                            <div key={e.value} className={`grid grid-cols-12 ${index !== listValue.listTypeOfDocument.length - 1 ? "border-b" : ""} hover:bg-gray-50`}>
+                                                <div className="col-span-2 p-2 text-xs flex items-center justify-center">
+                                                    <span className="px-2 py-1 text-purple-700 bg-purple-100 rounded-md font-medium">
+                                                        {index + 1}
+                                                    </span>
+                                                </div>
+                                                <div className="col-span-5 p-2 text-xs flex items-center justify-center border-l">
+                                                    <span className="px-2 py-1 text-orange-700 bg-orange-100 rounded-md font-medium">
+                                                        {e.label}
+                                                    </span>
+                                                </div>
+                                                <div className="col-span-5 p-2 text-xs flex items-center justify-center border-l font-medium text-gray-700">
+                                                    {formatNumber(e.adjustedMoney !== undefined ? e.adjustedMoney : (e.money))}
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
-                            )}
-                        </div>
-                    </div>
-                    <div className="mt-1 space-x-2 text-right">
+                            </div>
+                        )}
+                    </Customscrollbar>
+                    
+                    <div className="border-t border-gray-200 pt-4 mt-2 flex justify-end space-x-3">
                         <button
                             type="button"
                             onClick={_ToggleModal.bind(this, false)}
-                            className="button text-[#344054] font-normal text-base py-2 px-4 rounded-[5.5px] border border-solid border-[#D0D5DD]"
+                            className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium transition-colors duration-200"
                         >
-                            {props.dataLang?.branch_popup_exit}
+                            {props.dataLang?.branch_popup_exit || "Hủy"}
                         </button>
+                        
                         <button
                             type="submit"
-                            className="button text-[#FFFFFF]  font-normal text-base py-2 px-4 rounded-[5.5px] bg-[#003DA0]"
+                            className="px-4 py-2.5 bg-[#003DA0] hover:bg-[#0F4F9E] text-white rounded-md text-sm font-medium transition-colors duration-200"
                         >
-                            {props.dataLang?.branch_popup_save}
+                            {props.dataLang?.branch_popup_save || "Lưu"}
                         </button>
                     </div>
                 </form>

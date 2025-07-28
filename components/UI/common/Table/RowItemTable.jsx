@@ -13,7 +13,7 @@ export const RowItemTable = ({
   const adjustedColSpan = colSpan === 0.5 ? 1 : (colSpan ? colSpan * 2 : 2);
 
   return (
-    <h6
+    <div
       style={{
         gridColumn: `span ${adjustedColSpan}`,
         textAlign: textAlign,
@@ -32,6 +32,6 @@ export const RowItemTable = ({
       )}
     >
       {children}
-    </h6>
+    </div>
   );
 };

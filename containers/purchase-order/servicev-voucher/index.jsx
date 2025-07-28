@@ -1,5 +1,6 @@
 import { BtnAction } from "@/components/UI/BtnAction";
 import TabFilter from "@/components/UI/TabFilter";
+import Breadcrumb from "@/components/UI/breadcrumb/BreadcrumbCustom";
 import OnResetData from "@/components/UI/btnResetData/btnReset";
 import ContainerPagination from "@/components/UI/common/ContainerPagination/ContainerPagination";
 import TitlePagination from "@/components/UI/common/ContainerPagination/TitlePagination";
@@ -8,7 +9,7 @@ import { EmptyExprired } from "@/components/UI/common/EmptyExprired";
 import { ColumnTable, HeaderTable, RowItemTable, RowTable } from "@/components/UI/common/Table";
 import TagBranch from "@/components/UI/common/Tag/TagBranch";
 import { TagColorLime, TagColorOrange, TagColorSky } from "@/components/UI/common/Tag/TagStatus";
-import { Container, ContainerBody, ContainerFilterTab, ContainerTable, ContainerTotal, } from "@/components/UI/common/layout";
+import { Container, ContainerBody, ContainerFilterTab, ContainerTable, ContainerTotal, LayOutTableDynamic, } from "@/components/UI/common/layout";
 import DropdowLimit from "@/components/UI/dropdowLimit/dropdowLimit";
 import DateToDateComponent from "@/components/UI/filterComponents/dateTodateComponent";
 import ExcelFileComponent from "@/components/UI/filterComponents/excelFilecomponet";
@@ -44,6 +45,9 @@ import PopupDetail from "./components/popupDetail";
 import { useServiceVoucherCombobox } from "./hooks/useServiceVoucherCombobox";
 import { useServicevVoucherFilterbar } from "./hooks/useServicevVoucherFilterbar";
 import { useServicevVoucherList } from "./hooks/useServicevVoucherList";
+import formatMoneyOrDash from "@/utils/helpers/formatMoneyOrDash";
+import ButtonAddNew from "@/components/UI/button/buttonAddNew";
+import { routerServiceVoucher } from "@/routers/buyImportGoods";
 registerLocale("vi", vi);
 
 const initialState = {
@@ -222,9 +226,305 @@ const ServicevVoucher = (props) => {
         },
     ];
 
+    const breadcrumbItems = [
+        {
+            label: `${dataLang?.serviceVoucher_title || "serviceVoucher_title"}`,
+        },
+        {
+            label: `${dataLang?.serviceVoucher_title_lits || "serviceVoucher_title_lits"}`,
+        },
+    ]
+
     return (
         <React.Fragment>
-            <Head>
+             <LayOutTableDynamic
+                head={
+                    <Head>
+                        <title>{dataLang?.serviceVoucher_title || "serviceVoucher_title"} </title>
+                    </Head>
+                }
+                breadcrumb={
+                    <>
+                        {statusExprired ? (
+                            <EmptyExprired />
+                        ) : (
+                            <React.Fragment>
+                                <Breadcrumb items={breadcrumbItems} className="3xl:text-sm 2xl:text-xs xl:text-[10px] lg:text-[10px]" />
+                            </React.Fragment>
+                        )}
+                    </>
+                }
+                titleButton={
+                    <>
+                        <h2 className="text-title-section text-[#52575E] capitalize font-medium">
+                            {dataLang?.serviceVoucher_title_lits || "serviceVoucher_title_lits"}
+                        </h2>
+                       
+                        {role == true || checkAdd ? (
+                            <PopupServieVoucher
+                                onRefreshGroup={refetchFilter.bind(this)}
+                                onRefresh={refetch.bind(this)}
+                                dataLang={dataLang}
+                                className="responsive-text-sm xl:px-5 px-3 xl:py-2.5 py-1.5 bg-background-blue-2 text-white rounded-lg btn-animation hover:scale-105"
+                            />
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    isShow("error", WARNING_STATUS_ROLE);
+                                }}
+                                className="responsive-text-sm xl:px-5 px-3 xl:py-2.5 py-1.5 bg-background-blue-2 text-white rounded-lg btn-animation hover:scale-105"
+                            >
+                                {dataLang?.branch_popup_create_new}
+                            </button>
+                        )}
+                    </>
+                }
+                fillterTab={
+                    <>
+                        {dataFilterbar && dataFilterbar?.map((e) => {
+                            return (
+                                <div key={e?.id}>
+                                    <TabFilter
+                                        backgroundColor="#e2f0fe"
+                                        dataLang={dataLang}
+                                        key={e?.id}
+                                        onClick={_HandleSelectTab.bind(this, `${e?.id}`)}
+                                        total={e?.count}
+                                        active={e?.id}
+                                        className={"text-[#0F4F9E] "}
+                                    >
+                                        {dataLang[e?.name] || e?.name}
+                                    </TabFilter>
+                                </div>
+                            );
+                        })}
+                    </>
+                }
+                table={
+                    <div className="flex flex-col h-full">
+                        <div className="w-full items-center flex justify-between gap-2">
+                            <div className="flex gap-3 items-center w-full">
+                                <SearchComponent
+                                    colSpan={1}
+                                    dataLang={dataLang}
+                                    onChange={_HandleOnChangeKeySearch.bind(this)}
+                                />
+                                <DateToDateComponent
+                                    colSpan={1}
+                                    value={isState.valueDate}
+                                    onChange={(e) => queryState({ valueDate: e })}
+                                />
+                                <SelectComponent
+                                    options={[
+                                        {
+                                            value: "",
+                                            label: dataLang?.serviceVoucher_branch || "serviceVoucher_branch",
+                                            isDisabled: true,
+                                        },
+                                        ...listBr,
+                                    ]}
+                                    colSpan={1}
+                                    onChange={(e) => queryState({ valueBr: e })}
+                                    value={isState.valueBr}
+                                    placeholder={dataLang?.serviceVoucher_branch || "serviceVoucher_branch"}
+                                    isClearable={true}
+                                />
+                                <SelectComponent
+                                    onInputChange={(event) => {
+                                        _HandleSeachApi(event);
+                                    }}
+                                    options={[
+                                        {
+                                            value: "",
+                                            label: dataLang?.serviceVoucher_voucher_code || "serviceVoucher_voucher_code",
+                                            isDisabled: true,
+                                        },
+                                        ...listCode,
+                                    ]}
+                                    onChange={(e) => queryState({ valueCode: e })}
+                                    value={isState.valueCode}
+                                    placeholder={dataLang?.serviceVoucher_voucher_code || "serviceVoucher_voucher_code"}
+                                    colSpan={1}
+                                    isClearable={true}
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <OnResetData sOnFetching={(e) => { }} onClick={() => refetch()} />
+                                {role == true || checkExport ? (
+                                    <div className={``}>
+                                        {data?.rResult?.length > 0 && (
+                                            <ExcelFileComponent
+                                                dataLang={dataLang}
+                                                filename="Danh sách phiếu dịch vụ"
+                                                title="DSPDV"
+                                                multiDataSet={multiDataSet}
+                                            />
+                                        )}
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => isShow("error", WARNING_STATUS_ROLE)}
+                                        className={`xl:px-4 px-3 xl:py-2.5 py-1.5 2xl:text-xs xl:text-xs text-[7px] flex items-center space-x-2 bg-[#C7DFFB] rounded hover:scale-105 transition`}
+                                    >
+                                        <Grid6 className="scale-75 2xl:scale-100 xl:scale-100" size={18} />
+                                        <span>{dataLang?.client_list_exportexcel}</span>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        <Customscrollbar className="h-full overflow-y-auto">
+                            <div className="w-full">
+                                <HeaderTable gridCols={16}>
+                                    <ColumnTable colSpan={0.5} textAlign={"center"}>
+                                        {dataLang?.stt || "stt"}
+                                    </ColumnTable>
+                                    <ColumnTable colSpan={1.5} textAlign={"left"} className={"whitespace-nowrap"}>
+                                        {dataLang?.serviceVoucher_day_vouchers || "serviceVoucher_day_vouchers"}
+                                    </ColumnTable>
+                                    <ColumnTable colSpan={1.5} textAlign={"left"} className={"whitespace-nowrap"}>
+                                        {dataLang?.serviceVoucher_voucher_code || "serviceVoucher_voucher_code"}
+                                    </ColumnTable>
+                                    <ColumnTable colSpan={2} textAlign={"left"} className={"whitespace-nowrap"}>
+                                        {dataLang?.serviceVoucher_supplier || "serviceVoucher_supplier"}
+                                    </ColumnTable>
+                                    <ColumnTable colSpan={1.5} textAlign={"right"}>
+                                        {dataLang?.serviceVoucher_total_amount || "serviceVoucher_total_amount"}
+                                    </ColumnTable>
+                                    <ColumnTable colSpan={1.5} textAlign={"right"}>
+                                        {dataLang?.serviceVoucher_tax_money || "serviceVoucher_tax_money"}
+                                    </ColumnTable>
+                                    <ColumnTable colSpan={1.5} textAlign={"right"}>
+                                        {dataLang?.serviceVoucher_into_money || "serviceVoucher_into_money"}
+                                    </ColumnTable>
+                                    <ColumnTable colSpan={1.5} textAlign={"center"}>
+                                        {dataLang?.serviceVoucher_status_of_spending || "serviceVoucher_status_of_spending"}
+                                    </ColumnTable>
+                                    <ColumnTable colSpan={2} textAlign={"left"}>
+                                        {dataLang?.serviceVoucher_note || "serviceVoucher_note"}
+                                    </ColumnTable>
+                                    <ColumnTable colSpan={1} textAlign={"left"}>
+                                        {dataLang?.serviceVoucher_branch || "serviceVoucher_branch"}
+                                    </ColumnTable>
+                                    <ColumnTable colSpan={1.5} textAlign={"left"}>
+                                        {dataLang?.import_action || "serviceVoucher_operation"}
+                                    </ColumnTable>
+                                </HeaderTable>
+                                {isFetching && !isState.refreshing ? (
+                                    <Loading className="h-80" color="#0f4f9e" />
+                                ) : data?.rResult?.length > 0 ? (
+                                    <>
+                                        <div className="divide-y divide-slate-200 min:h-[400px] h-[100%] max:h-[800px]">
+                                            {data?.rResult?.map((e, index) => (
+                                                <RowTable gridCols={16} key={e.id.toString()}>
+                                                    <RowItemTable colSpan={0.5} textAlign={"center"}>
+                                                        {index + 1}
+                                                    </RowItemTable>
+                                                    <RowItemTable colSpan={1.5} textAlign={"left"}>
+                                                        {e?.date != null ? formatMoment(e?.date, FORMAT_MOMENT.DATE_SLASH_LONG) : ""}
+                                                    </RowItemTable>
+                                                    <RowItemTable colSpan={1.5} textAlign={"left"} className={"whitespace-nowrap"}>
+                                                        <PopupDetail
+                                                            dataLang={dataLang}
+                                                            className="responsive-text-sm font-semibold text-center text-[#003DA0] hover:text-blue-600 transition-all ease-linear cursor-pointer"
+                                                            name={e?.code}
+                                                            id={e?.id}
+                                                        />
+                                                    </RowItemTable>
+                                                    <RowItemTable colSpan={2} textAlign={"left"}>
+                                                        {e.supplier_name}
+                                                    </RowItemTable>
+                                                    <RowItemTable colSpan={1.5} textAlign={"right"}>
+                                                        {formatMoney(Number(e.total_price))} <span className="underline">đ</span>
+                                                    </RowItemTable>
+                                                    <RowItemTable colSpan={1.5} textAlign={"right"}>
+                                                        {formatMoneyOrDash(Number(e.total_tax_price))}
+                                                    </RowItemTable>
+                                                    <RowItemTable colSpan={1.5} textAlign={"right"}>
+                                                        {formatMoney(Number(e.total_amount))} <span className="underline">đ</span>
+                                                    </RowItemTable>
+                                                    <RowItemTable
+                                                        colSpan={1.5}
+                                                        className="flex items-center mx-auto w-fit"
+                                                    >
+                                                        {(e?.status_pay === "not_spent" && (
+                                                            <TagColorSky name={"Chưa chi"} />
+                                                        )) ||
+                                                            (e?.status_pay === "spent_part" && (
+                                                                <TagColorOrange name={`Chi 1 phần (${formatMoney(e?.amount_paid)})`} />
+                                                            )) ||
+                                                            (e?.status_pay === "spent" && (<TagColorLime name={"Đã chi đủ"} />))}
+                                                    </RowItemTable>
+                                                    <RowItemTable
+                                                        colSpan={2}
+                                                        textAlign={"left"}
+                                                        className="truncate"
+                                                    >
+                                                        {e.note}
+                                                    </RowItemTable>
+                                                    <RowItemTable colSpan={1}>
+                                                        {e?.branch_name}
+                                                    </RowItemTable>
+                                                    <RowItemTable colSpan={1.5} className="flex">
+                                                        <BtnAction
+                                                            onRefresh={refetch.bind(this)}
+                                                            onRefreshGroup={refetchFilter.bind(this)}
+                                                            dataLang={dataLang}
+                                                            status_pay={e?.status_pay}
+                                                            type="servicev_voucher"
+                                                            id={e?.id}
+                                                            className="bg-slate-100 xl:px-4 px-2 xl:py-1.5 py-1 rounded 2xl:text-base xl:text-xs text-[9px]"
+                                                        />
+                                                    </RowItemTable>
+                                                </RowTable>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <NoData type="table" />
+                                )}
+                            </div>
+                        </Customscrollbar>
+                    </div>
+                }
+                showTotal={true}
+                total={
+                    <>
+                        <ContainerTotal className={'!grid-cols-32'}>
+                            <RowItemTable colSpan={5.5} textAlign={'end'} className="px-5">
+                                {dataLang?.import_total || "import_total"}
+                            </RowItemTable>
+                            <RowItemTable colSpan={1.5} textAlign={'end'} className="flex justify-end gap-0.5">
+                                {formatMoneyOrDash(data?.rTotal?.total_price)}
+                            </RowItemTable>
+                            <RowItemTable colSpan={1.5} textAlign={'end'} className="flex justify-end gap-0.5">
+                                {formatMoneyOrDash(data?.rTotal?.total_tax_price)}
+                            </RowItemTable>
+                            <RowItemTable colSpan={1.5} textAlign={'end'} className="flex justify-end gap-0.5">
+                                {formatMoneyOrDash(data?.rTotal?.total_amount)}
+                            </RowItemTable>
+                        </ContainerTotal>
+                    </>
+                }
+                pagination={
+                    <div className="flex items-center justify-between gap-2">
+                        {data?.rResult?.length != 0 && (
+                            <ContainerPagination>
+                                <Pagination
+                                    postsPerPage={limit}
+                                    totalPosts={Number(data?.output?.iTotalDisplayRecords)}
+                                    paginate={paginate}
+                                    currentPage={router.query?.page || 1}
+                                />
+                            </ContainerPagination>
+                        )}
+
+                        <DropdowLimit sLimit={sLimit} limit={limit} dataLang={dataLang} />
+                    </div>
+                }
+            />
+            {/* <Head>
                 <title>{dataLang?.serviceVoucher_title || "serviceVoucher_title"} </title>
             </Head>
             <Container>
@@ -496,7 +796,7 @@ const ServicevVoucher = (props) => {
                         </ContainerPagination>
                     )}
                 </ContainerBody>
-            </Container>
+            </Container> */}
         </React.Fragment>
     );
 };

@@ -39,10 +39,10 @@ body {
   font-size: 12px;
   font-weight: 500;
 }
-.tippy-popper[x-placement^="bottom"] [x-arrow] {
+.tippy-popper[x-placement^='bottom'] [x-arrow] {
   border-bottom: 7px solid #555f6d !important;
 }
-.tippy-popper[x-placement^="top"] [x-arrow] {
+.tippy-popper[x-placement^='top'] [x-arrow] {
   border-top: 7px solid #555f6d !important;
 }
 
@@ -175,7 +175,7 @@ body {
 .popup-overlay {
   background: rgba(0, 0, 0, 0.5);
 }
-[data-popup="tooltip"].popup-overlay {
+[data-popup='tooltip'].popup-overlay {
   background: transparent;
 }
 
@@ -318,7 +318,7 @@ body {
 }
 
 @property --angle {
-  syntax: "<angle>";
+  syntax: '<angle>';
   initial-value: 0deg;
   inherits: false;
 }
@@ -338,35 +338,25 @@ body {
   border: none; /* Đảm bảo không có border mặc định */
 
   &::before {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: radial-gradient(
-      50% 93.75% at 50% 6.25%,
-      #a3eed6 0%,
-      rgba(255, 255, 255, 0) 100%
-    );
+    background: radial-gradient(50% 93.75% at 50% 6.25%, #a3eed6 0%, rgba(255, 255, 255, 0) 100%);
     pointer-events: none;
     z-index: 1;
 
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
 
-    -webkit-mask: linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask-composite: exclude;
     -webkit-mask-composite: xor; /* hoặc destination-out */
     transition: background 0.5s ease-in-out;
   }
 
   &:hover::before {
-    background: conic-gradient(
-      from var(--angle),
-      #a3eed6,
-      rgba(255, 255, 255, 0),
-      #a3eed6
-    );
+    background: conic-gradient(from var(--angle), #a3eed6, rgba(255, 255, 255, 0), #a3eed6);
     padding: 2px;
     animation: borderMove 1.5s linear infinite;
   }
@@ -419,7 +409,7 @@ body {
 //   }
 
 .i::before {
-  content: "";
+  content: '';
   position: absolute;
   width: 0px;
   height: 0px;
@@ -519,8 +509,7 @@ body {
 .CircularProgressbar .CircularProgressbar-background {
   fill: #d6d6d6;
 }
-.CircularProgressbar.CircularProgressbar-inverted
-  .CircularProgressbar-background {
+.CircularProgressbar.CircularProgressbar-inverted .CircularProgressbar-background {
   fill: #3e98c7;
 }
 .CircularProgressbar.CircularProgressbar-inverted .CircularProgressbar-text {
@@ -707,8 +696,8 @@ body {
 }
 
 .page-item.active a {
-  color: #11315B;
-  background-color: #E2F0FE;
+  color: #11315b;
+  background-color: #e2f0fe;
   padding: 8px 14px;
   font-size: 14px;
   border-radius: 8px;
@@ -741,7 +730,7 @@ body {
   .react-datepicker__close-icon::after {
     background-color: transparent !important;
     color: transparent !important;
-    content: url("/icon/new/X.svg") !important;
+    content: url('/icon/new/X.svg') !important;
 
     // vertical-align: middle;
     @apply size-4 absolute top-1/2 -translate-y-1/2 right-2 cursor-pointer;
@@ -939,3 +928,424 @@ body {
   padding: 8px !important;
   border-radius: 16px !important;
 }
+
+// Search bar trong component form sales-export-product
+.input-searchbar {
+  font-family: 'Lexend Deca', 'sans-serif';
+  font-size: 14px;
+  outline-offset: 0px;
+  outline: none;
+  border: 1px solid;
+}
+
+.input-searchbar:hover {
+  border: 1px solid #003da0;
+}
+
+.sale-order-btn-submit {
+  background: #0375f3 !important;
+}
+
+.sale-order-btn-submit:hover {
+  color: #ffff !important;
+  border-color: #4096ff !important;
+  background: #003da0 !important;
+}
+
+.sales-product-date {
+  height: 42px;
+}
+
+.select-with-sort,
+.sales-product-date,
+.select-with-radio {
+  width: 100%;
+  border-radius: 8px;
+  .ant-select {
+    .ant-select-selection-item {
+      white-space: normal;
+      line-height: 22px;
+    }
+  }
+}
+
+.select-with-sort,
+.select-with-radio {
+  .ant-select-single {
+    height: auto;
+    min-height: 42px;
+  }
+}
+
+.select-custom-label,
+.select-tax {
+  .ant-select-single {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.select-custom-label {
+  .ant-select-single,
+  .ant-select-selector {
+    height: auto;
+    min-height: 40px;
+  }
+  @media screen and (max-width: 1535px) {
+    .ant-select-single,
+    .ant-select-selector {
+      min-height: 32px;
+    }
+  }
+}
+
+.select-tax {
+  .ant-select-single,
+  .ant-select-selector {
+    height: auto;
+    min-height: 36px;
+  }
+}
+
+.select-with-radio,
+.select-with-sort,
+.select-custom-label {
+  .ant-select-selector {
+    border-radius: 8px;
+    border: 1px solid #D0D5DD !important;
+  }
+
+  .ant-select-selector .ant-select-selection-wrap .ant-select-selection-search input {
+    cursor: pointer;
+  }
+
+  .ant-select-selector:hover {
+    border-color: #003da0 !important;
+    border-radius: 8px;
+  }
+
+  .ant-select-selector:focus {
+    border-color: #003da0 !important;
+  }
+
+  .ant-select-selector:focus-visible {
+    border-color: #003da0 !important;
+  }
+
+  .ant-select-selection-placeholder {
+    color: #919eab;
+    font-weight: 400;
+    font-family: 'Lexend Deca';
+  }
+
+  .ant-select-dropdown .ant-select-item {
+    padding: 5px 6px !important;
+  }
+
+  .ant-select-focused .ant-select-selector {
+    border-color: #003da0 !important;
+  }
+
+  .option-content:last-child {
+    border-bottom: none;
+  }
+}
+
+.date-form,
+.select-with-sort,
+.select-with-radio {
+  .ant-select-single .ant-select-selector .ant-select-selection-item,
+  .ant-picker .ant-picker-input > input {
+    font-size: 15px;
+    line-height: 24px;
+  }
+}
+
+@media screen and (max-width: 1439px) {
+  .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+    padding: 0 9px;
+  }
+  .date-form,
+  .select-with-sort,
+  .select-with-radio {
+    .ant-select-single .ant-select-selector .ant-select-selection-item,
+    .ant-picker .ant-picker-input > input {
+      font-size: 13px;
+      line-height: 20px;
+    }
+  }
+}
+
+.select-with-sort,
+.select-with-radio {
+  .ant-select-selection-wrap {
+    margin-left: 24px !important;
+    margin: auto 0;
+  }
+}
+
+.ant-picker-outlined:hover {
+  border-color: #003da0 !important;
+}
+
+.ant-picker-outlined:focus,
+.ant-picker-outlined:focus-within {
+  border-color: #003da0 !important;
+}
+
+.ant-picker .ant-picker-input input::placeholder {
+  color: #919eab;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 28px;
+  font-family: 'Lexend Deca';
+}
+
+.select-by-search {
+  font-family: 'Lexend Deca', 'sans-serif';
+  font-size: 14px;
+  outline-offset: 0px;
+  outline: none;
+}
+
+.select-by-search .ant-select-selector {
+  border-radius: 8px;
+}
+
+.select-by-search .ant-select-selector:hover {
+  border-color: #003da0 !important;
+}
+
+.select-by-search .ant-select-selector:focus,
+.select-by-search .ant-select-selector:focus-within {
+  border: 2px solid;
+  border-color: #003da0 !important;
+}
+
+.ant-select-selector {
+  font-size: revert !important;
+}
+.select-by-search .ant-select-clear {
+  margin-right: 60px;
+  font-size: 14px;
+}
+
+.price-input-number {
+  margin: 0 10px;
+}
+
+.price-input-number .ant-input-number .ant-input-number-input-wrap input {
+  text-align: end;
+  color: #141522;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Lexend Deca';
+}
+
+.price-input-number .ant-input-number-suffix {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ant-input-number-outlined:hover {
+  border-color: #003da0 !important;
+}
+
+.ant-input-number-outlined:focus {
+  border-color: #003da0 !important;
+}
+
+.react-select-2-placeholder {
+  font-size: 10px;
+}
+
+/* scroll-bar-products-sale */
+.scroll-bar-products-sale {
+  scrollbar-width: thin; /* Dành cho Firefox */
+  scrollbar-color: #e1e7ef transparent; /* Thumb và track */
+}
+
+/* Scrollbar cho Chrome/Edge/Safari */
+.scroll-bar-products-sale::-webkit-scrollbar {
+  width: 10px; /* Chiều rộng thanh cuộn */
+  height: 10px; /* Chiều cao (nếu cuộn ngang) */
+}
+
+/* Thumb (thanh kéo) */
+.scroll-bar-products-sale::-webkit-scrollbar-thumb {
+  background-color: #94a3b8; /* Màu chính */
+  border-radius: 10px;
+  border: 2px solid transparent; /* Tạo viền trong suốt */
+  background-clip: content-box; /* Giới hạn màu trong phần content */
+  transition: background-color 0.3s; /* Hiệu ứng mượt khi hover */
+}
+
+/* Thumb khi hover */
+.scroll-bar-products-sale::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b; /* Màu đậm hơn khi di chuột qua */
+  border: 2px solid #f1f5f9; /* Thêm viền trắng để nổi bật */
+}
+
+/* Track (nền thanh cuộn) */
+.scroll-bar-products-sale::-webkit-scrollbar-track {
+  background: transparent; /* Trong suốt */
+  margin: 4px 0; /* Tạo khoảng trống xung quanh */
+}
+
+/* Corner (góc giữa scrollbar dọc và ngang) */
+.scroll-bar-products-sale::-webkit-scrollbar-corner {
+  background: transparent; /* Ẩn góc */
+}
+
+// Apply font family to all antd
+[class^='ant-'],
+[class*=' ant-'],
+.css-xxx * {
+  font-family: 'Lexend Deca', sans-serif !important;
+}
+
+// Apply font family to all react-select components
+.customDropdowTax__control,
+.customDropdowTax__menu,
+.customDropdowTax__option,
+.customDropdowTax__single-value {
+  font-family: 'Lexend Deca', sans-serif;
+}
+// react-select components
+.css-1ouq9ig-control:hover {
+  border-color: #003da0 !important;
+}
+
+.ant-picker-ok {
+  .ant-btn {
+    margin-block: 8px;
+    padding: 18px 12px;
+    border-radius: 8px;
+    span {
+      display: none;
+    }
+    &::before {
+      content: 'Hoàn thành';
+      font-size: 14px;
+    }
+  }
+}
+
+.ant-select-dropdown {
+  .ant-select-item-option-content {
+    white-space: normal;
+  }
+}
+
+.custom-select-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: transparent !important;
+  color: inherit !important;
+  font-weight: normal !important;
+}
+
+/* Màu xám khi hover */
+.custom-select-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background-color: #f5f5f5 !important;
+}
+
+// .ant-select-dropdown .ant-select-item-option-selected {
+//   background-color: transparent !important;
+//   color: inherit !important;
+// }
+
+.ant-select-item-option-content {
+  background-color: transparent !important;
+  padding: 0 !important;
+
+}
+
+// .ant-select-item-option-active {
+//   // padding: 0 !important;  
+// }
+// .ant-select-item {
+//   // padding: 0 !important;
+// }
+/* Màu xám khi hover */
+// .ant-select-dropdown .ant-select-item:hover {
+//   background-color: transparent !important;
+// }
+
+// /* Màu xám khi hover */
+// .ant-select-dropdown .ant-select-item-option-active {
+//   background-color: transparent !important;
+// }
+
+// /* Loại bỏ màu nền xanh cho option được chọn trong dropdown */
+// .select-with-radio .ant-select-dropdown .ant-select-item-option-selected {
+//   background-color: transparent !important;
+// }
+
+
+/* date picker */
+
+/* Loại bỏ đường gạch border-b dưới các thứ trong tuần của datepicker */
+.react-datepicker__day-names {
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: none !important;
+}
+
+.react-datepicker__day-name {
+  border-bottom: none !important;
+}
+
+/* Loại bỏ border-b cho grid grid-cols-7 border-b border-gray-300 dark:border-gray-700 py-2 */
+.grid.grid-cols-7.border-b.border-gray-300,
+.grid.grid-cols-7.border-b.border-gray-700 {
+  border-bottom: none !important;
+}
+
+/* Làm cho thứ đầu tiên (CN) có màu đỏ */
+.grid.grid-cols-7 div:first-child {
+  color: #ff0000 !important;
+}
+
+/* Làm cho các ngày chủ nhật trong tháng có màu đỏ */
+.grid.grid-cols-7.gap-y-0\.5.my-1 button:nth-child(7n+1):not(.text-gray-400) {
+  color: #ff0000 !important;
+}
+
+/* Ghi đè màu text thành #344054 */
+.whitespace-nowrap.w-1\/2.md\:w-1\/3.lg\:w-auto.transition-all.duration-300.hover\:bg-gray-100.dark\:hover\:bg-white\/10.p-2.rounded.cursor-pointer.text-blue-600.dark\:text-blue-400.dark\:hover\:text-blue-400.hover\:text-blue-700 {
+  color: #344054 !important;
+}
+
+/* Áp dụng box-shadow */
+.mt-2\.5.shadow-sm.border.border-gray-300.px-1.py-0\.5.bg-white.dark\:bg-slate-800.dark\:text-white.dark\:border-slate-600.rounded-lg {
+  box-shadow: 0px 8px 16px -2px #1B242C1F, 0px 2px 2px -1px #1B232C0A !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Single row tags styles */
+// .single-row-tags {
+//   .ant-select-selector {
+//     height: auto !important;
+//     padding-right: 30px !important;
+//   }
+  
+//   .ant-select-selection-overflow {
+//     flex-wrap: nowrap !important;
+//     overflow-x: auto !important;
+//     scrollbar-width: none !important; /* Firefox */
+//     -ms-overflow-style: none !important; /* IE and Edge */
+//   }
+  
+//   .ant-select-selection-overflow::-webkit-scrollbar {
+//     display: none !important; /* Chrome, Safari, Opera */
+//   }
+  
+//   .ant-select-selection-overflow-item {
+//     flex: none !important;
+//   }
+// }

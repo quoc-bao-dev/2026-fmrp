@@ -1,9 +1,11 @@
 import apiPayments from "@/Api/apiAccountant/apiPayments";
 import EditIcon from "@/components/icons/common/EditIcon";
+import PlusIcon from "@/components/icons/common/PlusIcon";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import InPutMoneyFormat from "@/components/UI/inputNumericFormat/inputMoneyFormat";
 import MultiValue from "@/components/UI/mutiValue/multiValue";
 import PopupCustom from "@/components/UI/popup";
+import PopupConfim from "@/components/UI/popupConfim/popupConfim";
 import SelectOptionLever from "@/components/UI/selectOptionLever/selectOptionLever";
 import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
 import { WARNING_STATUS_ROLE } from "@/constants/warningStatus/warningStatus";
@@ -48,7 +50,6 @@ const inistError = {
     errPrice: false,
     errMethod: false,
     errListTypeDoc: false,
-    errCosts: false,
     errSotien: false,
 };
 
@@ -67,12 +68,22 @@ const Popup_dspc = (props) => {
     const isShow = useToast();
 
     const { is_admin: role, permissions_current: auth } = useSelector((state) => state.auth);
+    
+    const authState = useSelector((state) => state.auth);
 
     const { checkAdd, checkEdit } = useActionRole(auth, "payment");
 
     const [open, sOpen] = useState(false);
-
+    
+    // Thêm lại hàm _ToggleModal đã bị xóa
     const _ToggleModal = (e) => sOpen(e);
+    
+    // Add new state for PopupConfim
+    const [showBalanceConfirm, setShowBalanceConfirm] = useState(false);
+    const [showAdjustConfirm, setShowAdjustConfirm] = useState(false);
+    const [remainingAmount, setRemainingAmount] = useState(0);
+    const [excessAmount, setExcessAmount] = useState(0);
+    const [totalSotienErr, setTotalSotienErr] = useState(0);
 
     const [error, sError] = useState(inistError);
 
@@ -142,7 +153,7 @@ const Popup_dspc = (props) => {
         expense_voucher_id: id ? id : "",
     }
 
-    const { data: dataListTypeofDoc = [] } = useVoucherListVoucher(params, searchListTypeofDoc)
+    const { data: dataListTypeofDoc = [] } = useVoucherListVoucher(params, searchListTypeofDoc, open)
 
     //Loại chi phí
     const { data: dataListCost = [] } = useCostComboboxByBranch({ "filter[branch_id]": branch?.value })
@@ -158,16 +169,51 @@ const Popup_dspc = (props) => {
         sPrice(null);
         sMethod(null);
         sNote("");
-        sNote("");
         sError(inistError);
-        sOption([{ id: Date.now(), expense: "", price: 0 }]); // Đặt giá trị là 0 thay vì null
+        sOption([{ id: Date.now(), expense: "", price: 0 }]);
         sData(inistArrr);
+        setCurrentFloatValue(0); // Reset currentFloatValue khi khởi tạo lại trạng thái
     };
 
+    // Thêm state để theo dõi quá trình tải dữ liệu chi tiết
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+
     useEffect(() => {
-        open && initstialState();
-        props?.id && sFetch((e) => ({ ...e, onFetchingDetail: true }));
+        if (open) {
+            initstialState();
+            
+            if (props?.id) {
+                // Đánh dấu đang tải chi tiết để ngăn việc tự động chọn chi nhánh đầu tiên
+                setIsLoadingDetails(true);
+                sFetch((e) => ({ ...e, onFetchingDetail: true }));
+            } else if (authState.branch?.length > 0) {
+                // Chỉ tự động chọn chi nhánh đầu tiên khi tạo mới
+                setTimeout(() => {
+                    sBranch({
+                        value: authState.branch[0].id,
+                        label: authState.branch[0].name,
+                    });
+                }, 0);
+            }
+        }
     }, [open]);
+
+    // Thêm useEffect riêng để xử lý trường hợp chi nhánh không được đặt sau khi mở popup
+    useEffect(() => {
+        if (open && !branch && !props?.id && !isLoadingDetails && authState.branch?.length > 0) {
+            sBranch({
+                value: authState.branch[0].id,
+                label: authState.branch[0].name,
+            });
+        }
+    }, [open, branch, authState.branch, isLoadingDetails]);
+
+    // Thêm useEffect để cập nhật trạng thái sau khi tải xong chi tiết
+    useEffect(() => {
+        if (!fetch.onFetchingDetail && isLoadingDetails) {
+            setIsLoadingDetails(false);
+        }
+    }, [fetch.onFetchingDetail]);
 
     const _ServerFetching_detail = async () => {
         try {
@@ -183,7 +229,9 @@ const Popup_dspc = (props) => {
                 label: dataLang[db?.objects] || db?.objects,
                 value: db?.objects,
             });
-            sPrice(Number(db?.total));
+            const totalAmount = Number(db?.total);
+            sPrice(totalAmount);
+            setCurrentFloatValue(totalAmount); // Set currentFloatValue to match the total price
             sNote(db?.note);
             sListObject(
                 db?.objects === "other"
@@ -221,20 +269,27 @@ const Popup_dspc = (props) => {
                 }))
             );
             db?.type_vouchers == "import" && sData((e) => ({ ...e, dataTable: db?.tbDeductDeposit }));
-            sFetch((e) => ({ ...e, onFetchingDetail: false }));
+            
         } catch (error) {
-
+            isShow && isShow("error", "Có lỗi xảy ra khi tải dữ liệu chi tiết");
+            console.error("Error fetching payment details:", error);
+        } finally {
+            sFetch((e) => ({ ...e, onFetchingDetail: false }));
+            setIsLoadingDetails(false);
         }
     };
+
+    useEffect(() => {
+        if (fetch.onFetchingDetail && props?.id && open) {
+            _ServerFetching_detail();
+        }
+    }, [fetch.onFetchingDetail, open]);
 
     useEffect(() => {
         typeOfDocument?.value == "import" && listTypeOfDocument && sFetch((e) => ({ ...e, onFetchingTable: true }));
     }, [listTypeOfDocument]);
 
-
-    useEffect(() => {
-        fetch.onFetchingDetail && props?.id && _ServerFetching_detail();
-    }, [open]);
+    // useEffect này đã được thay thế bằng useEffect mới ở trên để xử lý việc gọi _ServerFetching_detail
 
     useEffect(() => {
         if (fetch.onFetchingTable) {
@@ -276,6 +331,13 @@ const Popup_dspc = (props) => {
     // Lưu trữ giá trị floatValue từ InPutMoneyFormat để sử dụng cho so sánh
     const [currentFloatValue, setCurrentFloatValue] = useState(0);
     
+    // Đảm bảo currentFloatValue được cập nhật khi price thay đổi
+    useEffect(() => {
+        if (price !== null && price !== undefined && !isNaN(price)) {
+            setCurrentFloatValue(Number(price));
+        }
+    }, [price]);
+    
     // Theo dõi khi currentFloatValue thay đổi để cập nhật lại các chi phí
     useEffect(() => {
         if (currentFloatValue > 0 && option.length > 0) {
@@ -302,44 +364,64 @@ const Popup_dspc = (props) => {
         } else if (type == "branch" && branch != value) {
             sBranch(value);
             sListObject(null);
-            sPrice(null);
-            setCurrentFloatValue(0);
+            // Không reset giá trị price và currentFloatValue nếu đã có
             sListTypeOfDocument([]);
             sTypeOfDocument(null);
-            const updatedOptions = option.map((item) => {
-                return {
-                    ...item,
-                    expense: "",
-                    price: 0, // Đặt giá trị là 0 thay vì ""
-                };
-            });
-            sOption(updatedOptions);
+            // Giữ nguyên giá trị chi phí nếu đã có
+            if (price === null || currentFloatValue === 0) {
+                const updatedOptions = option.map((item) => {
+                    return {
+                        ...item,
+                        expense: "",
+                        price: 0,
+                    };
+                });
+                sOption(updatedOptions);
+            }
         } else if (type == "object" && object != value) {
             sObject(value);
             sListObject(null);
             sTypeOfDocument(null);
             sListTypeOfDocument([]);
-            sPrice(null);
-            setCurrentFloatValue(0);
-            sOption((prevOption) => {
-                const newOption = prevOption.map((item, index) => {
-                    return { ...item, price: 0 }; // Đặt giá trị là 0 thay vì ""
+            // Không reset giá trị price và currentFloatValue nếu đã có
+            // Giữ nguyên giá trị chi phí nếu đã có
+            if (price === null || currentFloatValue === 0) {
+                sOption((prevOption) => {
+                    const newOption = prevOption.map((item, index) => {
+                        return { ...item, price: 0 };
+                    });
+                    return newOption;
                 });
-                return newOption;
-            });
+            }
         } else if (type == "listObject") {
             sListObject(value);
+            // Reset danh sách chứng từ khi thay đổi danh sách đối tượng
+            sListTypeOfDocument([]);
+            
+            // Reset số tiền về 0 khi thay đổi danh sách đối tượng
+            sPrice(0);
+            setCurrentFloatValue(0);
+            
+            // Reset tất cả chi phí về 0
+            sOption(prevOption => {
+                return prevOption.map(item => ({
+                    ...item,
+                    price: 0
+                }));
+            });
         } else if (type == "typeOfDocument" && typeOfDocument != value) {
             sTypeOfDocument(value);
             sListTypeOfDocument([]);
-            sPrice(null);
-            setCurrentFloatValue(0);
-            sOption((prevOption) => {
-                const newOption = prevOption.map((item, index) => {
-                    return { ...item, price: 0 }; // Đặt giá trị là 0 thay vì ""
+            // Không reset giá trị price và currentFloatValue nếu đã có
+            // Giữ nguyên giá trị chi phí nếu đã có
+            if (price === null || currentFloatValue === 0) {
+                sOption((prevOption) => {
+                    const newOption = prevOption.map((item, index) => {
+                        return { ...item, price: 0 };
+                    });
+                    return newOption;
                 });
-                return newOption;
-            });
+            }
         } else if (type == "listTypeOfDocument") {
             sListTypeOfDocument(value);
             if (value && value.length > 0) {
@@ -364,21 +446,21 @@ const Popup_dspc = (props) => {
                     });
                 }
             } else if (value && value.length == 0) {
-                sPrice(null);
-                setCurrentFloatValue(0);
-                
-                // Cập nhật chi phí - chỉ giữ lại chi phí đầu tiên với giá trị 0
-                if (option.length > 0) {
-                    const firstOptionId = option[0].id;
-                    const firstOptionExpense = option[0].expense;
-                    
-                    sOption(prevOptions => {
-                        return [{
-                            id: firstOptionId,
-                            expense: firstOptionExpense,
-                            price: 0 // Đặt giá trị là 0 thay vì null
-                        }];
-                    });
+                // Không reset giá trị price và currentFloatValue nếu đã có
+                if (price === null || currentFloatValue === 0) {
+                    // Cập nhật chi phí - chỉ giữ lại chi phí đầu tiên với giá trị 0
+                    if (option.length > 0) {
+                        const firstOptionId = option[0].id;
+                        const firstOptionExpense = option[0].expense;
+                        
+                        sOption(prevOptions => {
+                            return [{
+                                id: firstOptionId,
+                                expense: firstOptionExpense,
+                                price: 0
+                            }];
+                        });
+                    }
                 }
             }
         } else if (type === "price") {
@@ -412,7 +494,7 @@ const Popup_dspc = (props) => {
                 
                 // Nếu đang giảm tổng tiền và tổng tiền mới nhỏ hơn tổng chi phí hiện tại
                 if (isTotalDecreased && newPriceValue < currentTotalExpenses) {
-                    showToat("warning", `Tổng tiền giảm từ ${currentFloatValue.toLocaleString('en')} xuống ${newPriceValue.toLocaleString('en')}. Chi phí đầu tiên sẽ được giữ lại và các chi phí khác sẽ được đặt về 0.`, 4000);
+                    showToat("error", `Tổng tiền giảm từ ${currentFloatValue.toLocaleString('en')} xuống ${newPriceValue.toLocaleString('en')}. Chi phí đầu tiên sẽ được giữ lại và các chi phí khác sẽ được đặt về 0.`, 4000);
                     
                     // Cập nhật chi phí - giữ chi phí đầu tiên với tổng tiền mới
                     // và đặt tất cả chi phí khác về 0 (không xóa chúng)
@@ -441,35 +523,20 @@ const Popup_dspc = (props) => {
                             }
                         });
                     });
-                } else {
-                    // Nếu không phải là giảm tổng tiền hoặc tổng tiền mới vẫn đủ,
-                    // thì thực hiện xử lý như trước (xóa hết chi phí khác)
-                    if (option.length > 0) {
-                        // Hiển thị thông báo trước khi thực hiện xóa
-                        if (option.length > 1) {
-                            showToat("warning", "Khi thay đổi tổng số tiền, chi phí đầu tiên sẽ nhận toàn bộ giá trị và các chi phí khác sẽ bị xóa.", 3000);
-                        }
-                        
-                        // Tạo ra một chi phí mới với giá trị mới
-                        const firstOptionId = option[0].id;
-                        const firstOptionExpense = option[0].expense;
-                        
-                        // Sử dụng functional update để đảm bảo state được cập nhật đúng
-                        sOption(prevOptions => {
-                            // Chỉ giữ lại phần tử đầu tiên và cập nhật giá trị
-                            return [{
-                                id: firstOptionId,
-                                expense: firstOptionExpense,
-                                price: newPriceValue
-                            }];
-                        });
-                        
-                        // Hiển thị thông báo nếu đã xóa các chi phí
-                        if (option.length > 1) {
-                            isShow("info", "Số tiền đã được cập nhật và các chi phí khác đã bị xóa khỏi danh sách", 3000);
-                        }
-                    }
+                } else if (option.length > 0 && (currentTotalExpenses === 0 || option[0].price === 0)) {
+                    // Nếu chưa có chi phí nào hoặc chi phí đầu tiên là 0, cập nhật chi phí đầu tiên với giá trị mới
+                    const firstOptionId = option[0].id;
+                    const firstOptionExpense = option[0].expense;
+                    
+                    sOption(prevOptions => {
+                        return [{
+                            id: firstOptionId,
+                            expense: firstOptionExpense,
+                            price: newPriceValue
+                        }];
+                    });
                 }
+                // Nếu không thuộc các trường hợp trên, giữ nguyên chi phí hiện tại
             }
         } else if (type == "method") {
             sMethod(value);
@@ -489,6 +556,7 @@ const Popup_dspc = (props) => {
             const itemPrice = parseFloat(item.price || 0);
             return total + (isNaN(itemPrice) ? 0 : itemPrice);
         }, 0);
+        setTotalSotienErr(totalSotienErr);
         
         // Cập nhật kiểm tra để yêu cầu tổng chi phí bằng đúng currentFloatValue (không lớn hơn hoặc nhỏ hơn)
         const isExpensesDifferent = Math.abs(totalSotienErr - currentFloatValue) > 0.01; // Cho phép sai số nhỏ
@@ -513,16 +581,22 @@ const Popup_dspc = (props) => {
                 
                 if (totalSotienErr < currentFloatValue) {
                     const remainingAmount = currentFloatValue - totalSotienErr;
+                    setRemainingAmount(remainingAmount);
                     
-                    isShow("error", `Tổng chi phí (${totalSotienErr.toLocaleString('en')}) phải bằng tổng số tiền (${currentFloatValue.toLocaleString('en')}). Còn ${remainingAmount.toLocaleString('en')} chưa được phân bổ.`, 3000);
+                    // isShow("error", `Tổng chi phí (${totalSotienErr.toLocaleString('en')}) phải bằng tổng số tiền (${currentFloatValue.toLocaleString('en')}). Còn ${remainingAmount.toLocaleString('en')} chưa được phân bổ.`, 3000);
                     
-                    if (window.confirm(`Tổng chi phí (${totalSotienErr.toLocaleString('en')}) chưa bằng tổng số tiền (${currentFloatValue.toLocaleString('en')}). \n\nBạn có muốn tự động phân bổ ${remainingAmount.toLocaleString('en')} còn lại không?`)) {
-                        _AutoBalanceRemainingAmount();
-                        return; // Dừng lại, không hiển thị thông báo lỗi
-                    }
+                    // Hiển thị PopupConfim thay vì window.confirm
+                    setShowBalanceConfirm(true);
+                    return;
                 } else if (totalSotienErr > currentFloatValue) {
                     const excessAmount = totalSotienErr - currentFloatValue;
+                    setExcessAmount(excessAmount);
+                    
                     isShow("error", `Tổng chi phí (${totalSotienErr.toLocaleString('en')}) vượt quá tổng số tiền (${currentFloatValue.toLocaleString('en')}) ${excessAmount.toLocaleString('en')}. Vui lòng giảm bớt chi phí.`, 3000);
+                    
+                    // Hiển thị PopupConfim thay vì window.confirm
+                    setShowAdjustConfirm(true);
+                    return;
                 }
             } else {
                 isShow("error", props.dataLang?.required_field_null || "required_field_null");
@@ -616,7 +690,7 @@ const Popup_dspc = (props) => {
 
     const _AutoBalanceRemainingAmount = () => {
         if (currentFloatValue <= 0) {
-            isShow("warning", "Không có số tiền để phân bổ.");
+            isShow("error", "Không có số tiền để phân bổ.");
             return;
         }
         
@@ -652,7 +726,7 @@ const Popup_dspc = (props) => {
             );
             
             if (validExpenses.length === 0) {
-                isShow("warning", "Không có chi phí hợp lệ để phân bổ. Vui lòng chọn loại chi phí trước.", 3000);
+                isShow("error", "Không có chi phí hợp lệ để phân bổ. Vui lòng chọn loại chi phí trước.", 3000);
                 return;
             }
             
@@ -698,17 +772,11 @@ const Popup_dspc = (props) => {
             return total + parseFloat(item.price || 0);
         }, 0);
         
-        // Kiểm tra nếu đã sử dụng hết ngân sách
-        if (currentFloatValue > 0 && totalExpenses >= currentFloatValue) {
-            isShow("error", "Tổng số tiền chi phí đã đạt mức tối đa. Vui lòng điều chỉnh các chi phí hiện có trước khi thêm mới.", 3000);
-            return;
-        }
+        // Luôn đặt giá trị là 0 cho chi phí mới
+        const newExpenseValue = 0;
         
-        // Tính toán số tiền còn lại có thể sử dụng
-        const remainingAmount = currentFloatValue - totalExpenses;
-        
-        // Thêm mới nếu còn ngân sách
-        sOption([...option, { id: uuidv4(), expense: "", price: 0 }]);
+        // Thêm mới luôn, không báo lỗi
+        sOption([...option, { id: uuidv4(), expense: "", price: newExpenseValue }]);
     };
 
     const _HandleDelete = (id) => {
@@ -722,7 +790,7 @@ const Popup_dspc = (props) => {
     const handleSelectAll = () => {
         // Hiển thị thông báo nếu có nhiều chi phí sẽ bị xóa
         if (option.length > 1) {
-            showToat("warning", "Khi chọn tất cả chứng từ, chi phí đầu tiên sẽ nhận toàn bộ giá trị và các chi phí khác sẽ bị xóa.", 3000);
+            showToat("error", "Khi chọn tất cả chứng từ, chi phí đầu tiên sẽ nhận toàn bộ giá trị và các chi phí khác sẽ bị xóa.", 3000);
         }
         
         // Lấy tổng số tiền từ tất cả các chứng từ
@@ -759,7 +827,7 @@ const Popup_dspc = (props) => {
     const handleDeselectAll = () => {
         // Hiển thị thông báo nếu có nhiều chi phí sẽ bị xóa
         if (option.length > 1) {
-            showToat("warning", "Khi bỏ chọn tất cả chứng từ, tất cả chi phí sẽ được reset và chỉ giữ lại chi phí đầu tiên.", 3000);
+            showToat("error", "Khi bỏ chọn tất cả chứng từ, tất cả chi phí sẽ được reset và chỉ giữ lại chi phí đầu tiên.", 3000);
         }
         
         // Cập nhật danh sách chứng từ
@@ -864,60 +932,68 @@ const Popup_dspc = (props) => {
     };
 
     return (
-        <PopupCustom
-            title={props.id ? `${props.dataLang?.payment_edit || "payment_edit"}` : `${props.dataLang?.payment_add || "payment_add"}`}
-            button={
-                props?.id ? (
-                    <div
-                        onClick={() => {
-                            if (role || checkEdit) {
-                                sOpen(true);
-                            } else {
-                                isShow("error", WARNING_STATUS_ROLE);
-                            }
-                        }}
-                        className="group rounded-lg w-full p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer hover:border-[#064E3B] hover:bg-[#064E3B]/10"
-                    >
-                        <EditIcon
-                            color="#064E3B"
-                            className="size-5"
-                        />
-                        {/* <p className="group-hover:text-sky-500">
-                            {props.dataLang?.payment_editVotes || "payment_editVotes"}
-                        </p> */}
+        <>
+            <PopupCustom
+                title={props.id ? `${props.dataLang?.payment_edit || "payment_edit"}` : `${props.dataLang?.payment_add || "payment_add"}`}
+                button={
+                    props?.id ? (
+                        <div
+                            onClick={() => {
+                                if (role || checkEdit) {
+                                    sOpen(true);
+                                } else {
+                                    isShow("error", WARNING_STATUS_ROLE);
+                                }
+                            }}
+                            className="group rounded-lg w-full p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer hover:border-[#064E3B] hover:bg-[#064E3B]/10"
+                        >
+                            <EditIcon
+                                color="#064E3B"
+                                className="size-5"
+                            />
+                        </div>
+                    ) : (
+                        <div
+                        className="flex items-center p-1 gap-2 text-white rounded-md transition-all duration-300 cursor-pointer"
+                            // onClick={() => {
+                            //     if (role || checkAdd) {
+                            //         sOpen(true);
+                            //     } else {
+                            //         isShow("error", WARNING_STATUS_ROLE);
+                            //     }
+                            // }}
+                        >
+                            <PlusIcon className="w-4 h-4" />
+                            <span className="font-medium">{props.dataLang?.branch_popup_create_new || "branch_popup_create_new"}</span>
+                        </div>
+                    )
+                }
+                onClickOpen={() => {
+                    if (role || checkAdd) {
+                        sOpen(true);
+                    } else {
+                        isShow("error", WARNING_STATUS_ROLE);
+                    }
+                }}
+                open={open}
+                onClose={_ToggleModal.bind(this, false)}
+                classNameBtn={props.className}
+            >
+                <div className="flex flex-col w-[60vw]">
+                    {/* Header section with styling */}
+                    <div className="border-b border-[#E7EAEE] mb-4">
+                        <h2 className="mt-4 font-medium text-[#1A3353] bg-[#F1F5F9] px-3 py-2 rounded-md text-base mb-3">
+                            {props.dataLang?.payment_general_information || "payment_general_information"}
+                        </h2>
                     </div>
-                ) : (
-                    <div
-                        onClick={() => {
-                            if (role || checkAdd) {
-                                sOpen(true);
-                            } else {
-                                isShow("error", WARNING_STATUS_ROLE);
-                            }
-                        }}
-                    >
-                        {props.dataLang?.branch_popup_create_new || "branch_popup_create_new"}
-                    </div>
-                )
-            }
-            open={open}
-            onClose={_ToggleModal.bind(this, false)}
-            classNameBtn={props.className}
-        >
-            <div className="flex items-center space-x-4 3xl:my-3 2xl:my-1 my-1 border-[#E7EAEE] border-opacity-70 border-b-[1px]"></div>
-            <h2 className="font-normal bg-[#ECF0F4] p-1 2xl:text-[12px] xl:text-[13px] text-[12px]  ">
-                {props.dataLang?.payment_general_information || "payment_general_information"}
-            </h2>
-            <div className="w-[40vw]">
-                <form onSubmit={_HandleSubmit.bind(this)} className="">
-                    <div className="">
-                        <div className="grid items-center grid-cols-12 gap-1 ">
-                            <div className="col-span-12 grid grid-cols-12 items-center gap-1 overflow-auto 3xl:max-h-[400px] xxl:max-h-[300px] 2xl:max-h-[350px] xl:max-h-[300px] lg:max-h-[280px] max-h-[300px] scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
-                                <div className="relative col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] mb-1 ">
-                                        {dataLang?.serviceVoucher_day_vouchers}{" "}
+                    <form onSubmit={_HandleSubmit.bind(this)} className="space-y-4">
+                        <Customscrollbar className="max-h-[70vh] overflow-auto pr-2 custom-scrollbar">
+                            <div className="grid grid-cols-12 gap-4">
+                                <div className="col-span-4">
+                                    <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                        {dataLang?.serviceVoucher_day_vouchers || "Ngày chứng từ"}
                                     </label>
-                                    <div className="flex flex-row custom-date-picker ">
+                                    <div className="relative">
                                         <DatePicker
                                             blur
                                             fixedHeight
@@ -929,37 +1005,39 @@ const Popup_dspc = (props) => {
                                             dateFormat="dd/MM/yyyy h:mm:ss aa"
                                             timeInputLabel={"Time: "}
                                             placeholder={dataLang?.price_quote_system_default || "price_quote_system_default"}
-                                            className={`border  focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full z-[999] bg-[#ffffff] rounded text-[#52575E] font-normal p-2 outline-none cursor-pointer `}
+                                            className="w-full text-sm px-3 py-2.5 bg-white border border-[#d0d5dd] rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#003DA0] focus:border-[#003DA0] transition-all duration-200"
                                         />
                                         {date && (
                                             <MdClear
                                                 onClick={() => _HandleChangeInput("clear")}
-                                                className="absolute right-0 -translate-x-[320%] translate-y-[1%] h-10 text-[#CCCCCC] hover:text-[#999999] scale-110 cursor-pointer"
+                                                className="absolute right-9 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer transition-colors"
                                             />
                                         )}
-                                        <BsCalendarEvent className="absolute right-0 -translate-x-[75%] translate-y-[70%] text-[#CCCCCC] scale-110 cursor-pointer" />
+                                        <BsCalendarEvent className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                     </div>
                                 </div>
-                                <div className="col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] mb-1 ">
-                                        {dataLang?.serviceVoucher_voucher_code || "serviceVoucher_voucher_code"}
+
+                                <div className="col-span-4">
+                                    <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                        {dataLang?.serviceVoucher_voucher_code || "Mã chứng từ"}
                                     </label>
                                     <input
                                         value={code}
                                         onChange={_HandleChangeInput.bind(this, "code")}
                                         placeholder={props.dataLang?.payment_systemDefaul || "payment_systemDefaul"}
                                         type="text"
-                                        className={`focus:border-[#92BFF7] border-[#d0d5dd] 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded-[5.5px] text-[#52575E] font-normal p-2.5 border outline-none `}
+                                        className="w-full text-sm px-3 py-2.5 bg-white border border-[#d0d5dd] rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#003DA0] focus:border-[#003DA0] transition-all duration-200 placeholder:text-gray-400"
                                     />
                                 </div>
-                                <div className="col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] ">
-                                        {props.dataLang?.payment_branch || "payment_branch"}{" "}
+
+                                <div className="col-span-4">
+                                    <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                        {props.dataLang?.payment_branch || "Chi nhánh"}{" "}
                                         <span className="text-red-500">*</span>
                                     </label>
                                     <SelectCore
                                         closeMenuOnSelect={true}
-                                        placeholder={props.dataLang?.payment_branch || "payment_branch"}
+                                        placeholder={props.dataLang?.payment_branch || "Chi nhánh"}
                                         options={listBranch}
                                         isSearchable={true}
                                         onChange={_HandleChangeInput.bind(this, "branch")}
@@ -976,37 +1054,50 @@ const Popup_dspc = (props) => {
                                                 ...theme.colors,
                                                 primary25: "#EBF5FF",
                                                 primary50: "#92BFF7",
-                                                primary: "#0F4F9E",
+                                                primary: "#003DA0",
                                             },
                                         })}
                                         styles={{
+                                            control: (base, state) => ({
+                                                ...base,
+                                                minHeight: '42px',
+                                                boxShadow: state.isFocused ? '0 0 0 1px #003DA0' : 'none',
+                                                borderColor: error.errBranch ? '#f43f5e' : state.isFocused ? '#003DA0' : '#d0d5dd',
+                                                '&:hover': {
+                                                    borderColor: state.isFocused ? '#003DA0' : '#64748b',
+                                                },
+                                            }),
                                             placeholder: (base) => ({
                                                 ...base,
-                                                color: "#cbd5e1",
+                                                color: '#94a3b8',
                                             }),
                                             menuPortal: (base) => ({
                                                 ...base,
                                                 zIndex: 9999,
-                                                position: "absolute",
+                                            }),
+                                            indicatorSeparator: () => null,
+                                            clearIndicator: (base) => ({
+                                                ...base,
+                                                marginRight: '-6px',
                                             }),
                                         }}
-                                        className={`${error.errBranch ? "border-red-500" : "border-transparent"
-                                            }  placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px]  font-normal outline-none border `}
+                                        className="text-sm"
                                     />
                                     {error.errBranch && (
-                                        <label className="mb-2  2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
-                                            {props.dataLang?.payment_errBranch || "payment_errBranch"}
-                                        </label>
+                                        <p className="mt-1 text-xs text-red-500">
+                                            {props.dataLang?.payment_errBranch || "Vui lòng chọn chi nhánh"}
+                                        </p>
                                     )}
                                 </div>
-                                <div className="col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] ">
-                                        {props.dataLang?.payment_method || "payment_method"}{" "}
+                                
+                                <div className="col-span-4">
+                                    <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                        {props.dataLang?.payment_method || "Phương thức thanh toán"}{" "}
                                         <span className="text-red-500">*</span>
                                     </label>
                                     <SelectCore
                                         closeMenuOnSelect={true}
-                                        placeholder={props.dataLang?.payment_method || "payment_method"}
+                                        placeholder={props.dataLang?.payment_method || "Phương thức thanh toán"}
                                         options={listPayment}
                                         isSearchable={true}
                                         onChange={_HandleChangeInput.bind(this, "method")}
@@ -1023,37 +1114,50 @@ const Popup_dspc = (props) => {
                                                 ...theme.colors,
                                                 primary25: "#EBF5FF",
                                                 primary50: "#92BFF7",
-                                                primary: "#0F4F9E",
+                                                primary: "#003DA0",
                                             },
                                         })}
                                         styles={{
+                                            control: (base, state) => ({
+                                                ...base,
+                                                minHeight: '42px',
+                                                boxShadow: state.isFocused ? '0 0 0 1px #003DA0' : 'none',
+                                                borderColor: error.errMethod ? '#f43f5e' : state.isFocused ? '#003DA0' : '#d0d5dd',
+                                                '&:hover': {
+                                                    borderColor: state.isFocused ? '#003DA0' : '#64748b',
+                                                },
+                                            }),
                                             placeholder: (base) => ({
                                                 ...base,
-                                                color: "#cbd5e1",
+                                                color: '#94a3b8',
                                             }),
                                             menuPortal: (base) => ({
                                                 ...base,
                                                 zIndex: 9999,
-                                                position: "absolute",
+                                            }),
+                                            indicatorSeparator: () => null,
+                                            clearIndicator: (base) => ({
+                                                ...base,
+                                                marginRight: '-6px',
                                             }),
                                         }}
-                                        className={`${error.errMethod ? "border-red-500" : "border-transparent"
-                                            } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px]  font-normal outline-none border `}
+                                        className="text-sm"
                                     />
                                     {error.errMethod && (
-                                        <label className="mb-2  2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
-                                            {props.dataLang?.payment_errMethod || "payment_errMethod"}
-                                        </label>
+                                        <p className="mt-1 text-xs text-red-500">
+                                            {props.dataLang?.payment_errMethod || "Vui lòng chọn phương thức thanh toán"}
+                                        </p>
                                     )}
                                 </div>
-                                <div className="col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] ">
-                                        {props.dataLang?.payment_ob || "payment_ob"}{" "}
+                                
+                                <div className="col-span-4">
+                                    <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                        {props.dataLang?.payment_ob || "Đối tượng"}{" "}
                                         <span className="text-red-500">*</span>
                                     </label>
                                     <SelectCore
                                         closeMenuOnSelect={true}
-                                        placeholder={props.dataLang?.payment_ob || "payment_ob"}
+                                        placeholder={props.dataLang?.payment_ob || "Đối tượng"}
                                         options={objectCombobox}
                                         isSearchable={true}
                                         onChange={_HandleChangeInput.bind(this, "object")}
@@ -1070,89 +1174,103 @@ const Popup_dspc = (props) => {
                                                 ...theme.colors,
                                                 primary25: "#EBF5FF",
                                                 primary50: "#92BFF7",
-                                                primary: "#0F4F9E",
+                                                primary: "#003DA0",
                                             },
                                         })}
                                         styles={{
+                                            control: (base, state) => ({
+                                                ...base,
+                                                minHeight: '42px',
+                                                boxShadow: state.isFocused ? '0 0 0 1px #003DA0' : 'none',
+                                                borderColor: error.errObject ? '#f43f5e' : state.isFocused ? '#003DA0' : '#d0d5dd',
+                                                '&:hover': {
+                                                    borderColor: state.isFocused ? '#003DA0' : '#64748b',
+                                                },
+                                            }),
                                             placeholder: (base) => ({
                                                 ...base,
-                                                color: "#cbd5e1",
+                                                color: '#94a3b8',
                                             }),
                                             menuPortal: (base) => ({
                                                 ...base,
                                                 zIndex: 9999,
-                                                position: "absolute",
+                                            }),
+                                            indicatorSeparator: () => null,
+                                            clearIndicator: (base) => ({
+                                                ...base,
+                                                marginRight: '-6px',
                                             }),
                                         }}
-                                        className={`${error.errObject ? "border-red-500" : "border-transparent"
-                                            } 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E]  font-normal outline-none border `}
+                                        className="text-sm"
                                     />
                                     {error.errObject && (
-                                        <label className="mb-2  2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
-                                            {props.dataLang?.payment_errOb || "payment_errOb"}
-                                        </label>
+                                        <p className="mt-1 text-xs text-red-500">
+                                            {props.dataLang?.payment_errOb || "Vui lòng chọn đối tượng"}
+                                        </p>
                                     )}
                                 </div>
-                                <div className="col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] ">
-                                        {props.dataLang?.payment_listOb || "payment_listOb"}{" "}
+                                
+                                <div className="col-span-4">
+                                    <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                        {props.dataLang?.payment_listOb || "Danh sách đối tượng"}{" "}
                                         <span className="text-red-500">*</span>
                                     </label>
                                     {object?.value == "other" ? (
                                         <CreatableSelectCore
                                             options={listObjectCombobox}
-                                            placeholder={props.dataLang?.payment_listOb || "payment_listOb"}
+                                            placeholder={props.dataLang?.payment_listOb || "Danh sách đối tượng"}
                                             onChange={_HandleChangeInput.bind(this, "listObject")}
                                             isClearable={true}
                                             value={listObject}
                                             classNamePrefix="Select"
-                                            className={`${error.errListObject ? "border-red-500" : "border-transparent"} Select__custom removeDivide  placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] font-normal outline-none border `}
+                                            className="Select__custom removeDivide text-sm"
                                             isSearchable={true}
                                             noOptionsMessage={() => `Chưa có gợi ý`}
                                             formatCreateLabel={(value) => `Tạo "${value}"`}
                                             menuPortalTarget={document.body}
                                             onMenuOpen={handleMenuOpen}
-                                            style={{
-                                                border: "none",
-                                                boxShadow: "none",
-                                                outline: "none",
-                                            }}
                                             theme={(theme) => ({
                                                 ...theme,
                                                 colors: {
                                                     ...theme.colors,
                                                     primary25: "#EBF5FF",
                                                     primary50: "#92BFF7",
-                                                    primary: "#0F4F9E",
+                                                    primary: "#003DA0",
                                                 },
                                             })}
                                             styles={{
+                                                control: (base, state) => ({
+                                                    ...base,
+                                                    minHeight: '42px',
+                                                    boxShadow: state.isFocused ? '0 0 0 1px #003DA0' : 'none',
+                                                    borderColor: error.errListObject ? '#f43f5e' : state.isFocused ? '#003DA0' : '#d0d5dd',
+                                                    '&:hover': {
+                                                        borderColor: state.isFocused ? '#003DA0' : '#64748b',
+                                                    },
+                                                }),
                                                 placeholder: (base) => ({
                                                     ...base,
-                                                    color: "#cbd5e1",
+                                                    color: '#94a3b8',
                                                 }),
                                                 menuPortal: (base) => ({
                                                     ...base,
                                                     zIndex: 9999,
-                                                    position: "absolute",
-                                                }),
-                                                control: (base, state) => ({
-                                                    ...base,
-                                                    boxShadow: "none",
-                                                    ...(state.isFocused && {
-                                                        border: "0 0 0 1px #92BFF7",
-                                                    }),
                                                 }),
                                                 dropdownIndicator: (base) => ({
                                                     ...base,
                                                     display: "none",
+                                                }),
+                                                indicatorSeparator: () => null,
+                                                clearIndicator: (base) => ({
+                                                    ...base,
+                                                    marginRight: '-6px',
                                                 }),
                                             }}
                                         />
                                     ) : (
                                         <SelectCore
                                             closeMenuOnSelect={true}
-                                            placeholder={props.dataLang?.payment_listOb || "payment_listOb"}
+                                            placeholder={props.dataLang?.payment_listOb || "Danh sách đối tượng"}
                                             options={listObjectCombobox}
                                             isSearchable={true}
                                             onChange={_HandleChangeInput.bind(this, "listObject")}
@@ -1169,37 +1287,50 @@ const Popup_dspc = (props) => {
                                                     ...theme.colors,
                                                     primary25: "#EBF5FF",
                                                     primary50: "#92BFF7",
-                                                    primary: "#0F4F9E",
+                                                    primary: "#003DA0",
                                                 },
                                             })}
                                             styles={{
+                                                control: (base, state) => ({
+                                                    ...base,
+                                                    minHeight: '42px',
+                                                    boxShadow: state.isFocused ? '0 0 0 1px #003DA0' : 'none',
+                                                    borderColor: error.errListObject ? '#f43f5e' : state.isFocused ? '#003DA0' : '#d0d5dd',
+                                                    '&:hover': {
+                                                        borderColor: state.isFocused ? '#003DA0' : '#64748b',
+                                                    },
+                                                }),
                                                 placeholder: (base) => ({
                                                     ...base,
-                                                    color: "#cbd5e1",
+                                                    color: '#94a3b8',
                                                 }),
                                                 menuPortal: (base) => ({
                                                     ...base,
                                                     zIndex: 9999,
-                                                    position: "absolute",
+                                                }),
+                                                indicatorSeparator: () => null,
+                                                clearIndicator: (base) => ({
+                                                    ...base,
+                                                    marginRight: '-6px',
                                                 }),
                                             }}
-                                            className={`${error.errListObject ? "border-red-500" : "border-transparent"
-                                                } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] font-normal outline-none border `}
+                                            className="text-sm"
                                         />
                                     )}
                                     {error.errListObject && (
-                                        <label className="mb-2  2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
-                                            {props.dataLang?.payment_errListOb || "payment_errListOb"}
-                                        </label>
+                                        <p className="mt-1 text-xs text-red-500">
+                                            {props.dataLang?.payment_errListOb || "Vui lòng chọn danh sách đối tượng"}
+                                        </p>
                                     )}
                                 </div>
-                                <div className="col-span-6 ">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] ">
-                                        {props.dataLang?.payment_typeOfDocument || "payment_typeOfDocument"}
+                                
+                                <div className="col-span-4">
+                                    <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                        {props.dataLang?.payment_typeOfDocument || "Loại chứng từ"}
                                     </label>
                                     <SelectCore
                                         closeMenuOnSelect={true}
-                                        placeholder={props.dataLang?.payment_typeOfDocument || "payment_typeOfDocument"}
+                                        placeholder={props.dataLang?.payment_typeOfDocument || "Loại chứng từ"}
                                         options={dataTypeofDoc}
                                         isSearchable={true}
                                         onChange={_HandleChangeInput.bind(this, "typeOfDocument")}
@@ -1216,30 +1347,44 @@ const Popup_dspc = (props) => {
                                                 ...theme.colors,
                                                 primary25: "#EBF5FF",
                                                 primary50: "#92BFF7",
-                                                primary: "#0F4F9E",
+                                                primary: "#003DA0",
                                             },
                                         })}
                                         styles={{
+                                            control: (base, state) => ({
+                                                ...base,
+                                                minHeight: '42px',
+                                                boxShadow: state.isFocused ? '0 0 0 1px #003DA0' : 'none',
+                                                borderColor: state.isFocused ? '#003DA0' : '#d0d5dd',
+                                                '&:hover': {
+                                                    borderColor: state.isFocused ? '#003DA0' : '#64748b',
+                                                },
+                                            }),
                                             placeholder: (base) => ({
                                                 ...base,
-                                                color: "#cbd5e1",
+                                                color: '#94a3b8',
                                             }),
                                             menuPortal: (base) => ({
                                                 ...base,
                                                 zIndex: 9999,
-                                                position: "absolute",
+                                            }),
+                                            indicatorSeparator: () => null,
+                                            clearIndicator: (base) => ({
+                                                ...base,
+                                                marginRight: '-6px',
                                             }),
                                         }}
-                                        className={`border-transparent placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] font-normal outline-none border `}
+                                        className="text-sm"
                                     />
                                 </div>
-                                <div className="col-span-6 ">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] ">
-                                        {props.dataLang?.payment_listOfDoc || "payment_listOfDoc"}
+                                
+                                <div className="col-span-4">
+                                    <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                        {props.dataLang?.payment_listOfDoc || "Danh sách chứng từ"}
                                     </label>
                                     <SelectCore
                                         closeMenuOnSelect={false}
-                                        placeholder={props.dataLang?.payment_listOfDoc || "payment_listOfDoc"}
+                                        placeholder={props.dataLang?.payment_listOfDoc || "Danh sách chứng từ"}
                                         onInputChange={_HandleSeachApi.bind(this)}
                                         options={dataListTypeofDoc}
                                         isSearchable={true}
@@ -1259,280 +1404,378 @@ const Popup_dspc = (props) => {
                                                 ...theme.colors,
                                                 primary25: "#EBF5FF",
                                                 primary50: "#92BFF7",
-                                                primary: "#0F4F9E",
+                                                primary: "#003DA0",
                                             },
                                         })}
                                         styles={{
+                                            control: (base, state) => ({
+                                                ...base,
+                                                minHeight: '42px',
+                                                boxShadow: state.isFocused ? '0 0 0 1px #003DA0' : 'none',
+                                                borderColor: error.errListTypeDoc && typeOfDocument != null && listTypeOfDocument?.length == 0 ? '#f43f5e' : state.isFocused ? '#003DA0' : '#d0d5dd',
+                                                '&:hover': {
+                                                    borderColor: state.isFocused ? '#003DA0' : '#64748b',
+                                                },
+                                            }),
                                             placeholder: (base) => ({
                                                 ...base,
-                                                color: "#cbd5e1",
+                                                color: '#94a3b8',
                                             }),
                                             menuPortal: (base) => ({
                                                 ...base,
                                                 zIndex: 9999,
-                                                position: "absolute",
+                                            }),
+                                            indicatorSeparator: () => null,
+                                            clearIndicator: (base) => ({
+                                                ...base,
+                                                marginRight: '-6px',
+                                            }),
+                                            multiValue: (base) => ({
+                                                ...base,
+                                                backgroundColor: '#e0f2fe',
+                                                borderRadius: '4px',
+                                            }),
+                                            multiValueLabel: (base) => ({
+                                                ...base,
+                                                color: '#0369a1',
+                                                fontWeight: 500,
+                                            }),
+                                            multiValueRemove: (base) => ({
+                                                ...base,
+                                                color: '#0369a1',
+                                                '&:hover': {
+                                                    backgroundColor: '#0369a1',
+                                                    color: '#fff',
+                                                }
                                             }),
                                         }}
-                                        className={`${error.errListTypeDoc && typeOfDocument != null && listTypeOfDocument?.length == 0
-                                            ? "border-red-500"
-                                            : "border-transparent"
-                                            } 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full rounded text-[#52575E]  font-normal outline-none border `}
+                                        className="text-sm"
                                     />
                                     {error.errListTypeDoc && typeOfDocument != null && listTypeOfDocument?.length == 0 && (
-                                        <label className="2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
-                                            {props.dataLang?.payment_errlistOfDoc || "payment_errlistOfDoc"}
-                                        </label>
+                                        <p className="mt-1 text-xs text-red-500">
+                                            {props.dataLang?.payment_errlistOfDoc || "Vui lòng chọn danh sách chứng từ"}
+                                        </p>
                                     )}
                                 </div>
-                                {data.dataTable.length > 0 && (
-                                    <div className="col-span-12 m-1 transition-all duration-200 ease-linear border border-b-0 rounded">
-                                        <div className="grid items-center grid-cols-4 col-span-12 border border-t-0 border-l-0 border-r-0 divide-x">
-                                            <h1 className="text-center text-xs p-1.5 text-zinc-800 font-semibold">
-                                                {props.dataLang?.payment_numberEnterd || "payment_numberEnterd"}
-                                            </h1>
-                                            <h1 className="text-center text-xs p-1.5 text-zinc-800 font-semibold">
-                                                {props.dataLang?.payment_numberSlips || "payment_numberSlips"}
-                                            </h1>
-                                            <h1 className="text-center text-xs p-1.5 text-zinc-800 font-semibold">
-                                                {props.dataLang?.payment_deductionMoney || "payment_deductionMoney"}
-                                            </h1>
-                                            <h1 className="text-center text-xs p-1.5 text-zinc-800 font-semibold">
-                                                {props.dataLang?.payment_cashInReturn || "payment_cashInReturn"}
-                                            </h1>
-                                        </div>
-                                        <Customscrollbar className={`${data.dataTable.length > 5 ? " h-[170px] overflow-auto" : ""} cursor-pointer`}  >
-                                            {data.dataTable.map((e) => {
-                                                return (
-                                                    <div className="grid items-center grid-cols-4 col-span-12 border-b divide-x">
-                                                        <h1 className="p-2 text-xs text-center ">
-                                                            <span className="px-2 py-1 text-purple-500 bg-purple-200 rounded-xl">
-                                                                {e.import_code}
-                                                            </span>
-                                                        </h1>
-                                                        <h1 className="p-2 text-xs text-center">
-                                                            <span className="px-2 py-1 text-orange-500 bg-orange-200 rounded-xl">
-                                                                {e.payslip_code}
-                                                            </span>
-                                                        </h1>
-                                                        <h1 className="p-2 text-xs text-center">
-                                                            {formatNumber(e.deposit_amount)}
-                                                        </h1>
-                                                        <h1 className="p-2 text-xs text-center">
-                                                            {formatNumber(e.amount_left)}
-                                                        </h1>
-                                                    </div>
-                                                );
-                                            })}
-                                        </Customscrollbar>
-                                    </div>
-                                )}
-                                <div className="col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] ">
-                                        {props.dataLang?.payment_amountOfMoney || "payment_amountOfMoney"}{" "}
+
+                                <div className="col-span-4">
+                                    <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                        {props.dataLang?.payment_amountOfMoney || "Số tiền"}{" "}
                                         <span className="text-red-500">*</span>
                                     </label>
-                                    <InPutMoneyFormat
-                                        value={price}
-                                        onChange={(e) => {
-                                            console.log("Raw input value:", e.target.value);
-                                            _HandleChangeInput("price", e);
-                                        }}
-                                        placeholder={((object == null || listObject == null) && (props.dataLang?.payment_errObList || "payment_errObList")) || (object != null && props.dataLang?.payment_amountOfMoney) || "payment_amountOfMoney"}
-                                        isAllowed={(values) => {
-                                            if (!values.value) return true;
-                                            const { floatValue, formattedValue } = values;
-                                            console.log("Kiểm tra giá trị nhập:", floatValue, "giá trị hiện tại:", price);
-                                            
-                                            // Vẫn kiểm tra không cho nhập giá trị lớn hơn tổng số tiền ban đầu
-                                            if (object?.value && listTypeOfDocument?.length > 0 && object?.value != "other") {
-                                                let totalMoney = listTypeOfDocument.reduce((total, item) => total + parseFloat(item.money || 0), 0);
-                                                if (floatValue > totalMoney) {
-                                                    isShow("error", `${props.dataLang?.payment_errPlease || "payment_errPlease"} ${totalMoney.toLocaleString("en")}`);
-                                                    return false;
+                                    <div className="relative">
+                                        <InPutMoneyFormat
+                                            value={price}
+                                            onValueChange={(values) => {
+                                                if (values.value) {
+                                                    _HandleChangeInput("price", { target: { value: values.value } });
                                                 }
-                                            }
-                                            
-                                            // Chỉ cập nhật floatValue khi giá trị hợp lệ
-                                            console.log("Giá trị hợp lệ, cập nhật currentFloatValue =", floatValue);
-                                            setCurrentFloatValue(floatValue);
-                                            return true;
-                                        }}
-                                        className={`${error.errPrice && price == null
-                                            ? "border-red-500"
-                                            : "focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300"
-                                            } 3xl:placeholder:text-[13px] 2xl:placeholder:text-[12px] xl:placeholder:text-[10px] placeholder:text-[9px] placeholder:text-slate-300  w-full disabled:bg-slate-100 bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px]  font-normal outline-none border p-[9.5px]`}
-                                    />
+                                            }}
+                                            placeholder={((object == null || listObject == null) && (props.dataLang?.payment_errObList || "payment_errObList")) || (object != null && props.dataLang?.payment_amountOfMoney) || "payment_amountOfMoney"}
+                                            isAllowed={(values) => {
+                                                if (!values.value) return true;
+                                                const { floatValue, formattedValue } = values;
+                                                
+                                                if (object?.value && listTypeOfDocument?.length > 0 && object?.value != "other") {
+                                                    let totalMoney = listTypeOfDocument.reduce((total, item) => total + parseFloat(item.money || 0), 0);
+                                                    if (floatValue > totalMoney) {
+                                                        isShow("error", `${props.dataLang?.payment_errPlease || "payment_errPlease"} ${totalMoney.toLocaleString("en")}`);
+                                                        return false;
+                                                    }
+                                                }
+                                                
+                                                setCurrentFloatValue(floatValue);
+                                                return true;
+                                            }}
+                                            className={`w-full text-sm px-3 py-2.5 bg-white border ${error.errPrice && price == null ? "border-red-500" : "border-[#d0d5dd]"} rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#003DA0] focus:border-[#003DA0] transition-all duration-200 placeholder:text-gray-400`}
+                                        />
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">đ</span>
+                                    </div>
                                     {error.errPrice && (
-                                        <label className="2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
-                                            {props.dataLang?.payment_errAmount || "payment_errAmount"}
-                                        </label>
+                                        <p className="mt-1 text-xs text-red-500">
+                                            {props.dataLang?.payment_errAmount || "Vui lòng nhập số tiền"}
+                                        </p>
                                     )}
                                 </div>
-                                <div className="col-span-6">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] mb-1 ">
-                                        {props.dataLang?.payment_note || "payment_note"}
+                                
+                                <div className="col-span-12">
+                                    <label className="block text-[#344054] font-medium text-sm mb-1.5">
+                                        {props.dataLang?.payment_note || "Ghi chú"}
                                     </label>
                                     <input
                                         value={note}
                                         onChange={_HandleChangeInput.bind(this, "note")}
-                                        placeholder={props.dataLang?.payment_note || "payment_note"}
+                                        placeholder={props.dataLang?.payment_note || "Ghi chú"}
                                         type="text"
-                                        className="focus:border-[#92BFF7] border-[#d0d5dd] 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded-[5.5px] text-[#52575E] font-normal p-2.5 border outline-none "
+                                        className="w-full text-sm px-3 py-2.5 bg-white border border-[#d0d5dd] rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#003DA0] focus:border-[#003DA0] transition-all duration-200 placeholder:text-gray-400"
                                     />
                                 </div>
-                            </div>
-                            <h2 className="font-normal bg-[#ECF0F4] p-1 2xl:text-[12px] xl:text-[13px] text-[12px]  w-full col-span-12 mt-0.5">
-                                {props.dataLang?.payment_costInfo || "payment_costInfo"}
-                            </h2>
-                            <div className="col-span-12 max-h-[140px] min-h-[140px] overflow-hidden ">
-                                <div className="grid grid-cols-12 items-center  sticky top-0  bg-[#F7F8F9] py-2 z-10 min-h-50px max-h-[50px]">
-                                    <h4 className="2xl:text-[12px] xl:text-[13px] text-[12px] px-2  text-[#667085] uppercase  col-span-6    text-center  truncate font-[400] flex items-center gap-1">
-                                        <button
-                                            type="button"
-                                            onClick={_HandleAddNew.bind(this)}
-                                            title="Thêm"
-                                            className="flex flex-col items-center justify-center transition rounded-full hover:bg-red-100 hover:animate-pulse bg-slate-200"
-                                        >
-                                            <Add color="red" size={20} className="" />
-                                        </button>
-                                        {props.dataLang?.payment_costs || "payment_costs"}
-                                    </h4>
-                                    <h4 className="2xl:text-[12px] xl:text-[13px] text-[12px] px-2  text-[#667085] uppercase  col-span-4    text-center  truncate font-[400]">
-                                        {props.dataLang?.payment_amountOfMoney || "payment_amountOfMoney"}
-                                    </h4>
-                                    <h4 className="2xl:text-[12px] xl:text-[13px] text-[12px] px-2  text-[#667085] uppercase  col-span-2   text-center  truncate font-[400]">
-                                        {props.dataLang?.payment_operation || "payment_operation"}
-                                    </h4>
-                                </div>
-                                <Customscrollbar className="min-h-[100px] max-h-[100px]">
-                                    {sortedArr
-                                        .map((e, index) => (
-                                        <div className="grid items-center grid-cols-12 gap-1 py-1 " key={e?.id}>
-                                            <div className="col-span-6 my-auto ">
-                                                <SelectCore
-                                                    closeMenuOnSelect={true}
-                                                    placeholder={props.dataLang?.payment_expense || "payment_expense"}
-                                                    options={dataListCost}
-                                                    isSearchable={true}
-                                                    formatOptionLabel={SelectOptionLever}
-                                                    onChange={_HandleChangeInputOption.bind(this, e?.id, "expense")}
-                                                    value={e?.expense}
-                                                    menuPlacement="top"
-                                                    LoadingIndicator
-                                                    noOptionsMessage={() => "Không có dữ liệu"}
-                                                    maxMenuHeight="145px"
-                                                    isClearable={true}
-                                                    menuPortalTarget={document.body}
-                                                    onMenuOpen={handleMenuOpen}
-                                                    theme={(theme) => ({
-                                                        ...theme,
-                                                        colors: {
-                                                            ...theme.colors,
-                                                            primary25: "#EBF5FF",
-                                                            primary50: "#92BFF7",
-                                                            primary: "#0F4F9E",
-                                                        },
-                                                    })}
-                                                    styles={{
-                                                        placeholder: (base) => ({
-                                                            ...base,
-                                                            color: "#cbd5e1",
-                                                        }),
-                                                        menuPortal: (base) => ({
-                                                            ...base,
-                                                            zIndex: 9999,
-                                                            position: "absolute",
-                                                        }),
-                                                    }}
-                                                    className={`${error.errCosts && e?.expense === ""
-                                                        ? "border-red-500"
-                                                        : "border-transparent"
-                                                        } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] mb-2 font-normal outline-none border `}
-                                                />
+                                {data.dataTable.length > 0 && (
+                                    <div className="col-span-12 mt-3">
+                                        <div className="bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden">
+                                            <div className="grid grid-cols-4 bg-gray-50 border-b">
+                                                <h3 className="col-span-1 p-2.5 text-xs font-medium text-gray-600 text-center">
+                                                    {props.dataLang?.payment_numberEnterd || "Mã nhập hàng"}
+                                                </h3>
+                                                <h3 className="col-span-1 p-2.5 text-xs font-medium text-gray-600 text-center border-l">
+                                                    {props.dataLang?.payment_numberSlips || "Mã phiếu chi"}
+                                                </h3>
+                                                <h3 className="col-span-1 p-2.5 text-xs font-medium text-gray-600 text-center border-l">
+                                                    {props.dataLang?.payment_deductionMoney || "Số tiền khấu trừ"}
+                                                </h3>
+                                                <h3 className="col-span-1 p-2.5 text-xs font-medium text-gray-600 text-center border-l">
+                                                    {props.dataLang?.payment_cashInReturn || "Còn lại"}
+                                                </h3>
                                             </div>
-                                            <div className="flex items-center justify-center col-span-4 text-center">
-                                                <InPutMoneyFormat
-                                                    value={e?.price}
-                                                    placeholder={price == null && (props.dataLang?.payment_errAmountAbove || "payment_errAmountAbove")}
-                                                    onValueChange={_HandleChangeInputOption.bind(this, e?.id, "price")}
-                                                    isAllowed={(values) => {
-                                                        if (!values.value) return true;
-                                                        const { floatValue } = values;
-                                                        
-                                                        // Nếu tổng tiền chưa được nhập
-                                                        if (currentFloatValue <= 0) {
-                                                            isShow("error", "Vui lòng nhập tổng số tiền trước khi phân bổ chi phí");
-                                                            return false;
-                                                        }
-                                                        
-                                                        // Kiểm tra nếu giá trị vượt quá tổng số tiền
-                                                        if (floatValue > currentFloatValue) {
-                                                            isShow("error", `Giá trị không được vượt quá tổng số tiền ${currentFloatValue.toLocaleString("en")}`);
-                                                            return false;
-                                                        }
-                                                        
-                                                        // Tính tổng chi phí của các chi phí khác
-                                                        const index = option.findIndex((x) => x.id === e?.id);
-                                                        const totalOtherExpenses = option.reduce((sum, opt, i) => {
-                                                            if (i !== index) {
-                                                                return sum + parseFloat(opt.price || 0);
-                                                            }
-                                                            return sum;
-                                                        }, 0);
-                                                        
-                                                        // Tính số tiền còn lại có thể sử dụng
-                                                        const remainingBudget = currentFloatValue - totalOtherExpenses;
-                                                        
-                                                        // Kiểm tra nếu giá trị vượt quá số tiền còn lại
-                                                        if (floatValue > remainingBudget) {
-                                                            isShow("error", `Giá trị tối đa có thể nhập là ${remainingBudget.toLocaleString("en")}`);
-                                                            return false;
-                                                        }
-                                                        
-                                                        return true;
-                                                    }}
-                                                    className={`${error.errSotien && (e?.price === "" || e?.price === null)
-                                                        ? "border-b-red-500"
-                                                        : e?.price === null || e?.price === undefined || isNaN(e?.price) 
-                                                          ? "border-b-orange-500" 
-                                                          : "border-b-green-500"
-                                                        } placeholder:text-[10px] border-b-2 appearance-none 2xl:text-[12px] xl:text-[13px] text-[12px] text-center py-1 px-1 font-normal w-[90%] focus:outline-none `}
-                                                />
-                                            </div>
-                                            <div className="flex items-center justify-center col-span-2">
-                                                <button
-                                                    onClick={_HandleDelete.bind(this, e?.id)}
-                                                    type="button"
-                                                    title="Xóa"
-                                                    className="transition  w-full bg-slate-100 h-10 rounded-[5.5px] text-red-500 flex flex-col justify-center items-center mb-2"
-                                                >
-                                                    <IconDelete />
-                                                </button>
+                                            <div className={`${data.dataTable.length > 5 ? "max-h-[170px] overflow-y-auto" : ""}`}>
+                                                {data.dataTable.map((e, index) => (
+                                                    <div key={index} className={`grid grid-cols-4 ${index !== data.dataTable.length - 1 ? "border-b" : ""} hover:bg-gray-50`}>
+                                                        <div className="col-span-1 p-2 text-xs flex items-center justify-center">
+                                                            <span className="px-2 py-1 text-purple-700 bg-purple-100 rounded-md font-medium">
+                                                                {e.import_code}
+                                                            </span>
+                                                        </div>
+                                                        <div className="col-span-1 p-2 text-xs flex items-center justify-center border-l">
+                                                            <span className="px-2 py-1 text-orange-700 bg-orange-100 rounded-md font-medium">
+                                                                {e.payslip_code}
+                                                            </span>
+                                                        </div>
+                                                        <div className="col-span-1 p-2 text-xs flex items-center justify-center border-l font-medium text-gray-700">
+                                                            {formatNumber(e.deposit_amount)}
+                                                        </div>
+                                                        <div className="col-span-1 p-2 text-xs flex items-center justify-center border-l font-medium text-gray-700">
+                                                            {formatNumber(e.amount_left)}
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
-                                    ))}
-                                </Customscrollbar>
+                                    </div>
+                                )}
+                                
+                                {/* Chi phí section */}
+                                <div className="col-span-12 mt-6">
+                                    <div className="border-t border-b border-[#E7EAEE] py-4 mb-4">
+                                        <h2 className="font-medium text-[#1A3353] bg-[#F1F5F9] px-3 py-2 rounded-md text-base flex items-center">
+                                            <span>{props.dataLang?.payment_costInfo || "Thông tin chi phí"}</span>
+                                            <button
+                                                type="button"
+                                                onClick={_HandleAddNew}
+                                                title="Thêm chi phí"
+                                                className="ml-2 p-1 rounded-full bg-[#003DA0] hover:bg-[#0F4F9E] text-white flex items-center justify-center transition-colors duration-200"
+                                            >
+                                                <Add size={16} />
+                                            </button>
+                                        </h2>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-12 bg-gray-50 rounded-t-md border border-b-0 border-gray-200">
+                                        <div className="col-span-6 p-3 font-medium text-sm text-gray-700 flex items-center justify-center">
+                                            {props.dataLang?.payment_costs || "Chi phí"}
+                                        </div>
+                                        <div className="col-span-4 p-3 font-medium text-sm text-gray-700 flex items-center justify-center">
+                                            {props.dataLang?.payment_amountOfMoney || "Số tiền"}
+                                        </div>
+                                        <div className="col-span-2 p-3 font-medium text-sm text-gray-700 flex items-center justify-center">
+                                            {props.dataLang?.payment_operation || "Thao tác"}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className={`border border-t-0 border-gray-200 rounded-b-md overflow-hidden ${sortedArr.length > 4 ? "max-h-[230px] overflow-y-auto" : ""}`}>
+                                        {sortedArr.map((e, index) => (
+                                            <div key={e?.id} className={`grid grid-cols-12 gap-3 ${index !== sortedArr.length - 1 ? "border-b border-gray-200" : ""} p-3 hover:bg-gray-50`}>
+                                                <div className="col-span-6">
+                                                    <SelectCore
+                                                        closeMenuOnSelect={true}
+                                                        placeholder={props.dataLang?.payment_expense || "Chi phí"}
+                                                        options={dataListCost}
+                                                        isSearchable={true}
+                                                        formatOptionLabel={SelectOptionLever}
+                                                        onChange={_HandleChangeInputOption.bind(this, e?.id, "expense")}
+                                                        value={e?.expense}
+                                                        menuPlacement="top"
+                                                        LoadingIndicator
+                                                        noOptionsMessage={() => "Không có dữ liệu"}
+                                                        maxMenuHeight="145px"
+                                                        isClearable={true}
+                                                        menuPortalTarget={document.body}
+                                                        onMenuOpen={handleMenuOpen}
+                                                        theme={(theme) => ({
+                                                            ...theme,
+                                                            colors: {
+                                                                ...theme.colors,
+                                                                primary25: "#EBF5FF",
+                                                                primary50: "#92BFF7",
+                                                                primary: "#003DA0",
+                                                            },
+                                                        })}
+                                                        styles={{
+                                                            control: (base, state) => ({
+                                                                ...base,
+                                                                minHeight: '42px',
+                                                                boxShadow: state.isFocused ? '0 0 0 1px #003DA0' : 'none',
+                                                                borderColor: error.errCosts && e?.expense === "" ? '#f43f5e' : state.isFocused ? '#003DA0' : '#d0d5dd',
+                                                                '&:hover': {
+                                                                    borderColor: state.isFocused ? '#003DA0' : '#64748b',
+                                                                },
+                                                            }),
+                                                            placeholder: (base) => ({
+                                                                ...base,
+                                                                color: '#94a3b8',
+                                                            }),
+                                                            menuPortal: (base) => ({
+                                                                ...base,
+                                                                zIndex: 9999,
+                                                            }),
+                                                            indicatorSeparator: () => null,
+                                                            clearIndicator: (base) => ({
+                                                                ...base,
+                                                                marginRight: '-6px',
+                                                            }),
+                                                        }}
+                                                        className="text-sm"
+                                                    />
+                                                </div>
+                                                <div className="col-span-4">
+                                                    <div className="relative">
+                                                        <InPutMoneyFormat
+                                                            value={e?.price}
+                                                            placeholder={price == null ? props.dataLang?.payment_errAmountAbove || "Vui lòng nhập số tiền trước" : ""}
+                                                            onValueChange={_HandleChangeInputOption.bind(this, e?.id, "price")}
+                                                            isAllowed={(values) => {
+                                                                if (!values.value) return true;
+                                                                const { floatValue } = values;
+                                                                
+                                                                if (currentFloatValue <= 0) {
+                                                                    isShow("error", "Vui lòng nhập tổng số tiền trước khi phân bổ chi phí");
+                                                                    return false;
+                                                                }
+                                                                
+                                                                if (floatValue > currentFloatValue) {
+                                                                    isShow("error", `Giá trị không được vượt quá tổng số tiền ${currentFloatValue.toLocaleString("en")}`);
+                                                                    return false;
+                                                                }
+                                                                
+                                                                const index = option.findIndex((x) => x.id === e?.id);
+                                                                const totalOtherExpenses = option.reduce((sum, opt, i) => {
+                                                                    if (i !== index) {
+                                                                        return sum + parseFloat(opt.price || 0);
+                                                                    }
+                                                                    return sum;
+                                                                }, 0);
+                                                                
+                                                                const remainingBudget = currentFloatValue - totalOtherExpenses;
+                                                                
+                                                                if (floatValue > remainingBudget) {
+                                                                    isShow("error", `Giá trị tối đa có thể nhập là ${remainingBudget.toLocaleString("en")}`);
+                                                                    return false;
+                                                                }
+                                                                
+                                                                return true;
+                                                            }}
+                                                            className={`w-full text-sm px-3 py-2.5 bg-white border ${
+                                                                error.errSotien && (e?.price === "" || e?.price === null) ? "border-red-500" : 
+                                                                e?.price === null || e?.price === undefined || isNaN(e?.price) ? "border-orange-400" : 
+                                                                "border-green-400"
+                                                            } rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#003DA0] focus:border-[#003DA0] transition-all duration-200 placeholder:text-gray-400`}
+                                                        />
+                                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">đ</span>
+                                                    </div>
+                                                </div>
+                                                <div className="col-span-2 flex items-center justify-center">
+                                                    <button
+                                                        onClick={_HandleDelete.bind(this, e?.id)}
+                                                        type="button"
+                                                        title="Xóa chi phí"
+                                                        className={`w-10 h-10 rounded-md flex items-center justify-center ${
+                                                            index === 0 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+                                                        }`}
+                                                        disabled={index === 0}
+                                                    >
+                                                        <IconDelete size={20} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
+                        </Customscrollbar>
+                        
+                        <div className="border-t border-gray-200 pt-4 mt-2 flex justify-end space-x-3">
+                            <button
+                                type="button"
+                                onClick={_ToggleModal.bind(this, false)}
+                                className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium transition-colors duration-200"
+                            >
+                                {props.dataLang?.branch_popup_exit || "Hủy"}
+                            </button>
+                            
+                            <button
+                                type="submit"
+                                className="px-4 py-2.5 bg-[#003DA0] hover:bg-[#0F4F9E] text-white rounded-md text-sm font-medium transition-colors duration-200"
+                            >
+                                {props.dataLang?.branch_popup_save || "Lưu"}
+                            </button>
                         </div>
-                    </div>
-                    <div className="mt-1 space-x-2 text-right">
-                        <button
-                            type="button"
-                            onClick={_ToggleModal.bind(this, false)}
-                            className="button text-[#344054] font-normal text-base py-2 px-4 rounded-[5.5px] border border-solid border-[#D0D5DD]"
-                        >
-                            {props.dataLang?.branch_popup_exit}
-                        </button>
-                        <button
-                            type="submit"
-                            className="button text-[#FFFFFF]  font-normal text-base py-2 px-4 rounded-[5.5px] bg-[#003DA0]"
-                        >
-                            {props.dataLang?.branch_popup_save}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </PopupCustom>
+                    </form>
+                </div>
+            </PopupCustom>
+            
+            {/* PopupConfim for balance remaining amount */}
+            <PopupConfim
+                isOpen={showBalanceConfirm}
+                onClose={() => setShowBalanceConfirm(false)}
+                cancel={() => setShowBalanceConfirm(false)}
+                save={() => {
+                    setShowBalanceConfirm(false);
+                    _AutoBalanceRemainingAmount();
+                }}
+                title="Phân bổ số tiền còn lại"
+                subtitle={
+                  <div>
+                    <p>Tổng chi phí ({totalSotienErr.toLocaleString('en')}) chưa bằng tổng số tiền ({currentFloatValue.toLocaleString('en')}).</p>
+                    <p>Bạn có muốn tự động phân bổ {remainingAmount.toLocaleString('en')} còn lại không?</p>
+                  </div>
+                }
+                type="warning"
+                nameModel="payment"
+            />
+            
+            {/* PopupConfim for adjust expenses */}
+            <PopupConfim
+                isOpen={showAdjustConfirm}
+                onClose={() => setShowAdjustConfirm(false)}
+                cancel={() => setShowAdjustConfirm(false)}
+                save={() => {
+                    setShowAdjustConfirm(false);
+                    // Tự động điều chỉnh chi phí để khớp với tổng số tiền
+                    // Giữ tỷ lệ giữa các chi phí
+                    const ratio = currentFloatValue / totalSotienErr;
+                    const updatedOptions = option.map(item => {
+                        if (item.expense !== "" && item.expense !== null && item.price !== null && item.price !== 0) {
+                            return {
+                                ...item,
+                                price: parseFloat(item.price) * ratio
+                            };
+                        }
+                        return item;
+                    });
+                    
+                    sOption(updatedOptions);
+                    isShow("success", `Đã điều chỉnh chi phí để khớp với tổng số tiền ${currentFloatValue.toLocaleString("en")}.`, 3000);
+                }}
+                title="Điều chỉnh chi phí"
+                subtitle={
+                  <div>
+                    <p>Tổng chi phí ({totalSotienErr.toLocaleString('en')}) vượt quá tổng số tiền ({currentFloatValue.toLocaleString('en')}).</p>
+                    <p>Bạn có muốn tự động điều chỉnh chi phí để khớp với tổng số tiền không?</p>
+                  </div>
+                }
+                type="warning"
+                nameModel="payment"
+            />
+        </>
     );
 };
 

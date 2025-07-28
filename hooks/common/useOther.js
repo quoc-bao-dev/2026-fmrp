@@ -53,7 +53,7 @@ export const useVoucherListPayPaySlip = (params, search) => {
 }
 
 // ds chứng từ trong phiếu chi
-export const useVoucherListVoucher = (params, search) => {
+export const useVoucherListVoucher = (params, search, isEnabled = true) => {
     return useQuery({
         queryKey: ['api_voucher_list_combobox_voucher', { ...params }, search],
         queryFn: async () => {
@@ -65,6 +65,7 @@ export const useVoucherListVoucher = (params, search) => {
                 money: money,
             }))
         },
+        enabled: isEnabled,
         ...optionsQuery
     })
 }

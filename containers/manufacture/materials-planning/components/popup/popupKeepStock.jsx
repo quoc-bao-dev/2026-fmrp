@@ -399,9 +399,9 @@ const PopupKeepStock = ({
                 "materials_planning_raw_materials"
             }
             button={
-                <button
+                <div
                     // className="bg-blue-100 rounded-lg outline-none focus:outline-none"
-                    className=" responsive-text-sm 3xl:py-3 3xl:px-4 py-2 px-3 bg-background-blue-2 text-white rounded-lg btn-animation hover:scale-105 flex items-center gap-x-2"
+                    className="responsive-text-sm 3xl:px-4 py-2.5 px-3 bg-background-blue-2/80 hover:bg-background-blue-2 text-white rounded-lg flex items-center gap-x-2 transition-all duration-300"
                     onClick={() => {
                         if (+dataTable?.countAll == 0) {
                             return isShow(
@@ -417,7 +417,7 @@ const PopupKeepStock = ({
                         {icon} <h3 className="text-xs font-medium text-blue-600 3xl:text-base">{title}</h3>
                     </div> */}
                     {icon} {title}
-                </button>
+                </div>
             }
             open={open}
             onClose={_ToggleModal.bind(this, false)}

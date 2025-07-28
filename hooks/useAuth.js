@@ -107,6 +107,7 @@ export const useSetings = () => {
             return newData;
         },
         placeholderData: keepPreviousData,
+        staleTime: 5 * 60 * 1000, // Cache 5 phút
         ...optionsQuery
     })
 }

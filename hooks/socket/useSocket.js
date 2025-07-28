@@ -7,8 +7,6 @@ const useSocket = (url, options = {}, shouldConnect = true) => {
     // Đảm bảo `options` không thay đổi
     const stableOptions = useMemo(() => options, [JSON.stringify(options)]);
 
-    console.log('stableOptions', stableOptions);
-
 
     useEffect(() => {
         // ⛔ Không kết nối nếu chưa đủ điều kiện

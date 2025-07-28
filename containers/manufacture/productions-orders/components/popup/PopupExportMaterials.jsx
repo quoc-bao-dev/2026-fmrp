@@ -195,59 +195,133 @@ const InputNumberCustom = memo(
     max = Infinity,
     disabled = false,
     isError = false,
+    allowDecimal = true, // Thêm prop cho phép nhập số thập phân
   }) => {
     const [inputValue, setInputValue] = useState(state || 0);
+    const [formattedValue, setFormattedValue] = useState(
+      formatNumber(state || 0)
+    );
     const showToast = useToast();
+    const dataSeting = useSetingServer();
 
     useEffect(() => {
       setInputValue(state || 0);
+      setFormattedValue(formatNumber(state || 0));
     }, [state]);
 
-    // Chỉ nhận số hoặc rỗng
+    // Xử lý nhập liệu
     const handleInputChange = useCallback(
       (e) => {
         if (disabled) return;
         const value = e.target.value;
+
         if (value === "") {
           setInputValue("");
+          setFormattedValue("");
           return;
         }
-        // Chỉ lấy số, cho phép số thực
-        const numericValue = value.replace(/[^0-9.]/g, "");
+
+        // Xử lý chuỗi đầu vào dựa vào allowDecimal
+        let numericValue;
+        if (allowDecimal) {
+          // Cho phép nhập số thập phân - Chỉ chấp nhận dấu chấm (.) làm dấu thập phân
+          // Loại bỏ tất cả ký tự không phải số hoặc dấu chấm
+          numericValue = value.replace(/[^\d.]/g, "");
+          
+          // Đảm bảo chỉ có một dấu chấm
+          const countDecimal = (numericValue.match(/\./g) || []).length;
+          if (countDecimal > 1) {
+            const lastIndex = numericValue.lastIndexOf('.');
+            numericValue = numericValue.substring(0, lastIndex) + 
+                          numericValue.charAt(lastIndex) +
+                          numericValue.substring(lastIndex + 1).replace(/\./g, '');
+          }
+        } else {
+          // Chỉ nhận số nguyên
+          numericValue = value.replace(/\D/g, "");
+        }
+
         if (numericValue === "") {
           setInputValue("");
+          setFormattedValue("");
           return;
         }
-        const numberValue = Number(numericValue);
-        if (numberValue > max) {
+
+        // Chuyển đổi chuỗi thành số
+        const numValue = allowDecimal 
+          ? parseFloat(numericValue) 
+          : parseInt(numericValue);
+        
+        if (numValue > max) {
           showToast(
             "error",
             `Số lượng không được vượt quá ${formatNumber(max)}`
           );
           return;
         }
-        setInputValue(numberValue);
+        
+        setInputValue(numValue);
+
+        // Khi đang nhập, hiển thị giá trị đúng định dạng
+        // Với số thập phân, giữ nguyên dạng để người dùng tiếp tục nhập
+        if (numericValue.endsWith('.')) {
+          setFormattedValue(numericValue);
+        } else {
+          setFormattedValue(formatNumber(numValue));
+        }
       },
-      [disabled, max, showToast]
+      [disabled, allowDecimal, max, showToast]
+    );
+
+    const parseToNumber = useCallback(
+      (value) => {
+        if (allowDecimal) {
+          // Cho phép nhập số thập phân - chỉ xử lý với dấu chấm
+          const cleaned = value.toString().replace(/[^\d.]/g, "");
+          const parsed = parseFloat(cleaned);
+          return isNaN(parsed) ? min : parsed;
+        } else {
+          // Chỉ nhận số nguyên
+          const cleaned = value.toString().replace(/\D/g, "");
+          const parsed = parseInt(cleaned);
+          return isNaN(parsed) ? min : parsed;
+        }
+      },
+      [min, allowDecimal]
     );
 
     // Khi blur, cập nhật lại state cha và format lại
     const handleBlur = useCallback(() => {
-      let number = inputValue === "" ? min : Number(inputValue);
-      if (number < min) number = min;
-      if (number > max) {
-        showToast("error", `Số lượng không được vượt quá ${formatNumber(max)}`);
-        number = max;
+      if (inputValue === "") {
+        setState(min);
+        setInputValue(min);
+        setFormattedValue(formatNumber(min));
+        return;
       }
-      setInputValue(number);
-      setState(number);
-    }, [inputValue, min, max, setState, showToast]);
+
+      const number = parseToNumber(inputValue);
+
+      if (number < min) {
+        setState(min);
+        setInputValue(min);
+        setFormattedValue(formatNumber(min));
+      } else if (number > max) {
+        showToast("error", `Số lượng không được vượt quá ${formatNumber(max)}`);
+        setState(max);
+        setInputValue(max);
+        setFormattedValue(formatNumber(max));
+      } else {
+        setState(number);
+        setInputValue(number);
+        setFormattedValue(formatNumber(number));
+      }
+    }, [inputValue, min, max, setState, showToast, parseToNumber]);
 
     // Cộng/trừ luôn dùng số
     const handleChange = useCallback(
       (type) => {
         if (disabled) return;
-        let current = inputValue === "" ? min : Number(inputValue);
+        const current = parseToNumber(inputValue);
         let result = current;
         if (type === "increment" && current < max) {
           result = current + 1;
@@ -259,10 +333,11 @@ const InputNumberCustom = memo(
           return;
         }
         if (type === "decrement" && current > min) result = current - 1;
-        setInputValue(result);
         setState(result);
+        setInputValue(result);
+        setFormattedValue(formatNumber(result));
       },
-      [disabled, inputValue, max, min, setState, showToast]
+      [disabled, inputValue, max, min, setState, showToast, parseToNumber]
     );
 
     // Khi click nút +/-
@@ -270,6 +345,13 @@ const InputNumberCustom = memo(
       (e, type) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (window.getSelection) {
+          window.getSelection().removeAllRanges();
+        } else if (document.selection) {
+          document.selection.empty();
+        }
+
         handleChange(type);
       },
       [handleChange]
@@ -297,7 +379,7 @@ const InputNumberCustom = memo(
         <input
           disabled={disabled}
           type="text"
-          value={inputValue === "" ? "" : formatNumber(inputValue)}
+          value={formattedValue}
           onChange={handleInputChange}
           onBlur={handleBlur}
           onMouseDown={(e) => e.stopPropagation()}
@@ -321,6 +403,8 @@ const InputNumberCustom = memo(
     );
   }
 );
+
+InputNumberCustom.displayName = "InputNumberCustom";
 
 const variantsContent = {
   open: { height: "auto", opacity: 1 },
@@ -542,6 +626,7 @@ const SubProductRow = memo(
                         className="bg-white"
                         disabled={isSemiProduct}
                         max={Number(total_quantity) || Infinity}
+                        allowDecimal={true}
                       />
                     </div>
                   </td>

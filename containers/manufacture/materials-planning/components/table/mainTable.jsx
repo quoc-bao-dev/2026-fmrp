@@ -1,44 +1,37 @@
-import { SearchNormal1 } from "iconsax-react";
-import React, { useContext, useEffect, useState } from "react";
-import { v4 as uddid } from "uuid";
-
+import apiMaterialsPlanning from "@/Api/apiManufacture/manufacture/materialsPlanning/apiMaterialsPlanning";
+import PlusIcon from "@/components/icons/common/PlusIcon";
+import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
+import { TagColorOrange } from "@/components/UI/common/Tag/TagStatus";
 import PopupConfim from "@/components/UI/popupConfim/popupConfim";
 import Zoom from "@/components/UI/zoomElement/zoomElement";
-
-import useToast from "@/hooks/useToast";
-import { useToggle } from "@/hooks/useToggle";
-
-import FilterHeader from "../header/filterHeader";
-import TabItem from "./tabItem";
-import TabKeepStock from "./tabKeepStock";
-import TabPlan from "./tabPlan";
-
-import apiMaterialsPlanning from "@/Api/apiManufacture/manufacture/materialsPlanning/apiMaterialsPlanning";
-import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
-import TagBranch from "@/components/UI/common/Tag/TagBranch";
+import { optionsQuery } from "@/configs/optionsQuery";
 import {
     CONFIRM_DELETION,
     TITLE_DELETE_COMMAND,
 } from "@/constants/delete/deleteTable";
 import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
+import { ProductionsOrdersContext } from "@/containers/manufacture/productions-orders/context/productionsOrders";
 import { useBranchList } from "@/hooks/common/useBranch";
 import { useInternalPlansSearchCombobox } from "@/hooks/common/useInternalPlans";
 import { useOrdersSearchCombobox } from "@/hooks/common/useOrder";
-import { formatMoment } from "@/utils/helpers/formatMoment";
-import { debounce } from "lodash";
-import { MdAdd } from "react-icons/md";
-import { RiDeleteBin5Line } from "react-icons/ri";
-import PopupKeepStock from "../popup/popupKeepStock";
-import PopupPurchase from "../popup/popupPurchase";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { optionsQuery } from "@/configs/optionsQuery";
-import { TagColorOrange } from "@/components/UI/common/Tag/TagStatus";
-import { ProductionsOrdersContext } from "@/containers/manufacture/productions-orders/context/productionsOrders";
-import dynamic from "next/dynamic";
-import PopupPurchaseBeta from "../popup/popupPurchaseBeta";
 import useSetingServer from "@/hooks/useConfigNumber";
-import PlusIcon from "@/components/icons/common/PlusIcon";
-// import ModalDetail from "@/containers/manufacture/productions-orders/components/modal/modalDetail";
+import useToast from "@/hooks/useToast";
+import { useToggle } from "@/hooks/useToggle";
+import { formatMoment } from "@/utils/helpers/formatMoment";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { SearchNormal1 } from "iconsax-react";
+import { debounce } from "lodash";
+import dynamic from "next/dynamic";
+import React, { useContext, useEffect, useState } from "react";
+import { RiDeleteBin5Line } from "react-icons/ri";
+import { v4 as uddid } from "uuid";
+import FilterHeader from "../header/filterHeader";
+import PopupKeepStock from "../popup/popupKeepStock";
+import PopupPurchaseBeta from "../popup/popupPurchaseBeta";
+import TabItem from "./tabItem";
+import TabKeepStock from "./tabKeepStock";
+import TabPlan from "./tabPlan";
+
 const ModalDetail = dynamic(
     () =>
         import(
@@ -755,12 +748,6 @@ const MainTable = ({ dataLang }) => {
                                                 }}
                                             >
                                                 {e.icon} {e.name}
-                                                {/* <div className="flex items-center gap-2 px-3 py-2 ">
-                                                        {e.icon}
-                                                        <h3 className="text-xs font-medium text-red-600 3xl:text-base">
-                                                            {e.name}
-                                                        </h3>
-                                                    </div> */}
                                             </button>
                                         )) ||
                                             (e.id == 1 && (

@@ -1,4 +1,4 @@
-import EntryAndExist from '@/containers/report-statistical/warehouse-report/entry-and-exist'
+import EntryAndExist from "@/containers/report-statistical/warehouse-report/EntryAndExist"
 
 const Page = (props) => {
     return <EntryAndExist  {...props} />

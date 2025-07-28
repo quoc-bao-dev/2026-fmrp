@@ -69,7 +69,6 @@ const PopupBranch = (props) => {
         data.append("address", address);
         data.append("warehouse_import_id", warehouse.value);
 
-        // console.log("🚀 ~ FormData content:", Object.fromEntries(data.entries()));
         try {
             const { isSuccess, message } = await apiBranch.apiHandingBranch(
                 props?.id ? props?.id : undefined,

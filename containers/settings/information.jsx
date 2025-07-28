@@ -1,3 +1,4 @@
+import apiDashboard from "@/Api/apiDashboard/apiDashboard";
 import apiInformation from "@/Api/apiSettings/apiInformation";
 import { EmptyExprired } from "@/components/UI/common/EmptyExprired";
 import { Container } from "@/components/UI/common/layout";
@@ -10,13 +11,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 const Information = (props) => {
     const dataLang = props.dataLang;
 
     const isShow = useToast();
-
+    const dispatch = useDispatch();
     const statusExprired = useStatusExprired();
 
     const inputUpload = useRef();
@@ -104,6 +105,10 @@ const Information = (props) => {
             const { isSuccess } = await apiInformation.apiHandingInfo(formData);
             if (isSuccess) {
                 isShow("success", "Cập nhật dữ liệu thành công");
+                
+                // Cập nhật lại dữ liệu settings từ server
+                const res = await apiDashboard.apiSettings();
+                dispatch({ type: "setings/server", payload: res?.settings });
             } else {
                 isShow("error", "Cập nhật dữ liệu thất bại");
             }
@@ -121,7 +126,9 @@ const Information = (props) => {
     const _HandleSubmit = () => {
         sOnSending(true);
     };
+    
     const dataSetting = useSelector((state) => state.setings);
+
     return (
         <React.Fragment>
             <Head>
@@ -137,7 +144,7 @@ const Information = (props) => {
                         <h6>Thông Tin Doanh Nghiệp</h6>
                     </div>
                 )}
-                <div className="grid grid-cols-9 gap-5">
+                <div className="grid grid-cols-9 gap-5 pb-4">
                     <div className="col-span-2 sticky ">
                         <div className="h-fit p-5 rounded bg-[#E2F0FE] space-y-3 mb-3">
                             <ListBtn_Setting dataLang={dataLang} />
@@ -228,25 +235,29 @@ const Information = (props) => {
                                 </p>
                             </div>
                             <div className="flex flex-col justify-between h-full col-span-2">
-                                <h3 className="text-[#344054]">Hồ sơ HĐĐT của đơn vị đã hoàn thiện 10%</h3>
+                                <h3 className="text-[#344054]">Hồ sơ HĐĐT của đơn vị đã hoàn thiện {dataSetting?.completion_percent}%</h3>
                                 <div className="w-full h-2.5 bg-white rounded-full relative">
                                     <div
                                         className="absolute left-0 bg-gradient-to-r from-[#1556D9] to-[#8FE8FA] h-2.5 rounded-full"
-                                        style={{ width: `10%` }}
+                                        style={{ width: `${dataSetting?.completion_percent}%` }}
                                     />
                                 </div>
                                 <p className="text-[#667085] font-[300]">
                                     Hãy hoàn thiện hồ sơ HĐĐT của bạn để phát hành hóa đơn điện tử nhanh chóng, tránh
                                     sai sót.
                                 </p>
-                                <div>
-                                    <h5 className="text-[#11315B] ">Thông tin còn thiếu</h5>
-                                    <div className="flex divide-x divide-red-500">
-                                        {/* {listInfo.map((e, i) => 
-                                            <h6 key={i} className='text-[#EE1E1E] font-[300] text-[14px] px-2 w-fit'>{e}</h6>
-                                        )} */}
+                                {dataSetting?.missing_fields?.length > 0 ? (
+                                    <div className="flex flex-col gap-1">
+                                        <h5 className="text-[#11315B] ">Thông tin còn thiếu</h5>
+                                        <div className="flex divide-x divide-red-500">
+                                            {dataSetting?.missing_fields?.map((e, i) =>
+                                                <h6 key={i} className={`${i === 0 ? 'pl-0' : ''} text-[#EE1E1E] font-[300] text-[14px] px-2 w-fit`}>{e}</h6>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
+                                ):(
+                                    <h5 className="text-gray-800 rounded-md bg-green-01/50 px-2 py-1 w-fit">Thông tin đã hoàn thiện</h5>
+                                )}
                             </div>
                         </div>
                         <div className="pt-3 space-y-3">

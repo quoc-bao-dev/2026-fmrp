@@ -26,7 +26,6 @@ import {
   useState,
 } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa";
-import { useDispatch } from "react-redux";
 import { Tooltip } from "react-tippy";
 import { twMerge } from "tailwind-merge";
 
@@ -46,6 +45,7 @@ const InputNumberCustom = memo(
     max = Infinity,
     disabled = false,
     isError = false,
+    allowDecimal = true, // Thêm prop cho phép nhập số thập phân
   }) => {
     const [inputValue, setInputValue] = useState(state || 0);
     const [formattedValue, setFormattedValue] = useState(
@@ -57,26 +57,7 @@ const InputNumberCustom = memo(
       setFormattedValue(formatNumber(state || 0));
     }, [state]);
 
-    const parseToNumber = useCallback(
-      (value) => {
-        const cleaned = value.toString().replace(/\D/g, "");
-        const parsed = parseInt(cleaned);
-        return isNaN(parsed) ? min : parsed;
-      },
-      [min]
-    );
-
-    const handleChange = useCallback(
-      (type) => {
-        if (disabled) return;
-        const current = parseToNumber(state);
-        let result = current;
-        if (type === "increment" && current < max) result = current + 1;
-        if (type === "decrement" && current > min) result = current - 1;
-        setState(result);
-      },
-      [disabled, state, parseToNumber, max, min, setState]
-    );
+    const dataSeting = useSetingServer();
 
     const handleInputChange = useCallback(
       (e) => {
@@ -89,7 +70,25 @@ const InputNumberCustom = memo(
           return;
         }
 
-        const numericValue = value.replace(/\D/g, "");
+        // Xử lý chuỗi đầu vào dựa vào allowDecimal
+        let numericValue;
+        if (allowDecimal) {
+          // Cho phép nhập số thập phân - Chỉ chấp nhận dấu chấm (.) làm dấu thập phân
+          // Loại bỏ tất cả ký tự không phải số hoặc dấu chấm
+          numericValue = value.replace(/[^\d.]/g, "");
+          
+          // Đảm bảo chỉ có một dấu chấm
+          const countDecimal = (numericValue.match(/\./g) || []).length;
+          if (countDecimal > 1) {
+            const lastIndex = numericValue.lastIndexOf('.');
+            numericValue = numericValue.substring(0, lastIndex) + 
+                          numericValue.charAt(lastIndex) +
+                          numericValue.substring(lastIndex + 1).replace(/\./g, '');
+          }
+        } else {
+          // Chỉ nhận số nguyên
+          numericValue = value.replace(/\D/g, "");
+        }
 
         if (numericValue === "") {
           setInputValue("");
@@ -97,11 +96,51 @@ const InputNumberCustom = memo(
           return;
         }
 
-        const numValue = parseInt(numericValue);
+        // Chuyển đổi chuỗi thành số
+        const numValue = allowDecimal 
+          ? parseFloat(numericValue) 
+          : parseInt(numericValue);
+        
         setInputValue(numValue);
-        setFormattedValue(formatNumber(numValue));
+
+        // Khi đang nhập, hiển thị giá trị đúng định dạng
+        // Với số thập phân, giữ nguyên dạng để người dùng tiếp tục nhập
+        if (numericValue.endsWith('.')) {
+          setFormattedValue(numericValue);
+        } else {
+          setFormattedValue(formatNumber(numValue));
+        }
       },
-      [disabled]
+      [disabled, allowDecimal, dataSeting]
+    );
+
+    const parseToNumber = useCallback(
+      (value) => {
+        if (allowDecimal) {
+          // Cho phép nhập số thập phân - chỉ xử lý với dấu chấm
+          const cleaned = value.toString().replace(/[^\d.]/g, "");
+          const parsed = parseFloat(cleaned);
+          return isNaN(parsed) ? min : parsed;
+        } else {
+          // Chỉ nhận số nguyên
+          const cleaned = value.toString().replace(/\D/g, "");
+          const parsed = parseInt(cleaned);
+          return isNaN(parsed) ? min : parsed;
+        }
+      },
+      [min, allowDecimal]
+    );
+
+    const handleChange = useCallback(
+      (type) => {
+        if (disabled) return;
+        const current = parseToNumber(state);
+        let result = current;
+        if (type === "increment" && current < max) result = current + 1;
+        if (type === "decrement" && current > min) result = current - 1;
+        setState(result);
+      },
+      [disabled, state, parseToNumber, max, min, setState]
     );
 
     const handleBlur = useCallback(() => {
@@ -303,6 +342,7 @@ const ProductRow = memo(
             <InputNumberCustom
               state={product.quantity_success}
               setState={(value) => updateProductQuantity(index, value)}
+              allowDecimal={true}
             />
           </div>
         </td>
@@ -312,6 +352,7 @@ const ProductRow = memo(
               state={product.error === undefined ? 0 : product.error}
               setState={(value) => updateProductError(index, value)}
               isError={true}
+              allowDecimal={true}
             />
           </div>
         </td>
@@ -399,7 +440,6 @@ const PopupCompleteCommand = ({ onClose }) => {
       }));
       setProducts(itemsWithDefaults);
       setSelectAll(false);
-      console.log(itemsWithDefaults)
     }
   }, [productCompleted]);
 
@@ -475,7 +515,6 @@ const PopupCompleteCommand = ({ onClose }) => {
           ...updatedProducts[index],
           quantity_success: value,
         };
-        console.log(updatedProducts)
         return updatedProducts;
       });
     },

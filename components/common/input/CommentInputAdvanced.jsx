@@ -1,18 +1,15 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import imageCompression from "browser-image-compression";
-import { PiImage, PiPaperPlaneRightFill, PiSmiley, PiTextAa, PiPaperclip } from "react-icons/pi";
 import ButtonAnimationNew from "@/components/common/button/ButtonAnimationNew";
-import ToatstNotifi from "@/utils/helpers/alerNotification";
 import CloseXIcon from "@/components/icons/common/CloseXIcon";
-import { StateContext } from "@/context/_state/productions-orders/StateContext";
-import { usePostAddComment } from "@/managers/api/productions-order/comment/usePostAddComment";
-
-import { useGetListStaffs } from "@/managers/api/productions-order/comment/useGetListStaffs";
-import { AnimatePresence, motion } from "framer-motion";
-import Image from "next/image";
 import ImageAvatar from "@/containers/manufacture/productions-orders/components/ui/comment/ImageAvatar";
-import { useGetListEmoji } from "@/managers/api/productions-order/comment/useGetListEmoji";
+import { StateContext } from "@/context/_state/productions-orders/StateContext";
 import useToast from "@/hooks/useToast";
+import { useGetListEmoji } from "@/managers/api/productions-order/comment/useGetListEmoji";
+import { useGetListStaffs } from "@/managers/api/productions-order/comment/useGetListStaffs";
+import { usePostAddComment } from "@/managers/api/productions-order/comment/usePostAddComment";
+import imageCompression from "browser-image-compression";
+import { AnimatePresence, motion } from "framer-motion";
+import { useContext, useEffect, useRef, useState } from "react";
+import { PiImage, PiPaperPlaneRightFill, PiSmiley } from "react-icons/pi";
 
 const CommentInputAdvanced = () => {
     const fileInputRef = useRef();

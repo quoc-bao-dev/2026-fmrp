@@ -75,7 +75,6 @@ const Register = React.memo((props) => {
     const showToat = useToast();
 
     const [isState, sIsState] = useState(initialState);
-    console.log("isState.countOtp", isState.countOtp);
 
     const data = useSelector((state) => state.availableLang);
 
