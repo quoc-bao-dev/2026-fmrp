@@ -5,13 +5,14 @@ import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport'
 import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet'
 import SearchComponent from '@/components/UI/filterComponents/searchComponent'
 import Pagination from '@/components/UI/pagination'
-import SelectReport from '@/components/common/select/SelectReport'
 import SelectSearchReport from '@/components/common/select/SelectSearchReport'
 import ReportLayout from '@/components/layout/ReportLayout'
 import TableSection from '@/components/layout/ReportLayout/TableSection'
 import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems'
-import PopupDetail from '@/containers/purchase-order/import/components/popup'
+import PopupDetail from '@/containers/manufacture/production-warehouse/components/popup'
 import { useLanguageContext } from '@/context/ui/LanguageContext'
+import { useGetWarehouse } from '@/hooks/common/useWarehouses'
+import useFeature from '@/hooks/useConfigFeature'
 import usePagination from '@/hooks/usePagination'
 import useStatusExprired from '@/hooks/useStatusExprired'
 import formatMoneyOrDash from '@/utils/helpers/formatMoneyOrDash'
@@ -20,12 +21,10 @@ import moment from 'moment'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { PiPackage, PiWarehouseLight } from 'react-icons/pi'
+import { useSelector } from 'react-redux'
 import { useDebounce } from 'use-debounce'
 import { useExportExcel } from './hook/useExportExcel'
-import { useGetListReportImport } from './hook/useGetListReportImport'
-import { useGetWarehouse } from './hook/useGetWarehouse'
-import useFeature from '@/hooks/useConfigFeature'
-import { useSelector } from 'react-redux'
+import { useGetListReportExportManufacture } from './hook/useGetListReportExportManufacture'
 
 const breadcrumbItems = [
   {
@@ -48,8 +47,10 @@ const ExportProduction = (props) => {
   // console.log("product_serial", dataProductSerial?.is_enable)
   const auth = useSelector((state) => state.auth)
   // Tạo biến kiểm tra quyền xem giá
+  console.log(auth)
   const canViewPrice =
-    auth?.permissions_current?.length === 0 || auth?.permissions_current?.report_warehouse_import?.is_price == 1
+    auth?.permissions_current?.length === 0 ||
+    auth?.permissions_current?.report_warehouse_exportManufacture?.is_price == 1
 
   // Tạo biến kiểm tra các tính năng
   const hasProductExpiry = dataProductExpiry?.is_enable == 1
@@ -74,10 +75,10 @@ const ExportProduction = (props) => {
   const { data: warehouseData } = useGetWarehouse()
   const { data: dataProduct, refetch } = useInventoryItems(debouncedSearchTerm)
   const {
-    data: dataReportImport,
+    data: dataReportExportManufacture,
     isFetching,
-    refetch: refetchReportImport,
-  } = useGetListReportImport({
+    refetch: refetchReportExportManufacture,
+  } = useGetListReportExportManufacture({
     page: currentPage,
     limit: limit,
     search: debouncedSearchValue,
@@ -90,10 +91,18 @@ const ExportProduction = (props) => {
   })
 
   useEffect(() => {
-    if (refetchReportImport) {
-      refetchReportImport()
+    if (refetchReportExportManufacture) {
+      refetchReportExportManufacture()
     }
-  }, [limit, dateRange, selectedWarehouse, selectedProducts, debouncedSearchValue, currentPage, refetchReportImport])
+  }, [
+    limit,
+    dateRange,
+    selectedWarehouse,
+    selectedProducts,
+    debouncedSearchValue,
+    currentPage,
+    refetchReportExportManufacture,
+  ])
 
   useEffect(() => {
     // Cập nhật options khi dataProduct thay đổi
@@ -191,7 +200,7 @@ const ExportProduction = (props) => {
     })
 
     // Reset warehouse selection
-    setSelectedWarehouse(null)
+    // setSelectedWarehouse(null)
 
     // Reset product search and selection
     setSearchTerm('')
@@ -210,7 +219,7 @@ const ExportProduction = (props) => {
     })
   }
 
-  const { multiDataSet } = useExportExcel(dataReportImport)
+  const { multiDataSet } = useExportExcel(dataReportExportManufacture)
 
   return (
     <ReportLayout
@@ -222,7 +231,7 @@ const ExportProduction = (props) => {
           <div className="flex gap-3">
             <DateToDateReport placeholder="Giai đoạn" value={dateRange} onChange={handleDateChange} />
 
-            <SelectReport
+            <SelectSearchReport
               placeholder="Kho thành phẩm"
               onChange={handleWarehouseChange}
               onClear={handleClearWarehouse}
@@ -279,22 +288,24 @@ const ExportProduction = (props) => {
             { title: 'Mặt hàng', width: 'w-60', textAlign: 'left' },
             { title: 'LSXCT', width: 'w-36', textAlign: 'left' },
             { title: 'Kho - VT xuất', width: 'w-44', textAlign: 'left' },
-            { title: 'ĐVT', width: 'w-24', textAlign: 'left' },
+            { title: 'ĐVT', width: 'w-24', textAlign: 'center' },
             { title: 'SL', width: 'w-20', textAlign: 'center' },
             { title: 'GT quy đổi', width: 'w-28', textAlign: 'center' },
-            { title: 'SL quy đổi', width: 'w-24', textAlign: 'center' },
-            { title: 'Giá vốn', width: 'w-28', textAlign: 'center' },
-            { title: 'Thành tiền', width: 'w-32 2xl:w-36', textAlign: 'end' },
+            { title: 'SL quy đổi', width: 'w-24 2xl:w-28', textAlign: 'center' },
+            ...(canViewPrice ? [
+              { title: 'Giá vốn', width: 'w-32 2xl:w-36', textAlign: 'center' },
+              { title: 'Thành tiền', width: 'w-32 2xl:w-36', textAlign: 'end' },
+            ] : []),
             { title: 'Ghi chú', width: 'w-52', textAlign: 'left' },
           ]}
-          data={dataReportImport?.rResult}
+          data={dataReportExportManufacture?.rResult}
           isFetching={isFetching}
           renderFixedRow={(item, index) => (
             <>
               <RowItemTable className="w-14 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
                 {index + 1}
               </RowItemTable>
-              <RowItemTable className="w-32 2xl:w-36 flex flex-col justify-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0 text-center">
+              <RowItemTable className="w-32 2xl:w-36 flex flex-col justify-center items-start py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0 text-center">
                 <span>{moment(item.date).format('DD/MM/YYYY')}</span>
                 <span>{moment(item.date).format('HH:mm:ss')}</span>
               </RowItemTable>
@@ -302,7 +313,7 @@ const ExportProduction = (props) => {
                 <PopupDetail
                   dataLang={dataLang}
                   className="responsive-text-sm font-semibold text-center text-[#003DA0] hover:text-blue-600 transition-all ease-linear cursor-pointer "
-                  name={item.code_import}
+                  name={item.code}
                   id={item.id}
                 />
               </RowItemTable>
@@ -311,40 +322,44 @@ const ExportProduction = (props) => {
           renderScrollableRow={(item, index) => (
             <>
               <RowItemTable className="w-32 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
-                {item.name_supplier}
-              </RowItemTable>
-              <RowItemTable className="w-60 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
                 {item.item_code}
               </RowItemTable>
-              <RowItemTable className="w-36 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
-                <div className="flex flex-col gap-2 justify-start">
+              <RowItemTable className="w-60 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+                <div className="flex flex-col gap-1 justify-start">
                   <p className="text-left responsive-text-sm text-neutral-07 font-normal">{item.item_name}</p>
                   <p className="text-left responsive-text-xxs text-neutral-07 font-normal">
                     {item.item_variation || ''}
                   </p>
                 </div>
               </RowItemTable>
-              <RowItemTable className="w-44 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
-                {item.unit_name}
+              <RowItemTable className="w-36 flex justify-start items-center py-2 px-3 border-r border-[#E0E0E1] !text-new-blue !responsive-text-sm font-normal flex-shrink-0">
+                {item.reference_no_detail}
               </RowItemTable>
-              <RowItemTable className="w-24 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+              <RowItemTable className="w-44 flex justify-start items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
                 {item.warehouse_name}
+              </RowItemTable>
+              <RowItemTable className="w-24 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+                {item.unit_name}
               </RowItemTable>
               <RowItemTable className="w-20 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
                 {formatNumber(Number(item.quantity))}
               </RowItemTable>
               <RowItemTable className="w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
-                {formatNumber(Number(item.quantity))}
+                {formatNumber(Number(item.coefficient))}
               </RowItemTable>
-              <RowItemTable className="w-24 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
-                {formatNumber(Number(item.quantity))}
+              <RowItemTable className="w-24 2xl:w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+                {formatNumber(Number(item.quantity_exchange))} {item.unit_name_qd}
               </RowItemTable>
-              <RowItemTable className="w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
-                {formatNumber(Number(item.quantity))}
-              </RowItemTable>
-              <RowItemTable className="w-32 2xl:w-36 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
-                {formatNumber(Number(item.quantity))}
-              </RowItemTable>
+              {canViewPrice && (
+                <>
+                  <RowItemTable className="w-32 2xl:w-36 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+                    {formatMoneyOrDash(Number(item.price))}
+                  </RowItemTable>
+                  <RowItemTable className="w-32 2xl:w-36 flex justify-end items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+                    {formatMoneyOrDash(Number(item.amount))}
+                  </RowItemTable>
+                </>
+              )}
               <RowItemTable className="w-52 flex justify-start items-center py-2 px-3 text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
                 {item.note || '-'}
               </RowItemTable>
@@ -359,24 +374,22 @@ const ExportProduction = (props) => {
               <RowItemTable className="w-60 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-36 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-44 flex-shrink-0 bg-white"></RowItemTable>
-              <RowItemTable className="h-10 w-24 flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
+              <RowItemTable className="h-10 w-24 whitespace-nowrap flex items-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
                 Tổng cộng
               </RowItemTable>
               <RowItemTable className="h-10 w-20 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
-                {formatNumber(Number(dataReportImport?.rTotal?.total_quantity))}
+                {formatNumber(Number(dataReportExportManufacture?.rTotal?.total_quantity))}
               </RowItemTable>
-              <RowItemTable className="h-10 w-28 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
-                {formatNumber(Number(dataReportImport?.rTotal?.total_quantity))}
-              </RowItemTable>
-              <RowItemTable className="h-10 w-24 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
-                {formatNumber(Number(dataReportImport?.rTotal?.total_quantity))}
-              </RowItemTable>
-              <RowItemTable className="h-10 w-28 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
-                {formatNumber(Number(dataReportImport?.rTotal?.total_quantity))}
-              </RowItemTable>
-              <RowItemTable className="h-10 w-32 2xl:w-36 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
-                {formatNumber(Number(dataReportImport?.rTotal?.total_quantity))}
-              </RowItemTable>
+              <RowItemTable className="h-10 w-28 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white"></RowItemTable>
+              <RowItemTable className="h-10 w-24 2xl:w-28 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white"></RowItemTable>
+              {canViewPrice && (
+                <>
+                  <RowItemTable className="h-10 w-32 2xl:w-36 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white"></RowItemTable>
+                  <RowItemTable className="h-10 w-32 2xl:w-36 flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
+                    {formatMoneyOrDash(Number(dataReportExportManufacture?.rTotal?.total_amount))}
+                  </RowItemTable>
+                </>
+              )}
               <RowItemTable className="w-52 flex-shrink-0 bg-white"></RowItemTable>
             </>
           )}
@@ -385,7 +398,7 @@ const ExportProduction = (props) => {
       totalSection={
         <Pagination
           postsPerPage={limit}
-          totalPosts={Number(dataReportImport?.output?.iTotalDisplayRecords) || 0}
+          totalPosts={Number(dataReportExportManufacture?.output?.iTotalDisplayRecords) || 0}
           paginate={paginate}
           currentPage={currentPage}
         />

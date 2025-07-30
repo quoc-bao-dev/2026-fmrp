@@ -102,22 +102,6 @@ const Navbar = (props) => {
   const isNavbarWarehouse = [
     {
       id: uuidv4(),
-      title: 'Báo cáo tồn kho',
-      children: [
-        {
-          id: uuidv4(),
-          name: 'Thẻ kho',
-          path: '/report-statistical/warehouse-report/card',
-        },
-        {
-          id: uuidv4(),
-          name: 'BC nhập xuất tồn',
-          path: '/report-statistical/warehouse-report/entry-and-exist',
-        },
-      ],
-    },
-    {
-      id: uuidv4(),
       title: 'Báo cáo chi tiết các phiếu',
       children: [
         {
@@ -139,6 +123,23 @@ const Navbar = (props) => {
           id: uuidv4(),
           name: 'BC xuất kho giao hàng',
           path: '/report-statistical/warehouse-report/export-delivery',
+        },
+      ],
+    },
+    {
+      id: uuidv4(),
+      title: 'Báo cáo tồn kho',
+      children: [
+        {
+          id: uuidv4(),
+          name: 'BC nhập xuất tồn',
+          path: '/report-statistical/warehouse-report/entry-and-exist',
+        },
+        {
+          id: uuidv4(),
+          name: 'Thẻ kho',
+          path: '/report-statistical/warehouse-report/card',
+          disabled: true, // Thêm thuộc tính disabled
         },
       ],
     },
@@ -305,7 +306,7 @@ const Navbar = (props) => {
   }, [router.pathname])
 
   return (
-    <ul className="w-[17%] h-fit xl:p-4 2xl:p-6 pt-4 flex flex-col gap-6 border border-[#E7F2FE] bg-primary-06 rounded-lg">
+    <ul className="w-[17%] h-fit xl:p-4 2xl:p-6 pt-4 p-2 flex flex-col gap-6 border border-[#E7F2FE] bg-primary-06 rounded-lg">
       {navbar &&
         navbar.map((item) => {
           return (
@@ -315,24 +316,37 @@ const Navbar = (props) => {
                 {item.children ? (
                   item.children.map((child) => {
                     return (
-                      <Link href={child.path} key={child.id} className="relative">
-                        <li
-                          className={`group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
-                            router.pathname === child.path ? 'bg-typo-blue-5 text-white' : ''
-                          } `}
-                        >
-                          <div className="flex items-center gap-2">
-                            <div
-                              className={`size-1.5 rounded-full flex-shrink-0 ${
-                                router.pathname === child.path ? 'bg-white/60' : 'bg-primary-01'
-                              } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
-                            />
-                            <div className="flex flex-col items-start w-full">
-                              <div className="responsive-text-sm">{child.name}</div>
+                      <div key={child.id} className="relative">
+                        {child.disabled ? (
+                          <li className="group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-not-allowed opacity-50">
+                            <div className="flex items-center gap-2">
+                              <div className="size-1.5 rounded-full flex-shrink-0 bg-gray-400" />
+                              <div className="flex flex-col items-start w-full">
+                                <div className="responsive-text-sm text-gray-400">{child.name}</div>
+                              </div>
                             </div>
-                          </div>
-                        </li>
-                      </Link>
+                          </li>
+                        ) : (
+                          <Link href={child.path} className="relative">
+                            <li
+                              className={`group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
+                                router.pathname === child.path ? 'bg-typo-blue-5 text-white' : ''
+                              } `}
+                            >
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`size-1.5 rounded-full flex-shrink-0 ${
+                                    router.pathname === child.path ? 'bg-white/60' : 'bg-primary-01'
+                                  } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
+                                />
+                                <div className="flex flex-col items-start w-full">
+                                  <div className="responsive-text-sm">{child.name}</div>
+                                </div>
+                              </div>
+                            </li>
+                          </Link>
+                        )}
+                      </div>
                     )
                   })
                 ) : (

@@ -1,4 +1,5 @@
 import apiComons from '@/Api/apiComon/apiComon'
+import apiReport from '@/Api/apiReport-Statistical/apiReport'
 import apiReturnSales from '@/Api/apiSalesExportProduct/returnSales/apiReturnSales'
 import apiSalesOrder from '@/Api/apiSalesExportProduct/salesOrder/apiSalesOrder'
 import { optionsQuery } from '@/configs/optionsQuery'
@@ -105,8 +106,16 @@ export const useWarehouseInventory = (id) => {
     enabled: !!id,
   })
 }
-/// vị trí kho kiểm kê
 
+/// kho 
+export const useGetWarehouse = () => {
+  return useQuery({
+    queryKey: ["api_get_warehouse"],
+    queryFn: () => apiReport.apiGetWarehouse(),
+  });
+};
+
+/// vị trí kho kiểm kê
 export const useLocationByWarehouseInventory = (id) => {
   const dispatch = useDispatch()
   return useQuery({

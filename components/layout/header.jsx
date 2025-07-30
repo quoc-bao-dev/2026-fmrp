@@ -713,34 +713,37 @@ const Header = () => {
           // img: "/icon/header/khac/bc.png",
           items: [
             {
-              viewOwn: -1,
-              view: -1,
-              name: 'Quản lý sản xuất',
-              link: '/report-statistical/production-manager/quota-materials',
-            },
-            {
-              viewOwn: -1,
+              viewOwn: 1,
               view: 1,
               name: 'Tồn kho',
-              link: '/report-statistical/warehouse-report/card',
+              link: '/report-statistical/warehouse-report/entry-and-exist',
+            },
+            {
+              viewOwn: 0,
+              view: 0,
+              name: 'Quản lý sản xuất',
+              link: '/report-statistical/production-manager/quota-materials',
+              forceDisableForAdmin: true,
+            },
+            {
+              viewOwn: 0,
+              view: 0,
+              name: 'Báo cáo bán hàng',
+              link: '/report-statistical/sales-report/quote',
+              forceDisableForAdmin: true,
+            },
+            {
+              viewOwn: 0,
+              view: 0,
+              name: 'Báo cáo mua hàng',
+              link: '/report-statistical/purchase-order/purchases',
+              forceDisableForAdmin: true,
             },
             // {
             //     viewOwn: -1,
             //     view: -1,
             //     name: "Báo cáo QC"
             // },
-            {
-              viewOwn: -1,
-              view: -1,
-              name: 'Báo cáo bán hàng',
-              link: '/report-statistical/sales-report/quote',
-            },
-            {
-              viewOwn: -1,
-              view: -1,
-              name: 'Báo cáo mua hàng',
-              link: '/report-statistical/purchase-report/purchases',
-            },
             // {
             //     viewOwn: -1,
             //     view: -1,

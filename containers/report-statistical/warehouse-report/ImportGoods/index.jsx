@@ -5,13 +5,13 @@ import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport'
 import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet'
 import SearchComponent from '@/components/UI/filterComponents/searchComponent'
 import Pagination from '@/components/UI/pagination'
-import SelectReport from '@/components/common/select/SelectReport'
 import SelectSearchReport from '@/components/common/select/SelectSearchReport'
 import ReportLayout from '@/components/layout/ReportLayout'
 import TableSection from '@/components/layout/ReportLayout/TableSection'
 import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems'
 import PopupDetail from '@/containers/manufacture/products-warehouse/components/pupup'
 import { useLanguageContext } from '@/context/ui/LanguageContext'
+import { useGetWarehouse } from '@/hooks/common/useWarehouses'
 import usePagination from '@/hooks/usePagination'
 import useStatusExprired from '@/hooks/useStatusExprired'
 import formatNumber from '@/utils/helpers/formatnumber'
@@ -20,7 +20,6 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { PiPackage, PiWarehouseLight } from 'react-icons/pi'
 import { useDebounce } from 'use-debounce'
-import { useGetWarehouse } from '../ImportPurchase/hook/useGetWarehouse'
 import { useExportExcel } from './hook/useExportExcel'
 import { useGetListReportImportFinishedGoods } from './hook/useGetListReportImport'
 
@@ -175,7 +174,7 @@ const ImportGoods = (props) => {
     })
 
     // Reset warehouse selection
-    setSelectedWarehouse(null)
+    // setSelectedWarehouse(null)
 
     // Reset product search and selection
     setSearchTerm('')
@@ -206,7 +205,7 @@ const ImportGoods = (props) => {
           <div className="flex gap-3">
             <DateToDateReport placeholder="Giai đoạn" value={dateRange} onChange={handleDateChange} />
 
-            <SelectReport
+            <SelectSearchReport
               placeholder="Kho thành phẩm"
               onChange={handleWarehouseChange}
               onClear={handleClearWarehouse}
@@ -260,9 +259,9 @@ const ImportGoods = (props) => {
           ]}
           scrollableColumns={[
             { title: 'LSX chi tiết', width: 'w-40', textAlign: 'left' },
-            { title: 'Mã mặt hàng', width: 'w-32', textAlign: 'center' },
+            { title: 'Mã mặt hàng', width: 'w-32', textAlign: 'left' },
             { title: 'Mặt hàng', width: 'w-60', textAlign: 'left' },
-            { title: 'Kho nhập', width: 'w-60', textAlign: 'left' },
+            { title: 'Vị trí', width: 'w-60', textAlign: 'left' },
             { title: 'ĐVT', width: 'w-24', textAlign: 'center' },
             { title: 'SL', width: 'w-20', textAlign: 'center' },
             { title: 'Ghi chú', width: 'min-w-52', textAlign: 'center' },
@@ -293,7 +292,7 @@ const ImportGoods = (props) => {
               <RowItemTable className="flex items-center py-2 px-3 border-r border-[#E0E0E1] !text-new-blue !responsive-text-sm font-normal w-40 flex-shrink-0">
                 {item.reference_no_detail}
               </RowItemTable>
-              <RowItemTable className="flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-32 flex-shrink-0">
+              <RowItemTable className="flex justify-start items-center text-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-32 flex-shrink-0">
                 {item.item_code}
               </RowItemTable>
               <RowItemTable className="flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-60 flex-shrink-0">
@@ -305,7 +304,7 @@ const ImportGoods = (props) => {
                 </div>
               </RowItemTable>
               <RowItemTable className="flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-60 flex-shrink-0">
-                {item.warehouse_name}
+                {item.location_name}
               </RowItemTable>
               <RowItemTable className="flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-24 flex-shrink-0">
                 {item.unit_name}
@@ -313,7 +312,7 @@ const ImportGoods = (props) => {
               <RowItemTable className="flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-20 flex-shrink-0">
                 {formatNumber(Number(item.quantity))}
               </RowItemTable>
-              <RowItemTable className="flex justify-start items-center py-2 px-3 text-neutral-07 !responsive-text-sm font-normal min-w-52 flex-shrink-0">
+              <RowItemTable className="flex justify-start items-center py-2 px-3 text-neutral-07 !responsive-text-sm font-normal w-52 flex-shrink-0">
                 {item.note}
               </RowItemTable>
             </>
@@ -327,7 +326,7 @@ const ImportGoods = (props) => {
               <RowItemTable className="w-32 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-60 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-60 flex-shrink-0 bg-white"></RowItemTable>
-              <RowItemTable className="w-24 h-10 flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
+              <RowItemTable className="w-24 h-10 whitespace-nowrap flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
                 Tổng cộng
               </RowItemTable>
               <RowItemTable

@@ -54,7 +54,7 @@ export const useExportExcel = (dataReportImport) => {
           },
         },
         {
-          title: 'Kho nhập',
+          title: 'Vị trí',
           width: { wch: 30 },
           style: {
             fill: { fgColor: { rgb: 'C7DFFB' } },

@@ -1258,7 +1258,10 @@ body {
   padding: 0 !important;
 
 }
-
+.ant-select-item-option.ant-custom.ant-select-item-option-active, 
+.ant-select-item.ant-select-item-option.ant-custom {
+  padding: 0 !important;  
+}
 // .ant-select-item-option-active {
 //   // padding: 0 !important;  
 // }
@@ -1349,3 +1352,25 @@ body {
 //     flex: none !important;
 //   }
 // }
+
+/* Grouped Table Headers */
+.grouped-header-table {
+  .no-scrollbar {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+  
+  /* Ensure equal distribution of sub-columns within groups */
+  .sub-column-group {
+    display: flex;
+    
+    > * {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+}

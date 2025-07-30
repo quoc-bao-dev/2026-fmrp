@@ -1,9 +1,9 @@
 import apiReport from '@/Api/apiReport-Statistical/apiReport'
 import { useQuery } from '@tanstack/react-query'
 
-export const useGetListReportImport = (data) => {
+export const useGetListReportExportManufacture = (data) => {
   return useQuery({
     queryKey: ['api_get_list_report_import'],
-    queryFn: () => apiReport.apiGetListReportImport({ params: data }),
+    queryFn: () => apiReport.apiGetListReportExportManufacture({ params: data }),
   })
 }
