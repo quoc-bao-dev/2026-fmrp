@@ -29,9 +29,6 @@ const FilterDropdown = ({ children, trigger }) => {
         }
     };
 
-    console.log('stateFilterDropdown', stateFilterDropdown);
-
-
     useEffect(() => {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);

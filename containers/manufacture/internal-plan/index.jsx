@@ -159,10 +159,6 @@ const InternalPlan = (props) => {
     };
 
     const _HandleChangeInput = (id, checkedUn, type, value) => {
-        console.log("🚀 ~ const_HandleChangeInput= ~ value:", value);
-        console.log("🚀 ~ const_HandleChangeInput= ~ type:", type);
-        console.log("🚀 ~ const_HandleChangeInput= ~ checkedUn:", checkedUn);
-        console.log("🚀 ~ const_HandleChangeInput= ~ id:", id);
 
         handleQueryId({
             status: true,
@@ -375,11 +371,14 @@ const InternalPlan = (props) => {
                         </div>
                         <Customscrollbar className="h-full overflow-y-auto">
                             <div className="w-full">
-                                <HeaderTable gridCols={9}>
+                                <HeaderTable gridCols={10}>
+                                    <ColumnTable colSpan={0.5} textAlign={"center"}>
+                                        STT
+                                    </ColumnTable>
                                     <ColumnTable colSpan={1} textAlign={"center"}>
                                         {dataLang?.import_day_vouchers || "import_day_vouchers"}
                                     </ColumnTable>
-                                    <ColumnTable colSpan={1} textAlign={"center"}>
+                                    <ColumnTable colSpan={1.5} textAlign={"center"}>
                                         {dataLang?.import_code_vouchers || "import_code_vouchers"}
                                     </ColumnTable>
                                     <ColumnTable colSpan={2} textAlign={"left "}>
@@ -408,7 +407,10 @@ const InternalPlan = (props) => {
                                     <>
                                         <div className="divide-y divide-slate-200 h-[100%]">
                                             {data?.rResult?.map((e, index) => (
-                                                <RowTable key={e.id.toString()} gridCols={9}>
+                                                <RowTable key={e.id.toString()} gridCols={10}>
+                                                    <RowItemTable colSpan={0.5} textAlign={"center"}>
+                                                        {index + 1}
+                                                    </RowItemTable>
                                                     <RowItemTable colSpan={1} textAlign={"center"}>
                                                         {e?.date != null
                                                             ? formatMoment(
@@ -417,7 +419,7 @@ const InternalPlan = (props) => {
                                                             )
                                                             : ""}
                                                     </RowItemTable>
-                                                    <RowItemTable colSpan={1} textAlign={"center"}>
+                                                    <RowItemTable colSpan={1.5} textAlign={"center"}>
                                                         <PopupDetail
                                                             dataLang={dataLang}
                                                             className="3xl:text-base 2xl:text-[12.5px] xl:text-[11px] font-medium text-[9px] px-2 col-span-1 text-center text-[#0F4F9E] hover:text-[#5599EC] transition-all ease-linear cursor-pointer "
@@ -505,10 +507,6 @@ const InternalPlan = (props) => {
                     <div className="flex items-center justify-between gap-2">
                         {data?.rResult?.length != 0 && (
                             <ContainerPagination>
-                                <TitlePagination
-                                    dataLang={dataLang}
-                                    totalItems={data?.output?.iTotalDisplayRecords}
-                                />
                                 <Pagination
                                     postsPerPage={limit}
                                     totalPosts={Number(data?.output?.iTotalDisplayRecords)}

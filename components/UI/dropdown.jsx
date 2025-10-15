@@ -1,20 +1,19 @@
 import useToast from "@/hooks/useToast";
 import { Inter, Lexend_Deca } from "@next/font/google";
-import { Cd, SearchNormal1, TickCircle } from "iconsax-react";
+import { Cd, TickCircle } from "iconsax-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Tooltip } from "react-tippy";
 import Popup from "reactjs-popup";
-import Loading from "./loading/loading";
-import Zoom from "./zoomElement/zoomElement";
-import NoData from "./noData/nodata";
-import { useRouter } from "next/router";
-import HoverEffectButton from "../animations/button/HoverEffectButton";
+import { twMerge } from "tailwind-merge";
 import PopupRequestUpdateVersion from "../common/popup/PopupRequestUpdateVersion";
 import DropdownIcon from "../icons/common/DropdownIcon";
-import { twMerge } from "tailwind-merge";
+import Loading from "./loading/loading";
+import NoData from "./noData/nodata";
+import Zoom from "./zoomElement/zoomElement";
 
 const deca = Lexend_Deca({
   subsets: ["latin"],
@@ -108,7 +107,7 @@ export const Dropdown = (props) => {
                     <div className="space-y-0 " key={ci}>
                       {ce.link ? (
                         <>
-                          {is_admin ? (
+                          {is_admin && !ce?.forceDisableForAdmin ? (
                             <Link
                               title={ce.title}
                               href={`${ce.link}`}
@@ -172,7 +171,7 @@ export const Dropdown = (props) => {
                             <button
                               type="button"
                               onClick={() =>
-                                showToat("error", "Bạn không có quyền truy cập")
+                                showToat("info", ce?.forceDisableForAdmin ? "Tính năng đang phát triển" : "Bạn không có quyền truy cập")
                               }
                               className="flex text-left text-gray-400 w-full opacity-60 cursor-not-allowed  items-center 2xl:space-x-2 2xl:mb-0 2xl:px-3 2xl:py-2 xl:space-x-1  xl:px-3 xl:py-1 lg:space-x-1 lg:mb-0 lg:px-1 lg:py-1 rounded"
                             >
@@ -267,7 +266,7 @@ export const Dropdown = (props) => {
                                     </span>
                                   </li>
                                 </Link>
-                              ) : is_admin ? (
+                              ) : is_admin && !e?.forceDisableForAdmin ? (
                                 <Link
                                   href={e.link ? e.link : "#"}
                                   title={e.name}
@@ -299,7 +298,7 @@ export const Dropdown = (props) => {
                                   onClick={() =>
                                     showToat(
                                       "error",
-                                      "Bạn không có quyền truy cập"
+                                      e?.forceDisableForAdmin ? "Báo cáo đang tối ưu" : "Bạn không có quyền truy cập"
                                     )
                                   }
                                   className="w-full text-left text-gray-100 outline-none cursor-not-allowed opacity-60"

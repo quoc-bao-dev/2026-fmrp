@@ -104,7 +104,7 @@ const Finance = (props) => {
                                 >
                                     {dataLang?.branch_popup_finance_exchange_rate}
                                 </button>
-                                <button
+                                {/* <button
                                     onClick={_HandleSelectTab.bind(this, "currencies")}
                                     className={`${router.query?.tab === "currencies"
                                         ? "text-[#0F4F9E] bg-[#e2f0fe]"
@@ -112,7 +112,7 @@ const Finance = (props) => {
                                         } rounded-lg px-4 py-2 outline-none`}
                                 >
                                     {dataLang?.branch_popup_finance_unittitle}
-                                </button>
+                                </button> */}
                                 <button
                                     onClick={_HandleSelectTab.bind(this, "paymentmodes")}
                                     className={`${router.query?.tab === "paymentmodes"

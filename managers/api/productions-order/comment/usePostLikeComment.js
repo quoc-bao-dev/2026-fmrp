@@ -6,7 +6,6 @@ export const usePostLikeComment = () => {
 
     const postLikeCommentMutation = useMutation({
         mutationFn: async (idComment) => {
-            console.log('idComment', idComment);
 
             const { data: r } = await apiProductionsOrders.apiPostLikeComment({ idComment: idComment });
             return r;

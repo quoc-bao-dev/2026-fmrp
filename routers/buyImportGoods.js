@@ -27,4 +27,11 @@ const routerReturns = {
     form: `${url}/returns/form`,
 };
 
-export { routerPurchases, routerOrder, routerImport, routerReturns };
+// Trả hàng
+
+const routerServiceVoucher = {
+    home: `${url}/servicev-voucher?tab=`,
+    form: `${url}/servicev-voucher/form`,
+};
+
+export { routerPurchases, routerOrder, routerImport, routerReturns, routerServiceVoucher };

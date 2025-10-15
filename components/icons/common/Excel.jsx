@@ -7,8 +7,8 @@ const ExcelIcon = ({ color = "currentColor", className = "" }) => {
       className={className}
     >
       <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
+        fillRule="evenodd"
+        clipRule="evenodd"
         d="M1.5 12V3.5C1.5 3.22386 1.72386 3 2 3H14C14.2761 3 14.5 3.22386 14.5 3.5V12C14.5 12 14.5 12.4142 14.2071 12.7071C14.2071 12.7071 13.9142 13 13.5 13H2.5C2.5 13 2.08579 13 1.79289 12.7071C1.79289 12.7071 1.5 12.4142 1.5 12ZM2.5 12H13.5V4H2.5V12Z"
         fill={color}
       />

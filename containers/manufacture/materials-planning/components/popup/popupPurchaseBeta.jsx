@@ -225,7 +225,7 @@ const PopupPurchaseBeta = ({
     <PopupCustom
       title={"Thêm mua hàng"}
       button={
-        <button
+        <div
           className="bg-blue-100 rounded-lg outline-none focus:outline-none"
           onClick={() => {
             if (dataSeting?.package == "1") {
@@ -257,14 +257,14 @@ const PopupPurchaseBeta = ({
         >
           <div
             // className="flex items-center gap-2 px-3 py-2 "
-            className=" responsive-text-sm 3xl:py-3 3xl:px-4 py-2 px-3 bg-background-blue-2 text-white rounded-lg btn-animation hover:scale-105 flex items-center gap-x-2"
+            className=" responsive-text-sm 3xl:px-4 py-2.5 px-3 bg-background-blue-2/80 hover:bg-background-blue-2 text-white rounded-lg flex items-center gap-x-2 transition-all duration-300"
           >
             {icon} {title}
             {/* <h3 className="text-xs font-medium text-blue-600 3xl:text-base">
               {title}
             </h3> */}
           </div>
-        </button>
+        </div>
       }
       open={open}
       onClose={_ToggleModal.bind(this, false)}

@@ -224,7 +224,6 @@ const PopupUpgradeProfessional = (props) => {
         upgradePackageData?.data?.id,
         formData
       );
-      console.log(response);
       if (response.result === false) {
         showToat("error", response.message);
       }
@@ -245,7 +244,7 @@ const PopupUpgradeProfessional = (props) => {
         } catch (error) {
           setIsQrUpdating(false);
           isShow(
-            "warning",
+            "error",
             "Đã nâng cấp gói thành công nhưng không thể cập nhật QR. Vui lòng thử làm mới."
           );
         }
@@ -566,8 +565,8 @@ const PopupUpgradeProfessional = (props) => {
               </div>
             </Customscrollbar>
           </div>
-          <div className="flex flex-col gap-3 2xl:gap-9 lg:w-[505px] flex-1">
-            <Customscrollbar className="pr-2 2xl:pr-2.5 flex flex-col gap-3 2xl:gap-9">
+          <div className="flex flex-col gap-3 2xl:gap-9 lg:w-[505px] flex-1 max-h-full">
+            <Customscrollbar className="pr-2 2xl:pr-2.5 flex flex-col gap-3 2xl:gap-9 max-h-full flex-1 min-h-0">
               <div className="flex flex-col gap-3 2xl:gap-9">
                 <div className="flex flex-col gap-2 2xl:gap-3">
                   <h3 className="text-xl font-semibold text-typo-black-4">
@@ -644,7 +643,6 @@ const PopupUpgradeProfessional = (props) => {
                       className="p-[4px]"
                       state={userCount}
                       setState={(value) => {
-                        console.log("Đã thay đổi số user:", value);
                         setUserCount(value);
                       }}
                       min={packageData?.data?.[0]?.default_user || 5}

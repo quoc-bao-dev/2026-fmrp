@@ -8,7 +8,6 @@ import useActionRole from "@/hooks/useRole";
 import useToast from "@/hooks/useToast";
 import { useEffect } from "react";
 import "react-datepicker/dist/react-datepicker.css";
-import { RiDeleteBin6Line } from "react-icons/ri";
 import { useSelector } from "react-redux";
 
 const PopupTableValidateDelete = (props) => {

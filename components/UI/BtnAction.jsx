@@ -24,6 +24,7 @@ import {
 } from "@/managers/api/purchase-order/useLinkFilePDF";
 import { fetchPDFDelivery, fetchPDFSaleOrder, fetchPDFReceipts, fetchPDFPayments } from "@/managers/api/sales-order/useLinkFilePDF";
 import apiReturnSales from "@/Api/apiSalesExportProduct/returnSales/apiReturnSales";
+import apiServiceVoucher from "@/Api/apiPurchaseOrder/apiServicevVoucher";
 import {
     routerImport,
     routerOrder,
@@ -83,6 +84,28 @@ const fetchPDFReturnSales = async ({ id }) => {
     }
 };
 
+// Hàm xử lý in PDF cho phiếu dịch vụ
+const fetchPDFServiceVoucher = async ({ id }) => {
+    try {
+        const response = await apiServiceVoucher.apiPrintServiceVoucher({
+            data: {
+                id: id,
+            },
+        });
+        
+        if (response && response.isSuccess === 1) {
+            return {
+                isSuccess: 1,
+                pdf_url: response.pdf_url,
+            };
+        }
+        return { isSuccess: 0, message: response?.message || "Không thể in phiếu dịch vụ" };
+    } catch (error) {
+        console.error("Error fetching service voucher PDF:", error);
+        return { isSuccess: 0, message: error.message || "Lỗi không xác định" };
+    }
+};
+
 const Popup_Pdf = (props) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isLoadingPrint, setIsLoadingPrint] = useState(false);
@@ -110,13 +133,11 @@ const Popup_Pdf = (props) => {
                 id: id,
                 type: typeNumber,
             });
-            console.log("🚀 ~ handlePrintTem ~ response:", response);
             if (response?.isSuccess === 1 && response?.pdf_url) {
                 window.open(response.pdf_url, "_blank");
             }
             setIsLoadingPrint(false);
         } catch (error) {
-            console.log("🚀 ~ handlePrintTem ~ error:", error);
             setIsLoadingPrint(false);
         }
     };
@@ -253,7 +274,8 @@ export const BtnAction = React.memo((props) => {
         import: fetchPDFPurchaseOrderImport,
         deliveryReceipt: fetchPDFDelivery,
         returnSales: fetchPDFReturnSales,
-        returns: fetchPDFPurchaseOrder
+        returns: fetchPDFPurchaseOrder,
+        servicev_voucher: fetchPDFServiceVoucher
     };
     
     //Xử lý in PDF
@@ -302,7 +324,6 @@ export const BtnAction = React.memo((props) => {
             }
             setLoadingButtonPrint(false);
         } catch (error) {
-            console.log("🚀 ~ handlePrintTem ~ error:", error);
             isShow("error", `Lỗi khi in phiếu: ${error.message || "Không xác định"}`);
             setLoadingButtonPrint(false);
         }
@@ -450,8 +471,6 @@ export const BtnAction = React.memo((props) => {
         }
         ///Đơn hàng bán
         else if (props?.id && props?.type === "sales_product") {
-            console.log(props?.id, props?.type)
-    console.log(props)
 
             if (props?.status !== "approved") {
                 confimDelete(typeConfig);
@@ -755,11 +774,11 @@ export const BtnAction = React.memo((props) => {
             );
         } else if (props.type == "servicev_voucher") {
             allButtons.push(
-                <div key="edit" className="group transition-all ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] hover:bg-slate-50 text-left cursor-pointer px-5 rounded w-full">
-                    <EditIcon
+                <div key="edit" className="group transition-all ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] hover:bg-slate-50 text-left cursor-pointer rounded w-full">
+                    {/* <EditIcon
                         color="#064E3B"
-                        className="group-hover:text-sky-500 group-hover:shadow-md"
-                    />
+                        className="size-5 group-hover:text-sky-500 group-hover:shadow-md flex-shrink-0"
+                    /> */}
                     <Popup_servie
                         status_pay={props?.status_pay}
                         onRefreshGr={props.onRefreshGr}
@@ -897,7 +916,7 @@ export const BtnAction = React.memo((props) => {
                     />
                 );
             }
-        } else if (props?.type === "order" || props?.type === "sales_product" || props?.type === "receipts" || props?.type === "payment") {
+        } else if (props?.type === "order" || props?.type === "sales_product" || props?.type === "receipts" || props?.type === "payment" || props?.type === "servicev_voucher") {
             const totalButtons = calculateTotalButtons();
             allButtons.push(
                 <ButtonPrintItem

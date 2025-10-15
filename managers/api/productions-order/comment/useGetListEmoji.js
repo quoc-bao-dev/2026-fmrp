@@ -8,9 +8,6 @@ export const useGetListEmoji = ({
     const fetchListEmoji = async () => {
         const { data } = await apiProductionsOrders.apiGetListEmoji()
 
-        console.log('data data emoji: ', data);
-
-
         return data?.emoji
     };
 

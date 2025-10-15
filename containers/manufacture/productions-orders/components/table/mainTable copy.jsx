@@ -121,10 +121,8 @@ const MainTable = ({ dataLang, typeScreen }) => {
 
     useEffect(() => {
         const activeIndex = listLsxTab.findIndex(e => e.id === isState?.isTabList)
-        console.log('activeIndex', activeIndex);
 
         const activeTab = tabListRefs.current[activeIndex]
-        console.log('activeTab', activeTab);
         if (activeTab) {
             const { offsetLeft, offsetWidth } = activeTab
             setUnderlineProps({ left: offsetLeft, width: offsetWidth })

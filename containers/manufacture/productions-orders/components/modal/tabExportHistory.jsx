@@ -48,7 +48,6 @@ const TabExportHistory = memo(({ isStateModal, width, dataLang, listTab, typePag
     const onChangeSearch = debounce((e) => { setIsSearch(e.target.value) }, 500)
 
     const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature()
-    console.log("isStateModal?.dataDetail?.poi", isStateModal?.dataDetail?.poi);
 
     const { data, isLoading, isFetching, refetch } = useQuery({
         queryKey: ['api_get_suggest_exporting', isSearch, router.query?.page, isState.openModal, isStateModal.isTab],

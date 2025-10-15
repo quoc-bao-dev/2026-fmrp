@@ -1,25 +1,24 @@
 "use client";
 
-import React, { useContext, useEffect, useRef, useState } from "react";
-import * as d3 from "d3";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
-import Zoom from "@/components/UI/zoomElement/zoomElement";
-import Image from "next/image";
-import { ProductionsOrdersContext } from "@/containers/manufacture/productions-orders/context/productionsOrders";
-import useSetingServer from "@/hooks/useConfigNumber";
-import formatNumberConfig from "@/utils/helpers/formatnumber";
-import useToast from "@/hooks/useToast";
-import ModalImage from "react-modal-image";
-import NoData from "@/components/UI/noData/nodata";
-import ModalDetail from "@/containers/manufacture/productions-orders/components/modal/modalDetail";
 import Loading from "@/components/UI/loading/loading";
-import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
-import { formatMoment } from "@/utils/helpers/formatMoment";
-import { useInView } from "react-intersection-observer";
 import LoadingButton from "@/components/UI/loading/loadingButton";
+import NoData from "@/components/UI/noData/nodata";
+import Zoom from "@/components/UI/zoomElement/zoomElement";
+import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
 import SheetProductionsOrderDetail from "@/containers/manufacture/productions-orders/components/sheet/SheetProductionsOrderDetail";
+import { ProductionsOrdersContext } from "@/containers/manufacture/productions-orders/context/productionsOrders";
 import { StateContext } from "@/context/_state/productions-orders/StateContext";
 import { useSheet } from "@/context/ui/SheetContext";
+import useSetingServer from "@/hooks/useConfigNumber";
+import useToast from "@/hooks/useToast";
+import { formatMoment } from "@/utils/helpers/formatMoment";
+import formatNumberConfig from "@/utils/helpers/formatnumber";
+import * as d3 from "d3";
+import Image from "next/image";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { useInView } from "react-intersection-observer";
+import ModalImage from "react-modal-image";
 
 // e74c3c đỏ nhạt
 // 3b82f6  xanh dương
@@ -526,9 +525,6 @@ const GanttChart = ({
 
         // Hàm mở Sheet chi tiết công đoạn
         const handleToggleSheetDetail = (item) => {
-            console.log("item item:", item);
-            console.log("isStateProvider isStateProvider:", isStateProvider);
-
             // if (item.poi_id === isStateProvider?.productionsOrders?.poiId) return
 
             queryStateProvider({
@@ -927,7 +923,7 @@ const GanttChart = ({
                     // "max-h-screen"
                     }   overflow-hidden border`}
             >
-                <div className="sticky top-0 z-10 flex border-b border-b-[#e5e7eb]">
+                <div className="sticky top-0 flex border-b border-b-[#e5e7eb]">
                     <div
                         className={`${typePageMoblie ? "w-[23%]" : "w-[40%]"
                             }  border-r border-[#e5e7eb]`}
@@ -973,12 +969,12 @@ const GanttChart = ({
                                                             viewBox="0 0 20 20"
                                                             fill="currentColor"
                                                             stroke="currentColor"
-                                                            stroke-width="1"
+                                                            strokeWidth="1"
                                                         >
                                                             <path
                                                                 fill-rule="evenodd"
                                                                 d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                                clip-rule="evenodd"
+                                                                clipRule="evenodd"
                                                             ></path>
                                                         </svg>
                                                     </div>
@@ -1190,7 +1186,7 @@ const GanttChart = ({
                                                 <label
                                                     key={pIndex}
                                                     htmlFor={product?.id}
-                                                    className="flex items-center w-full gap-2 px-1 text-sm cursor-pointer"
+                                                    className="flex items-center w-full gap-2 px-1 py-0.5 text-sm cursor-pointer"
                                                     style={{
                                                         minHeight: `${product?.processArr?.length * ROW_HEIGHT
                                                             }px`,
@@ -1338,22 +1334,22 @@ const GanttChart = ({
                                                                 </div>
                                                                 <div className="flex items-center gap-1">
                                                                     {product?.images != null ? (
-                                                                        <ModalImage
-                                                                            small={product?.images}
-                                                                            large={product?.images}
+                                                                        <Image
+                                                                            // small={product?.images}
+                                                                            src={product?.images}
                                                                             width={36}
                                                                             height={36}
                                                                             alt={product?.name}
                                                                             className="object-cover rounded-md min-w-[36px] min-h-[36px] w-[36px] h-[36px] max-w-[36px] max-h-[36px]"
                                                                         />
                                                                     ) : (
-                                                                        <ModalImage
+                                                                        <Image
                                                                             width={36}
                                                                             height={36}
-                                                                            small="/icon/noimagelogo.png"
-                                                                            large="/icon/noimagelogo.png"
+                                                                            src="/icon/noimagelogo.png"
+                                                                            alt={product?.name}
                                                                             className="object-cover rounded-md min-w-[36px] min-h-[36px] w-[36px] h-[36px] max-w-[36px] max-h-[36px]"
-                                                                        ></ModalImage>
+                                                                        ></Image>
                                                                     )}
                                                                     <div className="flex flex-col">
                                                                         <h1 className="text-[#000000] line-clamp-2 font-semibold 3xl:text-xs  xxl:text-[11px] 2xl:text-[10px] xl:text-[9px] lg:text-[9px] text-[11px]">
@@ -1417,7 +1413,7 @@ const GanttChart = ({
                         </Customscrollbar>
                         <div
                             className={`${typePageMoblie ? "w-[79%] h-[92%]" : "w-[60%] h-[100%]"
-                                }  overflow-hidden`}
+                                } overflow-hidden`}
                         >
                             {orders.some((order) =>
                                 order?.listProducts?.some(

@@ -557,13 +557,13 @@ const ReturnSales = (props) => {
                                     <ColumnTable textAlign={"left"} colSpan={1}>
                                         {dataLang?.returnSales_client || "returnSales_client"}
                                     </ColumnTable>
-                                    <ColumnTable textAlign={"left"} colSpan={1}>
+                                    <ColumnTable textAlign={"right"} colSpan={1}>
                                         {dataLang?.import_total_amount || "import_total_amount"}
                                     </ColumnTable>
-                                    <ColumnTable textAlign={"left"} colSpan={1}>
+                                    <ColumnTable textAlign={"right"} colSpan={1}>
                                         {dataLang?.import_tax_money || "import_tax_money"}
                                     </ColumnTable>
-                                    <ColumnTable textAlign={"left"} colSpan={1}>
+                                    <ColumnTable textAlign={"right"} colSpan={1}>
                                         {dataLang?.import_into_money || "import_into_money"}
                                     </ColumnTable>
                                     <ColumnTable textAlign={"center"} colSpan={1}>
@@ -609,13 +609,13 @@ const ReturnSales = (props) => {
                                                     <RowItemTable colSpan={1} textAlign={"left"}>
                                                         {e.client_name}
                                                     </RowItemTable>
-                                                    <RowItemTable colSpan={1} textAlign={"left"}>
+                                                    <RowItemTable colSpan={1} textAlign={"right"}>
                                                         {renderMoneyOrDash(e.total_price)}
                                                     </RowItemTable>
-                                                    <RowItemTable colSpan={1} textAlign={"left"}>
+                                                    <RowItemTable colSpan={1} textAlign={"right"}>
                                                         {renderMoneyOrDash(e.total_tax_price)}
                                                     </RowItemTable>
-                                                    <RowItemTable colSpan={1} textAlign={"left"}>
+                                                    <RowItemTable colSpan={1} textAlign={"right"}>
                                                         {renderMoneyOrDash(e.total_amount)}
                                                     </RowItemTable>
                                                     <RowItemTable colSpan={1} className=" mx-auto">
@@ -682,13 +682,13 @@ const ReturnSales = (props) => {
                             <RowItemTable colSpan={3.5} textAlign={"right"} className="p-2">
                                 {dataLang?.import_total || "import_total"}
                             </RowItemTable>
-                            <RowItemTable colSpan={1} textAlign={"left"}>
+                            <RowItemTable colSpan={1} textAlign={"right"}>
                                 {renderMoneyOrDash(data?.rTotal?.total_price)}
                             </RowItemTable>
-                            <RowItemTable colSpan={1} textAlign={"left"}>
+                            <RowItemTable colSpan={1} textAlign={"right"}>
                                 {renderMoneyOrDash(data?.rTotal?.total_tax_price)}
                             </RowItemTable>
-                            <RowItemTable colSpan={1} textAlign={"left"}>
+                            <RowItemTable colSpan={1} textAlign={"right"}>
                                 {renderMoneyOrDash(data?.rTotal?.total_amount)}
                             </RowItemTable>
                         </ContainerTotal>

@@ -33,7 +33,7 @@ const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRi
             "3": { color: 'bg-[#F54A45]/20 text-[#C02A26]', title: dataLang?.productions_orders_overdue || "overdue" }
         };
         const color = colorMap[product?.status_item];
-console.log(product)
+
         return (
             <div
                 key={`product-${index}`}

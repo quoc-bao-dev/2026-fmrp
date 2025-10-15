@@ -32,40 +32,42 @@ const PopupDetail = (props) => {
             onClose={_ToggleModal.bind(this, false)}
             classNameBtn={props?.className}
         >
-            <div className="flex items-center space-x-4 my-2 border-[#E7EAEE] border-opacity-70 border-b-[1px]"></div>
-            {/* <div className=" space-x-5 w-[530px] 3xl:h-auto  2xl:h-auto xl:h-[540px] h-[500px] ">         */}
-            <div className=" space-x-5 w-[530px] h-auto">
-                <div>
-                    <div className="w-[530px]">
-                        {/* <div className="min:h-[170px] h-[72%] max:h-[100px]  customsroll overflow-auto pb-1 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100"> */}
-                        <Customscrollbar className="max-h-[85vh]">
-                            <h2 className="font-semibold bg-[#ECF0F4] p-2 text-[13px]">
+            <div className="flex items-center mb-2 border-b border-gray-100"></div>
+            <div className="w-[50vw] h-auto">
+                <div className="w-full">
+                    <Customscrollbar className="max-h-[85vh]">
+                        {/* Phần thông tin chi tiết */}
+                        <div className="rounded-lg overflow-hidden border border-gray-100 shadow-sm mb-3">
+                            <h2 className="font-semibold bg-blue-50 p-3 text-[14px] text-blue-700 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
                                 {props.dataLang?.import_detail_info || "import_detail_info"}
                             </h2>
-                            <div className="min-h-[130px] px-2 bg-gray-50 ">
-                                <div className="grid grid-cols-2 space-x-4 3xl:max-h-[400px] xxl:max-h-[300px] 2xl:max-h-[350px] xl:max-h-[300px] lg:max-h-[280px] max-h-[300px] scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
-                                    <div className="col-span-1">
-                                        <div className="grid grid-cols-2 my-4 font-semibold">
-                                            <h3 className=" text-[13px] ">
+                            <div className="px-4 py-3 bg-white">
+                                <div className="grid grid-cols-4 gap-4 max-h-[300px] overflow-auto px-1">
+                                    {/* <div className="col-span-1 space-y-3"> */}
+                                        <div className="flex flex-col">
+                                            <span className="text-[12px] text-gray-500">
                                                 {props.dataLang?.import_day_vouchers || "import_day_vouchers"}
-                                            </h3>
-                                            <h3 className=" text-[13px]  font-medium">
+                                            </span>
+                                            <span className="text-[14px] font-medium">
                                                 {data?.date != null ? formatMoment(data?.date, FORMAT_MOMENT.DATE_SLASH_LONG) : ""}
-                                            </h3>
+                                            </span>
                                         </div>
-                                        <div className="grid grid-cols-2 my-4 font-semibold">
-                                            <h3 className="text-[13px]">
+                                        <div className="flex flex-col">
+                                            <span className="text-[12px] text-gray-500">
                                                 {props.dataLang?.payment_creator || "payment_creator"}
-                                            </h3>
-                                            <div className="relative flex flex-wrap items-center justify-start gap-2">
+                                            </span>
+                                            <div className="flex items-center mt-1">
                                                 <CustomAvatar fullName={data?.staff_name} profileImage={data?.profile_image} />
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-2 font-semibold ">
-                                            <h3 className=" text-[13px] ">
+                                        <div className="flex flex-col">
+                                            <span className="text-[12px] text-gray-500">
                                                 {props.dataLang?.payment_obType || "payment_obType"}
-                                            </h3>
-                                            <div className="flex items-center">
+                                            </span>
+                                            <div className="flex items-center mt-1">
                                                 {
                                                     (data?.objects === "client" && (<TagColorSky name={props.dataLang[data?.objects] || data?.objects} />))
                                                     ||
@@ -75,12 +77,11 @@ const PopupDetail = (props) => {
                                                 }
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-2 my-4 font-semibold">
-                                            <h3 className="text-[13px]">
+                                        <div className="flex flex-col">
+                                            <span className="text-[12px] text-gray-500">
                                                 {props.dataLang?.payment_typeOfDocument || "payment_typeOfDocument"}
-                                            </h3>
-                                            <div className="flex items-center">
-
+                                            </span>
+                                            <div className="flex items-center mt-1">
                                                 {
                                                     (data?.type_vouchers === "import" && (<TagColorMore color={'#a855f7'} backgroundColor={"#e9d5ff"} name={props.dataLang[data?.type_vouchers] || data?.type_vouchers} />))
                                                     ||
@@ -92,179 +93,183 @@ const PopupDetail = (props) => {
                                                 }
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="col-span-1 ">
-                                        <div className="grid grid-cols-2 my-4 font-semibold">
-                                            <h3 className=" text-[13px] ">
+                                    {/* </div> */}
+                                    {/* <div className="col-span-1 space-y-3"> */}
+                                        <div className="flex flex-col">
+                                            <span className="text-[12px] text-gray-500">
                                                 {props.dataLang?.payment_code || "payment_code"}
-                                            </h3>
-                                            <h3 className=" text-[13px]  font-medium text-blue-600">
+                                            </span>
+                                            <span className="text-[14px] font-medium text-blue-600">
                                                 {data?.code}
-                                            </h3>
+                                            </span>
                                         </div>
-                                        <div className="grid grid-cols-2 my-4 font-semibold">
-                                            <h3 className=" text-[13px] ">
+                                        <div className="flex flex-col">
+                                            <span className="text-[12px] text-gray-500">
                                                 {props.dataLang?.payment_TT_method || "payment_TT_method"}
-                                            </h3>
-                                            <h3 className=" text-[13px]  font-medium">{data?.payment_mode_name}</h3>
+                                            </span>
+                                            <span className="text-[14px] font-medium">{data?.payment_mode_name}</span>
                                         </div>
-                                        <div className="grid grid-cols-2 my-4 font-semibold">
-                                            <h3 className="text-[13px]">
+                                        <div className="flex flex-col">
+                                            <span className="text-[12px] text-gray-500">
                                                 {props.dataLang?.payment_ob || "payment_ob"}
-                                            </h3>
-                                            <div className="flex flex-wrap items-center justify-start gap-2">
-                                                <h3 className=" text-[13px]  font-medium">{data?.object_text}</h3>
+                                            </span>
+                                            <span className="text-[14px] font-medium">{data?.object_text}</span>
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[12px] text-gray-500">{"Chi nhánh"}</span>
+                                            <div className="mt-1">
+                                                <TagBranch className="w-fit">
+                                                    {data?.branch_name}
+                                                </TagBranch>
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-2 font-semibold ">
-                                            <h3 className=" text-[13px] ">{"Chi nhánh"}</h3>
-                                            <TagBranch className="w-fit">
-                                                {data?.branch_name}
-                                            </TagBranch>
-                                        </div>
-                                    </div>
+                                    {/* </div> */}
                                 </div>
-                                <div className="grid grid-cols-4 col-span-2 mb-4 font-semibold ">
-                                    <h3 className=" text-[13px] col-span-1 ">
+                                <div className="border-t border-gray-100 mt-3 pt-3">
+                                    <span className="text-[12px] text-gray-500 block mb-1">
                                         {props.dataLang?.payment_voucherCode || "payment_voucherCode"}
-                                    </h3>
-                                    <div className="flex flex-wrap items-center justify-start col-span-3 gap-2 font-medium">
+                                    </span>
+                                    <div className="flex flex-wrap gap-2 font-medium">
                                         {data?.voucher?.map((code, index) => (
-                                            <React.Fragment key={code?.id}>
+                                            <span key={code?.id} className="px-2 py-1 bg-gray-50 rounded-md text-[13px] border border-gray-200">
                                                 {code.code}
-                                                {index !== data?.voucher.length - 1 && ", "}
-                                            </React.Fragment>
+                                                {index !== data?.voucher.length - 1 ? "" : ""}
+                                            </span>
                                         ))}
                                     </div>
                                 </div>
                             </div>
-                            {data?.type_vouchers == "import" && data.tbDeductDeposit?.length > 0 && (
-                                <div className="col-span-12 m-1 transition-all duration-200 ease-linear border border-b-0 rounded">
-                                    <div className="grid items-center grid-cols-4 col-span-12 border border-t-0 border-l-0 border-r-0 divide-x">
-                                        <h1 className="text-center text-xs p-1.5 text-zinc-800 font-semibold">
-                                            {props.dataLang?.payment_numberEnterd || "payment_numberEnterd"}
-                                        </h1>
-                                        <h1 className="text-center text-xs p-1.5 text-zinc-800 font-semibold">
-                                            {props.dataLang?.payment_numberSlips || "payment_numberSlips"}
-                                        </h1>
-                                        <h1 className="text-center text-xs p-1.5 text-zinc-800 font-semibold">
-                                            {props.dataLang?.payment_deductionMoney || "payment_deductionMoney"}
-                                        </h1>
-                                        <h1 className="text-center text-xs p-1.5 text-zinc-800 font-semibold">
-                                            {props.dataLang?.payment_cashInReturn || "payment_cashInReturn"}
-                                        </h1>
+                        </div>
+
+                        {/* Phần khấu trừ tiền cọc */}
+                        {data?.type_vouchers == "import" && data.tbDeductDeposit?.length > 0 && (
+                            <div className="rounded-lg overflow-hidden border border-gray-100 shadow-sm mb-3">
+                                <div className="grid grid-cols-4 bg-gray-50 border-b">
+                                    <div className="px-3 py-2 text-[13px] font-medium text-gray-600 text-center border-r">
+                                        {props.dataLang?.payment_numberEnterd || "payment_numberEnterd"}
                                     </div>
-                                    <Customscrollbar
-                                        className={`${data.tbDeductDeposit.length > 3 ? " h-[100px] overflow-auto" : ""
-                                            } `}
-                                    >
-                                        {data.tbDeductDeposit.map((e, index) => {
-                                            return (
-                                                <div key={index} className="grid items-center grid-cols-4 col-span-12 border-b divide-x">
-                                                    <h1 className="p-2 text-xs text-center ">
-                                                        <span className="px-2 py-1 text-purple-500 bg-purple-200 rounded-xl">
-                                                            {e.import_code}
-                                                        </span>
-                                                    </h1>
-                                                    <h1 className="p-2 text-xs text-center">
-                                                        <span className="px-2 py-1 text-orange-500 bg-orange-200 rounded-xl">
-                                                            {e.payslip_code}
-                                                        </span>
-                                                    </h1>
-                                                    <h1 className="p-2 text-xs text-center">
-                                                        {formatNumber(e.deposit_amount)}
-                                                    </h1>
-                                                    <h1 className="p-2 text-xs text-center">
-                                                        {formatNumber(e.amount_left)}
-                                                    </h1>
+                                    <div className="px-3 py-2 text-[13px] font-medium text-gray-600 text-center border-r">
+                                        {props.dataLang?.payment_numberSlips || "payment_numberSlips"}
+                                    </div>
+                                    <div className="px-3 py-2 text-[13px] font-medium text-gray-600 text-center border-r">
+                                        {props.dataLang?.payment_deductionMoney || "payment_deductionMoney"}
+                                    </div>
+                                    <div className="px-3 py-2 text-[13px] font-medium text-gray-600 text-center">
+                                        {props.dataLang?.payment_cashInReturn || "payment_cashInReturn"}
+                                    </div>
+                                </div>
+                                <div className="bg-white">
+                                    <Customscrollbar className={`${data.tbDeductDeposit.length > 3 ? "max-h-[150px]" : ""}`}>
+                                        {data.tbDeductDeposit.map((e, index) => (
+                                            <div key={index} className="grid grid-cols-4 border-b hover:bg-gray-50 transition-colors">
+                                                <div className="p-2 text-center">
+                                                    <span className="px-2 py-1 inline-block text-purple-600 bg-purple-100 rounded-lg text-xs font-medium">
+                                                        {e.import_code}
+                                                    </span>
                                                 </div>
-                                            );
-                                        })}
+                                                <div className="p-2 text-center">
+                                                    <span className="px-2 py-1 inline-block text-orange-600 bg-orange-100 rounded-lg text-xs font-medium">
+                                                        {e.payslip_code}
+                                                    </span>
+                                                </div>
+                                                <div className="p-2 text-center text-sm">
+                                                    {formatNumber(e.deposit_amount)}
+                                                </div>
+                                                <div className="p-2 text-center text-sm">
+                                                    {formatNumber(e.amount_left)}
+                                                </div>
+                                            </div>
+                                        ))}
                                     </Customscrollbar>
                                 </div>
-                            )}
-                            <h2 className="font-semibold bg-[#ECF0F4]  p-1 2xl:text-[12px] xl:text-[13px] text-[12px]  w-full col-span-12 mt-0.5">
+                            </div>
+                        )}
+
+                        {/* Phần thông tin chi phí */}
+                        <div className="rounded-lg overflow-hidden border border-gray-100 shadow-sm mb-3">
+                            <h2 className="font-semibold bg-blue-50 p-3 text-[14px] text-blue-700 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
                                 {props.dataLang?.payment_costInfo || "payment_costInfo"}
                             </h2>
-                            <div className=" w-[100%] lx:w-[110%] ">
-                                {/* <div className={`grid-cols-5 grid sticky top-0  bg-white shadow-lg  z-10 rounded`}>
-                                    <h4 className="text-[13px] px-2 py-2 text-gray-600 uppercase  font-[600] col-span-1  text-center">
-                                        #
-                                    </h4>
-                                    <h4 className="text-[13px] px-2 py-2 text-gray-600 uppercase  font-[600] col-span-2  text-center">
-                                        {props.dataLang?.payment_costs || "payment_costs"}
-                                    </h4>
-                                    <h4 className="text-[13px] px-2 py-2 text-gray-600 uppercase  font-[600] col-span-2 text-center">
-                                        {props.dataLang?.payment_amountOfMoney || "payment_amountOfMoney"}
-                                    </h4>
-                                </div> */}
-                                <HeaderTablePopup gridCols={5} className={'!rounded-none'}>
+                            <div className="bg-white">
+                                <HeaderTablePopup gridCols={5} className="!rounded-none !bg-gray-50">
                                     <ColumnTablePopup>
                                         #
                                     </ColumnTablePopup>
                                     <ColumnTablePopup colSpan={2}>
                                         {props.dataLang?.payment_costs || "payment_costs"}
                                     </ColumnTablePopup>
-                                    <ColumnTablePopup>
+                                    <ColumnTablePopup colSpan={2}>
                                         {props.dataLang?.payment_amountOfMoney || "payment_amountOfMoney"}
                                     </ColumnTablePopup>
                                 </HeaderTablePopup>
                                 {isLoading ? (
                                     <Loading className="max-h-28" color="#0f4f9e" />
                                 ) : data?.detail?.length > 0 ? (
-                                    <Customscrollbar className="min-h-[90px] max-h-[170px] 2xl:max-h-[250px]"   >
-                                        <div className="divide-y divide-slate-200 min:h-[170px]  max:h-[170px]">
+                                    <Customscrollbar className="max-h-[200px]">
+                                        <div className="divide-y divide-gray-100">
                                             {data?.detail?.map((e, index) => (
                                                 <div
-                                                    className="grid items-center grid-cols-5 border-b "
+                                                    className="grid grid-cols-5 hover:bg-gray-50 transition-colors"
                                                     key={e.id?.toString()}
                                                 >
-                                                    <h6 className="text-[13px] col-span-1 font-medium  py-2  text-center break-words">
-                                                        {index + 1}
-                                                    </h6>
-                                                    <h6 className="text-[13px] col-span-2 font-medium pl-2 py-2  text-left break-words">
+                                                    <div className="col-span-1 py-3 text-center">
+                                                        <span className="w-6 h-6 inline-flex items-center justify-center rounded-full bg-blue-100 text-blue-600 text-xs font-medium">
+                                                            {index + 1}
+                                                        </span>
+                                                    </div>
+                                                    <div className="col-span-2 py-3 pl-2 text-[13px] text-gray-700">
                                                         {e?.costs_name}
-                                                    </h6>
-                                                    <h6 className="text-[13px] col-span-2 font-medium pl-2 py-2  text-center">
+                                                    </div>
+                                                    <div className="col-span-2 py-3 text-center text-[13px] font-medium">
                                                         {formatNumber(e?.total)}
-                                                    </h6>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
                                     </Customscrollbar>
                                 ) : <NoData />}
                             </div>
-                            <h2 className="font-semibold p-2 text-[13px]  border-[#E7EAEE] border-opacity-70 border-y-[1px]  z-10">
+                        </div>
+
+                        {/* Phần tổng số tiền và ghi chú */}
+                        <div className="rounded-lg overflow-hidden border border-gray-100 shadow-sm">
+                            <h2 className="font-semibold bg-blue-50 p-3 text-[14px] text-blue-700 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
                                 {props.dataLang?.purchase_total || "purchase_total"}
                             </h2>
-                            <div className="grid flex-col justify-between grid-cols-12 mt-2 ">
-                                <div className="col-span-7">
-                                    <h3 className="text-[13px] font-semibold">
-                                        {props.dataLang?.import_from_note || "import_from_note"}
-                                    </h3>
-                                    <textarea
-                                        className="text-[13px] resize-none scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 placeholder:text-slate-300 w-[90%] min-h-[70px]  max-h-[70px] bg-[#ffffff] rounded-[5.5px] text-[#52575E] font-medium p-1 outline-none "
-                                        disabled
-                                        value={data?.note}
-                                    />
-                                </div>
-                                <div className="col-span-2 space-y-1 text-right">
-                                    <div className="font-semibold text-left text-[13px]">
-                                        <h3>
-                                            {props.dataLang?.import_detail_total_amount || "import_detail_total_amount"}
-                                        </h3>
+                            <div className="bg-white p-4">
+                                <div className="grid grid-cols-12 gap-4">
+                                    <div className="col-span-7">
+                                        <span className="text-[13px] text-gray-500 block mb-2">
+                                            {props.dataLang?.import_from_note || "import_from_note"}
+                                        </span>
+                                        <textarea
+                                            className="w-full p-3 min-h-[80px] text-[13px] bg-gray-50 border border-gray-200 rounded-lg resize-none outline-none"
+                                            disabled
+                                            value={data?.note}
+                                        />
                                     </div>
-                                </div>
-                                <div className="col-span-3 space-y-1 text-right">
-                                    <div className="font-medium mr-2.5">
-                                        <h3 className="text-right text-blue-600 text-[13px]">
-                                            {formatNumber(data?.total)}
-                                        </h3>
+                                    <div className="col-span-5">
+                                        <div className="bg-gray-50 p-4 rounded-lg h-full flex flex-col justify-center">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-[13px] text-gray-600 font-medium">
+                                                    {props.dataLang?.import_detail_total_amount || "import_detail_total_amount"}
+                                                </span>
+                                                <span className="text-[18px] font-bold text-blue-600">
+                                                    {formatNumber(data?.total)} <span className="underline">đ</span>
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </Customscrollbar>
-                    </div>
+                        </div>
+                    </Customscrollbar>
                 </div>
             </div>
         </PopupCustom>

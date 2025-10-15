@@ -1,6 +1,8 @@
 import React from "react";
 import LoadingButton from "../loading/loadingButton";
-const ButtonSubmit = ({ loading, dataLang, onClick, ...rest }) => {
+import { twMerge } from "tailwind-merge";
+
+const ButtonSubmit = ({ loading, dataLang, onClick, icon, ...rest }) => {
     const title = rest?.title || dataLang?.purchase_order_purchase_save || "purchase_order_purchase_save";
     return (
         <React.Fragment>
@@ -9,9 +11,10 @@ const ButtonSubmit = ({ loading, dataLang, onClick, ...rest }) => {
                     onClick={onClick}
                     type={rest?.type || 'submit'}
                     {...rest}
-                    className={`${rest?.className} button text-[#FFFFFF] hover:bg-blue-500 font-normal text-base hover:scale-105 ease-in-out transition-all btn-amination py-2 px-4 rounded-[5.5px] bg-[#003DA0]`}
+                    className={twMerge(`button text-[#FFFFFF] hover:bg-blue-500 font-normal text-base ease-in-out transition-all btn-amination py-2 px-4 rounded-[5.5px] bg-[#003DA0]`, rest?.className)}
                 >
                     {/* {dataLang?.purchase_order_purchase_save || "purchase_order_purchase_save"} */}
+                    {icon}
                     {title}
                 </button>
             ) : (

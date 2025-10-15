@@ -16,5 +16,6 @@ export const useListBomProductPlan = ({ id }) => {
         queryKey: ["apiListBomProductPlan", id],
         queryFn: fetchListBomProductPlan,
         enabled: !!id
+        // staleTime: 5 * 60 * 1000 // Cache 5 phút
     });
 };

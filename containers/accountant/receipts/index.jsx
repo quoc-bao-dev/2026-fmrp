@@ -5,7 +5,7 @@ import ContainerPagination from "@/components/UI/common/ContainerPagination/Cont
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { EmptyExprired } from "@/components/UI/common/EmptyExprired";
 import { ColumnTable, HeaderTable, RowItemTable, RowTable } from "@/components/UI/common/Table";
-import { TagColorMore, TagColorOrange, TagColorRed, TagColorSky } from "@/components/UI/common/Tag/TagStatus";
+import { TagColorOrange, TagColorRed, TagColorSky } from "@/components/UI/common/Tag/TagStatus";
 import { ContainerTotal, LayOutTableDynamic } from "@/components/UI/common/layout";
 import CustomAvatar from "@/components/UI/common/user/CustomAvatar";
 import DropdowLimit from "@/components/UI/dropdowLimit/dropdowLimit";
@@ -280,7 +280,7 @@ const Receipts = (props) => {
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        isShow("warning", WARNING_STATUS_ROLE);
+                                        isShow("error", WARNING_STATUS_ROLE);
                                     }}
                                     className="responsive-text-sm xl:px-5 px-3 xl:py-2.5 py-1.5 bg-background-blue-2 text-white rounded-lg btn-animation hover:scale-105"
                                 >
@@ -369,7 +369,7 @@ const Receipts = (props) => {
                                         </div>
                                         :
                                         <button
-                                            onClick={() => isShow("warning", WARNING_STATUS_ROLE)}
+                                            onClick={() => isShow("error", WARNING_STATUS_ROLE)}
                                             className={`xl:px-4 px-3 xl:py-2.5 py-1.5 2xl:text-xs xl:text-xs text-[7px] flex items-center space-x-2 bg-[#C7DFFB] rounded hover:scale-105 transition`}
                                         >
                                             <Grid6 className="scale-75 2xl:scale-100 xl:scale-100" size={18} />
@@ -406,7 +406,7 @@ const Receipts = (props) => {
                                     <ColumnTable colSpan={0.5} textAlign={"left"}>
                                         {"PTTT"}
                                     </ColumnTable>
-                                    <ColumnTable colSpan={1} textAlign={"left"}>
+                                    <ColumnTable colSpan={1} textAlign={"right"}>
                                         {dataLang?.payment_amountOfMoney || "payment_amountOfMoney"}
                                     </ColumnTable>
                                     <ColumnTable colSpan={1} textAlign={"center"}>
@@ -478,7 +478,7 @@ const Receipts = (props) => {
                                                 <RowItemTable colSpan={0.5} textAlign={"left"}>
                                                     {e?.payment_mode_name}
                                                 </RowItemTable>
-                                                <RowItemTable colSpan={1} textAlign={"left"}>
+                                                <RowItemTable colSpan={1} textAlign={"right"} className={"flex items-center justify-end gap-0.5"}>
                                                     {renderMoneyOrDash(e?.total)}
                                                 </RowItemTable>
                                                 <RowItemTable colSpan={1} textAlign={"center"}>
@@ -541,7 +541,7 @@ const Receipts = (props) => {
                             <RowItemTable colSpan={7.5} className="p-2" textAlign={"right"}>
                                 {dataLang?.purchase_order_table_total_outside || "purchase_order_table_total_outside"}
                             </RowItemTable>
-                            <RowItemTable colSpan={1} textAlign={"left"} className="p-2 mr-1">
+                            <RowItemTable colSpan={1} textAlign={"right"} className="p-2 gap-0.5 flex items-center justify-end">
                                 {renderMoneyOrDash(data?.rTotal?.sum_total)}
                             </RowItemTable>
                         </ContainerTotal>

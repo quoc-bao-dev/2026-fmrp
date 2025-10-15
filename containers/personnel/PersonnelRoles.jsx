@@ -95,7 +95,6 @@ const PersonnelRoles = (props) => {
   // danh sách chức vụ
   const { refetch: refetchPosition, data: dataPositionOption = [] } =
     usePositionLits();
-  console.log("dataPositionOption", dataPositionOption);
 
   // const { refetch: refetchPosition, data: dataPositionOption = [] } = usePositionLits();
 

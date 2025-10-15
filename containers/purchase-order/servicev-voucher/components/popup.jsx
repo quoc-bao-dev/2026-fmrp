@@ -1,4 +1,6 @@
 import apiServiceVoucher from "@/Api/apiPurchaseOrder/apiServicevVoucher";
+import EditIcon from "@/components/icons/common/EditIcon";
+import PlusIcon from "@/components/icons/common/PlusIcon";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import InPutMoneyFormat from "@/components/UI/inputNumericFormat/inputMoneyFormat";
 import InPutNumericFormat from "@/components/UI/inputNumericFormat/inputNumericFormat";
@@ -29,6 +31,7 @@ import { useSelector } from "react-redux";
 import Select from "react-select";
 import { v4 as uuidv4 } from "uuid";
 registerLocale("vi", vi);
+
 const PopupServieVoucher = (props) => {
     let id = props?.id;
 
@@ -39,6 +42,8 @@ const PopupServieVoucher = (props) => {
     const isShow = useToast();
 
     const dataSeting = useSetingServer();
+
+    const authState = useSelector((state) => state.auth);
 
     const { is_admin: role, permissions_current: auth } = useSelector((state) => state.auth);
 
@@ -105,6 +110,17 @@ const PopupServieVoucher = (props) => {
     const { data: listSupplier } = useSupplierList({ "filter[branch_id]": valueBr != null ? valueBr.value : null, });
 
     const dataSupplier = valueBr ? listSupplier?.rResult?.map((e) => ({ label: e.name, value: e.id })) : []
+    
+    // Tự động chọn chi nhánh đầu tiên từ authState khi component mount
+    useEffect(() => {
+        if (authState.branch?.length > 0 && !valueBr && open) {
+            const firstBranch = {
+                label: authState.branch[0].name,
+                value: authState.branch[0].id,
+            }
+            sValueBr(firstBranch)
+        }
+    }, [authState.branch, open])
 
     const _HandleOpenModal = (e) => {
         if (id) {
@@ -126,7 +142,6 @@ const PopupServieVoucher = (props) => {
     useEffect(() => {
         open && sDate(new Date());
         open && sCode("");
-        open && sValueBr(null);
         open && sValueSupplier(null);
         open && sOption([
             {
@@ -148,6 +163,8 @@ const PopupServieVoucher = (props) => {
         open && sErrBranch(false);
         open && sErrSupplier(false);
         open && sErrService(false);
+        
+        // Không reset chi nhánh tại đây để giữ lại giá trị từ useEffect tự động chọn
     }, [open]);
 
     useQuery({
@@ -533,7 +550,18 @@ const PopupServieVoucher = (props) => {
         <>
             <PopupCustom
                 title={props.id ? `${props.dataLang?.serviceVoucher_edit || "serviceVoucher_edit"}` : `${props.dataLang?.serviceVoucher_add || "serviceVoucher_add"}`}
-                button={props.id ? props.dataLang?.serviceVoucher_edit_votes || "serviceVoucher_edit_votes" : `${props.dataLang?.branch_popup_create_new}`}
+                button={props.id ? 
+                <div className="group rounded-lg p-1 border border-transparent hover:border-[#064E3B] hover:bg-[#064E3B]/10 transition-all ease-in-out flex items-center gap-2  2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer">
+                    <EditIcon
+                        color="#064E3B"
+                        className="size-5 transition-all duration-300"
+                    />
+                </div> : 
+                <div className="flex items-center gap-2">
+                    <PlusIcon />
+                    {props.dataLang?.branch_popup_create_new}
+                </div>
+            }
                 onClickOpen={_HandleOpenModal.bind(this)}
                 open={open}
                 onClose={_HandleCloseModal.bind(this)}
@@ -579,19 +607,6 @@ const PopupServieVoucher = (props) => {
                                 </div>
                                 <div className="col-span-1 max-h-[70px] min-h-[70px]">
                                     <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] mb-1 ">
-                                        {dataLang?.serviceVoucher_voucher_code || "serviceVoucher_voucher_code"}
-                                        <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        value={code}
-                                        onChange={_HandleChangeInput.bind(this, "code")}
-                                        placeholder={"Mặc định theo hệ thống"}
-                                        type="text"
-                                        className="focus:border-[#92BFF7] border-[#d0d5dd] 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded-[5.5px] text-[#52575E] font-normal p-2.5 border outline-none mb-2"
-                                    />
-                                </div>
-                                <div className="col-span-1 max-h-[70px] min-h-[70px]">
-                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] mb-1 ">
                                         {props.dataLang?.serviceVoucher_branch} <span className="text-red-500">*</span>
                                     </label>
                                     <Select
@@ -627,13 +642,26 @@ const PopupServieVoucher = (props) => {
                                             }),
                                         }}
                                         className={`${errBranch ? "border-red-500" : "border-transparent"
-                                            } 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] mb-2 font-normal outline-none border `}
+                                            } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] mb-2 font-normal outline-none border `}
                                     />
                                     {errBranch && (
                                         <label className="mb-2  2xl:text-[12px] xl:text-[13px] text-[12px] text-red-500">
                                             {props.dataLang?.client_list_bran}
                                         </label>
                                     )}
+                                </div>
+                                <div className="col-span-1 max-h-[70px] min-h-[70px]">
+                                    <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] mb-1 ">
+                                        {dataLang?.serviceVoucher_voucher_code || "serviceVoucher_voucher_code"}
+                                        <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        value={code}
+                                        onChange={_HandleChangeInput.bind(this, "code")}
+                                        placeholder={"Mặc định theo hệ thống"}
+                                        type="text"
+                                        className="focus:border-[#92BFF7] border-[#d0d5dd] 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded-[5.5px] text-[#52575E] font-normal p-2.5 border outline-none mb-2"
+                                    />
                                 </div>
                                 <div className="col-span-1  max-h-[70px] min-h-[70px]">
                                     <label className="text-[#344054] font-normal 2xl:text-[12px] xl:text-[13px] text-[12px] mb-1 ">

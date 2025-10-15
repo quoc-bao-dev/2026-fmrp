@@ -8,11 +8,13 @@ const CheckboxDefault = ({
     onChange,
     disabled = false,
     className = "",
+    onClick,
 }) => {
     return (
         <label
             className={`inline-flex items-center space-x-2 cursor-pointer ${disabled ? "opacity-50 cursor-not-allowed" : ""
                 } ${className}`}
+            onClick={onClick}
         >
             <input
                 type="checkbox"
@@ -43,7 +45,7 @@ const CheckboxDefault = ({
                     />
                 </svg>
             </div>
-            {label && <span className="text-sm text-gray-700">{label}</span>}
+            {label && <span className="responsive-text-base text-gray-700">{label}</span>}
         </label>
     );
 };

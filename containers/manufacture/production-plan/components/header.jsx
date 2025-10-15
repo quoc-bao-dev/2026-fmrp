@@ -131,35 +131,30 @@ const Header = (props) => {
                     Kế hoạch sản xuất
                 </h2>
                 <div className="flex items-stretch gap-4">
-                    <div>
-                        <Zoom>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if (role || checkAdd) {
-                                        if (isCheck) {
-                                            router.push(routerPproductionPlan.form);
-                                        } else {
-                                            showToat(
-                                                "error",
-                                                router.query?.tab == "plan"
-                                                    ? "Vui lòng chọn ít nhất một KHNB"
-                                                    : "Vui lòng chọn ít nhất một đơn hàng"
-                                            );
-                                        }
-                                    } else {
-                                        showToat("error", WARNING_STATUS_ROLE);
-                                    }
-                                }}
-                                // className="bg-[#003DA0] rounded-md hover:scale-105 transition-all duration-200 ease-linear 3xl:py-2.5 xxl:py-2 2xl:py-2 xl:py-1 lg:py-1 py-3  px-4 flex items-center gap-2"
-                                className={`responsive-text-sm 3xl:py-3 3xl:px-4 py-2 px-3 bg-background-blue-2 text-white rounded-lg btn-animation hover:scale-105 flex items-center gap-x-2 text-nowrap whitespace-nowrap`}
-                            >
-                                <p className="flex flex-row justify-center items-center gap-x-1 responsive-text-sm text-sm font-normal whitespace-nowrap">
-                                    <PlusIcon /> Lập kế hoạch NVL
-                                </p>
-                            </button>
-                        </Zoom>
-                    </div>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            if (role || checkAdd) {
+                                if (isCheck) {
+                                    router.push(routerPproductionPlan.form);
+                                } else {
+                                        showToat(
+                                            "error",
+                                            router.query?.tab == "plan"
+                                                ? "Vui lòng chọn ít nhất một KHNB"
+                                        : "Vui lòng chọn ít nhất một đơn hàng"
+                                );
+                            }
+                            } else {
+                                showToat("error", WARNING_STATUS_ROLE);
+                            }
+                        }}
+                        className="responsive-text-sm 3xl:py-3 3xl:px-4 py-2 px-3 bg-background-blue-2 hover:bg-background-blue-4 text-white rounded-lg btn-animation flex items-center gap-x-2 text-nowrap whitespace-nowrap"
+                    >
+                        <p className="flex flex-row justify-center items-center gap-x-1 responsive-text-sm text-sm font-normal whitespace-nowrap">
+                            <PlusIcon /> Lập lệnh sản xuất
+                        </p>
+                    </button>
 
                     <FilterDropdown
                         trigger={triggerFilterAll}

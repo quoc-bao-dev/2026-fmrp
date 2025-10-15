@@ -75,7 +75,6 @@ const Register = React.memo((props) => {
     const showToat = useToast();
 
     const [isState, sIsState] = useState(initialState);
-    console.log("isState.countOtp", isState.countOtp);
 
     const data = useSelector((state) => state.availableLang);
 
@@ -239,6 +238,7 @@ const Register = React.memo((props) => {
             queryState({ sendOtp: true });
 
             const dataSubmit = new FormData();
+            dataSubmit.append("is_web", 1);
             dataSubmit.append("career", data?.major);
             dataSubmit.append("company_name", data?.companyName);
             dataSubmit.append("fullname", data?.fullName);

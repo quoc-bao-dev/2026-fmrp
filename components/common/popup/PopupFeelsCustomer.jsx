@@ -77,7 +77,6 @@ const PopupFeelsCustomer = ({ onClose }) => {
 
 
     const getFileIcon = (file) => {
-        console.log('file', file);
 
         const mimeType = file?.type;
         const fileName = file?.name?.toLowerCase() || '';

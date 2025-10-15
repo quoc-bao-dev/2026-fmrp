@@ -19,8 +19,6 @@ export const useMaterialIssueHistory = ({
 
         const {data} = await apiProductionsOrders.apiGetSuggestExporting({ page: pageParam, limit: limit }, formData)
 
-        console.log('data', data);
-
         // const flattenedItemsArray = res?.data?.rResult?.flatMap(entry =>
         //     entry.items.map(item => ({
         //         branch_name: entry.branch_name,

@@ -1,10 +1,8 @@
-import React from "react";
-
 import { Container } from "@/components/UI/common/layout";
 import Head from "next/head";
-
-import { ProductionsOrdersProvider } from "./context/productionsOrders";
+import React from "react";
 import ProductionsOrderMain from "./components/main/ProductionsOrderMain";
+import { ProductionsOrdersProvider } from "./context/productionsOrders";
 
 const ProductionsOrders = (props) => {
     const propsDefault = { dataLang: props.dataLang, typeScreen: props.type };

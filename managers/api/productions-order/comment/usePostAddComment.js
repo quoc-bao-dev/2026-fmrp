@@ -10,12 +10,10 @@ export const usePostAddComment = () => {
     const postAddCommentMutation = useMutation({
         mutationFn: async (data) => {
             const res = await apiProductionsOrders.apiPostAddComment(data);
-            console.log('res', res);
 
             return res;
         },
         onSuccess: (data) => {
-            console.log('data', data);
 
             if (data && data?.isSuccess) {
                 queryStateProvider((prev) => ({
@@ -44,7 +42,6 @@ export const usePostAddComment = () => {
 
     const onSubmit = async (data) => {
         try {
-            console.log('data  data', data);
 
             const tempDiv = document.createElement("div");
             tempDiv.innerHTML = data?.productionsOrders?.inputCommentText ?? "";

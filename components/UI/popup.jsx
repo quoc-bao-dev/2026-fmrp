@@ -4,12 +4,12 @@ import { Add as IconClose } from "iconsax-react";
 import React, { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import 'simplebar-react/dist/simplebar.min.css';
+import { twMerge } from "tailwind-merge";
 
 const deca = Lexend_Deca({
     subsets: ["latin"],
     weight: ["300", "400", "500", "600", "700"],
 });
-// const inter = Inter({ subsets: ["latin"] });
 
 const Popup = (props) => {
     const dispatch = useDispatch();
@@ -33,13 +33,13 @@ const Popup = (props) => {
             >
                 <div 
                     onClick={(e) => e.stopPropagation()}
-                    className={`${deca.className} bg-[#ffffff] ${props?.classNameModeltime} p-4 shadow-xl rounded-xl w-full`}
+                    className={`${deca.className} bg-[#ffffff] p-4 shadow-xl rounded-xl w-full ${props?.classNameModeltime}`}
                 >
                     <div className={`${props.classNameTittle ? props.classNameTittle : "items-center"} flex justify-between`}>
                         <div className={`flex items-center gap-4 w-full ${props?.classNameTittle}`}>
-                            <h1 className="text-[#101828] font-medium !text-base !capitalize">
+                            <div className="text-[#101828] font-medium !text-base !capitalize w-full">
                                 {props.title}
-                            </h1>
+                            </div>
                         </div>
 
                         {
@@ -49,9 +49,9 @@ const Popup = (props) => {
                                 :
                                 <button
                                     onClick={props.onClose}
-                                    className="flex flex-col items-center justify-center transition rounded-full outline-none w-7 h-7 bg-slate-200 hover:opacity-80 hover:scale-105"
+                                    className={twMerge(`flex flex-col items-center justify-center transition rounded-full outline-none w-7 h-7 bg-slate-200 hover:opacity-80 hover:scale-105 ${props?.classNameIconClose}`)}
                                 >
-                                    <IconClose className="rotate-45" />
+                                    <IconClose className="rotate-45 size-full" />
                                 </button>
                         }
                     </div>

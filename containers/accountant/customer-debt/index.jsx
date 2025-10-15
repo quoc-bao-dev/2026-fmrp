@@ -417,7 +417,7 @@ const CustomerDebt = (props) => {
                 </HeaderTable>
                 {isLoading || isFetching ? (
                   <Loading className="h-80" color="#0f4f9e" />
-                ) : data?.rResult?.length < 0 ? (
+                ) : data?.rResult?.length > 0 ? (
                   <div className="h-full divide-y divide-slate-200">
                     {data?.rResult?.map((e, index) => (
                       <RowTable gridCols={12} key={e.id.toString()}>

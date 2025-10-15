@@ -409,7 +409,7 @@ const Payment = (props) => {
                                     <ColumnTable colSpan={1} textAlign={'left'}>
                                         {dataLang?.payment_costs || "payment_costs"}
                                     </ColumnTable>
-                                    <ColumnTable colSpan={1} textAlign={'left'}>
+                                    <ColumnTable colSpan={1} textAlign={'right'}>
                                         {dataLang?.payment_amountOfMoney || "payment_amountOfMoney"}
                                     </ColumnTable>
                                     <ColumnTable colSpan={1} textAlign={'center'}>
@@ -485,7 +485,7 @@ const Payment = (props) => {
                                                         </React.Fragment>
                                                     ))}
                                                 </RowItemTable>
-                                                <RowItemTable colSpan={1} textAlign={'left'}>
+                                                <RowItemTable colSpan={1} textAlign={'right'}>
                                                     {renderMoneyOrDash(e?.total)}
                                                 </RowItemTable>
                                                 <RowItemTable colSpan={1}>
@@ -526,7 +526,7 @@ const Payment = (props) => {
                         <RowItemTable colSpan={1} className="p-2" textAlign={"start"}>
                             {dataLang?.purchase_order_table_total_outside || "purchase_order_table_total_outside"}
                         </RowItemTable>
-                        <RowItemTable colSpan={5} textAlign={'left'} className={'p-2 whitespace-nowrap'}>
+                        <RowItemTable colSpan={1} textAlign={'right'} className={'p-2 whitespace-nowrap'}>
                             {renderMoneyOrDash(data?.rTotal?.sum_total)}
                         </RowItemTable>
                     </ContainerTotal>

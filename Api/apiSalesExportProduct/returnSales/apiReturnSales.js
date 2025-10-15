@@ -30,7 +30,7 @@ const apiReturnSales = {
         return response.data
     },
     async apiComboboxLocation(params) {
-        const response = await axiosCustom('GET', `/api_web/api_warehouse/Getcomboboxlocation/?csrf_protection=true`, params);
+        const response = await axiosCustom('GET', `/api_web/api_warehouse/GetcomboboxlocationReturn/?csrf_protection=true`, params);
         return response.data
     },
     async apiHandingReturnSales(id, data) {

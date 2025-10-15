@@ -5,7 +5,8 @@ const IMAGE_TYPE = {
     notificationheader: '/icon/nodata-noti-final.svg',
     dashboard: '/icon/task.svg',
     table: "/background/system/nodata-table-2.png",
-    comment: "/background/system/message_empty.svg"
+    comment: "/background/system/message_empty.svg",
+    report: "/data-not-found.png"
 };
 
 const NoData = ({
@@ -18,11 +19,12 @@ const NoData = ({
     const imageSrc = IMAGE_TYPE[type] || "/icon/nodata_ok.svg";
     const isTable = type === "table";
     const isComment = type === "comment";
+    const isReport = type === "report";
     const title = isTable ?
         ("Chưa có dữ liệu")
         :
         (
-            isComment ? "Hãy thảo luận trao đổi tình hình sản xuất ngay!" : "Không tìm thấy các mục"
+            isComment ? "Hãy thảo luận trao đổi tình hình sản xuất ngay!" : isReport ? "Chưa có dữ liệu" : "Không tìm thấy các mục"
         )
 
     return (
@@ -36,8 +38,8 @@ const NoData = ({
             <div className="h-full flex flex-col justify-center items-center 3xl:gap-5 gap-3 3xl:py-5 py-3 mx-auto">
                 <Image
                     src={imageSrc}
-                    width={500}
-                    height={500}
+                    width={1000}
+                    height={1000}
                     alt="nodata"
                     className={classNameImage}
                     priority

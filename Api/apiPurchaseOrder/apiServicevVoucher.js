@@ -21,5 +21,9 @@ const apiServiceVoucher = {
         const response = await axiosCustom('POST', id ? `/api_web/Api_service/service/${id}?csrf_protection=true` : "/api_web/Api_service/service/?csrf_protection=true", data);
         return response.data
     },
+    async apiPrintServiceVoucher(data) {
+        const response = await axiosCustom('POST', `/api_web/Api_print/Print_ServicesWeb`, data);
+        return response.data
+    },
 }
 export default apiServiceVoucher

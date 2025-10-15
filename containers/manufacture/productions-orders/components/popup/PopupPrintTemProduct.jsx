@@ -135,7 +135,6 @@ const PopupPrintTemProduct = ({ dataItem, idManufacture }) => {
             // }
             try {
                 const response = await apiProducts.apiPrintItemsManufactures(formData);
-                console.log("🚀 ~ handlePrint ~ response:", response);
                 if (response.isSuccess === 1) {
                     setLisTemItem(response);
                     setIsPrintTem(true);
