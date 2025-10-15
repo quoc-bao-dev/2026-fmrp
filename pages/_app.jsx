@@ -22,6 +22,7 @@ import ReusableSheet from "@/components/common/sheet/ReusableSheet";
 import { StateContext, StateProvider } from "@/context/_state/productions-orders/StateContext";
 import { SocketProvider } from "@/context/socket/SocketContext";
 import { VersionProvider } from "@/context/_state/version-application/VersionContext";
+import ForgotPassPage from "./auth/forgot-password";
 
 // const t = Lark
 const deca = Lexend_Deca({
@@ -170,8 +171,12 @@ function MainPage({ Component, pageProps }) {
         !isLoading &&
         (!dataAuth || !(tokenFMRP && databaseappFMRP) || auth == false)
     ) {
+
         if (router.pathname == "/auth/register") {
             return <Register dataLang={data} />;
+        }
+        if (router.pathname == "/auth/forgot-password") {
+            return <ForgotPassPage dataLang={data} />;
         }
         if (
             (!isLoading &&
