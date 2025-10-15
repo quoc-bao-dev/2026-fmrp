@@ -2,6 +2,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useForgotPassword } from '@/managers/api/auth/useForgotPassword';
 
 // Zod schema for form validation
 const forgotPasswordSchema = z.object({
@@ -47,11 +48,26 @@ const ForgotPassForm = ({ onSubmit: onSubmitProp }) => {
         resolver: zodResolver(forgotPasswordSchema),
     });
 
+    const { forgotPassword, isLoading } = useForgotPassword({
+        onSuccess: data => {
+            if (typeof onSubmitProp === 'function') {
+                onSubmitProp(data);
+            }
+        },
+        onError: error => {
+            console.error('Forgot password error:', error);
+        },
+    });
+
     const onSubmit = async data => {
-        if (typeof onSubmitProp === 'function') {
-            await onSubmitProp(data);
-            return;
-        }
+        // Transform form data to match API payload
+        const payload = {
+            phone_number: data.phone,
+            company_code: data.companyCode,
+        };
+
+        await forgotPassword(payload);
+        // console.log(payload);
     };
 
     return (
@@ -64,6 +80,7 @@ const ForgotPassForm = ({ onSubmit: onSubmitProp }) => {
                     {...register('phone')}
                     className={`${errors.phone ? 'border-red-500 border' : 'border-[#cccccc]'} border outline-none focus:border-[#0F4F9E] hover:border-[#0F4F9E]/60 px-5 py-3 rounded-md w-full`}
                 />
+                {errors.phone && <span className='text-xs text-red-500'>{errors.phone.message}</span>}
 
                 {/* [Mã công ty] */}
                 <input
@@ -74,12 +91,17 @@ const ForgotPassForm = ({ onSubmit: onSubmitProp }) => {
                 />
 
                 {/* [Form Validation] */}
-                {errors.phone && <span className='text-xs text-red-500'>{errors.phone.message}</span>}
                 {errors.companyCode && <span className='text-xs text-red-500'>{errors.companyCode.message}</span>}
 
                 {/* [Form Actions] */}
-                <button type='submit' className='text-[#FFFFFF] font-normal text-lg py-3 w-full rounded-md bg-gradient-to-l from-[#0375f3]  via-[#296dc1] to-[#0375f3] btn-animation hover:scale-105'>
-                    Tiếp theo
+                <button
+                    type='submit'
+                    disabled={isLoading}
+                    className={`text-[#FFFFFF] font-normal text-lg py-3 w-full rounded-md bg-gradient-to-l from-[#0375f3] via-[#296dc1] to-[#0375f3] btn-animation hover:scale-105 ${
+                        isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                >
+                    {isLoading ? 'Đang xử lý...' : 'Tiếp theo'}
                 </button>
             </form>
         </>
