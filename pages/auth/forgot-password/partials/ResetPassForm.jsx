@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { useChangePassword } from '@/managers/api/auth/useChangePassword';
+import { useForm } from 'react-hook-form';
 import { useForgotPassword } from './ForgotPasswordContext';
 import InputPassword from './InputPassword';
 
@@ -12,14 +11,14 @@ import InputPassword from './InputPassword';
     - rememberDefault?: boolean
     - onSubmit?: (payload: { newPassword: string; confirmPassword: string; remember: boolean }) => Promise<void> | void
 */
-const ResetPassForm = ({ companyCode = '', companyName = '', rememberDefault = true, onSubmit }) => {
+const ResetPassForm = ({ companyCode = '', companyName = '' }) => {
     const {
         register,
         handleSubmit,
         watch,
         formState: { errors },
     } = useForm({
-        defaultValues: { remember: rememberDefault },
+        defaultValues: {},
     });
 
     const { goToLogin } = useForgotPassword();
@@ -30,6 +29,7 @@ const ResetPassForm = ({ companyCode = '', companyName = '', rememberDefault = t
             sessionStorage.removeItem('company_name');
             sessionStorage.removeItem('forgot_phone');
             sessionStorage.removeItem('key_change_password');
+
             goToLogin();
         },
     });
@@ -97,11 +97,6 @@ const ResetPassForm = ({ companyCode = '', companyName = '', rememberDefault = t
                     error={errors.confirmPassword}
                 />
             </div>
-
-            <label className='flex items-center space-x-2 select-none'>
-                <input type='checkbox' {...register('remember')} />
-                <span>Ghi nhớ cho lần đăng nhập sau</span>
-            </label>
 
             <button
                 type='submit'
