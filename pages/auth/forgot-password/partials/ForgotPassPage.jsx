@@ -1,28 +1,31 @@
 import AuthLayout from './AuthLayout';
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import ForgotPass from './ForgotPass';
 import Otp from './Otp';
 import ResetPass from './ResetPass';
 import Image from 'next/image';
+import { useForgotPassword } from './ForgotPasswordContext';
 
 /**
  * Forgot Password Page component
- * @description Multi-step forgot password flow with step-based rendering
+ * @description Multi-step forgot password flow with step-based rendering using global state
  * @returns {JSX.Element} Rendered forgot password page
  * @example
  * // Basic usage - renders forgot password form by default
  * <ForgotPassPage />
- *
- * // With step parameter - renders specific step
- * // URL: /auth/forgot-password?step=otp
- * // URL: /auth/forgot-password?step=reset
  */
 const ForgotPassPage = () => {
+    const { step } = useForgotPassword();
     const router = useRouter();
-    const stepParam = Array.isArray(router.query.step) ? router.query.step[0] : router.query.step;
-    const step = stepParam || 'forgot';
+
+    // Handle navigation to login page when step is 'login'
+    useEffect(() => {
+        if (step === 'login') {
+            router.push('/auth/login');
+        }
+    }, [step, router]);
 
     return (
         <AuthLayout title='Quên Mật Khẩu'>

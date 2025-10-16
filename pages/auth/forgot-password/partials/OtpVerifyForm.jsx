@@ -1,5 +1,5 @@
 import { useCheckOTP } from '@/managers/api/auth/useCheckOTP';
-import { useRouter } from 'next/router';
+import { useForgotPassword } from './ForgotPasswordContext';
 import { useState } from 'react';
 import OtpInput from './OtpInput';
 
@@ -14,14 +14,14 @@ const OtpVerifyForm = ({ phone = '', length = 6, onSubmit }) => {
     const [code, setCode] = useState(() => Array.from({ length }, () => ''));
     const [completed, setCompleted] = useState(false);
 
-    const router = useRouter();
+    const { goToReset } = useForgotPassword();
 
     const { checkOTP, isLoading } = useCheckOTP({
         onSuccess: data => {
             if (data?.isSuccess) {
                 // TODO: set ten cong ty va ma cong ty
                 sessionStorage.setItem('key_change_password', data?.key_change_password);
-                router.push('/auth/forgot-password?step=reset');
+                goToReset();
             }
         },
     });

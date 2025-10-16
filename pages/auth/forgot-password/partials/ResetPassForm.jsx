@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useChangePassword } from '@/managers/api/auth/useChangePassword';
-import { useRouter } from 'next/router';
+import { useForgotPassword } from './ForgotPasswordContext';
 import InputPassword from './InputPassword';
 
 /*
@@ -22,7 +22,7 @@ const ResetPassForm = ({ companyCode = '', companyName = '', rememberDefault = t
         defaultValues: { remember: rememberDefault },
     });
 
-    const router = useRouter();
+    const { goToLogin } = useForgotPassword();
     const { changePassword, isLoading } = useChangePassword({
         onSuccess: () => {
             // clear dữ liệu
@@ -30,7 +30,7 @@ const ResetPassForm = ({ companyCode = '', companyName = '', rememberDefault = t
             sessionStorage.removeItem('company_name');
             sessionStorage.removeItem('forgot_phone');
             sessionStorage.removeItem('key_change_password');
-            router.push('/auth/login');
+            goToLogin();
         },
     });
 

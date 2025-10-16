@@ -2,8 +2,8 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useForgotPassword } from '@/managers/api/auth/useForgotPassword';
-import { useRouter } from 'next/router';
+import { useForgotPassword as useForgotPasswordAPI } from '@/managers/api/auth/useForgotPassword';
+import { useForgotPassword } from './ForgotPasswordContext';
 import Input from './Input';
 
 // Zod schema for form validation
@@ -42,7 +42,7 @@ const forgotPasswordSchema = z.object({
  * <ForgotPassForm />
  */
 const ForgotPassForm = ({ onSubmit: onSubmitProp }) => {
-    const router = useRouter();
+    const { goToOtp } = useForgotPassword();
 
     const {
         register,
@@ -53,7 +53,7 @@ const ForgotPassForm = ({ onSubmit: onSubmitProp }) => {
         resolver: zodResolver(forgotPasswordSchema),
     });
 
-    const { forgotPassword, isLoading } = useForgotPassword({
+    const { forgotPassword, isLoading } = useForgotPasswordAPI({
         onSuccess: data => {
             if (data?.isSuccess) {
                 try {
@@ -62,7 +62,7 @@ const ForgotPassForm = ({ onSubmit: onSubmitProp }) => {
                     sessionStorage.setItem('company_code', data.company_code);
                     sessionStorage.setItem('company_name', data.company_name);
                 } catch (e) {}
-                router.push('/auth/forgot-password?step=otp');
+                goToOtp();
             }
             if (typeof onSubmitProp === 'function') onSubmitProp(data);
         },
