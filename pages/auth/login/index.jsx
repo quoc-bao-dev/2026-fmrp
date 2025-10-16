@@ -4,7 +4,6 @@ import { optionsQuery } from '@/configs/optionsQuery';
 import { useSetings } from '@/hooks/useAuth';
 import useToast from '@/hooks/useToast';
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
-import { Eye as IconEye, EyeSlash as IconEyeSlash } from 'iconsax-react';
 import Cookies from 'js-cookie';
 import Head from 'next/head';
 import Image from 'next/image';
@@ -13,6 +12,8 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useForm } from 'react-hook-form';
+import Input from '../forgot-password/partials/Input';
+import InputPassword from '../forgot-password/partials/InputPassword';
 import { FaQuoteLeft, FaQuoteRight } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import 'sweetalert2/src/sweetalert2.scss';
@@ -24,7 +25,6 @@ const Login = React.memo(props => {
         listMajor: [],
         listPosition: [],
         checkMajior: null,
-        typePassword: false,
         isRegister: false,
         stepRegister: 0,
         isLogin: true,
@@ -231,41 +231,26 @@ const Login = React.memo(props => {
                                     <h1 className='text-[#11315B] font-medium text-3xl text-center capitalize'>{dataLang?.auth_login || 'auth_login'}</h1>
                                 </div>
                                 <div className='space-y-2'>
-                                    <input
+                                    <Input
                                         type='text'
                                         name='code'
                                         {...register('code', { required: true })}
                                         placeholder='Mã công ty'
-                                        className={`${
-                                            errors.code ? 'border-red-500 border' : 'border-[#cccccc]'
-                                        } border outline-none  focus:border-[#0F4F9E] hover:border-[#0F4F9E]/60 px-5 py-3 rounded-md w-full`}
+                                        error={errors.code ? { message: 'Vui lòng nhập mã công ty' } : null}
                                     />
-                                    {errors.code && <span className='text-xs text-red-500'>Vui lòng nhập mã công ty</span>}
-                                    <input
+                                    <Input
                                         type='text'
                                         name='name'
                                         {...register('name', { required: true })}
                                         placeholder={dataLang?.auth_user_name || 'auth_user_name'}
-                                        className={`${
-                                            errors.name ? 'border-red-500 border' : 'border-[#cccccc]'
-                                        } border outline-none  focus:border-[#0F4F9E] hover:border-[#0F4F9E]/60 px-5 py-3 rounded-md w-full`}
+                                        error={errors.name ? { message: 'Vui lòng nhập email hoặc số điện thoại' } : null}
                                     />
-                                    {errors.name && <span className='text-xs text-red-500'>Vui lòng nhập email hoặc số điện thoại</span>}
-                                    <div className='relative flex flex-col justify-center'>
-                                        <input
-                                            type={isState.typePassword ? 'text' : 'password'}
-                                            name='password'
-                                            {...register('password', { required: true })}
-                                            placeholder={dataLang?.auth_password || 'auth_password'}
-                                            className={`${
-                                                errors.password ? 'border-red-500 border' : 'border-[#cccccc]'
-                                            } border outline-none focus:border-[#0F4F9E] hover:border-[#0F4F9E]/60 py-3 pl-5 pr-12 rounded-md w-full`}
-                                        />
-                                        {errors.password && <span className='text-xs text-red-500'>Vui lòng nhập mật khẩu</span>}
-                                        <button type='button' onClick={() => queryState({ typePassword: !isState.typePassword })} className='absolute top-0 translate-y-1/2 right-3'>
-                                            {isState.typePassword ? <IconEyeSlash /> : <IconEye />}
-                                        </button>
-                                    </div>
+                                    <InputPassword
+                                        name='password'
+                                        {...register('password', { required: true })}
+                                        placeholder={dataLang?.auth_password || 'auth_password'}
+                                        error={errors.password ? { message: 'Vui lòng nhập mật khẩu' } : null}
+                                    />
                                     <div className='flex justify-between w-full'>
                                         <div className='flex items-center space-x-1.5'>
                                             <input
@@ -387,7 +372,7 @@ const Login = React.memo(props => {
                                     </p>
                                     <p className='text-[#667085] font-light text-[16px]'>
                                         Hotline:
-                                        <span className='text-[#0F4F9E] font-normal ml-1'>0901.13.6968 - 0932.755.968</span>
+                                        <span className='text-[#0F4F9E] font-normal ml-1'>0901.13.6968 - 0981.89.3353</span>
                                     </p>
                                     {/* <p className="text-[#667085] font-light text-[16px]">
                                                         Tổng đài:

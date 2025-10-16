@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import apiForgotPassword from '@/Api/apiLogin/apiForgotPassword';
 import useToast from '@/hooks/useToast';
+import { useLanguageContext } from '@/context/ui/LanguageContext';
 
 /**
  * Custom hook for forgot password functionality
@@ -31,7 +32,7 @@ import useToast from '@/hooks/useToast';
  */
 export const useForgotPassword = (options = {}) => {
     const showToast = useToast();
-
+    const dataLang = useLanguageContext();
     const forgotPasswordMutation = useMutation({
         mutationFn: async payload => {
             const res = await apiForgotPassword.forgotPassword(payload);
@@ -39,10 +40,10 @@ export const useForgotPassword = (options = {}) => {
         },
         onSuccess: data => {
             if (data?.isSuccess) {
-                showToast('success', data?.message || 'Password reset initiated successfully');
+                showToast('success', dataLang[data?.message] || 'Password reset initiated successfully');
                 if (options.onSuccess) options.onSuccess(data);
             } else {
-                showToast('error', data?.message || 'Password reset failed');
+                showToast('error', dataLang[data?.message] || 'Password reset failed');
             }
         },
         onError: error => {

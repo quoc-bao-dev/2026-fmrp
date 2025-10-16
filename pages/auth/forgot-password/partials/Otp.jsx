@@ -1,6 +1,5 @@
-import React from "react";
-import OtpVerifyForm from "./OtpVerifyForm";
-import { useRouter } from "next/router";
+import { useEffect, useState } from 'react';
+import OtpVerifyForm from './OtpVerifyForm';
 
 /**
  * OTP Verification component
@@ -11,14 +10,20 @@ import { useRouter } from "next/router";
  * <Otp />
  */
 const Otp = () => {
-  const router = useRouter();
-  const phone = router.query.phone || "";
+    const [phone, setPhone] = useState('');
 
-  const onSubmit = async (code) => {
-    // verify OTP with API here if needed
-  };
+    useEffect(() => {
+        try {
+            const savedPhone = typeof window !== 'undefined' ? sessionStorage.getItem('forgot_phone') : '';
+            setPhone(savedPhone || '');
+        } catch (e) {
+            setPhone('');
+        }
+    }, []);
 
-  return <OtpVerifyForm phone={phone} length={6} onSubmit={onSubmit} />;
+    const onSubmit = async code => {};
+
+    return <OtpVerifyForm phone={phone} length={6} onSubmit={onSubmit} />;
 };
 
 export default Otp;

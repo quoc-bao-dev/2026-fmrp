@@ -1,6 +1,8 @@
-import { Eye as IconEye, EyeSlash as IconEyeSlash } from 'iconsax-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useChangePassword } from '@/managers/api/auth/useChangePassword';
+import { useRouter } from 'next/router';
+import InputPassword from './InputPassword';
 
 /*
   ResetPassForm
@@ -19,18 +21,41 @@ const ResetPassForm = ({ companyCode = '', companyName = '', rememberDefault = t
     } = useForm({
         defaultValues: { remember: rememberDefault },
     });
-    const [showNew, setShowNew] = useState(false);
-    const [showConfirm, setShowConfirm] = useState(false);
+
+    const router = useRouter();
+    const { changePassword, isLoading } = useChangePassword({
+        onSuccess: () => {
+            // clear dữ liệu
+            sessionStorage.removeItem('company_code');
+            sessionStorage.removeItem('company_name');
+            sessionStorage.removeItem('forgot_phone');
+            sessionStorage.removeItem('key_change_password');
+            router.push('/auth/login');
+        },
+    });
 
     const newPassword = watch('newPassword');
 
     const handleSubmitForm = async data => {
-        if (typeof onSubmit === 'function') {
-            await onSubmit({
-                newPassword: data.newPassword,
-                confirmPassword: data.confirmPassword,
-                remember: !!data.remember,
-            });
+        // Log dữ liệu: password, company code, key change password, phone (lấy từ session)
+        try {
+            const companyCode = sessionStorage.getItem('company_code') || '';
+            const phone = sessionStorage.getItem('forgot_phone') || '';
+            const keyChange = sessionStorage.getItem('key_change_password') || '';
+
+            const previewPayload = {
+                phone_number: phone,
+                company_code: companyCode,
+                key_change_password: keyChange,
+                password: data?.newPassword || '',
+            };
+
+            console.log('Preview change password payload from session:', previewPayload);
+
+            // Gọi API đổi mật khẩu
+            await changePassword(previewPayload);
+        } catch (e) {
+            console.warn('Cannot access sessionStorage to log payload:', e);
         }
     };
 
@@ -54,41 +79,23 @@ const ResetPassForm = ({ companyCode = '', companyName = '', rememberDefault = t
             )}
 
             <div className='space-y-7 pt-6'>
-                <div className='relative'>
-                    <input
-                        type={showNew ? 'text' : 'password'}
-                        placeholder='Nhập mật khẩu mới'
-                        {...register('newPassword', {
-                            required: 'Vui lòng nhập mật khẩu mới',
-                            minLength: { value: 6, message: 'Tối thiểu 6 ký tự' },
-                        })}
-                        className={`${
-                            errors.newPassword ? 'border-red-500 border' : 'border-[#cccccc]'
-                        } border outline-none focus:border-[#0F4F9E] hover:border-[#0F4F9E]/60 px-5 py-3 pr-12 rounded-md w-full`}
-                    />
-                    <button type='button' onClick={() => setShowNew(!showNew)} className='absolute top-1/2 -translate-y-1/2 right-3'>
-                        {showNew ? <IconEyeSlash /> : <IconEye />}
-                    </button>
-                    {errors.newPassword && <span className='text-xs text-red-500 mt-1 inline-block'>{errors.newPassword.message}</span>}
-                </div>
+                <InputPassword
+                    placeholder='Nhập mật khẩu mới'
+                    {...register('newPassword', {
+                        required: 'Vui lòng nhập mật khẩu mới',
+                        minLength: { value: 6, message: 'Tối thiểu 6 ký tự' },
+                    })}
+                    error={errors.newPassword}
+                />
 
-                <div className='relative'>
-                    <input
-                        type={showConfirm ? 'text' : 'password'}
-                        placeholder='Nhập lại mật khẩu'
-                        {...register('confirmPassword', {
-                            required: 'Vui lòng nhập lại mật khẩu',
-                            validate: v => v === newPassword || 'Mật khẩu không khớp',
-                        })}
-                        className={`${
-                            errors.confirmPassword ? 'border-red-500 border' : 'border-[#cccccc]'
-                        } border outline-none focus:border-[#0F4F9E] hover:border-[#0F4F9E]/60 px-5 py-3 pr-12 rounded-md w-full`}
-                    />
-                    <button type='button' onClick={() => setShowConfirm(!showConfirm)} className='absolute top-1/2 -translate-y-1/2 right-3'>
-                        {showConfirm ? <IconEyeSlash /> : <IconEye />}
-                    </button>
-                    {errors.confirmPassword && <span className='text-xs text-red-500 mt-1 inline-block'>{errors.confirmPassword.message}</span>}
-                </div>
+                <InputPassword
+                    placeholder='Nhập lại mật khẩu'
+                    {...register('confirmPassword', {
+                        required: 'Vui lòng nhập lại mật khẩu',
+                        validate: v => v === newPassword || 'Mật khẩu không khớp',
+                    })}
+                    error={errors.confirmPassword}
+                />
             </div>
 
             <label className='flex items-center space-x-2 select-none'>
@@ -96,8 +103,14 @@ const ResetPassForm = ({ companyCode = '', companyName = '', rememberDefault = t
                 <span>Ghi nhớ cho lần đăng nhập sau</span>
             </label>
 
-            <button type='submit' className='text-[#FFFFFF] font-normal text-lg py-3 w-full rounded-md bg-gradient-to-l from-[#0375f3]  via-[#296dc1] to-[#0375f3] btn-animation hover:scale-105'>
-                Xác nhận
+            <button
+                type='submit'
+                disabled={isLoading}
+                className={`text-[#FFFFFF] font-normal text-lg py-3 w-full rounded-md bg-gradient-to-l from-[#0375f3]  via-[#296dc1] to-[#0375f3] btn-animation hover:scale-105 ${
+                    isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+            >
+                {isLoading ? 'Đang xử lý...' : 'Xác nhận'}
             </button>
         </form>
     );

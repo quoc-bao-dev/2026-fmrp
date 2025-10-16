@@ -3,6 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useForgotPassword } from '@/managers/api/auth/useForgotPassword';
+import { useRouter } from 'next/router';
+import Input from './Input';
 
 // Zod schema for form validation
 const forgotPasswordSchema = z.object({
@@ -40,19 +42,29 @@ const forgotPasswordSchema = z.object({
  * <ForgotPassForm />
  */
 const ForgotPassForm = ({ onSubmit: onSubmitProp }) => {
+    const router = useRouter();
+
     const {
         register,
         handleSubmit,
         formState: { errors },
+        watch,
     } = useForm({
         resolver: zodResolver(forgotPasswordSchema),
     });
 
     const { forgotPassword, isLoading } = useForgotPassword({
         onSuccess: data => {
-            if (typeof onSubmitProp === 'function') {
-                onSubmitProp(data);
+            if (data?.isSuccess) {
+                try {
+                    const phoneValue = watch('phone');
+                    if (phoneValue) sessionStorage.setItem('forgot_phone', phoneValue);
+                    sessionStorage.setItem('company_code', data.company_code);
+                    sessionStorage.setItem('company_name', data.company_name);
+                } catch (e) {}
+                router.push('/auth/forgot-password?step=otp');
             }
+            if (typeof onSubmitProp === 'function') onSubmitProp(data);
         },
         onError: error => {
             console.error('Forgot password error:', error);
@@ -74,24 +86,10 @@ const ForgotPassForm = ({ onSubmit: onSubmitProp }) => {
         <>
             <form onSubmit={handleSubmit(onSubmit)} className='space-y-8 mt-20'>
                 {/* [Form Fields] */}
-                <input
-                    type='text'
-                    placeholder='Nhập số điện thoại'
-                    {...register('phone')}
-                    className={`${errors.phone ? 'border-red-500 border' : 'border-[#cccccc]'} border outline-none focus:border-[#0F4F9E] hover:border-[#0F4F9E]/60 px-5 py-3 rounded-md w-full`}
-                />
-                {errors.phone && <span className='text-xs text-red-500'>{errors.phone.message}</span>}
+                <Input type='text' placeholder='Nhập số điện thoại' {...register('phone')} error={errors.phone} />
 
                 {/* [Mã công ty] */}
-                <input
-                    type='text'
-                    placeholder='Mã công ty'
-                    {...register('companyCode')}
-                    className={`${errors.companyCode ? 'border-red-500 border' : 'border-[#cccccc]'} border outline-none focus:border-[#0F4F9E] hover:border-[#0F4F9E]/60 px-5 py-3 rounded-md w-full`}
-                />
-
-                {/* [Form Validation] */}
-                {errors.companyCode && <span className='text-xs text-red-500'>{errors.companyCode.message}</span>}
+                <Input type='text' placeholder='Mã công ty' {...register('companyCode')} error={errors.companyCode} />
 
                 {/* [Form Actions] */}
                 <button
