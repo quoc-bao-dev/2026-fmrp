@@ -1,7 +1,7 @@
-import QuotaMaterials from '@/containers/report-statistical/production-manager/quota-materials'
+import QuotaMaterials from '@/containers/report-statistical/production-manager/QuotaMaterials';
 
-const Page = (props) => {
-    return <QuotaMaterials {...props} />
-}
+const Page = () => {
+    return <QuotaMaterials />;
+};
 
-export default Page
+export default Page;

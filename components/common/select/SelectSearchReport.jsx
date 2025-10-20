@@ -129,7 +129,7 @@ const SelectSearchReport = ({
           value={value}
           open={open}
           mode={mode === 'multiple' ? 'multiple' : undefined}
-          onDropdownVisibleChange={handleDropdownVisibleChange}
+          onOpenChange={handleDropdownVisibleChange}
           onChange={handleChange}
           onClear={handleClear}
           disabled={disabled}

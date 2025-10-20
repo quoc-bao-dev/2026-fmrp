@@ -11,7 +11,6 @@ import TableSection from '@/components/layout/ReportLayout/TableSection'
 import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems'
 import { useLanguageContext } from '@/context/ui/LanguageContext'
 import { useGetWarehouse } from '@/hooks/common/useWarehouses'
-import useFeature from '@/hooks/useConfigFeature'
 import usePagination from '@/hooks/usePagination'
 import useStatusExprired from '@/hooks/useStatusExprired'
 import formatMoneyOrDash from '@/utils/helpers/formatMoneyOrDash'
@@ -19,7 +18,6 @@ import formatNumber from '@/utils/helpers/formatnumber'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { PiPackage, PiWarehouseLight } from 'react-icons/pi'
-import { useSelector } from 'react-redux'
 import { useDebounce } from 'use-debounce'
 import { useExportExcel } from './hooks/useExportExcel'
 import { useGetListReportStock } from './hooks/useGetListReportStock'
@@ -28,10 +26,14 @@ import PopupWarehouseDetail from './popup/popupWarehouseDetail'
 const breadcrumbItems = [
   {
     label: `Báo cáo`,
-    href: '/report-statistical',
   },
   {
-    label: `Xuất nhập tồn`,
+    label: `Báo cáo tồn kho`,
+  },
+  {
+    label: `Nhập xuất tồn`,
+    href: '/report-statistical/warehouse-report/entry-and-exist',
+
   },
 ]
 
@@ -46,6 +48,7 @@ const EntryAndExist = (props) => {
     endDate: undefined,
   })
   const [selectedWarehouse, setSelectedWarehouse] = useState(null)
+  const [isInitialized, setIsInitialized] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500)
   const [productOptions, setProductOptions] = useState([])
@@ -81,10 +84,10 @@ const EntryAndExist = (props) => {
   })
 
   useEffect(() => {
-    if (refetchReportImport) {
+    if (refetchReportImport && isInitialized) {
       refetchReportImport()
     }
-  }, [limit, dateRange, selectedWarehouse, selectedProducts, debouncedSearchValue, currentPage, refetchReportImport])
+  }, [limit, dateRange, selectedWarehouse, selectedProducts, debouncedSearchValue, currentPage, refetchReportImport, isInitialized])
 
   useEffect(() => {
     // Cập nhật options khi dataProduct thay đổi
@@ -120,14 +123,15 @@ const EntryAndExist = (props) => {
 
   useEffect(() => {
     // Tự động chọn kho đầu tiên khi dữ liệu kho được tải về
-    if (warehouseData?.rResult && warehouseData.rResult.length > 0) {
+    if (warehouseData?.rResult && warehouseData.rResult.length > 0 && !isInitialized) {
       const firstWarehouse = warehouseData.rResult[0]
       setSelectedWarehouse({
         value: firstWarehouse.id,
         label: firstWarehouse.name,
       })
+      setIsInitialized(true)
     }
-  }, [warehouseData?.rResult])
+  }, [warehouseData?.rResult, isInitialized])
 
   const handleWarehouseChange = (value) => {
     const selected = warehouseData?.rResult?.find((w) => w.id === value)
@@ -171,7 +175,8 @@ const EntryAndExist = (props) => {
   }
 
   const handleSearch = (value) => {
-    setSearchValue(value?.target?.value || value)
+    const searchValue = value?.target?.value || (typeof value === 'string' ? value : '')
+    setSearchValue(searchValue)
   }
 
   // Add limit handler
@@ -243,7 +248,7 @@ const EntryAndExist = (props) => {
         statusExprired={statusExprired}
         breadcrumbItems={breadcrumbItems}
         filterSection={
-          <div className="w-full items-center flex justify-between gap-10">
+          <div className="w-full items-center flex justify-between gap-4">
             <div className="flex gap-3">
               <DateToDateReport placeholder="Giai đoạn" value={dateRange} onChange={handleDateChange} />
 
@@ -451,12 +456,14 @@ const EntryAndExist = (props) => {
           />
         }
         totalSection={
-          <Pagination
-            postsPerPage={limit}
-            totalPosts={Number(dataReportStock?.recordsTotal) || 0}
-            paginate={paginate}
-            currentPage={currentPage}
-          />
+          dataReportStock?.recordsTotal > 0 && (
+            <Pagination
+              postsPerPage={limit}
+              totalPosts={Number(dataReportStock?.recordsTotal) || 0}
+              paginate={paginate}
+              currentPage={currentPage}
+            />
+          )
         }
         paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}
       />

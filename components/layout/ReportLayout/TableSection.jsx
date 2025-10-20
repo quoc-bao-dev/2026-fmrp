@@ -171,9 +171,10 @@ const TableSection = ({
             {fixedColumns.map((column, index) => (
               <ColumnTable
                 key={index}
-                className={`flex items-center py-2 px-3 border-r border-b border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 ${
-                  column.width
-                } ${column.textAlign === 'center' ? 'justify-center' : column.textAlign === 'end' ? 'justify-end' : ''}`}
+                className={`flex items-center py-2 px-3 border-r border-b border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 
+                  ${column.width} 
+                  ${column.className} 
+                  ${column.textAlign === 'center' ? 'justify-center' : column.textAlign === 'end' ? 'justify-end' : ''}`}
                 style={{ minHeight: '80px' }} // Span both header levels
               >
                 {column.title}
@@ -303,7 +304,7 @@ const TableSection = ({
       </Customscrollbar>
 
       {/* Footer row - moved outside scrollbar to stay fixed at bottom */}
-      {renderFooter && (
+      {renderFooter ? (
         <div className="flex sticky bottom-0 z-10 bg-white w-full">
           <div
             className="flex overflow-auto no-scrollbar w-full"
@@ -314,6 +315,8 @@ const TableSection = ({
             {renderFooter()}
           </div>
         </div>
+      ) : (
+        <div className="h-2"/>
       )}
     </div>
   )

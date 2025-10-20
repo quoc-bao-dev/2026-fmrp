@@ -719,8 +719,8 @@ const Header = () => {
               link: '/report-statistical/warehouse-report/entry-and-exist',
             },
             {
-              viewOwn: 0,
-              view: 0,
+              viewOwn: 1,
+              view: 1,
               name: 'Quản lý sản xuất',
               link: '/report-statistical/production-manager/quota-materials',
               forceDisableForAdmin: true,
@@ -1632,10 +1632,10 @@ const DropdownAvatar = React.memo(() => {
             <Image
               alt=""
               src="/icon/header/dropdown.png"
-              width={12}
-              height={12}
+              width={30}
+              height={30}
               quality={100}
-              className="object-cover"
+              className="object-cover w-3 h-full"
               loading="lazy"
               crossOrigin="anonymous"
               blurDataURL="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="

@@ -29,11 +29,14 @@ import { useGetListReportImport } from './hook/useGetListReportImport'
 const breadcrumbItems = [
   {
     label: `Báo cáo`,
-    href: '/report-statistical',
   },
   {
-    label: `Tồn kho`,
+    label: `Chi tiết phiếu`,
   },
+  {
+    label: `Báo cáo nhập kho mua hàng`,
+    href: '/report-statistical/warehouse-report/import-purchase',
+  }
 ]
 
 const ImportPurchase = (props) => {
@@ -59,6 +62,7 @@ const ImportPurchase = (props) => {
     endDate: undefined,
   })
   const [selectedWarehouse, setSelectedWarehouse] = useState(null)
+  const [isInitialized, setIsInitialized] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500)
   const [productOptions, setProductOptions] = useState([])
@@ -88,10 +92,10 @@ const ImportPurchase = (props) => {
   })
 
   useEffect(() => {
-    if (refetchReportImport) {
+    if (refetchReportImport && isInitialized) {
       refetchReportImport()
     }
-  }, [limit, dateRange, selectedWarehouse, selectedProducts, debouncedSearchValue, currentPage, refetchReportImport])
+  }, [limit, dateRange, selectedWarehouse, selectedProducts, debouncedSearchValue, currentPage, refetchReportImport, isInitialized])
 
   useEffect(() => {
     // Cập nhật options khi dataProduct thay đổi
@@ -124,14 +128,15 @@ const ImportPurchase = (props) => {
 
   useEffect(() => {
     // Tự động chọn kho đầu tiên khi dữ liệu kho được tải về
-    if (warehouseData?.rResult && warehouseData.rResult.length > 0) {
+    if (warehouseData?.rResult && warehouseData.rResult.length > 0 && !isInitialized) {
       const firstWarehouse = warehouseData.rResult[0]
       setSelectedWarehouse({
         value: firstWarehouse.id,
         label: firstWarehouse.name,
       })
+      setIsInitialized(true)
     }
-  }, [warehouseData?.rResult])
+  }, [warehouseData?.rResult, isInitialized])
 
   const handleWarehouseChange = (value) => {
     const selected = warehouseData?.rResult?.find((w) => w.id === value)
@@ -173,7 +178,8 @@ const ImportPurchase = (props) => {
   }
 
   const handleSearch = (value) => {
-    setSearchValue(value?.target?.value || value)
+    const searchValue = value?.target?.value || (typeof value === 'string' ? value : '')
+    setSearchValue(searchValue)
   }
 
   // Add limit handler
@@ -216,7 +222,7 @@ const ImportPurchase = (props) => {
       statusExprired={statusExprired}
       breadcrumbItems={breadcrumbItems}
       filterSection={
-        <div className="w-full items-center flex justify-between gap-10">
+        <div className="w-full items-center flex justify-between gap-4">
           <div className="flex gap-3">
             <DateToDateReport placeholder="Giai đoạn" value={dateRange} onChange={handleDateChange} />
 
@@ -416,12 +422,14 @@ const ImportPurchase = (props) => {
         />
       }
       totalSection={
-        <Pagination
-          postsPerPage={limit}
-          totalPosts={Number(dataReportImport?.output?.iTotalDisplayRecords) || 0}
-          paginate={paginate}
-          currentPage={currentPage}
-        />
+        dataReportImport?.output?.iTotalDisplayRecords > 0 && (
+          <Pagination
+            postsPerPage={limit}
+            totalPosts={Number(dataReportImport?.output?.iTotalDisplayRecords) || 0}
+            paginate={paginate}
+            currentPage={currentPage}
+          />
+        )
       }
       paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}
     />
