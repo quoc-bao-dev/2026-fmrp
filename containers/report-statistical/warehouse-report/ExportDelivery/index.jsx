@@ -388,7 +388,7 @@ const ExportDelivery = (props) => {
               <RowItemTable className="w-60 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-40 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-20 flex-shrink-0 bg-white"></RowItemTable>
-              <RowItemTable className="h-10 w-32 flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
+              <RowItemTable className="h-10 w-32 flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white uppercase">
                 Tổng cộng
               </RowItemTable>
               <RowItemTable className="h-10 w-24 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">

@@ -336,7 +336,7 @@ const ImportGoods = (props) => {
               <RowItemTable className="w-32 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-60 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-60 flex-shrink-0 bg-white"></RowItemTable>
-              <RowItemTable className="w-24 h-10 whitespace-nowrap flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
+              <RowItemTable className="w-24 h-10 whitespace-nowrap flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white uppercase">
                 Tổng cộng
               </RowItemTable>
               <RowItemTable

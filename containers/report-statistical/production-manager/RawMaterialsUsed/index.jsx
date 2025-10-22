@@ -17,8 +17,9 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems';
-import { useGetBOMs } from './hook';
+import { useGetBOMs, useGetRawMaterialsUsed } from './hook';
 import { useExportExcel } from './hook/useExportExcel';
+import moment from 'moment';
 
 const breadcrumbItems = [
   {
@@ -34,51 +35,6 @@ const breadcrumbItems = [
   },
 ];
 
-// Mock data - thay thế bằng API thực tế
-const mockData = [
-  {
-    id: 1,
-    order_number: 'DH001',
-    order_note: 'Giao hàng gấp',
-    production_order: 'SX001',
-    date: '2024-01-15',
-    material_code: 'NVL001',
-    material_name: 'Vải cotton 100%',
-    material_type: 'Vải',
-    unit_name: 'Mét',
-    output_quantity: 100,
-    return_quantity: 5,
-    used_quantity: 95,
-  },
-  {
-    id: 2,
-    order_number: 'DH002',
-    order_note: '',
-    production_order: 'SX002',
-    date: '2024-01-16',
-    material_code: 'NVL002',
-    material_name: 'Chỉ may',
-    material_type: 'Phụ liệu',
-    unit_name: 'Cuộn',
-    output_quantity: 50,
-    return_quantity: 0,
-    used_quantity: 50,
-  },
-  {
-    id: 3,
-    order_number: 'DH003',
-    order_note: 'Màu đen',
-    production_order: 'SX003',
-    date: '2024-01-17',
-    material_code: 'NVL003',
-    material_name: 'Khóa kéo',
-    material_type: 'Phụ liệu',
-    unit_name: 'Cái',
-    output_quantity: 75,
-    return_quantity: 2,
-    used_quantity: 73,
-  },
-];
 
 const RawMaterialsUsed = () => {
   const router = useRouter();
@@ -100,19 +56,33 @@ const RawMaterialsUsed = () => {
   const currentPage = Number(router.query.page) || 1;
 
   const { data: dataProduct } = useInventoryItems(debouncedSearchTerm);
-  const { data } = useGetBOMs({
+  const { data } = useGetRawMaterialsUsed({
     page: currentPage,
     limit: limit,
     search: debouncedSearchValue,
     material_id: selectedMaterial?.map(item => item.value) || [],
   });
 
-  const mockTotal = {
-    total_records: mockData.length,
-    total_output: mockData.reduce((sum, item) => sum + item.output_quantity, 0),
-    total_return: mockData.reduce((sum, item) => sum + item.return_quantity, 0),
-    total_used: mockData.reduce((sum, item) => sum + item.used_quantity, 0),
+  // Tính tổng từ dữ liệu thực tế
+  const calculateTotals = () => {
+    if (!data?.output?.aaData) return { total_plan: 0, total_output: 0, total_return: 0, total_used: 0 };
+    
+    const flattenedData = [];
+    data.output.aaData.forEach((orderItem) => {
+      orderItem.boms.forEach((bom) => {
+        flattenedData.push(bom);
+      });
+    });
+    
+    return {
+      total_plan: flattenedData.reduce((sum, bom) => sum + (parseFloat(bom.quota_primary) || 0), 0),
+      total_output: flattenedData.reduce((sum, bom) => sum + (parseFloat(bom.quantity_export) || 0), 0),
+      total_return: flattenedData.reduce((sum, bom) => sum + (parseFloat(bom.quantity_purchase_internal) || 0), 0),
+      total_used: flattenedData.reduce((sum, bom) => sum + (parseFloat(bom.quantity_used) || 0), 0),
+    };
   };
+  
+  const totals = calculateTotals();
 
   const handleDateChange = newValue => {
     setDateRange(newValue);
@@ -158,8 +128,8 @@ const RawMaterialsUsed = () => {
     });
   };
 
-  const { multiDataSet } = useExportExcel(mockData || []);
-  // const { multiDataSet } = useExportExcel(data?.output?.aaData || []);
+  // const { multiDataSet } = useExportExcel(mockData || []);
+  const { multiDataSet } = useExportExcel(data?.output?.aaData || []);
 
   return (
     <>
@@ -199,80 +169,167 @@ const RawMaterialsUsed = () => {
           </div>
         }
         tableSection={
-          <TableSection
-            fixedColumns={[
-              { title: 'STT', width: 'w-14', textAlign: 'center' },
-              { title: 'Đơn hàng bán/ Kế hoạch nội bộ', width: 'w-48', textAlign: 'center', className: 'text-center' },
-              { title: 'Ghi chú đơn hàng', width: 'w-40', textAlign: 'center', className: 'text-center' },
-              { title: 'Số lệnh SX chi tiết', width: 'w-40', textAlign: 'center' },
-            ]}
-            scrollableColumns={[
-              { title: 'Ngày', width: 'w-28', textAlign: 'center' },
-              { title: 'Mã NVL', width: 'w-32', textAlign: 'center' },
-              { title: 'Tên NVL', width: 'w-48', textAlign: 'left' },
-              { title: 'Loại', width: 'w-32', textAlign: 'center' },
-              { title: 'Đơn vị', width: 'w-28', textAlign: 'center' },
-            ]}
-            groupedHeaders={[
-              {
-                title: 'Số lượng',
-                columns: [
-                  { title: 'Đầu ra', width: 'w-32', textAlign: 'center' },
-                  { title: 'Nhập lại', width: 'w-32', textAlign: 'center' },
-                  { title: 'Đã sử dụng', width: 'w-32', textAlign: 'center' },
-                ],
-              },
-            ]}
-            data={mockData}
-            isFetching={false}
-            renderFixedRow={(item, index) => (
-              <>
-                <RowItemTable className='w-14 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>{index + 1}</RowItemTable>
-                <RowItemTable className='w-48 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>{item.order_number}</RowItemTable>
-                <RowItemTable className='w-40 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  <span className='text-center responsive-text-sm'>{item.order_note || '-'}</span>
-                </RowItemTable>
-                <RowItemTable className='w-40 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>{item.production_order}</RowItemTable>
-              </>
-            )}
-            renderScrollableRow={(item, index) => (
-              <>
-                <RowItemTable className='w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {new Date(item.date).toLocaleDateString('vi-VN')}
-                </RowItemTable>
-                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>{item.material_code}</RowItemTable>
-                <RowItemTable className='w-48 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  <span className='text-left responsive-text-sm'>{item.material_name}</span>
-                </RowItemTable>
-                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>{item.material_type}</RowItemTable>
-                <RowItemTable className='w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>{item.unit_name}</RowItemTable>
-                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {formatNumber(item.output_quantity)}
-                </RowItemTable>
-                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {formatNumber(item.return_quantity)}
-                </RowItemTable>
-                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 text-neutral-07 font-normal flex-shrink-0'>{formatNumber(item.used_quantity)}</RowItemTable>
-              </>
-            )}
-            renderFooter={() => (
-              <>
-                <RowItemTable className='w-14 flex-shrink-0 bg-white'></RowItemTable>
-                <RowItemTable className='w-48 flex-shrink-0 bg-white'></RowItemTable>
-                <RowItemTable className='w-40 flex-shrink-0 bg-white'></RowItemTable>
-                <RowItemTable className='w-40 flex-shrink-0 bg-white'></RowItemTable>
+          <div className="relative w-full overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="responsive-text-sm">
+                  <th className="min-w-14 px-3 py-2 text-center font-semibold text-gray-700 border border-gray-400 sticky left-0 bg-white z-20" style={{borderRight: '1px solid #9ca3af'}}>STT</th>
+                  <th className="min-w-48 px-3 py-2 text-center font-semibold text-gray-700 border border-gray-400 sticky left-14 bg-white z-20" style={{borderRight: '1px solid #9ca3af'}}>Đơn hàng bán/ Kế hoạch nội bộ</th>
+                  <th className="min-w-40 px-3 py-2 text-center font-semibold text-gray-700 border border-gray-400 sticky left-[248px] bg-white z-20" style={{borderRight: '1px solid #9ca3af'}}>Ghi chú đơn hàng</th>
+                  <th className="min-w-40 px-3 py-2 text-center font-semibold text-gray-700 border border-gray-400 sticky left-[392px] bg-white z-20" style={{borderRight: '1px solid #9ca3af'}}>Số lệnh SX chi tiết</th>
+                  <th className="min-w-28 px-3 py-2 text-center font-semibold text-gray-700 border border-gray-400">Ngày</th>
+                  <th className="min-w-32 px-3 py-2 text-center font-semibold text-gray-700 border border-gray-400">Mã NVL</th>
+                  <th className="min-w-52 px-3 py-2 text-center font-semibold text-gray-700 border border-gray-400">Tên NVL</th>
+                  <th className="min-w-48 px-3 py-2 text-center font-semibold text-gray-700 border border-gray-400">Loại</th>
+                  <th className="min-w-28 px-3 py-2 text-center font-semibold text-gray-700 border border-gray-400">Đơn vị</th>
+                  <th className="min-w-32 px-3 py-2 text-center font-semibold text-gray-700 border border-gray-400">Kế hoạch</th>
+                  <th className="min-w-32 px-3 py-2 text-center font-semibold text-gray-700 border border-gray-400">Đầu ra</th>
+                  <th className="min-w-32 px-3 py-2 text-center font-semibold text-gray-700 border border-gray-400">Nhập lại</th>
+                  <th className="min-w-32 px-3 py-2 text-center font-semibold text-gray-700 border border-gray-400">Đã sử dụng</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(() => {
+                  // Tạo mảng dữ liệu đã được "flatten" để hiển thị từng bom item
+                  const flattenedData = [];
+                  let globalIndex = 0;
+                  
+                  data?.output?.aaData?.forEach((orderItem, orderIndex) => {
+                    orderItem.boms.forEach((bom, bomIndex) => {
+                      flattenedData.push({
+                        ...orderItem,
+                        bom,
+                        globalIndex: globalIndex++,
+                        orderIndex,
+                        bomIndex,
+                        isFirstBom: bomIndex === 0,
+                        isLastBom: bomIndex === orderItem.boms.length - 1,
+                        totalBoms: orderItem.boms.length
+                      });
+                    });
+                  });
+                  
+                  return flattenedData.map((flattenedItem, index) => (
+                    <tr key={`${flattenedItem.orderIndex}-${flattenedItem.bomIndex}`} className="hover:bg-gray-50">
+                      {/* STT - chỉ hiển thị ở bom đầu tiên với rowspan */}
+                      {flattenedItem.isFirstBom && (
+                        <td 
+                          rowSpan={flattenedItem.totalBoms}
+                          className="w-14 px-3 py-2 text-center text-sm text-gray-700 border border-gray-400 align-middle sticky left-0 bg-white z-20"
+                          style={{borderRight: '1px solid #9ca3af'}}
+                        >
+                          {flattenedItem.orderIndex + 1}
+                        </td>
+                      )}
+                      
+                      {/* Đơn hàng bán - chỉ hiển thị ở bom đầu tiên với rowspan */}
+                      {flattenedItem.isFirstBom && (
+                        <td 
+                          rowSpan={flattenedItem.totalBoms}
+                          className="w-48 px-3 py-2 text-center text-sm text-gray-700 border border-gray-400 align-middle sticky left-14 bg-white z-20"
+                          style={{borderRight: '1px solid #9ca3af'}}
+                        >
+                          {flattenedItem.object_data.reference_no}
+                        </td>
+                      )}
+                      
+                      {/* Ghi chú đơn hàng - chỉ hiển thị ở bom đầu tiên với rowspan */}
+                      {flattenedItem.isFirstBom && (
+                        <td 
+                          rowSpan={flattenedItem.totalBoms}
+                          className="w-40 px-3 py-2 text-center text-sm text-gray-700 border border-gray-400 align-middle sticky left-[248px] bg-white z-20"
+                          style={{borderRight: '1px solid #9ca3af'}}
+                        >
+                          {flattenedItem?.object_data?.note || '-'}
+                        </td>
+                      )}
+                      
+                      {/* Số lệnh SX chi tiết - chỉ hiển thị ở bom đầu tiên với rowspan */}
+                      {flattenedItem.isFirstBom && (
+                        <td 
+                          rowSpan={flattenedItem.totalBoms}
+                          className="w-40 px-3 py-2 text-center text-sm text-gray-700 border border-gray-400 align-middle sticky left-[392px] bg-white z-20"
+                          style={{borderRight: '1px solid #9ca3af'}}
+                        >
+                          {flattenedItem.reference_no_detail}
+                        </td>
+                      )}
+                      
+                      {/* Ngày - chỉ hiển thị ở bom đầu tiên với rowspan */}
+                      {flattenedItem.isFirstBom && (
+                        <td 
+                          rowSpan={flattenedItem.totalBoms}
+                          className="w-28 px-3 py-2 text-center text-sm text-gray-700 border border-gray-400 align-middle"
+                        >
+                          {moment(flattenedItem.po_date).format('DD/MM/YYYY')}
+                        </td>
+                      )}
+                      
+                      {/* Mã NVL - hiển thị cho mỗi bom */}
+                      <td className="w-32 px-3 py-2 text-center text-sm text-gray-700 border border-gray-400">
+                        {flattenedItem.bom.item_code}
+                      </td>
+                      
+                      {/* Tên NVL - hiển thị cho mỗi bom */}
+                      <td className="w-48 px-3 py-2 text-left text-sm text-gray-700 border border-gray-400">
+                        {flattenedItem.bom.item_name}
+                      </td>
+                      
+                      {/* Loại - hiển thị cho mỗi bom */}
+                      <td className="w-32 px-3 py-2 text-center text-sm text-gray-700 border border-gray-400">
+                        {flattenedItem.bom.type_products === 'materials' ? 'Nguyên vật liệu' : 
+                         flattenedItem.bom.type_products === 'semi_products' ? 'Bán thành phẩm' : 
+                         flattenedItem.bom.type_products === 'semi_products_outside' ? 'Bán thành phẩm ngoài' : 
+                         flattenedItem.bom.type_products}
+                      </td>
+                      
+                      {/* Đơn vị - hiển thị cho mỗi bom */}
+                      <td className="w-28 px-3 py-2 text-center text-sm text-gray-700 border border-gray-400">
+                        {flattenedItem.bom.unit_name}
+                      </td>
+                      
+                      {/* Số lượng kế hoạch - hiển thị cho mỗi bom */}
+                      <td className="w-32 px-3 py-2 text-center text-sm text-gray-700 border border-gray-400">
+                        {formatNumber(Number(flattenedItem.bom.quota_primary))}
+                      </td>
 
-                <RowItemTable className='h-10 w-28 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>Tổng cộng</RowItemTable>
-                <RowItemTable className='h-10 w-32 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
-                <RowItemTable className='h-10 w-48 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
-                <RowItemTable className='h-10 w-32 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
-                <RowItemTable className='h-10 w-28 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
-                <RowItemTable className='h-10 w-32 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(mockTotal.total_output)}</RowItemTable>
-                <RowItemTable className='h-10 w-32 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(mockTotal.total_return)}</RowItemTable>
-                <RowItemTable className='h-10 w-32 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(mockTotal.total_used)}</RowItemTable>
-              </>
-            )}
-          />
+                      {/* Số lượng đầu ra - hiển thị cho mỗi bom */}
+                      <td className="w-32 px-3 py-2 text-center text-sm text-gray-700 border border-gray-400">
+                        {formatNumber(Number(flattenedItem.bom.quantity_export))}
+                      </td>
+                      
+                      {/* Số lượng nhập lại - hiển thị cho mỗi bom */}
+                      <td className="w-32 px-3 py-2 text-center text-sm text-gray-700 border border-gray-400">
+                        {formatNumber(Number(flattenedItem.bom.quantity_purchase_internal))}
+                      </td>
+                      
+                      {/* Số lượng đã sử dụng - hiển thị cho mỗi bom */}
+                      <td className="w-32 px-3 py-2 text-center text-sm text-gray-700 border border-gray-400">
+                        {formatNumber(Number(flattenedItem.bom.quantity_used))}
+                      </td>
+                    </tr>
+                  ));
+                })()}
+              </tbody>
+              <tfoot>
+                <tr className="bg-gray-100">
+                  <td className="w-14 px-3 py-2 text-center text-sm font-semibold text-gray-700 border border-gray-400 sticky left-0 bg-gray-100 z-20" style={{borderRight: '1px solid #9ca3af'}}></td>
+                  <td className="w-48 px-3 py-2 text-center text-sm font-semibold text-gray-700 border border-gray-400 sticky left-14 bg-gray-100 z-20" style={{borderRight: '1px solid #9ca3af'}}></td>
+                  <td className="w-40 px-3 py-2 text-center text-sm font-semibold text-gray-700 border border-gray-400 sticky left-[248px] bg-gray-100 z-20" style={{borderRight: '1px solid #9ca3af'}}></td>
+                  <td className="w-40 px-3 py-2 text-center text-sm font-semibold text-gray-700 border border-gray-400 sticky left-[392px] bg-gray-100 z-20" style={{borderRight: '1px solid #9ca3af'}}></td>
+                  <td className="w-28 px-3 py-2 text-center text-sm font-semibold text-gray-700 border border-gray-400 sticky left-[536px] bg-gray-100 z-20" style={{borderRight: '1px solid #9ca3af'}}>Tổng cộng</td>
+                  <td className="w-32 px-3 py-2 text-center text-sm font-semibold text-gray-700 border border-gray-400">-</td>
+                  <td className="w-48 px-3 py-2 text-center text-sm font-semibold text-gray-700 border border-gray-400">-</td>
+                  <td className="w-32 px-3 py-2 text-center text-sm font-semibold text-gray-700 border border-gray-400">-</td>
+                  <td className="w-28 px-3 py-2 text-center text-sm font-semibold text-gray-700 border border-gray-400">-</td>
+                  <td className="w-32 px-3 py-2 text-center text-sm font-semibold text-gray-700 border border-gray-400">{formatNumber(totals.total_plan)}</td>
+                  <td className="w-32 px-3 py-2 text-center text-sm font-semibold text-gray-700 border border-gray-400">{formatNumber(totals.total_output)}</td>
+                  <td className="w-32 px-3 py-2 text-center text-sm font-semibold text-gray-700 border border-gray-400">{formatNumber(totals.total_return)}</td>
+                  <td className="w-32 px-3 py-2 text-center text-sm font-semibold text-gray-700 border border-gray-400">{formatNumber(totals.total_used)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         }
         totalSection={<Pagination postsPerPage={limit} totalPosts={Number(data?.output?.iTotalDisplayRecords) || 0} paginate={paginate} currentPage={currentPage} />}
         paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}

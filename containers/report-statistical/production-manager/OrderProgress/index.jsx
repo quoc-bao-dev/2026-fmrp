@@ -9,16 +9,16 @@ import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecompon
 import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 import PaginationComponent from '@/components/UI/pagination';
 import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems';
-import PopupDetailProduct from '@/containers/sales-export-product/sales-order/components/PopupDetailProduct';
 import { useLanguageContext } from '@/context/ui/LanguageContext';
 import usePagination from '@/hooks/usePagination';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import formatNumber from '@/utils/helpers/formatnumber';
+import moment from 'moment';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PiCalendar, PiPackage, PiShoppingCart } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
-import { useGetBOMs } from './hook';
+import { useGetOrderProgress, useGetSalesOrderCombobox } from './hook';
 import { useExportExcel } from './hook/useExportExcel';
 
 const breadcrumbItems = [
@@ -35,58 +35,6 @@ const breadcrumbItems = [
   },
 ];
 
-// Mock data - thay thế bằng API thực tế
-const mockData = [
-  {
-    id: 1,
-    order_date: '2024-01-15',
-    order_number: 'DH001',
-    branch_name: 'Xưởng A',
-    product_name: 'Áo thun nam',
-    note: 'Giao hàng gấp',
-    quantity: 100,
-    required_date: '2024-01-25',
-    produced_quantity: 80,
-    delivered_quantity: 60,
-    pending_quantity: 40,
-    completion_date: '2024-01-23',
-    delivery_date: '2024-01-24',
-    status: 'Đang sản xuất',
-  },
-  {
-    id: 2,
-    order_date: '2024-01-16',
-    order_number: 'DH002',
-    branch_name: 'Xưởng B',
-    product_name: 'Quần jean nữ',
-    note: '',
-    quantity: 50,
-    required_date: '2024-01-30',
-    produced_quantity: 50,
-    delivered_quantity: 50,
-    pending_quantity: 0,
-    completion_date: '2024-01-28',
-    delivery_date: '2024-01-29',
-    status: 'Hoàn thành',
-  },
-  {
-    id: 3,
-    order_date: '2024-01-17',
-    order_number: 'DH003',
-    branch_name: 'Xưởng A',
-    product_name: 'Áo khoác',
-    note: 'Màu đen',
-    quantity: 75,
-    required_date: '2024-02-05',
-    produced_quantity: 30,
-    delivered_quantity: 0,
-    pending_quantity: 75,
-    completion_date: null,
-    delivery_date: null,
-    status: 'Chưa bắt đầu',
-  },
-];
-
 const OrderProgress = () => {
   const router = useRouter();
   const { paginate } = usePagination();
@@ -99,25 +47,47 @@ const OrderProgress = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState([]);
   const [limit, setLimit] = useState(15);
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearchValue] = useDebounce(searchValue, 500);
+  const [orderSearch, setOrderSearch] = useState('');
+  const [debouncedOrderSearch] = useDebounce(orderSearch, 500);
   const [productOptions, setProductOptions] = useState([]);
   const currentPage = Number(router.query.page) || 1;
 
   const { data: dataProduct } = useInventoryItems(debouncedSearchTerm);
-  const { data, isFetching } = useGetBOMs({
+  const { data: dataSalesOrderCombobox } = useGetSalesOrderCombobox({
+    search: debouncedOrderSearch,
+  });
+
+  // Hàm chuyển đổi Date object sang định dạng d/m/Y
+  const formatDateToDMY = date => {
+    if (!date) return undefined;
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // Tạo filter với định dạng ngày d/m/Y
+  const getFormattedDateRange = () => {
+    if (!dateRange?.startDate || !dateRange?.endDate) return {};
+
+    return {
+      start_date: formatDateToDMY(new Date(dateRange.startDate)),
+      end_date: formatDateToDMY(new Date(dateRange.endDate)),
+    };
+  };
+
+  const { data, isFetching } = useGetOrderProgress({
     page: currentPage,
     limit: limit,
     search: debouncedSearchValue,
-    filter: {
-      ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
-      ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
-      ...(selectedOrder !== null && { order_id: selectedOrder }),
-      ...(selectedProduct && selectedProduct.length > 0 && { product_id: selectedProduct.map(item => item.value) }),
-    },
+    ...getFormattedDateRange(),
+    ...(selectedOrder !== null && { order_ids: selectedOrder.map(item => item.value) }),
+    ...(selectedProduct && selectedProduct.length > 0 && { product_id: selectedProduct.map(item => item.value) }),
   });
 
   useEffect(() => {
@@ -142,25 +112,47 @@ const OrderProgress = () => {
     }
   }, [dataProduct, selectedProduct]);
 
-  const mockTotal = {
-    total_records: mockData.length,
-    total_quantity: mockData.reduce((sum, item) => sum + item.quantity, 0),
-    total_produced: mockData.reduce((sum, item) => sum + item.produced_quantity, 0),
-    total_delivered: mockData.reduce((sum, item) => sum + item.delivered_quantity, 0),
-    total_pending: mockData.reduce((sum, item) => sum + item.pending_quantity, 0),
-  };
+  const totals = useMemo(() => {
+    const rows = data?.output?.aaData || [];
+    return rows.reduce(
+      (acc, item) => {
+        const q = Number(item.quantity) || 0;
+        const qSx = Number(item.quantity_sx) || 0;
+        const qHt = Number(item.quantity_ht) || 0;
+        const qDelivery = Number(item.quantity_delivery) || 0;
+        const qNotDelivery = Number(item.quantity_not_delivery) || 0;
+        acc.total_quantity += q;
+        acc.total_produced += qSx;
+        acc.total_finished += qHt;
+        acc.total_delivered += qDelivery;
+        acc.total_pending += qNotDelivery;
+        return acc;
+      },
+      { total_quantity: 0, total_produced: 0, total_finished: 0, total_delivered: 0, total_pending: 0 }
+    );
+  }, [data?.output?.aaData]);
 
   const handleDateChange = newValue => {
+    router.push({ pathname: router.pathname, query: { ...router.query, page: 1 } });
     setDateRange(newValue);
   };
 
-  const handleOrderChange = value => {
-    setSelectedOrder(value);
+  const handleOrderChange = values => {
+    if (!values || values.length === 0) {
+      setSelectedOrder([]);
+      router.push({ pathname: router.pathname, query: { ...router.query, page: 1 } });
+      return;
+    }
+    const orderOptions = (dataSalesOrderCombobox?.orders || []).map(item => ({ value: item.id, label: item.reference_no }));
+    const selectedItems = values.map(v => orderOptions.find(opt => opt.value === v)).filter(Boolean);
+    setSelectedOrder(selectedItems);
+    router.push({ pathname: router.pathname, query: { ...router.query, page: 1 } });
   };
 
   const handleProductChange = values => {
     if (!values || values.length === 0) {
       setSelectedProduct([]);
+      router.push({ pathname: router.pathname, query: { ...router.query, page: 1 } });
       return;
     }
 
@@ -174,14 +166,17 @@ const OrderProgress = () => {
     });
 
     setSelectedProduct(selectedItems);
+    router.push({ pathname: router.pathname, query: { ...router.query, page: 1 } });
   };
 
   const handleClearOrder = () => {
-    setSelectedOrder(null);
+    setSelectedOrder([]);
+    router.push({ pathname: router.pathname, query: { ...router.query, page: 1 } });
   };
 
   const handleClearProduct = () => {
     setSelectedProduct([]);
+    router.push({ pathname: router.pathname, query: { ...router.query, page: 1 } });
   };
 
   const handleSearch = value => {
@@ -207,7 +202,7 @@ const OrderProgress = () => {
       endDate: undefined,
     });
     setSearchTerm('');
-    setSelectedOrder(null);
+    setSelectedOrder([]);
     setSelectedProduct([]);
     setSearchValue('');
     setLimit(15);
@@ -217,19 +212,18 @@ const OrderProgress = () => {
     });
   };
 
-  const { multiDataSet } = useExportExcel(mockData || []);
-  // const { multiDataSet } = useExportExcel(data?.data || []);
+  const { multiDataSet } = useExportExcel(data?.output?.aaData || []);
 
   const getStatusColor = status => {
     switch (status) {
-      case 'Hoàn thành':
-        return 'text-green-600';
-      case 'Đang sản xuất':
-        return 'text-blue-600';
-      case 'Chưa bắt đầu':
-        return 'text-gray-600';
+      case 'success':
+        return 'text-green-600 border-green-600';
+      case 'warning':
+        return 'text-blue-600 border-blue-600';
+      case 'secondary':
+        return 'text-red-500 border-red-500';
       default:
-        return 'text-neutral-07';
+        return 'text-neutral-07 border-neutral-07';
     }
   };
 
@@ -247,14 +241,12 @@ const OrderProgress = () => {
                 placeholder='Đơn hàng bán'
                 onChange={handleOrderChange}
                 onClear={handleClearOrder}
+                onSearch={value => setOrderSearch(value)}
                 icon={<PiShoppingCart color='#9295A4' className='size-4' />}
                 className='w-full'
-                options={[
-                  { value: '1', label: 'DH001 - Áo thun nam' },
-                  { value: '2', label: 'DH002 - Quần jean nữ' },
-                  { value: '3', label: 'DH003 - Áo khoác' },
-                ]}
+                options={dataSalesOrderCombobox?.orders?.map(item => ({ value: item.id, label: item.reference_no }))}
                 value={selectedOrder}
+                mode='multiple'
               />
               <SelectSearchReport
                 placeholder='Mặt hàng'
@@ -281,38 +273,34 @@ const OrderProgress = () => {
           <TableSection
             fixedColumns={[
               { title: 'STT', width: 'w-14', textAlign: 'center' },
-              { title: 'Ngày đơn hàng', width: 'w-32', textAlign: 'center' },
-              { title: 'Số đơn hàng', width: 'w-32', textAlign: 'center' },
+              { title: 'Ngày đơn hàng', width: 'w-32 text-center', textAlign: 'center' },
+              { title: 'Số đơn hàng', width: 'w-32', textAlign: 'left' },
               { title: 'Chi nhánh xưởng', width: 'w-40', textAlign: 'left' },
             ]}
             scrollableColumns={[
               { title: 'Tên sản phẩm', width: 'w-48', textAlign: 'left' },
+              { title: 'Biến thể', width: 'w-48', textAlign: 'left' },
+              { title: 'Đơn vị tính', width: 'w-24 text-center', textAlign: 'center' },
               { title: 'Ghi chú', width: 'w-40', textAlign: 'left' },
               { title: 'Số lượng', width: 'w-28', textAlign: 'center' },
-              { title: 'Ngày cần hàng', width: 'w-32', textAlign: 'center' },
+              { title: 'Ngày cần hàng', width: 'w-32 text-center', textAlign: 'center' },
               { title: 'SL sản xuất', width: 'w-28', textAlign: 'center' },
+              { title: 'SL đã hoàn thành sản xuất', width: 'w-32 text-center', textAlign: 'center' },
               { title: 'SL đã giao', width: 'w-28', textAlign: 'center' },
-              { title: 'SL chưa giao', width: 'w-28', textAlign: 'center' },
-              { title: 'Ngày hoàn thành sx', width: 'w-40', textAlign: 'center' },
-              { title: 'Ngày giao hàng đủ', width: 'w-36', textAlign: 'center' },
-              { title: 'Trạng thái', width: 'w-32', textAlign: 'center' },
+              { title: 'SL chưa giao', width: 'w-28 text-center', textAlign: 'center' },
+              { title: 'Ngày hoàn thành mới nhất', width: 'w-36 text-center', textAlign: 'center' },
+              { title: 'Ngày giao hàng mới nhất', width: 'w-36 text-center', textAlign: 'center' },
+              { title: 'Trạng thái sản xuất', width: 'w-40 text-center', textAlign: 'center' },
             ]}
-            data={mockData || []}
+            data={data?.output?.aaData || []}
             isFetching={isFetching}
             renderFixedRow={(item, index) => (
               <>
                 <RowItemTable className='w-14 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>{index + 1}</RowItemTable>
                 <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {new Date(item.order_date).toLocaleDateString('vi-VN')}
+                  {moment(item.date).format('DD/MM/YYYY')}
                 </RowItemTable>
-                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] !text-new-blue hover:underline cursor-pointer font-normal flex-shrink-0'>
-                  <PopupDetailProduct
-                    dataLang={dataLang}
-                    className='3xl:text-sm 2xl:text-13 xl:text-xs text-11 font-medium col-span-1 text-center text-[#0F4F9E] hover:text-blue-500 transition-all duration-200 ease-in-out cursor-pointer'
-                    name={item.order_number}
-                    id={item.id}
-                  />
-                </RowItemTable>
+                <RowItemTable className='w-32 flex items-center py-2 px-3 border-r border-[#E0E0E1] !text-new-blue font-normal flex-shrink-0'>{item.reference_no}</RowItemTable>
                 <RowItemTable className='w-40 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
                   <span className='text-left responsive-text-sm'>{item.branch_name}</span>
                 </RowItemTable>
@@ -321,59 +309,73 @@ const OrderProgress = () => {
             renderScrollableRow={(item, index) => (
               <>
                 <RowItemTable className='w-48 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  <span className='text-left responsive-text-sm'>{item.product_name}</span>
+                  <span className='text-left responsive-text-sm'>{item.item_name}</span>
+                </RowItemTable>
+                <RowItemTable className='w-48 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
+                  <span className='text-left responsive-text-sm'>{item.item_variant_name}</span>
+                </RowItemTable>
+                <RowItemTable className='w-24 flex items-center justify-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
+                  <span className='text-center responsive-text-sm'>{item.item_unit_name}</span>
                 </RowItemTable>
                 <RowItemTable className='w-40 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  <span className='text-left responsive-text-sm'>{item.note || '-'}</span>
+                  <span className='text-left responsive-text-sm'>{item.note_item || '-'}</span>
                 </RowItemTable>
                 <RowItemTable className='w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {formatNumber(item.quantity)}
+                  {Number(item.quantity) === 0 ? '-' : formatNumber(Number(item.quantity))}
                 </RowItemTable>
                 <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {new Date(item.required_date).toLocaleDateString('vi-VN')}
+                  {moment(item.delivery_date).format('DD/MM/YYYY')}
                 </RowItemTable>
                 <RowItemTable className='w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {formatNumber(item.produced_quantity)}
+                  {Number(item.quantity_sx) === 0 ? '-' : formatNumber(Number(item.quantity_sx))}
+                </RowItemTable>
+                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
+                  {Number(item.quantity_ht) === 0 ? '-' : formatNumber(Number(item.quantity_ht))}
                 </RowItemTable>
                 <RowItemTable className='w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {formatNumber(item.delivered_quantity)}
+                  {Number(item.quantity_delivery) === 0 ? '-' : formatNumber(Number(item.quantity_delivery))}
                 </RowItemTable>
                 <RowItemTable className='w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {formatNumber(item.pending_quantity)}
-                </RowItemTable>
-                <RowItemTable className='w-40 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {item.completion_date ? new Date(item.completion_date).toLocaleDateString('vi-VN') : '-'}
+                  {Number(item.quantity_not_delivery) === 0 ? '-' : formatNumber(Number(item.quantity_not_delivery))}
                 </RowItemTable>
                 <RowItemTable className='w-36 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {item.delivery_date ? new Date(item.delivery_date).toLocaleDateString('vi-VN') : '-'}
+                  {item.max_purchase_date ? moment(item.max_purchase_date).format('DD/MM/YYYY') : '-'}
                 </RowItemTable>
-                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 text-neutral-07 font-normal flex-shrink-0'>
-                  <span className={`responsive-text-sm font-medium ${getStatusColor(item.status)}`}>{item.status}</span>
+                <RowItemTable className='w-36 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
+                  {item.max_delivery_date ? moment(item.max_delivery_date).format('DD/MM/YYYY') : '-'}
+                </RowItemTable>
+                <RowItemTable className='w-40 flex justify-center items-center py-2 px-3 text-neutral-07 font-normal flex-shrink-0'>
+                  <span className={`responsive-text-sm font-medium border rounded-full px-2 py-1 ${getStatusColor(item.status_item_po_data.color)}`}>{item.status_item_po_data.name}</span>
                 </RowItemTable>
               </>
             )}
             renderFooter={() => (
               <>
+                {/* Fixed columns: STT, Ngày đơn hàng, Số đơn hàng, Chi nhánh xưởng */}
                 <RowItemTable className='w-14 flex-shrink-0 bg-white'></RowItemTable>
                 <RowItemTable className='w-32 flex-shrink-0 bg-white'></RowItemTable>
                 <RowItemTable className='w-32 flex-shrink-0 bg-white'></RowItemTable>
                 <RowItemTable className='w-40 flex-shrink-0 bg-white'></RowItemTable>
 
-                <RowItemTable className='h-10 w-48 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>Tổng cộng</RowItemTable>
+                {/* Scrollable columns: Tên SP, Biến thể, ĐVT, Ghi chú, ... */}
+                <RowItemTable className='h-10 w-48 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white uppercase'>Tổng cộng</RowItemTable>
+                <RowItemTable className='h-10 w-48 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
+                <RowItemTable className='h-10 w-24 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
                 <RowItemTable className='h-10 w-40 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
-                <RowItemTable className='h-10 w-28 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(mockTotal.total_quantity)}</RowItemTable>
+                <RowItemTable className='h-10 w-28 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(totals.total_quantity)}</RowItemTable>
                 <RowItemTable className='h-10 w-32 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
-                <RowItemTable className='h-10 w-28 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(mockTotal.total_produced)}</RowItemTable>
-                <RowItemTable className='h-10 w-28 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(mockTotal.total_delivered)}</RowItemTable>
-                <RowItemTable className='h-10 w-28 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(mockTotal.total_pending)}</RowItemTable>
-                <RowItemTable className='h-10 w-40 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
+                <RowItemTable className='h-10 w-28 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(totals.total_produced)}</RowItemTable>
+                <RowItemTable className='h-10 w-32 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(totals.total_finished)}</RowItemTable>
+                <RowItemTable className='h-10 w-28 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(totals.total_delivered)}</RowItemTable>
+                <RowItemTable className='h-10 w-28 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(totals.total_pending)}</RowItemTable>
                 <RowItemTable className='h-10 w-36 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
-                <RowItemTable className='h-10 w-32 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
+                <RowItemTable className='h-10 w-36 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
+                <RowItemTable className='h-10 w-40 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
               </>
             )}
           />
         }
-        totalSection={ <PaginationComponent postsPerPage={limit} totalPosts={Number(data?.output?.iTotalRecords) || 0} paginate={paginate} currentPage={currentPage} />}
+        totalSection={<PaginationComponent postsPerPage={limit} totalPosts={Number(data?.output?.iTotalRecords) || 0} paginate={paginate} currentPage={currentPage} />}
         paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}
       />
     </>

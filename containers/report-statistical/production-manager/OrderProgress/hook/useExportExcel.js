@@ -1,19 +1,15 @@
-import formatNumber from '@/utils/helpers/formatnumber';
 import moment from 'moment';
 
 export const useExportExcel = dataReportOrderProgress => {
-  const totalQuantity = Array.isArray(dataReportOrderProgress)
-    ? dataReportOrderProgress.reduce((sum, item) => sum + (Number(item?.quantity) || 0), 0)
-    : 0;
-  const totalProduced = Array.isArray(dataReportOrderProgress)
-    ? dataReportOrderProgress.reduce((sum, item) => sum + (Number(item?.produced_quantity) || 0), 0)
-    : 0;
-  const totalDelivered = Array.isArray(dataReportOrderProgress)
-    ? dataReportOrderProgress.reduce((sum, item) => sum + (Number(item?.delivered_quantity) || 0), 0)
-    : 0;
-  const totalPending = Array.isArray(dataReportOrderProgress)
-    ? dataReportOrderProgress.reduce((sum, item) => sum + (Number(item?.pending_quantity) || 0), 0)
-    : 0;
+  const rows = Array.isArray(dataReportOrderProgress) ? dataReportOrderProgress : [];
+  const totalQuantity = rows.reduce((sum, item) => sum + (Number(item?.quantity) || 0), 0);
+  const totalProduced = rows.reduce((sum, item) => sum + (Number(item?.quantity_sx) || 0), 0);
+  const totalFinished = rows.reduce((sum, item) => sum + (Number(item?.quantity_ht) || 0), 0);
+  const totalDelivered = rows.reduce((sum, item) => sum + (Number(item?.quantity_delivery) || 0), 0);
+  const totalPending = rows.reduce((sum, item) => sum + (Number(item?.quantity_not_delivery) || 0), 0);
+
+  // Helper tạo ô số có định dạng ngăn cách hàng nghìn trong Excel
+  const numberCell = value => ({ value: Number(value) || 0, style: { numFmt: '#,##0' } });
 
   const multiDataSet = [
     {
@@ -54,6 +50,20 @@ export const useExportExcel = dataReportOrderProgress => {
           },
         },
         {
+          title: 'Biến thể',
+          width: { wch: 25 },
+          style: {
+            font: { bold: true },
+          },
+        },
+        {
+          title: 'Đơn vị tính',
+          width: { wch: 15 },
+          style: {
+            font: { bold: true },
+          },
+        },
+        {
           title: 'Ghi chú',
           width: { wch: 25 },
           style: {
@@ -82,6 +92,13 @@ export const useExportExcel = dataReportOrderProgress => {
           },
         },
         {
+          title: 'SL đã hoàn thành sản xuất',
+          width: { wch: 22 },
+          style: {
+            font: { bold: true },
+          },
+        },
+        {
           title: 'SL đã giao',
           width: { wch: 15 },
           style: {
@@ -96,21 +113,21 @@ export const useExportExcel = dataReportOrderProgress => {
           },
         },
         {
-          title: 'Ngày hoàn thành sx',
+          title: 'Ngày hoàn thành mới nhất',
           width: { wch: 20 },
           style: {
             font: { bold: true },
           },
         },
         {
-          title: 'Ngày giao hàng đủ',
+          title: 'Ngày giao hàng mới nhất',
           width: { wch: 20 },
           style: {
             font: { bold: true },
           },
         },
         {
-          title: 'Trạng thái',
+          title: 'Trạng thái sản xuất',
           width: { wch: 15 },
           style: {
             font: { bold: true },
@@ -118,21 +135,24 @@ export const useExportExcel = dataReportOrderProgress => {
         },
       ],
       data: [
-        ...(dataReportOrderProgress?.map((item, index) => [
+        ...(rows.map((item, index) => [
           { value: index + 1 },
-          { value: item.order_date ? moment(item.order_date).format('DD/MM/YYYY') : '' },
-          { value: item.order_number || '' },
+          { value: item.date ? moment(item.date).format('DD/MM/YYYY') : '' },
+          { value: item.reference_no || '' },
           { value: item.branch_name || '' },
-          { value: item.product_name || '' },
-          { value: item.note || '' },
-          { value: formatNumber(item.quantity) || '' },
-          { value: item.required_date ? moment(item.required_date).format('DD/MM/YYYY') : '' },
-          { value: formatNumber(item.produced_quantity) || '' },
-          { value: formatNumber(item.delivered_quantity) || '' },
-          { value: formatNumber(item.pending_quantity) || '' },
-          { value: item.completion_date ? moment(item.completion_date).format('DD/MM/YYYY') : '' },
+          { value: item.item_name || '' },
+          { value: item.item_variant_name || '' },
+          { value: item.item_unit_name || '' },
+          { value: item.note_item || '' },
+          numberCell(item.quantity),
           { value: item.delivery_date ? moment(item.delivery_date).format('DD/MM/YYYY') : '' },
-          { value: item.status || '' },
+          numberCell(item.quantity_sx),
+          numberCell(item.quantity_ht),
+          numberCell(item.quantity_delivery),
+          numberCell(item.quantity_not_delivery),
+          { value: item.max_purchase_date ? moment(item.max_purchase_date).format('DD/MM/YYYY') : '' },
+          { value: item.max_delivery_date ? moment(item.max_delivery_date).format('DD/MM/YYYY') : '' },
+          { value: item.status_item_po_data?.name || '' },
         ]) || []),
         // Dòng tổng cộng
         [
@@ -141,15 +161,18 @@ export const useExportExcel = dataReportOrderProgress => {
           { value: '' }, // Số đơn hàng
           { value: '' }, // Chi nhánh xưởng
           { value: 'Tổng cộng', style: { font: { bold: true } } }, // Tên sản phẩm (tiêu đề tổng)
+          { value: '' }, // Biến thể
+          { value: '' }, // Đơn vị tính
           { value: '' }, // Ghi chú
-          { value: formatNumber(totalQuantity), style: { font: { bold: true } } }, // Số lượng
+          { value: totalQuantity, style: { font: { bold: true }, numFmt: '#,##0' } }, // Số lượng
           { value: '' }, // Ngày cần hàng
-          { value: formatNumber(totalProduced), style: { font: { bold: true } } }, // SL sản xuất
-          { value: formatNumber(totalDelivered), style: { font: { bold: true } } }, // SL đã giao
-          { value: formatNumber(totalPending), style: { font: { bold: true } } }, // SL chưa giao
-          { value: '' }, // Ngày hoàn thành sx
-          { value: '' }, // Ngày giao hàng đủ
-          { value: '' }, // Trạng thái
+          { value: totalProduced, style: { font: { bold: true }, numFmt: '#,##0' } }, // SL sản xuất
+          { value: totalFinished, style: { font: { bold: true }, numFmt: '#,##0' } }, // SL đã hoàn thành sản xuất
+          { value: totalDelivered, style: { font: { bold: true }, numFmt: '#,##0' } }, // SL đã giao
+          { value: totalPending, style: { font: { bold: true }, numFmt: '#,##0' } }, // SL chưa giao
+          { value: '' }, // Ngày hoàn thành mới nhất
+          { value: '' }, // Ngày giao hàng mới nhất
+          { value: '' }, // Trạng thái sản xuất
         ],
       ],
     },

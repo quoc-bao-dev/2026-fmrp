@@ -726,8 +726,8 @@ const Header = () => {
               forceDisableForAdmin: true,
             },
             {
-              viewOwn: 0,
-              view: 0,
+              viewOwn: 1,
+              view: 1,
               name: 'Báo cáo bán hàng',
               link: '/report-statistical/sales-report/quote',
               forceDisableForAdmin: true,

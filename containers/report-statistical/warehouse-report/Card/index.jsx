@@ -74,12 +74,12 @@ const Card = props => {
     page: currentPage,
     limit: limit,
     search: debouncedSearchValue,
-    // filter: {
-    //     warehouses_id: selectedWarehouse?.value,
-    //     ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
-    //     ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
-    //     ...(selectedProduct && { items: [selectedProduct.value] }),
-    // },
+    filter: {
+        warehouses_id: selectedWarehouse?.value,
+        ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
+        ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
+        ...(selectedProduct && { items: [selectedProduct.value] }),
+    },
   });
   console.log(dataReportStock);
 

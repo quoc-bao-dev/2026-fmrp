@@ -418,7 +418,7 @@ const EntryAndExist = (props) => {
                 <RowItemTable className="!w-64 flex-shrink-0 bg-white"></RowItemTable>
 
                 {/* Đơn vị tính trong footer */}
-                <RowItemTable className="h-10 w-28 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white">
+                <RowItemTable className="h-10 w-28 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white uppercase">
                   Tổng cộng
                 </RowItemTable>
 

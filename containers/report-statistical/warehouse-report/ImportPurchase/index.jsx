@@ -400,7 +400,7 @@ const ImportPurchase = (props) => {
                 <RowItemTable className="w-40 flex-shrink-0 bg-white"></RowItemTable>
               )}
               <RowItemTable className="w-24 flex-shrink-0 bg-white"></RowItemTable>
-              <RowItemTable className="h-10 flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold w-32 flex-shrink-0 bg-white">
+              <RowItemTable className="h-10 flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold w-32 flex-shrink-0 bg-white uppercase">
                 Tổng cộng
               </RowItemTable>
               <RowItemTable

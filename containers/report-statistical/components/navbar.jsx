@@ -9,23 +9,8 @@ const Navbar = props => {
     const isNavbarSales = [
         {
             id: uuidv4(),
-            name: 'Báo cáo đơn hàng theo báo giá',
-            path: '/report-statistical/sales-report/quote',
-        },
-        {
-            id: uuidv4(),
-            name: 'Báo cáo hàng trả lại',
-            path: '/report-statistical/sales-report/returned-goods',
-        },
-        {
-            id: uuidv4(),
-            name: 'Báo cáo lịch giao hàng',
-            path: '/report-statistical/sales-report/delivery-schedules',
-        },
-        {
-            id: uuidv4(),
             name: 'Tình trạng đơn hàng',
-            path: '/report-statistical/sales-eport/status-row',
+            path: '/report-statistical/sales-eport/order-status',
         },
         {
             id: uuidv4(),
@@ -34,19 +19,34 @@ const Navbar = props => {
         },
         {
             id: uuidv4(),
-            name: 'Phân tích bán hàng',
-            path: '/report-statistical/sales-report/sales-analysis',
-        },
-        {
-            id: uuidv4(),
-            name: 'Bảng kê giá bán gần nhất',
-            path: '/report-statistical/sales-report/price-list',
-        },
-        {
-            id: uuidv4(),
             name: 'Nhật ký bán hàng',
             path: '/report-statistical/sales-report/selling-diary',
         },
+        // {
+        //     id: uuidv4(),
+        //     name: 'Báo cáo đơn hàng theo báo giá',
+        //     path: '/report-statistical/sales-report/quote',
+        // },
+        // {
+        //     id: uuidv4(),
+        //     name: 'Báo cáo hàng trả lại',
+        //     path: '/report-statistical/sales-report/returned-goods',
+        // },
+        // {
+        //     id: uuidv4(),
+        //     name: 'Báo cáo lịch giao hàng',
+        //     path: '/report-statistical/sales-report/delivery-schedules',
+        // },
+        // {
+        //     id: uuidv4(),
+        //     name: 'Phân tích bán hàng',
+        //     path: '/report-statistical/sales-report/sales-analysis',
+        // },
+        // {
+        //     id: uuidv4(),
+        //     name: 'Bảng kê giá bán gần nhất',
+        //     path: '/report-statistical/sales-report/price-list',
+        // },
     ];
     // báo cáo mua hàng
     const isNavbarPurchase = [

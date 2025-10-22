@@ -47,6 +47,16 @@ const apiReport = {
     const response = await axiosCustom('GET', `/api_web/reports/boms`, data)
     return response.data
   },
+
+  async apiGetOrderProgress(data) {
+    const response = await axiosCustom('GET', `/api_web/reports/order-progress`, data)
+    return response.data
+  },
+
+  async apiGetRawMaterialsUsed(data) {
+    const response = await axiosCustom('GET', `/api_web/reports/material-usage`, data)
+    return response.data
+  },
   
 }
 
