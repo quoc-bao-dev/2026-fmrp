@@ -36,6 +36,18 @@ const apiReport = {
     const response = await axiosCustom('GET', `/api_web/Api_reports/getDetailOutItems`, data)
     return response.data
   },
+
+  async apiGetCardStock(data) {
+    const response = await axiosCustom('GET', `/api_web/Api_reports/getCardStock`, data)
+    return response.data
+  },
+
+  //Quản lý sản xuất
+  async apiGetBOMs(data) {
+    const response = await axiosCustom('GET', `/api_web/reports/boms`, data)
+    return response.data
+  },
+  
 }
 
 export default apiReport

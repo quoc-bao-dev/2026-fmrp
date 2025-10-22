@@ -98,6 +98,7 @@ const SelectSearchReport = ({
     setOpen(visible)
     if (!visible) {
       setSearchValue('') // Reset search khi đóng dropdown
+      onSearch && onSearch('') // Gọi lại API với search rỗng
     }
   }
 

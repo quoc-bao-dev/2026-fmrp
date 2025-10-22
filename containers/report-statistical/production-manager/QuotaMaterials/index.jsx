@@ -8,209 +8,270 @@ import DropdowLimit from '@/components/UI/dropdowLimit/dropdowLimit';
 import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet';
 import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 import PaginationComponent from '@/components/UI/pagination';
+import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems';
 import { useLanguageContext } from '@/context/ui/LanguageContext';
 import usePagination from '@/hooks/usePagination';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import formatNumber from '@/utils/helpers/formatnumber';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
-import { PiBookOpenText, PiPackage } from 'react-icons/pi';
+import { useEffect, useState } from 'react';
+import { PiPackage } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
+import { useGetBOMs } from './hook';
+import { useExportExcel } from './hook/useExportExcel';
 
 const breadcrumbItems = [
-    {
-        label: `Báo cáo`,
-    },
-    {
-        label: `Quản lý sản xuất`,
-        href: '/report-statistical/production-manager',
-    },
-    {
-        label: `Định mức NVL`,
-    },
+  {
+    label: `Báo cáo`,
+  },
+  {
+    label: `Quản lý sản xuất`,
+    href: '/report-statistical/production-manager',
+  },
+  {
+    label: `Định mức NVL`,
+  },
 ];
 
 const QuotaMaterials = () => {
-    const router = useRouter();
-    const { paginate } = usePagination();
-    const dataLang = useLanguageContext();
-    const statusExprired = useStatusExprired();
+  const router = useRouter();
+  const { paginate } = usePagination();
+  const dataLang = useLanguageContext();
+  const statusExprired = useStatusExprired();
 
-    const [searchTerm, setSearchTerm] = useState('');
-    const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
-    const [selectedProduct, setSelectedProduct] = useState(null);
-    const [selectedVersion, setSelectedVersion] = useState(null);
-    const [limit, setLimit] = useState(15);
-    const [searchValue, setSearchValue] = useState('');
-    const [debouncedSearchValue] = useDebounce(searchValue, 500);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
+  const [selectedProduct, setSelectedProduct] = useState([]);
+  const [selectedVersion, setSelectedVersion] = useState(null);
+  const [limit, setLimit] = useState(15);
+  const [searchValue, setSearchValue] = useState('');
+  const [debouncedSearchValue] = useDebounce(searchValue, 500);
+  const [productOptions, setProductOptions] = useState([]);
 
-    const currentPage = Number(router.query.page) || 1;
+  const currentPage = Number(router.query.page) || 1;
 
-    // Mock data - thay thế bằng API thực tế
-    const mockData = [
-        {
-            id: 1,
-            material_code: 'NVL001',
-            material_name: 'Vải cotton 100%',
-            material_type: 'Vải',
-            unit_name: 'Mét',
-            quota_quantity: 2.5,
-        },
-        {
-            id: 2,
-            material_code: 'NVL002',
-            material_name: 'Chỉ may',
-            material_type: 'Phụ liệu',
-            unit_name: 'Cuộn',
-            quota_quantity: 1.0,
-        },
-        {
-            id: 3,
-            material_code: 'NVL003',
-            material_name: 'Khóa kéo',
-            material_type: 'Phụ liệu',
-            unit_name: 'Cái',
-            quota_quantity: 2.0,
-        },
-    ];
+  const { data: dataProduct } = useInventoryItems(debouncedSearchTerm);
+  const { data } = useGetBOMs({
+    page: currentPage,
+    limit: limit,
+    search: debouncedSearchValue,
+    product_id: selectedProduct?.map(item => item.value) || [],
+  });
 
-    const mockTotal = {
-        total_records: mockData.length,
-    };
+  // Cập nhật productOptions khi dataProduct thay đổi
+  useEffect(() => {
+    if (dataProduct) {
+      const newOptions = Array.isArray(dataProduct)
+        ? dataProduct.map(product => ({
+            value: product.value,
+            label: product.name,
+            code: product.code,
+          }))
+        : [];
 
-    const handleProductChange = value => {
-        setSelectedProduct(value);
-    };
+      // Giữ lại các options đã được chọn
+      const selectedOptionValues = selectedProduct?.map(item => item.value) || [];
+      const existingSelectedOptions = productOptions.filter(opt => selectedOptionValues.includes(opt.value));
 
-    const handleVersionChange = value => {
-        setSelectedVersion(value);
-    };
+      // Kết hợp options mới với các options đã chọn, loại bỏ trùng lặp
+      const combinedOptions = [...existingSelectedOptions, ...newOptions];
+      const uniqueOptions = combinedOptions.filter((option, index, self) => index === self.findIndex(o => o.value === option.value));
 
-    const handleClearProduct = () => {
-        setSelectedProduct(null);
-    };
+      setProductOptions(uniqueOptions);
+    }
+  }, [dataProduct, selectedProduct]);
 
-    const handleClearVersion = () => {
-        setSelectedVersion(null);
-    };
+  const handleProductChange = values => {
+    if (!values || values.length === 0) {
+      setSelectedProduct([]);
+      return;
+    }
 
-    const handleSearch = value => {
-        const searchValue = value?.target?.value || (typeof value === 'string' ? value : '');
-        setSearchValue(searchValue);
-    };
+    const selectedItems = values.map(value => {
+      const selectedItem = productOptions.find(opt => opt.value === value);
+      return {
+        value: selectedItem.value,
+        label: selectedItem.label,
+        code: selectedItem.code,
+      };
+    });
 
-    const handleLimitChange = newLimit => {
-        setLimit(newLimit);
-    };
+    setSelectedProduct(selectedItems);
+  };
 
-    const handleResetData = () => {
-        setSearchTerm('');
-        setSelectedProduct(null);
-        setSelectedVersion(null);
-        setSearchValue('');
-        setLimit(15);
-        router.push({
-            pathname: router.pathname,
-            query: { ...router.query, page: 1 },
+  const handleClearProduct = () => {
+    setSelectedProduct([]);
+    setSearchTerm(''); // Reset search term khi clear
+  };
+
+  const handleSearch = value => {
+    const searchValue = value?.target?.value || (typeof value === 'string' ? value : '');
+    setSearchValue(searchValue);
+  };
+
+  const handleLimitChange = newLimit => {
+    setLimit(newLimit);
+    router.push({
+      pathname: router.pathname,
+      query: { ...router.query, page: 1 },
+    });
+  };
+
+  const handleResetData = () => {
+    setSearchTerm('');
+    setSelectedProduct([]);
+    setSelectedVersion(null);
+    setSearchValue('');
+    setLimit(15);
+    router.push({
+      pathname: router.pathname,
+      query: { ...router.query, page: 1 },
+    });
+  };
+
+  // Flatten data để hiển thị bom_items dưới mỗi sản phẩm chính
+  const flattenedData =
+    data?.output?.aaData?.reduce((acc, product, productIndex) => {
+      // Thêm sản phẩm chính
+      acc.push({
+        ...product,
+        isMainProduct: true,
+        displayIndex: productIndex + 1,
+        material_code: product.product_code,
+        material_name: product.product_name,
+        unit_name: product.unit_name,
+        quota_quantity: product.quantity,
+      });
+
+      // Thêm các bom_items
+      if (product.bom_items && product.bom_items.length > 0) {
+        product.bom_items.forEach((bomItem, bomIndex) => {
+          acc.push({
+            ...bomItem,
+            isMainProduct: false,
+            displayIndex: '', // Không hiển thị số thứ tự cho phần tử con
+            material_code: bomItem.item_code,
+            variant_name: bomItem.item_variant_name,
+            material_name: bomItem.item_name,
+            material_type: bomItem.type_item === 'material' ? 'Nguyên vật liệu' : 'BTP - thành phẩm',
+            unit_name: bomItem.unit_name,
+            quota_quantity: bomItem.quota,
+            stage_name: bomItem.stage_name,
+            parentProduct: product.product_name,
+          });
         });
-    };
+      }
 
-    // Mock export data
-    const exportData = {
-        headers: ['STT', 'Mã nguyên vật liệu', 'Tên nguyên vật liệu', 'Loại', 'Đơn vị', 'Số lượng định mức'],
-        data: mockData.map((item, index) => [index + 1, item.material_code, item.material_name, item.material_type, item.unit_name, item.quota_quantity]),
-    };
+      return acc;
+    }, []) || [];
 
-    return (
-        <>
-            <ReportLayout
-                title={'Báo cáo định mức NVL'}
-                statusExprired={statusExprired}
-                breadcrumbItems={breadcrumbItems}
-                filterSection={
-                    <div className='w-full items-center flex justify-between gap-4'>
-                        <div className='flex gap-3'>
-                            <SearchComponent dataLang={dataLang} onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' placeholder='Tìm kiếm...' />
+  const { multiDataSet } = useExportExcel(flattenedData);
 
-                            <SelectSearchReport
-                                placeholder='Thành phẩm'
-                                onChange={handleProductChange}
-                                onClear={handleClearProduct}
-                                icon={<PiPackage color='#9295A4' className='size-4' />}
-                                className='w-[200px] 2xl:w-[250px]'
-                                options={[
-                                    { value: '1', label: 'Áo thun nam' },
-                                    { value: '2', label: 'Quần jean nữ' },
-                                    { value: '3', label: 'Áo khoác' },
-                                ]}
-                                value={selectedProduct}
-                            />
-
-                            <SelectSearchReport
-                                placeholder='Phiên bản'
-                                onChange={handleVersionChange}
-                                onClear={handleClearVersion}
-                                icon={<PiBookOpenText color='#9295A4' className='size-4' />}
-                                className='w-[200px] 2xl:w-[250px]'
-                                options={[
-                                    { value: '1', label: 'V1.0' },
-                                    { value: '2', label: 'V2.0' },
-                                    { value: '3', label: 'V3.0' },
-                                ]}
-                                value={selectedVersion}
-                            />
-                        </div>
-                        <div className='flex gap-3 items-center'>
-                            <OnResetData sOnFetching={() => {}} onClick={handleResetData} className='!py-3' />
-                            <ExcelFileComponent dataLang={dataLang} filename='Báo cáo định mức NVL' title='BCDMNVL' multiDataSet={exportData} classBtn='!py-3' />
-                        </div>
-                    </div>
-                }
-                tableSection={
-                    <TableSection
-                        fixedColumns={[
-                            { title: 'STT', width: 'w-14', textAlign: 'center' },
-                            { title: 'Mã nguyên vật liệu', width: 'w-64', textAlign: 'left' },
-                            { title: 'Tên nguyên vật liệu', width: 'w-64', textAlign: 'left' },
-                        ]}
-                        scrollableColumns={[
-                            { title: 'Loại', width: 'w-32', textAlign: 'center' },
-                            { title: 'Đơn vị', width: 'w-28', textAlign: 'center' },
-                            { title: 'Số lượng định mức', width: 'w-40', textAlign: 'center' },
-                        ]}
-                        data={mockData}
-                        isFetching={false}
-                        renderFixedRow={(item, index) => (
-                            <>
-                                <RowItemTable className='w-14 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>{index + 1}</RowItemTable>
-                                <RowItemTable className='w-64 flex flex-col justify-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                                    <span>{item.material_code}</span>
-                                </RowItemTable>
-                                <RowItemTable className='w-64 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                                    <div className='flex flex-col gap-1 justify-start'>
-                                        <p className='text-left responsive-text-sm text-neutral-07 font-normal'>{item.material_name}</p>
-                                    </div>
-                                </RowItemTable>
-                            </>
-                        )}
-                        renderScrollableRow={(item, index) => (
-                            <>
-                                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                                    {item.material_type}
-                                </RowItemTable>
-                                <RowItemTable className='w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                                    {item.unit_name}
-                                </RowItemTable>
-                                <RowItemTable className='w-40 flex justify-center items-center py-2 px-3 text-neutral-07 font-normal flex-shrink-0'>{formatNumber(item.quota_quantity)}</RowItemTable>
-                            </>
-                        )}
-                    />
-                }
-                totalSection={mockData?.length > 0 && <PaginationComponent postsPerPage={limit} totalPosts={Number(mockTotal?.total_records) || 0} paginate={paginate} currentPage={currentPage} />}
-                paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}
-            />
-        </>
-    );
+  return (
+    <>
+      <ReportLayout
+        title={'Báo cáo định mức NVL'}
+        statusExprired={statusExprired}
+        breadcrumbItems={breadcrumbItems}
+        filterSection={
+          <div className='w-full items-center flex justify-between gap-4'>
+            <div className='flex gap-3'>
+              <SelectSearchReport
+                placeholder='Thành phẩm'
+                onSearch={value => {
+                  setSearchTerm(value);
+                }}
+                onChange={handleProductChange}
+                onClear={handleClearProduct}
+                icon={<PiPackage color='#9295A4' className='size-4' />}
+                className='w-[200px] 2xl:w-[250px]'
+                options={productOptions}
+                value={selectedProduct}
+                mode='multiple'
+              />
+            </div>
+            <div className='flex gap-3 items-center'>
+              <SearchComponent dataLang={dataLang} onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' placeholder='Tìm kiếm...' />
+              <OnResetData sOnFetching={() => {}} onClick={handleResetData} className='!py-3' />
+              <ExcelFileComponent dataLang={dataLang} filename='Báo cáo định mức NVL' title='BCDMNVL' multiDataSet={multiDataSet} classBtn='!py-3' />
+            </div>
+          </div>
+        }
+        tableSection={
+          <TableSection
+            fixedColumns={[
+              { title: 'STT', width: 'w-14', textAlign: 'center' },
+              { title: 'Mã nguyên vật liệu', width: 'w-64 2xl:w-80', textAlign: 'left' },
+              { title: 'Tên nguyên vật liệu', width: 'w-64 2xl:w-80', textAlign: 'left' },
+            ]}
+            scrollableColumns={[
+              { title: 'Loại', width: 'w-44 2xl:w-56', textAlign: 'left' },
+              { title: 'Biến thể', width: 'w-40 2xl:w-72', textAlign: 'left' },
+              { title: 'Đơn vị', width: 'w-28 2xl:w-36', textAlign: 'center' },
+              { title: 'Số lượng định mức', width: 'w-40 2xl:w-48', textAlign: 'center' },
+            ]}
+            data={flattenedData}
+            isFetching={false}
+            renderFixedRow={(item, index) => (
+              <>
+                <RowItemTable
+                  className={`w-14 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${
+                    item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
+                  }`}
+                >
+                  {item.displayIndex}
+                </RowItemTable>
+                <RowItemTable
+                  className={`w-64 2xl:w-80 flex flex-col justify-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${
+                    item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
+                  }`}
+                >
+                  <span className={item.isMainProduct ? 'font-semibold' : ''}>{item.material_code}</span>
+                </RowItemTable>
+                <RowItemTable
+                  className={`w-64 2xl:w-80 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${
+                    item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
+                  }`}
+                >
+                  <div className='flex flex-col gap-1 justify-start'>
+                    <p className={`text-left responsive-text-sm text-neutral-07 font-normal ${item.isMainProduct ? 'font-semibold' : ''}`}>{item.material_name}</p>
+                  </div>
+                </RowItemTable>
+              </>
+            )}
+            renderScrollableRow={(item, index) => (
+              <>
+                <RowItemTable
+                  className={`w-44 2xl:w-56 flex py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'}`}
+                >
+                  <span className={item.isMainProduct ? 'font-semibold' : ''}>{item.material_type}</span>
+                </RowItemTable>
+                <RowItemTable
+                  className={`w-40 2xl:w-72 flex py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'}`}
+                >
+                  <span className={item.isMainProduct ? 'font-semibold' : ''}>{item.variant_name}</span>
+                </RowItemTable>
+                <RowItemTable
+                  className={`w-28 2xl:w-36 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${
+                    item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
+                  }`}
+                >
+                  <span className={item.isMainProduct ? 'font-semibold' : ''}>{item.unit_name}</span>
+                </RowItemTable>
+                <RowItemTable
+                  className={`w-40 2xl:w-48 flex justify-center items-center py-2 px-3 text-neutral-07 font-normal flex-shrink-0 ${item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'}`}
+                >
+                  <span className={item.isMainProduct ? 'font-semibold' : ''}>{formatNumber(Number(item.quota_quantity))}</span>
+                </RowItemTable>
+              </>
+            )}
+          />
+        }
+        totalSection={flattenedData?.length > 0 && <PaginationComponent postsPerPage={limit} totalPosts={Number(data?.output?.iTotalRecords) || 0} paginate={paginate} currentPage={currentPage} />}
+        paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}
+      />
+    </>
+  );
 };
 
 export default QuotaMaterials;

@@ -1,11 +1,15 @@
-import apiReport from '@/Api/apiReport-Statistical/apiReport'
-import { useQuery } from '@tanstack/react-query'
+import apiReport from '@/Api/apiReport-Statistical/apiReport';
+import { useQuery } from '@tanstack/react-query';
 
-export const useGetListReportStock = (data) => {
+export const useGetCardStock = data => {
+  const fetchCardStock = async () => {
+    const response = await apiReport.apiGetCardStock({ params: data });
+    return response.data;
+  };
   return useQuery({
-    queryKey: ['api_get_list_report_stock_card', data],
-    queryFn: () => apiReport.apiGetListReportStock({ params: data }),
+    queryKey: ['api_get_card_stock', data],
+    queryFn: fetchCardStock,
     staleTime: 5 * 60 * 1000, // 5 phút
     cacheTime: 10 * 60 * 1000, // 10 phút
-  })
-} 
+  });
+};

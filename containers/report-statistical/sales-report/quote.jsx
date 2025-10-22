@@ -1,46 +1,61 @@
-import OnResetData from "@/components/UI/btnResetData/btnReset";
-import ContainerPagination from "@/components/UI/common/ContainerPagination/ContainerPagination";
-import TitlePagination from "@/components/UI/common/ContainerPagination/TitlePagination";
-import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
-import { EmptyExprired } from "@/components/UI/common/EmptyExprired";
-import { ColumnTable, HeaderTable, RowItemTable, RowTable } from "@/components/UI/common/Table";
-import { Container, ContainerBody, ContainerTable, ContainerTotal } from "@/components/UI/common/layout";
-import DropdowLimit from "@/components/UI/dropdowLimit/dropdowLimit";
-import SearchComponent from "@/components/UI/filterComponents/searchComponent";
-import SelectComponent from "@/components/UI/filterComponents/selectComponent";
-import Loading from "@/components/UI/loading/loading";
-import NoData from "@/components/UI/noData/nodata";
-import Pagination from "@/components/UI/pagination";
-import useSetingServer from "@/hooks/useConfigNumber";
-import { useLimitAndTotalItems } from "@/hooks/useLimitAndTotalItems";
-import useStatusExprired from "@/hooks/useStatusExprired";
-import formatNumberConfig from "@/utils/helpers/formatnumber";
-import { ArrowDown2, Grid6 } from "iconsax-react";
-import Head from "next/head";
-import { useRouter } from "next/router";
-import React, { useState } from "react";
-import DatePicker from "react-datepicker";
-import { v4 as uuid } from "uuid";
-import Navbar from "../components/navbar";
-import { TbFileReport } from "react-icons/tb";
-import TitleHeader from "../components/titleHeader";
-import usePagination from "@/hooks/usePagination";
+import OnResetData from '@/components/UI/btnResetData/btnReset';
+import { RowItemTable } from '@/components/UI/common/Table';
+import DropdowLimit from '@/components/UI/dropdowLimit/dropdowLimit';
+import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport';
+import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet';
+import SearchComponent from '@/components/UI/filterComponents/searchComponent';
+import SelectComponent from '@/components/UI/filterComponents/selectComponent';
+import Pagination from '@/components/UI/pagination';
+import ReportLayout from '@/components/layout/ReportLayout';
+import TableSection from '@/components/layout/ReportLayout/TableSection';
+import useSetingServer from '@/hooks/useConfigNumber';
+import usePagination from '@/hooks/usePagination';
+import useStatusExprired from '@/hooks/useStatusExprired';
+import formatNumberConfig from '@/utils/helpers/formatnumber';
+import { Grid6 } from 'iconsax-react';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import React, { useState } from 'react';
+import { useDebounce } from 'use-debounce';
 
-const Quote = (props) => {
+const breadcrumbItems = [
+    {
+        label: `Báo cáo`,
+    },
+    {
+        label: `Báo cáo bán hàng`,
+    },
+    {
+        label: `Báo cáo đơn hàng theo báo giá`,
+        href: '/report-statistical/sales-report/quote',
+    },
+];
+
+const Quote = props => {
     const dataLang = props.dataLang;
-
     const dataSeting = useSetingServer();
-
     const router = useRouter();
-
     const { paginate } = usePagination();
-
     const statusExprired = useStatusExprired();
 
-    const { limit, updateLimit: sLimit, totalItems, updateTotalItems: sTotalItems } = useLimitAndTotalItems();
-    const formatNumber = (number) => {
+    const formatNumber = number => {
         return formatNumberConfig(+number, dataSeting);
     };
+
+    // State management
+    const [dateRange, setDateRange] = useState({
+        startDate: undefined,
+        endDate: undefined,
+    });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
+    const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [limit, setLimit] = useState(15);
+    const [searchValue, setSearchValue] = useState('');
+    const [debouncedSearchValue] = useDebounce(searchValue, 500);
+
+    const currentPage = Number(router.query.page) || 1;
 
     const initialState = {
         total: {},
@@ -50,248 +65,221 @@ const Quote = (props) => {
 
     const [isState, setState] = useState(initialState);
 
-    const queryState = (key) => setState((prev) => ({ ...prev, ...key }));
+    const queryState = key => setState(prev => ({ ...prev, ...key }));
+
+    // Handler functions
+    const handleDateChange = newValue => {
+        setDateRange(newValue);
+    };
+
+    const handleCustomerChange = value => {
+        setSelectedCustomer(value);
+    };
+
+    const handleOrderChange = value => {
+        setSelectedOrder(value);
+    };
+
+    const handleSearch = value => {
+        const searchValue = value?.target?.value || (typeof value === 'string' ? value : '');
+        setSearchValue(searchValue);
+    };
+
+    const handleLimitChange = newLimit => {
+        setLimit(newLimit);
+    };
+
+    const handleResetData = () => {
+        // Reset date range
+        setDateRange({
+            startDate: undefined,
+            endDate: undefined,
+        });
+
+        // Reset selections
+        setSelectedCustomer(null);
+        setSelectedOrder(null);
+
+        // Reset search value
+        setSearchValue('');
+
+        // Reset limit to default
+        setLimit(15);
+
+        // Reset to first page
+        router.push({
+            pathname: router.pathname,
+            query: { ...router.query, page: 1 },
+        });
+    };
+
+    // Mock data for export (you can replace this with actual data)
+    const multiDataSet = [
+        {
+            sheetName: 'Báo cáo đơn hàng theo báo giá',
+            data: isState.data || [],
+            columns: [
+                { header: 'Khách hàng', key: 'customer_name' },
+                { header: 'Báo giá', key: 'quote_code' },
+                { header: 'Ngày', key: 'date' },
+                { header: 'Đơn hàng bán', key: 'order_code' },
+                { header: 'Mã thành phẩm', key: 'product_code' },
+                { header: 'Tên thành phẩm', key: 'product_name' },
+                { header: 'Đơn vị', key: 'unit' },
+                { header: 'Số lượng báo giá', key: 'quote_quantity' },
+                { header: 'Số lượng đơn hàng', key: 'order_quantity' },
+                { header: 'Số lượng đã giao', key: 'delivered_quantity' },
+                { header: 'Còn lại chưa giao', key: 'remaining_quantity' },
+            ],
+        },
+    ];
 
     return (
         <React.Fragment>
-            <Head>
-                <title>Báo cáo đơn hàng theo báo giá</title>
-            </Head>
-            <Container className={"!pb-0"}>
-                {statusExprired ? <EmptyExprired /> : null}
+            <ReportLayout
+                title={'Báo cáo đơn hàng theo báo giá'}
+                statusExprired={statusExprired}
+                breadcrumbItems={breadcrumbItems}
+                filterSection={
+                    <div className='w-full items-center flex justify-between gap-4'>
+                        <div className='flex gap-3'>
+                            <DateToDateReport placeholder='Giai đoạn' value={dateRange} onChange={handleDateChange} />
 
-                <div className="h-full">
-                    <div className="space-y-3 h-[96%] overflow-hidden">
-                        <TitleHeader title={"Báo cáo bán hàng"} />
-                        <div className="grid grid-cols-10">
-                            <Navbar />
-                            <div className="col-span-8">
-                                <div className="3xl:space-y-3 space-y-2 col-span-8">
-                                    <div className="w-full items-center flex justify-between gap-2">
-                                        <div className="flex gap-3 items-center w-full">
-                                            <div className="flex gap-3 items-center w-full">
-                                                <div className="grid grid-cols-5 gap-2">
-                                                    <SearchComponent
-                                                        colSpan={1}
-                                                        dataLang={dataLang}
-                                                        placeholder={dataLang?.branch_search}
-                                                        onChange={() => { }}
-                                                    />
-                                                    <SelectComponent
-                                                        options={[
-                                                            {
-                                                                value: "",
-                                                                label: "Khách hàng",
-                                                                isDisabled: true,
-                                                            },
-                                                        ]}
-                                                        placeholder={"Khách hàng"}
-                                                        isSearchable={true}
-                                                        colSpan={1}
-                                                    />
-                                                    <SelectComponent
-                                                        options={[
-                                                            {
-                                                                value: "",
-                                                                label: "Đơn hàng bán",
-                                                                isDisabled: true,
-                                                            },
-                                                        ]}
-                                                        placeholder={"Đơn hàng bán"}
-                                                        isSearchable={true}
-                                                        colSpan={1}
-                                                    />
-                                                    {/* <div className="w-full relative">
-                                                        <DatePicker
-                                                            id="start"
-                                                            portalId="menu-time"
-                                                            calendarClassName="rasta-stripes"
-                                                            clearButtonClassName="text"
-                                                            // selected={startDate}
-                                                            // onChange={(date) => setStartDate(date)}
-                                                            isClearable
-                                                            placeholderText="Ngày bắt đầu"
-                                                            className="p-2  placeholder:text-[#cbd5e1]  2xl:text-base text-xs w-full outline-none focus:outline-none focus:border-[#0F4F9E] focus:border-2  rounded-md"
-                                                        />
-                                                        <ArrowDown2
-                                                            size="11"
-                                                            color="#6b7280"
-                                                            className="absolute top-1/2 right-0 -translate-x-1/2 -translate-y-1/2"
-                                                        />
-                                                    </div>
-                                                    <div className="w-full relative">
-                                                        <DatePicker
-                                                            id="start"
-                                                            portalId="menu-time"
-                                                            calendarClassName="rasta-stripes"
-                                                            clearButtonClassName="text"
-                                                            // selected={startDate}
-                                                            // onChange={(date) => setStartDate(date)}
-                                                            isClearable
-                                                            placeholderText="Ngày kết thúc"
-                                                            className="p-2  placeholder:text-[#cbd5e1]  2xl:text-base text-xs w-full outline-none focus:outline-none focus:border-[#0F4F9E] focus:border-2  rounded-md"
-                                                        />
-                                                        <ArrowDown2
-                                                            size="11"
-                                                            color="#6b7280"
-                                                            className="absolute top-1/2 right-0 -translate-x-1/2 -translate-y-1/2"
-                                                        />
-                                                    </div> */}
-                                                    <div className="w-full relative">
-                                                        <DatePicker
-                                                            id="start"
-                                                            portalId="menu-time"
-                                                            calendarClassName="rasta-stripes"
-                                                            clearButtonClassName="text"
-                                                            // selected={startDate}
-                                                            // selected={startDate}
-                                                            // onChange={onChange}
-                                                            // startDate={startDate}
-                                                            // endDate={endDate}
-                                                            selectsRange
-                                                            // onChange={(date) => setStartDate(date)}
-                                                            isClearable
-                                                            placeholderText="Từ ngày đến ngày"
-                                                            className="p-2  placeholder:text-[#cbd5e1]  2xl:text-base text-xs w-full outline-none focus:outline-none focus:border-[#0F4F9E] focus:border-2  rounded-md"
-                                                        />
-                                                        <ArrowDown2
-                                                            size="11"
-                                                            color="#6b7280"
-                                                            className="absolute top-1/2 right-0 -translate-x-1/2 -translate-y-1/2"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="col-span-1 xl:col-span-2 lg:col-span-2">
-                                            <div className="flex justify-end gap-2 space-x-2 items-center">
-                                                <OnResetData sOnFetching={() => { }} />
-                                                <button
-                                                    onClick={() => { }}
-                                                    className={`xl:px-4 px-3 xl:py-2.5 py-1.5 2xl:text-xs xl:text-xs text-[7px] flex items-center space-x-2 bg-[#C7DFFB] rounded hover:scale-105 transition`}
-                                                >
-                                                    <Grid6 className="2xl:scale-100 xl:scale-100 scale-75" size={18} />
-                                                    <span>{dataLang?.client_list_exportexcel}</span>
-                                                </button>
-                                                <div>
-                                                    <DropdowLimit sLimit={sLimit} limit={limit} dataLang={dataLang} />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="3xl:h-[620px] 2xl:max-h-[550px] 2xl:h-[550px] max-h-[550px] h-[550px] overflow-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
-                                    <div className={`2xl:w-[100%] pr-2`}>
-                                        {/* header table */}
-                                        <HeaderTable gridCols={14}>
-                                            <ColumnTable colSpan={2} textAlign={"center"}>
-                                                Khách hàng
-                                            </ColumnTable>
-                                            <ColumnTable colSpan={1} textAlign={"center"}>
-                                                Báo giá
-                                            </ColumnTable>
-                                            <ColumnTable colSpan={1} textAlign={"center"}>
-                                                Ngày
-                                            </ColumnTable>
-                                            <ColumnTable colSpan={2} textAlign={"center"}>
-                                                Đơn hàng bán
-                                            </ColumnTable>
-                                            <ColumnTable colSpan={2} textAlign={"center"}>
-                                                Mã thành phẩm
-                                            </ColumnTable>
-                                            <ColumnTable colSpan={1} textAlign={"center"}>
-                                                Tên thành phẩm
-                                            </ColumnTable>
-                                            <ColumnTable colSpan={1} textAlign={"center"}>
-                                                Đơn vị
-                                            </ColumnTable>
-                                            <ColumnTable colSpan={1} textAlign={"center"}>
-                                                Số lượng báo giá
-                                            </ColumnTable>
-                                            <ColumnTable colSpan={1} textAlign={"center"}>
-                                                Số lượng đơn hàng
-                                            </ColumnTable>
-                                            <ColumnTable colSpan={1} textAlign={"center"}>
-                                                Số lượng đã giao
-                                            </ColumnTable>
-                                            <ColumnTable colSpan={1} textAlign={"center"}>
-                                                Còn lại chưa giao
-                                            </ColumnTable>
-                                        </HeaderTable>
-                                        {/* data table */}
-                                        {isState.isLoading ? (
-                                            <Loading
-                                                className="3xl:h-[620px] 2xl:max-h-[550px] 2xl:h-[550px] max-h-[550px] h-[550px]"
-                                                color="#0f4f9e"
-                                            />
-                                        ) : isState?.data && isState?.data?.length > 0 ? (
-                                            <div className=" min:h-[400px] h-[100%] w-full max:h-[600px]  ">
-                                                {isState.data?.map((e) => (
-                                                    <RowTable gridCols={14} key={e.id.toString()}>
-                                                        <RowItemTable colSpan={2} textAlign={"center"}>
-                                                            {/* {e?.date != null ? moment(e?.date).format("DD/MM/YYYY") : ""} */}
-                                                        </RowItemTable>
-                                                        <RowItemTable colSpan={1} textAlign={"center"}></RowItemTable>
-                                                        <RowItemTable colSpan={1} textAlign={"right"}></RowItemTable>
-                                                        <RowItemTable colSpan={2} textAlign={"right"}></RowItemTable>
-                                                        <RowItemTable colSpan={2} textAlign={"right"}></RowItemTable>
-                                                        <RowItemTable
-                                                            colSpan={1}
-                                                            textAlign={"left"}
-                                                            className={"truncate"}
-                                                        ></RowItemTable>
-                                                        <RowItemTable
-                                                            colSpan={1}
-                                                            className="flex items-center space-x-1"
-                                                        ></RowItemTable>
-                                                        <RowItemTable colSpan={1}></RowItemTable>
-                                                        <RowItemTable colSpan={1} className="mx-auto"></RowItemTable>
-                                                        <RowItemTable colSpan={1} className="mx-auto"></RowItemTable>
-                                                        <RowItemTable colSpan={1} className="mx-auto"></RowItemTable>
-                                                    </RowTable>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <NoData />
-                                        )}
-                                    </div>
-                                </div>
-                                {isState?.data?.length != 0 && (
-                                    <ContainerTotal className="!grid-cols-14">
-                                        <ColumnTable colSpan={10} textAlign={"center"} className="p-2">
-                                            {dataLang?.productsWarehouse_total || "productsWarehouse_total"}
-                                        </ColumnTable>
-                                        <ColumnTable colSpan={1} textAlign={"right"} className="p-2 mr-1">
-                                            {formatNumber(isState.total?.total_quantity)}
-                                        </ColumnTable>
-                                        <ColumnTable colSpan={1} textAlign={"right"} className="p-2 mr-1">
-                                            {formatNumber(isState.total?.total_quantity)}
-                                        </ColumnTable>
-                                        <ColumnTable colSpan={1} textAlign={"right"} className="p-2 mr-1">
-                                            {formatNumber(isState.total?.total_quantity)}
-                                        </ColumnTable>
-                                        <ColumnTable colSpan={1} textAlign={"right"} className="p-2 mr-1">
-                                            {formatNumber(isState.total?.total_quantity)}
-                                        </ColumnTable>
-                                    </ContainerTotal>
-                                )}
-                            </div>
+                            <SelectComponent
+                                options={[
+                                    {
+                                        value: '',
+                                        label: 'Khách hàng',
+                                        isDisabled: true,
+                                    },
+                                ]}
+                                placeholder={'Khách hàng'}
+                                isSearchable={true}
+                                value={selectedCustomer}
+                                onChange={handleCustomerChange}
+                                className='w-[200px] 2xl:w-[250px]'
+                            />
+
+                            <SelectComponent
+                                options={[
+                                    {
+                                        value: '',
+                                        label: 'Đơn hàng bán',
+                                        isDisabled: true,
+                                    },
+                                ]}
+                                placeholder={'Đơn hàng bán'}
+                                isSearchable={true}
+                                value={selectedOrder}
+                                onChange={handleOrderChange}
+                                className='w-[200px] 2xl:w-[250px]'
+                            />
+                        </div>
+                        <div className='flex gap-3 items-center'>
+                            <SearchComponent dataLang={dataLang} onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' />
+                            <OnResetData sOnFetching={handleResetData} onClick={handleResetData} className='!py-3' />
+                            <ExcelFileComponent dataLang={dataLang} filename='Báo cáo đơn hàng theo báo giá' title='BCDHBG' multiDataSet={multiDataSet} classBtn='!py-3' />
                         </div>
                     </div>
-                    {isState?.data?.length != 0 && (
-                        <ContainerPagination className={"justify-end"}>
-                            <TitlePagination dataLang={dataLang} totalItems={isState?.total?.iTotalDisplayRecords} />
-                            <Pagination
-                                postsPerPage={isState.limitItemWarehouseDetail}
-                                totalPosts={Number(isState?.total?.iTotalDisplayRecords)}
-                                paginate={paginate}
-                                currentPage={router.query?.page || 1}
-                                className="3xl:text-base text-sm"
-                            />
-                        </ContainerPagination>
-                    )}
-                </div>
-            </Container>
+                }
+                tableSection={
+                    <TableSection
+                        fixedColumns={[
+                            { title: 'STT', width: 'w-14', textAlign: 'center' },
+                            { title: 'Khách hàng', width: 'w-40', textAlign: 'left' },
+                            { title: 'Báo giá', width: 'w-32', textAlign: 'center' },
+                        ]}
+                        scrollableColumns={[
+                            { title: 'Ngày', width: 'w-32', textAlign: 'center' },
+                            { title: 'Đơn hàng bán', width: 'w-40', textAlign: 'center' },
+                            { title: 'Mã thành phẩm', width: 'w-32', textAlign: 'left' },
+                            { title: 'Tên thành phẩm', width: 'w-60', textAlign: 'left' },
+                            { title: 'Đơn vị', width: 'w-20', textAlign: 'center' },
+                            { title: 'Số lượng báo giá', width: 'w-32', textAlign: 'center' },
+                            { title: 'Số lượng đơn hàng', width: 'w-32', textAlign: 'center' },
+                            { title: 'Số lượng đã giao', width: 'w-32', textAlign: 'center' },
+                            { title: 'Còn lại chưa giao', width: 'w-32', textAlign: 'center' },
+                        ]}
+                        data={isState?.data}
+                        isFetching={isState?.onFetching}
+                        renderFixedRow={(item, index) => (
+                            <>
+                                <RowItemTable className='w-14 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0'>
+                                    {index + 1}
+                                </RowItemTable>
+                                <RowItemTable className='w-40 flex justify-start items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0'>
+                                    {item?.customer_name || '-'}
+                                </RowItemTable>
+                                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] !text-new-blue !responsive-text-sm font-semibold flex-shrink-0'>
+                                    {item?.quote_code || '-'}
+                                </RowItemTable>
+                            </>
+                        )}
+                        renderScrollableRow={(item, index) => (
+                            <>
+                                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0'>
+                                    {item?.date || '-'}
+                                </RowItemTable>
+                                <RowItemTable className='w-40 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0'>
+                                    {item?.order_code || '-'}
+                                </RowItemTable>
+                                <RowItemTable className='w-32 flex justify-start items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0'>
+                                    {item?.product_code || '-'}
+                                </RowItemTable>
+                                <RowItemTable className='w-60 flex justify-start items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0'>
+                                    {item?.product_name || '-'}
+                                </RowItemTable>
+                                <RowItemTable className='w-20 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0'>
+                                    {item?.unit || '-'}
+                                </RowItemTable>
+                                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0'>
+                                    {formatNumber(item?.quote_quantity || 0)}
+                                </RowItemTable>
+                                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0'>
+                                    {formatNumber(item?.order_quantity || 0)}
+                                </RowItemTable>
+                                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0'>
+                                    {formatNumber(item?.delivered_quantity || 0)}
+                                </RowItemTable>
+                                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 text-neutral-07 !responsive-text-sm font-normal flex-shrink-0'>
+                                    {formatNumber(item?.remaining_quantity || 0)}
+                                </RowItemTable>
+                            </>
+                        )}
+                        renderFooter={() => (
+                            <>
+                                <RowItemTable className='w-14 flex-shrink-0 bg-white'></RowItemTable>
+                                <RowItemTable className='w-40 flex-shrink-0 bg-white'></RowItemTable>
+                                <RowItemTable className='w-32 flex-shrink-0 bg-white'></RowItemTable>
+                                <RowItemTable className='w-32 flex-shrink-0 bg-white'></RowItemTable>
+                                <RowItemTable className='w-40 flex-shrink-0 bg-white'></RowItemTable>
+                                <RowItemTable className='w-32 flex-shrink-0 bg-white'></RowItemTable>
+                                <RowItemTable className='w-60 flex-shrink-0 bg-white'></RowItemTable>
+                                <RowItemTable className='w-20 flex-shrink-0 bg-white'></RowItemTable>
+                                <RowItemTable className='h-10 w-32 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white'>
+                                    Tổng cộng
+                                </RowItemTable>
+                                <RowItemTable className='h-10 w-32 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white'>
+                                    {formatNumber(isState?.total?.total_quote_quantity || 0)}
+                                </RowItemTable>
+                                <RowItemTable className='h-10 w-32 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white'>
+                                    {formatNumber(isState?.total?.total_order_quantity || 0)}
+                                </RowItemTable>
+                                <RowItemTable className='h-10 w-32 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white'>
+                                    {formatNumber(isState?.total?.total_delivered_quantity || 0)}
+                                </RowItemTable>
+                                <RowItemTable className='h-10 w-32 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white'>
+                                    {formatNumber(isState?.total?.total_remaining_quantity || 0)}
+                                </RowItemTable>
+                            </>
+                        )}
+                    />
+                }
+                totalSection={
+                    isState?.data?.length > 0 && <Pagination postsPerPage={limit} totalPosts={Number(isState?.total?.iTotalDisplayRecords) || 0} paginate={paginate} currentPage={currentPage} />
+                }
+                paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}
+            />
         </React.Fragment>
     );
 };

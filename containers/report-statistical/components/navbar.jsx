@@ -225,28 +225,42 @@ const Navbar = props => {
     ];
     // Quản lý sản xuất
     const isNavbarProductionManager = [
+        // {
+        //     id: uuidv4(),
+        //     title: 'Quản lý sản xuất',
+        //     children: [
+        //         {
+        //             id: uuidv4(),
+        //             name: 'Báo cáo định mức NVL',
+        //             path: '/report-statistical/production-manager/quota-materials',
+        //         },
+        //         {
+        //             id: uuidv4(),
+        //             name: 'Báo cáo tiến độ theo đơn hàng',
+        //             path: '/report-statistical/production-manager/order-progress',
+        //         },
+        //         {
+        //             id: uuidv4(),
+        //             name: 'Báo cáo nguyên liệu sử dụng',
+        //             path: '/report-statistical/production-manager/raw-materials-used',
+        //         },
+        //     ],
+        // },
         {
             id: uuidv4(),
-            title: 'Quản lý sản xuất',
-            children: [
-                {
-                    id: uuidv4(),
-                    name: 'Báo cáo định mức NVL',
-                    path: '/report-statistical/production-manager/quota-materials',
-                },
-                {
-                    id: uuidv4(),
-                    name: 'Báo cáo tiến độ theo đơn hàng',
-                    path: '/report-statistical/production-manager/order-progress',
-                },
-                {
-                    id: uuidv4(),
-                    name: 'Báo cáo nguyên liệu sử dụng',
-                    path: '/report-statistical/production-manager/raw-materials-used',
-                },
-            ],
+            name: 'Báo cáo định mức NVL',
+            path: '/report-statistical/production-manager/quota-materials',
         },
-
+        {
+            id: uuidv4(),
+            name: 'Báo cáo tiến độ theo đơn hàng',
+            path: '/report-statistical/production-manager/order-progress',
+        },
+        {
+            id: uuidv4(),
+            name: 'Báo cáo nguyên liệu sử dụng',
+            path: '/report-statistical/production-manager/raw-materials-used',
+        },
         // {
         //   id: uuidv4(),
         //   name: 'Báo cáo lệnh sản xuất theo công đoạn',
@@ -313,13 +327,13 @@ const Navbar = props => {
     }, [router.pathname]);
 
     return (
-        <ul className='w-[17%] h-fit xl:p-4 2xl:p-6 pt-4 p-2 flex flex-col gap-6 border border-[#E7F2FE] bg-primary-06 rounded-lg'>
+        <ul className={`w-[17%] h-fit xl:p-4 2xl:p-6 pt-4 p-2 flex flex-col border border-[#E7F2FE] bg-primary-06 rounded-lg ${navbar.some(item => item.children) ? 'gap-6' : 'gap-3'}`}>
             {navbar &&
                 navbar.map(item => {
                     return (
                         <div key={item.id} className='flex flex-col gap-4'>
-                            <h1 className='responsive-text-sm uppercase text-primary-01'>{item.title}</h1>
-                            <div className='flex flex-col gap-3 px-1.5'>
+                            {item.title && <h1 className='responsive-text-sm uppercase text-primary-01'>{item.title}</h1>}
+                            <div className={`flex flex-col gap-3 ${item.children ? 'px-1.5' : ''}`}>
                                 {item.children ? (
                                     item.children.map(child => {
                                         return (
@@ -363,7 +377,7 @@ const Navbar = props => {
                                                 router.pathname === item.path ? 'bg-typo-blue-5 text-white' : ''
                                             } `}
                                         >
-                                            <div className='flex xl:w-[90%] xl:max-w-[90%] w-[85%] max-w-[85%] items-center gap-2'>
+                                            <div className='flex xl:w-[95%] xl:max-w-[95%] items-center gap-2'>
                                                 <div
                                                     className={`size-1.5 rounded-full flex-shrink-0 ${
                                                         router.pathname === item.path ? 'bg-white/60' : 'bg-primary-01'

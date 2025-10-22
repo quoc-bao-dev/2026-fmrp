@@ -187,6 +187,10 @@ const ExportDelivery = (props) => {
   // Add limit handler
   const handleLimitChange = (newLimit) => {
     setLimit(newLimit)
+    router.push({
+      pathname: router.pathname,
+      query: { ...router.query, page: 1 },
+    })
   }
 
   const handleResetData = () => {
