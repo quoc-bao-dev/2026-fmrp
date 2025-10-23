@@ -203,33 +203,6 @@ const ExportProduction = (props) => {
     })
   }
 
-  const handleResetData = () => {
-    // Reset date range
-    setDateRange({
-      startDate: undefined,
-      endDate: undefined,
-    })
-
-    // Reset warehouse selection
-    // setSelectedWarehouse(null)
-
-    // Reset product search and selection
-    setSearchTerm('')
-    setSelectedProducts([])
-
-    // Reset search value
-    setSearchValue('')
-
-    // Reset limit to default
-    setLimit(15)
-
-    // Reset to first page
-    router.push({
-      pathname: router.pathname,
-      query: { ...router.query, page: 1 },
-    })
-  }
-
   const { multiDataSet } = useExportExcel(dataReportExportManufacture)
 
   return (
@@ -276,7 +249,7 @@ const ExportProduction = (props) => {
               value={searchValue}
               classNameBox="!py-2 2xl:!p-2.5"
             />
-            <OnResetData sOnFetching={handleResetData} onClick={handleResetData} className="!py-3" />
+            <OnResetData sOnFetching={refetchReportExportManufacture} className="!py-3" />
             <ExcelFileComponent
               dataLang={dataLang}
               filename="Danh sách xuất kho sản xuất"

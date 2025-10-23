@@ -1135,6 +1135,14 @@ const DeliveryReceiptForm = (props) => {
                                         formatNumber={formatNumber}
                                         isError={errWarehouse}
                                       />
+                                      {(
+                                        errWarehouse && (
+                                          ce?.warehouse == null ||
+                                          (id && (ce?.warehouse?.label == null || ce?.warehouse?.warehouse_name == null))
+                                        )
+                                      ) && (
+                                        <span className="text-red-500 text-xs mt-1">Vui lòng chọn kho</span>
+                                      )}
                                     </div>
                                     {/* Số lượng */}
                                     <div className="flex items-center justify-center">

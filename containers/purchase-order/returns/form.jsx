@@ -952,45 +952,54 @@ const PurchaseReturnsForm = (props) => {
                                     <React.Fragment key={ce?.id?.toString()}>
                                       {/* Kho Trả - Vị trí trả */}
                                       <div className="flex flex-col justify-center">
-                                        <SelectCustomLabel
-                                          dataLang={dataLang}
-                                          placeholder={dataLang?.returns_point || 'returns_point'}
-                                          options={dataWarehouses.filter((o) => o.parentId === e.id)}
-                                          value={ce?.kho}
-                                          onChange={_HandleChangeChild.bind(this, e?.id, ce?.id, 'kho')}
-                                          isError={
+                                        <div className="flex flex-col w-full">
+                                          <SelectCustomLabel
+                                            dataLang={dataLang}
+                                            placeholder={dataLang?.returns_point || 'returns_point'}
+                                            options={dataWarehouses.filter((o) => o.parentId === e.id)}
+                                            value={ce?.kho}
+                                            onChange={_HandleChangeChild.bind(this, e?.id, ce?.id, 'kho')}
+                                            isError={
+                                              (errWarehouse && ce?.kho == null) ||
+                                              (errWarehouse &&
+                                                (ce?.kho?.label == null || ce?.kho?.warehouse_name == null))
+                                            }
+                                            renderOption={(option) => {
+                                              return (
+                                                (option?.warehouse_name || option?.label || option?.qty) && (
+                                                  <div>
+                                                    <div className="flex gap-1 3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px] leading-normal font-semibold">
+                                                      <h2>
+                                                        {dataLang?.returns_wareshoue || 'returns_wareshoue'}:{' '}
+                                                        {option?.warehouse_name}
+                                                      </h2>
+                                                    </div>
+                                                    <div className="flex gap-1 3xl:text-[11px] 2xl:text-[10px] xl:text-[9.5px] text-[9px] leading-normal font-medium">
+                                                      <h2>
+                                                        {dataLang?.returns_wareshouePosition ||
+                                                          'returns_wareshouePosition'}
+                                                        : {option?.label}
+                                                      </h2>
+                                                    </div>
+                                                    <div className="flex gap-1 2xl:text-[11px] xl:text-[9.5px] text-[9px] leading-normal font-medium">
+                                                      <h2>
+                                                        {dataLang?.returns_survive || 'returns_survive'}:{' '}
+                                                        {formatNumber(option?.qty)}
+                                                      </h2>
+                                                    </div>
+                                                  </div>
+                                                )
+                                              )
+                                            }}
+                                          />
+                                          {(
                                             (errWarehouse && ce?.kho == null) ||
                                             (errWarehouse &&
                                               (ce?.kho?.label == null || ce?.kho?.warehouse_name == null))
-                                          }
-                                          renderOption={(option) => {
-                                            return (
-                                              (option?.warehouse_name || option?.label || option?.qty) && (
-                                                <div>
-                                                  <div className="flex gap-1 3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px] leading-normal font-semibold">
-                                                    <h2>
-                                                      {dataLang?.returns_wareshoue || 'returns_wareshoue'}:{' '}
-                                                      {option?.warehouse_name}
-                                                    </h2>
-                                                  </div>
-                                                  <div className="flex gap-1 3xl:text-[11px] 2xl:text-[10px] xl:text-[9.5px] text-[9px] leading-normal font-medium">
-                                                    <h2>
-                                                      {dataLang?.returns_wareshouePosition ||
-                                                        'returns_wareshouePosition'}
-                                                      : {option?.label}
-                                                    </h2>
-                                                  </div>
-                                                  <div className="flex gap-1 2xl:text-[11px] xl:text-[9.5px] text-[9px] leading-normal font-medium">
-                                                    <h2>
-                                                      {dataLang?.returns_survive || 'returns_survive'}:{' '}
-                                                      {formatNumber(option?.qty)}
-                                                    </h2>
-                                                  </div>
-                                                </div>
-                                              )
-                                            )
-                                          }}
-                                        />
+                                          ) && (
+                                            <span className="text-red-500 text-xs mt-1">Vui lòng chọn kho</span>
+                                          )}
+                                        </div>
                                       </div>
                                       {/* Số lượng */}
                                       <div

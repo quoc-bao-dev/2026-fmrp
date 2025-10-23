@@ -390,12 +390,20 @@ const PurchaseImportForm = (props) => {
 
     const hasNullWarehouse = listData.some((item) =>
       item.child?.some(
-        (childItem) =>
-          childItem?.id_plan == 0 &&
-          (childItem.warehouse === null ||
-            (id && (childItem.warehouse?.label === null || childItem.warehouse?.warehouse_name === null)))
+        (childItem) => {
+          console.log('Checking warehouse:', {
+            id_plan: childItem?.id_plan,
+            warehouse: childItem?.warehouse,
+            condition1: childItem?.id_plan == 0,
+            condition2: childItem?.warehouse === null,
+            condition3: id && (childItem.warehouse?.label === null || childItem.warehouse?.warehouse_name === null)
+          })
+          return childItem.warehouse === null ||
+            (id && (childItem.warehouse?.label === null || childItem.warehouse?.warehouse_name === null))
+        }
       )
     )
+    console.log('hasNullWarehouse:', hasNullWarehouse)
 
     const hasNullSerial = listData.some(
       (item) =>
@@ -459,6 +467,10 @@ const PurchaseImportForm = (props) => {
     sErrBranch(false)
   }, [idBranch != null])
 
+  useEffect(() => {
+    sErrWarehouse(false)
+  }, [listData])
+
   const options = dataItems?.map((e) => ({
     label: `${e.name} <span style={{display: none}}>${e.code}</span><span style={{display: none}}>${e.product_variation} </span><span style={{display: none}}>${e.text_type} ${e.unit_name} </span>`,
     value: e.id,
@@ -514,7 +526,7 @@ const PurchaseImportForm = (props) => {
       }, 0)
       return accumulator + childTotal
     }, 0)
-console.log(option)
+
     const totalAmount = option?.reduce((accumulator, item) => {
       const childTotal = item.child?.reduce((childAccumulator, childItem) => {
         const product =
@@ -525,14 +537,6 @@ console.log(option)
       }, 0)
       return accumulator + childTotal
     }, 0)
-
-    console.log('Chi tiết tính toán:', {
-      totalPrice,
-      totalDiscountPrice,
-      totalDiscountAfterPrice,
-      totalTax,
-      totalAmount
-    })
 
     return {
       totalPrice: totalPrice || 0,
@@ -825,7 +829,7 @@ console.log(option)
       </div>
     </div>
   )
-console.log(listData)
+
   return (
     <LayoutOrderManagement
       dataLang={dataLang}
@@ -997,7 +1001,7 @@ console.log(listData)
                                 } grid items-center justify-center gap-3 h-full py-1`}
                               >
                                 {e?.child?.map((ce) => (
-                                  <React.Fragment key={ce?.id?.toString()}>
+                                    <React.Fragment key={ce?.id?.toString()}>
                                     {/* Kho - Vị trí */}
                                     <div className={`flex flex-col items-center justify-center`}>
                                       {ce?.id_plan > 0 && ce?.reference_no_plan ? (
@@ -1008,19 +1012,24 @@ console.log(listData)
                                           className="3xl:!text-[13px] xl:!text-[10px] !text-[9px]"
                                         />
                                       ) : (
-                                        <SelectCustomLabel
-                                          dataLang={dataLang}
-                                          placeholder={dataLang?.PDF_house || 'PDF_house'}
-                                          options={dataWarehouse}
-                                          value={ce?.warehouse}
-                                          onChange={_HandleChangeChild.bind(this, e?.id, ce?.id, 'warehouse')}
-                                          isError={
-                                            (errWarehouse && ce?.warehouse == null) ||
-                                            (errWarehouse &&
-                                              (ce?.warehouse?.label == null || ce?.warehouse?.warehouse_name == null))
-                                          }
-                                          isVisibleLotDate={false}
-                                        />
+                                        <div className="flex flex-col w-full">
+                                          <SelectCustomLabel
+                                            dataLang={dataLang}
+                                            placeholder={dataLang?.PDF_house || 'PDF_house'}
+                                            options={dataWarehouse}
+                                            value={ce?.warehouse}
+                                            onChange={_HandleChangeChild.bind(this, e?.id, ce?.id, 'warehouse')}
+                                            isError={
+                                              (errWarehouse && ce?.warehouse == null) || 
+                                              (errWarehouse && (ce?.warehouse?.label == null || ce?.warehouse?.warehouse_name == null))
+                                            }
+                                            isVisibleLotDate={false}
+                                          />
+                                          {((errWarehouse && ce?.warehouse == null) || 
+                                            (errWarehouse && (ce?.warehouse?.label == null || ce?.warehouse?.warehouse_name == null))) && (
+                                            <span className="text-red-500 text-xs mt-1">Vui lòng chọn kho</span>
+                                          )}
+                                        </div>
                                       )}
                                     </div>
                                     {dataProductSerial.is_enable === '1' ? (

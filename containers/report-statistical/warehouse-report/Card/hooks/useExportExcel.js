@@ -1,5 +1,4 @@
-
-export const useExportExcel = (dataReportStock) => {
+export const useExportExcel = displayedData => {
   const multiDataSet = [
     {
       columns: [
@@ -12,7 +11,7 @@ export const useExportExcel = (dataReportStock) => {
           },
         },
         {
-          title: 'Mã mặt hàng',
+          title: 'Ngày duyệt kho',
           width: { wch: 15 },
           style: {
             fill: { fgColor: { rgb: 'C7DFFB' } },
@@ -20,23 +19,7 @@ export const useExportExcel = (dataReportStock) => {
           },
         },
         {
-          title: 'Mặt hàng',
-          width: { wch: 40 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
-        {
-          title: 'Đơn vị tính',
-          width: { wch: 12 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
-        {
-          title: 'SL Tồn đầu kỳ',
+          title: 'Ngày chứng từ',
           width: { wch: 15 },
           style: {
             fill: { fgColor: { rgb: 'C7DFFB' } },
@@ -44,15 +27,23 @@ export const useExportExcel = (dataReportStock) => {
           },
         },
         {
-          title: 'GT Tồn đầu kỳ',
-          width: { wch: 18 },
+          title: 'Mã chứng từ',
+          width: { wch: 20 },
           style: {
             fill: { fgColor: { rgb: 'C7DFFB' } },
             font: { bold: true },
           },
         },
         {
-          title: 'SL Nhập kho',
+          title: 'Diễn giải',
+          width: { wch: 30 },
+          style: {
+            fill: { fgColor: { rgb: 'C7DFFB' } },
+            font: { bold: true },
+          },
+        },
+        {
+          title: 'Đơn giá',
           width: { wch: 15 },
           style: {
             fill: { fgColor: { rgb: 'C7DFFB' } },
@@ -60,15 +51,7 @@ export const useExportExcel = (dataReportStock) => {
           },
         },
         {
-          title: 'GT Nhập kho',
-          width: { wch: 18 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
-        {
-          title: 'SL Xuất kho',
+          title: 'Số lượng nhập',
           width: { wch: 15 },
           style: {
             fill: { fgColor: { rgb: 'C7DFFB' } },
@@ -76,15 +59,7 @@ export const useExportExcel = (dataReportStock) => {
           },
         },
         {
-          title: 'GT Xuất kho',
-          width: { wch: 18 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
-        {
-          title: 'SL Tồn cuối kỳ',
+          title: 'Số lượng xuất',
           width: { wch: 15 },
           style: {
             fill: { fgColor: { rgb: 'C7DFFB' } },
@@ -92,8 +67,8 @@ export const useExportExcel = (dataReportStock) => {
           },
         },
         {
-          title: 'GT Tồn cuối kỳ',
-          width: { wch: 18 },
+          title: 'Số lượng tồn lũy kế',
+          width: { wch: 20 },
           style: {
             fill: { fgColor: { rgb: 'C7DFFB' } },
             font: { bold: true },
@@ -101,86 +76,64 @@ export const useExportExcel = (dataReportStock) => {
         },
       ],
       data: [
-        ...(dataReportStock?.data?.map((item, index) => [
-          { value: String(index + 1) },
-          { value: item.item_code || '' },
-          { value: item.item_name + (item.item_variation ? '\n' + item.item_variation : '') || '' },
-          { value: item.unit_name || '' },
-          { 
-            value: Number(item.opening_qty) === 0 ? 0 : Number(Math.abs(item.opening_qty || 0)),
-            style: { numFmt: '#,##0' }
-          },
-          { 
-            value: Number(item.opening_value || 0),
-            style: { numFmt: '#,##0' }
-          },
-          { 
-            value: Number(item.in_qty || 0),
-            style: { numFmt: '#,##0' }
-          },
-          { 
-            value: Number(item.in_value || 0),
-            style: { numFmt: '#,##0' }
-          },
-          { 
-            value: Number(item.out_qty || 0),
-            style: { numFmt: '#,##0' }
-          },
-          { 
-            value: Number(item.out_value || 0),
-            style: { numFmt: '#,##0' }
-          },
-          { 
-            value: Number(item.closing_qty || 0),
-            style: { numFmt: '#,##0' }
-          },
-          { 
-            value: Number(item.closing_value || 0),
-            style: { numFmt: '#,##0' }
-          },
-        ]) || []),
-        // Dòng tổng cộng
-        [
-          { value: '' },
-          { value: '' },
-          { value: '' },
-          { value: 'Tổng cộng', style: { font: { bold: true } } },
-          { 
-            value: Number(dataReportStock?.rTotal?.opening_qty || 0),
-            style: { numFmt: '#,##0', font: { bold: true } }
-          },
-          { 
-            value: Number(dataReportStock?.rTotal?.opening_value || 0),
-            style: { numFmt: '#,##0', font: { bold: true } }
-          },
-          { 
-            value: Number(dataReportStock?.rTotal?.in_qty || 0),
-            style: { numFmt: '#,##0', font: { bold: true } }
-          },
-          { 
-            value: Number(dataReportStock?.rTotal?.in_value || 0),
-            style: { numFmt: '#,##0', font: { bold: true } }
-          },
-          { 
-            value: Number(dataReportStock?.rTotal?.out_qty || 0),
-            style: { numFmt: '#,##0', font: { bold: true } }
-          },
-          { 
-            value: Number(dataReportStock?.rTotal?.out_value || 0),
-            style: { numFmt: '#,##0', font: { bold: true } }
-          },
-          { 
-            value: Number(dataReportStock?.rTotal?.closing_qty || 0),
-            style: { numFmt: '#,##0', font: { bold: true } }
-          },
-          { 
-            value: Number(dataReportStock?.rTotal?.closing_value || 0),
-            style: { numFmt: '#,##0', font: { bold: true } }
-          },
-        ]
-      ]
-    }
-  ]
+        ...(displayedData?.map((item, index) => {
+          // Xác định màu nền dựa trên loại dòng
+          const backgroundColor = item._rowType === 'opening' ? 'F3F6FF' : item._rowType === 'closing' ? 'E8FFF3' : '';
+          
+          return [
+            { 
+              value: item._rowType ? '' : String(index),
+              style: backgroundColor ? { fill: { fgColor: { rgb: backgroundColor } } } : {}
+            },
+            {
+              value: item._rowType ? (item._rowType === 'opening' ? 'Tồn đầu kỳ' : 'Tồn cuối kỳ') : item.warehouseman_date ? new Date(item.warehouseman_date).toLocaleDateString('vi-VN') : '',
+              style: backgroundColor ? { fill: { fgColor: { rgb: backgroundColor } } } : {}
+            },
+            {
+              value: item.document_date ? new Date(item.document_date).toLocaleDateString('vi-VN') : '',
+              style: backgroundColor ? { fill: { fgColor: { rgb: backgroundColor } } } : {}
+            },
+            { 
+              value: item.document_code || '',
+              style: backgroundColor ? { fill: { fgColor: { rgb: backgroundColor } } } : {}
+            },
+            {
+              value: item._rowType ? '' : item.document_type || '',
+              style: backgroundColor ? { fill: { fgColor: { rgb: backgroundColor } } } : {}
+            },
+            {
+              value: item._rowType === 'opening' ? '' : Number(item.price || 0),
+              style: { 
+                numFmt: '#,##0',
+                ...(backgroundColor ? { fill: { fgColor: { rgb: backgroundColor } } } : {})
+              },
+            },
+            {
+              value: item._rowType ? '' : Number(item.in_qty || 0),
+              style: { 
+                numFmt: '#,##0',
+                ...(backgroundColor ? { fill: { fgColor: { rgb: backgroundColor } } } : {})
+              },
+            },
+            {
+              value: item._rowType ? '' : Number(item.out_qty || 0),
+              style: { 
+                numFmt: '#,##0',
+                ...(backgroundColor ? { fill: { fgColor: { rgb: backgroundColor } } } : {})
+              },
+            },
+            {
+              value: Number(item.closing_qty || 0),
+              style: { 
+                numFmt: '#,##0',
+                ...(backgroundColor ? { fill: { fgColor: { rgb: backgroundColor } } } : {})
+              },
+            },
+          ];
+        }) || []),
+      ],
+    },
+  ];
 
-  return { multiDataSet }
-} 
+  return { multiDataSet };
+};

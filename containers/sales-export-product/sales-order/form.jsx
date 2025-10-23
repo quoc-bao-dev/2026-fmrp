@@ -410,23 +410,23 @@ const SalesOrderForm = (props) => {
   // Validate state
   useEffect(() => {
     setErrDate(false)
-  }, [startDate != null])
+  }, [startDate !== null])
 
   useEffect(() => {
     sErrCustomer(false)
-  }, [selectedCustomer != null])
+  }, [selectedCustomer !== null])
 
   useEffect(() => {
     setErrDeliveryDate(false)
-  }, [deliveryDate != null])
+  }, [deliveryDate !== null])
 
   useEffect(() => {
     setErrBranch(false)
-  }, [selectedBranch != null])
+  }, [selectedBranch !== null])
 
   useEffect(() => {
     setErrStaff(false)
-  }, [selectedStaff != null])
+  }, [selectedStaff !== null])
 
   // format number
   const formatNumber = (number) => {
@@ -801,38 +801,40 @@ const SalesOrderForm = (props) => {
 
     if (typeOrder === '0') {
       if (
-        startDate == null ||
-        selectedCustomer == null ||
-        selectedBranch == null ||
-        selectedStaff == null ||
+        startDate === null ||
+        selectedCustomer === null ||
+        selectedBranch === null ||
+        selectedStaff === null ||
+        deliveryDate === null ||
         deliveryDateInOption === true
       ) {
-        startDate == null && setErrDate(true)
-        selectedCustomer == null && sErrCustomer(true)
-        selectedBranch == null && setErrBranch(true)
-        selectedStaff == null && setErrStaff(true)
+        startDate === null && setErrDate(true)
+        selectedCustomer === null && sErrCustomer(true)
+        selectedBranch === null && setErrBranch(true)
+        selectedStaff === null && setErrStaff(true)
+        deliveryDate === null && setErrDeliveryDate(true)
         deliveryDateInOption === true && setErrDeliveryDate(true)
-        // deliveryDate == null && setErrDeliveryDate(true)
         isShow('error', `${dataLang?.required_field_null}`)
       } else {
         setOnSending(true)
       }
     } else if (typeOrder === '1') {
       if (
-        startDate == null ||
-        selectedCustomer == null ||
-        selectedBranch == null ||
-        selectedStaff == null ||
+        startDate === null ||
+        selectedCustomer === null ||
+        selectedBranch === null ||
+        selectedStaff === null ||
+        deliveryDate === null ||
         deliveryDateInOption === true ||
-        quote == null
+        quote === null
       ) {
-        startDate == null && setErrDate(true)
-        selectedCustomer == null && sErrCustomer(true)
-        selectedBranch == null && setErrBranch(true)
-        selectedStaff == null && setErrStaff(true)
+        startDate === null && setErrDate(true)
+        selectedCustomer === null && sErrCustomer(true)
+        selectedBranch === null && setErrBranch(true)
+        selectedStaff === null && setErrStaff(true)
+        deliveryDate === null && setErrDeliveryDate(true)
         deliveryDateInOption === true && setErrDeliveryDate(true)
-        quote?.value == null && setErrQuote(true)
-        // deliveryDate == null && setErrDeliveryDate(true)
+        quote === null && setErrQuote(true)
 
         isShow('error', `${dataLang?.required_field_null}`)
       } else {
@@ -870,11 +872,11 @@ const SalesOrderForm = (props) => {
     })
 
     if (
-      isTotalMoney?.totalPrice > 0 &&
+      isTotalMoney?.totalPrice >= 0 &&
       isTotalMoney?.totalDiscountPrice >= 0 &&
-      isTotalMoney?.totalDiscountAfterPrice > 0 &&
+      isTotalMoney?.totalDiscountAfterPrice >= 0 &&
       isTotalMoney?.totalTax >= 0 &&
-      isTotalMoney?.totalAmount > 0
+      isTotalMoney?.totalAmount >= 0
     ) {
       try {
         const { isSuccess, message } = await apiSalesOrder.apiHandingSalesOrder(id, formData)
@@ -907,7 +909,7 @@ const SalesOrderForm = (props) => {
         'error',
         newDataOption?.length === 0
           ? `Chưa chọn thông tin mặt hàng!`
-          : 'Tiền không được âm, vui lòng kiểm tra lại thông tin mặt hàng!'
+          : 'Có lỗi trong thông tin mặt hàng, vui lòng kiểm tra lại!'
       )
       setOnSending(false)
     }
@@ -2376,7 +2378,7 @@ const SalesOrderForm = (props) => {
               </div>
               {errDeliveryDate && (
                 <label className="text-sm text-red-500">
-                  {dataLang?.sales_product_err_delivery_date || 'Vui lòng chọn ngày cần hàng'}
+                  { 'Vui lòng chọn ngày cần hàng'}
                 </label>
               )}
             </div>
@@ -2391,7 +2393,7 @@ const SalesOrderForm = (props) => {
             value={selectedCustomer}
             onChange={(value) => setSelectedCustomer(value)}
             isError={errCustomer}
-            messErr={dataLang?.sales_product_err_customer || 'sales_product_err_customer'}
+            errMess={dataLang?.sales_product_err_customer || 'sales_product_err_customer'}
             isShowAddNew={true}
             sSearch={sSearchClient}
             dataBranch={dataBranch}

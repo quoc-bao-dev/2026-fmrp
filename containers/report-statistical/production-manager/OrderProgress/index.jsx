@@ -81,7 +81,7 @@ const OrderProgress = () => {
     };
   };
 
-  const { data, isFetching } = useGetOrderProgress({
+  const { data, isFetching, refetch: refetchOrderProgress } = useGetOrderProgress({
     page: currentPage,
     limit: limit,
     search: debouncedSearchValue,
@@ -196,22 +196,6 @@ const OrderProgress = () => {
     });
   };
 
-  const handleResetData = () => {
-    setDateRange({
-      startDate: undefined,
-      endDate: undefined,
-    });
-    setSearchTerm('');
-    setSelectedOrder([]);
-    setSelectedProduct([]);
-    setSearchValue('');
-    setLimit(15);
-    router.push({
-      pathname: router.pathname,
-      query: { ...router.query, page: 1 },
-    });
-  };
-
   const { multiDataSet } = useExportExcel(data?.output?.aaData || []);
 
   const getStatusColor = status => {
@@ -264,7 +248,7 @@ const OrderProgress = () => {
             </div>
             <div className='flex gap-3 items-center'>
               <SearchComponent dataLang={dataLang} onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' placeholder='Tìm kiếm...' />
-              <OnResetData sOnFetching={() => {}} onClick={handleResetData} className='!py-3' />
+              <OnResetData sOnFetching={() => {}} onClick={refetchOrderProgress} className='!py-3' />
               <ExcelFileComponent dataLang={dataLang} filename='Báo cáo tiến độ theo đơn hàng' title='BCTDTDH' multiDataSet={multiDataSet} classBtn='!py-3' />
             </div>
           </div>
@@ -300,7 +284,7 @@ const OrderProgress = () => {
                 <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
                   {moment(item.date).format('DD/MM/YYYY')}
                 </RowItemTable>
-                <RowItemTable className='w-32 flex items-center py-2 px-3 border-r border-[#E0E0E1] !text-new-blue font-normal flex-shrink-0'>{item.reference_no}</RowItemTable>
+                <RowItemTable className='w-32 flex items-center py-2 px-3 border-r border-[#E0E0E1] font-normal flex-shrink-0'>{item.reference_no}</RowItemTable>
                 <RowItemTable className='w-40 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
                   <span className='text-left responsive-text-sm'>{item.branch_name}</span>
                 </RowItemTable>

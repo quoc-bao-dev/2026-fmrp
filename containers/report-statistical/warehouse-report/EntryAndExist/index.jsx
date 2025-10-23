@@ -188,33 +188,6 @@ const EntryAndExist = (props) => {
     })
   }
 
-  const handleResetData = () => {
-    // Reset date range
-    setDateRange({
-      startDate: undefined,
-      endDate: undefined,
-    })
-
-    // Reset warehouse selection
-    // setSelectedWarehouse(null)
-
-    // Reset product search and selection
-    setSearchTerm('')
-    setSelectedProducts([])
-
-    // Reset search value
-    setSearchValue('')
-
-    // Reset limit to default
-    setLimit(15)
-
-    // Reset to first page
-    router.push({
-      pathname: router.pathname,
-      query: { ...router.query, page: 1 },
-    })
-  }
-
   const { multiDataSet } = useExportExcel(dataReportStock)
 
   // Xử lý click vào số lượng nhập kho
@@ -290,7 +263,7 @@ const EntryAndExist = (props) => {
                 value={searchValue}
                 classNameBox="!py-2 2xl:!p-2.5"
               />
-              <OnResetData sOnFetching={() => {}} onClick={handleResetData} className="!py-3" />
+              <OnResetData sOnFetching={() => {}} onClick={refetchReportImport} className="!py-3" />
               <ExcelFileComponent
                 dataLang={dataLang}
                 filename="Báo cáo xuất nhập tồn"

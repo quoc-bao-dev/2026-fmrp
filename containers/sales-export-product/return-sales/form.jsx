@@ -904,20 +904,29 @@ const ReturnSalesForm = (props) => {
                               <React.Fragment key={ce?.id?.toString()}>
                                 {/* Kho - Vị trí kho */}
                                 <div className="flex items-center h-full">
-                                  <SelectCustomLabel
-                                    dataLang={dataLang}
-                                    placeholder={fetChingData.onLoadingChild ? '' : dataLang?.PDF_house || 'PDF_house'}
-                                    options={dataWarehouse}
-                                    value={ce?.warehouse}
-                                    onChange={(value) => _HandleChangeChild(e?.id, ce?.id, 'warehouse', value)}
-                                    formatNumber={formatNumber}
-                                    isError={
+                                  <div className="flex flex-col w-full">
+                                    <SelectCustomLabel
+                                      dataLang={dataLang}
+                                      placeholder={fetChingData.onLoadingChild ? '' : dataLang?.PDF_house || 'PDF_house'}
+                                      options={dataWarehouse}
+                                      value={ce?.warehouse}
+                                      onChange={(value) => _HandleChangeChild(e?.id, ce?.id, 'warehouse', value)}
+                                      formatNumber={formatNumber}
+                                      isError={
+                                        (errors.errWarehouse && ce?.warehouse == null) ||
+                                        (errors.errWarehouse &&
+                                          (ce?.warehouse?.label == null || ce?.warehouse?.warehouse_name == null))
+                                      }
+                                      isVisibleLotDate={false}
+                                    />
+                                    {(
                                       (errors.errWarehouse && ce?.warehouse == null) ||
                                       (errors.errWarehouse &&
                                         (ce?.warehouse?.label == null || ce?.warehouse?.warehouse_name == null))
-                                    }
-                                    isVisibleLotDate={false}
-                                  />
+                                    ) && (
+                                      <span className="text-red-500 text-xs mt-1">Vui lòng chọn kho</span>
+                                    )}
+                                  </div>
                                 </div>
                                 {/* Số lượng */}
                                 <div className="flex items-center justify-center">

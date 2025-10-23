@@ -57,6 +57,11 @@ const apiReport = {
     const response = await axiosCustom('GET', `/api_web/reports/material-usage`, data)
     return response.data
   },
+
+  async apiGetMaterialsLookup(search) {
+    const response = await axiosCustom('GET', `/api_web/materials/lookup?search=${search}`)
+    return response.data
+  },
   
 }
 

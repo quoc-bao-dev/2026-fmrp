@@ -15,13 +15,15 @@ import { useGetWarehouse } from '@/hooks/common/useWarehouses';
 import usePagination from '@/hooks/usePagination';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import formatNumber from '@/utils/helpers/formatnumber';
+import moment from 'moment';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import { PiPackage, PiWarehouseLight } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
 import { useExportExcel } from './hooks/useExportExcel';
 import { useGetCardStock } from './hooks/useGetListReportStock';
-import moment from 'moment';
+import formatMoneyOrDash from '@/utils/helpers/formatMoneyOrDash';
 
 const breadcrumbItems = [
   {
@@ -69,25 +71,27 @@ const Card = props => {
   const {
     data: dataReportStock,
     isFetching,
-    refetch: refetchReportImport,
+    refetch: refetchCardStock,
   } = useGetCardStock({
-    page: currentPage,
-    limit: limit,
-    search: debouncedSearchValue,
-    filter: {
+    data: {
+      page: currentPage,
+      limit: limit,
+      search: debouncedSearchValue,
+      filter: {
         warehouses_id: selectedWarehouse?.value,
         ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
         ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
-        ...(selectedProduct && { items: [selectedProduct.value] }),
+        ...(selectedProduct && { items: selectedProduct.value }),
+      },
     },
+    enabled: !!selectedProduct, // Chỉ gọi API khi đã chọn mặt hàng
   });
-  console.log(dataReportStock);
 
   useEffect(() => {
-    if (refetchReportImport && isInitialized) {
-      refetchReportImport();
+    if (refetchCardStock && isInitialized && selectedProduct) {
+      refetchCardStock();
     }
-  }, [limit, dateRange, selectedWarehouse, selectedProduct, debouncedSearchValue, currentPage, refetchReportImport, isInitialized]);
+  }, [limit, dateRange, selectedWarehouse, selectedProduct, debouncedSearchValue, currentPage, refetchCardStock, isInitialized]);
 
   useEffect(() => {
     // Cập nhật options khi dataProduct thay đổi
@@ -182,38 +186,15 @@ const Card = props => {
     });
   };
 
-  const handleResetData = () => {
-    // Reset date range
-    setDateRange({
-      startDate: undefined,
-      endDate: undefined,
-    });
-
-    // Reset warehouse selection
-    // setSelectedWarehouse(null)
-
-    // Reset product search and selection
-    setSearchTerm('');
-    setSelectedProduct(null);
-
-    // Reset search value
-    setSearchValue('');
-
-    // Reset limit to default
-    setLimit(15);
-
-    // Reset to first page
-    router.push({
-      pathname: router.pathname,
-      query: { ...router.query, page: 1 },
-    });
-  };
-
-  const { multiDataSet } = useExportExcel(dataReportStock);
-
   // Tạo dữ liệu hiển thị: thêm dòng Đầu kỳ và Cuối kỳ
   const displayedData = useMemo(() => {
     const baseData = Array.isArray(dataReportStock) ? dataReportStock : [];
+
+    // Nếu không có dữ liệu gốc, trả về mảng rỗng để hiển thị NoData
+    if (baseData.length === 0) {
+      return [];
+    }
+
     const openingRow = {
       _rowType: 'opening',
       item_code: '',
@@ -227,8 +208,7 @@ const Card = props => {
       in_value: 0,
       out_qty: 0,
       out_value: 0,
-      closing_qty: 0,
-      closing_value: 0,
+      closing_qty: baseData[0]?.opening_qty ?? 0,
     };
 
     const closingRow = {
@@ -238,49 +218,23 @@ const Card = props => {
       document_date: '',
       item_variation: '',
       unit_name: '',
+      price: baseData.reduce((acc, item) => acc + Number(item.price || 0), 0),
       opening_qty: 0,
       opening_value: 0,
       in_qty: 0,
       in_value: 0,
       out_qty: 0,
       out_value: 0,
-      closing_qty: dataReportStock?.rTotal?.closing_qty ?? 0,
-      closing_value: dataReportStock?.rTotal?.closing_value ?? 0,
+      closing_qty: baseData[baseData.length - 1]?.closing_qty ?? 0,
     };
 
-    // Nếu không có dữ liệu, vẫn hiển thị 2 dòng đầu/cuối
+    // Chỉ hiển thị dòng đầu/cuối khi có dữ liệu
     return [openingRow, ...baseData, closingRow];
   }, [dataReportStock]);
 
   const getSpecialRowBg = item => (item?._rowType === 'opening' ? 'bg-[#F3F6FF]' : item?._rowType === 'closing' ? 'bg-[#E8FFF3]' : '');
 
-  // Xử lý click vào số lượng nhập kho
-  const handleClickImportQuantity = item => {
-    if (Number(item.in_qty) > 0) {
-      setSelectedImportItem(item);
-      setShowPopupImport(true);
-    }
-  };
-
-  // Xử lý click vào số lượng xuất kho
-  const handleClickExportQuantity = item => {
-    if (Number(item.out_qty) > 0) {
-      setSelectedExportItem(item);
-      setShowPopupExport(true);
-    }
-  };
-
-  // Đóng popup nhập kho
-  const handleCloseImportPopup = () => {
-    setShowPopupImport(false);
-    setSelectedImportItem(null);
-  };
-
-  // Đóng popup xuất kho
-  const handleCloseExportPopup = () => {
-    setShowPopupExport(false);
-    setSelectedExportItem(null);
-  };
+  const { multiDataSet } = useExportExcel(displayedData);
 
   return (
     <>
@@ -321,67 +275,80 @@ const Card = props => {
             </div>
             <div className='flex gap-3 items-center'>
               <SearchComponent dataLang={dataLang} onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' />
-              <OnResetData sOnFetching={() => {}} onClick={handleResetData} className='!py-3' />
-              <ExcelFileComponent dataLang={dataLang} filename='Báo cáo xuất nhập tồn' title='BCXNT' multiDataSet={multiDataSet} classBtn='!py-3' />
+              <OnResetData sOnFetching={() => {}} onClick={refetchCardStock} className='!py-3' />
+              <ExcelFileComponent dataLang={dataLang} filename='Báo cáo thẻ kho' title='BCTK' multiDataSet={multiDataSet} classBtn='!py-3' />
             </div>
           </div>
         }
         tableSection={
-          <TableSection
-            fixedColumns={[
-              { title: 'STT', width: 'w-14', textAlign: 'center' },
-              { title: 'Ngày duyệt kho', width: 'w-44', textAlign: 'center' },
-              { title: 'Ngày chứng từ', width: 'w-44', textAlign: 'center' },
-              { title: 'Mã chứng từ', width: 'w-44', textAlign: 'left' },
-            ]}
-            scrollableColumns={[
-              { title: 'Diễn giải', width: 'w-80', textAlign: 'center' },
-              { title: 'Đơn giá', width: 'w-48', textAlign: 'center' },
-              { title: 'Số lượng nhập', width: 'w-36', textAlign: 'center' },
-              { title: 'Số lượng xuất', width: 'w-40', textAlign: 'center' },
-              { title: 'Số lượng tồn lũy kế', width: 'w-40', textAlign: 'center' },
-            ]}
-            data={displayedData}
-            isFetching={isFetching}
-            renderFixedRow={(item, index) => (
-              <>
-                <RowItemTable className={`w-14 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
-                  {item._rowType ? '' : index}
-                </RowItemTable>
-                <RowItemTable className={`w-44 flex flex-col justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
-                  <span>{item._rowType ? (item._rowType === 'opening' ? 'Tồn đầu kỳ' : 'Tồn cuối kỳ') : moment(item.document_date).format('DD/MM/YYYY')}</span>
-                </RowItemTable>
-                <RowItemTable className={`w-44 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
-                  <div className='flex flex-col gap-1 justify-start'>{item.document_date ? moment(item.document_date).format('DD/MM/YYYY') : ''}</div>
-                </RowItemTable>
-                <RowItemTable className={`w-44 flex items-center py-2 px-3 border-r border-[#E0E0E1] !text-new-blue hover:underline cursor-pointer font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
-                  <div className='flex flex-col gap-1 justify-start'>{item.document_code}</div>
-                </RowItemTable>
-              </>
-            )}
-            renderScrollableRow={(item, index) => (
-              <>
-                <RowItemTable className={`w-80 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
-                  {item.document_type}
-                </RowItemTable>
-                <RowItemTable className={`w-48 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
-                  {}
-                </RowItemTable>
-                <RowItemTable className={`w-36 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
-                  {formatNumber(Number(item.in_qty || 0))}
-                </RowItemTable>
-                <RowItemTable className={`w-40 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
-                  {formatNumber(Number(item.out_qty || 0))}
-                </RowItemTable>
-                <RowItemTable className={`w-40 flex justify-center items-center py-2 px-3  text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
-                  {item.closing_qty}
-                </RowItemTable>
-              </>
-            )}
-          />
+          !selectedProduct ? (
+            <div className='p-10 bg-gray-50 border border-[#E0E0E1] rounded-lg'>
+              <div className='text-center flex flex-col items-center justify-center gap-2'>
+                <Image src='/data-not-found.png' alt='No Data' width={300} height={300} className='object-contain' />
+                <p className='text-lg font-medium text-gray-600 mb-2'>Vui lòng chọn mặt hàng</p>
+                <p className='text-sm text-gray-500'>Để xem báo cáo thẻ kho, bạn cần chọn mặt hàng từ combo box bên trên</p>
+              </div>
+            </div>
+          ) : (
+            <TableSection
+              fixedColumns={[
+                { title: 'STT', width: 'w-14', textAlign: 'center' },
+                { title: 'Ngày duyệt kho', width: 'w-44', textAlign: 'center' },
+                { title: 'Ngày chứng từ', width: 'w-44', textAlign: 'center' },
+                { title: 'Mã chứng từ', width: 'w-44', textAlign: 'left' },
+              ]}
+              scrollableColumns={[
+                { title: 'Diễn giải', width: 'w-60', textAlign: 'center' },
+                { title: 'Đơn giá', width: 'w-48', textAlign: 'center' },
+                { title: 'Số lượng nhập', width: 'w-36', textAlign: 'center' },
+                { title: 'Số lượng xuất', width: 'w-40', textAlign: 'center' },
+                { title: 'Số lượng tồn lũy kế', width: 'w-40', textAlign: 'center' },
+              ]}
+              data={displayedData}
+              isFetching={isFetching}
+              renderFixedRow={(item, index) => (
+                <>
+                  <RowItemTable className={`w-14 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
+                    {item._rowType ? '' : index}
+                  </RowItemTable>
+                  <RowItemTable className={`w-44 flex flex-col justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
+                    <span>{item._rowType ? (item._rowType === 'opening' ? 'Tồn đầu kỳ' : 'Tồn cuối kỳ') : moment(item.warehouseman_date).format('DD/MM/YYYY')}</span>
+                  </RowItemTable>
+                  <RowItemTable className={`w-44 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
+                    <div className='flex flex-col gap-1 justify-start'>{item.document_date ? moment(item.document_date).format('DD/MM/YYYY') : ''}</div>
+                  </RowItemTable>
+                  <RowItemTable className={`w-44 flex items-center py-2 px-3 border-r border-[#E0E0E1] font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
+                    <div className='flex flex-col gap-1 justify-start'>{item.document_code}</div>
+                  </RowItemTable>
+                </>
+              )}
+              renderScrollableRow={(item) => (
+                <>
+                  <RowItemTable className={`w-60 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
+                    {item.document_type}
+                  </RowItemTable>
+                  <RowItemTable className={`w-48 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
+                  {item._rowType === "opening" ? '' : formatMoneyOrDash(Number(item.price || 0))}
+                  </RowItemTable>
+                  <RowItemTable className={`w-36 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
+                  {item._rowType ? '' : Number(item.in_qty || 0) === 0 ? '-' : formatNumber(Number(item.in_qty || 0))}
+                  </RowItemTable>
+                  <RowItemTable className={`w-40 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
+                    {item._rowType ? '' : Number(item.out_qty || 0) === 0 ? '-' : formatNumber(Number(item.out_qty || 0))}
+                  </RowItemTable>
+                  <RowItemTable className={`w-40 flex justify-center items-center py-2 px-3  text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
+                    {(Number(item.closing_qty || 0) === 0 && item._rowType === false) ? '-' : formatNumber(Number(item.closing_qty || 0))}
+                  </RowItemTable>
+                </>
+              )}
+            />
+          )
         }
-        totalSection={dataReportStock?.recordsTotal > 0 && <Pagination postsPerPage={limit} totalPosts={Number(dataReportStock?.recordsTotal) || 0} paginate={paginate} currentPage={currentPage} />}
-        paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}
+        totalSection={
+          selectedProduct &&
+          dataReportStock?.recordsTotal > 0 && <Pagination postsPerPage={limit} totalPosts={Number(dataReportStock?.recordsTotal) || 0} paginate={paginate} currentPage={currentPage} />
+        }
+        paginationSection={selectedProduct && <DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}
       />
     </>
   );

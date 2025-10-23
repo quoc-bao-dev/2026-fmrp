@@ -51,7 +51,7 @@ const QuotaMaterials = () => {
   const currentPage = Number(router.query.page) || 1;
 
   const { data: dataProduct } = useInventoryItems(debouncedSearchTerm);
-  const { data } = useGetBOMs({
+  const { data, refetch: refetchQuotaMaterials } = useGetBOMs({
     page: currentPage,
     limit: limit,
     search: debouncedSearchValue,
@@ -111,18 +111,6 @@ const QuotaMaterials = () => {
 
   const handleLimitChange = newLimit => {
     setLimit(newLimit);
-    router.push({
-      pathname: router.pathname,
-      query: { ...router.query, page: 1 },
-    });
-  };
-
-  const handleResetData = () => {
-    setSearchTerm('');
-    setSelectedProduct([]);
-    setSelectedVersion(null);
-    setSearchValue('');
-    setLimit(15);
     router.push({
       pathname: router.pathname,
       query: { ...router.query, page: 1 },
@@ -192,7 +180,7 @@ const QuotaMaterials = () => {
             </div>
             <div className='flex gap-3 items-center'>
               <SearchComponent dataLang={dataLang} onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' placeholder='Tìm kiếm...' />
-              <OnResetData sOnFetching={() => {}} onClick={handleResetData} className='!py-3' />
+              <OnResetData sOnFetching={() => {}} onClick={refetchQuotaMaterials} className='!py-3' />
               <ExcelFileComponent dataLang={dataLang} filename='Báo cáo định mức NVL' title='BCDMNVL' multiDataSet={multiDataSet} classBtn='!py-3' />
             </div>
           </div>

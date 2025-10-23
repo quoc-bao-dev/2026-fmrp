@@ -11,3 +11,14 @@ export const useGetRawMaterialsUsed = data => {
     queryFn: fetchRawMaterialsUsed,
   });
 };
+
+export const useGetMaterialsLookup = search => {
+  const fetchMaterialsLookup = async () => {
+    const response = await apiReport.apiGetMaterialsLookup(search);
+    return response.data.materials;
+  };
+  return useQuery({
+    queryKey: ['api_get_materials_lookup', search],
+    queryFn: fetchMaterialsLookup,
+  });
+};
