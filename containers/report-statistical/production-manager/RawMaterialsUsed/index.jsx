@@ -1,28 +1,25 @@
 import OnResetData from '@/components/UI/btnResetData/btnReset';
-import { RowItemTable } from '@/components/UI/common/Table';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import DropdowLimit from '@/components/UI/dropdowLimit/dropdowLimit';
 import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport';
 import SearchComponent from '@/components/UI/filterComponents/searchComponent';
-import SelectSearchReport from '@/components/common/select/SelectSearchReport';
-import ReportLayout from '@/components/layout/ReportLayout';
-import TableSection from '@/components/layout/ReportLayout/TableSection';
+import Loading from '@/components/UI/loading/loading';
+import NoData from '@/components/UI/noData/nodata';
 import Pagination from '@/components/UI/pagination';
+import SelectSearchReport from '@/components/common/select/SelectSearchReport';
+import ExcelIcon from '@/components/icons/common/Excel';
+import ReportLayout from '@/components/layout/ReportLayout';
 import { useLanguageContext } from '@/context/ui/LanguageContext';
 import usePagination from '@/hooks/usePagination';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import formatNumber from '@/utils/helpers/formatnumber';
-import { PiPackage, PiCalendar, PiBox } from 'react-icons/pi';
+import moment from 'moment';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { PiPackage } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
-import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems';
-import { useGetBOMs, useGetMaterialsLookup, useGetRawMaterialsUsed } from './hook';
+import { useGetMaterialsLookup, useGetRawMaterialsUsed } from './hook';
 import { exportWithMergeRawMaterialsUsed } from './hook/useExportExcel';
-import moment from 'moment';
-import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
-import Loading from '@/components/UI/loading/loading';
-import NoData from '@/components/UI/noData/nodata';
-import ExcelIcon from '@/components/icons/common/Excel';
 
 const breadcrumbItems = [
   {
@@ -50,7 +47,6 @@ const RawMaterialsUsed = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
-  const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [limit, setLimit] = useState(15);
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearchValue] = useDebounce(searchValue, 500);
@@ -195,13 +191,7 @@ const RawMaterialsUsed = () => {
         filterSection={
           <div className='w-full items-center flex justify-between gap-4'>
             <div className='flex gap-3'>
-              <DateToDateReport
-                placeholder='Từ ngày đến ngày'
-                value={dateRange}
-                onChange={handleDateChange}
-                icon={<PiCalendar color='#9295A4' className='size-4' />}
-                className='w-[240px] 2xl:w-[250px]'
-              />
+              <DateToDateReport placeholder='Từ ngày đến ngày' value={dateRange} onChange={handleDateChange} className='w-[240px] 2xl:w-[250px]' />
               <SelectSearchReport
                 placeholder='Nguyên liệu'
                 onChange={handleProductChange}
@@ -217,7 +207,10 @@ const RawMaterialsUsed = () => {
             <div className='flex gap-3 items-center'>
               <SearchComponent dataLang={dataLang} onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' placeholder='Tìm kiếm...' />
               <OnResetData sOnFetching={() => {}} onClick={refetchRawMaterialsUsed} className='!py-3' />
-              <button onClick={handleExportExcel} className='!py-3 3xl:py-3 3xl:px-4 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded-lg border border-background-blue-2 transition'>
+              <button
+                onClick={handleExportExcel}
+                className='!py-3 3xl:py-3 3xl:px-4 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded-lg border border-background-blue-2 transition'
+              >
                 <ExcelIcon className='3xl:size-5 size-4 text-typo-blue-4' />
                 <span className='text-typo-blue-4 responsive-text-sm font-medium whitespace-nowrap'>{dataLang?.client_list_exportexcel}</span>
               </button>
@@ -361,16 +354,24 @@ const RawMaterialsUsed = () => {
                         <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.bom.unit_name}</td>
 
                         {/* Số lượng kế hoạch - hiển thị cho mỗi bom */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.bom.quota_primary == 0 ? '-' : formatNumber(Number(flattenedItem.bom.quota_primary))}</td>
+                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
+                          {flattenedItem.bom.quota_primary == 0 ? '-' : formatNumber(Number(flattenedItem.bom.quota_primary))}
+                        </td>
 
                         {/* Số lượng đầu ra - hiển thị cho mỗi bom */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.bom.quantity_export == 0 ? '-' : formatNumber(Number(flattenedItem.bom.quantity_export))}</td>
+                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
+                          {flattenedItem.bom.quantity_export == 0 ? '-' : formatNumber(Number(flattenedItem.bom.quantity_export))}
+                        </td>
 
                         {/* Số lượng nhập lại - hiển thị cho mỗi bom */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.bom.quantity_purchase_internal == 0 ? '-' : formatNumber(Number(flattenedItem.bom.quantity_purchase_internal))}</td>
+                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
+                          {flattenedItem.bom.quantity_purchase_internal == 0 ? '-' : formatNumber(Number(flattenedItem.bom.quantity_purchase_internal))}
+                        </td>
 
                         {/* Số lượng đã sử dụng - hiển thị cho mỗi bom */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.bom.quantity_used == 0 ? '-' : formatNumber(Number(flattenedItem.bom.quantity_used))}</td>
+                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
+                          {flattenedItem.bom.quantity_used == 0 ? '-' : formatNumber(Number(flattenedItem.bom.quantity_used))}
+                        </td>
                       </tr>
                     ));
                   })()}
