@@ -955,10 +955,11 @@ const SalesOrderForm = (props) => {
         />
         <div className="flex flex-col 3xl:text-[10px] text-[9px] overflow-hidden w-full">
           <div className="font-semibold responsive-text-sm truncate text-black">{option.e?.name}</div>
-          {(option.e?.product_variation || option.e?.product_variation_1) && (
+          {(option.e?.product_variation) && (
             <div className="text-blue-600 truncate">
-              {option.e?.product_variation && `Màu sắc: ${option.e?.product_variation} `}
-              {option.e?.product_variation_1 && `- Size: ${option.e?.product_variation_1}`}
+              {option.e?.product_variation}
+              {/* {option.e?.product_variation && `Màu sắc: ${option.e?.product_variation} `} */}
+              {/* {option.e?.product_variation_1 && `- Size: ${option.e?.product_variation_1}`} */}
             </div>
           )}
           <div className="text-gray-500">
@@ -2055,7 +2056,6 @@ const SalesOrderForm = (props) => {
   //   //     setOnSending(false)
   //   // }
   // }
-
   return (
     <LayoutOrderManagement
       dataLang={dataLang}
@@ -2145,9 +2145,11 @@ const SalesOrderForm = (props) => {
                                     {e?.item?.e?.name}
                                   </h3>
                                   <p>
-                                    Màu sắc: <span>{e?.item?.e?.product_variation}</span> - Size:{' '}
+                                    {/* Màu sắc: <span> */}
+                                      {e?.item?.e?.product_variation}
+                                      {/* </span> - Size:{' '} */}
                                   </p>
-                                  <p>{e?.item?.e?.product_variation_1 ? e?.item?.e?.product_variation_1 : 'None'}</p>
+                                  {/* <p>{e?.item?.e?.product_variation_1 ? e?.item?.e?.product_variation_1 : 'None'}</p> */}
                                   <p>
                                     ĐVT: <span>{e?.unit}</span> - Tồn: {formatNumber(e?.item?.e?.qty_warehouse)}
                                   </p>
@@ -2184,9 +2186,9 @@ const SalesOrderForm = (props) => {
                           >
                             <button
                               onClick={() => handleDecrease(e?.id)}
-                              className="2xl:scale-100 xl:scale-90 scale-75 bg-primary-05 hover:bg-typo-blue-4/50 font-bold flex items-center justify-center p-0.5 rounded-full"
+                              className="size-6 flex-shrink-0 bg-primary-05 hover:bg-typo-blue-4/50 font-bold flex items-center justify-center rounded-full"
                             >
-                              <Minus size="16" className="scale-75 2xl:scale-100 xl:scale-90" />
+                              <Minus size="16" className="" />
                             </button>
                             <InPutNumericFormat
                               value={e?.quantity}
@@ -2203,9 +2205,9 @@ const SalesOrderForm = (props) => {
                             />
                             <button
                               onClick={() => handleIncrease(e.id)}
-                              className="2xl:scale-100 xl:scale-90 scale-75 bg-primary-05 hover:bg-typo-blue-4/50 font-bold flex items-center justify-center p-0.5 rounded-full"
+                              className="size-6 flex-shrink-0 bg-primary-05 hover:bg-typo-blue-4/50 font-bold flex items-center justify-center p-0.5 rounded-full"
                             >
-                              <Add size="16" className="scale-75 2xl:scale-100 xl:scale-90" />
+                              <Add size="16" className="" />
                             </button>
                           </div>
                         </div>
