@@ -22,6 +22,11 @@ const Navbar = props => {
       name: 'Báo cáo trả lại hàng bán',
       path: '/report-statistical/sales-report/returns',
     },
+    {
+      id: uuidv4(),
+      name: 'Đối chiếu công nợ khách hàng',
+      path: '/report-statistical/sales-report/customer-debt',
+    },
     // {
     //   id: uuidv4(),
     //   name: 'Tình trạng đơn hàng',

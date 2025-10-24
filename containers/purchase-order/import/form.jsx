@@ -287,7 +287,6 @@ const PurchaseImportForm = (props) => {
   }
 
   const _HandleChangeInput = (type, value) => {
-    console.log('_HandleChangeInput', type, value)
 
     if (type == 'code') {
       sCode(value.target.value)
@@ -391,19 +390,16 @@ const PurchaseImportForm = (props) => {
     const hasNullWarehouse = listData.some((item) =>
       item.child?.some(
         (childItem) => {
-          console.log('Checking warehouse:', {
-            id_plan: childItem?.id_plan,
-            warehouse: childItem?.warehouse,
-            condition1: childItem?.id_plan == 0,
-            condition2: childItem?.warehouse === null,
-            condition3: id && (childItem.warehouse?.label === null || childItem.warehouse?.warehouse_name === null)
-          })
+          // Bỏ qua kiểm tra kho nếu có id_plan > 0 và reference_no_plan
+          if (childItem?.id_plan > 0 && childItem?.reference_no_plan) {
+            return false
+          }
+          
           return childItem.warehouse === null ||
             (id && (childItem.warehouse?.label === null || childItem.warehouse?.warehouse_name === null))
         }
       )
     )
-    console.log('hasNullWarehouse:', hasNullWarehouse)
 
     const hasNullSerial = listData.some(
       (item) =>

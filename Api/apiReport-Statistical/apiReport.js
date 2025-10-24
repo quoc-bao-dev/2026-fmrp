@@ -1,5 +1,6 @@
 import { _ServerInstance as axiosCustom } from '@/services/axios'
 const apiReport = {
+  //Báo cáo tồn kho
   async apiGetWarehouse() {
     const response = await axiosCustom('GET', `/api_web/api_warehouse/warehouse?csrf_protection=true`)
     return response.data
@@ -62,6 +63,28 @@ const apiReport = {
     const response = await axiosCustom('GET', `/api_web/materials/lookup?search=${search}`)
     return response.data
   },
+  
+  //Báo cáo bán hàng
+  async apiGetSalesRevenue(data) {
+    const response = await axiosCustom('GET', `/api_web/reports/sales-revenue`, data)
+    return response.data
+  },
+
+  async apiGetDeliveries(data) {
+    const response = await axiosCustom('GET', `/api_web/reports/deliveries`, data)
+    return response.data
+  },
+
+  async apiGetReturns(data) {
+    const response = await axiosCustom('GET', `/api_web/reports/returns`, data)
+    return response.data
+  },
+
+  async apiGetCustomerDebt(data) {
+    const response = await axiosCustom('GET', `/api_web/reports/customer-debt`, data)
+    return response.data
+  },
+
   
 }
 

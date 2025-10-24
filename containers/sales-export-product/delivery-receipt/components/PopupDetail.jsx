@@ -22,7 +22,7 @@ registerLocale('vi', vi)
 
 const PopupDetail = (props) => {
   const [open, sOpen] = useState(false)
-
+console.log(props)
   const _ToggleModal = (e) => sOpen(e)
 
   const dataSeting = useSetingServer()
