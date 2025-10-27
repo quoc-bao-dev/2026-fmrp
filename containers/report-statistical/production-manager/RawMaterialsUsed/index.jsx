@@ -225,16 +225,16 @@ const RawMaterialsUsed = () => {
               <table className='w-full border-0 p-0 m-0'>
                 <thead>
                   <tr className='responsive-text-sm sticky top-0 z-50 bg-white'>
-                    <th rowSpan={2} className='min-w-14 h-2 p-0 font-semibold text-gray-700 sticky left-0 bg-white z-20'>
+                    {/* <th rowSpan={2} className='min-w-14 h-2 p-0 font-semibold text-gray-700 sticky left-0 bg-white z-20'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border border-[#E0E0E1]'>STT</div>
+                    </th> */}
+                    <th rowSpan={2} className='min-w-32 h-2 p-0 font-semibold text-gray-700 sticky left-0 bg-white z-20'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-x border-[#E0E0E1]'>Đơn hàng bán/ Kế hoạch nội bộ</div>
                     </th>
-                    <th rowSpan={2} className='min-w-32 h-2 p-0 font-semibold text-gray-700 sticky left-14 bg-white z-20'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Đơn hàng bán/ Kế hoạch nội bộ</div>
-                    </th>
-                    <th rowSpan={2} className='min-w-40 h-2 p-0 font-semibold text-gray-700 sticky left-[184px] bg-white z-20'>
+                    <th rowSpan={2} className='min-w-40 h-2 p-0 font-semibold text-gray-700 sticky left-[128px] bg-white z-20'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Ghi chú đơn hàng</div>
                     </th>
-                    <th rowSpan={2} className='min-w-40 h-2 p-0 font-semibold text-gray-700 sticky left-[344px] bg-white z-20'>
+                    <th rowSpan={2} className='min-w-40 h-2 p-0 font-semibold text-gray-700 sticky left-[288px] bg-white z-20'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Số lệnh SX chi tiết</div>
                     </th>
                     <th rowSpan={2} className='min-w-28 h-2 p-0 font-semibold text-gray-700'>
@@ -298,29 +298,29 @@ const RawMaterialsUsed = () => {
                     return flattenedData.map((flattenedItem, index) => (
                       <tr key={`${flattenedItem.orderIndex}-${flattenedItem.bomIndex}`} className='hover:bg-gray-50 responsive-text-sm relative'>
                         {/* STT - chỉ hiển thị ở bom đầu tiên với rowspan */}
-                        {flattenedItem.isFirstBom && (
+                        {/* {flattenedItem.isFirstBom && (
                           <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-0 z-20 bg-white'>
                             <div className='w-full h-full flex items-center justify-center px-3 py-2 border-x border-b border-[#E0E0E1]'>{flattenedItem.orderIndex + 1}</div>
                           </td>
-                        )}
+                        )} */}
 
                         {/* Đơn hàng bán - chỉ hiển thị ở bom đầu tiên với rowspan */}
                         {flattenedItem.isFirstBom && (
-                          <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-14 z-20 bg-white'>
-                            <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.object_data?.reference_no}</div>
+                          <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-0 z-20 bg-white'>
+                            <div className='w-full h-full flex items-center justify-center px-3 py-2 border-x border-b border-[#E0E0E1]'>{flattenedItem?.object_data?.reference_no}</div>
                           </td>
                         )}
 
                         {/* Ghi chú đơn hàng - chỉ hiển thị ở bom đầu tiên với rowspan */}
                         {flattenedItem.isFirstBom && (
-                          <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[184px] z-20 bg-white'>
+                          <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[128px] z-20 bg-white'>
                             <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.object_data?.note || '-'}</div>
                           </td>
                         )}
 
                         {/* Số lệnh SX chi tiết - chỉ hiển thị ở bom đầu tiên với rowspan */}
                         {flattenedItem.isFirstBom && (
-                          <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[344px] z-20 bg-white'>
+                          <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[288px] z-20 bg-white'>
                             <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem.reference_no_detail}</div>
                           </td>
                         )}
@@ -378,9 +378,6 @@ const RawMaterialsUsed = () => {
                 </tbody>
                 <tfoot>
                   <tr className='bg-white sticky bottom-0 z-50 responsive-text-sm'>
-                    <td className='w-14 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full border-t border-[#E0E0E1]'></div>
-                    </td>
                     <td className='w-48 p-0 h-2 text-center font-semibold text-gray-700'>
                       <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>

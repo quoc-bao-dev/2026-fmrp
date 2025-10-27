@@ -9,7 +9,7 @@ import Pagination from '@/components/UI/pagination';
 import SelectSearchReport from '@/components/common/select/SelectSearchReport';
 import ExcelIcon from '@/components/icons/common/Excel';
 import ReportLayout from '@/components/layout/ReportLayout';
-import PopupDetailProduct from '@/containers/sales-export-product/sales-order/components/PopupDetailProduct';
+import PopupDetail from '@/containers/sales-export-product/delivery-receipt/components/PopupDetail';
 import { useSalesOrderCombobox } from '@/containers/sales-export-product/sales-order/hooks/useSalesOrderCombobox';
 import { useLanguageContext } from '@/context/ui/LanguageContext';
 import { useClientCombobox } from '@/hooks/common/useClients';
@@ -17,14 +17,12 @@ import useSetingServer from '@/hooks/useConfigNumber';
 import usePagination from '@/hooks/usePagination';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
-import moment from 'moment';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { FaFileInvoice, FaUsers } from 'react-icons/fa';
 import { useDebounce } from 'use-debounce';
-import { useGetDeliveries, useGetSalesRevenue } from './hook';
+import { useGetDeliveries } from './hook';
 import { exportWithMergeSalesRevenue } from './hook/useExportExcel';
-import PopupDetail from '@/containers/sales-export-product/delivery-receipt/components/PopupDetail';
 
 const breadcrumbItems = [
   {
@@ -193,45 +191,42 @@ const Deliveries = props => {
           isFetchingSalesRevenue ? (
             <Loading color='#0f4f9e' />
           ) : dataSalesRevenue?.aaData?.length > 0 ? (
-            <Customscrollbar alwaysShowScrollbar={true} className='h-full flex-1 overflow-auto'>
+            <Customscrollbar alwaysShowScrollbar={true} className='h-full flex-1 overflow-auto border border-[#E0E0E1]'>
               <table className='w-full border-0 p-0 m-0'>
                 <thead>
                   <tr className='responsive-text-sm sticky top-0 z-50 bg-white'>
-                    <th className='min-w-14 h-2 p-0 font-semibold text-gray-700 sticky left-0 bg-white z-20'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border border-[#E0E0E1]'>STT</div>
+                    <th className='min-w-24 h-2 p-0 font-semibold text-gray-700 sticky left-0 bg-white z-20'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Ngày</div>
                     </th>
-                    <th className='min-w-24 h-2 p-0 font-semibold text-gray-700 sticky left-14 bg-white z-20'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Ngày</div>
+                    <th className='min-w-36 h-2 p-0 font-semibold text-gray-700 sticky left-[96px] bg-white z-20'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Số giao hàng</div>
                     </th>
-                    <th className='min-w-36 h-2 p-0 font-semibold text-gray-700 sticky left-[152px] bg-white z-20'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Số giao hàng</div>
+                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700 sticky left-[240px] bg-white z-20'>
+                      <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Khách hàng</div>
                     </th>
-                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700 sticky left-[296px] bg-white z-20'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Khách hàng</div>
-                    </th>
-                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700 sticky left-[424px] bg-white z-20'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Địa chỉ giao</div>
+                    <th className='min-w-40 h-2 p-0 font-semibold text-gray-700 sticky left-[368px] bg-white z-20'>
+                      <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Địa chỉ giao</div>
                     </th>
                     <th className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Nhân viên phụ trách</div>
+                      <div className='w-full h-full flex items-center px-2 py-2 border-b border-r border-[#E0E0E1]'>Nhân viên phụ trách</div>
                     </th>
-                    <th className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Mã hàng</div>
+                    <th className='min-w-28 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Mã hàng</div>
                     </th>
-                    <th className='min-w-24 h-2 p-0 font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Tên hàng</div>
-                    </th>
-                    <th className='min-w-24 h-2 p-0 font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>ĐVT</div>
+                    <th className='min-w-48 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Tên hàng</div>
                     </th>
                     <th className='min-w-24 h-2 p-0 font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Số lượng</div>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>ĐVT</div>
                     </th>
                     <th className='min-w-24 h-2 p-0 font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Giá</div>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Số lượng</div>
                     </th>
                     <th className='min-w-24 h-2 p-0 font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Thành tiền</div>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Giá</div>
+                    </th>
+                    <th className='min-w-24 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-end px-3 py-2 border-b border-[#E0E0E1]'>Thành tiền</div>
                     </th>
                   </tr>
                 </thead>
@@ -258,86 +253,83 @@ const Deliveries = props => {
 
                     return flattenedData.map((flattenedItem, index) => (
                       <tr key={`${flattenedItem.orderIndex}-${flattenedItem.itemIndex}`} className='hover:bg-gray-50 responsive-text-sm relative'>
-                        {/* STT - chỉ hiển thị ở item đầu tiên với rowspan */}
+                        {/* Ngày - chỉ hiển thị ở item đầu tiên với rowspan */}
                         {flattenedItem.isFirstItem && (
                           <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-0 z-20 bg-white'>
-                            <div className='w-full h-full flex items-center justify-center px-3 py-2 border-x border-b border-[#E0E0E1]'>{flattenedItem.orderIndex + 1}</div>
+                            <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.delivery_date || '-'}</div>
                           </td>
                         )}
 
-                        {/* Mã khách hàng - chỉ hiển thị ở item đầu tiên với rowspan */}
+                        {/* Số giao hàng - chỉ hiển thị ở item đầu tiên với rowspan */}
                         {flattenedItem.isFirstItem && (
-                          <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-14 z-20 bg-white'>
-                            <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.delivery_date || '-'}</div>
+                          <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[96px] z-20 bg-white'>
+                            <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                              <PopupDetail
+                                dataLang={dataLang}
+                                className='transition-all text-[#0F4F9E] hover:text-blue-600 ease-linear font-semibold cursor-pointer'
+                                name={flattenedItem?.reference_no}
+                                id={flattenedItem?.delivery_id}
+                              />
+                            </div>
                           </td>
                         )}
 
                         {/* Khách hàng - chỉ hiển thị ở item đầu tiên với rowspan */}
                         {flattenedItem.isFirstItem && (
-                          <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[152px] z-20 bg-white'>
-                            <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>
-                            <PopupDetail
-                              dataLang={dataLang}
-                              className=" transition-all text-[#0F4F9E] hover:text-blue-600 ease-linear  cursor-pointer" // className="text-left"
-                              name={flattenedItem?.reference_no}
-                              id={flattenedItem?.delivery_id}
-                            />
-                              </div>
-                          </td>
-                        )}
-
-                        {/* Ngày - chỉ hiển thị ở item đầu tiên với rowspan */}
-                        {flattenedItem.isFirstItem && (
-                          <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[296px] z-20 bg-white'>
+                          <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[240px] z-20 bg-white'>
                             <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.customer_name || '-'}</div>
                           </td>
                         )}
 
-                        {/* Phiếu bán hàng - chỉ hiển thị ở item đầu tiên với rowspan */}
+                        {/* Địa chỉ giao - chỉ hiển thị ở item đầu tiên với rowspan */}
                         {flattenedItem.isFirstItem && (
-                          <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[424px] z-20 bg-white'>
-                            <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1] !text-new-blue font-semibold'>
-                              {/* <PopupDetailProduct
-                                dataLang={dataLang}
-                                className='3xl:text-sm 2xl:text-13 xl:text-xs text-11 font-medium col-span-1 text-center text-[#0F4F9E] hover:text-blue-500 transition-all duration-200 ease-in-out cursor-pointer'
-                                name={flattenedItem?.reference_no ? flattenedItem?.reference_no : ''}
-                                id={flattenedItem?.id}
-                              /> */}
-                              {flattenedItem?.address_delivery || '-'}
-                            </div>
+                          <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[368px] z-20 bg-white'>
+                            <div className='w-full h-full flex items-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.address_delivery || '-'}</div>
                           </td>
                         )}
 
-                        {/* Nhân viên - chỉ hiển thị ở item đầu tiên với rowspan */}
+                        {/* Nhân viên phụ trách - chỉ hiển thị ở item đầu tiên với rowspan */}
                         {flattenedItem.isFirstItem && (
                           <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle bg-white'>
-                            <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.employee_name || '-'}</div>
+                            <div className='w-full h-full flex items-center px-2 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.employee_name || '-'}</div>
                           </td>
                         )}
 
-                        {/* Biến thể - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.item_code || '-'}</td>
+                        {/* Mã hàng - hiển thị cho mỗi item */}
+                        <td className='p-0 h-2'>
+                          <div className='h-full flex items-center justify-center px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.item_code || '-'}</div>
+                        </td>
 
-                        {/* Đơn vị - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.item_name || '-'}</td>
+                        {/* Tên hàng - hiển thị cho mỗi item */}
+                        <td className='p-0 h-2'>
+                          <div className='h-full flex items-center px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.item_name || '-'}</div>
+                        </td>
 
                         {/* Số lượng đơn hàng - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.unit_name}</td>
+                        <td className='p-0 h-2'>
+                          <div className='h-full flex items-center justify-center px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.unit_name}</div>
+                        </td>
 
                         {/* Số lượng đã giao - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
-                          {/* {Number(flattenedItem.item?.quantity_delivery) === 0 ? '-' : formatNumber(flattenedItem.item?.quantity_delivery)} */}
-                          {flattenedItem.item?.quantity}
+                        <td className='p-0 h-2'>
+                          <div className='h-full flex items-center justify-center px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1]'>
+                            {/* {Number(flattenedItem.item?.quantity_delivery) === 0 ? '-' : formatNumber(flattenedItem.item?.quantity_delivery)} */}
+                            {flattenedItem.item?.quantity}
+                          </div>
                         </td>
 
                         {/* Đơn giá - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
-                          {Number(flattenedItem.item?.price) === 0 ? '-' : formatNumber(flattenedItem.item?.price)}
+                        <td className='p-0 h-2'>
+                          <div className='h-full flex items-center justify-center px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1]'>
+                            {Number(flattenedItem.item?.price) === 0 ? '-' : formatNumber(flattenedItem.item?.price)}
+                          </div>
                         </td>
 
-                        {/* Chiết khấu % - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
-                          {Number(flattenedItem.item?.amount) === 0 ? '-' : formatNumber(flattenedItem.item?.amount)}
+                        {/* Thành tiền - hiển thị cho mỗi item */}
+                        <td className='p-0 h-2'>
+                          <div className='h-full flex items-center justify-end px-3 py-2 text-left text-new-blue font-semibold border-b border-[#E0E0E1]'>
+                            {Number(flattenedItem.item?.amount) === 0 ? '-' : formatNumber(flattenedItem.item?.amount)}
+                          </div>
                         </td>
                       </tr>
                     ));
@@ -345,9 +337,6 @@ const Deliveries = props => {
                 </tbody>
                 <tfoot>
                   <tr className='bg-white sticky bottom-0 z-50 responsive-text-sm'>
-                    <td className='w-14 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full border-t border-[#E0E0E1]'></div>
-                    </td>
                     <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
                       <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
@@ -381,16 +370,6 @@ const Deliveries = props => {
                     <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>
                         {formatNumber(flattenedData.reduce((sum, item) => sum + (Number(item?.quantity) || 0), 0))}
-                      </div>
-                    </td>
-                    <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>
-                        {formatNumber(flattenedData.reduce((sum, item) => sum + (Number(item?.quantity_delivery) || 0), 0))}
-                      </div>
-                    </td>
-                    <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>
-                        {formatNumber(flattenedData.reduce((sum, item) => sum + (Number(item?.quantity_not_delivery) || 0), 0))}
                       </div>
                     </td>
                   </tr>

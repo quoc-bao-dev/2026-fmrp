@@ -13,6 +13,7 @@ const ReportLayout = ({
   paginationSection,
   statusExprired,
   breadcrumbItems,
+  maginBottom = false,
 }) => {
   return (
     <Container className="bg-gray-color">
@@ -26,7 +27,7 @@ const ReportLayout = ({
               <div className="px-4">{filterSection}</div>
 
               {/* Table Section */}
-              <div className="mt-5 flex-1 overflow-auto h-full">{tableSection}</div>
+              <div className={`mt-5 flex-1 overflow-auto h-full ${maginBottom ? 'mb-4' : ''}`}>{tableSection}</div>
 
               {/* Total Section */}
               <div className="flex items-center justify-between px-4">

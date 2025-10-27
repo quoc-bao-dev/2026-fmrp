@@ -256,7 +256,7 @@ const OrderProgress = () => {
         tableSection={
           <TableSection
             fixedColumns={[
-              { title: 'STT', width: 'w-14', textAlign: 'center' },
+              // { title: 'STT', width: 'w-14', textAlign: 'center' },
               { title: 'Ngày đơn hàng', width: 'w-32 text-center', textAlign: 'center' },
               { title: 'Số đơn hàng', width: 'w-32', textAlign: 'left' },
               { title: 'Chi nhánh xưởng', width: 'w-40', textAlign: 'left' },
@@ -280,7 +280,7 @@ const OrderProgress = () => {
             isFetching={isFetching}
             renderFixedRow={(item, index) => (
               <>
-                <RowItemTable className='w-14 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>{index + 1}</RowItemTable>
+                {/* <RowItemTable className='w-14 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>{index + 1}</RowItemTable> */}
                 <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
                   {moment(item.date).format('DD/MM/YYYY')}
                 </RowItemTable>

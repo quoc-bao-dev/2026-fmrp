@@ -1,12 +1,13 @@
 'use client';
 import SelectSearchReport from '@/components/common/select/SelectSearchReport';
 import ReportLayout from '@/components/layout/ReportLayout';
-import TableSection from '@/components/layout/ReportLayout/TableSection';
 import OnResetData from '@/components/UI/btnResetData/btnReset';
-import { RowItemTable } from '@/components/UI/common/Table';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import DropdowLimit from '@/components/UI/dropdowLimit/dropdowLimit';
 import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet';
 import SearchComponent from '@/components/UI/filterComponents/searchComponent';
+import Loading from '@/components/UI/loading/loading';
+import NoData from '@/components/UI/noData/nodata';
 import PaginationComponent from '@/components/UI/pagination';
 import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems';
 import { useLanguageContext } from '@/context/ui/LanguageContext';
@@ -161,6 +162,7 @@ const QuotaMaterials = () => {
         title={'Báo cáo định mức NVL'}
         statusExprired={statusExprired}
         breadcrumbItems={breadcrumbItems}
+        maginBottom={true}
         filterSection={
           <div className='w-full items-center flex justify-between gap-4'>
             <div className='flex gap-3'>
@@ -186,74 +188,72 @@ const QuotaMaterials = () => {
           </div>
         }
         tableSection={
-          <TableSection
-            fixedColumns={[
-              { title: 'STT', width: 'w-14', textAlign: 'center' },
-              { title: 'Mã nguyên vật liệu', width: 'w-64 2xl:w-80', textAlign: 'left' },
-              { title: 'Tên nguyên vật liệu', width: 'w-64 2xl:w-80', textAlign: 'left' },
-            ]}
-            scrollableColumns={[
-              { title: 'Loại', width: 'w-44 2xl:w-56', textAlign: 'left' },
-              { title: 'Biến thể', width: 'w-40 2xl:w-72', textAlign: 'left' },
-              { title: 'Đơn vị', width: 'w-28 2xl:w-36', textAlign: 'center' },
-              { title: 'Số lượng định mức', width: 'w-40 2xl:w-48', textAlign: 'center' },
-            ]}
-            data={flattenedData}
-            isFetching={false}
-            renderFixedRow={(item, index) => (
-              <>
-                <RowItemTable
-                  className={`w-14 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${
-                    item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
-                  }`}
-                >
-                  {item.displayIndex}
-                </RowItemTable>
-                <RowItemTable
-                  className={`w-64 2xl:w-80 flex flex-col justify-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${
-                    item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
-                  }`}
-                >
-                  <span className={item.isMainProduct ? 'font-semibold' : ''}>{item.material_code}</span>
-                </RowItemTable>
-                <RowItemTable
-                  className={`w-64 2xl:w-80 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${
-                    item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
-                  }`}
-                >
-                  <div className='flex flex-col gap-1 justify-start'>
-                    <p className={`text-left responsive-text-sm text-neutral-07 font-normal ${item.isMainProduct ? 'font-semibold' : ''}`}>{item.material_name}</p>
-                  </div>
-                </RowItemTable>
-              </>
-            )}
-            renderScrollableRow={(item, index) => (
-              <>
-                <RowItemTable
-                  className={`w-44 2xl:w-56 flex py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'}`}
-                >
-                  <span className={item.isMainProduct ? 'font-semibold' : ''}>{item.material_type}</span>
-                </RowItemTable>
-                <RowItemTable
-                  className={`w-40 2xl:w-72 flex py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'}`}
-                >
-                  <span className={item.isMainProduct ? 'font-semibold' : ''}>{item.variant_name}</span>
-                </RowItemTable>
-                <RowItemTable
-                  className={`w-28 2xl:w-36 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${
-                    item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
-                  }`}
-                >
-                  <span className={item.isMainProduct ? 'font-semibold' : ''}>{item.unit_name}</span>
-                </RowItemTable>
-                <RowItemTable
-                  className={`w-40 2xl:w-48 flex justify-center items-center py-2 px-3 text-neutral-07 font-normal flex-shrink-0 ${item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'}`}
-                >
-                  <span className={item.isMainProduct ? 'font-semibold' : ''}>{formatNumber(Number(item.quota_quantity))}</span>
-                </RowItemTable>
-              </>
-            )}
-          />
+          flattenedData?.length > 0 ? (
+            <Customscrollbar alwaysShowScrollbar={true} className='h-full flex-1 overflow-auto border border-[#E0E0E1]'>
+              <table className='w-full border-0 p-0 m-0'>
+                <thead>
+                  <tr className='responsive-text-sm bg-white sticky top-0 z-50'>
+                    <th className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Mã nguyên vật liệu</div>
+                    </th>
+                    <th className='min-w-64 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Tên nguyên vật liệu</div>
+                    </th>
+                    <th className='min-w-44 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Loại</div>
+                    </th>
+                    <th className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Biến thể</div>
+                    </th>
+                    <th className='min-w-28 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Đơn vị</div>
+                    </th>
+                    <th className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-[#E0E0E1]'>Số lượng định mức</div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {flattenedData.map((item, index) => (
+                    <tr key={index} className='hover:bg-gray-50 responsive-text-sm'>
+                      <td className={`px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1] ${
+                        item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
+                      }`}>
+                        <span className={item.isMainProduct ? 'font-semibold' : ''}>{item.material_code}</span>
+                      </td>
+                      <td className={`px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1] ${
+                        item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
+                      }`}>
+                        <span className={item.isMainProduct ? 'font-semibold' : ''}>{item.material_name}</span>
+                      </td>
+                      <td className={`px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1] ${
+                        item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
+                      }`}>
+                        <span className={item.isMainProduct ? 'font-semibold' : ''}>{item.material_type}</span>
+                      </td>
+                      <td className={`px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1] ${
+                        item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
+                      }`}>
+                        <span className={item.isMainProduct ? 'font-semibold' : ''}>{item.variant_name}</span>
+                      </td>
+                      <td className={`px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1] ${
+                        item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
+                      }`}>
+                        <span className={item.isMainProduct ? 'font-semibold' : ''}>{item.unit_name}</span>
+                      </td>
+                      <td className={`px-3 py-2 text-center text-gray-700 border-b border-[#E0E0E1] ${
+                        item.isMainProduct ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
+                      }`}>
+                        <span className={item.isMainProduct ? 'font-semibold' : ''}>{formatNumber(Number(item.quota_quantity))}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Customscrollbar>
+          ) : (
+            <NoData type='report' classNameImage='w-[245px]' />
+          )
         }
         totalSection={flattenedData?.length > 0 && <PaginationComponent postsPerPage={limit} totalPosts={Number(data?.output?.iTotalRecords) || 0} paginate={paginate} currentPage={currentPage} />}
         paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}
