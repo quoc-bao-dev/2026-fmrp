@@ -17,6 +17,24 @@ export const useClientCombobox = (search) => {
     },
   })
 }
+
+export const useClientComboboxWithBranch = (search, branch_id) => {
+  return useQuery({
+    queryKey: ['api_client_combobox_with_branch', search, branch_id],
+    queryFn: async () => {
+      const { data } = await apiComons.apiSearchClientWithBranch({
+        params: {
+          search: search ? search : '',
+          limit: 0,
+          branch_ids: branch_id,
+        },
+      })
+      return data?.clients?.map((e) => ({ label: e.name, value: e.id }))
+    },
+    enabled: !!branch_id,
+    ...optionsQuery,
+  })
+}
 /// danh sách khách hàng đổ hết nhưng không có ajax
 
 export const useClientComboboxNoSearchToParams = (params) => {

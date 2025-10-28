@@ -2,7 +2,6 @@ import Breadcrumb from '@/components/UI/breadcrumb/BreadcrumbCustom'
 import { EmptyExprired } from '@/components/UI/common/EmptyExprired'
 import { Container } from '@/components/UI/common/layout'
 import Head from 'next/head'
-import React from 'react'
 import LeftContent from './LeftContent'
 import RightContent from './RightContent'
 

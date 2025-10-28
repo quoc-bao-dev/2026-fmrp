@@ -1,5 +1,3 @@
-import Loading from "@/components/UI/loading/loading";
-import React from "react";
 import PrinterTem from "@/components/icons/common/PrinterTem";
 
 const PopupPrintItem = ({

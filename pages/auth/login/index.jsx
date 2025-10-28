@@ -123,11 +123,11 @@ const Login = React.memo(props => {
         const { isSuccess, message, token, database_app } = res;
         dispatch({ type: 'auth/update', payload: res.data?.data });
         Cookies.set('tokenFMRP', token, {
-            expires: new Date(Date.now() + 86400 * 1000),
+            expires: 365,
             sameSite: true,
         });
         Cookies.set('databaseappFMRP', database_app, {
-            expires: new Date(Date.now() + 86400 * 1000),
+            expires: 365,
         });
         showToat('success', message);
 

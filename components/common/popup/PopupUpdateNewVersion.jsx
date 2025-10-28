@@ -1,15 +1,13 @@
-import { Lexend_Deca } from "@next/font/google";
-import React, { useEffect, useRef, useState } from "react";
-import { PiSparkleFill } from "react-icons/pi";
-import { useDispatch } from "react-redux";
-import { Add as IconClose } from "iconsax-react";
-import SealCheck from "@/components/icons/SealCheck";
-import Image from "next/image";
-import ProgressBar from "@/components/common/progress/ProgressBar";
-import { twMerge } from "tailwind-merge";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import apiVersionApplication from "@/Api/apiVersion/apiNewVersion";
+import ProgressBar from "@/components/common/progress/ProgressBar";
+import SealCheck from "@/components/icons/SealCheck";
 import useToast from "@/hooks/useToast";
+import { Lexend_Deca } from "@next/font/google";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+import { useDispatch } from "react-redux";
+import { twMerge } from "tailwind-merge";
 
 const deca = Lexend_Deca({
     subsets: ["latin"],

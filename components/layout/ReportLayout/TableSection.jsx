@@ -1,8 +1,8 @@
-import React, { useRef, useState, useEffect } from 'react'
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar'
 import { ColumnTable } from '@/components/UI/common/Table'
 import Loading from '@/components/UI/loading/loading'
 import NoData from '@/components/UI/noData/nodata'
+import { useEffect, useRef, useState } from 'react'
 
 const TableSection = ({
   fixedColumns = [],

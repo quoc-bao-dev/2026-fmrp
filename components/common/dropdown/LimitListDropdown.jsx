@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import useSetingServer from "@/hooks/useConfigNumber";
 import CaretDownIcon from "@/components/icons/common/CaretDownIcon";
+import useSetingServer from "@/hooks/useConfigNumber";
+import { useEffect, useRef, useState } from "react";
 
 const LimitListDropdown = ({ sLimit, limit, dataLang, total }) => {
     const dataSeting = useSetingServer();

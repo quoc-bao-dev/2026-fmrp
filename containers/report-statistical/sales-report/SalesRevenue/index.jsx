@@ -10,9 +10,9 @@ import SelectSearchReport from '@/components/common/select/SelectSearchReport';
 import ExcelIcon from '@/components/icons/common/Excel';
 import ReportLayout from '@/components/layout/ReportLayout';
 import PopupDetailProduct from '@/containers/sales-export-product/sales-order/components/PopupDetailProduct';
-import { useSalesOrderCombobox } from '@/containers/sales-export-product/sales-order/hooks/useSalesOrderCombobox';
 import { useLanguageContext } from '@/context/ui/LanguageContext';
-import { useClientCombobox } from '@/hooks/common/useClients';
+import { useClientComboboxWithBranch } from '@/hooks/common/useClients';
+import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
 import useSetingServer from '@/hooks/useConfigNumber';
 import usePagination from '@/hooks/usePagination';
 import useStatusExprired from '@/hooks/useStatusExprired';
@@ -22,7 +22,7 @@ import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { FaFileInvoice, FaUsers } from 'react-icons/fa';
 import { useDebounce } from 'use-debounce';
-import { useGetSalesRevenue } from './hook';
+import { useGetSalesRevenue, useSalesOrderComboboxWithBranch } from './hook';
 import { exportWithMergeSalesRevenue } from './hook/useExportExcel';
 
 const breadcrumbItems = [
@@ -56,8 +56,8 @@ const SalesRevenue = props => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState([]);
   const [limit, setLimit] = useState(15);
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearchValue] = useDebounce(searchValue, 500);
@@ -67,6 +67,7 @@ const SalesRevenue = props => {
   const [debouncedCustomerSearchValue] = useDebounce(customerSearchValue, 500);
   const [orderSearchValue, setOrderSearchValue] = useState('');
   const [debouncedOrderSearchValue] = useDebounce(orderSearchValue, 500);
+  const { selectedBranches, setSelectedBranches } = usePersistedBranches('report_branch_ids');
 
   const currentPage = Number(router.query.page) || 1;
 
@@ -89,8 +90,8 @@ const SalesRevenue = props => {
     };
   };
 
-  const { data: dataClient } = useClientCombobox(debouncedCustomerSearchValue);
-  const { data: dataCode } = useSalesOrderCombobox(debouncedOrderSearchValue);
+  const { data: dataClient } = useClientComboboxWithBranch(debouncedCustomerSearchValue, selectedBranches?.length > 0 ? selectedBranches : null);
+  const { data: dataCode } = useSalesOrderComboboxWithBranch(debouncedOrderSearchValue, selectedBranches?.length > 0 ? selectedBranches : null);
 
   const {
     data: dataSalesRevenue,
@@ -101,8 +102,9 @@ const SalesRevenue = props => {
     limit: limit,
     ...getFormattedDateRange(),
     search: debouncedSearchValue,
-    client_ids: selectedCustomer?.value,
-    order_ids: selectedOrder?.value,
+    client_ids: selectedCustomer?.length > 0 ? selectedCustomer : undefined,
+    order_ids: selectedOrder?.length > 0 ? selectedOrder : undefined,
+    branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
   });
 
   // Handler functions
@@ -110,14 +112,12 @@ const SalesRevenue = props => {
     setDateRange(newValue);
   };
 
-  const handleCustomerChange = value => {
-    const selectedOption = dataClient?.find(option => option.value === value);
-    setSelectedCustomer(selectedOption || null);
+  const handleCustomerChange = values => {
+    setSelectedCustomer(Array.isArray(values) ? values : []);
   };
 
-  const handleOrderChange = value => {
-    const selectedOption = dataCode?.find(option => option.value === value);
-    setSelectedOrder(selectedOption || null);
+  const handleOrderChange = values => {
+    setSelectedOrder(Array.isArray(values) ? values : []);
   };
 
   const handleSearch = value => {
@@ -152,6 +152,9 @@ const SalesRevenue = props => {
         title={'Doanh số theo bán hàng'}
         statusExprired={statusExprired}
         breadcrumbItems={breadcrumbItems}
+        branchValue={selectedBranches}
+        onBranchChange={setSelectedBranches}
+        onBranchClear={() => setSelectedBranches([])}
         filterSection={
           <div className='w-full items-center flex justify-between gap-4'>
             <div className='grid grid-cols-3 gap-3'>
@@ -159,20 +162,22 @@ const SalesRevenue = props => {
               <SelectSearchReport
                 placeholder='Khách hàng'
                 onChange={handleCustomerChange}
-                onClear={() => setSelectedCustomer(null)}
+                onClear={() => setSelectedCustomer([])}
                 onSearch={setCustomerSearchValue}
                 icon={<FaUsers color='#9295A4' className='size-4' />}
                 options={dataClient || []}
                 value={selectedCustomer}
+                mode='multiple'
               />
               <SelectSearchReport
                 placeholder='Phiếu bán hàng'
                 onChange={handleOrderChange}
-                onClear={() => setSelectedOrder(null)}
+                onClear={() => setSelectedOrder([])}
                 onSearch={setOrderSearchValue}
                 icon={<FaFileInvoice color='#9295A4' className='size-4' />}
                 options={dataCode || []}
                 value={selectedOrder}
+                mode='multiple'
               />
             </div>
             <div className='flex gap-3 items-center'>
@@ -296,7 +301,7 @@ const SalesRevenue = props => {
                         {flattenedItem.isFirstItem && (
                           <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-0 z-20 bg-white'>
                             <div className='w-full h-full flex items-center justify-center px-3 py-2 border-x border-b border-[#E0E0E1]'>
-                              {flattenedItem?.date ? moment(flattenedItem.date).format('DD/MM/YYYY') : '-'}
+                              {flattenedItem?.date ? moment(flattenedItem.date).format('DD/MM/YYYY HH:mm:ss') : '-'}
                             </div>
                           </td>
                         )}
@@ -419,7 +424,7 @@ const SalesRevenue = props => {
                   })()}
                 </tbody>
                 <tfoot>
-                  <tr className='bg-white sticky bottom-0 z-50 responsive-text-sm'>
+                  <tr className='bg-white sticky bottom-[-1px] z-50 responsive-text-sm'>
                     <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
                       <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>

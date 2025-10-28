@@ -1,5 +1,3 @@
-import { color } from "framer-motion";
-import { TickCircle } from "iconsax-react";
 
 const TagColorProduct = ({
     dataLang,
@@ -91,10 +89,5 @@ const TagColorMore = ({ name, className, backgroundColor, color }) => {
 };
 
 export {
-    TagColorSky,
-    TagColorOrange,
-    TagColorLime,
-    TagColorRed,
-    TagColorMore,
-    TagColorProduct,
+    TagColorLime, TagColorMore, TagColorOrange, TagColorProduct, TagColorRed, TagColorSky
 };

@@ -1,6 +1,5 @@
-import React, { forwardRef } from "react";
-import { motion, Variants } from "framer-motion";
 import { variantButtonPressZoom } from "@/utils/animations/variantsAnimation";
+import { motion } from "framer-motion";
 
 // type Props = {
 //     title?: string | React.ReactNode;

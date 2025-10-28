@@ -1,10 +1,7 @@
-import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
 import { _ServerInstance as Axios } from "@/services/axios";
-import { formatMoment } from "@/utils/helpers/formatMoment";
 import { Verify } from "iconsax-react";
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Popup from "reactjs-popup";
 
 const PopupAppTrial = (props) => {

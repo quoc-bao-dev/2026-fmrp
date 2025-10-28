@@ -1,16 +1,16 @@
-import moment from 'moment';
 import * as XLSX from 'xlsx-js-style';
 
-export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_doanh_so_theo_ban_hang.xlsx') => {
-  // Chuẩn hóa dữ liệu từ flattenedData (mỗi item đã chứa thông tin order)
+export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_giao_hang.xlsx') => {
+  // Chuẩn hóa dữ liệu từ flattenedData 
   const rows = [];
   const groups = [];
   let currentRow = 0;
+  let orderStt = 1;
 
-  // Nhóm dữ liệu theo order để merge cells
+  // Nhóm dữ liệu theo delivery_id để merge cells
   const orderGroups = {};
-  rawData.forEach((item, index) => {
-    const orderId = item.id || `order_${index}`;
+  rawData.forEach((item) => {
+    const orderId = item?.delivery_id || `order_${currentRow}`;
     if (!orderGroups[orderId]) {
       orderGroups[orderId] = {
         order: item,
@@ -21,152 +21,74 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_do
   });
 
   // Tạo rows và groups
-  Object.values(orderGroups).forEach((group, groupIndex) => {
+  let groupStt = 1;
+  Object.values(orderGroups).forEach((group) => {
     const start = currentRow;
+    let isFirstRow = true;
     group.items.forEach((item, itemIndex) => {
+      // STT chỉ hiển thị ở dòng đầu tiên của mỗi order, các dòng còn lại là empty
+      const displayStt = isFirstRow ? groupStt : '';
       rows.push({
-        stt: groupIndex + 1,
-        customer_code: item?.customer_code || '',
-        customer_name: item?.customer_name || '',
-        date: item?.date || '',
-        reference_no: item?.reference_no || '',
-        employee_name: item?.employee_name || '',
+        rowStt: displayStt,
         delivery_date: item?.delivery_date || '',
+        reference_no: item?.reference_no || '',
+        customer_name: item?.customer_name || '',
+        address_delivery: item?.address_delivery || '',
+        employee_name: item?.employee_name || '',
         item_code: item?.item_code || '',
         item_name: item?.item_name || '',
-        variant_name: item?.variant_name || '',
         unit_name: item?.unit_name || '',
         quantity: Number(item?.quantity) || 0,
-        quantity_delivery: Number(item?.quantity_delivery) || 0,
-        quantity_not_delivery: Number(item?.quantity_not_delivery) || 0,
         price: Number(item?.price) || 0,
-        discount_percent_item: Number(item?.discount_percent_item) || 0,
-        discount_percent_amount_item: Number(item?.discount_percent_amount_item) || 0,
-        tax_rate_item: Number(item?.tax_rate_item) || 0,
-        tax_amount_item: Number(item?.tax_amount_item) || 0,
-        grand_total: Number(item?.grand_total) || 0,
-        total_payment: Number(item?.total_payment) || 0,
-        total_rest: Number(item?.total_rest) || 0,
+        amount: Number(item?.amount) || 0,
         isFirstItem: itemIndex === 0,
-        totalItems: group.items.length
+        totalItems: group.items.length,
+        deliveryId: group.order?.delivery_id
       });
       currentRow += 1;
+      isFirstRow = false;
     });
+    groupStt++;
     const end = currentRow - 1;
     if (end >= start) {
       groups.push({ start, end });
     }
   });
 
-  // Header hàng 1 - các cột chính
-  const headerRow1 = [
+  // Header đơn giản - phù hợp với bảng báo cáo giao hàng
+  const headers = [
     'STT',
-    'Mã khách hàng', 
+    'Ngày giao hàng',
+    'Số giao hàng',
     'Khách hàng',
-    'Ngày',
-    'Phiếu bán hàng',
-    'Nhân viên',
-    'Ngày giao hàng (dự kiến)',
-    'Mã sản phẩm',
-    'Tên sản phẩm',
-    'Biến thể',
-    'Đơn vị',
-    'Số lượng', // Merge 3 cột
-    '', // Đơn hàng
-    '', // Đã giao  
-    '', // Còn lại
-    'Giá trị', // Merge 8 cột
-    '', // Đơn giá
-    '', // % chiết khấu
-    '', // Tiền chiết khấu
-    '', // % thuế
-    '', // Tiền thuế
-    '', // Tổng cộng
-    '', // Đã thu
-    ''  // Còn lại
+    'Địa chỉ giao',
+    'Nhân viên phụ trách',
+    'Mã hàng',
+    'Tên hàng',
+    'ĐVT',
+    'Số lượng',
+    'Giá',
+    'Thành tiền'
   ];
 
-  // Header hàng 2 - các cột chi tiết (chỉ hiển thị cho Số lượng và Giá trị)
-  const headerRow2 = [
-    '', // STT - merge với hàng 1
-    '', // Mã khách hàng - merge với hàng 1
-    '', // Khách hàng - merge với hàng 1
-    '', // Ngày - merge với hàng 1
-    '', // Phiếu bán hàng - merge với hàng 1
-    '', // Nhân viên - merge với hàng 1
-    '', // Ngày giao hàng (dự kiến) - merge với hàng 1
-    '', // Mã sản phẩm - merge với hàng 1
-    '', // Tên sản phẩm - merge với hàng 1
-    '', // Biến thể - merge với hàng 1
-    '', // Đơn vị - merge với hàng 1
-    'Đơn hàng',
-    'Đã giao',
-    'Còn lại',
-    'Đơn giá',
-    '% chiết khấu',
-    'Tiền chiết khấu',
-    '% thuế',
-    'Tiền thuế',
-    'Tổng cộng',
-    'Đã thu',
-    'Còn lại'
-  ];
-
-  const headerRow1Styled = headerRow1.map(title => ({
-    v: title,
-    s: { 
-      font: { bold: true, color: { rgb: '#0284c7' }, sz: 12 }, 
-      border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } },
-      fill: { fgColor: { rgb: 'F0F8FF' } },
-      alignment: { horizontal: 'center', vertical: 'middle' }
-    },
-  }));
-
-  const headerRow2Styled = headerRow2.map(title => ({
-    v: title,
-    s: { 
-      font: { bold: true, color: { rgb: '#0284c7' }, sz: 12 }, 
-      border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } },
-      fill: { fgColor: { rgb: 'F0F8FF' } },
-      alignment: { horizontal: 'center', vertical: 'middle' }
-    },
-  }));
-
-  const wsData = rows.map((item, rowIndex) => [
-    item.stt,
-    item.customer_code,
-    item.customer_name,
-    item.date ? moment(item.date).format('DD/MM/YYYY') : '',
-    item.reference_no,
-    item.employee_name,
-    item.delivery_date ? moment(item.delivery_date).format('DD/MM/YYYY') : '',
-    item.item_code,
-    item.item_name,
-    item.variant_name,
-    item.unit_name,
+  const wsData = rows.map((item) => [
+    item.rowStt,
+    item.delivery_date || '',
+    item.reference_no || '',
+    item.customer_name || '',
+    item.address_delivery || '',
+    item.employee_name || '',
+    item.item_code || '',
+    item.item_name || '',
+    item.unit_name || '',
     item.quantity,
-    item.quantity_delivery,
-    item.quantity_not_delivery,
     item.price,
-    item.discount_percent_item, // % chiết khấu - giữ nguyên giá trị
-    item.discount_percent_amount_item, // Tiền chiết khấu - không chia 100
-    item.tax_rate_item, // % thuế - giữ nguyên giá trị
-    item.tax_amount_item, // Tiền thuế - không chia 100
-    item.isFirstItem ? item.grand_total : '',
-    item.isFirstItem ? item.total_payment : '',
-    item.isFirstItem ? item.total_rest : ''
+    item.amount
   ]);
 
   // Tính tổng cộng
   const totalQuantity = rows.reduce((sum, item) => sum + item.quantity, 0);
-  const totalDelivery = rows.reduce((sum, item) => sum + item.quantity_delivery, 0);
-  const totalNotDelivery = rows.reduce((sum, item) => sum + item.quantity_not_delivery, 0);
-  const totalPrice = rows.reduce((sum, item) => sum + item.price, 0);
-  const totalDiscountAmount = rows.reduce((sum, item) => sum + item.discount_percent_amount_item, 0);
-  const totalTaxAmount = rows.reduce((sum, item) => sum + item.tax_amount_item, 0);
-  const totalGrandTotal = Object.values(orderGroups).reduce((sum, group) => sum + (Number(group.order?.grand_total) || 0), 0);
-  const totalPayment = Object.values(orderGroups).reduce((sum, group) => sum + (Number(group.order?.total_payment) || 0), 0);
-  const totalRest = Object.values(orderGroups).reduce((sum, group) => sum + (Number(group.order?.total_rest) || 0), 0);
+  const totalAmount = rows.reduce((sum, item) => sum + item.amount, 0);
 
   const totalRow = [
     '',
@@ -178,129 +100,62 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_do
     '',
     '',
     '',
-    '',
-    '',
     totalQuantity,
-    totalDelivery,
-    totalNotDelivery,
-    totalPrice,
-    '', // Không hiển thị tổng phần trăm chiết khấu
-    totalDiscountAmount,
-    '', // Không hiển thị tổng phần trăm thuế
-    totalTaxAmount,
-    totalGrandTotal,
-    totalPayment,
-    totalRest
+    '',
+    totalAmount
   ];
 
   const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([headerRow1, headerRow2, ...wsData, totalRow]);
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...wsData, totalRow]);
 
-  // Style cơ bản cho toàn sheet
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  for (let R = 0; R <= range.e.r; R++) {
-    for (let C = 0; C <= range.e.c; C++) {
-      const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-      ws[cellRef] = ws[cellRef] || { v: '' };
-      ws[cellRef].s = ws[cellRef].s || { 
-        font: { sz: 11 }, 
+  // Style header
+  for (let C = 0; C < headers.length; C++) {
+    const cellRef = XLSX.utils.encode_cell({ r: 0, c: C });
+    if (ws[cellRef]) {
+      ws[cellRef].s = {
+        font: { bold: true, color: { rgb: '#0284c7' }, sz: 12 },
         border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } },
+        fill: { fgColor: { rgb: 'F0F8FF' } },
         alignment: { horizontal: 'center', vertical: 'middle' }
       };
     }
   }
 
-  // Style header hàng 1
-  for (let C = 0; C < headerRow1.length; C++) {
-    const cellRef = XLSX.utils.encode_cell({ r: 0, c: C });
-    ws[cellRef].s = {
-      font: { bold: true, color: { rgb: '#0284c7' }, sz: 12 },
-      border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } },
-      fill: { fgColor: { rgb: 'F0F8FF' } },
-      alignment: { horizontal: 'center', vertical: 'middle' }
-    };
-  }
-
-  // Style header hàng 2
-  for (let C = 0; C < headerRow2.length; C++) {
-    const cellRef = XLSX.utils.encode_cell({ r: 1, c: C });
-    ws[cellRef].s = {
-      font: { bold: true, color: { rgb: '#0284c7' }, sz: 12 },
-      border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } },
-      fill: { fgColor: { rgb: 'F0F8FF' } },
-      alignment: { horizontal: 'center', vertical: 'middle' }
-    };
-  }
-
-  // Merge cells cho header "Số lượng" và "Giá trị"
+  // Merge cells cho các cột được gộp (STT, Ngày giao hàng, Số giao hàng, Khách hàng, Địa chỉ giao, Nhân viên phụ trách)
   ws['!merges'] = ws['!merges'] || [];
-  
-  // Merge các cột từ STT đến Đơn vị (cột 0-10) thành 2 hàng
-  for (let c = 0; c <= 10; c++) {
-    ws['!merges'].push({ s: { r: 0, c: c }, e: { r: 1, c: c } });
-  }
-  
-  // Merge "Số lượng" (cột 11-13: Đơn hàng, Đã giao, Còn lại)
-  ws['!merges'].push({ s: { r: 0, c: 11 }, e: { r: 0, c: 13 } });
-  
-  // Merge "Giá trị" (cột 14-21: Đơn giá, % chiết khấu, Tiền chiết khấu, % thuế, Tiền thuế, Tổng cộng, Đã thu, Còn lại)
-  ws['!merges'].push({ s: { r: 0, c: 14 }, e: { r: 0, c: 21 } });
-  
-  // Đảm bảo text "Giá trị" hiển thị ở ô đầu tiên của vùng merge
-  const valueCellRef = XLSX.utils.encode_cell({ r: 0, c: 14 });
-  if (ws[valueCellRef]) {
-    ws[valueCellRef].v = 'Giá trị';
-  }
-
-  // Merge cells cho các cột được gộp (STT, Mã khách hàng, Khách hàng, Ngày, Phiếu bán hàng, Nhân viên)
   groups.forEach(g => {
     if (g.end > g.start) {
-      const startRow = g.start + 2; // +2 vì có 2 hàng header
-      const endRow = g.end + 2;
-      [0, 1, 2, 3, 4, 5].forEach(colIndex => { // STT, Mã khách hàng, Khách hàng, Ngày, Phiếu bán hàng, Nhân viên
+      const startRow = g.start + 1; // +1 vì có 1 hàng header
+      const endRow = g.end + 1;
+      // Merge các cột: STT (0), Ngày giao hàng (1), Số giao hàng (2), Khách hàng (3), Địa chỉ giao (4), Nhân viên phụ trách (5)
+      [0, 1, 2, 3, 4, 5].forEach(colIndex => {
         ws['!merges'].push({ s: { r: startRow, c: colIndex }, e: { r: endRow, c: colIndex } });
       });
     }
   });
 
-  // Merge cells cho Tổng cộng, Đã thu, Còn lại (chỉ hiển thị ở item đầu tiên)
-  groups.forEach(g => {
-    if (g.end > g.start) {
-      const startRow = g.start + 2; // +2 vì có 2 hàng header
-      const endRow = g.end + 2;
-      [19, 20, 21].forEach(colIndex => { // Tổng cộng, Đã thu, Còn lại (đã +1 vì có thêm cột "Số lượng")
-        ws['!merges'].push({ s: { r: startRow, c: colIndex }, e: { r: endRow, c: colIndex } });
-      });
-    }
-  });
-
-  // Format số cho các cột số
-  const numberCols = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]; // Các cột số lượng và tiền
-  const percentCols = [15, 17]; // Các cột phần trăm (% chiết khấu, % thuế) - format thành phần trăm
-  const moneyCols = [14, 16, 18]; // Các cột tiền (Đơn giá, Tiền chiết khấu, Tiền thuế) - format thành số tiền
+  // Format số cho các cột số: STT (0), Số lượng (9), Giá (10), Thành tiền (11)
+  const numberCols = [0, 9, 10, 11]; 
   
-  for (let r = 2; r <= rows.length + 1; r++) { // +2 vì có 2 hàng header
+  for (let r = 1; r <= rows.length; r++) { // +1 vì có 1 hàng header
     numberCols.forEach(c => {
       const ref = XLSX.utils.encode_cell({ r, c });
-      if (ws[ref] && ws[ref].v !== '') {
+      // Cột STT (0): Chỉ format nếu là số và không phải chuỗi rỗng
+      if (ws[ref] && ws[ref].v !== '' && typeof ws[ref].v === 'number') {
         ws[ref].t = 'n';
-        if (percentCols.includes(c)) {
-          // Chia cho 100 để hiển thị đúng phần trăm trong Excel
-          ws[ref].v = ws[ref].v/100;
-          ws[ref].s = { ...(ws[ref].s || {}), numFmt: '0.00%' };
-        } else if (moneyCols.includes(c)) {
-          // Các cột tiền - format thành số tiền, không chia cho 100
-          ws[ref].s = { ...(ws[ref].s || {}), numFmt: '#,##0' };
-        } else {
-          ws[ref].s = { ...(ws[ref].s || {}), numFmt: '#,##0' };
-        }
+        // Giữ lại border và style hiện tại
+        ws[ref].s = { 
+          ...(ws[ref].s || {}),
+          border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } },
+          numFmt: c === 0 ? '0' : '#,##0' // STT không có dấu phẩy, các cột khác có
+        };
       }
     });
   }
 
   // Style dòng tổng cộng
-  const totalRowIndex = rows.length + 2; // +2 vì có 2 hàng header
-  for (let c = 0; c < headerRow2.length; c++) {
+  const totalRowIndex = rows.length + 1; // +1 vì có 1 hàng header
+  for (let c = 0; c < headers.length; c++) {
     const ref = XLSX.utils.encode_cell({ r: totalRowIndex, c });
     if (ws[ref]) {
       ws[ref].s = {
@@ -309,39 +164,58 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_do
         fill: { fgColor: { rgb: 'E6F3FF' } },
         border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } }
       };
-      if (numberCols.includes(c) && ws[ref].v !== '') {
+      // Format số cho dòng tổng cộng
+      if (numberCols.includes(c) && ws[ref].v !== '' && typeof ws[ref].v === 'number') {
         ws[ref].t = 'n';
-        if (percentCols.includes(c)) {
-          // Không chia cho 100 ở dòng tổng cộng vì không có ý nghĩa
-          ws[ref].s.numFmt = '#,##0';
-        } else if (moneyCols.includes(c)) {
-          // Các cột tiền - format thành số tiền
-          ws[ref].s.numFmt = '#,##0';
-        } else {
-          ws[ref].s.numFmt = '#,##0';
-        }
+        ws[ref].s.numFmt = '#,##0';
+      }
+    }
+  }
+
+  // Style cơ bản cho toàn sheet
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let R = 0; R <= range.e.r; R++) {
+    for (let C = 0; C <= range.e.c; C++) {
+      const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+      ws[cellRef] = ws[cellRef] || { v: '' };
+      
+      // Cột STT (index 0) căn giữa
+      const alignment = C === 0 ? { horizontal: 'center', vertical: 'middle' } : { horizontal: 'left', vertical: 'middle', wrapText: true };
+      
+      // Nếu ô chưa có style hoặc chưa có border, thêm border
+      if (!ws[cellRef].s || !ws[cellRef].s.border) {
+        ws[cellRef].s = ws[cellRef].s || {};
+        ws[cellRef].s.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
+      }
+      
+      // Đảm bảo có font và alignment
+      if (!ws[cellRef].s.font) {
+        ws[cellRef].s.font = { sz: 11 };
+      }
+      if (!ws[cellRef].s.alignment) {
+        ws[cellRef].s.alignment = alignment;
       }
     }
   }
 
   // Set độ rộng cột
-  ws['!cols'] = headerRow2.map((title, index) => {
-    let width = 12;
+  ws['!cols'] = headers.map((title, index) => {
+    let width = 15;
     if (index === 0) width = 8; // STT
-    else if (index === 1) width = 15; // Mã khách hàng
-    else if (index === 2) width = 25; // Khách hàng
-    else if (index === 3) width = 12; // Ngày
-    else if (index === 4) width = 20; // Phiếu bán hàng
-    else if (index === 5) width = 20; // Nhân viên
-    else if (index === 6) width = 20; // Ngày giao hàng
-    else if (index === 7) width = 15; // Mã sản phẩm
-    else if (index === 8) width = 30; // Tên sản phẩm
-    else if (index === 9) width = 20; // Biến thể
-    else if (index === 10) width = 10; // Đơn vị
-    else width = 15; // Các cột số
+    else if (index === 1) width = 18; // Ngày giao hàng
+    else if (index === 2) width = 18; // Số giao hàng
+    else if (index === 3) width = 25; // Khách hàng
+    else if (index === 4) width = 30; // Địa chỉ giao
+    else if (index === 5) width = 20; // Nhân viên phụ trách
+    else if (index === 6) width = 15; // Mã hàng
+    else if (index === 7) width = 30; // Tên hàng
+    else if (index === 8) width = 10; // ĐVT
+    else if (index === 9) width = 12; // Số lượng
+    else if (index === 10) width = 15; // Giá
+    else if (index === 11) width = 15; // Thành tiền
     return { wch: width };
   });
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Doanh số theo bán hàng');
+  XLSX.utils.book_append_sheet(wb, ws, 'Báo cáo giao hàng');
   XLSX.writeFile(wb, filename);
 };

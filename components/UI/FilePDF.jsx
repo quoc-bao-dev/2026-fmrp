@@ -23,7 +23,6 @@ import moment from "moment";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 import React, { useEffect, useState } from "react";
-import { VscFilePdf } from "react-icons/vsc";
 import { _ServerInstance as Axios } from "services/axios";
 import PrinterIcon from "../icons/common/PrinterIcon";
 import PrinterTem from "../icons/common/PrinterTem";

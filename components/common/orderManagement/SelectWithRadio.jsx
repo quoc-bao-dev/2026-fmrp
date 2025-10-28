@@ -7,7 +7,7 @@ import { Empty, Select } from 'antd'
 import { debounce } from 'lodash'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
-import { PiPlus, PiCaretDownBold } from 'react-icons/pi'
+import { PiCaretDownBold, PiPlus } from 'react-icons/pi'
 import { useSelector } from 'react-redux'
 import InfoFormLabel from './InfoFormLabel'
 

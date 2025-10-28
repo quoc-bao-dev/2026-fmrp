@@ -1,4 +1,6 @@
 import { StateContext } from "@/context/_state/productions-orders/StateContext";
+import { useAppContext } from "@/context/_state/version-application/VersionContext";
+import { useSocketContext } from "@/context/socket/SocketContext";
 import { useSheet } from "@/context/ui/SheetContext";
 import {
     QueryClient,
@@ -7,8 +9,9 @@ import {
 } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import React, { useContext, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import PopupGlobal from "../common/popup/PopupGlobal";
+import PopupUpdateNewVersion from "../common/popup/PopupUpdateNewVersion";
 import ChatBubbleAI from "../UI/chat/ChatAiBubble";
 import ImagesModal from "../UI/images/ImagesModal";
 import PopupAccountInformation from "../UI/popup/PopupAccountInformation";
@@ -16,15 +19,10 @@ import PopupAppRenewal from "../UI/popup/PopupAppRenewal";
 import PopupAppTrial from "../UI/popup/PopupAppTrial";
 import PopupChangePassword from "../UI/popup/PopupChangePassword";
 import PopupRecommendation from "../UI/popup/PopupRecommendation";
+import PopupSuccessfulPayment from "../UI/popup/PopupSuccessfulPayment";
 import PopupUpdateVersion from "../UI/popup/PopupUpdateVersion";
 import PopupUpgradeProfessional from "../UI/popup/PopupUpgradeProfessional";
 import Header from "./header";
-
-import { useAppContext } from "@/context/_state/version-application/VersionContext";
-import { useSocketContext } from "@/context/socket/SocketContext";
-import { useDispatch } from "react-redux";
-import PopupUpdateNewVersion from "../common/popup/PopupUpdateNewVersion";
-import PopupSuccessfulPayment from "../UI/popup/PopupSuccessfulPayment";
 
 const queryClient = new QueryClient({
     defaultOptions: {

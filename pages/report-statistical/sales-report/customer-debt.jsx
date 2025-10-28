@@ -1,7 +1,7 @@
-import CustomerDebt from "@/containers/report-statistical/sales-report/CustomerDebt"
+import Deliveries from '@/containers/report-statistical/sales-report/Deliveries';
 
 const Page = () => {
-    return <CustomerDebt/>
-}
+  return <Deliveries />;
+};
 
-export default Page
+export default Page;

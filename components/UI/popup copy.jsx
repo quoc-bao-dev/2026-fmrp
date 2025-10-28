@@ -1,16 +1,14 @@
-import React, { useEffect } from "react";
 import { PopupParent } from "@/utils/lib/Popup";
-import { Add as IconClose } from "iconsax-react";
 import { Inter, Lexend_Deca } from "@next/font/google";
+import { Add as IconClose } from "iconsax-react";
+import React, { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import 'simplebar-react/dist/simplebar.min.css';
 const deca = Lexend_Deca({
     subsets: ["latin"],
     weight: ["300", "400", "500", "600", "700"],
 });
 const inter = Inter({ subsets: ["latin"] });
-
-import 'simplebar-react/dist/simplebar.min.css';
-import { Customscrollbar } from "./common/Customscrollbar";
-import { useDispatch, useSelector } from "react-redux";
 
 const Popup = (props) => {
     const dispatch = useDispatch();
