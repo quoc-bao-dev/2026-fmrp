@@ -39,6 +39,7 @@ import 'dayjs/locale/vi'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Add, ArrowDown2, ArrowUp2, Minus } from 'iconsax-react'
+import { debounce } from 'lodash'
 import moment from 'moment'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
@@ -48,8 +49,6 @@ import { LuBriefcase } from 'react-icons/lu'
 import { PiHash, PiMapPinLight } from 'react-icons/pi'
 import { useSelector } from 'react-redux'
 import { v4 as uuidv4 } from 'uuid'
-import { useSalesOrderQuotaByBranch } from './hooks/useSalesOrderQuotaByBranch'
-import { debounce } from 'lodash'
 
 dayjs.extend(customParseFormat)
 dayjs.locale('vi')

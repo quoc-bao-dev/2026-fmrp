@@ -1,18 +1,17 @@
+import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import TagBranch from "@/components/UI/common/Tag/TagBranch";
+import AvatarText from "@/components/UI/common/user/AvatarText";
 import ImageErrors from "@/components/UI/imageErrors";
 import Loading from "@/components/UI/loading/loading";
 import PopupCustom from "@/components/UI/popup";
 import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
 import { formatMoment } from "@/utils/helpers/formatMoment";
 import { SearchNormal1 as IconSearch } from "iconsax-react";
-import dynamic from "next/dynamic";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Tooltip } from "react-tippy";
+import { useClientDetail } from "../../hooks/usseClientDetail";
 import TableContact from "../table/tableContact";
 import TableDelivery from "../table/tableDelivery";
-import { useClientDetail } from "../../hooks/usseClientDetail";
-import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
-import AvatarText from "@/components/UI/common/user/AvatarText";
 
 
 const Popup_chitiet = (props) => {

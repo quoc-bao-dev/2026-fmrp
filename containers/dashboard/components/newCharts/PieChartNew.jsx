@@ -3,9 +3,9 @@ import CalendarDropdown, {
 } from "@/components/common/dropdown/CalendarDropdown";
 import { useGetProductStatus } from "@/hooks/dashboard/useGetProductStatus";
 import { getDateRangeFromValue } from "@/utils/helpers/getDateRange";
-import React, { useEffect, useState } from "react";
-import { Cell, Pie, PieChart, ResponsiveContainer, Sector } from "recharts";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { Cell, Pie, PieChart, ResponsiveContainer, Sector } from "recharts";
 const defaultData = [
     {
         name: "Chưa hoàn thành",

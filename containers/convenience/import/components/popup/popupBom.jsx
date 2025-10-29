@@ -1,22 +1,11 @@
-import React, { useEffect, useState, useMemo } from "react";
-
-import PopupCustom from "/components/UI/popup";
-
-import Popup from "reactjs-popup";
-
-import dynamic from "next/dynamic";
-
-
-import {
-  Edit as IconEdit,
-  Grid6 as IconExcel,
-  Trash as IconDelete,
-  SearchNormal1 as IconSearch,
-  Add as IconAdd,
-  FilterRemove,
-  ArrowRight,
-} from "iconsax-react";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
+import {
+  ArrowRight,
+  FilterRemove,
+  SearchNormal1 as IconSearch
+} from "iconsax-react";
+import { useEffect, useState } from "react";
+import PopupCustom from "/components/UI/popup";
 
 const Popup_bom = (props) => {
   const dataLang = props?.dataLang;

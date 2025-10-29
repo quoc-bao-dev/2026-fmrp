@@ -1,8 +1,7 @@
-import React, { useState } from 'react'
-import { ArrowRight2 } from "iconsax-react";
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import NoData from '@/components/UI/noData/nodata';
 import { useGetProductionProgressByGroup } from '@/hooks/dashboard/useGetProductionProgressByGroup';
-import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import React, { useState } from 'react';
 
 const ProductionProgressTracker = React.memo((props) => {
 

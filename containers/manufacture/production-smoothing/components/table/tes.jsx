@@ -1,8 +1,6 @@
-import Zoom from "components/UI/zoomElement/zoomElement";
-import { Add, SearchNormal1 } from "iconsax-react";
+import { SearchNormal1 } from "iconsax-react";
 import Image from "next/image";
-import { useEffect, useRef } from "react";
-import PopupAdd from "../popup/popup";
+import { useRef } from "react";
 
 const MainTable = ({
     data,

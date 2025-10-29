@@ -13,6 +13,7 @@ import SearchComponent from "@/components/UI/filterComponents/searchComponent";
 import SelectComponent from "@/components/UI/filterComponents/selectComponent";
 import Loading from "@/components/UI/loading/loading";
 import NoData from "@/components/UI/noData/nodata";
+import Pagination from "@/components/UI/pagination";
 import { WARNING_STATUS_ROLE } from "@/constants/warningStatus/warningStatus";
 import { useBranchList } from "@/hooks/common/useBranch";
 import { useLimitAndTotalItems } from "@/hooks/useLimitAndTotalItems";
@@ -29,7 +30,6 @@ import "react-phone-input-2/lib/style.css";
 import { useSelector } from "react-redux";
 import PopupCategoryErrors from "./components/popup";
 import { useCategoryErrorsList } from "./hooks/useCategoryErrorsList";
-import Pagination from "@/components/UI/pagination";
 
 const initilaState = {
     keySearch: "",

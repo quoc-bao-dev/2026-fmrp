@@ -2,7 +2,7 @@ import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { ColumnTablePopup, GeneralInformation, HeaderTablePopup } from "@/components/UI/common/TablePopup";
 import TagBranch from "@/components/UI/common/Tag/TagBranch";
 import { TagColorLime, TagColorOrange, TagColorSky } from "@/components/UI/common/Tag/TagStatus";
-import ImageErrors from "@/components/UI/imageErrors";
+import CustomAvatar from "@/components/UI/common/user/CustomAvatar";
 import Loading from "@/components/UI/loading/loading";
 import NoData from "@/components/UI/noData/nodata";
 import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
@@ -15,7 +15,6 @@ import { useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useServiceVoucherDetail } from "../hooks/useServiceVoucherDetail";
 import PopupCustom from "/components/UI/popup";
-import CustomAvatar from "@/components/UI/common/user/CustomAvatar";
 
 const PopupDetail = (props) => {
     const [open, sOpen] = useState(false);

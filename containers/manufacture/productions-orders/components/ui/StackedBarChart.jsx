@@ -1,15 +1,11 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-// import { Column } from "@ant-design/plots";
-// import html2canvas from "html2canvas";
-// import * as XLSX from "xlsx";
-import dynamic from "next/dynamic";
+import ButtonAnimationNew from "@/components/common/button/ButtonAnimationNew";
+import ExcelFileComponent from "@/components/common/excel/ExcelFileComponent";
+import Loading from "@/components/UI/loading/loading";
 import useSetingServer from "@/hooks/useConfigNumber";
 import formatNumberConfig from "@/utils/helpers/formatnumber";
-import ButtonAnimationNew from "@/components/common/button/ButtonAnimationNew";
+import dynamic from "next/dynamic";
+import { memo, useCallback, useMemo, useRef } from "react";
 import { PiImageBold, PiTable } from "react-icons/pi";
-import ExcelFileComponent from "@/components/common/excel/ExcelFileComponent";
-import html2canvas from "html2canvas";
-import Loading from "@/components/UI/loading/loading";
 
 const Bar = dynamic(() => import("@ant-design/plots").then(({ Bar }) => Bar), { ssr: false });
 

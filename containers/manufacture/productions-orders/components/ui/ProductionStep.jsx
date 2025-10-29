@@ -1,9 +1,8 @@
 import CheckIcon from '@/components/icons/common/CheckIcon';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
-import { ArrowDown } from 'iconsax-react';
 import moment from 'moment/moment';
-import React, { useState } from 'react';
-import { PiCaretDown, PiCaretDownBold, PiCaretUp, PiCaretUpBold } from 'react-icons/pi';
+import { useState } from 'react';
+import { PiCaretDownBold, PiCaretUpBold } from 'react-icons/pi';
 
 const steps = [
     { id: "189", name: "Đóng gói", qty: 5, lot: "LSXCT12031526", completed: false },

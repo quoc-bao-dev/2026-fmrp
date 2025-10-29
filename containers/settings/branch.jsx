@@ -1,4 +1,3 @@
-import { BtnAction } from "@/components/UI/BtnAction";
 import ContainerPagination from "@/components/UI/common/ContainerPagination/ContainerPagination";
 import TitlePagination from "@/components/UI/common/ContainerPagination/TitlePagination";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
@@ -18,10 +17,10 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 import "react-phone-input-2/lib/style.css";
+import { useSelector } from "react-redux";
 import PopupBranch from "./components/popupBranch";
 import { useBranchPageList, useWarehousesList } from "./hooks/usseBranch";
 import { ListBtn_Setting } from "./information";
-import { useSelector } from "react-redux";
 const Branch = (props) => {
     const router = useRouter();
 

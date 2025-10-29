@@ -7,14 +7,13 @@ import {
 } from "@/components/UI/common/Table";
 import Loading from "@/components/UI/loading/loading";
 import NoData from "@/components/UI/noData/nodata";
+import Cardtable from "@/components/common/card/Cardtable";
 import ProgressBar from "@/components/common/progress/ProgressBar";
 import { StateContext } from "@/context/_state/productions-orders/StateContext";
 import useSetingServer from "@/hooks/useConfigNumber";
 import { useListBomProductPlan } from "@/managers/api/productions-order/useListBomProductPlan";
-import { memo, useContext, useState } from "react";
-
-import Cardtable from "@/components/common/card/Cardtable";
 import formatNumberConfig from "@/utils/helpers/formatnumber";
+import { memo, useContext, useState } from "react";
 
 
 const TablePlaning = ({ Title, typeTable, dataLang, data }) => {

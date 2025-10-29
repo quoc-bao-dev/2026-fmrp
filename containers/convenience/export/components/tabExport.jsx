@@ -1,6 +1,5 @@
-import React from "react";
 import { useRouter } from "next/router";
-import Link from "next/link";
+import React from "react";
 import { TiTick } from "react-icons/ti";
 const TabClient = React.memo((props) => {
     const router = useRouter();

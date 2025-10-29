@@ -1,6 +1,5 @@
-import React from "react";
-import Select, { components } from "react-select";
 import Loading from "@/components/UI/loading/loading";
+import Select from "react-select";
 import DeleteButton from "./button/buttonDeleteSlect";
 
 const FormSupplier = ({

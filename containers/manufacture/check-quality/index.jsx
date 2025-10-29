@@ -1,7 +1,7 @@
+import { BtnAction } from "@/components/UI/BtnAction";
+import Breadcrumb from "@/components/UI/breadcrumb/BreadcrumbCustom";
 import OnResetData from "@/components/UI/btnResetData/btnReset";
-import { BtnStatusApprovedCustom } from "@/components/UI/btnStatusApproved/BtnStatusApproved";
 import ContainerPagination from "@/components/UI/common/ContainerPagination/ContainerPagination";
-import TitlePagination from "@/components/UI/common/ContainerPagination/TitlePagination";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { EmptyExprired } from "@/components/UI/common/EmptyExprired";
 import {
@@ -11,10 +11,7 @@ import {
     RowTable,
 } from "@/components/UI/common/Table";
 import {
-    Container,
-    ContainerBody,
-    ContainerTable,
-    LayOutTableDynamic,
+    LayOutTableDynamic
 } from "@/components/UI/common/layout";
 import DropdowLimit from "@/components/UI/dropdowLimit/dropdowLimit";
 import ExcelFileComponent from "@/components/UI/filterComponents/excelFilecomponet";
@@ -44,9 +41,6 @@ import PopupDetailWarehouseTransfer from "../warehouse-transfer/components/pupup
 import PopupCheckQuality from "./components/popup";
 import { useCheckQualityList } from "./hooks/useCheckQualityList";
 import Pagination from "/components/UI/pagination";
-import { BtnAction } from "@/components/UI/BtnAction";
-import TagBranch from "@/components/UI/common/Tag/TagBranch";
-import Breadcrumb from "@/components/UI/breadcrumb/BreadcrumbCustom";
 
 const initilaState = {
     data: [],

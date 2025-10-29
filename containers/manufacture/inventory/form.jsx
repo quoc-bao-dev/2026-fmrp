@@ -1,4 +1,5 @@
 import apiInventory from "@/Api/apiManufacture/warehouse/inventory/apiInventory";
+import Breadcrumb from "@/components/UI/breadcrumb/BreadcrumbCustom";
 import ButtonBack from "@/components/UI/button/buttonBack";
 import ButtonSubmit from "@/components/UI/button/buttonSubmit";
 import { EmptyExprired } from "@/components/UI/common/EmptyExprired";
@@ -26,7 +27,7 @@ import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import PopupProduct from "./components/popupProduct";
-import Breadcrumb from "@/components/UI/breadcrumb/BreadcrumbCustom";
+
 const InventoryForm = (props) => {
     const dataLang = props.dataLang;
     const router = useRouter();

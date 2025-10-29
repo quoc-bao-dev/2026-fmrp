@@ -1,6 +1,5 @@
-import Image from "next/image";
-import dynamic from "next/dynamic";
 import Breadcrumb from "@/components/UI/breadcrumb/BreadcrumbCustom";
+import dynamic from "next/dynamic";
 
 const Zoom = dynamic(() => import("@/components/UI/zoomElement/zoomElement"), { ssr: false });
 const Header = ({ dataLang }) => {

@@ -1,10 +1,8 @@
-import React from 'react'
-import dynamic from "next/dynamic";
-import { ArrowRight2 } from "iconsax-react";
+import NoData from '@/components/UI/noData/nodata';
 import { useGetTop5Customers } from '@/hooks/dashboard/useGetTop5Customers';
 import useSetingServer from '@/hooks/useConfigNumber';
 import formatNumberConfig from "@/utils/helpers/formatnumber";
-import NoData from '@/components/UI/noData/nodata';
+import dynamic from "next/dynamic";
 
 const Bar = dynamic(() => import("@ant-design/plots").then(({ Bar }) => Bar), { ssr: false, });
 

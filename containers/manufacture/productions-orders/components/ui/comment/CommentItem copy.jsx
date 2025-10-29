@@ -1,17 +1,13 @@
-import Image from "next/image";
-import React, { useState } from "react";
-import ImageAvatar from "./ImageAvatar";
-import moment from "moment";
-import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
+import SparklesBurst from "@/components/animations/animation/SparklesBurst";
 import GalleryModal from "@/components/common/Image/GalleryModal";
-import { AiFillLike, AiOutlineLike } from "react-icons/ai";
-import { PiThumbsUp, PiThumbsUpFill } from "react-icons/pi";
-
-import { AnimatePresence, motion } from 'framer-motion'
-
+import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
 import { usePostLikeComment } from "@/managers/api/productions-order/comment/usePostLikeComment";
 import { usePostUnlikeComment } from "@/managers/api/productions-order/comment/usePostUnlikeComment";
-import SparklesBurst from "@/components/animations/animation/SparklesBurst";
+import { AnimatePresence, motion } from 'framer-motion';
+import moment from "moment";
+import React, { useState } from "react";
+import { PiThumbsUp, PiThumbsUpFill } from "react-icons/pi";
+import ImageAvatar from "./ImageAvatar";
 
 const likeVariants = {
     initial: { scale: 0, rotate: 0 },

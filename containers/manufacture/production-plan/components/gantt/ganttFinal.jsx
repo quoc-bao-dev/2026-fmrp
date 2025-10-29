@@ -18,7 +18,6 @@ import * as d3 from "d3";
 import Image from "next/image";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import ModalImage from "react-modal-image";
 
 // e74c3c đỏ nhạt
 // 3b82f6  xanh dương

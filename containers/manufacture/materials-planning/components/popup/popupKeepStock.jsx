@@ -19,7 +19,7 @@ import useSetingServer from "@/hooks/useConfigNumber";
 import useToast from "@/hooks/useToast";
 import { formatMoment } from "@/utils/helpers/formatMoment";
 import formatNumberConfig from "@/utils/helpers/formatnumber";
-import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
     Add,
     Trash as IconDelete,
@@ -32,7 +32,6 @@ import DatePicker from "react-datepicker";
 import { Controller, useForm } from "react-hook-form";
 import { BsCalendarEvent } from "react-icons/bs";
 import { MdClear } from "react-icons/md";
-import ModalImage from "react-modal-image";
 import { v4 as uuidv4 } from "uuid";
 
 const initialState = {

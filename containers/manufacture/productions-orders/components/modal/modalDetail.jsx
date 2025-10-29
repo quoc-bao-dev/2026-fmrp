@@ -1,24 +1,22 @@
 import apiProductionsOrders from "@/Api/apiManufacture/manufacture/productionsOrders/apiProductionsOrders";
+import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { ContainerFilterTab } from "@/components/UI/common/layout";
 import TagBranch from "@/components/UI/common/Tag/TagBranch";
 import { optionsQuery } from "@/configs/optionsQuery";
+import useSetingServer from "@/hooks/useConfigNumber";
+import formatNumberConfig from "@/utils/helpers/formatnumber";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { memo, useContext, useEffect, useRef, useState } from "react";
-import { FaAngleDoubleRight } from "react-icons/fa";
 import { FaUpRightAndDownLeftFromCenter } from "react-icons/fa6";
-import { RxDragHandleDots1 } from "react-icons/rx";
+import { ProductionsOrdersContext } from "../../context/productionsOrders";
 import TabExportHistory from "./tabExportHistory";
 import TabExportSituation from "./tabExportSituation";
 import TabInFormation from "./tabInFormation";
 import TabProcessingCost from "./tabProcessingCost";
 import TabRecallMaterials from "./tabRecallMaterials";
 import TabWarehouseHistory from "./tabWarehouseHistory";
-import { ProductionsOrdersContext } from "../../context/productionsOrders";
-import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
-import useSetingServer from "@/hooks/useConfigNumber";
-import formatNumberConfig from "@/utils/helpers/formatnumber";
 
 
 const initialState = {

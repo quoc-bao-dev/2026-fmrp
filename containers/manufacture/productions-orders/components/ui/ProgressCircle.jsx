@@ -1,12 +1,6 @@
 // components/ProgressCircle.jsx
 'use client'
-import SmartTooltip from '@/components/common/tooltip/SmartTooltip'
-import TooltipPortal from '@/components/common/tooltip/TooltipPortal'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowUp } from 'iconsax-react'
 import { useRef, useState } from 'react'
-import { Tooltip } from 'react-tippy'
-import Popup from 'reactjs-popup'
 
 export default function ProgressCircle({ className, title, step, total, quantity, stages = [] }) {
 
