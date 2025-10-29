@@ -294,7 +294,7 @@ const SalesRevenue = props => {
                         });
                       });
                     });
-                    console.log(flattenedData);
+
                     return flattenedData.map((flattenedItem, index) => (
                       <tr key={`${flattenedItem.orderIndex}-${flattenedItem.itemIndex}`} className='hover:bg-gray-50 responsive-text-sm relative'>
                         {/* Ngày - chỉ hiển thị ở item đầu tiên với rowspan */}

@@ -14,6 +14,7 @@ const NoData = ({
     className = '',
     classNameImage = '3xl:max-w-[280px] max-w-[200px] w-full h-auto object-contain',
     classNameTitle = 'text-sm',
+    titleText = '',
     ...rest
 }) => {
     const imageSrc = IMAGE_TYPE[type] || "/icon/nodata_ok.svg";
@@ -21,10 +22,10 @@ const NoData = ({
     const isComment = type === "comment";
     const isReport = type === "report";
     const title = isTable ?
-        ("Chưa có dữ liệu")
+        (titleText || "Chưa có dữ liệu")
         :
         (
-            isComment ? "Hãy thảo luận trao đổi tình hình sản xuất ngay!" : isReport ? "Chưa có dữ liệu" : "Không tìm thấy các mục"
+            isComment ? "Hãy thảo luận trao đổi tình hình sản xuất ngay!" : isReport ? (titleText || "Chưa có dữ liệu") : "Không tìm thấy các mục"
         )
 
     return (

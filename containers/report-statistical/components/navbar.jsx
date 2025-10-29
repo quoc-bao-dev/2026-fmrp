@@ -24,7 +24,7 @@ const Navbar = props => {
     },
     {
       id: uuidv4(),
-      name: 'Đối chiếu công nợ khách hàng',
+      name: 'Đối chiếu công nợ KH',
       path: '/report-statistical/sales-report/customer-debt',
     },
     // {
