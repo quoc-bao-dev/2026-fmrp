@@ -6,7 +6,6 @@ import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import DropdowLimit from '@/components/UI/dropdowLimit/dropdowLimit';
 import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet';
 import SearchComponent from '@/components/UI/filterComponents/searchComponent';
-import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
 import PaginationComponent from '@/components/UI/pagination';
 import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems';
@@ -20,6 +19,8 @@ import { PiPackage } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
 import { useGetBOMs } from './hook';
 import { useExportExcel } from './hook/useExportExcel';
+import { useGetItemsWithBranch } from '../OrderProgress/hook';
+import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
 
 const breadcrumbItems = [
   {
@@ -39,6 +40,7 @@ const QuotaMaterials = () => {
   const { paginate } = usePagination();
   const dataLang = useLanguageContext();
   const statusExprired = useStatusExprired();
+  const { selectedBranches, setSelectedBranches } = usePersistedBranches();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
@@ -51,12 +53,16 @@ const QuotaMaterials = () => {
 
   const currentPage = Number(router.query.page) || 1;
 
-  const { data: dataProduct } = useInventoryItems(debouncedSearchTerm);
+  const { data: dataProduct } = useGetItemsWithBranch({
+    search: debouncedSearchTerm,
+    branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
+  });
   const { data, refetch: refetchQuotaMaterials } = useGetBOMs({
     page: currentPage,
     limit: limit,
     search: debouncedSearchValue,
     product_id: selectedProduct?.map(item => item.value) || [],
+    branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
   });
 
   // Cập nhật productOptions khi dataProduct thay đổi
@@ -163,6 +169,9 @@ const QuotaMaterials = () => {
         statusExprired={statusExprired}
         breadcrumbItems={breadcrumbItems}
         maginBottom={true}
+        branchValue={selectedBranches}
+        onBranchChange={setSelectedBranches}
+        onBranchClear={() => setSelectedBranches([])}
         filterSection={
           <div className='w-full items-center flex justify-between gap-4'>
             <div className='flex gap-3'>
@@ -192,18 +201,18 @@ const QuotaMaterials = () => {
             <Customscrollbar alwaysShowScrollbar={true} className='h-full flex-1 overflow-auto border border-[#E0E0E1]'>
               <table className='w-full border-0 p-0 m-0'>
                 <thead>
-                  <tr className='responsive-text-sm bg-white sticky top-0 z-50'>
+                  <tr className='responsive-text-sm bg-white sticky top-0 z-50 capitalize'>
                     <th className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Mã nguyên vật liệu</div>
+                      <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Mã nguyên vật liệu</div>
                     </th>
                     <th className='min-w-64 h-2 p-0 font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Tên nguyên vật liệu</div>
+                      <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Tên nguyên vật liệu</div>
                     </th>
                     <th className='min-w-44 h-2 p-0 font-semibold text-gray-700'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Loại</div>
                     </th>
                     <th className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Biến thể</div>
+                      <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Biến thể</div>
                     </th>
                     <th className='min-w-28 h-2 p-0 font-semibold text-gray-700'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Đơn vị</div>

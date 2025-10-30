@@ -20,6 +20,7 @@ import { PiPackage } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
 import { useGetMaterialsLookup, useGetRawMaterialsUsed } from './hook';
 import { exportWithMergeRawMaterialsUsed } from './hook/useExportExcel';
+import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
 
 const breadcrumbItems = [
   {
@@ -40,6 +41,7 @@ const RawMaterialsUsed = () => {
   const { paginate } = usePagination();
   const dataLang = useLanguageContext();
   const statusExprired = useStatusExprired();
+  const { selectedBranches, setSelectedBranches } = usePersistedBranches();
 
   const [dateRange, setDateRange] = useState({
     startDate: undefined,
@@ -74,7 +76,10 @@ const RawMaterialsUsed = () => {
     };
   };
 
-  const { data: dataMaterial } = useGetMaterialsLookup(debouncedSearchTerm);
+  const { data: dataMaterial } = useGetMaterialsLookup({
+    search: debouncedSearchTerm,
+    branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
+  });
 
   const {
     data,
@@ -86,6 +91,7 @@ const RawMaterialsUsed = () => {
     ...getFormattedDateRange(),
     search: debouncedSearchValue,
     material_ids: selectedProduct?.map(item => item.value) || [],
+    branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
   });
 
   // Tính tổng từ dữ liệu thực tế
@@ -188,6 +194,9 @@ const RawMaterialsUsed = () => {
         title={'Báo cáo nguyên liệu sử dụng'}
         statusExprired={statusExprired}
         breadcrumbItems={breadcrumbItems}
+        branchValue={selectedBranches}
+        onBranchChange={setSelectedBranches}
+        onBranchClear={() => setSelectedBranches([])}
         filterSection={
           <div className='w-full items-center flex justify-between gap-4'>
             <div className='flex gap-3'>
@@ -236,6 +245,9 @@ const RawMaterialsUsed = () => {
                     </th>
                     <th rowSpan={2} className='min-w-40 h-2 p-0 font-semibold text-gray-700 sticky left-[288px] bg-white z-20'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Số lệnh SX chi tiết</div>
+                    </th>
+                    <th rowSpan={2} className='min-w-36 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Chi nhánh</div>
                     </th>
                     <th rowSpan={2} className='min-w-28 h-2 p-0 font-semibold text-gray-700'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Ngày</div>
@@ -325,6 +337,13 @@ const RawMaterialsUsed = () => {
                           </td>
                         )}
 
+                        {/* Chi nhánh - chỉ hiển thị ở bom đầu tiên với rowspan */}
+                        {flattenedItem.isFirstBom && (
+                          <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle bg-white'>
+                            <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.branch_name || '-'}</div>
+                          </td>
+                        )}
+
                         {/* Ngày - chỉ hiển thị ở bom đầu tiên với rowspan */}
                         {flattenedItem.isFirstBom && (
                           <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle bg-white'>
@@ -378,32 +397,35 @@ const RawMaterialsUsed = () => {
                 </tbody>
                 <tfoot>
                   <tr className='bg-white sticky bottom-0 z-50 responsive-text-sm'>
-                    <td className='w-48 p-0 h-2 text-center font-semibold text-gray-700'>
+                    <td className='w-48 p-0 h-2 text-center font-semibold text-gray-700 sticky left-0 z-20 bg-white'>
                       <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
-                    <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
+                    <td className='w-48 p-0 h-2 text-center font-semibold text-gray-700 sticky left-[128px] z-20 bg-white'>
                       <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
-                    <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
+                    <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700 sticky left-[288px] z-20 bg-white'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1] uppercase'>Tổng cộng</div>
+                    </td>
+                    <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
+                      <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-28 p-0 h-2 text-center font-semibold text-gray-700'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>-</div>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-48 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>-</div>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>-</div>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-28 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>-</div>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-28 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>-</div>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>{formatNumber(totals.total_plan)}</div>

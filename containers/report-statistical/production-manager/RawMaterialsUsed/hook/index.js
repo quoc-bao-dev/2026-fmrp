@@ -12,13 +12,13 @@ export const useGetRawMaterialsUsed = data => {
   });
 };
 
-export const useGetMaterialsLookup = search => {
+export const useGetMaterialsLookup = params => {
   const fetchMaterialsLookup = async () => {
-    const response = await apiReport.apiGetMaterialsLookup(search);
+    const response = await apiReport.apiGetMaterialsLookup({ params });
     return response.data.materials;
   };
   return useQuery({
-    queryKey: ['api_get_materials_lookup', search],
+    queryKey: ['api_get_materials_lookup', params],
     queryFn: fetchMaterialsLookup,
   });
 };

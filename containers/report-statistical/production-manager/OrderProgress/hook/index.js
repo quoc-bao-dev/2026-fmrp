@@ -23,3 +23,20 @@ export const useGetSalesOrderCombobox = params => {
     keepPreviousData: true,
   });
 };
+
+export const useGetItemsWithBranch = params => {
+  return useQuery({
+    queryKey: ['api_get_items_with_branch', params],
+    queryFn: async () => {
+      const response = await apiReport.apiItemsWithBranch({ params });
+      return response.data?.result?.map((e) => ({
+        label: `${e.name + e.code + e.id}`,
+        name: e.name,
+        value: e.id,
+        code: e.code,
+        img: e.images,
+        type: e.text_type,
+    }))
+    },
+  });
+};

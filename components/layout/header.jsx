@@ -729,7 +729,7 @@ const Header = () => {
               viewOwn: 1,
               view: 1,
               name: 'Báo cáo bán hàng',
-              link: '/report-statistical/sales-report/sales-revenue',
+              link: '/report-statistical/sales-report/dashboard',
               forceDisableForAdmin: true,
             },
             {

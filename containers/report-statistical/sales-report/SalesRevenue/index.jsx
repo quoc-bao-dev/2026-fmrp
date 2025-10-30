@@ -200,7 +200,7 @@ const SalesRevenue = props => {
             <Customscrollbar alwaysShowScrollbar={true} className='h-full flex-1 overflow-auto'>
               <table className='w-full border-0 p-0 m-0'>
                 <thead>
-                  <tr className='responsive-text-sm sticky top-0 z-50 bg-white'>
+                  <tr className='responsive-text-sm sticky top-0 z-50 bg-white capitalize'>
                     <th rowSpan={2} className='min-w-32 h-2 p-0 font-semibold text-gray-700 sticky left-0 bg-white z-20'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border border-[#E0E0E1]'>Ngày đơn hàng</div>
                     </th>
@@ -209,6 +209,9 @@ const SalesRevenue = props => {
                     </th>
                     <th rowSpan={2} className='min-w-32 h-2 p-0 font-semibold text-gray-700 sticky left-[272px] bg-white z-20'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Phiếu bán hàng</div>
+                    </th>
+                    <th rowSpan={2} className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Chi nhánh</div>
                     </th>
                     <th rowSpan={2} className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Nhân viên</div>
@@ -220,10 +223,10 @@ const SalesRevenue = props => {
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Mã sản phẩm</div>
                     </th>
                     <th rowSpan={2} className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Tên sản phẩm</div>
+                      <div className='w-full h-full flex items-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Tên sản phẩm</div>
                     </th>
                     <th rowSpan={2} className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Biến thể</div>
+                      <div className='w-full h-full flex items-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Biến thể</div>
                     </th>
                     <th rowSpan={2} className='min-w-24 h-2 p-0 font-semibold text-gray-700'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Đơn vị</div>
@@ -235,42 +238,42 @@ const SalesRevenue = props => {
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Giá trị</div>
                     </th>
                   </tr>
-                  <tr className='responsive-text-sm sticky top-[32px] 2xl:top-[38px] z-40 bg-white '>
-                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700 border-r border-[#E0E0E1]'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-[#E0E0E1]'>Đơn hàng</div>
+                  <tr className='responsive-text-sm sticky top-[32px] 2xl:top-[38px] z-40 bg-white capitalize'>
+                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Đơn hàng</div>
                     </th>
-                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700 border-r border-[#E0E0E1]'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-[#E0E0E1]'>Đã giao</div>
+                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Đã giao</div>
                     </th>
-                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700 border-r border-[#E0E0E1]'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-[#E0E0E1]'>Còn lại</div>
+                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Còn lại</div>
                     </th>
-                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700 border-r border-[#E0E0E1]'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-[#E0E0E1]'>Đơn giá</div>
+                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Đơn giá</div>
                     </th>
-                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700 border-r border-[#E0E0E1]'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-[#E0E0E1]'>% chiết khấu</div>
+                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>% chiết khấu</div>
                     </th>
-                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700 border-r border-[#E0E0E1]'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-[#E0E0E1]'>Tiền chiết khấu</div>
+                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-end px-3 py-2 border-b border-r border-[#E0E0E1]'>Tiền chiết khấu</div>
                     </th>
-                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700 border-r border-[#E0E0E1]'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-[#E0E0E1]'>% thuế</div>
+                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>% thuế</div>
                     </th>
-                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700 border-r border-[#E0E0E1]'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-[#E0E0E1]'>Tiền thuế</div>
+                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-end px-3 py-2 border-b border-r border-[#E0E0E1]'>Tiền thuế</div>
                     </th>
-                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700 border-r border-[#E0E0E1]'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-[#E0E0E1]'>Thành tiền</div>
+                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-end px-3 py-2 border-b border-r border-[#E0E0E1]'>Thành tiền</div>
                     </th>
-                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700 border-r border-[#E0E0E1]'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-[#E0E0E1]'>Tổng cộng</div>
+                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-end px-3 py-2 border-b border-r border-[#E0E0E1]'>Tổng cộng</div>
                     </th>
-                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700 border-r border-[#E0E0E1]'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-[#E0E0E1]'>Đã thu</div>
+                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-end px-3 py-2 border-b border-r border-[#E0E0E1]'>Đã thu</div>
                     </th>
-                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700 border-r border-[#E0E0E1]'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-[#E0E0E1]'>Còn lại</div>
+                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-end px-3 py-2 border-b border-r border-[#E0E0E1]'>Còn lại</div>
                     </th>
                   </tr>
                 </thead>
@@ -328,6 +331,13 @@ const SalesRevenue = props => {
                           </td>
                         )}
 
+                        {/*Chi nhánh - chỉ hiển thị ở item đầu tiên với rowspan */}
+                        {flattenedItem.isFirstItem && (
+                          <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle bg-white'>
+                            <div className='w-full h-full flex items-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.branch_name || '-'}</div>
+                          </td>
+                        )}
+
                         {/* Nhân viên - chỉ hiển thị ở item đầu tiên với rowspan */}
                         {flattenedItem.isFirstItem && (
                           <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle bg-white'>
@@ -336,78 +346,108 @@ const SalesRevenue = props => {
                         )}
 
                         {/* Ngày giao hàng - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
-                          {flattenedItem.item?.delivery_date ? moment(flattenedItem.item.delivery_date).format('DD/MM/YYYY') : '-'}
+                        <td className='p-0 h-2 text-center text-gray-700'>
+                          <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                            {flattenedItem.item?.delivery_date ? moment(flattenedItem.item.delivery_date).format('DD/MM/YYYY') : '-'}
+                          </div>
                         </td>
 
                         {/* Mã sản phẩm - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.item_code || '-'}</td>
+                        <td className='p-0 h-2 text-left text-gray-700'>
+                          <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.item_code || '-'}</div>
+                        </td>
 
                         {/* Tên sản phẩm - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.item_name || '-'}</td>
+                        <td className='p-0 h-2 text-left text-gray-700'>
+                          <div className='w-full h-full flex items-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.item_name || '-'}</div>
+                        </td>
 
                         {/* Biến thể - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.variant_name || '-'}</td>
+                        <td className='p-0 h-2 text-left text-gray-700'>
+                          <div className='w-full h-full flex items-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.variant_name || '-'}</div>
+                        </td>
 
                         {/* Đơn vị - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.unit_name || '-'}</td>
+                        <td className='p-0 h-2 text-center text-gray-700'>
+                          <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.unit_name || '-'}</div>
+                        </td>
 
                         {/* Số lượng đơn hàng - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
-                          {Number(flattenedItem.item?.quantity) === 0 ? '-' : formatNumber(flattenedItem.item?.quantity)}
+                        <td className='p-0 h-2 text-center text-gray-700'>
+                          <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                            {Number(flattenedItem.item?.quantity) === 0 ? '-' : formatNumber(flattenedItem.item?.quantity)}
+                          </div>
                         </td>
 
                         {/* Số lượng đã giao - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
-                          {Number(flattenedItem.item?.quantity_delivery) === 0 ? '-' : formatNumber(flattenedItem.item?.quantity_delivery)}
+                        <td className='p-0 h-2 text-center text-gray-700'>
+                          <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                            {Number(flattenedItem.item?.quantity_delivery) === 0 ? '-' : formatNumber(flattenedItem.item?.quantity_delivery)}
+                          </div>
                         </td>
 
                         {/* Số lượng còn lại - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
-                          {Number(flattenedItem.item?.quantity_not_delivery) === 0 ? '-' : formatNumber(flattenedItem.item?.quantity_not_delivery)}
+                        <td className='p-0 h-2 text-center text-gray-700'>
+                          <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                            {Number(flattenedItem.item?.quantity_not_delivery) === 0 ? '-' : formatNumber(flattenedItem.item?.quantity_not_delivery)}
+                          </div>
                         </td>
 
                         {/* Đơn giá - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
-                          {Number(flattenedItem.item?.price) === 0 ? '-' : formatNumber(flattenedItem.item?.price)}
+                        <td className='p-0 h-2 text-center text-gray-700'>
+                          <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                            {Number(flattenedItem.item?.price) === 0 ? '-' : formatNumber(flattenedItem.item?.price)}
+                          </div>
                         </td>
 
                         {/* Chiết khấu % - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
-                          {Number(flattenedItem.item?.discount_percent_item) === 0 ? '-' : formatNumber(flattenedItem.item?.discount_percent_item) + '%'}
+                        <td className='p-0 h-2 text-center text-gray-700'>
+                          <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                            {Number(flattenedItem.item?.discount_percent_item) === 0 ? '-' : formatNumber(flattenedItem.item?.discount_percent_item) + '%'}
+                          </div>
                         </td>
 
                         {/* Chiết khấu tiền - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
-                          {Number(flattenedItem.item?.discount_percent_amount_item) === 0 ? '-' : formatNumber(flattenedItem.item?.discount_percent_amount_item)}
+                        <td className='p-0 h-2 text-end text-gray-700'>
+                          <div className='w-full h-full flex items-center justify-end px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                            {Number(flattenedItem.item?.discount_percent_amount_item) === 0 ? '-' : formatNumber(flattenedItem.item?.discount_percent_amount_item)}
+                          </div>
                         </td>
 
                         {/* % thuế - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
-                          {Number(flattenedItem.item?.tax_rate_item) === 0 ? '-' : formatNumber(flattenedItem.item?.tax_rate_item) + '%'}
+                        <td className='p-0 h-2 text-center text-gray-700'>
+                          <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                            {Number(flattenedItem.item?.tax_rate_item) === 0 ? '-' : formatNumber(flattenedItem.item?.tax_rate_item) + '%'}
+                          </div>
                         </td>
 
                         {/* Tiền thuế - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
-                          {Number(flattenedItem.item?.tax_amount_item) === 0 ? '-' : formatNumber(flattenedItem.item?.tax_amount_item)}
+                        <td className='p-0 h-2 text-end text-gray-700'>
+                          <div className='w-full h-full flex items-center justify-end px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                            {Number(flattenedItem.item?.tax_amount_item) === 0 ? '-' : formatNumber(flattenedItem.item?.tax_amount_item)}
+                          </div>
                         </td>
 
                         {/* Thành tiền - hiển thị cho mỗi item */}
-                        <td className='px-3 py-2 text-center text-gray-700 border-r border-b border-[#E0E0E1]'>
-                          {Number(flattenedItem.item?.total_amount) === 0 ? '-' : formatNumber(Number(flattenedItem.item?.total_amount))}
+                        <td className='p-0 h-2 text-end text-gray-700'>
+                          <div className='w-full h-full flex items-center justify-end px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                            {Number(flattenedItem.item?.total_amount) === 0 ? '-' : formatNumber(Number(flattenedItem.item?.total_amount))}
+                          </div>
                         </td>
 
                         {/* Tổng cộng - chỉ hiển thị ở item đầu tiên với rowspan */}
                         {flattenedItem.isFirstItem && (
-                          <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-new-blue font-semibold align-middle bg-white border-r border-b border-[#E0E0E1]'>
-                            <div className='w-full h-full flex items-center justify-center px-3 py-2'>{Number(flattenedItem?.grand_total) === 0 ? '-' : formatNumber(flattenedItem?.grand_total)}</div>
+                          <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-new-blue font-semibold align-middle bg-white'>
+                            <div className='w-full h-full flex items-center justify-end px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                              {Number(flattenedItem?.grand_total) === 0 ? '-' : formatNumber(flattenedItem?.grand_total)}
+                            </div>
                           </td>
                         )}
 
                         {/* Đã thu - chỉ hiển thị ở item đầu tiên với rowspan */}
                         {flattenedItem.isFirstItem && (
-                          <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-red-01 font-semibold align-middle bg-white border-r border-b border-[#E0E0E1]'>
-                            <div className='w-full h-full flex items-center justify-center px-3 py-2'>
+                          <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-red-01 font-semibold align-middle bg-white'>
+                            <div className='w-full h-full flex items-center justify-end px-3 py-2 border-r border-b border-[#E0E0E1]'>
                               {Number(flattenedItem?.total_payment) === 0 ? '-' : formatNumber(flattenedItem?.total_payment)}
                             </div>
                           </td>
@@ -415,8 +455,10 @@ const SalesRevenue = props => {
 
                         {/* Còn lại - chỉ hiển thị ở item đầu tiên với rowspan */}
                         {flattenedItem.isFirstItem && (
-                          <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-red-01 font-semibold align-middle bg-white border-r border-b border-[#E0E0E1]'>
-                            <div className='w-full h-full flex items-center justify-center px-3 py-2'>{Number(flattenedItem?.total_rest) === 0 ? '-' : formatNumber(flattenedItem?.total_rest)}</div>
+                          <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-red-01 font-semibold align-middle bg-white'>
+                            <div className='w-full h-full flex items-center justify-end px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                              {Number(flattenedItem?.total_rest) === 0 ? '-' : formatNumber(flattenedItem?.total_rest)}
+                            </div>
                           </td>
                         )}
                       </tr>
@@ -425,32 +467,35 @@ const SalesRevenue = props => {
                 </tbody>
                 <tfoot>
                   <tr className='bg-white sticky bottom-[-1px] z-50 responsive-text-sm'>
-                    <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
+                    <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700 sticky left-0 bg-white z-20'>
                       <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
-                    <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
+                    <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700 sticky left-[128px] bg-white z-20'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1] uppercase'>Tổng cộng</div>
                     </td>
-                    <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
+                    <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700 sticky left-[272px] bg-white z-20'>
+                      <div className='w-full h-full border-t border-[#E0E0E1]'></div>
+                    </td>
+                    <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
                       <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
                       <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full border-t border-[#E0E0E1]'>-</div>
+                      <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-60 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full border-t border-[#E0E0E1]'>-</div>
+                      <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full border-t border-[#E0E0E1]'>-</div>
+                      <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full border-t border-[#E0E0E1]'>-</div>
+                      <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full border-t border-[#E0E0E1]'>-</div>
+                      <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>
@@ -473,36 +518,36 @@ const SalesRevenue = props => {
                       </div>
                     </td>
                     <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full border-t border-[#E0E0E1]'>-</div>
+                      <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>
+                      <div className='w-full h-full flex items-center justify-end px-3 py-2 border-t border-[#E0E0E1]'>
                         {formatNumber(flattenedData.reduce((sum, item) => sum + (Number(item?.discount_percent_amount_item) || 0), 0))}
                       </div>
                     </td>
                     <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full border-t border-[#E0E0E1]'>-</div>
+                      <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>
+                      <div className='w-full h-full flex items-center justify-end px-3 py-2 border-t border-[#E0E0E1]'>
                         {formatNumber(flattenedData.reduce((sum, item) => sum + (Number(item?.tax_amount_item) || 0), 0))}
                       </div>
                     </td>
-                    <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full border-t border-[#E0E0E1]'>-</div>
+                    <td className='w-32 p-0 h-2 text-end font-semibold text-gray-700'>
+                      <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-32 p-0 h-2 text-center font-semibold text-new-blue'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>
+                      <div className='w-full h-full flex items-center justify-end px-3 py-2 border-t border-[#E0E0E1]'>
                         {formatNumber(dataSalesRevenue?.aaData?.reduce((sum, order) => sum + (Number(order?.grand_total) || 0), 0) || 0)}
                       </div>
                     </td>
                     <td className='w-32 p-0 h-2 text-center font-semibold text-red-01'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>
+                      <div className='w-full h-full flex items-center justify-end px-3 py-2 border-t border-[#E0E0E1]'>
                         {formatNumber(dataSalesRevenue?.aaData?.reduce((sum, order) => sum + (Number(order?.total_payment) || 0), 0) || 0)}
                       </div>
                     </td>
                     <td className='w-32 p-0 h-2 text-center font-semibold text-red-01'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>
+                      <div className='w-full h-full flex items-center justify-end px-3 py-2 border-t border-[#E0E0E1]'>
                         {formatNumber(dataSalesRevenue?.aaData?.reduce((sum, order) => sum + (Number(order?.total_rest) || 0), 0) || 0)}
                       </div>
                     </td>

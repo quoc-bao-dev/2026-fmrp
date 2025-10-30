@@ -1,7 +1,6 @@
 import OnResetData from '@/components/UI/btnResetData/btnReset';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport';
-import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
 import SelectSearchReport from '@/components/common/select/SelectSearchReport';
@@ -14,7 +13,7 @@ import useSetingServer from '@/hooks/useConfigNumber';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
 import moment from 'moment';
-import { useMemo, useState, Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { FaUsers } from 'react-icons/fa';
 import { useDebounce } from 'use-debounce';
 import { useGetCustomerDebt } from './hook';
@@ -97,7 +96,7 @@ const CustomerDebt = props => {
     if (!dataCustomerDebt) return;
     const clientName = dataCustomerDebt?.debt?.client_name || 'Khach_hang';
     const filename = `Bao_cao_cong_no_${clientName}.xlsx`;
-    exportCustomerDebtExcel(dataCustomerDebt, filename);
+    exportCustomerDebtExcel(dataCustomerDebt, filename, dataSeting, getFormattedDateRange());
   };
 
   const noDataTitle = !selectedCustomer
@@ -139,7 +138,7 @@ const CustomerDebt = props => {
       tableSection={
         isFetchingCustomerDebt ? (
           <Loading color='#0f4f9e' />
-        ) : (dataCustomerDebt?.deliveries?.length > 0 || dataCustomerDebt?.returns?.length > 0 || dataCustomerDebt?.other_payslips_coupon?.length > 0) ? (
+        ) : dataCustomerDebt ? (
           <div className='flex flex-col gap-4 relative h-full'>
             <div className='flex flex-col gap-1 responsive-text-sm px-4'>
               <h3>Khách hàng: {dataCustomerDebt?.debt?.client_name || '-'}</h3>
@@ -149,15 +148,19 @@ const CustomerDebt = props => {
             <Customscrollbar alwaysShowScrollbar={true} className='h-full flex-1 overflow-auto border border-[#E0E0E1]'>
               <table className='w-full border-0 p-0 m-0'>
                 <thead>
-                  <tr className='responsive-text-sm sticky top-0 z-50 bg-white'>
+                  <tr className='responsive-text-sm sticky top-0 z-50 bg-white capitalize'>
                     <th className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Ngày đơn hàng</div>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Ngày chứng từ</div>
                     </th>
                     <th className='min-w-36 h-2 p-0 font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Số đơn hàng</div>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Số chứng từ</div>
                     </th>
                     <th className='min-w-48 h-2 p-0 font-semibold text-gray-700'>
                       <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Sản phẩm</div>
+                    </th>
+                    {/* Cột Biến thể mới thêm */}
+                    <th className='min-w-36 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Biến thể</div>
                     </th>
                     <th className='min-w-24 h-2 p-0 font-semibold text-gray-700'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Đơn vị</div>
@@ -185,8 +188,8 @@ const CustomerDebt = props => {
                 <tbody>
                   {/* Công nợ đầu kỳ */}
                   <tr className='bg-gray-100 responsive-text-sm'>
-                    <td colSpan={9} className='p-0 h-2 text-left text-gray-700'>
-                      <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] font-bold'>Công nợ đầu kỳ</div>
+                    <td colSpan={10} className='p-0 h-2 text-left text-gray-700'>
+                      <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] font-bold capitalize'>Công nợ đầu kỳ</div>
                     </td>
                     <td className='p-0 h-2 text-right font-semibold text-gray-800'>
                       <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>{formatNumber(dataCustomerDebt?.debt?.debt_begin || 0)}</div>
@@ -195,8 +198,8 @@ const CustomerDebt = props => {
                   {Array.isArray(dataCustomerDebt?.deliveries) && dataCustomerDebt.deliveries.length > 0 && (
                     <>
                       <tr className='bg-blue-100 responsive-text-sm'>
-                        <td colSpan={10} className='p-0 h-2 text-center text-gray-700'>
-                          <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1] font-semibold'>Phiếu giao hàng</div>
+                        <td colSpan={11} className='p-0 h-2 text-center text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1] font-semibold uppercase'>Phiếu giao hàng</div>
                         </td>
                       </tr>
                       {/* Deliveries - summary row then items (for all orders) */}
@@ -210,7 +213,7 @@ const CustomerDebt = props => {
                             <td className='p-0 h-2 text-center text-gray-700'>
                               <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{delivery?.reference_no || '-'}</div>
                             </td>
-                            <td className='p-0 h-2' colSpan={4}>
+                            <td className='p-0 h-2' colSpan={5}>
                               <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'></div>
                             </td>
                             <td className='p-0 h-2 text-right'>
@@ -246,6 +249,10 @@ const CustomerDebt = props => {
                               <td className='p-0 h-2 text-left text-gray-700 align-middle'>
                                 <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{it?.item_name || it?.item_code || '-'}</div>
                               </td>
+                              {/* Cột Biến thể mới thêm */}
+                              <td className='p-0 h-2 text-left text-gray-700 align-middle'>
+                                <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{it?.variant_name || '-'}</div>
+                              </td>
                               <td className='p-0 h-2 text-center text-gray-700 align-middle'>
                                 <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{it?.unit_name || '-'}</div>
                               </td>
@@ -274,8 +281,8 @@ const CustomerDebt = props => {
                         </Fragment>
                       ))}
                       <tr className='bg-blue-50  responsive-text-sm'>
-                        <td colSpan={4} className='p-0 h-2 font-semibold text-gray-700'>
-                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>Tổng cộng</div>
+                        <td colSpan={5} className='p-0 h-2 font-semibold text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] capitalize'>Tổng cộng</div>
                         </td>
                         <td className='p-0 h-2 text-center font-semibold text-new-blue'>
                           <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>
@@ -295,8 +302,8 @@ const CustomerDebt = props => {
                   {Array.isArray(dataCustomerDebt?.returns) && dataCustomerDebt.returns.length > 0 && (
                     <>
                       <tr className='bg-amber-100 responsive-text-sm'>
-                        <td colSpan={10} className='p-0 h-2 text-center text-gray-700'>
-                          <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1] font-semibold'>Trả lại hàng bán</div>
+                        <td colSpan={11} className='p-0 h-2 text-center text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1] font-semibold uppercase'>Trả lại hàng bán</div>
                         </td>
                       </tr>
                       {/* Returns items - từng item */}
@@ -310,7 +317,7 @@ const CustomerDebt = props => {
                             <td className='p-0 h-2 text-center text-gray-700'>
                               <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{ret?.reference_no || '-'}</div>
                             </td>
-                            <td className='p-0 h-2' colSpan={4}>
+                            <td className='p-0 h-2' colSpan={5}>
                               <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'></div>
                             </td>
                             <td className='p-0 h-2 text-right'>
@@ -342,6 +349,9 @@ const CustomerDebt = props => {
                               <td className='p-0 h-2 text-left text-gray-700 align-middle'>
                                 <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{it?.item_name || it?.item_code || '-'}</div>
                               </td>
+                              <td className='p-0 h-2 text-left text-gray-700 align-middle'>
+                                <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{it?.variant_name || '-'}</div>
+                              </td>
                               <td className='p-0 h-2 text-center text-gray-700 align-middle'>
                                 <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{it?.unit_name || '-'}</div>
                               </td>
@@ -370,8 +380,8 @@ const CustomerDebt = props => {
                         </Fragment>
                       ))}
                       <tr className='bg-amber-50 responsive-text-sm'>
-                        <td colSpan={4} className='p-0 h-2 font-semibold text-gray-700'>
-                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>Tổng cộng</div>
+                        <td colSpan={5} className='p-0 h-2 font-semibold text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] capitalize'>Tổng cộng</div>
                         </td>
                         <td className='p-0 h-2 text-center font-semibold text-new-blue'>
                           <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>
@@ -389,8 +399,8 @@ const CustomerDebt = props => {
                   )}
 
                   <tr className='bg-gray-100 responsive-text-sm'>
-                    <td colSpan={9} className='p-0 h-2 text-left text-gray-700'>
-                      <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] font-semibold'>Tổng cộng phát sinh trong kỳ</div>
+                    <td colSpan={10} className='p-0 h-2 text-left text-gray-700'>
+                      <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] font-semibold capitalize'>Tổng cộng phát sinh trong kỳ</div>
                     </td>
                     <td className='p-0 h-2 text-right font-semibold text-new-blue'>
                       <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>{formatNumber(dataCustomerDebt.total_deliveries - dataCustomerDebt.total_returns || 0)}</div>
@@ -400,9 +410,23 @@ const CustomerDebt = props => {
                   {/* Phiếu khác trong kỳ */}
                   {Array.isArray(dataCustomerDebt?.other_payslips_coupon) && dataCustomerDebt.other_payslips_coupon.length > 0 && (
                     <>
+                      <tr className='bg-emerald-500/80 responsive-text-sm'>
+                        <td colSpan={11} className='p-0 h-2 text-center text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1] font-semibold uppercase'>Phiếu thu trong kỳ</div>
+                        </td>
+                      </tr>
                       <tr className='bg-emerald-100 responsive-text-sm'>
-                        <td colSpan={10} className='p-0 h-2 text-center text-gray-700'>
-                          <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1] font-semibold'>Phiếu thu trong kỳ</div>
+                        <td className='p-0 h-2 font-semibold text-center text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>Ngày chứng từ</div>
+                        </td>
+                        <td className='p-0 h-2 font-semibold text-center text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>Mã phiếu</div>
+                        </td>
+                        <td className='p-0 h-2 font-semibold text-gray-700' colSpan={8}>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>Ghi chú</div>
+                        </td>
+                        <td className='p-0 h-2 text-right font-semibold text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>Số tiền</div>
                         </td>
                       </tr>
 
@@ -414,8 +438,8 @@ const CustomerDebt = props => {
                           <td className='p-0 h-2 text-center text-gray-700'>
                             <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{cp?.code || '-'}</div>
                           </td>
-                          <td className='p-0 h-2' colSpan={7}>
-                            <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'></div>
+                          <td className='p-0 h-2' colSpan={8}>
+                            <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{cp?.note || '-'}</div>
                           </td>
                           <td className='p-0 h-2 text-right text-gray-700'>
                             <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>{Number(cp?.total) ? formatNumber(Number(cp?.total)) : '-'}</div>
@@ -424,9 +448,9 @@ const CustomerDebt = props => {
                       ))}
 
                       {/* Tổng tiền phiếu khác trong kỳ */}
-                      <tr className='bg-emerald-50 responsive-text-sm'>
-                        <td colSpan={9} className='p-0 h-2 font-semibold text-gray-700'>
-                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>Tổng cộng</div>
+                      <tr className='bg-emerald-100 responsive-text-sm'>
+                        <td colSpan={10} className='p-0 h-2 font-semibold text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] capitalize'>Tổng cộng</div>
                         </td>
                         <td className='p-0 h-2 text-right font-semibold text-gray-700'>
                           <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>{formatNumber(dataCustomerDebt?.total_other_payslips_coupon || 0)}</div>
@@ -437,8 +461,8 @@ const CustomerDebt = props => {
 
                   {/* Số dư cuối kỳ */}
                   <tr className='bg-gray-100 responsive-text-sm'>
-                    <td colSpan={9} className='p-0 h-2 font-bold text-gray-800'>
-                      <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>Số dư cuối kỳ</div>
+                    <td colSpan={10} className='p-0 h-2 font-bold text-gray-800'>
+                      <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] capitalize'>Số dư cuối kỳ</div>
                     </td>
                     <td className='p-0 h-2 text-right font-bold text-new-blue'>
                       <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>{formatNumber(dataCustomerDebt?.final_debt || 0)}</div>

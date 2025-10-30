@@ -34,13 +34,18 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_gi
         reference_no: item?.reference_no || '',
         customer_name: item?.customer_name || '',
         address_delivery: item?.address_delivery || '',
+        branch_name: item?.branch_name || '',
         employee_name: item?.employee_name || '',
         item_code: item?.item_code || '',
         item_name: item?.item_name || '',
+        variant_name: item?.variant_name || '',
         unit_name: item?.unit_name || '',
         quantity: Number(item?.quantity) || 0,
         price: Number(item?.price) || 0,
-        amount: Number(item?.amount) || 0,
+        discount_percent_item: item?.discount_percent_item ?? '',
+        tax_rate_item: item?.tax_rate_item ?? '',
+        total_amount: Number(item?.total_amount) || 0,
+        grand_total: Number(group.order?.grand_total) || 0,
         isFirstItem: itemIndex === 0,
         totalItems: group.items.length,
         deliveryId: group.order?.delivery_id
@@ -55,20 +60,25 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_gi
     }
   });
 
-  // Header đơn giản - phù hợp với bảng báo cáo giao hàng
+  // Header khớp giao diện và giữ STT ở cột đầu
   const headers = [
     'STT',
     'Ngày giao hàng',
     'Số giao hàng',
     'Khách hàng',
     'Địa chỉ giao',
+    'Chi nhánh',
     'Nhân viên phụ trách',
     'Mã hàng',
     'Tên hàng',
+    'Biến thể',
     'ĐVT',
     'Số lượng',
     'Giá',
-    'Thành tiền'
+    'Chiết khấu',
+    'Thuế',
+    'Thành tiền',
+    'Tổng cộng'
   ];
 
   const wsData = rows.map((item) => [
@@ -77,32 +87,42 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_gi
     item.reference_no || '',
     item.customer_name || '',
     item.address_delivery || '',
+    item.branch_name || '',
     item.employee_name || '',
     item.item_code || '',
     item.item_name || '',
+    item.variant_name || '',
     item.unit_name || '',
     item.quantity,
     item.price,
-    item.amount
+    item.discount_percent_item ?? '',
+    item.tax_rate_item ?? '',
+    item.total_amount,
+    item.grand_total
   ]);
 
   // Tính tổng cộng
   const totalQuantity = rows.reduce((sum, item) => sum + item.quantity, 0);
-  const totalAmount = rows.reduce((sum, item) => sum + item.amount, 0);
+  const totalTotalAmount = rows.reduce((sum, item) => sum + item.total_amount, 0);
 
   const totalRow = [
-    '',
-    '',
-    '',
-    'Tổng cộng',
-    '',
-    '',
-    '',
-    '',
-    '',
-    totalQuantity,
-    '',
-    totalAmount
+    '', // STT
+    '', // Ngày giao hàng
+    '', // Số giao hàng
+    'Tổng cộng', // Khách hàng (sticky ở footer UI)
+    '', // Địa chỉ giao
+    '', // Chi nhánh
+    '', // Nhân viên phụ trách
+    '', // Mã hàng
+    '', // Tên hàng
+    '', // Biến thể
+    '', // ĐVT
+    totalQuantity, // Số lượng
+    '', // Giá
+    '', // Chiết khấu
+    '', // Thuế
+    '', // Thành tiền
+    totalTotalAmount, // Tổng cộng
   ];
 
   const wb = XLSX.utils.book_new();
@@ -121,33 +141,32 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_gi
     }
   }
 
-  // Merge cells cho các cột được gộp (STT, Ngày giao hàng, Số giao hàng, Khách hàng, Địa chỉ giao, Nhân viên phụ trách)
+  // Merge cells cho các cột header cố định theo từng đơn: STT, Ngày giao hàng, Số giao hàng, Khách hàng, Địa chỉ giao, Chi nhánh, Nhân viên phụ trách, Tổng cộng đơn
   ws['!merges'] = ws['!merges'] || [];
   groups.forEach(g => {
     if (g.end > g.start) {
       const startRow = g.start + 1; // +1 vì có 1 hàng header
       const endRow = g.end + 1;
-      // Merge các cột: STT (0), Ngày giao hàng (1), Số giao hàng (2), Khách hàng (3), Địa chỉ giao (4), Nhân viên phụ trách (5)
-      [0, 1, 2, 3, 4, 5].forEach(colIndex => {
+      // Merge các cột: STT (0), Ngày giao hàng (1), Số giao hàng (2), Khách hàng (3), Địa chỉ giao (4), Chi nhánh (5), Nhân viên phụ trách (6), Tổng cộng đơn (16)
+      [0, 1, 2, 3, 4, 5, 6, 16].forEach(colIndex => {
         ws['!merges'].push({ s: { r: startRow, c: colIndex }, e: { r: endRow, c: colIndex } });
       });
     }
   });
 
-  // Format số cho các cột số: STT (0), Số lượng (9), Giá (10), Thành tiền (11)
-  const numberCols = [0, 9, 10, 11]; 
-  
+  // Format số cho các cột số: STT (0), Số lượng (11), Giá (12), Chiết khấu (13), Thuế (14), Thành tiền (15), Tổng cộng đơn (16)
+  const numberCols = [0, 11, 12, 13, 14, 15, 16]; 
+
   for (let r = 1; r <= rows.length; r++) { // +1 vì có 1 hàng header
     numberCols.forEach(c => {
       const ref = XLSX.utils.encode_cell({ r, c });
-      // Cột STT (0): Chỉ format nếu là số và không phải chuỗi rỗng
       if (ws[ref] && ws[ref].v !== '' && typeof ws[ref].v === 'number') {
         ws[ref].t = 'n';
         // Giữ lại border và style hiện tại
         ws[ref].s = { 
           ...(ws[ref].s || {}),
           border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } },
-          numFmt: c === 0 ? '0' : '#,##0' // STT không có dấu phẩy, các cột khác có
+          numFmt: c === 0 ? '0' : '#,##0'
         };
       }
     });
@@ -179,8 +198,12 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_gi
       const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
       ws[cellRef] = ws[cellRef] || { v: '' };
       
-      // Cột STT (index 0) căn giữa
-      const alignment = C === 0 ? { horizontal: 'center', vertical: 'middle' } : { horizontal: 'left', vertical: 'middle', wrapText: true };
+      // Căn giữa cho các cột đầu bảng (0..2) và cột số; còn lại trái + wrap
+      const centerCols = new Set([0, 1, 2]);
+      const numericCols = new Set([11, 12, 13, 14, 15, 16]);
+      const alignment = (centerCols.has(C) || numericCols.has(C))
+        ? { horizontal: 'center', vertical: 'middle' }
+        : { horizontal: 'left', vertical: 'middle', wrapText: true };
       
       // Nếu ô chưa có style hoặc chưa có border, thêm border
       if (!ws[cellRef].s || !ws[cellRef].s.border) {
@@ -198,7 +221,7 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_gi
     }
   }
 
-  // Set độ rộng cột
+  // Set độ rộng cột khớp giao diện và STT
   ws['!cols'] = headers.map((title, index) => {
     let width = 15;
     if (index === 0) width = 8; // STT
@@ -206,13 +229,18 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_gi
     else if (index === 2) width = 18; // Số giao hàng
     else if (index === 3) width = 25; // Khách hàng
     else if (index === 4) width = 30; // Địa chỉ giao
-    else if (index === 5) width = 20; // Nhân viên phụ trách
-    else if (index === 6) width = 15; // Mã hàng
-    else if (index === 7) width = 30; // Tên hàng
-    else if (index === 8) width = 10; // ĐVT
-    else if (index === 9) width = 12; // Số lượng
-    else if (index === 10) width = 15; // Giá
-    else if (index === 11) width = 15; // Thành tiền
+    else if (index === 5) width = 20; // Chi nhánh
+    else if (index === 6) width = 20; // Nhân viên phụ trách
+    else if (index === 7) width = 15; // Mã hàng
+    else if (index === 8) width = 30; // Tên hàng
+    else if (index === 9) width = 20; // Biến thể
+    else if (index === 10) width = 10; // ĐVT
+    else if (index === 11) width = 12; // Số lượng
+    else if (index === 12) width = 15; // Giá
+    else if (index === 13) width = 12; // Chiết khấu
+    else if (index === 14) width = 10; // Thuế
+    else if (index === 15) width = 15; // Thành tiền
+    else if (index === 16) width = 18; // Tổng cộng đơn
     return { wch: width };
   });
 

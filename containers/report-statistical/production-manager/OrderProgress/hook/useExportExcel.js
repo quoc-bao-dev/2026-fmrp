@@ -36,7 +36,7 @@ export const useExportExcel = dataReportOrderProgress => {
           },
         },
         {
-          title: 'Chi nhánh xưởng',
+          title: 'Chi nhánh',
           width: { wch: 25 },
           style: {
             font: { bold: true },

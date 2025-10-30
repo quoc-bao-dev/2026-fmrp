@@ -59,10 +59,15 @@ const apiReport = {
     return response.data
   },
 
-  async apiGetMaterialsLookup(search) {
-    const response = await axiosCustom('GET', `/api_web/materials/lookup?search=${search}`)
+  async apiGetMaterialsLookup(param) {
+    const response = await axiosCustom('GET', `/api_web/materials/lookup`, param)
     return response.data
   },
+
+  async apiItemsWithBranch(param) {
+    const response = await axiosCustom('POST', `/api_web/api_product/searchItemsNoneVariant?csrf_protection=true`, param);
+    return response.data
+},
   
   //Báo cáo bán hàng
   async apiGetSalesRevenue(data) {

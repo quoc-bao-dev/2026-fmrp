@@ -18,8 +18,9 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import { PiCalendar, PiPackage, PiShoppingCart } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
-import { useGetOrderProgress, useGetSalesOrderCombobox } from './hook';
+import { useGetItemsWithBranch, useGetOrderProgress, useGetSalesOrderCombobox } from './hook';
 import { useExportExcel } from './hook/useExportExcel';
+import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
 
 const breadcrumbItems = [
   {
@@ -40,6 +41,7 @@ const OrderProgress = () => {
   const { paginate } = usePagination();
   const dataLang = useLanguageContext();
   const statusExprired = useStatusExprired();
+  const { selectedBranches, setSelectedBranches } = usePersistedBranches();
 
   const [dateRange, setDateRange] = useState({
     startDate: undefined,
@@ -57,9 +59,15 @@ const OrderProgress = () => {
   const [productOptions, setProductOptions] = useState([]);
   const currentPage = Number(router.query.page) || 1;
 
-  const { data: dataProduct } = useInventoryItems(debouncedSearchTerm);
+  const { data: dataProduct } = useGetItemsWithBranch({
+    search: debouncedSearchTerm,
+    branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
+  });
+  // const { data: dataProduct } = useInventoryItems(debouncedSearchTerm);
+
   const { data: dataSalesOrderCombobox } = useGetSalesOrderCombobox({
     search: debouncedOrderSearch,
+    branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
   });
 
   // Hàm chuyển đổi Date object sang định dạng d/m/Y
@@ -81,10 +89,15 @@ const OrderProgress = () => {
     };
   };
 
-  const { data, isFetching, refetch: refetchOrderProgress } = useGetOrderProgress({
+  const {
+    data,
+    isFetching,
+    refetch: refetchOrderProgress,
+  } = useGetOrderProgress({
     page: currentPage,
     limit: limit,
     search: debouncedSearchValue,
+    branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
     ...getFormattedDateRange(),
     ...(selectedOrder !== null && { order_ids: selectedOrder.map(item => item.value) }),
     ...(selectedProduct && selectedProduct.length > 0 && { product_id: selectedProduct.map(item => item.value) }),
@@ -217,6 +230,9 @@ const OrderProgress = () => {
         title={'Báo cáo tiến độ theo đơn hàng'}
         statusExprired={statusExprired}
         breadcrumbItems={breadcrumbItems}
+        branchValue={selectedBranches}
+        onBranchChange={setSelectedBranches}
+        onBranchClear={() => setSelectedBranches([])}
         filterSection={
           <div className='w-full items-center flex justify-between gap-4'>
             <div className='grid grid-cols-3 gap-3'>
@@ -259,7 +275,7 @@ const OrderProgress = () => {
               // { title: 'STT', width: 'w-14', textAlign: 'center' },
               { title: 'Ngày đơn hàng', width: 'w-32 text-center', textAlign: 'center' },
               { title: 'Số đơn hàng', width: 'w-32', textAlign: 'left' },
-              { title: 'Chi nhánh xưởng', width: 'w-40', textAlign: 'left' },
+              { title: 'Chi nhánh', width: 'w-40', textAlign: 'left' },
             ]}
             scrollableColumns={[
               { title: 'Tên sản phẩm', width: 'w-48', textAlign: 'left' },
@@ -336,7 +352,6 @@ const OrderProgress = () => {
             renderFooter={() => (
               <>
                 {/* Fixed columns: STT, Ngày đơn hàng, Số đơn hàng, Chi nhánh xưởng */}
-                <RowItemTable className='w-14 flex-shrink-0 bg-white'></RowItemTable>
                 <RowItemTable className='w-32 flex-shrink-0 bg-white'></RowItemTable>
                 <RowItemTable className='w-32 flex-shrink-0 bg-white'></RowItemTable>
                 <RowItemTable className='w-40 flex-shrink-0 bg-white'></RowItemTable>

@@ -162,7 +162,7 @@ const Returns = props => {
         })) || []
     ) || [];
 
-  const handleExportExcel = () => {
+    const handleExportExcel = () => {
     exportWithMergeReturns(flattenedData || [], 'Báo cáo trả lại hàng bán.xlsx');
   };
 
@@ -217,7 +217,7 @@ const Returns = props => {
           <Customscrollbar alwaysShowScrollbar={true} className='h-full flex-1 overflow-auto border border-[#E0E0E1]'>
             <table className='w-full border-0 p-0 m-0'>
               <thead>
-                <tr className='responsive-text-sm sticky top-0 z-50 bg-white'>
+                <tr className='responsive-text-sm sticky top-0 z-50 bg-white capitalize'>
                   <th className='min-w-24 h-2 p-0 font-semibold text-gray-700 sticky left-0 bg-white z-20'>
                     <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Ngày trả hàng</div>
                   </th>
@@ -228,10 +228,16 @@ const Returns = props => {
                     <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Khách hàng</div>
                   </th>
                   <th className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
+                    <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Chi nhánh</div>
+                  </th>
+                  <th className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
                     <div className='w-full h-full flex items-center px-2 py-2 border-b border-r border-[#E0E0E1]'>Mã hàng</div>
                   </th>
                   <th className='min-w-48 h-2 p-0 font-semibold text-gray-700'>
                     <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Tên hàng</div>
+                  </th>
+                  <th className='min-w-44 h-2 p-0 font-semibold text-gray-700'>
+                    <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Biến thể</div>
                   </th>
                   <th className='min-w-24 h-2 p-0 font-semibold text-gray-700'>
                     <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>ĐVT</div>
@@ -243,7 +249,16 @@ const Returns = props => {
                     <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Đơn giá</div>
                   </th>
                   <th className='min-w-24 h-2 p-0 font-semibold text-gray-700'>
-                    <div className='w-full h-full flex items-center justify-end px-3 py-2 border-b border-[#E0E0E1]'>Thành tiền</div>
+                    <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Chiết khấu</div>
+                  </th>
+                  <th className='min-w-24 h-2 p-0 font-semibold text-gray-700'>
+                    <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Thuế</div>
+                  </th>
+                  <th className='min-w-24 h-2 p-0 font-semibold text-gray-700'>
+                    <div className='w-full h-full flex items-center justify-end px-3 py-2 border-b border-r border-[#E0E0E1]'>Thành tiền</div>
+                  </th>
+                  <th className='min-w-28 h-2 p-0 font-semibold text-gray-700'>
+                    <div className='w-full h-full flex items-center justify-end px-3 py-2 border-b border-[#E0E0E1]'>Tổng cộng</div>
                   </th>
                 </tr>
               </thead>
@@ -253,7 +268,9 @@ const Returns = props => {
                     {/* Ngày - chỉ hiển thị ở item đầu tiên với rowspan */}
                     {flattenedItem.isFirstItem && (
                       <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-0 z-20 bg-white'>
-                        <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{moment(flattenedItem?.date).format('DD/MM/YYYY HH:mm:ss') || '-'}</div>
+                        <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                          {moment(flattenedItem?.date).format('DD/MM/YYYY HH:mm:ss') || '-'}
+                        </div>
                       </td>
                     )}
 
@@ -274,7 +291,18 @@ const Returns = props => {
                     {/* Khách hàng - chỉ hiển thị ở item đầu tiên với rowspan */}
                     {flattenedItem.isFirstItem && (
                       <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[240px] z-20 bg-white'>
-                        <div className='w-full h-full flex items-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.customer_name || '-'}</div>
+                        <div className='w-full h-full flex items-center px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                          {flattenedItem?.customer_name || '-'}
+                        </div>
+                      </td>
+                    )}
+
+                    {/* Chi nhánh - chỉ hiển thị ở item đầu tiên với rowspan */}
+                    {flattenedItem.isFirstItem && (
+                      <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle bg-white'>
+                        <div className='w-full h-full flex items-center px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                          {flattenedItem?.branch_name || '-'}
+                        </div>
                       </td>
                     )}
 
@@ -286,6 +314,11 @@ const Returns = props => {
                     {/* Tên hàng - hiển thị cho mỗi item */}
                     <td className='p-0 h-2'>
                       <div className='h-full flex items-center px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.item_name || '-'}</div>
+                    </td>
+
+                    {/* biến thể - hiển thị cho mỗi item */}
+                    <td className='p-0 h-2'>
+                      <div className='h-full flex items-center px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.variant_name || '-'}</div>
                     </td>
 
                     {/* Đơn vị - hiển thị cho mỗi item */}
@@ -306,26 +339,53 @@ const Returns = props => {
                         {Number(flattenedItem.item?.price) === 0 ? '-' : formatNumber(Number(flattenedItem.item?.price))}
                       </div>
                     </td>
+                    {/* Chiết khấu - hiển thị theo discount_amount */}
+                    <td className='p-0 h-2'>
+                      <div className='h-full flex items-center justify-center px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1]'>
+                        {Number(flattenedItem.item?.discount_percent_item) === 0 ? '-' : formatNumber(Number(flattenedItem.item?.discount_percent_item)) + '%'}
+                      </div>
+                    </td>
+                    {/* Thuế - hiển thị theo tax_amount */}
+                    <td className='p-0 h-2'>
+                      <div className='h-full flex items-center justify-center px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1]'>
+                        {Number(flattenedItem.item?.tax_rate) === 0 ? '-' : formatNumber(Number(flattenedItem.item?.tax_rate)) + '%'}
+                      </div>
+                    </td>
 
                     {/* Thành tiền - hiển thị cho mỗi item */}
                     <td className='p-0 h-2'>
-                      <div className='h-full flex items-center justify-end px-3 py-2 text-left text-new-blue font-semibold border-b border-[#E0E0E1]'>
-                        {Number(flattenedItem.item?.amount) === 0 ? '-' : formatNumber(flattenedItem.item?.amount)}
+                      <div className='h-full flex items-center justify-end px-3 py-2 text-left border-b border-r border-[#E0E0E1]'>
+                        {Number(flattenedItem.item?.total_amount) === 0 ? '-' : formatNumber(Number(flattenedItem.item?.total_amount))}
                       </div>
                     </td>
+
+                    {/* Tổng cộng đơn - chỉ hiển thị ở item đầu tiên với rowspan */}
+                    {flattenedItem.isFirstItem && (
+                      <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-right text-new-blue font-semibold align-middle bg-white'>
+                        <div className='w-full h-full flex items-center justify-end px-3 py-2 border-b border-[#E0E0E1]'>
+                          {Number(flattenedItem?.grand_total) === 0 ? '-' : formatNumber(Number(flattenedItem?.grand_total))}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr className='bg-white sticky bottom-0 z-50 responsive-text-sm'>
-                  <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
+                  <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700 sticky left-0 bg-white z-50'>
                     <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                   </td>
-                  <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
+                  <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700 sticky left-[96px] bg-white z-50'>
                     <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                   </td>
-                  <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
+                  <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700 sticky left-[240px] bg-white z-50'>
                     <div className='w-full h-full border-t border-[#E0E0E1] uppercase px-3 py-2'>Tổng cộng</div>
+                  </td>
+                  <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
+                    <div className='w-full h-full border-t border-[#E0E0E1]'></div>
+                  </td>
+                  <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
+                    <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                   </td>
                   <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
                     <div className='w-full h-full border-t border-[#E0E0E1]'></div>
@@ -342,13 +402,20 @@ const Returns = props => {
                     </div>
                   </td>
                   <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
-                    <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>
-                      {formatNumber(flattenedData.reduce((sum, item) => sum + (Number(item?.price) || 0), 0))}
-                    </div>
+                    <div className='w-full h-full border-t border-[#E0E0E1]'></div>
+                  </td>              
+                  <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
+                    <div className='w-full h-full border-t border-[#E0E0E1]'></div>
+                  </td>
+                  <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
+                    <div className='w-full h-full border-t border-[#E0E0E1]'></div>
+                  </td>
+                  <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
+                    <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                   </td>
                   <td className='w-32 p-0 h-2 text-center font-semibold text-new-blue'>
                     <div className='w-full h-full flex items-center justify-end px-3 py-2 border-t border-[#E0E0E1]'>
-                      {formatNumber(flattenedData.reduce((sum, item) => sum + (Number(item?.amount) || 0), 0))}
+                      {formatNumber(flattenedData.reduce((sum, item) => sum + (Number(item?.total_amount) || 0), 0))}
                     </div>
                   </td>
                 </tr>

@@ -9,6 +9,11 @@ const Navbar = props => {
   const isNavbarSales = [
     {
       id: uuidv4(),
+      name: 'Tổng quan bán hàng',
+      path: '/report-statistical/sales-report/dashboard',
+    },
+    {
+      id: uuidv4(),
       name: 'Doanh số theo bán hàng',
       path: '/report-statistical/sales-report/sales-revenue',
     },
@@ -150,7 +155,7 @@ const Navbar = props => {
           id: uuidv4(),
           name: 'Thẻ kho',
           path: '/report-statistical/warehouse-report/card',
-          disabled: true, // Thêm thuộc tính disabled
+          // disabled: true, // Thêm thuộc tính disabled
         },
       ],
     },
@@ -264,12 +269,12 @@ const Navbar = props => {
     },
     {
       id: uuidv4(),
-      name: 'Báo cáo tiến độ theo đơn hàng',
+      name: 'Báo cáo tiến độ đơn hàng',
       path: '/report-statistical/production-manager/order-progress',
     },
     {
       id: uuidv4(),
-      name: 'Báo cáo nguyên liệu sử dụng',
+      name: 'Báo cáo NVL sử dụng',
       path: '/report-statistical/production-manager/raw-materials-used',
     },
     // {
@@ -361,7 +366,7 @@ const Navbar = props => {
                         ) : (
                           <Link href={child.path} className='relative'>
                             <li
-                              className={`group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
+                              className={`group font-medium flex p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
                                 router.pathname === child.path ? 'bg-typo-blue-5 text-white' : ''
                               } `}
                             >
@@ -384,11 +389,11 @@ const Navbar = props => {
                 ) : (
                   <Link href={item.path} key={item.id} className='relative'>
                     <li
-                      className={`group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
+                      className={`group font-medium flex p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
                         router.pathname === item.path ? 'bg-typo-blue-5 text-white' : ''
                       } `}
                     >
-                      <div className='flex xl:w-[95%] xl:max-w-[95%] items-center gap-2'>
+                      <div className='flex w-full items-center gap-2'>
                         <div
                           className={`size-1.5 rounded-full flex-shrink-0 ${
                             router.pathname === item.path ? 'bg-white/60' : 'bg-primary-01'

@@ -122,7 +122,7 @@ const TableSection = ({
             {fixedColumns.map((column, index) => (
               <ColumnTable
                 key={index}
-                className={`flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 ${
+                className={`flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 capitalize ${
                   column.width
                 } ${column.textAlign === 'center' ? 'justify-center' : column.textAlign === 'end' ? 'justify-end' : ''}`}
               >
@@ -141,7 +141,7 @@ const TableSection = ({
             {scrollableColumns.map((column, index) => (
               <ColumnTable
                 key={index}
-                className={`flex items-center py-2 px-3 ${
+                className={`flex items-center py-2 px-3 capitalize ${
                   index !== scrollableColumns.length - 1 ? 'border-r border-[#E0E0E1]' : ''
                 }  items-center text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 ${column.width} ${
                   column.textAlign === 'center' ? 'justify-center' : column.textAlign === 'end' ? 'justify-end' : ''
@@ -171,7 +171,7 @@ const TableSection = ({
             {fixedColumns.map((column, index) => (
               <ColumnTable
                 key={index}
-                className={`flex items-center py-2 px-3 border-r border-b border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 
+                className={`flex items-center py-2 px-3 border-r border-b border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 capitalize
                   ${column.width} 
                   ${column.className} 
                   ${column.textAlign === 'center' ? 'justify-center' : column.textAlign === 'end' ? 'justify-end' : ''}`}
@@ -194,7 +194,7 @@ const TableSection = ({
                   scrollableColumns.map((column, index) => (
                     <div
                       key={`single-${index}`}
-                      className={`flex items-center justify-center py-2 px-3 border-r border-b border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-semibold bg-white flex-shrink-0 ${column.width} ${
+                      className={`flex items-center justify-center py-2 px-3 border-r border-b border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-semibold bg-white flex-shrink-0 capitalize ${column.width} ${
                         column.textAlign === 'center' ? 'justify-center' : column.textAlign === 'end' ? 'justify-end' : ''
                       }`}
                       // style={{ minHeight: '80px' }} // Span both header levels like fixed columns
