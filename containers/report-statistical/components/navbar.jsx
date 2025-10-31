@@ -264,6 +264,11 @@ const Navbar = props => {
     // },
     {
       id: uuidv4(),
+      name: 'Tổng quan sản xuất',
+      path: '/report-statistical/production-manager/dashboard',
+    },
+    {
+      id: uuidv4(),
       name: 'Báo cáo định mức NVL',
       path: '/report-statistical/production-manager/quota-materials',
     },

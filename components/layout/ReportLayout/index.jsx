@@ -8,6 +8,7 @@ import TableSection from './TableSection';
 
 const ReportLayout = ({
   title,
+  filterHeader,
   filterSection,
   tableSection,
   totalSection,
@@ -26,17 +27,20 @@ const ReportLayout = ({
     <Container className='bg-gray-color'>
       {statusExprired ? <EmptyExprired /> : null}
       <div className='flex flex-col gap-5 h-full'>
-        <div className='flex items-center justify-between'>
+        <div className='flex items-end justify-between'>
           <TitleHeader title={title} breadcrumbItems={breadcrumbItems} />
-          <div className='min-w-48'>
-            <CustomSelectBranch
-              placeholderText={'Lọc chi nhánh'}
-              value={branchValue !== undefined ? branchValue : internalSelectedBranches}
-              onChange={values => (onBranchChange ? onBranchChange(values) : setInternalSelectedBranches(values))}
-              onClear={() => (onBranchClear ? onBranchClear() : setInternalSelectedBranches([]))}
-              isError={false}
-              errMess={null}
-            />
+          <div className='flex items-center gap-4'>
+            {filterHeader}
+            <div className='min-w-48'>
+              <CustomSelectBranch
+                placeholderText={'Lọc chi nhánh'}
+                value={branchValue !== undefined ? branchValue : internalSelectedBranches}
+                onChange={values => (onBranchChange ? onBranchChange(values) : setInternalSelectedBranches(values))}
+                onClear={() => (onBranchClear ? onBranchClear() : setInternalSelectedBranches([]))}
+                isError={false}
+                errMess={null}
+              />
+            </div>
           </div>
         </div>
 

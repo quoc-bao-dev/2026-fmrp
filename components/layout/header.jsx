@@ -722,7 +722,7 @@ const Header = () => {
               viewOwn: 1,
               view: 1,
               name: 'Quản lý sản xuất',
-              link: '/report-statistical/production-manager/quota-materials',
+              link: '/report-statistical/production-manager/dashboard',
               forceDisableForAdmin: true,
             },
             {

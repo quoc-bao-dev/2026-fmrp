@@ -962,7 +962,7 @@ const SalesOrderForm = (props) => {
             </div>
           )}
           <div className="text-gray-500">
-            ĐVT: {option.e?.unit_name} - Tồn: {formatNumber(option.e?.qty_warehouse)}
+            ĐVT: {option.e?.unit_name} - Tồn sẵn: {formatNumber(option.e?.qty_warehouse)}
           </div>
         </div>
       </div>

@@ -45,11 +45,11 @@ export const exportWithMergeRawMaterialsUsed = (rawData = [], filename = 'Bao_ca
 
   const columns = [
     'STT',
+    'Ngày',
     'Đơn hàng bán/ Kế hoạch nội bộ',
     'Ghi chú đơn hàng',
     'Số lệnh SX chi tiết',
     'Chi nhánh', // Thêm dòng này
-    'Ngày',
     'Mã NVL',
     'Tên NVL',
     'Biến thể',
@@ -74,11 +74,11 @@ export const exportWithMergeRawMaterialsUsed = (rawData = [], filename = 'Bao_ca
 
   const wsData = rows.map((item, rowIndex) => [
     rowGroupIndex[rowIndex] + 1, // STT theo nhóm
+    item.date ? moment(item.date).format('DD/MM/YYYY') : '',
     item.order_number,
     item.order_note,
     item.production_order,
     item.branch_name, // Thêm dòng này
-    item.date ? moment(item.date).format('DD/MM/YYYY') : '',
     item.material_code,
     item.material_name,
     item.variant_name,
@@ -96,7 +96,21 @@ export const exportWithMergeRawMaterialsUsed = (rawData = [], filename = 'Bao_ca
   const totalUsed = rows.reduce((s, r) => s + (Number(r.used_quantity) || 0), 0);
 
   const totalRow = [
-    '', '', '', '', '', '', '', 'Tổng cộng', '', '', '', '', '', '', ''
+    '', // STT
+    '', // Ngày
+    '', // Đơn hàng bán/ Kế hoạch nội bộ
+    '', // Ghi chú đơn hàng
+    '', // Số lệnh SX chi tiết
+    '', // Chi nhánh
+    '', // Mã NVL
+    'Tổng cộng', // Tên NVL (đặt nhãn tại cột mô tả)
+    '', // Biến thể
+    '', // Loại
+    '', // Đơn vị
+    totalPlan,   // SL kế hoạch
+    totalOutput, // SL đầu ra
+    totalReturn, // SL nhập lại
+    totalUsed    // SL đã sử dụng
   ];
 
   const wb = XLSX.utils.book_new();
@@ -121,14 +135,14 @@ export const exportWithMergeRawMaterialsUsed = (rawData = [], filename = 'Bao_ca
     };
   }
 
-  // Gộp ô theo nhóm cho các cột: STT (0), Đơn hàng bán (1), Ghi chú (2), Số lệnh (3), Chi nhánh (4), Ngày (5)
+  // Gộp ô theo nhóm cho các cột: STT (0), Ngày (1), Đơn hàng bán (2), Ghi chú (3), Số lệnh (4), Chi nhánh (5)
   // Lưu ý: Trong sheet, dữ liệu bắt đầu từ hàng 1 (0 là header). Chuyển start/end của nhóm +1.
   ws['!merges'] = ws['!merges'] || [];
   groups.forEach(g => {
     if (g.end > g.start) {
       const startRow = g.start + 1; // +1 vì header ở hàng 0
       const endRow = g.end + 1;
-      [0, 1, 2, 3, 4, 5].forEach(colIndex => { // Thêm cột 4 (Chi nhánh)
+      [0, 1, 2, 3, 4, 5].forEach(colIndex => {
         ws['!merges'].push({ s: { r: startRow, c: colIndex }, e: { r: endRow, c: colIndex } });
       });
     }

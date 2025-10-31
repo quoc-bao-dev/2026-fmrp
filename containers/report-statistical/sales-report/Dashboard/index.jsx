@@ -1,14 +1,16 @@
 import SaleIcon from '@/components/icons/common/SaleIcon';
 import ReportLayout from '@/components/layout/ReportLayout';
-import { useLanguageContext } from '@/context/ui/LanguageContext';
 import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
-import useSetingServer from '@/hooks/useConfigNumber';
 import useStatusExprired from '@/hooks/useStatusExprired';
-import formatNumberConfig from '@/utils/helpers/formatnumber';
-import { useRouter } from 'next/router';
 import { useState } from 'react';
-import { useDebounce } from 'use-debounce';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Label } from 'recharts';
+import QuickDateDropdown, { getDateRangeByQuickValue } from '../../components/QuickDateDropdown';
+import CompletionDonut from './CompletionDonut';
+import CustomerTypeSales from './CustomerTypeSales';
+import DebtChart from './DebtChart';
+import { useGetSalesSummary } from './hook';
+import RepeatOrderDonut from './RepeatOrderDonut';
+import RevenueStructurePie from './RevenueStructurePie';
+import formatNumber from '@/utils/helpers/formatnumber';
 
 const breadcrumbItems = [
   {
@@ -23,68 +25,48 @@ const breadcrumbItems = [
   },
 ];
 
-const Dashboard = props => {
-  const dataSeting = useSetingServer();
-  const router = useRouter();
+const Dashboard = () => {
   const statusExprired = useStatusExprired();
-  const dataLang = useLanguageContext();
-
-  const formatNumber = number => {
-    return formatNumberConfig(+number, dataSeting);
-  };
-
-  // State management
-  const [dateRange, setDateRange] = useState({
-    startDate: undefined,
-    endDate: undefined,
-  });
-  const [selectedCustomer, setSelectedCustomer] = useState([]);
-  const [selectedOrder, setSelectedOrder] = useState([]);
-  const [limit, setLimit] = useState(15);
-  const [searchValue, setSearchValue] = useState('');
-  const [debouncedSearchValue] = useDebounce(searchValue, 500);
-
-  // Search values riêng cho từng API
-  const [customerSearchValue, setCustomerSearchValue] = useState('');
-  const [debouncedCustomerSearchValue] = useDebounce(customerSearchValue, 500);
-  const [orderSearchValue, setOrderSearchValue] = useState('');
-  const [debouncedOrderSearchValue] = useDebounce(orderSearchValue, 500);
-
+  const [quickDate, setQuickDate] = useState('this_week');
+  const [dateRange, setDateRange] = useState(() => getDateRangeByQuickValue('this_week'));
   const { selectedBranches, setSelectedBranches } = usePersistedBranches();
 
-  const currentPage = Number(router.query.page) || 1;
+  const { data: salesSummary } = useGetSalesSummary({ start_date: dateRange.start_date, end_date: dateRange.end_date, branch_ids: selectedBranches });
 
-  // Hàm chuyển đổi Date object sang định dạng d/m/Y
-  const formatDateToDMY = date => {
-    if (!date) return undefined;
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
-  // Tạo filter với định dạng ngày d/m/Y
-  const getFormattedDateRange = () => {
-    if (!dateRange?.startDate || !dateRange?.endDate) return {};
-
-    return {
-      start_date: formatDateToDMY(new Date(dateRange.startDate)),
-      end_date: formatDateToDMY(new Date(dateRange.endDate)),
-    };
-  };
-
-  const handleSearch = value => {
-    const searchValue = value?.target?.value || (typeof value === 'string' ? value : '');
-    setSearchValue(searchValue);
-  };
-
-  const handleLimitChange = newLimit => {
-    setLimit(newLimit);
-    router.push({
-      pathname: router.pathname,
-      query: { ...router.query, page: 1, limit: newLimit },
-    });
-  };
+  const kpiItems = [
+    {
+      key: 'orders',
+      label: 'Doanh thu',
+      containerBg: '#DCFCE7',
+      iconBg: '#14B32E',
+      labelColor: '#14B32E',
+      value: () => formatNumber(salesSummary?.orders),
+    },
+    {
+      key: 'deliveries',
+      label: 'Xuất giao',
+      containerBg: '#FFE2E5',
+      iconBg: '#FA5A7D',
+      labelColor: '#FA5A7D',
+      value: () => formatNumber(salesSummary?.deliveries),
+    },
+    {
+      key: 'other_payslips_coupon',
+      label: 'Thu tiền',
+      containerBg: '#FFF4DE',
+      iconBg: '#FF947A',
+      labelColor: '#FF947A',
+      value: () => formatNumber(salesSummary?.other_payslips_coupon),
+    },
+    {
+      key: 'debt',
+      label: 'Công nợ',
+      containerBg: '#F3E8FF',
+      iconBg: '#BF83FF',
+      labelColor: '#BF83FF',
+      value: () => formatNumber(salesSummary?.debt),
+    },
+  ];
 
   return (
     <ReportLayout
@@ -92,6 +74,18 @@ const Dashboard = props => {
       statusExprired={statusExprired}
       breadcrumbItems={breadcrumbItems}
       maginBottom={true}
+      filterHeader={
+        <div className='flex items-center gap-2'>
+          <p className='responsive-text-base text-[#3A3E4C] font-semibold capitalize'>Lọc theo</p>
+          <QuickDateDropdown
+            value={quickDate}
+            onChange={range => {
+              setQuickDate(range.value);
+              setDateRange(range);
+            }}
+          />
+        </div>
+      }
       branchValue={selectedBranches}
       onBranchChange={setSelectedBranches}
       onBranchClear={() => setSelectedBranches([])}
@@ -99,135 +93,43 @@ const Dashboard = props => {
       <div className='h-full px-3'>
         <div className='grid grid-rows-2 gap-4 h-full min-h-0'>
           {/* Hàng 1 */}
-          <div className='grid grid-cols-5 gap-4'>
-            <div className='col-span-3'>
+          <div className='grid grid-cols-5 gap-4 h-full'>
+            <div className='col-span-3 h-full'>
               <div className='grid h-full grid-rows-10 gap-3'>
                 <div className='row-span-3 grid grid-cols-4 gap-3'>
-                  <div className='flex flex-col gap-3 rounded-2xl bg-[#FFE2E5] shadow-[0px_1px_8px_0px_#00000012] py-3 px-4 2xl:px-6'>
-                    <div className='flex gap-2 items-center'>
-                      <div className='bg-[#FA5A7D] rounded-full p-2'>
-                        <SaleIcon className='w-6 h-6' />
+                  {kpiItems.map(item => (
+                    <div key={item.key} className={`flex flex-col gap-3 rounded-2xl shadow-[0px_1px_8px_0px_#00000012] py-3 px-4 2xl:px-6`} style={{ backgroundColor: item.containerBg }}>
+                      <div className='flex gap-2 items-center'>
+                        <div className='rounded-full p-2' style={{ backgroundColor: item.iconBg }}>
+                          <SaleIcon className='w-6 h-6' />
+                        </div>
+                        <h3 className='responsive-text-sm font-medium capitalize' style={{ color: item.labelColor }}>{item.label}</h3>
                       </div>
-                      <h3 className='responsive-text-sm text-[#FA5A7D] font-medium'>Bán hàng</h3>
+                      <p className='responsive-text-lg text-[#425166] font-medium whitespace-nowrap'>{item.value()} đ</p>
                     </div>
-                    <p className='responsive-text-3xl text-[#425166] font-medium whitespace-nowrap'>300.000 đ</p>
-                  </div>
-                  <div className='flex flex-col gap-3 rounded-2xl bg-[#FFF4DE] shadow-[0px_1px_8px_0px_#00000012] py-3 px-4 2xl:px-6'>
-                    <div className='flex gap-2 items-center'>
-                      <div className='bg-[#FF947A] rounded-full p-2'>
-                        <SaleIcon className='w-6 h-6' />
-                      </div>
-                      <h3 className='responsive-text-sm text-[#FF947A] font-medium'>Thu tiền</h3>
-                    </div>
-                    <p className='responsive-text-3xl text-[#425166] font-medium whitespace-nowrap'>300.000 đ</p>
-                  </div>
-                  <div className='flex flex-col gap-3 rounded-2xl bg-[#DCFCE7] shadow-[0px_1px_8px_0px_#00000012] py-3 px-4 2xl:px-6'>
-                    <div className='flex gap-2 items-center'>
-                      <div className='bg-[#14B32E] rounded-full p-2'>
-                        <SaleIcon className='w-6 h-6' />
-                      </div>
-                      <h3 className='responsive-text-sm text-[#14B32E] font-medium'>Doanh thu</h3>
-                    </div>
-                    <p className='responsive-text-3xl text-[#425166] font-medium whitespace-nowrap'>300.000 đ</p>
-                  </div>
-                  <div className='flex flex-col gap-3 rounded-2xl bg-[#F3E8FF] shadow-[0px_1px_8px_0px_#00000012] py-3 px-4 2xl:px-6'>
-                    <div className='flex gap-2 items-center'>
-                      <div className='bg-[#BF83FF] rounded-full p-2'>
-                        <SaleIcon className='w-6 h-6' />
-                      </div>
-                      <h3 className='responsive-text-sm text-[#BF83FF] font-medium'>Lợi nhuận</h3>
-                    </div>
-                    <p className='responsive-text-3xl text-[#425166] font-medium whitespace-nowrap'>300.000 đ</p>
-                  </div>
+                  ))}
                 </div>
                 <div className='row-span-7 rounded-[20px] bg-[#EEF6FF] p-4 flex flex-col'>
-                  <h2 className='text-center font-semibold responsive-text-xl'>Công Nợ</h2>
-                  <ResponsiveContainer width='100%' height={220}>
-                    <LineChart
-                      data={[
-                        { name: '0', value: 10000 },
-                        { name: '30', value: 55000 },
-                        { name: '60', value: 35000 },
-                        { name: '90', value: 60000 },
-                        { name: '180', value: 48000 },
-                        { name: '>180', value: 75000 },
-                      ]}
-                      margin={{ top: 32, right: 32, left: 0, bottom: 20 }}
-                    >
-                      <CartesianGrid stroke="#D9D9D9" strokeDasharray="0" vertical={false} />
-                      <XAxis
-                        dataKey='name'
-                        tick={{ fill: '#828383', fontSize: 14, fontWeight: 400 }}
-                        padding={{ left: 0, right: 60 }}
-                        tickMargin={14}
-                        allowDuplicatedCategory={false}
-                        interval={0}
-                        minTickGap={32}
-                        tickFormatter={value => value === '0' ? '' : value}
-                        tickLine={{ strokeWidth: 0, y2: 0 }}
-                        axisLine={{ stroke: '#D9D9D9', strokeWidth: 1 }}
-                      >
-                        <Label
-                          value='(Ngày)'
-                          position='insideRight'
-                          offset={-8}
-                          style={{
-                            textAnchor: 'end',
-                            fill: '#003DA0',
-                            fontSize: 10,
-                            fontWeight: 400,
-                            transform: 'translateY(8px)',
-                          }}
-                        />
-                      </XAxis>
-                      <YAxis
-                        tickFormatter={v => v.toLocaleString('vi-VN')}
-                        domain={[0, 100000]}
-                        tick={{ fill: '#828383', fontSize: 14, fontWeight: 400 }}
-                        tickLine={{ strokeWidth: 0, y2: 0 }}
-                        axisLine={{ stroke: '#D9D9D9', strokeWidth: 1 }}
-                      >
-                        <Label
-                          value='(Ngàn đồng)'
-                          position='top'
-                          offset={10}
-                          style={{
-                            textAnchor: 'start',
-                            fill: '#003DA0',
-                            fontSize: 10,
-                            fontWeight: 400,
-                            transform: 'translateY(-10px)',
-                          }}
-                        />
-                      </YAxis>
-                      <YAxis
-                        orientation="right"
-                        axisLine={{ stroke: '#D9D9D9', strokeWidth: 1 }}
-                        tickLine={false}
-                        ticks={[]}
-                        label={false}
-                      />
-                      <Tooltip formatter={value => value.toLocaleString('vi-VN')} />
-                      <Line
-                        dataKey='value'
-                        stroke='#69A6D2'
-                        fill='#69A6D2'
-                        strokeWidth={3}
-                        dot={{ r: 5, stroke: '#69A6D2', fill: '#fff', strokeWidth: 3 }}
-                        activeDot={{ r: 8, stroke: '#69A6D2', fill: '#fff', strokeWidth: 4 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  <h2 className='text-center font-semibold responsive-text-xl text-neutral-04 capitalize'>Công Nợ</h2>
+                  <DebtChart />
                 </div>
               </div>
             </div>
-            <div className='col-span-2 bg-green-100 rounded p-4'>Ô 2, hàng 1 (40%)</div>
+            <div className='col-span-2 h-full min-h-0'>
+              <RevenueStructurePie />
+            </div>
           </div>
           {/* Hàng 2 */}
-          <div className='grid grid-cols-3 gap-4'>
-            <div className='bg-yellow-100 rounded p-4'>Ô 1, hàng 2 (1/3)</div>
-            <div className='bg-pink-100 rounded p-4'>Ô 2, hàng 2 (1/3)</div>
-            <div className='bg-purple-100 rounded p-4'>Ô 3, hàng 2 (1/3)</div>
+          <div className='grid grid-cols-3 gap-4 h-full'>
+            <div className='rounded-[20px] h-full'>
+              <CompletionDonut percent={70} />
+            </div>
+            <div className='rounded-[20px] h-full'>
+              <CustomerTypeSales />
+            </div>
+            <div className='rounded-[20px] h-full'>
+              <RepeatOrderDonut repeatPercent={40} />
+            </div>
           </div>
         </div>
       </div>

@@ -238,7 +238,7 @@ export const exportCustomerDebtExcel = (dataCustomerDebt, filename = 'Bao_cao_co
   bodyRows.push([
     'Công nợ đầu kỳ',
     ...Array(COLS - 2).fill(''),
-    Number(dataCustomerDebt?.debt?.debt_begin) || 0
+    Number(dataCustomerDebt?.raw_balance) || 0
   ]);
 
   // Phiếu giao hàng

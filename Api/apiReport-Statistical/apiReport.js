@@ -89,7 +89,10 @@ const apiReport = {
     const response = await axiosCustom('GET', `/api_web/reports/customer-debt`, data)
     return response.data
   },
-
+  async apiGetSalesSummary(data) {
+    const response = await axiosCustom('GET', `/api_web/dashboard/reports/summary`, data)
+    return response.data
+  },
   
 }
 

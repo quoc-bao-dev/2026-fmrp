@@ -188,7 +188,7 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_do
     totalQuantity,
     totalDelivery,
     totalNotDelivery,
-    totalPrice,
+    '', // Không tính tổng cho cột Đơn giá
     '', // Không hiển thị tổng phần trăm chiết khấu
     totalDiscountAmount,
     '', // Không hiển thị tổng phần trăm thuế

@@ -221,10 +221,10 @@ const Returns = props => {
                   <th className='min-w-24 h-2 p-0 font-semibold text-gray-700 sticky left-0 bg-white z-20'>
                     <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Ngày trả hàng</div>
                   </th>
-                  <th className='min-w-36 h-2 p-0 font-semibold text-gray-700 sticky left-[96px] bg-white z-20'>
+                  <th className='min-w-36 h-2 p-0 font-semibold text-gray-700 sticky left-[96px] 2xl:left-[104px] bg-white z-20'>
                     <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Số phiếu</div>
                   </th>
-                  <th className='min-w-44 h-2 p-0 font-semibold text-gray-700 sticky left-[240px] bg-white z-20'>
+                  <th className='min-w-44 h-2 p-0 font-semibold text-gray-700 sticky left-[240px] 2xl:left-[248px] bg-white z-20'>
                     <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Khách hàng</div>
                   </th>
                   <th className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
@@ -276,7 +276,7 @@ const Returns = props => {
 
                     {/* Số phiếu - chỉ hiển thị ở item đầu tiên với rowspan */}
                     {flattenedItem.isFirstItem && (
-                      <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[96px] z-20 bg-white'>
+                      <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[96px] 2xl:left-[104px] z-20 bg-white'>
                         <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>
                           <PopupDetail
                             dataLang={dataLang}
@@ -290,7 +290,7 @@ const Returns = props => {
 
                     {/* Khách hàng - chỉ hiển thị ở item đầu tiên với rowspan */}
                     {flattenedItem.isFirstItem && (
-                      <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[240px] z-20 bg-white'>
+                      <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[240px] 2xl:left-[248px] z-20 bg-white'>
                         <div className='w-full h-full flex items-center px-3 py-2 border-r border-b border-[#E0E0E1]'>
                           {flattenedItem?.customer_name || '-'}
                         </div>
@@ -375,10 +375,10 @@ const Returns = props => {
                   <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700 sticky left-0 bg-white z-50'>
                     <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                   </td>
-                  <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700 sticky left-[96px] bg-white z-50'>
+                  <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700 sticky left-[96px] 2xl:left-[104px] bg-white z-50'>
                     <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                   </td>
-                  <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700 sticky left-[240px] bg-white z-50'>
+                  <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700 sticky left-[240px] 2xl:left-[248px] bg-white z-50'>
                     <div className='w-full h-full border-t border-[#E0E0E1] uppercase px-3 py-2'>Tổng cộng</div>
                   </td>
                   <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>

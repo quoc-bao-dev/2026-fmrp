@@ -238,7 +238,7 @@ const SalesRevenue = props => {
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Giá trị</div>
                     </th>
                   </tr>
-                  <tr className='responsive-text-sm sticky top-[32px] 2xl:top-[38px] z-40 bg-white capitalize'>
+                  <tr className='responsive-text-sm sticky top-[34px] 2xl:top-[38px] z-40 bg-white capitalize'>
                     <th className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Đơn hàng</div>
                     </th>
@@ -512,10 +512,8 @@ const SalesRevenue = props => {
                         {formatNumber(flattenedData.reduce((sum, item) => sum + (Number(item?.quantity_not_delivery) || 0), 0))}
                       </div>
                     </td>
-                    <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>
-                        {formatNumber(flattenedData.reduce((sum, item) => sum + (Number(item?.price) || 0), 0))}
-                      </div>
+                    <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
+                      <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
                     <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
                       <div className='w-full h-full border-t border-[#E0E0E1]'></div>

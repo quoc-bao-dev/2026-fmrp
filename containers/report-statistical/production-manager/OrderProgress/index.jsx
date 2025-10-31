@@ -8,8 +8,8 @@ import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport'
 import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet';
 import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 import PaginationComponent from '@/components/UI/pagination';
-import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems';
 import { useLanguageContext } from '@/context/ui/LanguageContext';
+import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
 import usePagination from '@/hooks/usePagination';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import formatNumber from '@/utils/helpers/formatnumber';
@@ -20,7 +20,6 @@ import { PiCalendar, PiPackage, PiShoppingCart } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
 import { useGetItemsWithBranch, useGetOrderProgress, useGetSalesOrderCombobox } from './hook';
 import { useExportExcel } from './hook/useExportExcel';
-import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
 
 const breadcrumbItems = [
   {
@@ -352,12 +351,12 @@ const OrderProgress = () => {
             renderFooter={() => (
               <>
                 {/* Fixed columns: STT, Ngày đơn hàng, Số đơn hàng, Chi nhánh xưởng */}
-                <RowItemTable className='w-32 flex-shrink-0 bg-white'></RowItemTable>
-                <RowItemTable className='w-32 flex-shrink-0 bg-white'></RowItemTable>
-                <RowItemTable className='w-40 flex-shrink-0 bg-white'></RowItemTable>
+                <RowItemTable className='w-32 flex-shrink-0 bg-white sticky left-0 z-20'></RowItemTable>
+                <RowItemTable className='w-32 flex-shrink-0 bg-white sticky left-[128px] z-20'></RowItemTable>
+                <RowItemTable className='h-10 w-40 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white uppercase sticky left-[256px] z-20'>Tổng cộng</RowItemTable>
 
                 {/* Scrollable columns: Tên SP, Biến thể, ĐVT, Ghi chú, ... */}
-                <RowItemTable className='h-10 w-48 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white uppercase'>Tổng cộng</RowItemTable>
+                <RowItemTable className='w-48 flex-shrink-0 bg-white'></RowItemTable>
                 <RowItemTable className='h-10 w-48 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
                 <RowItemTable className='h-10 w-24 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
                 <RowItemTable className='h-10 w-40 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>

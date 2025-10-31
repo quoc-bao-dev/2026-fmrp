@@ -237,20 +237,20 @@ const RawMaterialsUsed = () => {
                     {/* <th rowSpan={2} className='min-w-14 h-2 p-0 font-semibold text-gray-700 sticky left-0 bg-white z-20'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border border-[#E0E0E1]'>STT</div>
                     </th> */}
-                    <th rowSpan={2} className='min-w-32 h-2 p-0 font-semibold text-gray-700 sticky left-0 bg-white z-20'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-x border-[#E0E0E1]'>Đơn hàng bán/ Kế hoạch nội bộ</div>
+                    <th rowSpan={2} className='min-w-28 h-2 p-0 font-semibold text-gray-700 sticky left-0 bg-white z-20'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-x border-[#E0E0E1]'>Ngày</div>
                     </th>
-                    <th rowSpan={2} className='min-w-40 h-2 p-0 font-semibold text-gray-700 sticky left-[128px] bg-white z-20'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Ghi chú đơn hàng</div>
+                    <th rowSpan={2} className='min-w-32 h-2 p-0 font-semibold text-gray-700 sticky left-[112px] bg-white z-20'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Đơn hàng bán/ Kế hoạch nội bộ</div>
                     </th>
-                    <th rowSpan={2} className='min-w-40 h-2 p-0 font-semibold text-gray-700 sticky left-[288px] bg-white z-20'>
+                    <th rowSpan={2} className='min-w-40 h-2 p-0 font-semibold text-gray-700 sticky left-[240px] bg-white z-20'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Số lệnh SX chi tiết</div>
+                    </th>
+                    <th rowSpan={2} className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Ghi chú đơn hàng</div>
                     </th>
                     <th rowSpan={2} className='min-w-36 h-2 p-0 font-semibold text-gray-700'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Chi nhánh</div>
-                    </th>
-                    <th rowSpan={2} className='min-w-28 h-2 p-0 font-semibold text-gray-700'>
-                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Ngày</div>
                     </th>
                     <th rowSpan={2} className='min-w-32 h-2 p-0 font-semibold text-gray-700 border-r border-[#E0E0E1]'>
                       <div className='w-full h-full flex items-center px-3 py-2 border-y border-[#E0E0E1]'>Mã NVL</div>
@@ -271,7 +271,7 @@ const RawMaterialsUsed = () => {
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-y border-r border-[#E0E0E1]'>Số lượng</div>
                     </th>
                   </tr>
-                  <tr className='responsive-text-sm sticky top-[34px] z-40 bg-white'>
+                  <tr className='responsive-text-sm sticky top-[34px] 2xl:top-[40px] z-40 bg-white'>
                     <th className='min-w-32 h-2 p-0 font-semibold text-gray-700 border-r border-[#E0E0E1]'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-[#E0E0E1]'>Kế hoạch</div>
                     </th>
@@ -316,24 +316,31 @@ const RawMaterialsUsed = () => {
                           </td>
                         )} */}
 
-                        {/* Đơn hàng bán - chỉ hiển thị ở bom đầu tiên với rowspan */}
+                        {/* Ngày - chỉ hiển thị ở bom đầu tiên với rowspan */}
                         {flattenedItem.isFirstBom && (
-                          <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-0 z-20 bg-white'>
-                            <div className='w-full h-full flex items-center justify-center px-3 py-2 border-x border-b border-[#E0E0E1]'>{flattenedItem?.object_data?.reference_no}</div>
+                          <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle bg-white sticky left-0 z-20'>
+                            <div className='w-full h-full flex items-center justify-center px-3 py-2 border-x border-b border-[#E0E0E1]'>{moment(flattenedItem.po_date).format('DD/MM/YYYY')}</div>
                           </td>
                         )}
 
-                        {/* Ghi chú đơn hàng - chỉ hiển thị ở bom đầu tiên với rowspan */}
+                        {/* Đơn hàng bán - chỉ hiển thị ở bom đầu tiên với rowspan */}
                         {flattenedItem.isFirstBom && (
-                          <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[128px] z-20 bg-white'>
-                            <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.object_data?.note || '-'}</div>
+                          <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[112px] z-20 bg-white'>
+                            <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.object_data?.reference_no}</div>
                           </td>
                         )}
 
                         {/* Số lệnh SX chi tiết - chỉ hiển thị ở bom đầu tiên với rowspan */}
                         {flattenedItem.isFirstBom && (
-                          <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[288px] z-20 bg-white'>
+                          <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle sticky left-[240px] z-20 bg-white'>
                             <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem.reference_no_detail}</div>
+                          </td>
+                        )}
+
+                        {/* Ghi chú đơn hàng - chỉ hiển thị ở bom đầu tiên với rowspan */}
+                        {flattenedItem.isFirstBom && (
+                          <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle'>
+                            <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.object_data?.note || '-'}</div>
                           </td>
                         )}
 
@@ -341,13 +348,6 @@ const RawMaterialsUsed = () => {
                         {flattenedItem.isFirstBom && (
                           <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle bg-white'>
                             <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.branch_name || '-'}</div>
-                          </td>
-                        )}
-
-                        {/* Ngày - chỉ hiển thị ở bom đầu tiên với rowspan */}
-                        {flattenedItem.isFirstBom && (
-                          <td rowSpan={flattenedItem.totalBoms} className='p-0 h-2 text-center text-gray-700 align-middle bg-white'>
-                            <div className='w-full h-full flex items-center justify-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{moment(flattenedItem.po_date).format('DD/MM/YYYY')}</div>
                           </td>
                         )}
 
@@ -400,10 +400,10 @@ const RawMaterialsUsed = () => {
                     <td className='w-48 p-0 h-2 text-center font-semibold text-gray-700 sticky left-0 z-20 bg-white'>
                       <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
-                    <td className='w-48 p-0 h-2 text-center font-semibold text-gray-700 sticky left-[128px] z-20 bg-white'>
+                    <td className='w-48 p-0 h-2 text-center font-semibold text-gray-700 sticky left-[112px] z-20 bg-white'>
                       <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                     </td>
-                    <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700 sticky left-[288px] z-20 bg-white'>
+                    <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700 sticky left-[240px] z-20 bg-white'>
                       <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1] uppercase'>Tổng cộng</div>
                     </td>
                     <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
