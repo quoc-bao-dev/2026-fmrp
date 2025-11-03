@@ -25,6 +25,7 @@ import { useSelector } from 'react-redux'
 import { useDebounce } from 'use-debounce'
 import { useExportExcel } from './hook/useExportExcel'
 import { useGetListReportExportManufacture } from './hook/useGetListReportExportManufacture'
+import { usePersistedBranches } from '@/hooks/common/usePersistedBranches'
 
 const breadcrumbItems = [
   {
@@ -45,6 +46,7 @@ const ExportProduction = (props) => {
   const dataLang = useLanguageContext()
   const statusExprired = useStatusExprired()
   const { dataProductExpiry, dataMaterialExpiry, dataProductSerial } = useFeature()
+  const { selectedBranches, setSelectedBranches } = usePersistedBranches()
   //   console.log("material_expiry", dataMaterialExpiry?.is_enable)
   //   console.log("product_expiry", dataProductExpiry?.is_enable)
   // console.log("product_serial", dataProductSerial?.is_enable)
@@ -87,6 +89,7 @@ const ExportProduction = (props) => {
     limit: limit,
     search: debouncedSearchValue,
     filter: {
+      branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
       warehouses_id: selectedWarehouse?.value,
       ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
       ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
@@ -210,6 +213,9 @@ const ExportProduction = (props) => {
       title={'Báo cáo xuất kho sản xuất'}
       statusExprired={statusExprired}
       breadcrumbItems={breadcrumbItems}
+      branchValue={selectedBranches}
+      onBranchChange={setSelectedBranches}
+      onBranchClear={() => setSelectedBranches([])}
       filterSection={
         <div className="w-full items-center flex justify-between gap-4">
           <div className="flex gap-3">

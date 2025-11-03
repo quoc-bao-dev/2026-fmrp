@@ -11,6 +11,7 @@ import TableSection from '@/components/layout/ReportLayout/TableSection'
 import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems'
 import PopupDetail from '@/containers/sales-export-product/delivery-receipt/components/PopupDetail'
 import { useLanguageContext } from '@/context/ui/LanguageContext'
+import { usePersistedBranches } from '@/hooks/common/usePersistedBranches'
 import { useGetWarehouse } from '@/hooks/common/useWarehouses'
 import useFeature from '@/hooks/useConfigFeature'
 import usePagination from '@/hooks/usePagination'
@@ -45,9 +46,7 @@ const ExportDelivery = (props) => {
   const dataLang = useLanguageContext()
   const statusExprired = useStatusExprired()
   const { dataProductExpiry, dataMaterialExpiry, dataProductSerial } = useFeature()
-  //   console.log("material_expiry", dataMaterialExpiry?.is_enable)
-  //   console.log("product_expiry", dataProductExpiry?.is_enable)
-  // console.log("product_serial", dataProductSerial?.is_enable)
+  const { selectedBranches, setSelectedBranches } = usePersistedBranches()
   const auth = useSelector((state) => state.auth)
   // Tạo biến kiểm tra quyền xem giá
   const canViewPrice =
@@ -86,6 +85,7 @@ const ExportDelivery = (props) => {
     limit: limit,
     search: debouncedSearchValue,
     filter: {
+      branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
       warehouses_id: selectedWarehouse?.value,
       ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
       ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
@@ -200,6 +200,9 @@ const ExportDelivery = (props) => {
       title={'Báo cáo xuất kho giao hàng'}
       statusExprired={statusExprired}
       breadcrumbItems={breadcrumbItems}
+      branchValue={selectedBranches}
+      onBranchChange={setSelectedBranches}
+      onBranchClear={() => setSelectedBranches([])}
       filterSection={
         <div className="w-full items-center flex justify-between gap-4">
           <div className="flex gap-3">

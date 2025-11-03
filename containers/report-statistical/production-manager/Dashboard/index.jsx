@@ -10,6 +10,7 @@ import { useGetProductionSummary } from './hook';
 import MainMaterialStock from './MainMaterialStock';
 import OrderCompletionDonut from './OrderCompletionDonut';
 import ProductionOrderStatusDonut from './ProductionOrderStatusDonut';
+import ProductionTrackingChart from './ProductionTrackingChart';
 
 const breadcrumbItems = [
   {
@@ -133,7 +134,7 @@ const Dashboard = () => {
           </div>
           <div className='grid grid-cols-2 gap-4 h-full min-h-0'>
             <ProductionOrderStatusDonut completed={30} running={30} late={15} notStarted={25} centerLabel={'Tháng 10'} />
-            <div className='bg-[#EEF6FF] h-[463px] rounded-[20px] p-4 flex flex-col gap-4'>ô 2</div>
+            <ProductionTrackingChart />
             <MainMaterialStock />
             <OrderCompletionDonut onTimePercent={40} />
           </div>

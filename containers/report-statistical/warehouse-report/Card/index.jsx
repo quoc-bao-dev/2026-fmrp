@@ -14,6 +14,7 @@ import { useLanguageContext } from '@/context/ui/LanguageContext';
 import { useGetWarehouse } from '@/hooks/common/useWarehouses';
 import usePagination from '@/hooks/usePagination';
 import useStatusExprired from '@/hooks/useStatusExprired';
+import formatMoneyOrDash from '@/utils/helpers/formatMoneyOrDash';
 import formatNumber from '@/utils/helpers/formatnumber';
 import moment from 'moment';
 import Image from 'next/image';
@@ -23,7 +24,7 @@ import { PiPackage, PiWarehouseLight } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
 import { useExportExcel } from './hooks/useExportExcel';
 import { useGetCardStock } from './hooks/useGetListReportStock';
-import formatMoneyOrDash from '@/utils/helpers/formatMoneyOrDash';
+import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
 
 const breadcrumbItems = [
   {
@@ -43,6 +44,7 @@ const Card = props => {
   const { paginate } = usePagination();
   const dataLang = useLanguageContext();
   const statusExprired = useStatusExprired();
+  const { selectedBranches, setSelectedBranches } = usePersistedBranches();
 
   const [dateRange, setDateRange] = useState({
     startDate: undefined,
@@ -57,10 +59,6 @@ const Card = props => {
   const [limit, setLimit] = useState(15);
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearchValue] = useDebounce(searchValue, 500);
-  const [showPopupImport, setShowPopupImport] = useState(false);
-  const [selectedImportItem, setSelectedImportItem] = useState(null);
-  const [showPopupExport, setShowPopupExport] = useState(false);
-  const [selectedExportItem, setSelectedExportItem] = useState(null);
 
   const currentPage = Number(router.query.page) || 1;
 
@@ -79,6 +77,7 @@ const Card = props => {
       search: debouncedSearchValue,
       filter: {
         warehouses_id: selectedWarehouse?.value,
+        branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
         ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
         ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
         ...(selectedProduct && { items: selectedProduct.value }),
@@ -242,6 +241,9 @@ const Card = props => {
         title={'Thẻ kho'}
         statusExprired={statusExprired}
         breadcrumbItems={breadcrumbItems}
+        branchValue={selectedBranches}
+        onBranchChange={setSelectedBranches}
+        onBranchClear={() => setSelectedBranches([])}
         filterSection={
           <div className='w-full items-center flex justify-between gap-4'>
             <div className='flex gap-3'>

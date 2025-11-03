@@ -1,4 +1,4 @@
-import { Cell, Customized, Pie, PieChart, ResponsiveContainer } from 'recharts';
+import { Cell, Customized, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
 const DonutBackground = ({ width, height }) => {
   const cx = width / 2;
@@ -13,10 +13,43 @@ const DonutBackground = ({ width, height }) => {
   );
 };
 
-const CompletionDonut = ({ percent = 70, title = 'Tỷ Lệ Đặt Hoàn Thành Đơn' }) => {
-  const clamped = Math.max(0, Math.min(100, Number(percent) || 0));
-  const baseRing = [{ name: 'base', value: 100 }];
-  const doneSlice = [{ name: 'done', value: clamped }];
+const CustomTooltip = ({ active, payload }) => {
+  if (!active || !payload || payload.length === 0) return null;
+  
+  // Chỉ hiển thị tooltip khi hover vào doneSlice (name === 'done')
+  const payloadName = payload[0]?.payload?.name;
+  if (payloadName !== 'done') return null;
+  
+  const data = payload[0]?.payload?.data || {};
+  const completionRate = Number(data?.completion_rate || 0);
+  const totalOrders = data?.total_orders || 0;
+  const completedOrders = data?.completed_orders || 0;
+  
+  return (
+    <div className='bg-white rounded-xl shadow-[0px_8px_24px_rgba(0,0,0,0.12)] px-3 py-2 min-w-[160px]'>
+      <div className='text-[12px] text-[#828383] mb-2 font-medium'>Thông tin chi tiết</div>
+      <div className='flex items-center justify-between gap-4 mb-1'>
+        <span className='text-[12px] text-[#828383]'>Tỷ lệ hoàn thành</span>
+        <span className='text-[12px] font-semibold text-[#425166]'>{completionRate.toFixed(1)}%</span>
+      </div>
+      <div className='flex items-center justify-between gap-4 mb-1'>
+        <span className='text-[12px] text-[#828383]'>Tổng đơn hàng</span>
+        <span className='text-[12px] font-semibold text-[#425166]'>{totalOrders}</span>
+      </div>
+      <div className='flex items-center justify-between gap-4'>
+        <span className='text-[12px] text-[#828383]'>Đơn đã hoàn thành</span>
+        <span className='text-[12px] font-semibold text-[#425166]'>{completedOrders}</span>
+      </div>
+    </div>
+  );
+};
+
+const CompletionDonut = ({ percent = 70, title = 'Tỷ Lệ Đặt Hoàn Thành Đơn', data }) => {
+  // Lấy completion_rate từ data
+  const completionRate = Number(data?.completion_rate || 0);
+  const clamped = Math.max(0, Math.min(100, completionRate));
+  const baseRing = [{ name: 'base', value: 100, data }];
+  const doneSlice = [{ name: 'done', value: clamped, data }];
   const startAt = 90; // 12 giờ
   const sweep = (clamped / 100) * 360;
 
@@ -57,6 +90,7 @@ const CompletionDonut = ({ percent = 70, title = 'Tỷ Lệ Đặt Hoàn Thành 
             >
               <Cell key='done' fill='#FEB08A' />
             </Pie>
+            <Tooltip content={<CustomTooltip />} />
             {/* Center label */}
             <text x='50%' y='50%' textAnchor='middle' dominantBaseline='central' className='text-[20px] font-bold fill-[#2E3A47]'>
               {`${clamped}%`}

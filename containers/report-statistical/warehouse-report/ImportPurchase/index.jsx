@@ -11,6 +11,7 @@ import TableSection from '@/components/layout/ReportLayout/TableSection'
 import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems'
 import PopupDetail from '@/containers/purchase-order/import/components/popup'
 import { useLanguageContext } from '@/context/ui/LanguageContext'
+import { usePersistedBranches } from '@/hooks/common/usePersistedBranches'
 import { useGetWarehouse } from '@/hooks/common/useWarehouses'
 import useFeature from '@/hooks/useConfigFeature'
 import usePagination from '@/hooks/usePagination'
@@ -45,6 +46,8 @@ const ImportPurchase = (props) => {
   const dataLang = useLanguageContext()
   const statusExprired = useStatusExprired()
   const { dataProductExpiry, dataMaterialExpiry, dataProductSerial } = useFeature()
+  const { selectedBranches, setSelectedBranches } = usePersistedBranches()
+
 //   console.log("material_expiry", dataMaterialExpiry?.is_enable)
 //   console.log("product_expiry", dataProductExpiry?.is_enable)
 // console.log("product_serial", dataProductSerial?.is_enable)
@@ -84,6 +87,7 @@ const ImportPurchase = (props) => {
     limit: limit,
     search: debouncedSearchValue,
     filter: {
+      branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
       warehouses_id: selectedWarehouse?.value,
       ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
       ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
@@ -198,6 +202,9 @@ const ImportPurchase = (props) => {
       title={'Báo cáo nhập kho mua hàng'}
       statusExprired={statusExprired}
       breadcrumbItems={breadcrumbItems}
+      branchValue={selectedBranches}
+      onBranchChange={setSelectedBranches}
+      onBranchClear={() => setSelectedBranches([])}
       filterSection={
         <div className="w-full items-center flex justify-between gap-4">
           <div className="flex gap-3">

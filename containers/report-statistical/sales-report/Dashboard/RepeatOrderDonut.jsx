@@ -1,10 +1,11 @@
-import { Cell, Customized, Pie, PieChart, ResponsiveContainer } from 'recharts';
+import Image from 'next/image';
+import { Cell, Customized, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
 const RingBackground = ({ width, height }) => {
   const cx = width / 2;
   const cy = height / 2;
   const fullR = Math.min(width, height) / 2;
-  const outerR = fullR - 8;
+  const outerR = fullR - 16;
   const innerR = fullR * 0.46; // khớp với innerRadius 42%
   return (
     <g style={{ pointerEvents: 'none' }}>
@@ -24,16 +25,53 @@ const CenterLabel = ({ width, height, value }) => {
   );
 };
 
-const RepeatOrderDonut = ({ repeatPercent = 10 }) => {
-  const clamped = Math.max(0, Math.min(100, Number(repeatPercent) || 0));
-  const data = [
-    { key: 'repeat', value: clamped },
-    { key: 'new', value: 100 - clamped },
-  ];
+const CustomTooltip = ({ active, payload, counts }) => {
+  if (!active || !payload || payload.length === 0) return null;
+  const item = payload[0];
+  const key = item?.payload?.key;
+  const value = Number(item?.value || 0);
+  const labelMap = { repeat: 'Đơn đặt lại', new: 'Đơn mới' };
+  const count = key === 'repeat' ? counts?.repeat : counts?.new;
+  return (
+    <div className='rounded-xl shadow-[0_6px_18px_rgba(0,0,0,0.08)] border' style={{ borderColor: '#E6EEF5', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(2px)', padding: '8px 10px' }}>
+      <div className='responsive-text-sm font-medium' style={{ color: '#2E3A47' }}>
+        {labelMap[key] || ''}
+      </div>
+      <div className='responsive-text-sm' style={{ color: '#2E3A47' }}>
+        {`${value}%`}
+        {typeof count === 'number' ? ` (${count} đơn)` : ''}
+      </div>
+    </div>
+  );
+};
+
+const RepeatOrderDonut = ({ dataRepeatRate }) => {
+  const repeat = Number(dataRepeatRate?.reorder_customers_percent ?? 0);
+  const clamped = Math.max(0, Math.min(100, isNaN(repeat) ? 0 : repeat));
+  const newPercent = Math.max(0, 100 - clamped);
+  const data = [];
+  if (clamped > 0) data.push({ key: 'repeat', value: clamped });
+  if (newPercent > 0) data.push({ key: 'new', value: newPercent });
+
+  const repeatCount = typeof dataRepeatRate?.reorder_customers_count === 'number' ? dataRepeatRate.reorder_customers_count : undefined;
+  const newCount = typeof dataRepeatRate?.one_time_customers_count === 'number' ? dataRepeatRate.one_time_customers_count : undefined;
+  const total = Number(dataRepeatRate?.total_customers ?? 0);
+
+  if (!total || total <= 0) {
+    return (
+      <div className='w-full h-full bg-[#EAF6FF] rounded-[20px] p-4 flex flex-col min-h-0'>
+        <h3 className='responsive-text-xl font-medium text-neutral-04 text-center capitalize'>Tỷ Lệ Đặt Hàng Lại</h3>
+        <div className='flex-1 flex flex-col items-center justify-center min-h-0'>
+          <Image src='/background/system/nodata-table-2.png' alt='Không có dữ liệu' width={160} height={100} />
+          <span className='responsive-text-sm text-neutral-03'>Không có dữ liệu</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='w-full h-full bg-[#EAF6FF] rounded-[20px] p-4 flex flex-col min-h-0'>
-      <h3 className='responsive-text-xl font-medium text-neutral-04 text-center capitalize'>Tỷ Lệ Đặt Hàng Lại Trong 1 Tháng</h3>
+      <h3 className='responsive-text-xl font-medium text-neutral-04 text-center capitalize'>Tỷ Lệ Đặt Hàng Lại</h3>
       <div className='flex items-center justify-center gap-6 mt-1 mb-3'>
         <div className='flex items-center gap-2'>
           <span className='inline-block w-3 h-3 rounded' style={{ background: '#FFB9BD' }} />
@@ -47,6 +85,7 @@ const RepeatOrderDonut = ({ repeatPercent = 10 }) => {
       <div className='w-full h-full min-h-0'>
         <ResponsiveContainer width='100%' height='100%'>
           <PieChart>
+            <Tooltip cursor={false} content={<CustomTooltip counts={{ repeat: repeatCount, new: newCount }} />} />
             <Customized component={RingBackground} />
             <Pie
               data={data}
@@ -54,7 +93,7 @@ const RepeatOrderDonut = ({ repeatPercent = 10 }) => {
               startAngle={90}
               endAngle={450}
               innerRadius={'52%'}
-              outerRadius={'95%'}
+              outerRadius={'90%'}
               stroke='none'
               isAnimationActive={false}
               labelLine={false}

@@ -22,6 +22,7 @@ import { useDebounce } from 'use-debounce'
 import { useExportExcel } from './hooks/useExportExcel'
 import { useGetListReportStock } from './hooks/useGetListReportStock'
 import PopupWarehouseDetail from './popup/popupWarehouseDetail'
+import { usePersistedBranches } from '@/hooks/common/usePersistedBranches'
 
 const breadcrumbItems = [
   {
@@ -42,6 +43,7 @@ const EntryAndExist = (props) => {
   const { paginate } = usePagination()
   const dataLang = useLanguageContext()
   const statusExprired = useStatusExprired()
+  const { selectedBranches, setSelectedBranches } = usePersistedBranches();
 
   const [dateRange, setDateRange] = useState({
     startDate: undefined,
@@ -76,6 +78,7 @@ const EntryAndExist = (props) => {
     limit: limit,
     search: debouncedSearchValue,
     filter: {
+      branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
       warehouses_id: selectedWarehouse?.value,
       ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
       ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
@@ -224,6 +227,9 @@ const EntryAndExist = (props) => {
         title={'Báo cáo nhập xuất tồn'}
         statusExprired={statusExprired}
         breadcrumbItems={breadcrumbItems}
+        branchValue={selectedBranches}
+        onBranchChange={setSelectedBranches}
+        onBranchClear={() => setSelectedBranches([])}
         filterSection={
           <div className="w-full items-center flex justify-between gap-4">
             <div className="flex gap-3">

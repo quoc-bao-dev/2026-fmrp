@@ -89,11 +89,37 @@ const apiReport = {
     const response = await axiosCustom('GET', `/api_web/reports/customer-debt`, data)
     return response.data
   },
+
+  //dashboard bán hàng
   async apiGetSalesSummary(data) {
     const response = await axiosCustom('GET', `/api_web/dashboard/reports/summary`, data)
     return response.data
   },
-  
+
+  async apiGetDebtTrend(data) {
+    const response = await axiosCustom('GET', `/api_web/dashboard/reports/debt-trend`, data)
+    return response.data
+  },
+
+  async apiGetProductGroupRevenue(data) {
+    const response = await axiosCustom('GET', `/api_web/dashboard/reports/product-group-revenue`, data)
+    return response.data
+  },
+
+  async apiGetOrderCompletionRate(data) {
+    const response = await axiosCustom('GET', `/api_web/dashboard/reports/order-completion-rate`, data)
+    return response.data
+  },
+
+  async apiGetCustomerTypeSales(data) {
+    const response = await axiosCustom('GET', `/api_web/dashboard/reports/customer-type-sales`, data)
+    return response.data
+  },
+
+  async apiGetMonthlyReorderRate(data) {
+    const response = await axiosCustom('GET', `/api_web/dashboard/reports/monthly-reorder-rate`, data)
+    return response.data
+  }
 }
 
 export default apiReport
