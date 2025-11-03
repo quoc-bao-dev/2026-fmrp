@@ -41,7 +41,7 @@ const Header = () => {
   const dataPstWH = useSelector((state) => state.statusUser)
 
   const dataSeting = useSetingServer()
-
+console.log(auth)
   // Khai báo biến state
   const [currentDropdownIndex, setCurrentDropdownIndex] = useState(0)
 

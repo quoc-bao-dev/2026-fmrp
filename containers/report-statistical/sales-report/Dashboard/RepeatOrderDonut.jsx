@@ -1,5 +1,11 @@
 import Image from 'next/image';
 import { Cell, Customized, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+const formatPercent = (value) => {
+  const num = Number(value ?? 0);
+  if (!isFinite(num)) return '0';
+  const str = num.toFixed(2);
+  return str.replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+};
 
 const RingBackground = ({ width, height }) => {
   const cx = width / 2;
@@ -20,7 +26,7 @@ const CenterLabel = ({ width, height, value }) => {
   const cy = height / 2;
   return (
     <text x={cx} y={cy} textAnchor='middle' dominantBaseline='central' className='responsive-text-xl font-medium fill-neutral-04'>
-      {`${value}%`}
+      {`${formatPercent(value)}%`}
     </text>
   );
 };
@@ -38,7 +44,7 @@ const CustomTooltip = ({ active, payload, counts }) => {
         {labelMap[key] || ''}
       </div>
       <div className='responsive-text-sm' style={{ color: '#2E3A47' }}>
-        {`${value}%`}
+        {`${formatPercent(value)}%`}
         {typeof count === 'number' ? ` (${count} đơn)` : ''}
       </div>
     </div>
@@ -105,7 +111,7 @@ const RepeatOrderDonut = ({ dataRepeatRate }) => {
                 const color = '#FFFFFF';
                 return (
                   <text x={x} y={y} fill={color} textAnchor='middle' dominantBaseline='central' className='font-semibold'>
-                    {`${value}%`}
+                    {`${formatPercent(value)}%`}
                   </text>
                 );
               }}
