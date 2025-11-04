@@ -1,7 +1,6 @@
 import ReactExport from "react-data-export";
 import { NumericFormat } from "react-number-format";
 import Select from "react-select";
-
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 const ExcelColumn = ReactExport.ExcelFile.ExcelColumn;

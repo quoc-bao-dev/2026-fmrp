@@ -971,7 +971,7 @@ const Warehouse = (props) => {
                                                                         textAlign={"center"}
                                                                         colSpan={1}
                                                                         // textSize={"text-[13px]"}
-                                                                        className="py-3 font-semibold border-b"
+                                                                        className="py-3 font-semibold border-b responsive-text-base !text-new-blue"
                                                                     >
                                                                         {item?.quantity ? (
                                                                             <>
@@ -979,7 +979,7 @@ const Warehouse = (props) => {
                                                                                     {formatNumber(+item?.quantity)}
                                                                                 </span>
                                                                                 /
-                                                                                <span className="relative pt-1 pl-0.5 text-xs capitalize top-1">
+                                                                                <span className="relative pt-1 pl-0.5 capitalize top-1">
                                                                                     {e?.unit}
                                                                                 </span>
                                                                             </>

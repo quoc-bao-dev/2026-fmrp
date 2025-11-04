@@ -6,9 +6,9 @@ import TitleForm from "../common/titleForm";
 const Client = ({ dataColumnNew, HandleCheckAll, dataLang, HandlePushItem, dataEmty, sDataEmty }) => {
     return (
         <div className="grid h-full min-h-0 grid-cols-12 gap-2 ">
-            <div className="h-full min-h-0 col-span-4 my-2 border-2 rounded bg-zinc-50">
+            <div className="h-full min-h-0 col-span-4 my-2 border rounded bg-zinc-50">
                 {/* <div className="col-span-4 bg-zinc-50 border-2 rounded my-2 3xl:h-auto xxl:h-[270px]  2xl:h-[375px] xl:h-[265px] lg:h-[270px] h-auto"> */}
-                <div className="grid h-full grid-cols-2 divide-x-2">
+                <div className="grid h-full grid-cols-2 divide-x">
                     <div className="flex flex-col h-full min-h-0 ">
                         <div className="h-fit">
                             <TitleForm title={"Trường dữ liệu"} />
@@ -62,9 +62,9 @@ const Client = ({ dataColumnNew, HandleCheckAll, dataLang, HandlePushItem, dataE
                     </div>
                 </div>
             </div>
-            <div className="h-full min-h-0 col-span-4 my-2 border-2 rounded bg-zinc-50">
+            <div className="h-full min-h-0 col-span-4 my-2 border rounded bg-zinc-50">
                 {/* <div className="col-span-4 bg-zinc-50 border-2 rounded my-2 3xl:h-auto xxl:h-[270px]  2xl:h-[375px] xl:h-[265px] lg:h-[270px] h-auto"> */}
-                <div className="grid h-full grid-cols-2 divide-x-2">
+                <div className="grid h-full grid-cols-2 divide-x">
                     <div className="flex flex-col h-full min-h-0 ">
                         <div className="h-fit">
                             <TitleForm title={"Trường dữ liệu"} />
@@ -119,9 +119,9 @@ const Client = ({ dataColumnNew, HandleCheckAll, dataLang, HandlePushItem, dataE
                     </div>
                 </div>
             </div>
-            <div className="h-full min-h-0 col-span-4 my-2 border-2 rounded bg-zinc-50">
+            <div className="h-full min-h-0 col-span-4 my-2 border rounded bg-zinc-50">
                 {/* <div className="col-span-4 bg-zinc-50 border-2 rounded my-2 3xl:h-auto xxl:h-[270px]  2xl:h-[375px] xl:h-[265px] lg:h-[270px] h-auto"> */}
-                <div className="grid h-full grid-cols-2 divide-x-2">
+                <div className="grid h-full grid-cols-2 divide-x">
                     <div className="flex flex-col h-full min-h-0 ">
                         <div className="h-fit">
                             <TitleForm title={"Trường dữ liệu"} />

@@ -4,7 +4,7 @@ const BtnClickAddItem = ({ dataBe, HandleCheckAll, type, parent, dataEmty, sData
     return (
         <>
             {dataBe?.length > 0 && (
-                <div className="mx-0.5">
+                <div className="mx-2 mt-1">
                     <button
                         onClick={() => HandleCheckAll(type, parent, dataEmty, sDataEmty)}
                         className="focus:outline-red-500 outline outline-1 shadow outline-gray-50 hover:bg-red-600 flex items-center justify-center gap-2

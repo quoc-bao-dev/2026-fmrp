@@ -1,6 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Customized } from 'recharts';
 import formatNumber from '@/utils/helpers/formatnumber';
 import Image from 'next/image';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 
 const COLORS = [
   '#75BDE0', // blue
@@ -18,7 +19,7 @@ const COLORS = [
 ];
 
 const RADIAN = Math.PI / 180;
-const formatPercent = (value) => {
+const formatPercent = value => {
   const num = Number(value ?? 0);
   if (!isFinite(num)) return '0';
   const str = num.toFixed(2);
@@ -97,21 +98,25 @@ const RevenueStructurePie = ({ data }) => {
 
   return (
     <div className='relative w-full h-full bg-[#EEF6FF] rounded-[20px] p-4 flex flex-col min-h-0'>
-      <h3 className='absolute top-4 left-4 font-medium text-neutral-04 capitalize responsive-text-xl'>
+      <h3 className='font-medium text-neutral-04 capitalize responsive-text-xl'>
         Cơ Cấu Nhóm Sản Phẩm
         <br />
         Theo Doanh Thu
       </h3>
-      <div className='grid grid-cols-6 gap-2 items-center flex-1 min-h-0'>
-        <div className='col-span-2 flex flex-col gap-4'>
-          {chartData.map((d, idx) => (
-            <div className='flex items-center gap-3' key={d.category_id || d.name || idx}>
-              <span className='inline-block w-4 h-4 rounded-[4px]' style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
-              <span className='responsive-text-sm text-[#8D9092]'>{d.name}</span>
+      <div className='w-full flex gap-2 items-center flex-1 min-h-0'>
+        <div className='w-1/3'>
+          <Customscrollbar className='max-h-[300px] overflow-y-auto'>
+            <div className='flex flex-col gap-2'>
+              {chartData.map((d, idx) => (
+                <div className='flex items-center gap-1.5' key={d.category_id || d.name || idx}>
+                  <span className='inline-block flex-shrink-0 w-4 h-4 rounded-[4px]' style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
+                  <span className='responsive-text-sm text-[#8D9092] truncate'>{d.name}</span>
+                </div>
+              ))}
             </div>
-          ))}
+          </Customscrollbar>
         </div>
-        <div className='col-span-4 h-full min-h-0'>
+        <div className='w-2/3 h-full min-h-0'>
           <div className='w-full h-full'>
             <ResponsiveContainer width='100%' height='100%'>
               <PieChart>

@@ -1,69 +1,50 @@
+import useToast from '@/hooks/useToast';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 
 const Navbar = props => {
+  const { permissions_current: auth } = useSelector(state => state.auth);
+
   const router = useRouter();
+  const showToast = useToast();
+
   //báo cáo bán hàng
   const isNavbarSales = [
     {
       id: uuidv4(),
       name: 'Tổng quan bán hàng',
       path: '/report-statistical/sales-report/dashboard',
+      disabled: auth?.report_sales_dashboard?.is_view == 0,
     },
     {
       id: uuidv4(),
       name: 'Doanh số theo bán hàng',
       path: '/report-statistical/sales-report/sales-revenue',
+      disabled: auth?.report_sales_revenue?.is_view == 0,
     },
     {
       id: uuidv4(),
       name: 'Báo cáo giao hàng',
       path: '/report-statistical/sales-report/deliveries',
+      disabled: auth?.report_deliveries?.is_view == 0,
     },
     {
       id: uuidv4(),
       name: 'Báo cáo trả lại hàng bán',
       path: '/report-statistical/sales-report/returns',
+      disabled: auth?.report_returns?.is_view == 0,
     },
     {
       id: uuidv4(),
       name: 'Đối chiếu công nợ KH',
       path: '/report-statistical/sales-report/customer-debt',
+      disabled: auth?.report_customer_debt?.is_view == 0,
     },
-    // {
-    //   id: uuidv4(),
-    //   name: 'Tình trạng đơn hàng',
-    //   path: '/report-statistical/sales-eport/order-status',
-    // },
-    // {
-    //   id: uuidv4(),
-    //   name: 'Nhật ký bán hàng',
-    //   path: '/report-statistical/sales-report/selling-diary',
-    // },
-    // {
-    //     id: uuidv4(),
-    //     name: 'Báo cáo đơn hàng theo báo giá',
-    //     path: '/report-statistical/sales-report/quote',
-    // },
-    // {
-    //     id: uuidv4(),
-    //     name: 'Báo cáo hàng trả lại',
-    //     path: '/report-statistical/sales-report/returned-goods',
-    // },
-    // {
-    // {
-    //     id: uuidv4(),
-    //     name: 'Phân tích bán hàng',
-    //     path: '/report-statistical/sales-report/sales-analysis',
-    // },
-    // {
-    //     id: uuidv4(),
-    //     name: 'Bảng kê giá bán gần nhất',
-    //     path: '/report-statistical/sales-report/price-list',
-    // },
   ];
+
   // báo cáo mua hàng
   const isNavbarPurchase = [
     {
@@ -114,6 +95,7 @@ const Navbar = props => {
       ],
     },
   ];
+  
   // báo cáo tồn kho
   const isNavbarWarehouse = [
     {
@@ -160,6 +142,7 @@ const Navbar = props => {
       ],
     },
   ];
+
   // tồn quỹ
   const isNavbarFundBalance = [
     {
@@ -216,6 +199,7 @@ const Navbar = props => {
       ],
     },
   ];
+
   // Công nợ phải thu
   const isNavbarReceivables = [
     {
@@ -239,29 +223,9 @@ const Navbar = props => {
       path: '/report-statistical/receivables-debt/debt-comparison-table',
     },
   ];
+
   // Quản lý sản xuất
   const isNavbarProductionManager = [
-    // {
-    //     id: uuidv4(),
-    //     title: 'Quản lý sản xuất',
-    //     children: [
-    //         {
-    //             id: uuidv4(),
-    //             name: 'Báo cáo định mức NVL',
-    //             path: '/report-statistical/production-manager/quota-materials',
-    //         },
-    //         {
-    //             id: uuidv4(),
-    //             name: 'Báo cáo tiến độ theo đơn hàng',
-    //             path: '/report-statistical/production-manager/order-progress',
-    //         },
-    //         {
-    //             id: uuidv4(),
-    //             name: 'Báo cáo nguyên liệu sử dụng',
-    //             path: '/report-statistical/production-manager/raw-materials-used',
-    //         },
-    //     ],
-    // },
     {
       id: uuidv4(),
       name: 'Tổng quan sản xuất',
@@ -282,41 +246,6 @@ const Navbar = props => {
       name: 'Báo cáo NVL sử dụng',
       path: '/report-statistical/production-manager/raw-materials-used',
     },
-    // {
-    //   id: uuidv4(),
-    //   name: 'Báo cáo lệnh sản xuất theo công đoạn',
-    //   path: '/report-statistical/production-manager/stage-production-order',
-    // },
-    // {
-    //   id: uuidv4(),
-    //   name: 'Báo cáo thời gian sản xuất theo đơn hàng',
-    //   path: '/report-statistical/production-manager/time-order-production',
-    // },
-    // {
-    //   id: uuidv4(),
-    //   name: 'Báo cáo sản lượng chi tiết',
-    //   path: '/report-statistical/production-manager/detailed-output',
-    // },
-    // {
-    //   id: uuidv4(),
-    //   name: 'Báo cáo nhập kho thành phẩm',
-    //   path: '/report-statistical/production-manager/import-warehouse-products',
-    // },
-    // {
-    //   id: uuidv4(),
-    //   name: 'Báo cáo thời gian sản xuất theo sản phẩm',
-    //   path: '/report-statistical/production-manager/time-by-product',
-    // },
-    // {
-    //   id: uuidv4(),
-    //   name: 'Báo cáo sản xuất tổng hợp',
-    //   path: '/report-statistical/production-manager/synthetic-production',
-    // },
-    // {
-    //   id: uuidv4(),
-    //   name: 'Báo cáo thời gian sản xuất theo loại sản phẩm',
-    //   path: '/report-statistical/production-manager/time-type-product',
-    // },
   ];
 
   const [navbar, setNavbar] = useState([]);
@@ -360,7 +289,10 @@ const Navbar = props => {
                     return (
                       <div key={child.id} className='relative'>
                         {child.disabled ? (
-                          <li className='group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-not-allowed opacity-50'>
+                          <li
+                            onClick={() => showToast('error', 'Bạn không có quyền truy cập')}
+                            className='group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer opacity-50'
+                          >
                             <div className='flex items-center gap-2'>
                               <div className='size-1.5 rounded-full flex-shrink-0 bg-gray-400' />
                               <div className='flex flex-col items-start w-full'>
@@ -392,24 +324,40 @@ const Navbar = props => {
                     );
                   })
                 ) : (
-                  <Link href={item.path} key={item.id} className='relative'>
-                    <li
-                      className={`group font-medium flex p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
-                        router.pathname === item.path ? 'bg-typo-blue-5 text-white' : ''
-                      } `}
-                    >
-                      <div className='flex w-full items-center gap-2'>
-                        <div
-                          className={`size-1.5 rounded-full flex-shrink-0 ${
-                            router.pathname === item.path ? 'bg-white/60' : 'bg-primary-01'
-                          } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
-                        />
-                        <div className='flex flex-col items-start w-full'>
-                          <div className='responsive-text-sm'>{item.name}</div>
+                  <div key={item.id} className='relative'>
+                    {item.disabled ? (
+                      <li
+                        onClick={() => showToast('error', 'Bạn không có quyền truy cập')}
+                        className='group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer opacity-50'
+                      >
+                        <div className='flex w-full items-center gap-2'>
+                          <div className='size-1.5 rounded-full flex-shrink-0 bg-gray-400' />
+                          <div className='flex flex-col items-start w-full'>
+                            <div className='responsive-text-sm text-gray-400'>{item.name}</div>
+                          </div>
                         </div>
-                      </div>
-                    </li>
-                  </Link>
+                      </li>
+                    ) : (
+                      <Link href={item.path} className='relative'>
+                        <li
+                          className={`group font-medium flex p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
+                            router.pathname === item.path ? 'bg-typo-blue-5 text-white' : ''
+                          } `}
+                        >
+                          <div className='flex w-full items-center gap-2'>
+                            <div
+                              className={`size-1.5 rounded-full flex-shrink-0 ${
+                                router.pathname === item.path ? 'bg-white/60' : 'bg-primary-01'
+                              } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
+                            />
+                            <div className='flex flex-col items-start w-full'>
+                              <div className='responsive-text-sm'>{item.name}</div>
+                            </div>
+                          </div>
+                        </li>
+                      </Link>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

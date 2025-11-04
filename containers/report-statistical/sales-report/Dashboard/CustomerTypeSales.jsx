@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis, Rectangle } from 'recharts';
+import formatNumber from '@/utils/helpers/formatnumber';
 
 const legendFormatter = value => {
   if (value === 'old') return 'KH cũ';
@@ -93,17 +94,27 @@ const clampLinesWithEllipsis = (lines, maxWidth, font, maxLines = 2) => {
   return kept;
 };
 
-// Format số theo locale vi-VN
-const formatNumber = (value) => {
+// Format số rút gọn khi quá lớn (ví dụ: 1.25T thay vì 1,250,000,000)
+const formatCompactNumber = (value) => {
   const num = Number(value ?? 0);
-  return new Intl.NumberFormat('vi-VN').format(num);
+  if (num >= 1000000000) {
+    return (num / 1000000000).toFixed(2).replace(/\.?0+$/, '') + 'T';
+  } else if (num >= 1000000) {
+    return (num / 1000000).toFixed(2).replace(/\.?0+$/, '') + 'M';
+  } else if (num >= 1000) {
+    return (num / 1000).toFixed(2).replace(/\.?0+$/, '') + 'K';
+  }
+  return formatNumber(num);
 };
 
 const XAxisTick = ({ x, y, payload }) => {
+  // Luôn dùng format rút gọn cho số lớn (>= 1000)
+  const displayValue = formatCompactNumber(payload?.value);
+  
   return (
     <g transform={`translate(${x},${y})`}>
       <text className='responsive-text-sm' fill='#838689' textAnchor='middle' dominantBaseline='hanging'>
-        {formatNumber(payload?.value)}
+        {displayValue}
       </text>
     </g>
   );
@@ -166,31 +177,67 @@ const CustomerTypeSales = ({ data }) => {
     return chartData.some(row => Number(row.old || 0) + Number(row.fresh || 0) > 0);
   }, [chartData]);
 
-  // Tính ticks: mốc cuối = max thực tế, các mốc giữa làm tròn về bội "đẹp" (1/2/5×10^k)
+  // Tính ticks: đảm bảo có 6 mốc đều nhau (5 khoảng) từ 0 đến max
   const { xDomainMax, xTicks } = useMemo(() => {
     if (!hasData) return { xDomainMax: 0, xTicks: [0] };
     const maxTotal = chartData.reduce((m, r) => Math.max(m, (Number(r.old) || 0) + (Number(r.fresh) || 0)), 0);
     if (maxTotal === 0) return { xDomainMax: 0, xTicks: [0] };
-    const steps = 5;
-    const rawStep = maxTotal / steps;
-    const niceUnit = (() => {
-      const exponent = Math.floor(Math.log10(rawStep || 1));
-      const fraction = rawStep / Math.pow(10, exponent);
-      let base;
-      if (fraction <= 1) base = 1;
-      else if (fraction <= 2) base = 2;
-      else if (fraction <= 5) base = 5;
-      else base = 10;
-      return base * Math.pow(10, exponent);
+    
+    // Làm tròn maxTotal lên một số "đẹp" để chia đều (không quá cao)
+    const niceMax = (() => {
+      const exponent = Math.floor(Math.log10(maxTotal || 1));
+      const fraction = maxTotal / Math.pow(10, exponent);
+      
+      // Tìm multiplier nhỏ nhất sao cho multiplier * 10^exponent >= maxTotal
+      // Sử dụng các mức: 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50, ...
+      let multiplier;
+      if (fraction <= 1) multiplier = 1;
+      else if (fraction <= 1.5) multiplier = 1.5;
+      else if (fraction <= 2) multiplier = 2;
+      else if (fraction <= 2.5) multiplier = 2.5;
+      else if (fraction <= 3) multiplier = 3;
+      else if (fraction <= 4) multiplier = 4;
+      else if (fraction <= 5) multiplier = 5;
+      else if (fraction <= 6) multiplier = 6;
+      else if (fraction <= 7) multiplier = 7;
+      else if (fraction <= 8) multiplier = 8;
+      else if (fraction <= 9) multiplier = 9;
+      else if (fraction <= 10) multiplier = 10;
+      else if (fraction <= 15) multiplier = 15;
+      else if (fraction <= 20) multiplier = 20;
+      else if (fraction <= 25) multiplier = 25;
+      else if (fraction <= 30) multiplier = 30;
+      else if (fraction <= 40) multiplier = 40;
+      else if (fraction <= 50) multiplier = 50;
+      else {
+        // Nếu > 50, nhân exponent lên 1 bậc và bắt đầu lại
+        const newExponent = exponent + 1;
+        const newFraction = maxTotal / Math.pow(10, newExponent);
+        if (newFraction <= 1) multiplier = 1;
+        else if (newFraction <= 2) multiplier = 2;
+        else if (newFraction <= 5) multiplier = 5;
+        else multiplier = 10;
+        return multiplier * Math.pow(10, newExponent);
+      }
+      
+      return multiplier * Math.pow(10, exponent);
     })();
-    const ticks = [0];
-    for (let i = 1; i < steps; i++) {
-      const target = i * rawStep;
-      const rounded = Math.round(target / niceUnit) * niceUnit;
-      if (rounded > 0 && rounded < maxTotal && !ticks.includes(rounded)) ticks.push(rounded);
+    
+    // Chia thành 6 mốc đều nhau (5 khoảng)
+    const numTicks = 6;
+    const step = niceMax / (numTicks - 1);
+    
+    // Tạo 6 mốc: 0, step, 2*step, 3*step, 4*step, niceMax
+    const ticks = [];
+    for (let i = 0; i < numTicks; i++) {
+      ticks.push(Math.round(i * step));
     }
-    ticks.push(maxTotal);
-    ticks.sort((a, b) => a - b);
+    
+    // Nếu maxTotal khác niceMax, thay mốc cuối bằng maxTotal
+    if (maxTotal !== niceMax && maxTotal > ticks[ticks.length - 2]) {
+      ticks[ticks.length - 1] = maxTotal;
+    }
+    
     return { xDomainMax: maxTotal, xTicks: ticks };
   }, [chartData, hasData]);
   
@@ -241,17 +288,19 @@ const CustomerTypeSales = ({ data }) => {
             barCategoryGap={'30%'}
             barGap={8}
             barSize={computedBarSize}
+            margin={{ right: 20 }}
           >
             <CartesianGrid horizontal={false} stroke='#CFD8E3' />
             <XAxis
               type='number'
               domain={[0, xDomainMax]}
               ticks={xTicks}
+              interval={0}
               allowDecimals={false}
               stroke='#90A3B0'
               axisLine={false}
               tickLine={false}
-              tick={<XAxisTick />}
+              tick={(props) => <XAxisTick {...props} />}
             />
             <YAxis
               type='category'

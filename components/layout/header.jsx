@@ -41,7 +41,7 @@ const Header = () => {
   const dataPstWH = useSelector((state) => state.statusUser)
 
   const dataSeting = useSetingServer()
-console.log(auth)
+
   // Khai báo biến state
   const [currentDropdownIndex, setCurrentDropdownIndex] = useState(0)
 
@@ -664,6 +664,7 @@ console.log(auth)
                 auth?.products?.is_view == '1'
                   ? '1'
                   : '0',
+              // view: 1,
               name: 'Export dữ liệu',
               link: '/convenience/export',
             },
