@@ -148,7 +148,7 @@ const BtnParent = ({
                         id="page"
                         onChange={(e) => sPageLimit((prevState) => ({ ...prevState, page: e.target.value }))}
                         value={pageLimit.page}
-                        className="w-full p-2 text-xs transition-all duration-200 ease-in-out bg-white border border-gray-300 rounded outline-none xl:text-sm peer focus:border-blue-400"
+                        className="w-full p-2 text-xs transition-all duration-200 ease-in-out bg-white border border-gray-300 rounded outline-none xl:text-sm peer focus:border-new-blue"
                         thousandSeparator=","
                         allowNegative={false}
                         decimalScale={0}
@@ -162,7 +162,7 @@ const BtnParent = ({
                     />
                     <label
                         htmlFor="page"
-                        className="absolute top-0 left-0 flex items-center h-full pl-2 text-xs transition-all duration-200 ease-in-out transform xl:text-sm group-focus-within:text-xs peer-valid:text-xs group-focus-within:h-1/2 peer-valid:h-1/2 group-focus-within:text-blue-400 group-focus-within:-translate-y-full peer-valid:-translate-y-full group-focus-within:pl-0 peer-valid:pl-0 "
+                        className="absolute top-0 left-0 flex items-center h-full pl-2 text-xs transition-all duration-200 ease-in-out transform xl:text-sm group-focus-within:text-xs peer-valid:text-xs group-focus-within:h-1/2 peer-valid:h-1/2 group-focus-within:text-new-blue group-focus-within:-translate-y-full peer-valid:-translate-y-full group-focus-within:pl-0 peer-valid:pl-0 "
                     >
                         Trang export
                     </label>
@@ -173,7 +173,7 @@ const BtnParent = ({
                     <NumericFormat
                         id="limit"
                         onChange={(e) => sPageLimit((prevState) => ({ ...prevState, limit: e.target.value }))}
-                        className="w-full p-2 text-xs transition-all duration-200 ease-in-out bg-white border border-gray-300 rounded outline-none appearance-none focus:placeholder:text-gray-400 placeholder:text-white focus:border-blue-400 xl:text-sm peer"
+                        className="w-full p-2 text-xs transition-all duration-200 ease-in-out bg-white border border-gray-300 rounded outline-none appearance-none focus:placeholder:text-gray-400 placeholder:text-white focus:border-new-blue xl:text-sm peer"
                         thousandSeparator=","
                         value={pageLimit.limit}
                         allowNegative={true}
@@ -184,7 +184,7 @@ const BtnParent = ({
                     />
                     <label
                         htmlFor="limit"
-                        className="absolute top-0 left-0 flex items-center h-full pl-2 text-xs transition-all duration-200 ease-in-out transform xl:text-sm group-focus-within:text-blue-400 group-focus-within:text-xs peer-valid:text-xs group-focus-within:h-1/2 peer-valid:h-1/2 group-focus-within:-translate-y-full peer-valid:-translate-y-full group-focus-within:pl-0 peer-valid:pl-0"
+                        className="absolute top-0 left-0 flex items-center h-full pl-2 text-xs transition-all duration-200 ease-in-out transform xl:text-sm group-focus-within:text-new-blue group-focus-within:text-xs peer-valid:text-xs group-focus-within:h-1/2 peer-valid:h-1/2 group-focus-within:-translate-y-full peer-valid:-translate-y-full group-focus-within:pl-0 peer-valid:pl-0"
                     >
                         Số lượng export
                     </label>
@@ -222,6 +222,24 @@ const BtnParent = ({
                         },
                     })}
                     styles={{
+                        control: (base, state) => ({
+                            ...base,
+                            boxShadow: 'none',
+                            outline: 'none',
+                            borderColor: state.isFocused ? '#0F4F9E' : '#d1d5db',
+                            '&:hover': { borderColor: '#0F4F9E' },
+                            cursor: 'pointer',
+                        }),
+                        dropdownIndicator: (base, state) => ({
+                            ...base,
+                            transition: 'transform 200ms ease',
+                            transform: state.selectProps.menuIsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                            ':hover': { transform: 'rotate(180deg)' },
+                        }),
+                        indicatorSeparator: (base) => ({
+                            ...base,
+                            display: 'none',
+                        }),
                         placeholder: (base) => ({
                             ...base,
                             color: "#cbd5e1",
@@ -232,11 +250,11 @@ const BtnParent = ({
                             position: "absolute",
                         }),
                     }}
-                    className={`placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] font-normal outline-none `}
+                    className={`placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] font-normal outline-none cursor-pointer`}
                 />
             </div>
             {tabPage != 5 && tabPage != 6 ? (
-                <div className="col-span-2 flex items-center  space-x-2 rounded p-2 hover:bg-gray-200 bg-gray-100 cursor-pointer btn-animation hover:scale-[1.02]">
+                <div className="col-span-2 flex items-center h-[38px] space-x-2 rounded p-2 hover:bg-gray-200 bg-gray-100 cursor-pointer btn-animation hover:scale-[1.02]">
                     <input
                         type="checkbox"
                         onChange={(e) => _HandleChange(e, "sampleImport")}
@@ -309,7 +327,7 @@ const BtnParent = ({
                         }
                     }}
                     type="button"
-                    className="col-span-2  p-2.5  bg-gradient-to-l hover:bg-blue-300 from-blue-500 via-blue-500  to-blue-500 text-white rounded btn-animation hover:scale-[1.02] flex items-center gap-1 justify-center z-0"
+                    className="col-span-2 h-[38px] p-2.5 bg-gradient-to-l hover:bg-blue-300 from-blue-500 via-blue-500  to-blue-500 text-white rounded btn-animation hover:scale-[1.02] flex items-center gap-1 justify-center z-0"
                 >
                     <span className="text-xs xl:text-sm">{"Export dữ liệu"}</span>
                 </button>

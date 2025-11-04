@@ -15,6 +15,15 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
+// Dot trắng viền đen cho điểm dữ liệu
+const WhiteDot = (props) => {
+  const { cx, cy, r = 5 } = props;
+  if (cx == null || cy == null) return null;
+  return (
+    <circle cx={cx} cy={cy} r={r} fill='#FFFFFF' stroke='#000000' strokeWidth={2} />
+  );
+};
+
 const ProductionTrackingChart = ({ data }) => {
   // Dữ liệu mặc định nếu không có data từ props
   const chartData = data || [
@@ -94,8 +103,8 @@ const ProductionTrackingChart = ({ data }) => {
             strokeWidth={2}
             fill='url(#colorKeHoach)'
             name='Kế hoạch'
-            dot={{ r: 4, fill: '#FFFFFF', stroke: '#000000', strokeWidth: 2 }}
-            activeDot={{ r: 4, fill: '#FFFFFF', stroke: '#000000', strokeWidth: 2 }}
+            dot={<WhiteDot r={3.5} />}
+            activeDot={<WhiteDot r={4} />}
           />
           {/* Area và Line cho Thực tế */}
           <Area
