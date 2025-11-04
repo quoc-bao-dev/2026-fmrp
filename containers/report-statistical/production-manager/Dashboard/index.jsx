@@ -6,7 +6,7 @@ import useStatusExprired from '@/hooks/useStatusExprired';
 import formatNumber from '@/utils/helpers/formatnumber';
 import { useState } from 'react';
 import QuickDateDropdown, { getDateRangeByQuickValue } from '../../components/QuickDateDropdown';
-import { useGetProductionSummary } from './hook';
+import { useGetLateManufacturingOrders, useGetManufacturingOrderStatus, useGetManufacturingPlanCompletion, useGetOee, useGetQcErrorRate } from './hook';
 import MainMaterialStock from './MainMaterialStock';
 import OrderCompletionDonut from './OrderCompletionDonut';
 import ProductionOrderStatusDonut from './ProductionOrderStatusDonut';
@@ -31,28 +31,20 @@ const Dashboard = () => {
   const [dateRange, setDateRange] = useState(() => getDateRangeByQuickValue('this_week'));
   const { selectedBranches, setSelectedBranches } = usePersistedBranches();
 
-  const { data: productionSummary } = useGetProductionSummary({ start_date: dateRange.start_date, end_date: dateRange.end_date, branch_ids: selectedBranches });
+  const { data: manufacturingPlanCompletion, refetch: refetchManufacturingPlanCompletion } = useGetManufacturingPlanCompletion({ start_date: dateRange.start_date, end_date: dateRange.end_date, branch_ids: selectedBranches });
+  const { data: lateManufacturingOrders, refetch: refetchLateManufacturingOrders } = useGetLateManufacturingOrders({ start_date: dateRange.start_date, end_date: dateRange.end_date, branch_ids: selectedBranches });
+  const { data: qcErrorRate, refetch: refetchQcErrorRate } = useGetQcErrorRate({ start_date: dateRange.start_date, end_date: dateRange.end_date, branch_ids: selectedBranches });
+  const { data: oee, refetch: refetchOee } = useGetOee({ start_date: dateRange.start_date, end_date: dateRange.end_date, branch_ids: selectedBranches });
+  const { data: manufacturingOrderStatus, refetch: refetchManufacturingOrderStatus } = useGetManufacturingOrderStatus({ start_date: dateRange.start_date, end_date: dateRange.end_date, branch_ids: selectedBranches });
 
-  // Normalize dữ liệu theo nhiều khả năng tên field khác nhau từ API
-  const completion = {
-    percent: productionSummary?.completion_rate_percent ?? productionSummary?.plan_completion?.percent ?? 92.5,
-    actual: productionSummary?.completion_actual ?? productionSummary?.plan_completion?.actual ?? 1850,
-    planned: productionSummary?.completion_planned ?? productionSummary?.plan_completion?.planned ?? 2000,
+  const reload = () => {
+    refetchManufacturingPlanCompletion();
+    refetchLateManufacturingOrders();
+    refetchQcErrorRate();
+    refetchOee();
+    refetchManufacturingOrderStatus();
   };
-  const lateOrders = {
-    count: productionSummary?.late_orders_count ?? productionSummary?.late_orders?.count ?? 8,
-    totalRunning: productionSummary?.total_running_orders ?? productionSummary?.late_orders?.total_running ?? 185,
-  };
-  const qc = {
-    percent: productionSummary?.qc_error_percent ?? productionSummary?.qc?.error_percent ?? 2.1,
-    defects: productionSummary?.qc_defects ?? productionSummary?.qc?.defects ?? 39,
-    finished: productionSummary?.qc_finished ?? productionSummary?.qc?.finished ?? 1850,
-  };
-  const oee = {
-    percent: productionSummary?.oee_percent ?? productionSummary?.oee?.percent ?? 78,
-    lines: productionSummary?.oee_lines ?? productionSummary?.oee?.lines ?? 5,
-  };
-
+  
   const kpiItems = [
     {
       key: 'completion',
@@ -60,8 +52,8 @@ const Dashboard = () => {
       containerBg: '#DCFCE7',
       iconBg: '#14B32E',
       labelColor: '#14B32E',
-      valueText: () => `${formatNumber(completion.percent)}%`,
-      subText: () => `Thực tế: ${formatNumber(completion.actual)}/ Kế hoạch: ${formatNumber(completion.planned)} SP`,
+      valueText: () => `${formatNumber(manufacturingPlanCompletion?.percent ?? 0)}%`,
+      subText: () => `Thực tế: ${formatNumber(manufacturingPlanCompletion?.actual ?? 0)}/ Kế hoạch: ${formatNumber(manufacturingPlanCompletion?.plan ?? 0)} SP`,
     },
     {
       key: 'late_orders',
@@ -69,8 +61,8 @@ const Dashboard = () => {
       containerBg: '#FFE2E5',
       iconBg: '#FA5A7D',
       labelColor: '#FA5A7D',
-      valueText: () => `${formatNumber(lateOrders.count)}`,
-      subText: () => `Tổng số ${formatNumber(lateOrders.totalRunning)} lệnh đang chạy`,
+      valueText: () => `${formatNumber(lateManufacturingOrders?.late_count ?? 0)}`,
+      subText: () => `Tổng số ${formatNumber(lateManufacturingOrders?.total_running ?? 0)} lệnh đang chạy`,
     },
     {
       key: 'qc_rate',
@@ -78,8 +70,8 @@ const Dashboard = () => {
       containerBg: '#FFF4DE',
       iconBg: '#FF947A',
       labelColor: '#FF947A',
-      valueText: () => `${formatNumber(qc.percent)}%`,
-      subText: () => `${formatNumber(qc.defects)} SP lỗi/${formatNumber(qc.finished)} SP hoàn thành`,
+      valueText: () => `${formatNumber(qcErrorRate?.avg_error_rate_percent ?? 0)}%`,
+      subText: () => `${formatNumber(qcErrorRate?.total_error ?? 0)} SP lỗi/${formatNumber(qcErrorRate?.total_completed ?? 0)} SP hoàn thành`,
     },
     {
       key: 'oee',
@@ -87,8 +79,9 @@ const Dashboard = () => {
       containerBg: '#F3E8FF',
       iconBg: '#BF83FF',
       labelColor: '#BF83FF',
-      valueText: () => `${formatNumber(oee.percent)}%`,
-      subText: () => `Trung bình ${formatNumber(oee.lines)} chuyền chính`,
+      valueText: () => `${formatNumber(oee?.oee_diff ?? 0)}%`,
+      // subText: () => `${oee?.compare_message ?? ''}`,
+      subText: () => `Trung bình ${formatNumber(oee?.compare_lines ?? 0)} chuyền chính`,
     },
   ];
 
@@ -100,6 +93,9 @@ const Dashboard = () => {
       maginBottom={true}
       filterHeader={
         <div className='flex items-center gap-2'>
+          <button className='responsive-text-sm text-[#3A3E4C] font-semibold capitalize' onClick={reload}>
+            Tải lại
+          </button>
           <p className='responsive-text-base text-[#3A3E4C] font-semibold capitalize'>Lọc theo</p>
           <QuickDateDropdown
             value={quickDate}

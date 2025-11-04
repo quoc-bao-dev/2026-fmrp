@@ -69,14 +69,14 @@ const Dashboard = () => {
   const { data: customerTypeSales, refetch: refetchCustomerTypeSales } = useGetCustomerTypeSales({ start_date: dateRange.start_date, end_date: dateRange.end_date, branch_ids: selectedBranches });
   const { data: monthlyReorderRate, refetch: refetchMonthlyReorderRate } = useGetMonthlyReorderRate({ start_date: dateRange.start_date, end_date: dateRange.end_date, branch_ids: selectedBranches });
 
-  const reload = () => {
-    refetchSalesSummary();
-    refetchDebtTrend();
-    refetchProductGroupRevenue();
-    refetchOrderCompletionRate();
-    refetchCustomerTypeSales();
-    refetchMonthlyReorderRate();
-  };
+  // const reload = () => {
+  //   refetchSalesSummary();
+  //   refetchDebtTrend();
+  //   refetchProductGroupRevenue();
+  //   refetchOrderCompletionRate();
+  //   refetchCustomerTypeSales();
+  //   refetchMonthlyReorderRate();
+  // };
 
   const kpiItems = [
     {
@@ -125,9 +125,9 @@ const Dashboard = () => {
       maginBottom={true}
       filterHeader={
         <div className='flex items-center gap-2'>
-          <button className='responsive-text-sm text-[#3A3E4C] font-semibold capitalize' onClick={reload}>
+          {/* <button className='responsive-text-sm text-[#3A3E4C] font-semibold capitalize' onClick={reload}>
             Tải lại
-          </button>
+          </button> */}
           <p className='responsive-text-base text-[#3A3E4C] font-semibold capitalize'>Lọc theo</p>
           <QuickDateDropdown
             value={quickDate}

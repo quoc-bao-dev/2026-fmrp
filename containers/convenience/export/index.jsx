@@ -144,7 +144,11 @@ const Export = props => {
 
   useEffect(() => {
     const perms = auth?.permissions_current || {};
-    const isAllowed = (t) => (t.perm === 'products' ? Number(perms?.products?.is_export) === 1 : Number(perms?.[t.perm]?.is_export) === 1);
+    const hasPerms = !!auth?.permissions_current && Object.keys(perms).length > 0;
+    const isAllowed = (t) => {
+      if (!hasPerms) return true; // Không có permissions_current thì full quyền
+      return t.perm === 'products' ? Number(perms?.products?.is_export) === 1 : Number(perms?.[t.perm]?.is_export) === 1;
+    };
     const current = Number(router.query?.tab || 1);
     const currentMeta = dataTab.find(t => t.id === current);
     if (currentMeta && isAllowed(currentMeta)) {
@@ -383,7 +387,8 @@ const Export = props => {
             {dataTab &&
               dataTab.map(e => {
                 const perms = auth?.permissions_current || {};
-                const allowed = e.perm === 'products' ? Number(perms?.products?.is_export) == 1 : Number(perms?.[e.perm]?.is_export) == 1;
+                const hasPerms = !!auth?.permissions_current && Object.keys(perms).length > 0;
+                const allowed = !hasPerms || (e.perm === 'products' ? Number(perms?.products?.is_export) == 1 : Number(perms?.[e.perm]?.is_export) == 1);
                 return (
                   <div>
                     <TabClient
