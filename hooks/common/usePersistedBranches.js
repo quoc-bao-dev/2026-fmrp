@@ -40,16 +40,21 @@ export function usePersistedBranches(storageKey = 'report_branch_ids') {
   useEffect(() => {
     if (!Array.isArray(branchOptions) || branchOptions.length === 0) return
 
-    // Nếu chưa có lựa chọn (sau khi đã hydrate) thì chọn mặc định chi nhánh đầu
+    // Lấy chi nhánh đầu tiên được enabled
+    const firstEnabledBranch = branchOptions.find(branch => branch.is_enabled === 1 || branch.is_enabled === true)
+
+    // Nếu chưa có lựa chọn (sau khi đã hydrate) thì chọn mặc định chi nhánh đầu được enabled
     if (!Array.isArray(selectedBranches) || selectedBranches.length === 0) {
-      setSelectedBranches([branchOptions[0].value])
+      if (firstEnabledBranch) {
+        setSelectedBranches([firstEnabledBranch.value])
+      }
       return
     }
 
     const validSet = new Set(branchOptions.map(b => b.value))
     const filtered = selectedBranches.filter(id => validSet.has(id))
     if (filtered.length !== selectedBranches.length) {
-      setSelectedBranches(filtered.length > 0 ? filtered : [branchOptions[0].value])
+      setSelectedBranches(filtered.length > 0 ? filtered : (firstEnabledBranch ? [firstEnabledBranch.value] : []))
     }
   }, [branchOptions])
 

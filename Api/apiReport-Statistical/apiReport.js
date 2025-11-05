@@ -95,6 +95,21 @@ const apiReport = {
     return response.data;
   },
 
+  async apiGetTrackProduction(data) {
+    const response = await axiosCustom('GET', `/api_web/dashboard/reports/track-production`, data);
+    return response.data;
+  },
+
+  async apiGetManufacturingOrderCompletionClassification(data) {
+    const response = await axiosCustom('GET', `/api_web/dashboard/reports/manufacturing-order-completion-classification`, data);
+    return response.data;
+  },
+
+  async apiGetMainMaterialStock(data) {
+    const response = await axiosCustom('GET', `/api_web/dashboard/reports/main-material-stock`, data);
+    return response.data;
+  },
+
   //Báo cáo bán hàng
   async apiGetSalesRevenue(data) {
     const response = await axiosCustom('GET', `/api_web/reports/sales-revenue`, data);

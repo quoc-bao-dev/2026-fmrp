@@ -38,8 +38,11 @@ const CustomSelectBranch = ({
   const inputRef = useRef(null);
   const isShow = useToast();
 
-  // Kiểm tra xem tất cả đã được chọn chưa
-  const allSelected = Array.isArray(value) && value.length === listBranch?.length && listBranch?.length > 0;
+  // Lấy danh sách các branch được enabled
+  const enabledBranches = listBranch?.filter(branch => branch.is_enabled === 1 || branch.is_enabled === true) || [];
+
+  // Kiểm tra xem tất cả các branch enabled đã được chọn chưa
+  const allSelected = Array.isArray(value) && enabledBranches.length > 0 && value.length === enabledBranches.length && enabledBranches.every(branch => value.includes(branch.value));
 
   // Kiểm tra có value được chọn không
   const hasValue = Array.isArray(value) ? value.length > 0 : !!value;
@@ -96,8 +99,9 @@ const CustomSelectBranch = ({
     if (allSelected) {
       onChange([]);
     } else {
-      const allValues = listBranch?.map(branch => branch.value) || [];
-      onChange(allValues);
+      // Chỉ chọn các branch có is_enabled === 1
+      const allEnabledValues = enabledBranches.map(branch => branch.value);
+      onChange(allEnabledValues);
     }
   };
 

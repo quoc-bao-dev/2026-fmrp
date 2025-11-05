@@ -1,4 +1,5 @@
 import useToast from "@/hooks/useToast";
+import { checkPageAccessFromNavbar, findFirstAccessiblePageFromNavbar } from "@/utils/helpers/findAccessiblePageFromNavbar";
 import { Inter, Lexend_Deca } from "@next/font/google";
 import { Cd, TickCircle } from "iconsax-react";
 import Image from "next/image";
@@ -29,9 +30,47 @@ export const Dropdown = (props) => {
 
   const [open, sOpen] = useState(false);
 
-  const { is_admin } = useSelector((state) => state.auth);
+  const { is_admin, permissions_current: auth } = useSelector((state) => state.auth);
 
   const showToat = useToast();
+
+  // Component wrapper cho Link để check quyền và redirect nếu cần
+  const SecureLink = ({ href, children, item, className, title, ...linkProps }) => {
+    const handleClick = (e) => {
+      // Nếu không có permissions_current thì cho full quyền
+      if (auth.length === 0) {
+        return; // Cho phép truy cập, không cần check
+      }
+      
+      // Kiểm tra quyền truy cập dựa trên navbar data
+      const hasPermission = checkPageAccessFromNavbar(href, auth);
+      
+      if (!hasPermission) {
+        e.preventDefault();
+        
+        // Tìm trang có quyền đầu tiên trong navbar tương ứng (theo thứ tự)
+        const accessiblePath = findFirstAccessiblePageFromNavbar(href, auth);
+        
+        if (accessiblePath) {
+          router.push(accessiblePath);
+        } else {
+          showToat("error", item?.forceDisableForAdmin ? "Báo cáo đang tối ưu" : "Bạn không có quyền truy cập");
+        }
+      }
+    };
+
+    return (
+      <Link
+        href={href}
+        onClick={handleClick}
+        className={className}
+        title={title}
+        {...linkProps}
+      >
+        {children}
+      </Link>
+    );
+  };
 
 
   return (
@@ -63,15 +102,6 @@ export const Dropdown = (props) => {
               </div>
             )}
           </button>
-          // <div className='overflow-hidden cursor-pointer'>
-          //     <HoverEffectButton
-          //         title={props.children}
-          //         hoverTitle={props.children}
-          //         reverse={false}
-          //         className={`${props?.link?.some(link => router.pathname.startsWith(link)) ? "bg-[#E2F0FE] text-[#11315B] font-semibold" : "bg-transparent text-[#F3F4F6] font-normal hover:text-[#11315B] hover:font-semibold"} rounded-xl xl:text-sm text-xs px-2 py-1 hover:drop-shadow-[0_0_5px_#eabd7a99] flex flex-col justify-center items-center overflow-hidden`}
-          //         colorHover="#E2F0FE"
-          //     />
-          // </div>
         }
         closeOnDocumentClick
         arrow={props.position}
@@ -80,7 +110,6 @@ export const Dropdown = (props) => {
         onClose={() => sOpen(false)}
         onOpen={() => sOpen(true)}
         position={props.position}
-      // className={`popover-edit -translate-y-10 rounded-lg ` + props.className}
       >
         <div
           className={`w-auto ${deca.className} bg-white  rounded-2xl shadow-lg`}
@@ -108,9 +137,10 @@ export const Dropdown = (props) => {
                       {ce.link ? (
                         <>
                           {is_admin && !ce?.forceDisableForAdmin ? (
-                            <Link
+                            <SecureLink
                               title={ce.title}
                               href={`${ce.link}`}
+                              item={ce}
                               className="flex items-center 2xl:space-x-2 2xl:mb-0 2xl:px-3 2xl:py-2 xl:space-x-1 xl:mb-0 xl:px-3 xl:py-1 lg:space-x-1 lg:mb-0 lg:px-1 lg:py-1 rounded text-[#637381] list-none hover:list-disc std:text-base hover:text-[#0375F3] mb-1"
                             >
                               {ce?.img ? (
@@ -136,11 +166,12 @@ export const Dropdown = (props) => {
                                   {ce.title}
                                 </li>
                               )}
-                            </Link>
+                            </SecureLink>
                           ) : ce?.viewOwn == "1" || ce?.view == "1" ? (
-                            <Link
+                            <SecureLink
                               title={ce.title}
                               href={`${ce.link}`}
+                              item={ce}
                               className="flex  items-center 2xl:space-x-2 2xl:mb-0 2xl:px-3 2xl:py-2 xl:space-x-1 xl:mb-0 xl:px-3 xl:py-1 lg:space-x-1 lg:mb-0 lg:px-1 lg:py-1 rounded text-[#637381] list-none hover:list-disc std:text-base hover:text-[#0375F3] mb-1"
                             >
                               {ce?.img ? (
@@ -166,7 +197,7 @@ export const Dropdown = (props) => {
                                   {ce.title}
                                 </li>
                               )}
-                            </Link>
+                            </SecureLink>
                           ) : (
                             <button
                               type="button"
@@ -257,9 +288,6 @@ export const Dropdown = (props) => {
                                     });
                                   }}
                                 >
-                                  {/* <li className="text-left 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] text-[#637381] list-none hover:list-disc std:text-base hover:text-[#0375F3] mb-1 focus:transform-gpu  px-3 py-2 rounded">
-                                    {e?.name}
-                                  </li> */}
                                   <li className="relative pl-4 text-[#637381] std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none group hover:text-[#0375F3]">
                                     <span className="before:content-['•'] before:absolute before:left-0 before:text-blue-600 before:opacity-0 group-hover:before:opacity-100">
                                       {e?.name}
@@ -267,9 +295,10 @@ export const Dropdown = (props) => {
                                   </li>
                                 </Link>
                               ) : is_admin && !e?.forceDisableForAdmin ? (
-                                <Link
+                                <SecureLink
                                   href={e.link ? e.link : "#"}
                                   title={e.name}
+                                  item={e}
                                   className="outline-none "
                                   key={i}
                                 >
@@ -278,11 +307,12 @@ export const Dropdown = (props) => {
                                       {e?.name}
                                     </span>
                                   </li>
-                                </Link>
+                                </SecureLink>
                               ) : e?.viewOwn == "1" || e?.view == "1" ? (
-                                <Link
+                                <SecureLink
                                   href={e.link ? e.link : "#"}
                                   title={e.name}
+                                  item={e}
                                   className="outline-none"
                                   key={i}
                                 >
@@ -291,7 +321,7 @@ export const Dropdown = (props) => {
                                       {e?.name}
                                     </span>
                                   </li>
-                                </Link>
+                                </SecureLink>
                               ) : (
                                 <button
                                   type="button"

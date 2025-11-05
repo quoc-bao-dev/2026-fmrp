@@ -1,15 +1,10 @@
-import ReactExport from "react-data-export";
-import { NumericFormat } from "react-number-format";
-import Select from "react-select";
-const ExcelFile = ReactExport.ExcelFile;
-const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
-const ExcelColumn = ReactExport.ExcelFile.ExcelColumn;
-// import * as XLSX from "xlsx";
 import { WARNING_STATUS_ROLE } from "@/constants/warningStatus/warningStatus";
 import useActionRole from "@/hooks/useRole";
 import useToast from "@/hooks/useToast";
 import { useEffect } from "react";
+import { NumericFormat } from "react-number-format";
 import { useSelector } from "react-redux";
+import Select from "react-select";
 import * as XLSX from "xlsx-js-style";
 
 const BtnParent = ({
@@ -25,8 +20,6 @@ const BtnParent = ({
     _HandleSubmit,
     dataLang,
     multiDataSet,
-    onSending,
-    sTemplateValue,
     sIsShow,
     sMultipleProgress,
 }) => {
@@ -148,12 +141,11 @@ const BtnParent = ({
                         id="page"
                         onChange={(e) => sPageLimit((prevState) => ({ ...prevState, page: e.target.value }))}
                         value={pageLimit.page}
-                        className="w-full p-2 text-xs transition-all duration-200 ease-in-out bg-white border border-gray-300 rounded outline-none xl:text-sm peer focus:border-new-blue"
+                        className="w-full h-[38px] p-2 text-xs transition-all duration-200 ease-in-out bg-white border border-gray-300 rounded outline-none xl:text-sm peer focus:border-new-blue"
                         thousandSeparator=","
                         allowNegative={false}
                         decimalScale={0}
                         required
-                        isNumericString={true}
                         isAllowed={(values) => {
                             const { value } = values;
                             const newValue = +value;
@@ -173,14 +165,13 @@ const BtnParent = ({
                     <NumericFormat
                         id="limit"
                         onChange={(e) => sPageLimit((prevState) => ({ ...prevState, limit: e.target.value }))}
-                        className="w-full p-2 text-xs transition-all duration-200 ease-in-out bg-white border border-gray-300 rounded outline-none appearance-none focus:placeholder:text-gray-400 placeholder:text-white focus:border-new-blue xl:text-sm peer"
+                        className="w-full h-[38px] p-2 text-xs transition-all duration-200 ease-in-out bg-white border border-gray-300 rounded outline-none appearance-none focus:placeholder:text-gray-400 placeholder:text-white focus:border-new-blue xl:text-sm peer"
                         thousandSeparator=","
                         value={pageLimit.limit}
                         allowNegative={true}
                         decimalScale={0}
                         required
                         placeholder={"Xuất hết điền -1"}
-                        isNumericString={true}
                     />
                     <label
                         htmlFor="limit"
@@ -258,8 +249,7 @@ const BtnParent = ({
                     <input
                         type="checkbox"
                         onChange={(e) => _HandleChange(e, "sampleImport")}
-                        checked={sampleImport}
-                        value={sampleImport}
+                        checked={sampleImport || false}
                         id="example12"
                         name="checkGroup1"
                         className="w-4 h-4 border-gray-300 rounded shadow-sm text-primary-600 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50 focus:ring-offset-0 disabled:cursor-not-allowed disabled:text-gray-400"
@@ -274,39 +264,6 @@ const BtnParent = ({
 
             {isShow ? (
                 <div className="col-span-2">
-                    {/* <ExcelFile
-                        filename={`${"Export dữ liệu"} ${
-                            (tabPage == 1 && "danh mục khách hàng") ||
-                            (tabPage == 2 && "danh mục nhà cung cấp") ||
-                            (tabPage == 3 && "danh mục nguyên vật liệu") ||
-                            (tabPage == 4 && "danh mục thành phẩm")
-                        }`}
-                        title="DLL"
-                        element={
-                            <button
-                                id="excelButton"
-                                className="w-full p-2.5  bg-gradient-to-l hover:bg-blue-300 from-blue-500 via-blue-500  to-blue-500 text-white rounded btn-animation hover:scale-[1.02] flex items-center gap-1 justify-center z-0"
-                            >
-                                <div
-                                    className={
-                                        "w-4 h-4 border-2 rounded-full border-pink-200 border-t-rose-500 animate-spin"
-                                    }
-                                ></div>
-                                <span className="text-xs xl:text-sm">{"Export dữ liệu"}</span>
-                            </button>
-                        }
-                    >
-                        <ExcelSheet
-                            dataSet={multiDataSet}
-                            data={multiDataSet}
-                            name={`${
-                                (tabPage == 1 && "Danh mục khách hàng") ||
-                                (tabPage == 2 && "Danh mục nhà cung cấp") ||
-                                (tabPage == 3 && "Danh mục nguyên vật liệu") ||
-                                (tabPage == 4 && "Danh mục thành phẩm")
-                            }`}
-                        ></ExcelSheet>
-                    </ExcelFile> */}
                     <button
                         id="excelButton"
                         className="w-full p-2.5  bg-gradient-to-l hover:bg-blue-300 from-blue-500 via-blue-500  to-blue-500 text-white rounded btn-animation hover:scale-[1.02] flex items-center gap-1 justify-center z-0"

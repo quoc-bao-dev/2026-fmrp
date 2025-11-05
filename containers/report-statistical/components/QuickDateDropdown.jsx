@@ -7,6 +7,7 @@ const OPTIONS = [
   { value: 'this_month', label: 'Tháng này' },
   { value: 'this_quarter', label: 'Quý này' },
   { value: 'this_year', label: 'Năm nay' },
+  { value: 'last_year', label: 'Năm trước' },
 ];
 
 const Radio = ({ checked }) => {
@@ -82,6 +83,10 @@ export const getDateRangeByQuickValue = (quickValue, now = new Date()) => {
       startDate = startOfYear();
       endDate = endOfYear();
       break;
+    case 'last_year':
+      startDate = new Date(current.getFullYear() - 1, 0, 1);
+      endDate = new Date(current.getFullYear() - 1, 11, 31);
+      break;
     default:
       break;
   }
@@ -124,7 +129,7 @@ const QuickDateDropdown = ({ value = 'this_week', onChange, className = '', opti
 
       {isOpen && (
         <div className='absolute top-full left-0 mt-1 z-50 bg-white border border-gray-200 rounded-2xl shadow-lg w-44 overflow-hidden'>
-          <div className='max-h-60 overflow-auto'>
+          <div className='max-h-64 overflow-auto'>
             {options.map((opt, idx) => {
               const checked = opt.value === value;
               return (

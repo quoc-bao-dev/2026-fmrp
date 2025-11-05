@@ -385,14 +385,13 @@ const Export = props => {
         fillterTab={
           <div className='flex items-center col-span-6 gap-4 flex-nowrap h-fit'>
             {dataTab &&
-              dataTab.map(e => {
+              dataTab.map((e, index) => {
                 const perms = auth?.permissions_current || {};
                 const hasPerms = !!auth?.permissions_current && Object.keys(perms).length > 0;
                 const allowed = !hasPerms || (e.perm === 'products' ? Number(perms?.products?.is_export) == 1 : Number(perms?.[e.perm]?.is_export) == 1);
                 return (
-                  <div>
+                  <div key={index}>
                     <TabClient
-                      key={e.id}
                       onClick={() => {
                         if (!allowed) return showToat('error', 'Bạn không có quyền truy cập tab này');
                         router.push({ pathname: router.route, query: { tab: e.id } });

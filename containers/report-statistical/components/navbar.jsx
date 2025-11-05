@@ -11,91 +11,6 @@ const Navbar = props => {
   const router = useRouter();
   const showToast = useToast();
 
-  //báo cáo bán hàng
-  const isNavbarSales = [
-    {
-      id: uuidv4(),
-      name: 'Tổng quan bán hàng',
-      path: '/report-statistical/sales-report/dashboard',
-      disabled: auth?.report_sales_dashboard?.is_view == 0,
-    },
-    {
-      id: uuidv4(),
-      name: 'Doanh số theo bán hàng',
-      path: '/report-statistical/sales-report/sales-revenue',
-      disabled: auth?.report_sales_revenue?.is_view == 0,
-    },
-    {
-      id: uuidv4(),
-      name: 'Báo cáo giao hàng',
-      path: '/report-statistical/sales-report/deliveries',
-      disabled: auth?.report_deliveries?.is_view == 0,
-    },
-    {
-      id: uuidv4(),
-      name: 'Báo cáo trả lại hàng bán',
-      path: '/report-statistical/sales-report/returns',
-      disabled: auth?.report_returns?.is_view == 0,
-    },
-    {
-      id: uuidv4(),
-      name: 'Đối chiếu công nợ KH',
-      path: '/report-statistical/sales-report/customer-debt',
-      disabled: auth?.report_customer_debt?.is_view == 0,
-    },
-  ];
-
-  // báo cáo mua hàng
-  const isNavbarPurchase = [
-    {
-      id: uuidv4(),
-      title: ' Báo cáo mặt hàng nhà cung cấp',
-      children: [
-        {
-          id: uuidv4(),
-          name: 'Báo cáo chi tiết yêu cầu mua hàng',
-          path: '/report-statistical/purchase-report/purchases',
-        },
-        {
-          id: uuidv4(),
-          name: 'Báo cáo tổng hợp mua hàng',
-          path: '/report-statistical/purchase-report/summary-of-purchases',
-        },
-        {
-          id: uuidv4(),
-          name: 'Báo cáo sổ chi tiết mua hàng',
-          path: '/report-statistical/purchase-report/purchase-details-book',
-        },
-        {
-          id: uuidv4(),
-          name: 'Theo dõi đặt hàng',
-          path: '/report-statistical/purchase-report/order-tracking',
-        },
-      ],
-    },
-    {
-      id: uuidv4(),
-      title: 'Báo cáo công nợ nhà cung cấp',
-      children: [
-        {
-          id: uuidv4(),
-          name: 'Báo cáo tổng hợp công nợ phải trả',
-          path: '/report-statistical/purchase-report/summary-of_liabilities',
-        },
-        {
-          id: uuidv4(),
-          name: 'Báo cáo chi tiết công nợ phải trả theo mặt hàng',
-          path: '/report-statistical/purchase-report/debt-by-item',
-        },
-        {
-          id: uuidv4(),
-          name: 'Bảng kê mua hàng',
-          path: '/report-statistical/purchase-report/purchases-list',
-        },
-      ],
-    },
-  ];
-  
   // báo cáo tồn kho
   const isNavbarWarehouse = [
     {
@@ -140,6 +55,87 @@ const Navbar = props => {
           // disabled: true, // Thêm thuộc tính disabled
         },
       ],
+    },
+  ];
+
+  // Quản lý sản xuất
+  const isNavbarProductionManager = [
+    {
+      id: uuidv4(),
+      name: 'Tổng quan sản xuất',
+      path: '/report-statistical/production-manager/dashboard',
+      disabled: auth?.report_manufacturing_dashboard?.is_view == 0,
+    },
+    {
+      id: uuidv4(),
+      name: 'Báo cáo định mức NVL',
+      path: '/report-statistical/production-manager/quota-materials',
+      disabled: auth?.report_boms?.is_view == 0,
+    },
+    {
+      id: uuidv4(),
+      name: 'Báo cáo tiến độ đơn hàng',
+      path: '/report-statistical/production-manager/order-progress',
+      disabled: auth?.report_order_progress?.is_view == 0,
+    },
+    {
+      id: uuidv4(),
+      name: 'Báo cáo NVL sử dụng',
+      path: '/report-statistical/production-manager/raw-materials-used',
+      disabled: auth?.report_material_usage?.is_view == 0,
+    },
+  ];
+
+  //báo cáo bán hàng
+  const isNavbarSales = [
+    {
+      id: uuidv4(),
+      name: 'Tổng quan bán hàng',
+      path: '/report-statistical/sales-report/dashboard',
+      disabled: auth?.report_sales_dashboard?.is_view == 0,
+    },
+    {
+      id: uuidv4(),
+      name: 'Doanh số theo bán hàng',
+      path: '/report-statistical/sales-report/sales-revenue',
+      disabled: auth?.report_sales_revenue?.is_view == 0,
+    },
+    {
+      id: uuidv4(),
+      name: 'Báo cáo giao hàng',
+      path: '/report-statistical/sales-report/deliveries',
+      disabled: auth?.report_deliveries?.is_view == 0,
+    },
+    {
+      id: uuidv4(),
+      name: 'Báo cáo trả lại hàng bán',
+      path: '/report-statistical/sales-report/returns',
+      disabled: auth?.report_returns?.is_view == 0,
+    },
+    {
+      id: uuidv4(),
+      name: 'Đối chiếu công nợ KH',
+      path: '/report-statistical/sales-report/customer-debt',
+      disabled: auth?.report_customer_debt?.is_view == 0,
+    },
+  ];
+
+  // báo cáo mua hàng
+  const isNavbarPurchase = [
+    {
+      id: uuidv4(),
+      name: 'Báo cáo nhập hàng',
+      path: '/report-statistical/purchase-report/import-goods',
+    },
+    {
+      id: uuidv4(),
+      name: 'Theo dõi đơn đặt hàng',
+      path: '/report-statistical/purchase-report/order-tracking',
+    },
+    {
+      id: uuidv4(),
+      name: 'Đối chiếu công nợ NCC',
+      path: '/report-statistical/purchase-report/supplier-debt',
     },
   ];
 
@@ -221,30 +217,6 @@ const Navbar = props => {
       id: uuidv4(),
       name: 'Bảng đối chiếu công nợ',
       path: '/report-statistical/receivables-debt/debt-comparison-table',
-    },
-  ];
-
-  // Quản lý sản xuất
-  const isNavbarProductionManager = [
-    {
-      id: uuidv4(),
-      name: 'Tổng quan sản xuất',
-      path: '/report-statistical/production-manager/dashboard',
-    },
-    {
-      id: uuidv4(),
-      name: 'Báo cáo định mức NVL',
-      path: '/report-statistical/production-manager/quota-materials',
-    },
-    {
-      id: uuidv4(),
-      name: 'Báo cáo tiến độ đơn hàng',
-      path: '/report-statistical/production-manager/order-progress',
-    },
-    {
-      id: uuidv4(),
-      name: 'Báo cáo NVL sử dụng',
-      path: '/report-statistical/production-manager/raw-materials-used',
     },
   ];
 

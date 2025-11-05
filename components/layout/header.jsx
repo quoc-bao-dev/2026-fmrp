@@ -650,21 +650,20 @@ const Header = () => {
               link: '/convenience/import',
             },
             {
-              viewOwn:
-                auth?.customers?.is_view_own == '1' ||
-                auth?.suppliers?.is_view_own == '1' ||
-                auth?.materials?.is_view_own == '1' ||
-                auth?.products?.is_view_own == '1'
-                  ? '1'
-                  : '0',
+              // viewOwn:
+              //   auth?.customers?.is_export == '1' ||
+              //   auth?.suppliers?.is_export == '1' ||
+              //   auth?.materials?.is_export == '1' ||
+              //   auth?.products?.is_export == '1'
+              //     ? '1'
+              //     : '0',
               view:
-                auth?.customers?.is_view == '1' ||
-                auth?.suppliers?.is_view == '1' ||
-                auth?.materials?.is_view == '1' ||
-                auth?.products?.is_view == '1'
+                auth?.customers?.is_export == '1' ||
+                auth?.suppliers?.is_export == '1' ||
+                auth?.materials?.is_export == '1' ||
+                auth?.products?.is_export == '1'
                   ? '1'
                   : '0',
-              // view: 1,
               name: 'Export dữ liệu',
               link: '/convenience/export',
             },
@@ -707,11 +706,9 @@ const Header = () => {
 
   const ListBaoCao = [
     {
-      // title: "Báo cáo",
       sub: [
         {
           title: 'Báo cáo',
-          // img: "/icon/header/khac/bc.png",
           items: [
             {
               viewOwn: 1,
@@ -720,55 +717,26 @@ const Header = () => {
               link: '/report-statistical/warehouse-report/entry-and-exist',
             },
             {
-              viewOwn: 1,
-              view: 1,
+              viewOwn: auth?.report_manufacturing_dashboard?.is_view || auth?.report_boms?.is_view || auth?.report_order_progress?.is_view || auth?.report_material_usage?.is_view ,
+              view: auth?.report_manufacturing_dashboard?.is_view || auth?.report_boms?.is_view || auth?.report_order_progress?.is_view || auth?.report_material_usage?.is_view ,
               name: 'Quản lý sản xuất',
               link: '/report-statistical/production-manager/dashboard',
-              forceDisableForAdmin: true,
+              // forceDisableForAdmin: true,
             },
             {
-              viewOwn: 1,
-              view: 1,
+              viewOwn: auth?.report_sales_dashboard?.is_view || auth?.report_sales_revenue?.is_view || auth?.report_deliveries?.is_view || auth?.report_returns?.is_view ,
+              view: auth?.report_sales_dashboard?.is_view || auth?.report_sales_revenue?.is_view || auth?.report_deliveries?.is_view || auth?.report_returns?.is_view ,
               name: 'Báo cáo bán hàng',
               link: '/report-statistical/sales-report/dashboard',
-              forceDisableForAdmin: true,
+              // forceDisableForAdmin: true,
             },
             {
               viewOwn: 0,
               view: 0,
               name: 'Báo cáo mua hàng',
-              link: '/report-statistical/purchase-order/purchases',
-              forceDisableForAdmin: true,
+              link: '/report-statistical/purchase-report/import-goods',
+              // forceDisableForAdmin: true,
             },
-            // {
-            //     viewOwn: -1,
-            //     view: -1,
-            //     name: "Báo cáo QC"
-            // },
-            // {
-            //     viewOwn: -1,
-            //     view: -1,
-            //     name: "Công nợ phải thu",
-            //     link: "/report-statistical/receivables-debt/aggregate-debt",
-            // },
-            // {
-            //     viewOwn: -1,
-            //     view: -1,
-            //     name: "Công nợ phải trả",
-            // },
-            // {
-            //     viewOwn: -1,
-            //     view: -1,
-            //     name: "Tồn quỹ",
-            //     link: "/report-statistical/fund-balance/autumn-diary",
-            // },
-
-            // {
-            //     viewOwn: -1,
-            //     view: -1,
-            //     name: "Báo cáo lợi nhuận",
-            //     link: "/report-statistical/profit-report",
-            // },
           ],
         },
       ],
@@ -1213,7 +1181,6 @@ const Header = () => {
 
   return (
     <header className="fixed z-[990] w-full bg-[#003DA0] top-0 xl:h-[72px] h-[62px] flex items-center justify-between 3xl:px-6 2xl:px-4 px-5 py-4">
-      {/* <header className="z-40 w-full bg-[#013da0] fixed top-0 3xl:h-[74px] 2xl:h-16 xl:h-14 lg:h-12"> */}
       <div className="flex items-center flex-row gap-x-4">
         <Link href="/" className="relative ">
           <Image
@@ -1228,16 +1195,6 @@ const Header = () => {
             placeholder="blur"
             blurDataURL="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
           />
-
-          {/* <div
-                        style={{
-                            background: `radial-gradient(45.83% 94.64% at 93.75% 3.57%, #1FC583 0%, #1F9285 100%)`,
-                            boxShadow: `1px 1px 2px 0px #00000040`
-                        }}
-                        className="px-1.5 py-0.5 text-[8px] font-semibold text-white rounded-sm w-fit absolute top-0 right-0 translate-x-[110%]"
-                    >
-                        Beta
-                    </div> */}
         </Link>
 
         <div className="flex flex-row items-center xl:gap-1 gap-0.5">
@@ -1281,27 +1238,6 @@ const Header = () => {
       </div>
 
       <div className="flex items-center gap-2 xl:gap-4 2xl:gap-6">
-        {/* <form className="relative flex items-center">
-                    <div className="2xl:size-5 xl:size-4 size-3 absolute xl:left-3 left-1.5">
-                        <Image
-                            alt=""
-                            src="/icon/header/timkiem.png"
-                            width={24}
-                            height={18}
-                            quality={100}
-                            className="object-contain w-full h-full"
-                            loading="lazy"
-                            crossOrigin="anonymous"
-                            blurDataURL="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
-                        />
-                    </div>
-                    <input
-                        className="3xl:w-64 2xl:w-44 xxl:w-40 xl:w-32 lg:w-24 3xl:h-10 xl:h-9 h-8 3xl:text-base xxl:text-sm text-xs 3xl:placeholder:text-base xxl:placeholder:text-[14px] placeholder:text-xs placeholder:text-white/50 text-[#ffffff] relative bg-[#ffffff1a] hover:bg-[#ffffff25] focus:bg-[#ffffff25] outline-none xxl:pl-10 xl:pl-8 lg:pl-6 pr-2 py-2 rounded-md"
-                        type="text"
-                        placeholder="Tìm kiếm"
-                    />
-                </form> */}
-        {/* {authState?.id_package_service === "1" && ( */}
         {authState?.is_upgrade && (
           <button
             className="py-1 px-2 rounded-full bg-typo-blue-4 flex items-center gap-2"
@@ -1354,35 +1290,6 @@ const Header = () => {
             </div>
           </Dropdown>
 
-          {/* <Tooltip
-                    title={"Góp ý"}
-                    arrow
-                    theme="dark"
-                    className="cursor-pointer"
-                >
-                    <div className='2xl:size-5 xl:size-4 size-3 shink-0'>
-                        <Image
-                            alt=""
-                            onClick={() => {
-                                dispatch({
-                                    type: "statePopupRecommendation",
-                                    payload: {
-                                        open: true
-                                    }
-                                })
-                            }}
-                            src="/icon/header/right/gopy.png"
-                            width={18}
-                            height={18}
-                            quality={100}
-                            className="object-contain w-full h-full transition"
-                            loading="lazy"
-                            crossOrigin="anonymous"
-                            blurDataURL="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
-                        />
-                    </div>
-                </Tooltip> */}
-
           <DropdownThongBao data={[] || ListThongBao} className="popover-thongbao" position={'bottom right'}>
             <div className="2xl:size-5 xl:size-4 size-3 shink-0">
               <Image
@@ -1397,10 +1304,8 @@ const Header = () => {
                 blurDataURL="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
               />
             </div>
-            {/* <div className="3xl:text-[9px] 2xl:text-[9px] xl:text-[9px] text-[9px] bg-red-500 3xl:h-3.5 3xl:w-3.5 2xl:h-3.5 2xl:w-3.5 xl:h-3.5 xl:w-3.5 lg:h-3.5 lg:w-3.5 rounded-full absolute top-0 right-0 3xl:translate-x-1 3xl:-translate-y-1 2xl:translate-x-1 2xl:-translate-y-1 xl:translate-x-1 xl:-translate-y-1 translate-x-1 -translate-y-1 flex flex-col items-center justify-center text-white font-medium">
-                                    2
-                                </div> */}
           </DropdownThongBao>
+
           <Tooltip title={'Hướng dẫn phần mềm'} className="cursor-pointer" arrow theme="dark">
             <motion.div
               className="cursor-pointer 2xl:size-6 xl:size-5 size-4 shink-0"
@@ -1453,9 +1358,6 @@ const Header = () => {
 
         <DropdownAvatar />
       </div>
-      {/* <div className="px-10 py-0 pt-1 overflow-x-auto">
-                <Expirred />
-            </div> */}
     </header>
   )
 }

@@ -1,4 +1,6 @@
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Label, Area, AreaChart } from 'recharts';
+import { useMemo } from 'react';
+import formatNumber from '@/utils/helpers/formatnumber';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload || payload.length === 0) return null;
@@ -8,7 +10,7 @@ const CustomTooltip = ({ active, payload, label }) => {
       {payload.map((item, index) => (
         <div key={index} className='flex items-center justify-between gap-4 mb-1'>
           <span className='text-[12px] text-[#828383]'>{item.name}</span>
-          <span className='text-[14px] font-medium text-[#425166]'>{item.value} SP</span>
+          <span className='text-[14px] font-medium text-[#425166]'>{formatNumber(item.value)} SP</span>
         </div>
       ))}
     </div>
@@ -24,22 +26,57 @@ const WhiteDot = (props) => {
   );
 };
 
-const ProductionTrackingChart = ({ data }) => {
-  // Dữ liệu mặc định nếu không có data từ props
-  const chartData = data || [
-    { day: 'T2', keHoach: 25, thucTe: 10 },
-    { day: 'T3', keHoach: 65, thucTe: 35 },
-    { day: 'T4', keHoach: 140, thucTe: 70 },
-    { day: 'T5', keHoach: 165, thucTe: 55 },
-    { day: 'T6', keHoach: 120, thucTe: 140 },
-    { day: 'T7', keHoach: 180, thucTe: 105 },
-    { day: 'CN', keHoach: 200, thucTe: 140 },
-  ];
+const ProductionTrackingChart = ({ data, title }) => {
+  // Map dữ liệu từ API sang format cho chart
+  const chartData = useMemo(() => {
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return [];
+    }
+    return data.map(item => ({
+      label: item.label,
+      keHoach: item.production_order || 0,
+      thucTe: item.actual || 0,
+    }));
+  }, [data]);
+
+  // Tính toán domain động cho YAxis
+  const yAxisDomain = useMemo(() => {
+    if (chartData.length === 0) return [0, 100];
+    
+    const maxValue = Math.max(
+      ...chartData.map(item => Math.max(item.keHoach, item.thucTe))
+    );
+    
+    // Làm tròn lên đến số tròn gần nhất (ví dụ: 10050 -> 11000)
+    const roundedMax = Math.ceil(maxValue / 1000) * 1000;
+    // Nếu maxValue nhỏ, làm tròn lên 100
+    const finalMax = maxValue < 100 ? 100 : (roundedMax === 0 ? 100 : roundedMax);
+    
+    return [0, finalMax];
+  }, [chartData]);
+
+  // Tính toán ticks cho YAxis
+  const yAxisTicks = useMemo(() => {
+    const [, max] = yAxisDomain;
+    if (max === 0) return [0];
+    
+    // Chia thành 5 phần, làm tròn step để có số đẹp
+    const step = Math.ceil(max / 5 / 100) * 100; // Làm tròn step lên bội số của 100
+    const ticks = [];
+    for (let i = 0; i <= max; i += step) {
+      ticks.push(Math.round(i));
+    }
+    // Đảm bảo có giá trị max
+    if (ticks[ticks.length - 1] < max) {
+      ticks.push(max);
+    }
+    return ticks;
+  }, [yAxisDomain]);
 
   return (
     <div className='w-full h-full rounded-[20px] bg-[#EAF6FF] p-4 flex flex-col min-h-0'>
       <h3 className='responsive-text-lg font-semibold text-[#3A3E4C] text-center mb-2'>
-        Theo Dõi Sản Lượng (Tuần Này)
+        Theo Dõi Sản Lượng {title ? `(${title})` : ''}
       </h3>
       {/* Legend đặt trên cùng */}
       <div className='flex items-center justify-center gap-6 mb-2'>
@@ -69,15 +106,15 @@ const ProductionTrackingChart = ({ data }) => {
           </defs>
           <CartesianGrid stroke='#E5E7EB' strokeDasharray='0' vertical={true} horizontal={true} strokeWidth={1} />
           <XAxis
-            dataKey='day'
+            dataKey='label'
             tick={{ fill: '#828383', fontSize: 12 }}
             tickLine={false}
             axisLine={{ stroke: '#D9D9D9', strokeWidth: 0.5 }}
             tickMargin={10}
           />
           <YAxis
-            domain={[0, 300]}
-            ticks={[0, 50, 100, 150, 200, 250, 300]}
+            domain={yAxisDomain}
+            ticks={yAxisTicks}
             tick={{ fill: '#828383', fontSize: 12 }}
             tickLine={false}
             axisLine={{ stroke: '#D9D9D9', strokeWidth: 0.5 }}

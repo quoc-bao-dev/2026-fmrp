@@ -1,14 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
-// Demo dữ liệu 1 giá trị/ vật tư (0-100). Sẽ được map sang high/safe/low theo ngưỡng
-const RAW_DATA = [
-  { name: 'Thép tấm 5mm', value: 75 },
-  { name: 'Bu lông MB', value: 92 },
-  { name: 'Sơn tĩnh điện (B)', value: 55 },
-  { name: 'Nhựa ABS 02', value: 35 },
-];
-
 const COLORS = {
   high: '#7ED69B',
   safe: '#F8D7A6',
@@ -22,13 +14,20 @@ const LEGEND_LABELS = {
 };
 
 const CustomLegend = ({ payload = [] }) => {
+  const items = payload.length
+    ? payload.map(entry => ({ key: entry?.value, color: entry?.color }))
+    : [
+        { key: 'high', color: COLORS.high },
+        { key: 'safe', color: COLORS.safe },
+        { key: 'low', color: COLORS.low },
+      ];
   return (
     <div className='flex items-center justify-center gap-6 mb-4'>
-      {payload.map(entry => (
-        <div key={entry?.value} className='flex items-center gap-1.5'>
-          <span style={{ width: 12, height: 12, borderRadius: 4, backgroundColor: entry?.color, display: 'inline-block' }} />
+      {items.map(item => (
+        <div key={item.key} className='flex items-center gap-1.5'>
+          <span style={{ width: 12, height: 12, borderRadius: 4, backgroundColor: item.color, display: 'inline-block' }} />
           <span className='responsive-text-sm' style={{ color: '#8D9092' }}>
-            {LEGEND_LABELS[entry?.value] || entry?.value}
+            {LEGEND_LABELS[item.key] || item.key}
           </span>
         </div>
       ))}
@@ -122,17 +121,34 @@ const YAxisTick = ({ x, y, payload, maxWidth }) => {
   );
 };
 
-// Map 1 giá trị thành 3 cột stack theo ngưỡng (low <= lowMax, high >= highMin, còn lại là safe)
+// Chuẩn hóa dữ liệu từ API về dạng [{ name, value(0-100), level? }]
+const extractRows = input => {
+  const materials = input?.data?.materials ?? input?.materials ?? (Array.isArray(input) ? input : []);
+  if (!Array.isArray(materials)) return [];
+  return materials.map(m => {
+    const computedPercent = m?.minimum_quantity > 0 ? (Number(m.total_quantity) / Number(m.minimum_quantity)) * 100 : Number(m.percent ?? 0);
+    const rawPercent = Number.isFinite(computedPercent) ? computedPercent : 0;
+    const value = Math.max(0, Math.min(100, Math.round(rawPercent)));
+    return { name: m?.name ?? '', value, level: m?.level };
+  });
+};
+
+// Map 1 giá trị thành 3 cột stack theo level (nếu có) hoặc theo ngưỡng
 const mapToStacks = (rows, { lowMax = 40, highMin = 80 } = {}) => {
   return rows.map(r => {
     const v = Number(r.value) || 0;
+    const level = String(r.level || '').toLowerCase();
+    if (level.includes('cao')) return { name: r.name, high: v, safe: 0, low: 0 };
+    if (level.includes('an toàn') || level.includes('an toan')) return { name: r.name, high: 0, safe: v, low: 0 };
+    if (level.includes('thấp') || level.includes('thap')) return { name: r.name, high: 0, safe: 0, low: v };
+
     if (v >= highMin) return { name: r.name, high: v, safe: 0, low: 0 };
     if (v <= lowMax) return { name: r.name, high: 0, safe: 0, low: v };
     return { name: r.name, high: 0, safe: v, low: 0 };
   });
 };
 
-const MainMaterialStock = ({ thresholds = { lowMax: 40, highMin: 80 }, data = RAW_DATA }) => {
+const MainMaterialStock = ({ thresholds = { lowMax: 40, highMin: 80 }, data }) => {
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
@@ -146,22 +162,38 @@ const MainMaterialStock = ({ thresholds = { lowMax: 40, highMin: 80 }, data = RA
   }, []);
 
   const yAxisWidth = Math.max(100, Math.round(containerWidth * 0.15));
-  const stackedData = mapToStacks(data, thresholds);
+  const rows = extractRows(data);
+  const stackedData = mapToStacks(rows, thresholds);
+  // Tính chiều cao biểu đồ dựa trên số dòng để có thể cuộn dọc
+  const barSize = 30; // trùng với barSize của BarChart
+  const rowGap = 18; // xấp xỉ khoảng cách giữa các bar
+  const topBottomPadding = 140; // chừa chỗ cho legend/tiêu đề/trục
+  const chartHeight = Math.max(320, rows.length * (barSize + rowGap) + topBottomPadding);
 
   return (
     <div ref={containerRef} className='w-full h-[463px] bg-[#EEF6FF] rounded-[20px] p-4 flex flex-col min-h-0'>
       <h3 className='responsive-text-xl font-semibold text-neutral-04 capitalize text-center'>Tồn Kho Vật Tư Chính</h3>
-      <div className='w-full h-full min-h-0'>
+      <CustomLegend />
+      <div className='w-full h-full min-h-0 overflow-y-auto'>
+        <div style={{ height: chartHeight }}>
+          <ResponsiveContainer width='100%' height='100%'>
+            <BarChart data={stackedData} layout='vertical' barCategoryGap={10} barGap={8} barSize={30}>
+              <CartesianGrid horizontal={false} stroke='#CFD8E3' />
+              {/* XAxis được tách ra phần cố định bên dưới */}
+              <YAxis type='category' dataKey='name' width={yAxisWidth} axisLine={{ stroke: '#CFD8E3' }} tickLine={false} tick={<YAxisTick maxWidth={yAxisWidth} />} />
+              <Tooltip cursor={{ fill: 'transparent' }} content={<CustomTooltip />} />
+              <Bar dataKey='high' stackId='a' fill={COLORS.high} radius={[8, 8, 8, 8]} />
+              <Bar dataKey='safe' stackId='a' fill={COLORS.safe} radius={[8, 8, 8, 8]} />
+              <Bar dataKey='low' stackId='a' fill={COLORS.low} radius={[8, 8, 8, 8]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+      {/* XAxis cố định (không cuộn) */}
+      <div className='w-full' style={{ height: 44 }}>
         <ResponsiveContainer width='100%' height='100%'>
-          <BarChart data={stackedData} layout='vertical' barCategoryGap={10} barGap={8} barSize={30}>
-            <CartesianGrid horizontal={false} stroke='#CFD8E3' />
+          <BarChart data={stackedData} layout='vertical' margin={{ left: yAxisWidth }}>
             <XAxis type='number' domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]} stroke='#90A3B0' axisLine={false} tickLine={false} tick={<XAxisTick />} />
-            <YAxis type='category' dataKey='name' width={yAxisWidth} axisLine={{ stroke: '#CFD8E3' }} tickLine={false} tick={<YAxisTick maxWidth={yAxisWidth} />} />
-            <Tooltip cursor={{ fill: 'transparent' }} content={<CustomTooltip />} />
-            <Legend verticalAlign='top' align='center' content={<CustomLegend />} />
-            <Bar dataKey='high' stackId='a' fill={COLORS.high} radius={[8, 8, 8, 8]} />
-            <Bar dataKey='safe' stackId='a' fill={COLORS.safe} radius={[8, 8, 8, 8]} />
-            <Bar dataKey='low' stackId='a' fill={COLORS.low} radius={[8, 8, 8, 8]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

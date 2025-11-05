@@ -9,7 +9,7 @@ const ListItem = ({ dataColumnNew, type, dataLang, HandlePushItem, isShow, dataE
                 return (
                     <div key={index} className="mx-2 my-2">
                         <Zoom>
-                            <button
+                            <div
                                 onClick={() => HandlePushItem(e.value, type, dataEmty, sDataEmty)}
                                 className="bg-white inline-flex items-center justify-between w-full gap-2 p-2 text-sm font-medium transition-all duration-200 ease-in-out border group hover:bg-gray-50 rounded-xl hover:border-gray-200"
                             >
@@ -32,7 +32,7 @@ const ListItem = ({ dataColumnNew, type, dataLang, HandlePushItem, isShow, dataE
                                 ) : (
                                     <TiArrowRight size="20" color="gray" className="" />
                                 )}
-                            </button>
+                            </div>
                         </Zoom>
                     </div>
                 );

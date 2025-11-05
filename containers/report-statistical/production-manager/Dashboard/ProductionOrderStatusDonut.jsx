@@ -1,5 +1,7 @@
 import { Cell, Customized, Pie, PieChart, ResponsiveContainer, Sector, Tooltip } from 'recharts';
 import { useState } from 'react';
+import Image from 'next/image';
+import Loading from '@/components/UI/loading/loading';
 
 const RingBackground = ({ width, height }) => {
   const cx = width / 2;
@@ -29,6 +31,35 @@ const CenterLabel = ({ width, height, label }) => {
       {label}
     </text>
   );
+};
+
+// Custom Tooltip component
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0];
+    return (
+      <div className='bg-white rounded-lg shadow-lg p-3 border border-gray-200'>
+        <div className='flex items-center gap-2 mb-2'>
+          <span 
+            className='inline-block w-3 h-3 rounded' 
+            style={{ backgroundColor: data.payload.color }} 
+          />
+          <p className='responsive-text-sm font-semibold text-neutral-04'>{data.payload.label}</p>
+        </div>
+        <div className='space-y-1'>
+          <p className='responsive-text-sm text-neutral-03'>
+            <span className='font-medium'>Tỉ lệ: </span>
+            {data.value}%
+          </p>
+          <p className='responsive-text-sm text-neutral-03'>
+            <span className='font-medium'>Số lượng: </span>
+            {data.payload.count} lệnh
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return null;
 };
 
 // Render active shape khi hover - dùng scale nhẹ và giữ nguyên radius để mượt hơn
@@ -92,31 +123,61 @@ const renderActiveShape = (props) => {
   );
 };
 
-// props: numbers (0-100) cho 4 trạng thái, tổng không nhất thiết = 100 (sẽ chuẩn hóa)
+// props: nhận object data với cấu trúc: { "0": {label, value, count}, "1": {...}, "2": {...}, "3": {...}, total }
 const ProductionOrderStatusDonut = ({
-  completed = 30,
-  running = 30,
-  late = 15,
-  notStarted = 25,
+  data,
   centerLabel = 'Tháng 10',
 }) => {
   const [activeIndex, setActiveIndex] = useState(null);
 
-  const raw = [
-    { key: 'completed', value: Number(completed) || 0, color: '#A2DFB2', label: 'Hoàn thành' },
-    { key: 'running', value: Number(running) || 0, color: '#75BDE0', label: 'Đang chạy' },
-    { key: 'late', value: Number(late) || 0, color: '#EF8F99', label: 'Trễ hạn' },
-    { key: 'not_started', value: Number(notStarted) || 0, color: '#FEDFAE', label: 'Chưa bắt đầu' },
-  ];
+  // Map các key từ API với các trạng thái và màu sắc tương ứng
+  // "0": Hoàn thành, "1": Đang chạy, "2": Trễ hạn, "3": Chưa bắt đầu
+  const statusMap = {
+    '0': { key: 'completed', color: '#A2DFB2', defaultLabel: 'Hoàn thành' },
+    '1': { key: 'running', color: '#75BDE0', defaultLabel: 'Đang chạy' },
+    '2': { key: 'late', color: '#EF8F99', defaultLabel: 'Trễ hạn' },
+    '3': { key: 'not_started', color: '#FEDFAE', defaultLabel: 'Chưa bắt đầu' },
+  };
 
-  const sum = raw.reduce((s, r) => s + (r.value > 0 ? r.value : 0), 0) || 1;
-  const data = raw.map(r => ({ key: r.key, value: Math.round((r.value / sum) * 100), color: r.color, label: r.label }));
+  // Xử lý dữ liệu từ API - dữ liệu đã có value là phần trăm sẵn
+  const chartData = Object.keys(statusMap).map(statusKey => {
+    const statusInfo = statusMap[statusKey];
+    const apiData = data?.[statusKey];
+    const value = Number(apiData?.value ?? 0);
+    
+    return {
+      key: statusInfo.key,
+      value: value,
+      color: statusInfo.color,
+      label: apiData?.label || statusInfo.defaultLabel,
+      count: apiData?.count ?? 0, 
+    };
+  });
+
+  // Lọc ra các cell có value > 0 để hiển thị
+  const filteredChartData = chartData.filter(item => item.value > 0);
+
+  // Kiểm tra xem tất cả các value có bằng 0 không
+  const hasNoData = filteredChartData.length === 0;
+
+  // Nếu không có dữ liệu, hiển thị empty state
+  if (hasNoData) {
+    return (
+      <div className='w-full h-[463px] bg-[#EAF6FF] rounded-[20px] p-4 flex flex-col min-h-0'>
+        <h3 className='responsive-text-xl font-semibold text-neutral-04 text-center'>Tình Trạng Lệnh Sản Xuất</h3>
+        <div className='flex flex-col items-center justify-center h-full'>
+          <Image src='/background/system/nodata-table-2.png' alt='Không có dữ liệu' width={160} height={100} />
+          <p className='responsive-text-sm text-neutral-03 mt-2'>Không có dữ liệu</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='w-full h-[463px] bg-[#EAF6FF] rounded-[20px] p-4 flex flex-col min-h-0'>
       <h3 className='responsive-text-xl font-semibold text-neutral-04 text-center'>Tình Trạng Lệnh Sản Xuất</h3>
       <div className='flex items-center justify-center gap-6 mt-1 mb-3'>
-        {data.map(d => (
+        {chartData.map(d => (
           <div key={d.key} className='flex items-center gap-2'>
             <span className='inline-block w-3 h-3 rounded' style={{ background: d.color }} />
             <span className='responsive-text-sm text-neutral-03'>{d.label}</span>
@@ -128,7 +189,7 @@ const ProductionOrderStatusDonut = ({
           <PieChart>
             <Customized component={RingBackground} />
             <Pie
-              data={data}
+              data={filteredChartData}
               dataKey='value'
               startAngle={90}
               endAngle={450}
@@ -165,11 +226,11 @@ const ProductionOrderStatusDonut = ({
                 );
               }}
             >
-              {data.map(d => (
+              {filteredChartData.map(d => (
                 <Cell key={d.key} fill={d.color} style={{ transition: 'all 0.4s ease-in-out', cursor: 'pointer' }} />
               ))}
             </Pie>
-            <Tooltip content={() => null} />
+            <Tooltip content={<CustomTooltip />} />
             <Customized component={props => <CenterLabel {...props} label={centerLabel} />} />
           </PieChart>
         </ResponsiveContainer>
