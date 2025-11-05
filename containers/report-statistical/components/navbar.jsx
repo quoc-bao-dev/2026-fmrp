@@ -52,7 +52,7 @@ const Navbar = props => {
           id: uuidv4(),
           name: 'Thẻ kho',
           path: '/report-statistical/warehouse-report/card',
-          // disabled: true, // Thêm thuộc tính disabled
+          disabled: true, // Thêm thuộc tính disabled
         },
       ],
     },

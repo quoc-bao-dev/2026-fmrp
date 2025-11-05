@@ -62,7 +62,7 @@ const SalesOrderForm = (props) => {
   const [selectedStaff, setSelectedStaff] = useState(null)
   const [flagStateChange, setFlagStateChange] = useState(false)
   const authState = useSelector((state) => state.auth)
-
+console.log(selectedCustomer)
   const [searchClient, sSearchClient] = useState(null)
 
   // Data Fetching
@@ -106,9 +106,11 @@ const SalesOrderForm = (props) => {
     } else {
       setFlagStateChange(false)
     }
-    setSelectedCustomer(null)
-    setSelectedStaff(null)
-    setSelectedPersonalContact(null)
+    if (!isHydrating) {
+      setSelectedCustomer(null)
+      setSelectedStaff(null)
+      setSelectedPersonalContact(null)
+    }
   }, [selectedBranch])
 
   // Reset state của ô "người liên lạc" khi ô "khách hàng" thay đổi, để đổ dữ liệu mới (khi có)
@@ -185,6 +187,9 @@ const SalesOrderForm = (props) => {
     totalTax: 0,
     totalAmount: 0,
   })
+
+  // Trạng thái hydrate dữ liệu ban đầu khi vào form sửa
+  const [isHydrating, setIsHydrating] = useState(true)
 
   const params = {
     'filter[branch_id]': selectedBranch !== null ? +selectedBranch : null,
@@ -266,6 +271,7 @@ const SalesOrderForm = (props) => {
         // setHidden(true);
         // setQuote({ label: rResult?.quote_code, value: rResult?.quote_id, });
       }
+      setIsHydrating(false)
       return rResult
     },
     ...optionsQuery,
@@ -439,6 +445,7 @@ const SalesOrderForm = (props) => {
   const resetValue = () => {
     if (status == 'customer') {
       setCustomer(isId)
+      setSelectedCustomer(isId)
       setContactPerson(null)
       // setQuote(null);
       setOption([])
@@ -447,6 +454,7 @@ const SalesOrderForm = (props) => {
     }
     if (status == 'branch') {
       setBranch(isId)
+      setSelectedBranch(isId)
       setOption([])
       setCustomer(null)
       setContactPerson(null)
@@ -492,6 +500,7 @@ const SalesOrderForm = (props) => {
         handleQueryId({ status: true, id: value, idChild: type })
       } else if (value !== selectedBranch) {
         setBranch(value)
+        setSelectedBranch(value)
         setCustomer(null)
         setContactPerson(null)
         setStaff(null)
@@ -502,6 +511,7 @@ const SalesOrderForm = (props) => {
       setContactPerson(value)
     } else if (type === 'staff') {
       setStaff(value)
+      setSelectedStaff(value)
     } else if (type === 'typeOrder') {
       handleQueryId({ status: true, idChild: type, id: value.target.value })
     } else if (type === 'quote') {
@@ -1721,17 +1731,18 @@ const SalesOrderForm = (props) => {
 
   // search api
   const _HandleSeachApi = debounce(async (inputValue) => {
-    if (branch == null) return
+    if (selectedBranch == null) return
 
     let form = new FormData()
 
+    // luôn gửi branch_id
+    ;[+selectedBranch].forEach((e, index) => form.append(`branch_id[${index}]`, e))
+
+    // chỉ gửi danh sách item đã chọn nếu có
     if (option.length > 0) {
-      if (branch != null) {
-        ;[+branch?.value].forEach((e, index) => form.append(`branch_id[${index}]`, e))
-        option.forEach((item, idx) => {
-          form.append(`items_id_selected[${idx}]`, item?.item?.value ?? '')
-        })
-      }
+      option.forEach((item, idx) => {
+        form.append(`items_id_selected[${idx}]`, item?.item?.value ?? '')
+      })
     }
 
     form.append('term', inputValue)
@@ -2391,7 +2402,7 @@ const SalesOrderForm = (props) => {
             title="Khách hàng"
             placeholderText="Chọn khách hàng"
             options={!!flagStateChange ? [] : dataCustomer}
-            value={selectedCustomer}
+            value={selectedCustomer || customer}
             onChange={(value) => setSelectedCustomer(value)}
             isError={errCustomer}
             errMess={dataLang?.sales_product_err_customer || 'sales_product_err_customer'}
@@ -2425,7 +2436,7 @@ const SalesOrderForm = (props) => {
                           title={dataLang?.sales_product_staff_in_charge || 'Nhân viên'}
                           placeholderText="Chọn nhân viên"
                           options={!!flagStateChange ? [] : dataStaffs}
-                          value={selectedStaff}
+                          value={selectedStaff || staff}
                           onChange={(value) => setSelectedStaff(value)}
                           isError={errStaff}
                         />
