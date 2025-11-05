@@ -5,13 +5,14 @@ import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport'
 import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet'
 import SearchComponent from '@/components/UI/filterComponents/searchComponent'
 import Pagination from '@/components/UI/pagination'
-import SelectReport from '@/components/common/select/SelectReport'
 import SelectSearchReport from '@/components/common/select/SelectSearchReport'
 import ReportLayout from '@/components/layout/ReportLayout'
 import TableSection from '@/components/layout/ReportLayout/TableSection'
 import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems'
-import PopupDetail from '@/containers/purchase-order/import/components/popup'
+import PopupDetail from '@/containers/sales-export-product/delivery-receipt/components/PopupDetail'
 import { useLanguageContext } from '@/context/ui/LanguageContext'
+import { useGetWarehouse } from '@/hooks/common/useWarehouses'
+import useFeature from '@/hooks/useConfigFeature'
 import usePagination from '@/hooks/usePagination'
 import useStatusExprired from '@/hooks/useStatusExprired'
 import formatMoneyOrDash from '@/utils/helpers/formatMoneyOrDash'
@@ -20,12 +21,10 @@ import moment from 'moment'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { PiPackage, PiWarehouseLight } from 'react-icons/pi'
+import { useSelector } from 'react-redux'
 import { useDebounce } from 'use-debounce'
 import { useExportExcel } from './hook/useExportExcel'
-import { useGetListReportImport } from './hook/useGetListReportImport'
-import { useGetWarehouse } from './hook/useGetWarehouse'
-import useFeature from '@/hooks/useConfigFeature'
-import { useSelector } from 'react-redux'
+import { useGetListReportExportDelivery } from './hook/useGetListReportExportDelivery'
 
 const breadcrumbItems = [
   {
@@ -72,12 +71,13 @@ const ExportDelivery = (props) => {
   const currentPage = Number(router.query.page) || 1
 
   const { data: warehouseData } = useGetWarehouse()
-  const { data: dataProduct, refetch } = useInventoryItems(debouncedSearchTerm)
+  const { data: dataProduct } = useInventoryItems(debouncedSearchTerm)
+  
   const {
-    data: dataReportImport,
+    data: dataReportExportDelivery,
     isFetching,
-    refetch: refetchReportImport,
-  } = useGetListReportImport({
+    refetch: refetchReportExportDelivery,
+  } = useGetListReportExportDelivery({
     page: currentPage,
     limit: limit,
     search: debouncedSearchValue,
@@ -90,10 +90,10 @@ const ExportDelivery = (props) => {
   })
 
   useEffect(() => {
-    if (refetchReportImport) {
-      refetchReportImport()
+    if (refetchReportExportDelivery) {
+      refetchReportExportDelivery()
     }
-  }, [limit, dateRange, selectedWarehouse, selectedProducts, debouncedSearchValue, currentPage, refetchReportImport])
+  }, [limit, dateRange, selectedWarehouse, selectedProducts, debouncedSearchValue, currentPage, refetchReportExportDelivery])
 
   useEffect(() => {
     // Cập nhật options khi dataProduct thay đổi
@@ -191,7 +191,7 @@ const ExportDelivery = (props) => {
     })
 
     // Reset warehouse selection
-    setSelectedWarehouse(null)
+    // setSelectedWarehouse(null)
 
     // Reset product search and selection
     setSearchTerm('')
@@ -210,11 +210,11 @@ const ExportDelivery = (props) => {
     })
   }
 
-  const { multiDataSet } = useExportExcel(dataReportImport)
+  const { multiDataSet } = useExportExcel(dataReportExportDelivery)
 
   return (
     <ReportLayout
-      title={'Báo cáo xuất kho sản xuất'}
+      title={'Báo cáo xuất kho giao hàng'}
       statusExprired={statusExprired}
       breadcrumbItems={breadcrumbItems}
       filterSection={
@@ -222,7 +222,7 @@ const ExportDelivery = (props) => {
           <div className="flex gap-3">
             <DateToDateReport placeholder="Giai đoạn" value={dateRange} onChange={handleDateChange} />
 
-            <SelectReport
+            <SelectSearchReport
               placeholder="Kho thành phẩm"
               onChange={handleWarehouseChange}
               onClear={handleClearWarehouse}
@@ -259,8 +259,8 @@ const ExportDelivery = (props) => {
             <OnResetData sOnFetching={handleResetData} onClick={handleResetData} className="!py-3" />
             <ExcelFileComponent
               dataLang={dataLang}
-              filename="Danh sách xuất kho sản xuất"
-              title="DSXK"
+              filename="Báo cáo xuất kho giao hàng"
+              title="BCXKGH"
               multiDataSet={multiDataSet}
               classBtn="!py-3"
             />
@@ -269,35 +269,35 @@ const ExportDelivery = (props) => {
       }
       tableSection={
         <TableSection
-          fixedColumns={[ 
+          fixedColumns={[
             { title: 'STT', width: 'w-14', textAlign: 'center' },
             { title: 'Ngày chứng từ', width: 'w-32 2xl:w-36', textAlign: 'left' },
             { title: 'Mã chứng từ', width: 'w-32', textAlign: 'center' },
           ]}
           scrollableColumns={[
             { title: 'Mã KH', width: 'w-32', textAlign: 'left' },
-            { title: 'Tên KH', width: 'w-60', textAlign: 'left' },
-            { title: 'Mã mặt hàng', width: 'w-36', textAlign: 'left' },
-            { title: 'Mặt hàng', width: 'w-44', textAlign: 'left' },
-            { title: 'Thông tin', width: 'w-24', textAlign: 'left' },
+            { title: 'Tên KH', width: 'w-40', textAlign: 'left' },
+            { title: 'Mã mặt hàng', width: 'w-32', textAlign: 'left' },
+            { title: 'Mặt hàng', width: 'w-60', textAlign: 'left' },
+            { title: 'Thông tin', width: 'w-40', textAlign: 'left' },
             { title: 'ĐVT', width: 'w-20', textAlign: 'center' },
-            { title: 'Vị trí', width: 'w-28', textAlign: 'center' },
+            { title: 'Vị trí', width: 'w-32', textAlign: 'left' },
             { title: 'SL', width: 'w-24', textAlign: 'center' },
-            { title: 'Đơn giá', width: 'w-28', textAlign: 'center' },
-            { title: '%CK', width: 'w-32 2xl:w-36', textAlign: 'end' },
-            { title: 'Đơn giá SCK', width: 'w-52', textAlign: 'left' },
-            { title: 'Thuế', width: 'w-52', textAlign: 'left' },
-            { title: 'Thành tiền', width: 'w-52', textAlign: 'left' },
+            { title: 'Đơn giá', width: 'w-32', textAlign: 'center' },
+            { title: '%CK', width: 'w-16', textAlign: 'center' },
+            { title: 'Đơn giá SCK', width: 'w-32', textAlign: 'center' },
+            { title: 'Thuế', width: 'w-28', textAlign: 'center' },
+            { title: 'Thành tiền', width: 'w-32 2xl:w-36', textAlign: 'end' },
             { title: 'Ghi chú', width: 'w-52', textAlign: 'left' },
           ]}
-          data={dataReportImport?.rResult}
+          data={dataReportExportDelivery?.rResult}
           isFetching={isFetching}
           renderFixedRow={(item, index) => (
             <>
               <RowItemTable className="w-14 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
                 {index + 1}
               </RowItemTable>
-              <RowItemTable className="w-32 2xl:w-36 flex flex-col justify-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0 text-center">
+              <RowItemTable className="w-32 2xl:w-36 flex flex-col justify-center items-start py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0 text-center">
                 <span>{moment(item.date).format('DD/MM/YYYY')}</span>
                 <span>{moment(item.date).format('HH:mm:ss')}</span>
               </RowItemTable>
@@ -305,7 +305,7 @@ const ExportDelivery = (props) => {
                 <PopupDetail
                   dataLang={dataLang}
                   className="responsive-text-sm font-semibold text-center text-[#003DA0] hover:text-blue-600 transition-all ease-linear cursor-pointer "
-                  name={item.code_import}
+                  name={item.code}
                   id={item.id}
                 />
               </RowItemTable>
@@ -313,40 +313,54 @@ const ExportDelivery = (props) => {
           )}
           renderScrollableRow={(item, index) => (
             <>
-              <RowItemTable className="w-32 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
-                {item.name_supplier}
+              <RowItemTable className="w-32 flex justify-start items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+                {item.code_client}
               </RowItemTable>
-              <RowItemTable className="w-60 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+              <RowItemTable className="w-40 flex justify-start items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+                {item.name_client}
+              </RowItemTable>
+              <RowItemTable className="w-32 flex justify-start items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
                 {item.item_code}
               </RowItemTable>
-              <RowItemTable className="w-36 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
-                <div className="flex flex-col gap-2 justify-start">
+              <RowItemTable className="w-60 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+                <div className="flex flex-col gap-1 justify-start">
                   <p className="text-left responsive-text-sm text-neutral-07 font-normal">{item.item_name}</p>
                   <p className="text-left responsive-text-xxs text-neutral-07 font-normal">
                     {item.item_variation || ''}
                   </p>
                 </div>
               </RowItemTable>
-              <RowItemTable className="w-44 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
-                {item.unit_name}
-              </RowItemTable>
-              <RowItemTable className="w-24 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
-                {item.warehouse_name}
+              <RowItemTable className="w-40 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+                <div className="flex flex-col gap-1 justify-start">
+                  <p className="text-left responsive-text-xs text-neutral-07 font-normal">LOT: {item.lot || '-'}</p>
+                  <p className="text-left responsive-text-xs text-neutral-07 font-normal">
+                    Date: {item.expiration_date || '-'}
+                  </p>
+                </div>{' '}
               </RowItemTable>
               <RowItemTable className="w-20 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
-                {formatNumber(Number(item.quantity))}
+                {item.unit_name}
               </RowItemTable>
-              <RowItemTable className="w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
-                {formatNumber(Number(item.quantity))}
+              <RowItemTable className="w-32 flex justify-start items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+                {item.location_name}
               </RowItemTable>
               <RowItemTable className="w-24 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
                 {formatNumber(Number(item.quantity))}
               </RowItemTable>
-              <RowItemTable className="w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
-                {formatNumber(Number(item.quantity))}
+              <RowItemTable className="w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+                {formatMoneyOrDash(Number(item.price))}
               </RowItemTable>
-              <RowItemTable className="w-32 2xl:w-36 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
-                {formatNumber(Number(item.quantity))}
+              <RowItemTable className="w-16 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+                {Number(item.discount_percent)}%
+              </RowItemTable>
+              <RowItemTable className="w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+                {formatMoneyOrDash(Number(item.price_after_discount))}
+              </RowItemTable>
+              <RowItemTable className="w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+                {(Number(item.tax_rate))}%
+              </RowItemTable>
+              <RowItemTable className="w-32 2xl:w-36 flex justify-end items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+                {formatMoneyOrDash(Number(item.amount))}
               </RowItemTable>
               <RowItemTable className="w-52 flex justify-start items-center py-2 px-3 text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
                 {item.note || '-'}
@@ -359,26 +373,27 @@ const ExportDelivery = (props) => {
               <RowItemTable className="w-32 2xl:w-36 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-32 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-32 flex-shrink-0 bg-white"></RowItemTable>
+              <RowItemTable className="w-40 flex-shrink-0 bg-white"></RowItemTable>
+              <RowItemTable className="w-32 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-60 flex-shrink-0 bg-white"></RowItemTable>
-              <RowItemTable className="w-36 flex-shrink-0 bg-white"></RowItemTable>
-              <RowItemTable className="w-44 flex-shrink-0 bg-white"></RowItemTable>
-              <RowItemTable className="h-10 w-24 flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
+              <RowItemTable className="w-40 flex-shrink-0 bg-white"></RowItemTable>
+              <RowItemTable className="w-20 flex-shrink-0 bg-white"></RowItemTable>
+              <RowItemTable className="h-10 w-32 flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
                 Tổng cộng
               </RowItemTable>
-              <RowItemTable className="h-10 w-20 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
-                {formatNumber(Number(dataReportImport?.rTotal?.total_quantity))}
-              </RowItemTable>
-              <RowItemTable className="h-10 w-28 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
-                {formatNumber(Number(dataReportImport?.rTotal?.total_quantity))}
-              </RowItemTable>
               <RowItemTable className="h-10 w-24 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
-                {formatNumber(Number(dataReportImport?.rTotal?.total_quantity))}
+                {formatNumber(Number(dataReportExportDelivery?.rTotal?.total_quantity))}
+              </RowItemTable>
+              <RowItemTable className="h-10 w-32 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
+              </RowItemTable>
+              <RowItemTable className="h-10 w-16 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
+              </RowItemTable>
+              <RowItemTable className="h-10 w-32 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
               </RowItemTable>
               <RowItemTable className="h-10 w-28 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
-                {formatNumber(Number(dataReportImport?.rTotal?.total_quantity))}
               </RowItemTable>
-              <RowItemTable className="h-10 w-32 2xl:w-36 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
-                {formatNumber(Number(dataReportImport?.rTotal?.total_quantity))}
+              <RowItemTable className="h-10 w-32 2xl:w-36 flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
+                {formatMoneyOrDash(Number(dataReportExportDelivery?.rTotal?.total_amount))}
               </RowItemTable>
               <RowItemTable className="w-52 flex-shrink-0 bg-white"></RowItemTable>
             </>
@@ -388,7 +403,7 @@ const ExportDelivery = (props) => {
       totalSection={
         <Pagination
           postsPerPage={limit}
-          totalPosts={Number(dataReportImport?.output?.iTotalDisplayRecords) || 0}
+          totalPosts={Number(dataReportExportDelivery?.output?.iTotalDisplayRecords) || 0}
           paginate={paginate}
           currentPage={currentPage}
         />

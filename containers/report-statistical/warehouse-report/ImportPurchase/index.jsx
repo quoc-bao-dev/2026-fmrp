@@ -5,13 +5,14 @@ import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport'
 import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet'
 import SearchComponent from '@/components/UI/filterComponents/searchComponent'
 import Pagination from '@/components/UI/pagination'
-import SelectReport from '@/components/common/select/SelectReport'
 import SelectSearchReport from '@/components/common/select/SelectSearchReport'
 import ReportLayout from '@/components/layout/ReportLayout'
 import TableSection from '@/components/layout/ReportLayout/TableSection'
 import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems'
 import PopupDetail from '@/containers/purchase-order/import/components/popup'
 import { useLanguageContext } from '@/context/ui/LanguageContext'
+import { useGetWarehouse } from '@/hooks/common/useWarehouses'
+import useFeature from '@/hooks/useConfigFeature'
 import usePagination from '@/hooks/usePagination'
 import useStatusExprired from '@/hooks/useStatusExprired'
 import formatMoneyOrDash from '@/utils/helpers/formatMoneyOrDash'
@@ -20,12 +21,10 @@ import moment from 'moment'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { PiPackage, PiWarehouseLight } from 'react-icons/pi'
+import { useSelector } from 'react-redux'
 import { useDebounce } from 'use-debounce'
 import { useExportExcel } from './hook/useExportExcel'
 import { useGetListReportImport } from './hook/useGetListReportImport'
-import { useGetWarehouse } from './hook/useGetWarehouse'
-import useFeature from '@/hooks/useConfigFeature'
-import { useSelector } from 'react-redux'
 
 const breadcrumbItems = [
   {
@@ -190,7 +189,7 @@ const ImportPurchase = (props) => {
     })
 
     // Reset warehouse selection
-    setSelectedWarehouse(null)
+    // setSelectedWarehouse(null)
 
     // Reset product search and selection
     setSearchTerm('')
@@ -221,7 +220,7 @@ const ImportPurchase = (props) => {
           <div className="flex gap-3">
             <DateToDateReport placeholder="Giai đoạn" value={dateRange} onChange={handleDateChange} />
 
-            <SelectReport
+            <SelectSearchReport
               placeholder="Kho thành phẩm"
               onChange={handleWarehouseChange}
               onClear={handleClearWarehouse}

@@ -24,6 +24,7 @@ import {
 } from "@/managers/api/purchase-order/useLinkFilePDF";
 import { fetchPDFDelivery, fetchPDFSaleOrder, fetchPDFReceipts, fetchPDFPayments } from "@/managers/api/sales-order/useLinkFilePDF";
 import apiReturnSales from "@/Api/apiSalesExportProduct/returnSales/apiReturnSales";
+import apiServiceVoucher from "@/Api/apiPurchaseOrder/apiServicevVoucher";
 import {
     routerImport,
     routerOrder,
@@ -79,6 +80,28 @@ const fetchPDFReturnSales = async ({ id }) => {
         return { isSuccess: 0, message: response?.message || "Không thể lấy thông tin phiếu" };
     } catch (error) {
         console.error("Error fetching return sales PDF:", error);
+        return { isSuccess: 0, message: error.message || "Lỗi không xác định" };
+    }
+};
+
+// Hàm xử lý in PDF cho phiếu dịch vụ
+const fetchPDFServiceVoucher = async ({ id }) => {
+    try {
+        const response = await apiServiceVoucher.apiPrintServiceVoucher({
+            data: {
+                id: id,
+            },
+        });
+        
+        if (response && response.isSuccess === 1) {
+            return {
+                isSuccess: 1,
+                pdf_url: response.pdf_url,
+            };
+        }
+        return { isSuccess: 0, message: response?.message || "Không thể in phiếu dịch vụ" };
+    } catch (error) {
+        console.error("Error fetching service voucher PDF:", error);
         return { isSuccess: 0, message: error.message || "Lỗi không xác định" };
     }
 };
@@ -251,7 +274,8 @@ export const BtnAction = React.memo((props) => {
         import: fetchPDFPurchaseOrderImport,
         deliveryReceipt: fetchPDFDelivery,
         returnSales: fetchPDFReturnSales,
-        returns: fetchPDFPurchaseOrder
+        returns: fetchPDFPurchaseOrder,
+        servicev_voucher: fetchPDFServiceVoucher
     };
     
     //Xử lý in PDF
@@ -892,7 +916,7 @@ export const BtnAction = React.memo((props) => {
                     />
                 );
             }
-        } else if (props?.type === "order" || props?.type === "sales_product" || props?.type === "receipts" || props?.type === "payment") {
+        } else if (props?.type === "order" || props?.type === "sales_product" || props?.type === "receipts" || props?.type === "payment" || props?.type === "servicev_voucher") {
             const totalButtons = calculateTotalButtons();
             allButtons.push(
                 <ButtonPrintItem
