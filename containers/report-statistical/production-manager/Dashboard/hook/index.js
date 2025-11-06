@@ -99,7 +99,7 @@ export const useGetMainMaterialStock = (data) => {
 };
 
 // Phân trang cursor theo id_last: dùng id cuối của danh sách; nếu không có thì dùng 0
-export const useGetMainMaterialStockInfinite = (baseParams) => {
+export const useGetMainMaterialStockInfinite = (baseParams, enabled = false, initialPageParam = 0) => {
   const fetchPage = async ({ pageParam = 0 }) => {
     const params = { ...baseParams, id_last: pageParam || 0 };
     const response = await apiReport.apiGetMainMaterialStock({ params });
@@ -107,14 +107,16 @@ export const useGetMainMaterialStockInfinite = (baseParams) => {
   };
 
   return useInfiniteQuery({
-    queryKey: ['api_get_main_material_stock_infinite', baseParams],
+    queryKey: ['api_get_main_material_stock_infinite', baseParams, initialPageParam],
     queryFn: fetchPage,
+    initialPageParam,
     getNextPageParam: (lastPage) => {
       const materials = lastPage?.materials || [];
       if (!materials.length) return undefined;
       const last = materials[materials.length - 1];
       return last?.id ?? undefined;
     },
+    enabled,
     ...optionsQuery,
   });
 };

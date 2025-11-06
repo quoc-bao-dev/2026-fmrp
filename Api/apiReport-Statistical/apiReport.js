@@ -1,8 +1,8 @@
 import { _ServerInstance as axiosCustom } from '@/services/axios';
 const apiReport = {
   //Báo cáo tồn kho
-  async apiGetWarehouse() {
-    const response = await axiosCustom('GET', `/api_web/api_warehouse/warehouse?csrf_protection=true`);
+  async apiGetWarehouse(data) {
+    const response = await axiosCustom('GET', `/api_web/api_warehouse/warehouse?csrf_protection=true`, data);
     return response.data;
   },
   async apiGetListReportImport(data) {

@@ -9,7 +9,6 @@ import Pagination from '@/components/UI/pagination';
 import SelectSearchReport from '@/components/common/select/SelectSearchReport';
 import ReportLayout from '@/components/layout/ReportLayout';
 import TableSection from '@/components/layout/ReportLayout/TableSection';
-import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems';
 import { useLanguageContext } from '@/context/ui/LanguageContext';
 import { useGetWarehouse } from '@/hooks/common/useWarehouses';
 import usePagination from '@/hooks/usePagination';
@@ -25,6 +24,7 @@ import { useDebounce } from 'use-debounce';
 import { useExportExcel } from './hooks/useExportExcel';
 import { useGetCardStock } from './hooks/useGetListReportStock';
 import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
+import { useGetItemsWithBranch } from '../../production-manager/OrderProgress/hook';
 
 const breadcrumbItems = [
   {
@@ -62,9 +62,15 @@ const Card = props => {
 
   const currentPage = Number(router.query.page) || 1;
 
-  const { data: warehouseData } = useGetWarehouse();
-  // Luôn gọi API, dù có search term hay không để load danh sách mặc định
-  const { data: dataProduct } = useInventoryItems(debouncedSearchTerm);
+  const { data: warehouseData } = useGetWarehouse({
+    filter: {
+      branch_id: selectedBranches?.length > 0 ? selectedBranches : null,
+    }
+  });
+  const { data: dataProduct } = useGetItemsWithBranch({
+    search: debouncedSearchTerm,
+    branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
+  });
 
   const {
     data: dataReportStock,
@@ -122,17 +128,29 @@ const Card = props => {
     setDateRange(newValue);
   };
 
+  // Reset mặt hàng khi selectedBranches thay đổi
   useEffect(() => {
-    // Tự động chọn kho đầu tiên khi dữ liệu kho được tải về
-    if (warehouseData?.rResult && warehouseData.rResult.length > 0 && !isInitialized) {
+    setSelectedProduct(null);
+    setProductOptions([]);
+    setSearchTerm('');
+  }, [selectedBranches]);
+
+  // Xử lý kho khi warehouseData hoặc selectedBranches thay đổi
+  useEffect(() => {
+    if (warehouseData?.rResult && warehouseData.rResult.length > 0) {
+      // Có dữ liệu: chọn kho đầu tiên
       const firstWarehouse = warehouseData.rResult[0];
       setSelectedWarehouse({
         value: firstWarehouse.id,
         label: firstWarehouse.name,
       });
       setIsInitialized(true);
+    } else {
+      // Không có dữ liệu: để trống
+      setSelectedWarehouse(null);
+      setIsInitialized(false);
     }
-  }, [warehouseData?.rResult, isInitialized]);
+  }, [warehouseData?.rResult, selectedBranches]);
 
   const handleWarehouseChange = value => {
     const selected = warehouseData?.rResult?.find(w => w.id === value);

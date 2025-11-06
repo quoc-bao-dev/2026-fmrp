@@ -8,7 +8,6 @@ import Pagination from '@/components/UI/pagination'
 import SelectSearchReport from '@/components/common/select/SelectSearchReport'
 import ReportLayout from '@/components/layout/ReportLayout'
 import TableSection from '@/components/layout/ReportLayout/TableSection'
-import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems'
 import PopupDetail from '@/containers/manufacture/production-warehouse/components/popup'
 import { useLanguageContext } from '@/context/ui/LanguageContext'
 import { useGetWarehouse } from '@/hooks/common/useWarehouses'
@@ -26,6 +25,7 @@ import { useDebounce } from 'use-debounce'
 import { useExportExcel } from './hook/useExportExcel'
 import { useGetListReportExportManufacture } from './hook/useGetListReportExportManufacture'
 import { usePersistedBranches } from '@/hooks/common/usePersistedBranches'
+import { useGetItemsWithBranch } from '../../production-manager/OrderProgress/hook'
 
 const breadcrumbItems = [
   {
@@ -52,7 +52,6 @@ const ExportProduction = (props) => {
   // console.log("product_serial", dataProductSerial?.is_enable)
   const auth = useSelector((state) => state.auth)
   // Tạo biến kiểm tra quyền xem giá
-  console.log(auth)
   const canViewPrice =
     auth?.permissions_current?.length === 0 ||
     auth?.permissions_current?.report_warehouse_exportManufacture?.is_price == 1
@@ -78,8 +77,15 @@ const ExportProduction = (props) => {
 
   const currentPage = Number(router.query.page) || 1
 
-  const { data: warehouseData } = useGetWarehouse()
-  const { data: dataProduct, refetch } = useInventoryItems(debouncedSearchTerm)
+  const { data: warehouseData } = useGetWarehouse({
+    filter: {
+      branch_id: selectedBranches?.length > 0 ? selectedBranches : null,
+    }
+  })
+  const { data: dataProduct } = useGetItemsWithBranch({
+    search: debouncedSearchTerm,
+    branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
+  })
   const {
     data: dataReportExportManufacture,
     isFetching,
@@ -141,17 +147,29 @@ const ExportProduction = (props) => {
     setDateRange(newValue)
   }
 
+  // Reset mặt hàng khi selectedBranches thay đổi
   useEffect(() => {
-    // Tự động chọn kho đầu tiên khi dữ liệu kho được tải về
-    if (warehouseData?.rResult && warehouseData.rResult.length > 0 && !isInitialized) {
+    setSelectedProducts([])
+    setProductOptions([])
+    setSearchTerm('')
+  }, [selectedBranches])
+
+  // Xử lý kho khi warehouseData hoặc selectedBranches thay đổi
+  useEffect(() => {
+    if (warehouseData?.rResult && warehouseData.rResult.length > 0) {
+      // Có dữ liệu: chọn kho đầu tiên
       const firstWarehouse = warehouseData.rResult[0]
       setSelectedWarehouse({
         value: firstWarehouse.id,
         label: firstWarehouse.name,
       })
       setIsInitialized(true)
+    } else {
+      // Không có dữ liệu: để trống
+      setSelectedWarehouse(null)
+      setIsInitialized(false)
     }
-  }, [warehouseData?.rResult, isInitialized])
+  }, [warehouseData?.rResult, selectedBranches])
 
   const handleWarehouseChange = (value) => {
     const selected = warehouseData?.rResult?.find((w) => w.id === value)
@@ -278,6 +296,7 @@ const ExportProduction = (props) => {
             { title: 'Mặt hàng', width: 'w-60', textAlign: 'left' },
             { title: 'LSXCT', width: 'w-36', textAlign: 'left' },
             { title: 'Kho - VT xuất', width: 'w-44', textAlign: 'left' },
+            { title: 'Chi nhánh', width: 'w-40', textAlign: 'left' },
             { title: 'ĐVT', width: 'w-24', textAlign: 'center' },
             { title: 'SL', width: 'w-20', textAlign: 'center' },
             { title: 'GT quy đổi', width: 'w-28', textAlign: 'center' },
@@ -328,6 +347,9 @@ const ExportProduction = (props) => {
               <RowItemTable className="w-44 flex justify-start items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
                 {item.warehouse_name}
               </RowItemTable>
+              <RowItemTable className="w-40 flex justify-start items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
+                {item.branch_name}
+              </RowItemTable>
               <RowItemTable className="w-24 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal flex-shrink-0">
                 {item.unit_name}
               </RowItemTable>
@@ -364,6 +386,7 @@ const ExportProduction = (props) => {
               <RowItemTable className="w-60 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-36 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-44 flex-shrink-0 bg-white"></RowItemTable>
+              <RowItemTable className="w-40 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="h-10 w-24 whitespace-nowrap flex items-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white uppercase">
                 Tổng cộng
               </RowItemTable>

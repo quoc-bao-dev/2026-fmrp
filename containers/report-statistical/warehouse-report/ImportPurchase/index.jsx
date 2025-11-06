@@ -26,6 +26,7 @@ import { useSelector } from 'react-redux'
 import { useDebounce } from 'use-debounce'
 import { useExportExcel } from './hook/useExportExcel'
 import { useGetListReportImport } from './hook/useGetListReportImport'
+import { useGetItemsWithBranch } from '../../production-manager/OrderProgress/hook'
 
 const breadcrumbItems = [
   {
@@ -76,8 +77,15 @@ const ImportPurchase = (props) => {
 
   const currentPage = Number(router.query.page) || 1
 
-  const { data: warehouseData } = useGetWarehouse()
-  const { data: dataProduct, refetch } = useInventoryItems(debouncedSearchTerm)
+  const { data: warehouseData } = useGetWarehouse({
+    filter: {
+      branch_id: selectedBranches?.length > 0 ? selectedBranches : null,
+    }
+  })
+  const { data: dataProduct } = useGetItemsWithBranch({
+    search: debouncedSearchTerm,
+    branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
+  })
   const {
     data: dataReportImport,
     isFetching,
@@ -130,17 +138,29 @@ const ImportPurchase = (props) => {
     setDateRange(newValue)
   }
 
+  // Reset mặt hàng khi selectedBranches thay đổi
   useEffect(() => {
-    // Tự động chọn kho đầu tiên khi dữ liệu kho được tải về
-    if (warehouseData?.rResult && warehouseData.rResult.length > 0 && !isInitialized) {
+    setSelectedProducts([])
+    setProductOptions([])
+    setSearchTerm('')
+  }, [selectedBranches])
+
+  // Xử lý kho khi warehouseData hoặc selectedBranches thay đổi
+  useEffect(() => {
+    if (warehouseData?.rResult && warehouseData.rResult.length > 0) {
+      // Có dữ liệu: chọn kho đầu tiên
       const firstWarehouse = warehouseData.rResult[0]
       setSelectedWarehouse({
         value: firstWarehouse.id,
         label: firstWarehouse.name,
       })
       setIsInitialized(true)
+    } else {
+      // Không có dữ liệu: để trống
+      setSelectedWarehouse(null)
+      setIsInitialized(false)
     }
-  }, [warehouseData?.rResult, isInitialized])
+  }, [warehouseData?.rResult, selectedBranches])
 
   const handleWarehouseChange = (value) => {
     const selected = warehouseData?.rResult?.find((w) => w.id === value)
@@ -270,6 +290,7 @@ const ImportPurchase = (props) => {
               { title: 'Thông tin', width: 'w-40', textAlign: 'left' },
             ] : []),
             { title: 'ĐVT', width: 'w-24', textAlign: 'center' },
+            { title: 'Chi nhánh', width: 'w-40', textAlign: 'left' },
             { title: 'Vị trí', width: 'w-36', textAlign: 'left' },
             { title: 'SL', width: 'w-20', textAlign: 'center' },
             ...(canViewPrice ? [
@@ -338,6 +359,9 @@ const ImportPurchase = (props) => {
               <RowItemTable className="flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-24 flex-shrink-0">
                 {item.unit_name}
               </RowItemTable>
+              <RowItemTable className="flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-40 flex-shrink-0">
+                {item.branch_name}
+              </RowItemTable>
               <RowItemTable className="flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-36 flex-shrink-0">
                 {item.warehouse_name}
               </RowItemTable>
@@ -380,7 +404,8 @@ const ImportPurchase = (props) => {
                 <RowItemTable className="w-40 flex-shrink-0 bg-white"></RowItemTable>
               )}
               <RowItemTable className="w-24 flex-shrink-0 bg-white"></RowItemTable>
-              <RowItemTable className="h-10 flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold w-32 flex-shrink-0 bg-white uppercase">
+              <RowItemTable className="w-40 flex-shrink-0 bg-white"></RowItemTable>
+              <RowItemTable className="h-10 flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold w-36 flex-shrink-0 bg-white uppercase">
                 Tổng cộng
               </RowItemTable>
               <RowItemTable
