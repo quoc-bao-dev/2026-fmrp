@@ -108,10 +108,12 @@ export const useWarehouseInventory = (id) => {
 }
 
 /// kho 
-export const useGetWarehouse = () => {
+export const useGetWarehouse = (data) => {
+  const hasBranch = data?.filter?.branch_id && (Array.isArray(data.filter.branch_id) ? data.filter.branch_id.length > 0 : true)
   return useQuery({
-    queryKey: ["api_get_warehouse"],
-    queryFn: () => apiReport.apiGetWarehouse(),
+    queryKey: ["api_get_warehouse", data],
+    queryFn: () => apiReport.apiGetWarehouse({params: data}),
+    enabled: !!hasBranch,
   });
 };
 

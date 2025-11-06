@@ -7,7 +7,7 @@ import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import formatNumber from '@/utils/helpers/formatnumber';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import QuickDateDropdown, { getDateRangeByQuickValue } from '../../components/QuickDateDropdown';
 import {
   useGetLateManufacturingOrders,
@@ -68,19 +68,59 @@ const Dashboard = () => {
 
   const { data: mainMaterialStock, refetch: refetchMainMaterialStock } = useGetMainMaterialStock({ start_date: dateRange.start_date, end_date: dateRange.end_date, branch_ids: selectedBranches });
 
-  // Infinite cho tồn kho vật tư chính theo id_last
+  // State để enable infinite query chỉ khi cần load more và lưu id_last để fetch từ đó
+  const [enableInfiniteQuery, setEnableInfiniteQuery] = useState(false);
+  const [initialPageParam, setInitialPageParam] = useState(0);
+  const hasLoadedMoreRef = useRef(false);
+
+  // Infinite cho tồn kho vật tư chính theo id_last - chỉ enable khi cần load more
   const {
     data: mainMaterialStockPages,
     fetchNextPage: fetchNextMainMaterialStock,
     hasNextPage: hasNextMainMaterialStock,
     isFetchingNextPage: isFetchingNextMainMaterialStock,
     refetch: refetchMainMaterialStockInfinite,
-  } = useGetMainMaterialStockInfinite({ start_date: dateRange.start_date, end_date: dateRange.end_date, branch_ids: selectedBranches });
-console.log(hasNextMainMaterialStock)
-  const mergedMainMaterialStock = {
-    ...mainMaterialStockPages?.pages?.[0],
-    data: {
-      materials: (mainMaterialStockPages?.pages || []).flatMap(p => p?.materials || [])
+  } = useGetMainMaterialStockInfinite(
+    { start_date: dateRange.start_date, end_date: dateRange.end_date, branch_ids: selectedBranches },
+    enableInfiniteQuery,
+    initialPageParam
+  );
+
+  // Merge dữ liệu: dùng mainMaterialStock cho lần đầu, sau đó merge với infinite data
+  const mergedMainMaterialStock = (() => {
+    if (!enableInfiniteQuery || !mainMaterialStockPages?.pages?.length) {
+      // Chưa load more, dùng dữ liệu từ mainMaterialStock
+      return mainMaterialStock;
+    }
+    // Đã load more, merge dữ liệu từ mainMaterialStock với infinite data
+    const initialMaterials = mainMaterialStock?.data?.materials || mainMaterialStock?.materials || [];
+    const infiniteMaterials = (mainMaterialStockPages?.pages || []).flatMap(p => p?.materials || []);
+    
+    // Loại bỏ trùng lặp dựa trên id (nếu infinite data có trùng với initial data)
+    const initialIds = new Set(initialMaterials.map(m => m?.id).filter(Boolean));
+    const newMaterials = infiniteMaterials.filter(m => !initialIds.has(m?.id));
+    
+    return {
+      ...mainMaterialStockPages?.pages?.[0],
+      data: {
+        materials: [...initialMaterials, ...newMaterials],
+      },
+    };
+  })();
+
+  // Handler để load more: enable infinite query và fetch trang tiếp theo
+  const handleLoadMore = () => {
+    if (!hasLoadedMoreRef.current) {
+      // Lần đầu tiên load more: lấy id cuối cùng từ mainMaterialStock để fetch từ đó
+      const materials = mainMaterialStock?.data?.materials || mainMaterialStock?.materials || [];
+      const lastId = materials.length > 0 ? materials[materials.length - 1]?.id : 0;
+      setInitialPageParam(lastId);
+      setEnableInfiniteQuery(true);
+      hasLoadedMoreRef.current = true;
+      // React Query sẽ tự động fetch trang đầu tiên với initialPageParam
+    } else {
+      // Các lần sau: chỉ fetch trang tiếp theo
+      fetchNextMainMaterialStock();
     }
   };
 
@@ -93,7 +133,13 @@ console.log(hasNextMainMaterialStock)
     refetchTrackProduction();
     refetchManufacturingOrderCompletionClassification();
     refetchMainMaterialStock();
-    refetchMainMaterialStockInfinite();
+    if (enableInfiniteQuery) {
+      refetchMainMaterialStockInfinite();
+    }
+    // Reset để có thể load more lại từ đầu
+    hasLoadedMoreRef.current = false;
+    setEnableInfiniteQuery(false);
+    setInitialPageParam(0);
   };
 
   // Map quickDate value sang label
@@ -211,20 +257,7 @@ console.log(hasNextMainMaterialStock)
           <div className='grid grid-cols-2 gap-4 h-full min-h-0'>
             <ProductionOrderStatusDonut data={manufacturingOrderStatus} centerLabel={getQuickDateLabel(quickDate)} />
             <ProductionTrackingChart data={trackProduction} title={getQuickDateLabel(quickDate)} />
-            <div className='flex flex-col gap-2'>
-              <MainMaterialStock data={mergedMainMaterialStock} />
-              {/* {hasNextMainMaterialStock && ( */}
-                <div className='flex justify-center'>
-                  <button
-                    onClick={() => fetchNextMainMaterialStock()}
-                    className='bg-white border border-gray-200 rounded-md px-3 py-1.5 responsive-text-sm text-[#3A3E4C] font-semibold'
-                    // disabled={isFetchingNextMainMaterialStock}
-                  >
-                    {isFetchingNextMainMaterialStock ? 'Đang tải...' : 'Tải thêm'}
-                  </button>
-                </div>
-              {/* )} */}
-            </div>
+            <MainMaterialStock data={mergedMainMaterialStock} onLoadMore={handleLoadMore} hasNext={enableInfiniteQuery ? !!hasNextMainMaterialStock : true} isLoading={!!isFetchingNextMainMaterialStock} />
             <OrderCompletionDonut data={manufacturingOrderCompletionClassification} />
           </div>
         </div>

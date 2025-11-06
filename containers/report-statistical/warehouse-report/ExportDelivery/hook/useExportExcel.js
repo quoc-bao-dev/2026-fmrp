@@ -70,6 +70,14 @@ export const useExportExcel = (dataReportExport) => {
           },
         },
         {
+          title: 'Chi nhánh',
+          width: { wch: 20 },
+          style: {
+            fill: { fgColor: { rgb: 'C7DFFB' } },
+            font: { bold: true },
+          },
+        },
+        {
           title: 'ĐVT',
           width: { wch: 10 },
           style: {
@@ -154,6 +162,7 @@ export const useExportExcel = (dataReportExport) => {
           { 
             value: `LOT: ${item.lot || '-'}\nDate: ${item.expiration_date ? moment(item.expiration_date).format('DD/MM/YYYY') : '-'}` 
           },
+          { value: item.branch_name || '' },
           { value: item.unit_name || '' },
           { value: item.location_name || '' },
           { value: item.quantity ? String(formatNumber(Number(item.quantity))) : '0' },
@@ -175,6 +184,7 @@ export const useExportExcel = (dataReportExport) => {
         ]) || []),
         // Thêm dòng tổng cộng
         [
+          { value: '' },
           { value: '' },
           { value: '' },
           { value: '' },

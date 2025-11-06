@@ -106,11 +106,9 @@ console.log(selectedCustomer)
     } else {
       setFlagStateChange(false)
     }
-    if (!isHydrating) {
       setSelectedCustomer(null)
       setSelectedStaff(null)
       setSelectedPersonalContact(null)
-    }
   }, [selectedBranch])
 
   // Reset state của ô "người liên lạc" khi ô "khách hàng" thay đổi, để đổ dữ liệu mới (khi có)
@@ -187,9 +185,6 @@ console.log(selectedCustomer)
     totalTax: 0,
     totalAmount: 0,
   })
-
-  // Trạng thái hydrate dữ liệu ban đầu khi vào form sửa
-  const [isHydrating, setIsHydrating] = useState(true)
 
   const params = {
     'filter[branch_id]': selectedBranch !== null ? +selectedBranch : null,
@@ -271,7 +266,6 @@ console.log(selectedCustomer)
         // setHidden(true);
         // setQuote({ label: rResult?.quote_code, value: rResult?.quote_id, });
       }
-      setIsHydrating(false)
       return rResult
     },
     ...optionsQuery,
