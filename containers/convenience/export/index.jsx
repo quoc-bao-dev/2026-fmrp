@@ -168,6 +168,8 @@ const Export = props => {
     if (router.query?.tab) {
       sArrEmty(initsArr);
       sPageLimit(initsPageLimit);
+      // Khi đổi tab thì xóa mẫu export đã chọn
+      sTemplateValue(null);
     }
   }, [router.query?.tab]);
 

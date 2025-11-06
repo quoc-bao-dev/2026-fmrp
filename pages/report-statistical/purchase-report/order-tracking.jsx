@@ -1,7 +1,7 @@
-import OrderProgress from '@/containers/report-statistical/production-manager/OrderProgress';
+import OrderTracking from '@/containers/report-statistical/purchase-report/OrderTracking';
 
 const Page = () => {
-    return <OrderProgress />;
+    return <OrderTracking />;
 };
 
 export default Page;

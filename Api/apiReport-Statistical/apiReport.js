@@ -161,6 +161,12 @@ const apiReport = {
     const response = await axiosCustom('GET', `/api_web/dashboard/reports/monthly-reorder-rate`, data);
     return response.data;
   },
+
+  //Báo cáo mua hàng
+  async apiGetOrderTracking(data) {
+    const response = await axiosCustom('GET', `/api_web/Api_reports/getListReportPurchaseOrders`, data);
+    return response.data;
+  },
 };
 
 export default apiReport;
