@@ -303,7 +303,7 @@ const OrderTracking = props => {
 
                     return (
                       <td key={col.key} className={`${col.tdClass} font-semibold text-gray-700`}>
-                        <div className={`w-full h-full ${idx === 1 ? 'flex items-center justify-center px-3 py-2 uppercase' : ''} border-t border-[#E0E0E1]`}>
+                        <div className={`w-full h-full flex items-center justify-center px-3 py-2 uppercase border-t border-[#E0E0E1]`}>
                           {content}
                         </div>
                       </td>
