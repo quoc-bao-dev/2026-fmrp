@@ -24,6 +24,7 @@ import { useDebounce } from 'use-debounce';
 import { useGetReturns, useGetReturnsComboboxWithBranch } from './hook';
 import { exportWithMergeReturns } from './hook/useExportExcel';
 import moment from 'moment';
+import formatMoneyOrDash from '@/utils/helpers/formatMoneyOrDash';
 
 const breadcrumbItems = [
   {
@@ -336,7 +337,7 @@ const Returns = props => {
                     {/* Đơn giá - hiển thị cho mỗi item */}
                     <td className='p-0 h-2'>
                       <div className='h-full flex items-center justify-center px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1]'>
-                        {Number(flattenedItem.item?.price) === 0 ? '-' : formatNumber(Number(flattenedItem.item?.price))}
+                        {formatMoneyOrDash(Number(flattenedItem.item?.price))}
                       </div>
                     </td>
                     {/* Chiết khấu - hiển thị theo discount_amount */}
@@ -355,7 +356,7 @@ const Returns = props => {
                     {/* Thành tiền - hiển thị cho mỗi item */}
                     <td className='p-0 h-2'>
                       <div className='h-full flex items-center justify-end px-3 py-2 text-left border-b border-r border-[#E0E0E1]'>
-                        {Number(flattenedItem.item?.total_amount) === 0 ? '-' : formatNumber(Number(flattenedItem.item?.total_amount))}
+                        {formatMoneyOrDash(Number(flattenedItem.item?.total_amount))}
                       </div>
                     </td>
 
@@ -363,7 +364,7 @@ const Returns = props => {
                     {flattenedItem.isFirstItem && (
                       <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-right text-new-blue font-semibold align-middle bg-white'>
                         <div className='w-full h-full flex items-center justify-end px-3 py-2 border-b border-[#E0E0E1]'>
-                          {Number(flattenedItem?.grand_total) === 0 ? '-' : formatNumber(Number(flattenedItem?.grand_total))}
+                          {formatMoneyOrDash(Number(flattenedItem?.grand_total))}
                         </div>
                       </td>
                     )}
@@ -415,7 +416,7 @@ const Returns = props => {
                   </td>
                   <td className='w-32 p-0 h-2 text-center font-semibold text-new-blue'>
                     <div className='w-full h-full flex items-center justify-end px-3 py-2 border-t border-[#E0E0E1]'>
-                      {formatNumber(flattenedData.reduce((sum, item) => sum + (Number(item?.total_amount) || 0), 0))}
+                      {formatMoneyOrDash(flattenedData.reduce((sum, item) => sum + (Number(item?.total_amount) || 0), 0))}
                     </div>
                   </td>
                 </tr>

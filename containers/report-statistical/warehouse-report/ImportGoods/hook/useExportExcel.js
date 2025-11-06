@@ -54,6 +54,14 @@ export const useExportExcel = (dataReportImport) => {
           },
         },
         {
+          title: 'Chi nhánh',
+          width: { wch: 20 },
+          style: {
+            fill: { fgColor: { rgb: 'C7DFFB' } },
+            font: { bold: true },
+          },
+        },
+        {
           title: 'Vị trí',
           width: { wch: 30 },
           style: {
@@ -94,8 +102,9 @@ export const useExportExcel = (dataReportImport) => {
         { value: item.item_code || '' },
         { value: item.item_name + (item.item_variation ? '\n' + item.item_variation : '') || '' },
         { value: item.warehouse_name || '' },
+        { value: item.branch_name || '' },
         { value: item.unit_name || '' },
-        { value: item.quantity ? String(formatNumber(Number(item.quantity))) : '0' },
+        { value: item.quantity ? (Number(item.quantity)) : 0, style: { numFmt: '#,##0' } },
         { value: item.note || '' }
       ]) || []
     }

@@ -30,14 +30,6 @@ export const useExportExcel = (dataReportImport) => {
           },
         },
         {
-          title: 'Nhà cung cấp',
-          width: { wch: 30 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
-        {
           title: 'Mã mặt hàng',
           width: { wch: 15 },
           style: {
@@ -54,6 +46,30 @@ export const useExportExcel = (dataReportImport) => {
           },
         },
         {
+          title: 'LSXCT',
+          width: { wch: 20 },
+          style: {
+            fill: { fgColor: { rgb: 'C7DFFB' } },
+            font: { bold: true },
+          },
+        },
+        {
+          title: 'Kho - VT xuất',
+          width: { wch: 20 },
+          style: {
+            fill: { fgColor: { rgb: 'C7DFFB' } },
+            font: { bold: true },
+          },
+        },
+        {
+          title: 'Chi nhánh',
+          width: { wch: 20 },
+          style: {
+            fill: { fgColor: { rgb: 'C7DFFB' } },
+            font: { bold: true },
+          },
+        },
+        {
           title: 'ĐVT',
           width: { wch: 10 },
           style: {
@@ -62,7 +78,7 @@ export const useExportExcel = (dataReportImport) => {
           },
         },
         {
-          title: 'Vị trí',
+          title: 'Số lượng',
           width: { wch: 20 },
           style: {
             fill: { fgColor: { rgb: 'C7DFFB' } },
@@ -70,7 +86,7 @@ export const useExportExcel = (dataReportImport) => {
           },
         },
         {
-          title: 'SL',
+          title: 'GT quy đổi',
           width: { wch: 10 },
           style: {
             fill: { fgColor: { rgb: 'C7DFFB' } },
@@ -78,7 +94,7 @@ export const useExportExcel = (dataReportImport) => {
           },
         },
         {
-          title: 'Đơn giá',
+          title: 'SL quy đổi',
           width: { wch: 15 },
           style: {
             fill: { fgColor: { rgb: 'C7DFFB' } },
@@ -86,24 +102,8 @@ export const useExportExcel = (dataReportImport) => {
           },
         },
         {
-          title: '%CK',
-          width: { wch: 10 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
-        {
-          title: 'Đơn giá SCK',
+          title: 'Giá vốn',
           width: { wch: 15 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
-        {
-          title: 'Thuế',
-          width: { wch: 10 },
           style: {
             fill: { fgColor: { rgb: 'C7DFFB' } },
             font: { bold: true },
@@ -129,23 +129,25 @@ export const useExportExcel = (dataReportImport) => {
       data: dataReportImport?.rResult?.map((item, index) => [
         { value: String(index + 1) },
         { value: item.date ? moment(item.date).format('DD/MM/YYYY HH:mm:ss') : '' },
-        { value: item.code_import || '' },
-        { value: item.name_supplier || '' },
+        { value: item.code || '' },
         { value: item.item_code || '' },
         { value: item.item_name + (item.item_variation ? '\n' + item.item_variation : '') || '' },
-        { value: item.unit_name || '' },
+        { value: item.reference_no_detail || '' },
         { value: item.warehouse_name || '' },
+        { value: item.branch_name || '' },
+        { value: item.unit_name || '' },
         { value: item.quantity ? String(formatNumber(Number(item.quantity))) : '0' },
+        { 
+          value: item.coefficient ? Number(item.coefficient) : 0,
+          style: { numFmt: '#,##0.##' }
+        },
+        { 
+          value: item.quantity_exchange ? String(formatNumber(Number(item.quantity_exchange))) + (item.unit_name_qd ? ' ' + item.unit_name_qd : '') : '0'
+        },
         { 
           value: item.price ? Number(item.price) : 0,
           style: { numFmt: '#,##0' }
         },
-        { value: item.discount_percent ? String(item.discount_percent) + '%' : '0%' },
-        { 
-          value: item.price_after_discount ? Number(item.price_after_discount) : 0,
-          style: { numFmt: '#,##0' }
-        },
-        { value: item.tax_rate ? String(item.tax_rate) + '%' : '0%' },
         { 
           value: item.amount ? Number(item.amount) : 0,
           style: { numFmt: '#,##0' }

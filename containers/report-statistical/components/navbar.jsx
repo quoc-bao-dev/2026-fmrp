@@ -52,7 +52,7 @@ const Navbar = props => {
           id: uuidv4(),
           name: 'Thẻ kho',
           path: '/report-statistical/warehouse-report/card',
-          disabled: true, // Thêm thuộc tính disabled
+          // disabled: true, // Thêm thuộc tính disabled
         },
       ],
     },
@@ -68,19 +68,19 @@ const Navbar = props => {
     },
     {
       id: uuidv4(),
-      name: 'Báo cáo định mức NVL',
+      name: 'BC định mức NVL',
       path: '/report-statistical/production-manager/quota-materials',
       disabled: auth?.report_boms?.is_view == 0,
     },
     {
       id: uuidv4(),
-      name: 'Báo cáo tiến độ đơn hàng',
+      name: 'BC tiến độ đơn hàng',
       path: '/report-statistical/production-manager/order-progress',
       disabled: auth?.report_order_progress?.is_view == 0,
     },
     {
       id: uuidv4(),
-      name: 'Báo cáo NVL sử dụng',
+      name: 'BC NVL sử dụng',
       path: '/report-statistical/production-manager/raw-materials-used',
       disabled: auth?.report_material_usage?.is_view == 0,
     },
@@ -255,7 +255,7 @@ const Navbar = props => {
           return (
             <div key={item.id} className='flex flex-col gap-4'>
               {item.title && <h1 className='responsive-text-sm uppercase text-primary-01'>{item.title}</h1>}
-              <div className={`flex flex-col gap-3 ${item.children ? 'px-1.5' : ''}`}>
+              <div className={`flex flex-col gap-3 ${item.children ? '' : ''}`}>
                 {item.children ? (
                   item.children.map(child => {
                     return (
@@ -268,7 +268,7 @@ const Navbar = props => {
                             <div className='flex items-center gap-2'>
                               <div className='size-1.5 rounded-full flex-shrink-0 bg-gray-400' />
                               <div className='flex flex-col items-start w-full'>
-                                <div className='responsive-text-sm text-gray-400'>{child.name}</div>
+                                <div className='responsive-text-sm text-gray-400 capitalize'>{child.name}</div>
                               </div>
                             </div>
                           </li>
@@ -286,7 +286,7 @@ const Navbar = props => {
                                   } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
                                 />
                                 <div className='flex flex-col items-start w-full'>
-                                  <div className='responsive-text-sm'>{child.name}</div>
+                                  <div className='responsive-text-sm capitalize'>{child.name}</div>
                                 </div>
                               </div>
                             </li>
@@ -305,7 +305,7 @@ const Navbar = props => {
                         <div className='flex w-full items-center gap-2'>
                           <div className='size-1.5 rounded-full flex-shrink-0 bg-gray-400' />
                           <div className='flex flex-col items-start w-full'>
-                            <div className='responsive-text-sm text-gray-400'>{item.name}</div>
+                            <div className='responsive-text-sm text-gray-400 capitalize'>{item.name}</div>
                           </div>
                         </div>
                       </li>
@@ -323,7 +323,7 @@ const Navbar = props => {
                               } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
                             />
                             <div className='flex flex-col items-start w-full'>
-                              <div className='responsive-text-sm'>{item.name}</div>
+                              <div className='responsive-text-sm capitalize'>{item.name}</div>
                             </div>
                           </div>
                         </li>

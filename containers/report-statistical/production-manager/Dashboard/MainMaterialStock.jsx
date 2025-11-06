@@ -1,5 +1,7 @@
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import formatNumber from '@/utils/helpers/formatnumber';
 import { useEffect, useRef, useState } from 'react';
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 const COLORS = {
   high: '#7ED69B',
@@ -39,19 +41,77 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload || payload.length === 0) return null;
   const byKey = Object.fromEntries(payload.map(p => [p.dataKey, p]));
   const order = ['high', 'safe', 'low'];
-  const nonZeroKey = order.find(k => (byKey[k]?.value ?? 0) > 0);
-  const value = nonZeroKey ? (byKey[nonZeroKey]?.value ?? 0) : 0;
-  const color = nonZeroKey ? byKey[nonZeroKey]?.color : '#2E3A47';
-  const category = nonZeroKey ? (LEGEND_LABELS[nonZeroKey] || nonZeroKey) : '';
+
+  // Lấy thông tin từ payload
+  const dataPayload = payload[0]?.payload;
+  const percent = Number(dataPayload?.percent ?? 0);
+  const minimumQuantity = dataPayload?.minimum_quantity ?? 0;
+  const totalQuantity = dataPayload?.total_quantity ?? 0;
+  const level = dataPayload?.level || ''; // Lấy level từ API
+
+  // Xác định categoryKey để lấy màu: dựa vào level từ API (giống logic trong mapToStacks)
+  let categoryKey = null;
+  const levelLower = String(level).toLowerCase();
+  
+  if (levelLower.includes('cao')) {
+    categoryKey = 'high';
+  } else if (levelLower.includes('an toàn') || levelLower.includes('an toan')) {
+    categoryKey = 'safe';
+  } else if (levelLower.includes('thấp') || levelLower.includes('thap')) {
+    categoryKey = 'low';
+  } else {
+    // Fallback: nếu không có level, xác định dựa trên payload hoặc percent
+    categoryKey = order.find(k => (byKey[k]?.value ?? 0) > 0);
+    if (!categoryKey) {
+      categoryKey = order.find(k => byKey[k] !== undefined && byKey[k]?.value !== undefined);
+      if (!categoryKey && percent !== undefined) {
+        if (percent >= 80) categoryKey = 'high';
+        else if (percent <= 40) categoryKey = 'low';
+        else categoryKey = 'safe';
+      }
+    }
+  }
+
+  // Lấy màu từ COLORS dựa trên categoryKey
+  const color = categoryKey ? COLORS[categoryKey] || '#2E3A47' : '#2E3A47';
+  // Dùng level từ API làm category, nếu không có thì dùng categoryKey
+  const category = level || (categoryKey ? LEGEND_LABELS[categoryKey] : '');
+
+  // Chỉ hiển thị số thập phân nếu có phần lẻ
+  const percentDisplay = percent % 1 === 0 ? percent : percent.toFixed(2);
 
   return (
     <div className='rounded-xl shadow-[0_6px_18px_rgba(0,0,0,0.08)] border' style={{ borderColor: '#E6EEF5', background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(2px)', padding: '10px 12px' }}>
-      <div className='responsive-text-sm font-semibold mb-1' style={{ color: '#2E3A47' }}>{label}</div>
+      <div className='responsive-text-sm font-semibold mb-1' style={{ color: '#2E3A47' }}>
+        {label}
+      </div>
       <div className='flex items-center gap-2 mb-1'>
         <span style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: color, display: 'inline-block' }} />
-        <span className='responsive-text-sm' style={{ color: '#8D9092' }}>{category}</span>
+        <span className='responsive-text-sm' style={{ color: '#8D9092' }}>
+          {category}
+        </span>
       </div>
-      <div className='responsive-text-lg font-semibold' style={{ color }}>{value}%</div>
+      <div className='responsive-text-lg font-semibold mb-2' style={{ color }}>
+        {percentDisplay}%
+      </div>
+      <div className='border-t pt-2' style={{ borderColor: '#E6EEF5' }}>
+        <div className='flex gap-1 justify-between items-center mb-1'>
+          <span className='responsive-text-sm' style={{ color: '#8D9092' }}>
+            Tổng số lượng:
+          </span>
+          <span className='responsive-text-sm font-semibold' style={{ color: '#2E3A47' }}>
+            {formatNumber(totalQuantity)}
+          </span>
+        </div>
+        <div className='flex gap-1 justify-between items-center'>
+          <span className='responsive-text-sm' style={{ color: '#8D9092' }}>
+            Số lượng tối thiểu:
+          </span>
+          <span className='responsive-text-sm font-semibold' style={{ color: '#2E3A47' }}>
+            {formatNumber(minimumQuantity)}
+          </span>
+        </div>
+      </div>
     </div>
   );
 };
@@ -121,7 +181,7 @@ const YAxisTick = ({ x, y, payload, maxWidth }) => {
   );
 };
 
-// Chuẩn hóa dữ liệu từ API về dạng [{ name, value(0-100), level? }]
+// Chuẩn hóa dữ liệu từ API về dạng [{ name, value(0-100), percent, level?, minimum_quantity, total_quantity }]
 const extractRows = input => {
   const materials = input?.data?.materials ?? input?.materials ?? (Array.isArray(input) ? input : []);
   if (!Array.isArray(materials)) return [];
@@ -129,7 +189,16 @@ const extractRows = input => {
     const computedPercent = m?.minimum_quantity > 0 ? (Number(m.total_quantity) / Number(m.minimum_quantity)) * 100 : Number(m.percent ?? 0);
     const rawPercent = Number.isFinite(computedPercent) ? computedPercent : 0;
     const value = Math.max(0, Math.min(100, Math.round(rawPercent)));
-    return { name: m?.name ?? '', value, level: m?.level };
+    // Lưu percent gốc từ API hoặc giá trị đã tính toán (không bị clamp)
+    const percent = Number.isFinite(Number(m.percent)) ? Number(m.percent) : rawPercent;
+    return {
+      name: m?.name ?? '',
+      value,
+      percent,
+      level: m?.level,
+      minimum_quantity: Number(m?.minimum_quantity) || 0,
+      total_quantity: Number(m?.total_quantity) || 0,
+    };
   });
 };
 
@@ -138,18 +207,26 @@ const mapToStacks = (rows, { lowMax = 40, highMin = 80 } = {}) => {
   return rows.map(r => {
     const v = Number(r.value) || 0;
     const level = String(r.level || '').toLowerCase();
-    if (level.includes('cao')) return { name: r.name, high: v, safe: 0, low: 0 };
-    if (level.includes('an toàn') || level.includes('an toan')) return { name: r.name, high: 0, safe: v, low: 0 };
-    if (level.includes('thấp') || level.includes('thap')) return { name: r.name, high: 0, safe: 0, low: v };
+    const baseData = {
+      name: r.name,
+      percent: r.percent,
+      level: r.level, // Lưu level gốc từ API
+      minimum_quantity: r.minimum_quantity,
+      total_quantity: r.total_quantity,
+    };
+    if (level.includes('cao')) return { ...baseData, high: v, safe: 0, low: 0 };
+    if (level.includes('an toàn') || level.includes('an toan')) return { ...baseData, high: 0, safe: v, low: 0 };
+    if (level.includes('thấp') || level.includes('thap')) return { ...baseData, high: 0, safe: 0, low: v };
 
-    if (v >= highMin) return { name: r.name, high: v, safe: 0, low: 0 };
-    if (v <= lowMax) return { name: r.name, high: 0, safe: 0, low: v };
-    return { name: r.name, high: 0, safe: v, low: 0 };
+    if (v >= highMin) return { ...baseData, high: v, safe: 0, low: 0 };
+    if (v <= lowMax) return { ...baseData, high: 0, safe: 0, low: v };
+    return { ...baseData, high: 0, safe: v, low: 0 };
   });
 };
 
-const MainMaterialStock = ({ thresholds = { lowMax: 40, highMin: 80 }, data }) => {
+const MainMaterialStock = ({ thresholds = { lowMax: 40, highMin: 80 }, data, onLoadMore, hasNext, isLoading }) => {
   const containerRef = useRef(null);
+  const scrollRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
   useEffect(() => {
@@ -161,6 +238,29 @@ const MainMaterialStock = ({ thresholds = { lowMax: 40, highMin: 80 }, data }) =
     return () => observer.disconnect();
   }, []);
 
+  // Auto load more khi cuộn gần cuối
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    const el = scrollRef.current;
+    const threshold = 120; // px còn lại ở cuối thì trigger
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        if (!el) return;
+        const { scrollTop, clientHeight, scrollHeight } = el;
+        const nearBottom = scrollTop + clientHeight >= scrollHeight - threshold;
+        if (nearBottom && hasNext && typeof onLoadMore === 'function' && !isLoading) {
+          onLoadMore();
+        }
+      });
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [hasNext, isLoading, onLoadMore]);
+
   const yAxisWidth = Math.max(100, Math.round(containerWidth * 0.15));
   const rows = extractRows(data);
   const stackedData = mapToStacks(rows, thresholds);
@@ -171,15 +271,16 @@ const MainMaterialStock = ({ thresholds = { lowMax: 40, highMin: 80 }, data }) =
   const chartHeight = Math.max(320, rows.length * (barSize + rowGap) + topBottomPadding);
 
   return (
-    <div ref={containerRef} className='w-full h-[463px] bg-[#EEF6FF] rounded-[20px] p-4 flex flex-col min-h-0'>
+    <div ref={containerRef} className='w-full h-[463px] bg-[#EEF6FF] rounded-[20px] p-4 flex flex-col min-h-0 relative'>
       <h3 className='responsive-text-xl font-semibold text-neutral-04 capitalize text-center'>Tồn Kho Vật Tư Chính</h3>
       <CustomLegend />
-      <div className='w-full h-full min-h-0 overflow-y-auto'>
+      <Customscrollbar alwaysShowScrollbar={true} ref={scrollRef} className='w-full h-full min-h-0 overflow-y-auto'>
         <div style={{ height: chartHeight }}>
           <ResponsiveContainer width='100%' height='100%'>
             <BarChart data={stackedData} layout='vertical' barCategoryGap={10} barGap={8} barSize={30}>
               <CartesianGrid horizontal={false} stroke='#CFD8E3' />
-              {/* XAxis được tách ra phần cố định bên dưới */}
+              {/* XAxis ẩn để giữ domain và scale đúng cho thanh bar */}
+              <XAxis hide type='number' domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]} />
               <YAxis type='category' dataKey='name' width={yAxisWidth} axisLine={{ stroke: '#CFD8E3' }} tickLine={false} tick={<YAxisTick maxWidth={yAxisWidth} />} />
               <Tooltip cursor={{ fill: 'transparent' }} content={<CustomTooltip />} />
               <Bar dataKey='high' stackId='a' fill={COLORS.high} radius={[8, 8, 8, 8]} />
@@ -188,7 +289,7 @@ const MainMaterialStock = ({ thresholds = { lowMax: 40, highMin: 80 }, data }) =
             </BarChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </Customscrollbar>
       {/* XAxis cố định (không cuộn) */}
       <div className='w-full' style={{ height: 44 }}>
         <ResponsiveContainer width='100%' height='100%'>
