@@ -1374,3 +1374,21 @@ body {
     }
   }
 }
+
+/* Recharts: loại bỏ viền focus (outline) màu xanh khi click vào biểu đồ */
+.recharts-wrapper:focus,
+.recharts-surface:focus,
+.recharts-layer:focus,
+.recharts-sector:focus,
+svg:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Loại bỏ highlight khi tap trên thiết bị cảm ứng */
+.recharts-wrapper,
+.recharts-surface,
+.recharts-layer,
+.recharts-sector {
+  -webkit-tap-highlight-color: transparent;
+}

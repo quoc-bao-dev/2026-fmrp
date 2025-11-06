@@ -2,8 +2,6 @@ import ButtonAnimationNew from "@/components/common/button/ButtonAnimationNew";
 import ErrorChatBot from "@/components/icons/common/ErrorChatBot";
 import SuccessChatIcon from "@/components/icons/common/SuccessChatIcon";
 import Image from "next/image";
-import React from "react";
-import { FaCheck } from "react-icons/fa";
 import { FaArrowRightLong } from "react-icons/fa6";
 const ResultChatBot = ({ productAnalysis, onRetry, onRedirect, dataLang }) => {
     return (

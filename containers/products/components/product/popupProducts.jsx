@@ -478,6 +478,7 @@ const Popup_Products = React.memo((props) => {
         formData.append("category_id", category.value);
         formData.append("unit_id", unit.value);
         formData.append("expiry", expiry);
+        formData.append("quantity_minimum", minimumAmount);
         formData.append("note", note);
         branch.forEach((e) => formData.append("branch_id[]", e.value));
         formData.append("images", thumbFile);

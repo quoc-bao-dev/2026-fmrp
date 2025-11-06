@@ -88,7 +88,9 @@ const SelectCustomLabel = ({
   return (
     <div className={`flex flex-col items-center justify-center h-full ${className} w-full`}>
       <Select
-        className={`placeholder-secondary-color-text-disabled placeholder:responsive-text-sm cursor-pointer w-full ${className}`}
+        className={`placeholder-secondary-color-text-disabled placeholder:responsive-text-sm cursor-pointer w-full ${className} ${
+          isError ? '!border-red-500 !border rounded-lg' : ''
+        }`}
         placeholder={placeholder}
         allowClear={allowClear}
         value={valueCustom || null}

@@ -25,15 +25,19 @@ import { useSelector } from 'react-redux'
 import { useDebounce } from 'use-debounce'
 import { useExportExcel } from './hook/useExportExcel'
 import { useGetListReportExportManufacture } from './hook/useGetListReportExportManufacture'
+import { usePersistedBranches } from '@/hooks/common/usePersistedBranches'
 
 const breadcrumbItems = [
   {
     label: `Báo cáo`,
-    href: '/report-statistical',
   },
   {
-    label: `Tồn kho`,
+    label: `Chi tiết phiếu`,
   },
+  {
+    label: `Báo cáo xuất kho sản xuất`,
+    href: '/report-statistical/warehouse-report/export-production',
+  }
 ]
 
 const ExportProduction = (props) => {
@@ -42,6 +46,7 @@ const ExportProduction = (props) => {
   const dataLang = useLanguageContext()
   const statusExprired = useStatusExprired()
   const { dataProductExpiry, dataMaterialExpiry, dataProductSerial } = useFeature()
+  const { selectedBranches, setSelectedBranches } = usePersistedBranches()
   //   console.log("material_expiry", dataMaterialExpiry?.is_enable)
   //   console.log("product_expiry", dataProductExpiry?.is_enable)
   // console.log("product_serial", dataProductSerial?.is_enable)
@@ -62,6 +67,7 @@ const ExportProduction = (props) => {
     endDate: undefined,
   })
   const [selectedWarehouse, setSelectedWarehouse] = useState(null)
+  const [isInitialized, setIsInitialized] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500)
   const [productOptions, setProductOptions] = useState([])
@@ -83,6 +89,7 @@ const ExportProduction = (props) => {
     limit: limit,
     search: debouncedSearchValue,
     filter: {
+      branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
       warehouses_id: selectedWarehouse?.value,
       ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
       ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
@@ -91,7 +98,7 @@ const ExportProduction = (props) => {
   })
 
   useEffect(() => {
-    if (refetchReportExportManufacture) {
+    if (refetchReportExportManufacture && isInitialized) {
       refetchReportExportManufacture()
     }
   }, [
@@ -102,6 +109,7 @@ const ExportProduction = (props) => {
     debouncedSearchValue,
     currentPage,
     refetchReportExportManufacture,
+    isInitialized,
   ])
 
   useEffect(() => {
@@ -135,14 +143,15 @@ const ExportProduction = (props) => {
 
   useEffect(() => {
     // Tự động chọn kho đầu tiên khi dữ liệu kho được tải về
-    if (warehouseData?.rResult && warehouseData.rResult.length > 0) {
+    if (warehouseData?.rResult && warehouseData.rResult.length > 0 && !isInitialized) {
       const firstWarehouse = warehouseData.rResult[0]
       setSelectedWarehouse({
         value: firstWarehouse.id,
         label: firstWarehouse.name,
       })
+      setIsInitialized(true)
     }
-  }, [warehouseData?.rResult])
+  }, [warehouseData?.rResult, isInitialized])
 
   const handleWarehouseChange = (value) => {
     const selected = warehouseData?.rResult?.find((w) => w.id === value)
@@ -184,35 +193,13 @@ const ExportProduction = (props) => {
   }
 
   const handleSearch = (value) => {
-    setSearchValue(value?.target?.value || value)
+    const searchValue = value?.target?.value || (typeof value === 'string' ? value : '')
+    setSearchValue(searchValue)
   }
 
   // Add limit handler
   const handleLimitChange = (newLimit) => {
     setLimit(newLimit)
-  }
-
-  const handleResetData = () => {
-    // Reset date range
-    setDateRange({
-      startDate: undefined,
-      endDate: undefined,
-    })
-
-    // Reset warehouse selection
-    // setSelectedWarehouse(null)
-
-    // Reset product search and selection
-    setSearchTerm('')
-    setSelectedProducts([])
-
-    // Reset search value
-    setSearchValue('')
-
-    // Reset limit to default
-    setLimit(15)
-
-    // Reset to first page
     router.push({
       pathname: router.pathname,
       query: { ...router.query, page: 1 },
@@ -226,8 +213,11 @@ const ExportProduction = (props) => {
       title={'Báo cáo xuất kho sản xuất'}
       statusExprired={statusExprired}
       breadcrumbItems={breadcrumbItems}
+      branchValue={selectedBranches}
+      onBranchChange={setSelectedBranches}
+      onBranchClear={() => setSelectedBranches([])}
       filterSection={
-        <div className="w-full items-center flex justify-between gap-10">
+        <div className="w-full items-center flex justify-between gap-4">
           <div className="flex gap-3">
             <DateToDateReport placeholder="Giai đoạn" value={dateRange} onChange={handleDateChange} />
 
@@ -265,7 +255,7 @@ const ExportProduction = (props) => {
               value={searchValue}
               classNameBox="!py-2 2xl:!p-2.5"
             />
-            <OnResetData sOnFetching={handleResetData} onClick={handleResetData} className="!py-3" />
+            <OnResetData sOnFetching={refetchReportExportManufacture} className="!py-3" />
             <ExcelFileComponent
               dataLang={dataLang}
               filename="Danh sách xuất kho sản xuất"
@@ -374,7 +364,7 @@ const ExportProduction = (props) => {
               <RowItemTable className="w-60 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-36 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-44 flex-shrink-0 bg-white"></RowItemTable>
-              <RowItemTable className="h-10 w-24 whitespace-nowrap flex items-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
+              <RowItemTable className="h-10 w-24 whitespace-nowrap flex items-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white uppercase">
                 Tổng cộng
               </RowItemTable>
               <RowItemTable className="h-10 w-20 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">

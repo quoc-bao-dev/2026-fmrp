@@ -1,4 +1,5 @@
-import PopupCustom from "@/components/UI/popup";
+import apiServiceVoucher from "@/Api/apiPurchaseOrder/apiServicevVoucher";
+import apiReturnSales from "@/Api/apiSalesExportProduct/returnSales/apiReturnSales";
 import { CONFIRM_DELETION, TITLE_DELETE } from "@/constants/delete/deleteTable";
 import { WARNING_STATUS_ROLE } from "@/constants/warningStatus/warningStatus";
 import Popup_dspc from "@/containers/accountant/payment/components/popup";
@@ -22,9 +23,7 @@ import {
     fetchPDFPurchaseOrder,
     fetchPDFPurchaseOrderImport,
 } from "@/managers/api/purchase-order/useLinkFilePDF";
-import { fetchPDFDelivery, fetchPDFSaleOrder, fetchPDFReceipts, fetchPDFPayments } from "@/managers/api/sales-order/useLinkFilePDF";
-import apiReturnSales from "@/Api/apiSalesExportProduct/returnSales/apiReturnSales";
-import apiServiceVoucher from "@/Api/apiPurchaseOrder/apiServicevVoucher";
+import { fetchPDFDelivery, fetchPDFPayments, fetchPDFReceipts, fetchPDFSaleOrder } from "@/managers/api/sales-order/useLinkFilePDF";
 import {
     routerImport,
     routerOrder,
@@ -45,7 +44,7 @@ import {
     routerReturnSales,
     routerSalesOrder,
 } from "@/routers/sellingGoods";
-import { Box1, BoxSearch, Trash } from "iconsax-react";
+import { Box1, BoxSearch } from "iconsax-react";
 import { useRouter } from "next/router";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";

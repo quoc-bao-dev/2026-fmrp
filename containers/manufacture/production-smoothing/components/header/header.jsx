@@ -1,5 +1,3 @@
-import Zoom from "components/UI/zoomElement/zoomElement";
-import Image from "next/image";
 import PopupAdd from "../popup/popup";
 
 const Header = ({ data, listStaff }) => {

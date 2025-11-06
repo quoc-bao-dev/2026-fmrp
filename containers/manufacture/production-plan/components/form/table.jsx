@@ -1,5 +1,4 @@
 import InputCustom from '@/components/common/input/InputCustom'
-import CalendarBlankIcon from '@/components/icons/common/CalendarBlankIcon'
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar'
 import { TagColorRed } from '@/components/UI/common/Tag/TagStatus'
 import Loading from '@/components/UI/loading/loading'
@@ -10,7 +9,6 @@ import { FnlocalStorage } from '@/utils/helpers/localStorage'
 import { TickCircle as IconTick } from 'iconsax-react'
 import Image from 'next/image'
 import React, { useEffect } from 'react'
-import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { IoClose } from 'react-icons/io5'
 

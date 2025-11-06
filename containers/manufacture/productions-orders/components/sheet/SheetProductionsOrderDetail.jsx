@@ -1,32 +1,28 @@
-import React, { memo, useContext, useEffect, useRef } from "react";
-import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
-import { useSheet } from "@/context/ui/SheetContext";
-import CloseXIcon from "@/components/icons/common/CloseXIcon";
 import ButtonAnimationNew from "@/components/common/button/ButtonAnimationNew";
-import { useItemOrderDetail } from "@/managers/api/productions-order/useItemOrderDetail";
-
-import { motion } from 'framer-motion'
-import { StateContext } from "@/context/_state/productions-orders/StateContext";
-import { useRouter } from "next/router";
-import CostCard from "../ui/CostCard";
-
-import formatMoneyConfig from "@/utils/helpers/formatMoney";
-import useSetingServer from "@/hooks/useConfigNumber";
-import TabSwitcherWithUnderline from "@/components/common/tab/TabSwitcherWithUnderline";
-
-import { PiLinkBold } from "react-icons/pi"
-import TabInformation from "../tab/TabInformation";
-import TabMaterialIssueHistory from "../tab/TabMaterialIssueHistory";
-import TabFGReceiptHistory from "../tab/TabFGReceiptHistory";
-import TabMaterialReturn from "../tab/TabMaterialReturn";
-import TabMaterialCost from "../tab/TabMaterialCost";
-import TabMaterialOutputTab from "../tab/TabMaterialOutput";
+import CommentInputAdvanced from "@/components/common/input/CommentInputAdvanced";
 import Skeleton from "@/components/common/skeleton/Skeleton";
+import TabSwitcherWithUnderline from "@/components/common/tab/TabSwitcherWithUnderline";
+import CloseXIcon from "@/components/icons/common/CloseXIcon";
+import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import CostCardSkeleton from "@/containers/manufacture/productions-orders/components/skeleton/CostCardSkeleton";
 import TabSwitcherWithUnderlineSkeleton from "@/containers/manufacture/productions-orders/components/skeleton/TabSwitcherWithUnderlineSkeleton";
-import ToatstNotifi from "@/utils/helpers/alerNotification";
-import CommentInputAdvanced from "@/components/common/input/CommentInputAdvanced";
+import { StateContext } from "@/context/_state/productions-orders/StateContext";
+import { useSheet } from "@/context/ui/SheetContext";
+import useSetingServer from "@/hooks/useConfigNumber";
 import useToast from "@/hooks/useToast";
+import { useItemOrderDetail } from "@/managers/api/productions-order/useItemOrderDetail";
+import formatMoneyConfig from "@/utils/helpers/formatMoney";
+import { motion } from 'framer-motion';
+import { useRouter } from "next/router";
+import React, { memo, useContext, useEffect, useRef } from "react";
+import { PiLinkBold } from "react-icons/pi";
+import TabFGReceiptHistory from "../tab/TabFGReceiptHistory";
+import TabInformation from "../tab/TabInformation";
+import TabMaterialCost from "../tab/TabMaterialCost";
+import TabMaterialIssueHistory from "../tab/TabMaterialIssueHistory";
+import TabMaterialOutputTab from "../tab/TabMaterialOutput";
+import TabMaterialReturn from "../tab/TabMaterialReturn";
+import CostCard from "../ui/CostCard";
 
 const initialState = {
     isTab: 1,

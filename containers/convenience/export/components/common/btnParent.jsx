@@ -1,17 +1,11 @@
-import { NumericFormat } from "react-number-format";
-import Select from "react-select";
-import ReactExport from "react-data-export";
-
-const ExcelFile = ReactExport.ExcelFile;
-const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
-const ExcelColumn = ReactExport.ExcelFile.ExcelColumn;
-// import * as XLSX from "xlsx";
-import * as XLSX from "xlsx-js-style";
-import { useEffect } from "react";
-import { useSelector } from "react-redux";
-import useActionRole from "@/hooks/useRole";
 import { WARNING_STATUS_ROLE } from "@/constants/warningStatus/warningStatus";
+import useActionRole from "@/hooks/useRole";
 import useToast from "@/hooks/useToast";
+import { useEffect } from "react";
+import { NumericFormat } from "react-number-format";
+import { useSelector } from "react-redux";
+import Select from "react-select";
+import * as XLSX from "xlsx-js-style";
 
 const BtnParent = ({
     sPageLimit,
@@ -26,8 +20,6 @@ const BtnParent = ({
     _HandleSubmit,
     dataLang,
     multiDataSet,
-    onSending,
-    sTemplateValue,
     sIsShow,
     sMultipleProgress,
 }) => {
@@ -149,12 +141,11 @@ const BtnParent = ({
                         id="page"
                         onChange={(e) => sPageLimit((prevState) => ({ ...prevState, page: e.target.value }))}
                         value={pageLimit.page}
-                        className="w-full p-2 text-xs transition-all duration-200 ease-in-out bg-white border border-gray-300 rounded outline-none xl:text-sm peer focus:border-blue-400"
+                        className="w-full h-[38px] p-2 text-xs transition-all duration-200 ease-in-out bg-white border border-gray-300 rounded outline-none xl:text-sm peer focus:border-new-blue"
                         thousandSeparator=","
                         allowNegative={false}
                         decimalScale={0}
                         required
-                        isNumericString={true}
                         isAllowed={(values) => {
                             const { value } = values;
                             const newValue = +value;
@@ -163,7 +154,7 @@ const BtnParent = ({
                     />
                     <label
                         htmlFor="page"
-                        className="absolute top-0 left-0 flex items-center h-full pl-2 text-xs transition-all duration-200 ease-in-out transform xl:text-sm group-focus-within:text-xs peer-valid:text-xs group-focus-within:h-1/2 peer-valid:h-1/2 group-focus-within:text-blue-400 group-focus-within:-translate-y-full peer-valid:-translate-y-full group-focus-within:pl-0 peer-valid:pl-0 "
+                        className="absolute top-0 left-0 flex items-center h-full pl-2 text-xs transition-all duration-200 ease-in-out transform xl:text-sm group-focus-within:text-xs peer-valid:text-xs group-focus-within:h-1/2 peer-valid:h-1/2 group-focus-within:text-new-blue group-focus-within:-translate-y-full peer-valid:-translate-y-full group-focus-within:pl-0 peer-valid:pl-0 "
                     >
                         Trang export
                     </label>
@@ -174,18 +165,17 @@ const BtnParent = ({
                     <NumericFormat
                         id="limit"
                         onChange={(e) => sPageLimit((prevState) => ({ ...prevState, limit: e.target.value }))}
-                        className="w-full p-2 text-xs transition-all duration-200 ease-in-out bg-white border border-gray-300 rounded outline-none appearance-none focus:placeholder:text-gray-400 placeholder:text-white focus:border-blue-400 xl:text-sm peer"
+                        className="w-full h-[38px] p-2 text-xs transition-all duration-200 ease-in-out bg-white border border-gray-300 rounded outline-none appearance-none focus:placeholder:text-gray-400 placeholder:text-white focus:border-new-blue xl:text-sm peer"
                         thousandSeparator=","
                         value={pageLimit.limit}
                         allowNegative={true}
                         decimalScale={0}
                         required
                         placeholder={"Xuất hết điền -1"}
-                        isNumericString={true}
                     />
                     <label
                         htmlFor="limit"
-                        className="absolute top-0 left-0 flex items-center h-full pl-2 text-xs transition-all duration-200 ease-in-out transform xl:text-sm group-focus-within:text-blue-400 group-focus-within:text-xs peer-valid:text-xs group-focus-within:h-1/2 peer-valid:h-1/2 group-focus-within:-translate-y-full peer-valid:-translate-y-full group-focus-within:pl-0 peer-valid:pl-0"
+                        className="absolute top-0 left-0 flex items-center h-full pl-2 text-xs transition-all duration-200 ease-in-out transform xl:text-sm group-focus-within:text-new-blue group-focus-within:text-xs peer-valid:text-xs group-focus-within:h-1/2 peer-valid:h-1/2 group-focus-within:-translate-y-full peer-valid:-translate-y-full group-focus-within:pl-0 peer-valid:pl-0"
                     >
                         Số lượng export
                     </label>
@@ -223,6 +213,24 @@ const BtnParent = ({
                         },
                     })}
                     styles={{
+                        control: (base, state) => ({
+                            ...base,
+                            boxShadow: 'none',
+                            outline: 'none',
+                            borderColor: state.isFocused ? '#0F4F9E' : '#d1d5db',
+                            '&:hover': { borderColor: '#0F4F9E' },
+                            cursor: 'pointer',
+                        }),
+                        dropdownIndicator: (base, state) => ({
+                            ...base,
+                            transition: 'transform 200ms ease',
+                            transform: state.selectProps.menuIsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                            ':hover': { transform: 'rotate(180deg)' },
+                        }),
+                        indicatorSeparator: (base) => ({
+                            ...base,
+                            display: 'none',
+                        }),
                         placeholder: (base) => ({
                             ...base,
                             color: "#cbd5e1",
@@ -233,16 +241,15 @@ const BtnParent = ({
                             position: "absolute",
                         }),
                     }}
-                    className={`placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] font-normal outline-none `}
+                    className={`placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] font-normal outline-none cursor-pointer`}
                 />
             </div>
             {tabPage != 5 && tabPage != 6 ? (
-                <div className="col-span-2 flex items-center  space-x-2 rounded p-2 hover:bg-gray-200 bg-gray-100 cursor-pointer btn-animation hover:scale-[1.02]">
+                <div className="col-span-2 flex items-center h-[38px] space-x-2 rounded p-2 hover:bg-gray-200 bg-gray-100 cursor-pointer btn-animation hover:scale-[1.02]">
                     <input
                         type="checkbox"
                         onChange={(e) => _HandleChange(e, "sampleImport")}
-                        checked={sampleImport}
-                        value={sampleImport}
+                        checked={sampleImport || false}
                         id="example12"
                         name="checkGroup1"
                         className="w-4 h-4 border-gray-300 rounded shadow-sm text-primary-600 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50 focus:ring-offset-0 disabled:cursor-not-allowed disabled:text-gray-400"
@@ -257,39 +264,6 @@ const BtnParent = ({
 
             {isShow ? (
                 <div className="col-span-2">
-                    {/* <ExcelFile
-                        filename={`${"Export dữ liệu"} ${
-                            (tabPage == 1 && "danh mục khách hàng") ||
-                            (tabPage == 2 && "danh mục nhà cung cấp") ||
-                            (tabPage == 3 && "danh mục nguyên vật liệu") ||
-                            (tabPage == 4 && "danh mục thành phẩm")
-                        }`}
-                        title="DLL"
-                        element={
-                            <button
-                                id="excelButton"
-                                className="w-full p-2.5  bg-gradient-to-l hover:bg-blue-300 from-blue-500 via-blue-500  to-blue-500 text-white rounded btn-animation hover:scale-[1.02] flex items-center gap-1 justify-center z-0"
-                            >
-                                <div
-                                    className={
-                                        "w-4 h-4 border-2 rounded-full border-pink-200 border-t-rose-500 animate-spin"
-                                    }
-                                ></div>
-                                <span className="text-xs xl:text-sm">{"Export dữ liệu"}</span>
-                            </button>
-                        }
-                    >
-                        <ExcelSheet
-                            dataSet={multiDataSet}
-                            data={multiDataSet}
-                            name={`${
-                                (tabPage == 1 && "Danh mục khách hàng") ||
-                                (tabPage == 2 && "Danh mục nhà cung cấp") ||
-                                (tabPage == 3 && "Danh mục nguyên vật liệu") ||
-                                (tabPage == 4 && "Danh mục thành phẩm")
-                            }`}
-                        ></ExcelSheet>
-                    </ExcelFile> */}
                     <button
                         id="excelButton"
                         className="w-full p-2.5  bg-gradient-to-l hover:bg-blue-300 from-blue-500 via-blue-500  to-blue-500 text-white rounded btn-animation hover:scale-[1.02] flex items-center gap-1 justify-center z-0"
@@ -310,7 +284,7 @@ const BtnParent = ({
                         }
                     }}
                     type="button"
-                    className="col-span-2  p-2.5  bg-gradient-to-l hover:bg-blue-300 from-blue-500 via-blue-500  to-blue-500 text-white rounded btn-animation hover:scale-[1.02] flex items-center gap-1 justify-center z-0"
+                    className="col-span-2 h-[38px] p-2.5 bg-gradient-to-l hover:bg-blue-300 from-blue-500 via-blue-500  to-blue-500 text-white rounded btn-animation hover:scale-[1.02] flex items-center gap-1 justify-center z-0"
                 >
                     <span className="text-xs xl:text-sm">{"Export dữ liệu"}</span>
                 </button>

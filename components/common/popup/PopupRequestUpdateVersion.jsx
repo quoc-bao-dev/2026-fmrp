@@ -1,16 +1,12 @@
-import { Inter, Lexend_Deca } from "@next/font/google";
-import React from "react";
-import { PiSparkleFill } from "react-icons/pi";
-import { useDispatch } from "react-redux";
-import { Add as IconClose } from "iconsax-react";
-import Image from "next/image";
-import { motion } from "framer-motion";
-import Link from "next/link";
-import ButtonAnimationNew from "../button/ButtonAnimationNew";
 import UpgradeIcon from "@/components/icons/common/UpgradeIcon";
-import { FaL } from "react-icons/fa6";
 import PopupUpgradeProfessional from "@/components/UI/popup/PopupUpgradeProfessional";
 import { useGetUpgradePackage } from "@/hooks/useAuth";
+import { Lexend_Deca } from "@next/font/google";
+import { Add as IconClose } from "iconsax-react";
+import Image from "next/image";
+import { PiSparkleFill } from "react-icons/pi";
+import { useDispatch } from "react-redux";
+import ButtonAnimationNew from "../button/ButtonAnimationNew";
 
 // const inter = Inter({ subsets: ['latin'] });
 

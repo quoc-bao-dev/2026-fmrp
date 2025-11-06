@@ -10,7 +10,6 @@ import useToast from "@/hooks/useToast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
     Trash as IconDelete,
-    Edit as IconEdit,
     GalleryEdit as IconEditImg,
     Eye as IconEye,
     EyeSlash as IconEyeSlash,

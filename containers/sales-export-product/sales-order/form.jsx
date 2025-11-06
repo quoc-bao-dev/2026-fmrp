@@ -39,6 +39,7 @@ import 'dayjs/locale/vi'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Add, ArrowDown2, ArrowUp2, Minus } from 'iconsax-react'
+import { debounce } from 'lodash'
 import moment from 'moment'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
@@ -48,8 +49,6 @@ import { LuBriefcase } from 'react-icons/lu'
 import { PiHash, PiMapPinLight } from 'react-icons/pi'
 import { useSelector } from 'react-redux'
 import { v4 as uuidv4 } from 'uuid'
-import { useSalesOrderQuotaByBranch } from './hooks/useSalesOrderQuotaByBranch'
-import { debounce } from 'lodash'
 
 dayjs.extend(customParseFormat)
 dayjs.locale('vi')
@@ -63,7 +62,7 @@ const SalesOrderForm = (props) => {
   const [selectedStaff, setSelectedStaff] = useState(null)
   const [flagStateChange, setFlagStateChange] = useState(false)
   const authState = useSelector((state) => state.auth)
-
+console.log(selectedCustomer)
   const [searchClient, sSearchClient] = useState(null)
 
   // Data Fetching
@@ -107,9 +106,11 @@ const SalesOrderForm = (props) => {
     } else {
       setFlagStateChange(false)
     }
-    setSelectedCustomer(null)
-    setSelectedStaff(null)
-    setSelectedPersonalContact(null)
+    if (!isHydrating) {
+      setSelectedCustomer(null)
+      setSelectedStaff(null)
+      setSelectedPersonalContact(null)
+    }
   }, [selectedBranch])
 
   // Reset state của ô "người liên lạc" khi ô "khách hàng" thay đổi, để đổ dữ liệu mới (khi có)
@@ -186,6 +187,9 @@ const SalesOrderForm = (props) => {
     totalTax: 0,
     totalAmount: 0,
   })
+
+  // Trạng thái hydrate dữ liệu ban đầu khi vào form sửa
+  const [isHydrating, setIsHydrating] = useState(true)
 
   const params = {
     'filter[branch_id]': selectedBranch !== null ? +selectedBranch : null,
@@ -267,6 +271,7 @@ const SalesOrderForm = (props) => {
         // setHidden(true);
         // setQuote({ label: rResult?.quote_code, value: rResult?.quote_id, });
       }
+      setIsHydrating(false)
       return rResult
     },
     ...optionsQuery,
@@ -410,23 +415,23 @@ const SalesOrderForm = (props) => {
   // Validate state
   useEffect(() => {
     setErrDate(false)
-  }, [startDate != null])
+  }, [startDate !== null])
 
   useEffect(() => {
     sErrCustomer(false)
-  }, [selectedCustomer != null])
+  }, [selectedCustomer !== null])
 
   useEffect(() => {
     setErrDeliveryDate(false)
-  }, [deliveryDate != null])
+  }, [deliveryDate !== null])
 
   useEffect(() => {
     setErrBranch(false)
-  }, [selectedBranch != null])
+  }, [selectedBranch !== null])
 
   useEffect(() => {
     setErrStaff(false)
-  }, [selectedStaff != null])
+  }, [selectedStaff !== null])
 
   // format number
   const formatNumber = (number) => {
@@ -440,6 +445,7 @@ const SalesOrderForm = (props) => {
   const resetValue = () => {
     if (status == 'customer') {
       setCustomer(isId)
+      setSelectedCustomer(isId)
       setContactPerson(null)
       // setQuote(null);
       setOption([])
@@ -448,6 +454,7 @@ const SalesOrderForm = (props) => {
     }
     if (status == 'branch') {
       setBranch(isId)
+      setSelectedBranch(isId)
       setOption([])
       setCustomer(null)
       setContactPerson(null)
@@ -493,6 +500,7 @@ const SalesOrderForm = (props) => {
         handleQueryId({ status: true, id: value, idChild: type })
       } else if (value !== selectedBranch) {
         setBranch(value)
+        setSelectedBranch(value)
         setCustomer(null)
         setContactPerson(null)
         setStaff(null)
@@ -503,6 +511,7 @@ const SalesOrderForm = (props) => {
       setContactPerson(value)
     } else if (type === 'staff') {
       setStaff(value)
+      setSelectedStaff(value)
     } else if (type === 'typeOrder') {
       handleQueryId({ status: true, idChild: type, id: value.target.value })
     } else if (type === 'quote') {
@@ -801,38 +810,40 @@ const SalesOrderForm = (props) => {
 
     if (typeOrder === '0') {
       if (
-        startDate == null ||
-        selectedCustomer == null ||
-        selectedBranch == null ||
-        selectedStaff == null ||
+        startDate === null ||
+        selectedCustomer === null ||
+        selectedBranch === null ||
+        selectedStaff === null ||
+        deliveryDate === null ||
         deliveryDateInOption === true
       ) {
-        startDate == null && setErrDate(true)
-        selectedCustomer == null && sErrCustomer(true)
-        selectedBranch == null && setErrBranch(true)
-        selectedStaff == null && setErrStaff(true)
+        startDate === null && setErrDate(true)
+        selectedCustomer === null && sErrCustomer(true)
+        selectedBranch === null && setErrBranch(true)
+        selectedStaff === null && setErrStaff(true)
+        deliveryDate === null && setErrDeliveryDate(true)
         deliveryDateInOption === true && setErrDeliveryDate(true)
-        // deliveryDate == null && setErrDeliveryDate(true)
         isShow('error', `${dataLang?.required_field_null}`)
       } else {
         setOnSending(true)
       }
     } else if (typeOrder === '1') {
       if (
-        startDate == null ||
-        selectedCustomer == null ||
-        selectedBranch == null ||
-        selectedStaff == null ||
+        startDate === null ||
+        selectedCustomer === null ||
+        selectedBranch === null ||
+        selectedStaff === null ||
+        deliveryDate === null ||
         deliveryDateInOption === true ||
-        quote == null
+        quote === null
       ) {
-        startDate == null && setErrDate(true)
-        selectedCustomer == null && sErrCustomer(true)
-        selectedBranch == null && setErrBranch(true)
-        selectedStaff == null && setErrStaff(true)
+        startDate === null && setErrDate(true)
+        selectedCustomer === null && sErrCustomer(true)
+        selectedBranch === null && setErrBranch(true)
+        selectedStaff === null && setErrStaff(true)
+        deliveryDate === null && setErrDeliveryDate(true)
         deliveryDateInOption === true && setErrDeliveryDate(true)
-        quote?.value == null && setErrQuote(true)
-        // deliveryDate == null && setErrDeliveryDate(true)
+        quote === null && setErrQuote(true)
 
         isShow('error', `${dataLang?.required_field_null}`)
       } else {
@@ -870,11 +881,11 @@ const SalesOrderForm = (props) => {
     })
 
     if (
-      isTotalMoney?.totalPrice > 0 &&
+      isTotalMoney?.totalPrice >= 0 &&
       isTotalMoney?.totalDiscountPrice >= 0 &&
-      isTotalMoney?.totalDiscountAfterPrice > 0 &&
+      isTotalMoney?.totalDiscountAfterPrice >= 0 &&
       isTotalMoney?.totalTax >= 0 &&
-      isTotalMoney?.totalAmount > 0
+      isTotalMoney?.totalAmount >= 0
     ) {
       try {
         const { isSuccess, message } = await apiSalesOrder.apiHandingSalesOrder(id, formData)
@@ -907,7 +918,7 @@ const SalesOrderForm = (props) => {
         'error',
         newDataOption?.length === 0
           ? `Chưa chọn thông tin mặt hàng!`
-          : 'Tiền không được âm, vui lòng kiểm tra lại thông tin mặt hàng!'
+          : 'Có lỗi trong thông tin mặt hàng, vui lòng kiểm tra lại!'
       )
       setOnSending(false)
     }
@@ -953,14 +964,15 @@ const SalesOrderForm = (props) => {
         />
         <div className="flex flex-col 3xl:text-[10px] text-[9px] overflow-hidden w-full">
           <div className="font-semibold responsive-text-sm truncate text-black">{option.e?.name}</div>
-          {(option.e?.product_variation || option.e?.product_variation_1) && (
+          {(option.e?.product_variation) && (
             <div className="text-blue-600 truncate">
-              {option.e?.product_variation && `Màu sắc: ${option.e?.product_variation} `}
-              {option.e?.product_variation_1 && `- Size: ${option.e?.product_variation_1}`}
+              {option.e?.product_variation}
+              {/* {option.e?.product_variation && `Màu sắc: ${option.e?.product_variation} `} */}
+              {/* {option.e?.product_variation_1 && `- Size: ${option.e?.product_variation_1}`} */}
             </div>
           )}
           <div className="text-gray-500">
-            ĐVT: {option.e?.unit_name} - Tồn: {formatNumber(option.e?.qty_warehouse)}
+            ĐVT: {option.e?.unit_name} - Tồn sẵn: {formatNumber(option.e?.qty_warehouse)}
           </div>
         </div>
       </div>
@@ -1719,17 +1731,18 @@ const SalesOrderForm = (props) => {
 
   // search api
   const _HandleSeachApi = debounce(async (inputValue) => {
-    if (branch == null) return
+    if (selectedBranch == null) return
 
     let form = new FormData()
 
+    // luôn gửi branch_id
+    ;[+selectedBranch].forEach((e, index) => form.append(`branch_id[${index}]`, e))
+
+    // chỉ gửi danh sách item đã chọn nếu có
     if (option.length > 0) {
-      if (branch != null) {
-        ;[+branch?.value].forEach((e, index) => form.append(`branch_id[${index}]`, e))
-        option.forEach((item, idx) => {
-          form.append(`items_id_selected[${idx}]`, item?.item?.value ?? '')
-        })
-      }
+      option.forEach((item, idx) => {
+        form.append(`items_id_selected[${idx}]`, item?.item?.value ?? '')
+      })
     }
 
     form.append('term', inputValue)
@@ -2053,7 +2066,6 @@ const SalesOrderForm = (props) => {
   //   //     setOnSending(false)
   //   // }
   // }
-
   return (
     <LayoutOrderManagement
       dataLang={dataLang}
@@ -2143,9 +2155,11 @@ const SalesOrderForm = (props) => {
                                     {e?.item?.e?.name}
                                   </h3>
                                   <p>
-                                    Màu sắc: <span>{e?.item?.e?.product_variation}</span> - Size:{' '}
+                                    {/* Màu sắc: <span> */}
+                                      {e?.item?.e?.product_variation}
+                                      {/* </span> - Size:{' '} */}
                                   </p>
-                                  <p>{e?.item?.e?.product_variation_1 ? e?.item?.e?.product_variation_1 : 'None'}</p>
+                                  {/* <p>{e?.item?.e?.product_variation_1 ? e?.item?.e?.product_variation_1 : 'None'}</p> */}
                                   <p>
                                     ĐVT: <span>{e?.unit}</span> - Tồn: {formatNumber(e?.item?.e?.qty_warehouse)}
                                   </p>
@@ -2182,9 +2196,9 @@ const SalesOrderForm = (props) => {
                           >
                             <button
                               onClick={() => handleDecrease(e?.id)}
-                              className="2xl:scale-100 xl:scale-90 scale-75 bg-primary-05 hover:bg-typo-blue-4/50 font-bold flex items-center justify-center p-0.5 rounded-full"
+                              className="size-6 flex-shrink-0 bg-primary-05 hover:bg-typo-blue-4/50 font-bold flex items-center justify-center rounded-full"
                             >
-                              <Minus size="16" className="scale-75 2xl:scale-100 xl:scale-90" />
+                              <Minus size="16" className="" />
                             </button>
                             <InPutNumericFormat
                               value={e?.quantity}
@@ -2201,9 +2215,9 @@ const SalesOrderForm = (props) => {
                             />
                             <button
                               onClick={() => handleIncrease(e.id)}
-                              className="2xl:scale-100 xl:scale-90 scale-75 bg-primary-05 hover:bg-typo-blue-4/50 font-bold flex items-center justify-center p-0.5 rounded-full"
+                              className="size-6 flex-shrink-0 bg-primary-05 hover:bg-typo-blue-4/50 font-bold flex items-center justify-center p-0.5 rounded-full"
                             >
-                              <Add size="16" className="scale-75 2xl:scale-100 xl:scale-90" />
+                              <Add size="16" className="" />
                             </button>
                           </div>
                         </div>
@@ -2376,7 +2390,7 @@ const SalesOrderForm = (props) => {
               </div>
               {errDeliveryDate && (
                 <label className="text-sm text-red-500">
-                  {dataLang?.sales_product_err_delivery_date || 'Vui lòng chọn ngày cần hàng'}
+                  { 'Vui lòng chọn ngày cần hàng'}
                 </label>
               )}
             </div>
@@ -2388,10 +2402,10 @@ const SalesOrderForm = (props) => {
             title="Khách hàng"
             placeholderText="Chọn khách hàng"
             options={!!flagStateChange ? [] : dataCustomer}
-            value={selectedCustomer}
+            value={selectedCustomer || customer}
             onChange={(value) => setSelectedCustomer(value)}
             isError={errCustomer}
-            messErr={dataLang?.sales_product_err_customer || 'sales_product_err_customer'}
+            errMess={dataLang?.sales_product_err_customer || 'sales_product_err_customer'}
             isShowAddNew={true}
             sSearch={sSearchClient}
             dataBranch={dataBranch}
@@ -2422,7 +2436,7 @@ const SalesOrderForm = (props) => {
                           title={dataLang?.sales_product_staff_in_charge || 'Nhân viên'}
                           placeholderText="Chọn nhân viên"
                           options={!!flagStateChange ? [] : dataStaffs}
-                          value={selectedStaff}
+                          value={selectedStaff || staff}
                           onChange={(value) => setSelectedStaff(value)}
                           isError={errStaff}
                         />

@@ -11,6 +11,7 @@ import TableSection from '@/components/layout/ReportLayout/TableSection'
 import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems'
 import PopupDetail from '@/containers/sales-export-product/delivery-receipt/components/PopupDetail'
 import { useLanguageContext } from '@/context/ui/LanguageContext'
+import { usePersistedBranches } from '@/hooks/common/usePersistedBranches'
 import { useGetWarehouse } from '@/hooks/common/useWarehouses'
 import useFeature from '@/hooks/useConfigFeature'
 import usePagination from '@/hooks/usePagination'
@@ -29,11 +30,14 @@ import { useGetListReportExportDelivery } from './hook/useGetListReportExportDel
 const breadcrumbItems = [
   {
     label: `Báo cáo`,
-    href: '/report-statistical',
   },
   {
-    label: `Tồn kho`,
+    label: `Chi tiết phiếu`,
   },
+  {
+    label: `Báo cáo xuất kho giao hàng`,
+    href: '/report-statistical/warehouse-report/export-delivery',
+  }
 ]
 
 const ExportDelivery = (props) => {
@@ -42,9 +46,7 @@ const ExportDelivery = (props) => {
   const dataLang = useLanguageContext()
   const statusExprired = useStatusExprired()
   const { dataProductExpiry, dataMaterialExpiry, dataProductSerial } = useFeature()
-  //   console.log("material_expiry", dataMaterialExpiry?.is_enable)
-  //   console.log("product_expiry", dataProductExpiry?.is_enable)
-  // console.log("product_serial", dataProductSerial?.is_enable)
+  const { selectedBranches, setSelectedBranches } = usePersistedBranches()
   const auth = useSelector((state) => state.auth)
   // Tạo biến kiểm tra quyền xem giá
   const canViewPrice =
@@ -60,6 +62,7 @@ const ExportDelivery = (props) => {
     endDate: undefined,
   })
   const [selectedWarehouse, setSelectedWarehouse] = useState(null)
+  const [isInitialized, setIsInitialized] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500)
   const [productOptions, setProductOptions] = useState([])
@@ -82,6 +85,7 @@ const ExportDelivery = (props) => {
     limit: limit,
     search: debouncedSearchValue,
     filter: {
+      branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
       warehouses_id: selectedWarehouse?.value,
       ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
       ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
@@ -90,10 +94,10 @@ const ExportDelivery = (props) => {
   })
 
   useEffect(() => {
-    if (refetchReportExportDelivery) {
+    if (refetchReportExportDelivery && isInitialized) {
       refetchReportExportDelivery()
     }
-  }, [limit, dateRange, selectedWarehouse, selectedProducts, debouncedSearchValue, currentPage, refetchReportExportDelivery])
+  }, [limit, dateRange, selectedWarehouse, selectedProducts, debouncedSearchValue, currentPage, refetchReportExportDelivery, isInitialized])
 
   useEffect(() => {
     // Cập nhật options khi dataProduct thay đổi
@@ -126,14 +130,15 @@ const ExportDelivery = (props) => {
 
   useEffect(() => {
     // Tự động chọn kho đầu tiên khi dữ liệu kho được tải về
-    if (warehouseData?.rResult && warehouseData.rResult.length > 0) {
+    if (warehouseData?.rResult && warehouseData.rResult.length > 0 && !isInitialized) {
       const firstWarehouse = warehouseData.rResult[0]
       setSelectedWarehouse({
         value: firstWarehouse.id,
         label: firstWarehouse.name,
       })
+      setIsInitialized(true)
     }
-  }, [warehouseData?.rResult])
+  }, [warehouseData?.rResult, isInitialized])
 
   const handleWarehouseChange = (value) => {
     const selected = warehouseData?.rResult?.find((w) => w.id === value)
@@ -175,35 +180,13 @@ const ExportDelivery = (props) => {
   }
 
   const handleSearch = (value) => {
-    setSearchValue(value?.target?.value || value)
+    const searchValue = value?.target?.value || (typeof value === 'string' ? value : '')
+    setSearchValue(searchValue)
   }
 
   // Add limit handler
   const handleLimitChange = (newLimit) => {
     setLimit(newLimit)
-  }
-
-  const handleResetData = () => {
-    // Reset date range
-    setDateRange({
-      startDate: undefined,
-      endDate: undefined,
-    })
-
-    // Reset warehouse selection
-    // setSelectedWarehouse(null)
-
-    // Reset product search and selection
-    setSearchTerm('')
-    setSelectedProducts([])
-
-    // Reset search value
-    setSearchValue('')
-
-    // Reset limit to default
-    setLimit(15)
-
-    // Reset to first page
     router.push({
       pathname: router.pathname,
       query: { ...router.query, page: 1 },
@@ -217,8 +200,11 @@ const ExportDelivery = (props) => {
       title={'Báo cáo xuất kho giao hàng'}
       statusExprired={statusExprired}
       breadcrumbItems={breadcrumbItems}
+      branchValue={selectedBranches}
+      onBranchChange={setSelectedBranches}
+      onBranchClear={() => setSelectedBranches([])}
       filterSection={
-        <div className="w-full items-center flex justify-between gap-10">
+        <div className="w-full items-center flex justify-between gap-4">
           <div className="flex gap-3">
             <DateToDateReport placeholder="Giai đoạn" value={dateRange} onChange={handleDateChange} />
 
@@ -256,7 +242,7 @@ const ExportDelivery = (props) => {
               value={searchValue}
               classNameBox="!py-2 2xl:!p-2.5"
             />
-            <OnResetData sOnFetching={handleResetData} onClick={handleResetData} className="!py-3" />
+            <OnResetData sOnFetching={refetchReportExportDelivery} className="!py-3" />
             <ExcelFileComponent
               dataLang={dataLang}
               filename="Báo cáo xuất kho giao hàng"
@@ -378,7 +364,7 @@ const ExportDelivery = (props) => {
               <RowItemTable className="w-60 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-40 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-20 flex-shrink-0 bg-white"></RowItemTable>
-              <RowItemTable className="h-10 w-32 flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
+              <RowItemTable className="h-10 w-32 flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white uppercase">
                 Tổng cộng
               </RowItemTable>
               <RowItemTable className="h-10 w-24 flex items-center justify-center px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
@@ -401,12 +387,14 @@ const ExportDelivery = (props) => {
         />
       }
       totalSection={
-        <Pagination
-          postsPerPage={limit}
-          totalPosts={Number(dataReportExportDelivery?.output?.iTotalDisplayRecords) || 0}
-          paginate={paginate}
-          currentPage={currentPage}
-        />
+        dataReportExportDelivery?.output?.iTotalDisplayRecords > 0 && (
+          <Pagination
+            postsPerPage={limit}
+            totalPosts={Number(dataReportExportDelivery?.output?.iTotalDisplayRecords) || 0}
+            paginate={paginate}
+            currentPage={currentPage}
+          />
+        )
       }
       paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}
     />

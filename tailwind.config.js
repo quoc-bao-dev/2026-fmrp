@@ -220,7 +220,7 @@ module.exports = {
         '.font-oblique': {
           'font-style': 'oblique',
         },
-      })
+      });
     },
     function ({ addComponents }) {
       addComponents({
@@ -328,7 +328,24 @@ module.exports = {
             lineHeight: '2rem',
           },
         },
-      })
+        '.responsive-text-3xl': {
+          fontSize: '23px',
+          lineHeight: '32px',
+          '@screen xl': {
+            fontSize: '24px',
+            lineHeight: '32px',
+          },
+          '@screen 2xl': {
+            fontSize: '25px',
+            lineHeight: '32px',
+          },
+          '@screen 3xl': {
+            fontSize: '26px',
+            lineHeight: '32px',
+          },
+        },
+        
+      });
     },
   ],
-}
+};

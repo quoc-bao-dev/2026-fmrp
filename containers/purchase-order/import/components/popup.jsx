@@ -4,8 +4,9 @@ import TagBranch from "@/components/UI/common/Tag/TagBranch";
 import { TagSingle } from "@/components/UI/common/Tag/TagSingle";
 import { TagColorLime, TagColorOrange, TagColorSky } from "@/components/UI/common/Tag/TagStatus";
 import { TagWarehouse } from "@/components/UI/common/Tag/TagWarehouse";
-import ImageErrors from "@/components/UI/imageErrors";
+import CustomAvatar from "@/components/UI/common/user/CustomAvatar";
 import Loading from "@/components/UI/loading/loading";
+import ExpandableContent from "@/components/UI/more";
 import NoData from "@/components/UI/noData/nodata";
 import PopupCustom from "@/components/UI/popup";
 import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
@@ -14,12 +15,10 @@ import useSetingServer from "@/hooks/useConfigNumber";
 import { formatMoment } from "@/utils/helpers/formatMoment";
 import formatMoneyConfig from "@/utils/helpers/formatMoney";
 import formatNumberConfig from "@/utils/helpers/formatnumber";
-import ExpandableContent from "@/components/UI/more";
 import { useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import ModalImage from "react-modal-image";
 import { useImportDetail } from "../hooks/useImportDetail";
-import CustomAvatar from "@/components/UI/common/user/CustomAvatar";
 const PopupDetail = (props) => {
     const [open, sOpen] = useState(false);
 

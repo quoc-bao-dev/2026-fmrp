@@ -9,10 +9,10 @@ import BackIcon from "@/components/icons/common/BackIcon";
 import PrinterIcon2 from "@/components/icons/common/PrinterIcon2";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import {
-    ColumnTable,
-    HeaderTable,
-    RowItemTable,
-    RowTable,
+  ColumnTable,
+  HeaderTable,
+  RowItemTable,
+  RowTable,
 } from "@/components/UI/common/Table";
 import NoData from "@/components/UI/noData/nodata";
 import { Lexend_Deca } from "@next/font/google";

@@ -7,26 +7,20 @@ import DatePicker from "react-datepicker";
 import { BsCalendarEvent } from "react-icons/bs";
 import { MdClear } from "react-icons/md";
 import { v4 as uuidv4 } from "uuid";
-
 import { Add, Trash as IconDelete, Minus } from "iconsax-react";
-
 import useSetingServer from "@/hooks/useConfigNumber";
 import useStatusExprired from "@/hooks/useStatusExprired";
 import useToast from "@/hooks/useToast";
 import { useToggle } from "@/hooks/useToggle";
-
 import { EmptyExprired } from "@/components/UI/common/EmptyExprired";
 import { Container } from "@/components/UI/common/layout";
 import InPutNumericFormat from "@/components/UI/inputNumericFormat/inputNumericFormat";
 import Loading from "@/components/UI/loading/loading";
 import PopupConfim from "@/components/UI/popupConfim/popupConfim";
-
 import { isAllowedNumber } from "@/utils/helpers/common";
 import formatNumberConfig from "@/utils/helpers/formatnumber";
 import { SelectCore } from "@/utils/lib/Select";
-
 import { routerQc } from "@/routers/manufacture";
-
 import apiComons from "@/Api/apiComon/apiComon";
 import apiInternalPlan from "@/Api/apiManufacture/manufacture/internalPlan/apiInternalPlan";
 import ButtonBack from "@/components/UI/button/buttonBack";

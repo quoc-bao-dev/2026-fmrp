@@ -1,24 +1,17 @@
+import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
+import PopupConfim from "@/components/UI/popupConfim/popupConfim";
+import Zoom from "@/components/UI/zoomElement/zoomElement";
+import { CONFIRM_DELETION, TITLE_DELETE } from "@/constants/delete/deleteTable";
+import useToast from "@/hooks/useToast";
+import { useToggle } from "@/hooks/useToggle";
 import { SearchNormal1 } from "iconsax-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { v4 as uddid } from "uuid";
-
-import PopupConfim from "@/components/UI/popupConfim/popupConfim";
-import Zoom from "@/components/UI/zoomElement/zoomElement";
-
-import useToast from "@/hooks/useToast";
-import { useToggle } from "@/hooks/useToggle";
-
-
 const TabItem = dynamic(() => import("./tabItem"), { ssr: false });
-
 const TabPlan = dynamic(() => import("./tabPlan"), { ssr: false });
-
 const TabKeepStock = dynamic(() => import("./tabKeepStock"), { ssr: false });
-
-import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
-import { CONFIRM_DELETION, TITLE_DELETE } from "@/constants/delete/deleteTable";
 
 const MainTable = ({ dataLang }) => {
     const arrButton = [

@@ -4,9 +4,9 @@ import CalendarDropdown, {
 import Loading from "@/components/UI/loading/loading";
 import { useGetTopProducedProducts } from "@/hooks/dashboard/useGetTopProducedProducts";
 import { getDateRangeFromValue } from "@/utils/helpers/getDateRange";
-import Image from "next/image";
-import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 
 const CardProduct = ({ name, quantity, percentageChange, className }) => {
   return (

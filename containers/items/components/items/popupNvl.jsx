@@ -1,5 +1,7 @@
 
 import apiItems from "@/Api/apiMaterial/items/apiItems";
+import EditIcon from "@/components/icons/common/EditIcon";
+import PlusIcon from "@/components/icons/common/PlusIcon";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import InPutMoneyFormat from "@/components/UI/inputNumericFormat/inputMoneyFormat";
 import InPutNumericFormat from "@/components/UI/inputNumericFormat/inputNumericFormat";
@@ -11,14 +13,12 @@ import { CONFIRM_DELETION, TITLE_DELETE } from "@/constants/delete/deleteTable";
 import useToast from "@/hooks/useToast";
 import { useToggle } from "@/hooks/useToggle";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Trash as IconDelete, Edit as IconEdit, GalleryEdit as IconEditImg, Image as IconImage } from "iconsax-react";
+import { Trash as IconDelete, GalleryEdit as IconEditImg, Image as IconImage } from "iconsax-react";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import Select from "react-select";
 import { useItemCategoryOptions } from "../../hooks/items/useItemCategoryOptions";
-import EditIcon from "@/components/icons/common/EditIcon";
-import PlusIcon from "@/components/icons/common/PlusIcon";
 const Popup_NVL = React.memo((props) => {
     const dataOptUnit = useSelector((state) => state.unit_NVL);
 
@@ -1285,7 +1285,7 @@ const Popup_NVL = React.memo((props) => {
                                                                         strokeWidth="1"
                                                                     >
                                                                         <path
-                                                                            fill-rule="evenodd"
+                                                                            fillRule="evenodd"
                                                                             d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                                                                             clipRule="evenodd"
                                                                         ></path>

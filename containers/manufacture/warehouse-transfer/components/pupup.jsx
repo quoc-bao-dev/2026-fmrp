@@ -1,26 +1,22 @@
-import apiWarehouseTransfer from "@/Api/apiManufacture/warehouse/warehouseTransfer/apiWarehouseTransfer";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { ColumnTablePopup, GeneralInformation, HeaderTablePopup } from "@/components/UI/common/TablePopup";
 import TagBranch from "@/components/UI/common/Tag/TagBranch";
 import { TagWarehouse } from "@/components/UI/common/Tag/TagWarehouse";
-import ImageErrors from "@/components/UI/imageErrors";
+import CustomAvatar from "@/components/UI/common/user/CustomAvatar";
 import Loading from "@/components/UI/loading/loading";
 import ExpandableContent from "@/components/UI/more";
 import NoData from "@/components/UI/noData/nodata";
 import PopupCustom from "@/components/UI/popup";
-import { optionsQuery } from "@/configs/optionsQuery";
 import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
 import LinkWarehouse from "@/containers/manufacture/components/linkWarehouse";
 import useFeature from "@/hooks/useConfigFeature";
 import useSetingServer from "@/hooks/useConfigNumber";
 import { formatMoment } from "@/utils/helpers/formatMoment";
 import formatNumberConfig from "@/utils/helpers/formatnumber";
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import ModalImage from "react-modal-image";
 import { useWarehouseTransferDetail } from "../hooks/useWarehouseTransferDetail";
-import CustomAvatar from "@/components/UI/common/user/CustomAvatar";
 
 const PopupDetailWarehouseTransfer = (props) => {
     const [open, sOpen] = useState(false);

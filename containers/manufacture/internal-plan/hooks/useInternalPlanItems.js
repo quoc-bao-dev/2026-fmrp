@@ -1,6 +1,6 @@
 import apiComons from "@/Api/apiComon/apiComon";
 import { optionsQuery } from "@/configs/optionsQuery";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 export const useInternalPlanItems = (idBranch, search) => {
     return useQuery({

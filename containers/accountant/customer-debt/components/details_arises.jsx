@@ -1,5 +1,6 @@
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { ColumnTablePopup, HeaderTablePopup } from "@/components/UI/common/TablePopup";
+import TagBranch from "@/components/UI/common/Tag/TagBranch";
 import DropdowLimit from "@/components/UI/dropdowLimit/dropdowLimit";
 import Loading from "@/components/UI/loading/loading";
 import ExpandableContent from "@/components/UI/more";
@@ -13,7 +14,6 @@ import { formatMoment } from "@/utils/helpers/formatMoment";
 import formatMoneyConfig from "@/utils/helpers/formatMoney";
 import { useMemo, useState } from "react";
 import { useCustomerDebtDetailArises } from "../hooks/useCustomerDebtDetailArises";
-import TagBranch from "@/components/UI/common/Tag/TagBranch";
 
 const getRandomColors = () => {
     const colors = [

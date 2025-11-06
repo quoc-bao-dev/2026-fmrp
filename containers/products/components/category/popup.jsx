@@ -1,18 +1,17 @@
 import apiCategory from "@/Api/apiProducts/category/apiCategory";
+import EditIcon from "@/components/icons/common/EditIcon";
+import PlusIcon from "@/components/icons/common/PlusIcon";
 import ButtonCancel from "@/components/UI/button/buttonCancel";
 import ButtonSubmit from "@/components/UI/button/buttonSubmit";
 import PopupCustom from "@/components/UI/popup";
 import SelectOptionLever from "@/components/UI/selectOptionLever/selectOptionLever";
 import useToast from "@/hooks/useToast";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Edit as IconEdit } from "iconsax-react";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import Select from "react-select";
 import { useProductCategoryDetailOptions } from "../../hooks/category/useProductCategoryDetailOptions";
 import { useCategoryOptions } from "../../hooks/product/useCategoryOptions";
-import EditIcon from "@/components/icons/common/EditIcon";
-import PlusIcon from "@/components/icons/common/PlusIcon";
 
 const Popup_Products = React.memo((props) => {
     const isShow = useToast();

@@ -2,13 +2,6 @@ import Cardtable from "@/components/common/card/Cardtable";
 import CalendarDropdown, {
   timeRanges,
 } from "@/components/common/dropdown/CalendarDropdown";
-import NoData from "@/components/UI/noData/nodata";
-import { useGetMaterialsToPurchase } from "@/hooks/dashboard/useGetMaterialsToPurchase";
-import useSetingServer from "@/hooks/useConfigNumber";
-import { getDateRangeFromValue } from "@/utils/helpers/getDateRange";
-import React, { useEffect, useState } from "react";
-import formatNumberConfig from "@/utils/helpers/formatnumber";
-import Loading from "@/components/UI/loading/loading";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import {
   ColumnTable,
@@ -16,6 +9,12 @@ import {
   RowItemTable,
   RowTable,
 } from "@/components/UI/common/Table";
+import NoData from "@/components/UI/noData/nodata";
+import { useGetMaterialsToPurchase } from "@/hooks/dashboard/useGetMaterialsToPurchase";
+import useSetingServer from "@/hooks/useConfigNumber";
+import formatNumberConfig from "@/utils/helpers/formatnumber";
+import { getDateRangeFromValue } from "@/utils/helpers/getDateRange";
+import { useEffect, useState } from "react";
 const ListMaterial = () => {
   const [materials, setMaterials] = useState([]);
   const [limit, setLimit] = useState(5);

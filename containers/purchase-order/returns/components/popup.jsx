@@ -3,7 +3,7 @@ import { ColumnTablePopup, GeneralInformation, HeaderTablePopup } from "@/compon
 import TagBranch from "@/components/UI/common/Tag/TagBranch";
 import { TagColorOrange, TagColorSky } from "@/components/UI/common/Tag/TagStatus";
 import { TagWarehouse } from "@/components/UI/common/Tag/TagWarehouse";
-import ImageErrors from "@/components/UI/imageErrors";
+import CustomAvatar from "@/components/UI/common/user/CustomAvatar";
 import Loading from "@/components/UI/loading/loading";
 import ExpandableContent from "@/components/UI/more";
 import NoData from "@/components/UI/noData/nodata";
@@ -20,7 +20,6 @@ import { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import ModalImage from "react-modal-image";
 import { useReturnDetail } from "../hooks/useReturnDetail";
-import CustomAvatar from "@/components/UI/common/user/CustomAvatar";
 registerLocale("vi", vi);
 const PopupDetail = (props) => {
     const [open, sOpen] = useState(false);

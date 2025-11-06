@@ -1,6 +1,3 @@
-import { useEffect, useState } from "react";
-import PopupCustom from "/components/UI/popup";
-
 import ButtonSubmit from "@/components/UI/button/buttonSubmit";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { ColumnTablePopup, GeneralInformation, HeaderTablePopup } from "@/components/UI/common/TablePopup";
@@ -10,7 +7,9 @@ import useToast from "@/hooks/useToast";
 import { isAllowedNumber } from "@/utils/helpers/common";
 import { SelectCore, componentsCore } from "@/utils/lib/Select";
 import { Trash as IconDelete } from "iconsax-react";
+import { useEffect, useState } from "react";
 import { v4 as uuid } from "uuid";
+import PopupCustom from "/components/UI/popup";
 const PopupDetailError = ({ data, id, quantityError, queryStateQlty, ...props }) => {
     const isShow = useToast();
 

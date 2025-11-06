@@ -1,13 +1,8 @@
-import React from "react";
 import {
-  Edit as IconEdit,
-  Grid6 as IconExcel,
-  Trash as IconDelete,
-  SearchNormal1 as IconSearch,
-  Add as IconAdd,
+  Trash as IconDelete
 } from "iconsax-react";
-import "react-tippy/dist/tippy.css";
 import { Tooltip } from "react-tippy";
+import "react-tippy/dist/tippy.css";
 
 const DeleteButton = ({ onClick, id }) => {
   return (

@@ -1,20 +1,19 @@
-import { useState } from "react";
-import PopupCustom from "/components/UI/popup";
-
+import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { ColumnTablePopup, GeneralInformation, HeaderTablePopup } from "@/components/UI/common/TablePopup";
-import useToast from "@/hooks/useToast";
-import NoData from "@/components/UI/noData/nodata";
-import { useCheckQualityDetail } from "../hooks/useCheckQualityDetail";
 import TagBranch from "@/components/UI/common/Tag/TagBranch";
 import CustomAvatar from "@/components/UI/common/user/CustomAvatar";
-import { formatMoment } from "@/utils/helpers/formatMoment";
-import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
-import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import Loading from "@/components/UI/loading/loading";
-import ModalImage, { Lightbox } from "react-modal-image";
-import useSetingServer from "@/hooks/useConfigNumber";
-import formatNumberConfig from "@/utils/helpers/formatnumber";
+import NoData from "@/components/UI/noData/nodata";
+import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
 import useFeature from "@/hooks/useConfigFeature";
+import useSetingServer from "@/hooks/useConfigNumber";
+import useToast from "@/hooks/useToast";
+import { formatMoment } from "@/utils/helpers/formatMoment";
+import formatNumberConfig from "@/utils/helpers/formatnumber";
+import { useState } from "react";
+import ModalImage from "react-modal-image";
+import { useCheckQualityDetail } from "../hooks/useCheckQualityDetail";
+import PopupCustom from "/components/UI/popup";
 
 
 const PopupCheckQuality = (props) => {

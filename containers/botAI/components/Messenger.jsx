@@ -1,12 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { twMerge } from "tailwind-merge";
-import LoadingThreeDotsJumping from "./LoadingThreeDotsJumping";
-import AvatarBotAI from "./AvatarBotAI";
 import AnimatedGeneraText from "@/components/animations/animation/AnimatedGeneraText";
-import parse from "html-react-parser";
-import { useDispatch } from "react-redux";
-import TableBOM from "./TableBOM";
 import { motion } from "framer-motion";
+import parse from "html-react-parser";
+import { useEffect, useMemo, useState } from "react";
+import { twMerge } from "tailwind-merge";
+import AvatarBotAI from "./AvatarBotAI";
+import LoadingThreeDotsJumping from "./LoadingThreeDotsJumping";
+import TableBOM from "./TableBOM";
 const Messenger = ({
     className,
     children,

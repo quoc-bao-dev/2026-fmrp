@@ -1,9 +1,9 @@
+import CaretDropdownThinIcon from "@/components/icons/common/CaretDropdownThinIcon";
 import configSelectFillter from "@/configs/configSelectFillter";
 import { SelectCore } from "@/utils/lib/Select";
 import { FaCheck } from "react-icons/fa";
 import { components } from "react-select";
 import { Customscrollbar } from "../../UI/common/Customscrollbar";
-import CaretDropdownThinIcon from "@/components/icons/common/CaretDropdownThinIcon";
 
 export const CustomOption = (props) => {
     return (

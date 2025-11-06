@@ -1,7 +1,5 @@
-import React, { useRef } from "react"
-import { motion } from "framer-motion"
 import { useAutoActiveTabWithUnderline } from "@/hooks/custom/tab/useAutoActiveTabWithUnderline"
-import { ContainerFilterTab } from "@/components/UI/common/layout"
+import { motion } from "framer-motion"
 
 const TabSwitcherWithUnderline = ({ className, tabs = [], activeTab, onChange, renderLabel }) => {
     const { underlineProps, tabListRefs } = useAutoActiveTabWithUnderline({

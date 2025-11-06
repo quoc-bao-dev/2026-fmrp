@@ -1,15 +1,11 @@
 import Image from "next/image";
-import React, { useRef, useState } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { FaArrowRight } from "react-icons/fa6";
-import { FaArrowLeft } from "react-icons/fa6";
-
-// Import Swiper styles
+import { useRef, useState } from "react";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import "swiper/css";
-import "swiper/css/pagination";
 import "swiper/css/navigation";
-// import required modules
+import "swiper/css/pagination";
 import { Navigation, Pagination } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 import { twMerge } from "tailwind-merge";
 const Carousel = ({ lisTemItem }) => {
     const swiperRef = useRef(null);

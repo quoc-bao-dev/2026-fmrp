@@ -1,6 +1,3 @@
-import React from "react";
-import Link from "next/link";
-import { IconAdd } from "iconsax-react";
 const ButtoonDelete = (props) => {
   return (
     <button

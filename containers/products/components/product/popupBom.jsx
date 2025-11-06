@@ -1,6 +1,5 @@
 import apiProducts from "@/Api/apiProducts/products/apiProducts";
 import OnResetData from "@/components/UI/btnResetData/btnReset";
-import ChatAi from "@/components/UI/chat/ChatAi";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { ColumnTablePopup, HeaderTablePopup } from "@/components/UI/common/TablePopup";
 import InPutNumericFormat from "@/components/UI/inputNumericFormat/inputNumericFormat";
@@ -14,8 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AttachCircle, Add as IconAdd, Trash as IconDelete } from "iconsax-react";
 import { debounce } from "lodash";
 import React, { useEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Select from "react-select";
 import { v4 } from "uuid";
 

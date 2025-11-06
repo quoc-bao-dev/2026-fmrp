@@ -1,4 +1,5 @@
 import { BtnAction } from "@/components/UI/BtnAction";
+import ModalImagePortal from "@/components/UI/ModalImagePortal/ModalImagePortal";
 import Breadcrumb from "@/components/UI/breadcrumb/BreadcrumbCustom";
 import OnResetData from "@/components/UI/btnResetData/btnReset";
 import ContainerPagination from "@/components/UI/common/ContainerPagination/ContainerPagination";
@@ -52,7 +53,6 @@ import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
-import ModalImage from "react-modal-image";
 import { useSelector } from "react-redux";
 import Popup_NVL from "./components/items/popupNvl";
 import { useItemCategoryOptions } from "./hooks/items/useItemCategoryOptions";
@@ -468,14 +468,14 @@ const Items = (props) => {
                           >
                             <div className="w-[48px] h-[48px] mx-auto">
                               {e?.images == null ? (
-                                <ModalImage
+                                <ModalImagePortal
                                   small="/icon/noimagelogo.png"
                                   large="/icon/noimagelogo.png"
                                   className="object-contain w-full h-full rounded"
                                 />
                               ) : (
                                 <>
-                                  <ModalImage
+                                  <ModalImagePortal
                                     small={e?.images}
                                     large={e?.images}
                                     className="w-[48px] h-[48px]  rounded object-cover"
@@ -506,7 +506,7 @@ const Items = (props) => {
                             {e?.unit}
                           </RowItemTable>
                           <RowItemTable colSpan={1} textAlign={"center"}>
-                            {renderMoneyOrDash(e?.stock_quantity)}
+                            { Number(e?.stock_quantity) > 0 ? formatNumber(Number(e?.stock_quantity)) : '-'}
                           </RowItemTable>
                           <RowItemTable colSpan={1} textAlign={"left"}>
                             {e?.note}

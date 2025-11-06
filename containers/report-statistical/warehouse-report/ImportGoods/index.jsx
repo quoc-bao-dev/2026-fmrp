@@ -22,15 +22,19 @@ import { PiPackage, PiWarehouseLight } from 'react-icons/pi'
 import { useDebounce } from 'use-debounce'
 import { useExportExcel } from './hook/useExportExcel'
 import { useGetListReportImportFinishedGoods } from './hook/useGetListReportImport'
+import { usePersistedBranches } from '@/hooks/common/usePersistedBranches'
 
 const breadcrumbItems = [
   {
     label: `Báo cáo`,
-    href: '/report-statistical',
   },
   {
-    label: `Tồn kho`,
+    label: `Chi tiết phiếu`,
   },
+  {
+    label: `Báo cáo nhập kho thành phẩm`,
+    href: '/report-statistical/warehouse-report/import-goods',
+  }
 ]
 
 const ImportGoods = (props) => {
@@ -38,12 +42,14 @@ const ImportGoods = (props) => {
   const { paginate } = usePagination()
   const dataLang = useLanguageContext()
   const statusExprired = useStatusExprired()
+  const { selectedBranches, setSelectedBranches } = usePersistedBranches()
 
   const [dateRange, setDateRange] = useState({
     startDate: undefined,
     endDate: undefined,
   })
   const [selectedWarehouse, setSelectedWarehouse] = useState(null)
+  const [isInitialized, setIsInitialized] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500)
   const [productOptions, setProductOptions] = useState([])
@@ -65,6 +71,7 @@ const ImportGoods = (props) => {
     limit: limit,
     search: debouncedSearchValue,
     filter: {
+      branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
       warehouses_id: selectedWarehouse?.value,
       ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
       ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
@@ -73,10 +80,10 @@ const ImportGoods = (props) => {
   })
 
   useEffect(() => {
-    if (refetchReportImport) {
+    if (refetchReportImport && isInitialized) {
       refetchReportImport()
     }
-  }, [limit, dateRange, selectedWarehouse, selectedProducts, debouncedSearchValue, currentPage, refetchReportImport])
+  }, [limit, dateRange, selectedWarehouse, selectedProducts, debouncedSearchValue, currentPage, refetchReportImport, isInitialized])
 
   useEffect(() => {
     // Cập nhật options khi dataProduct thay đổi
@@ -109,14 +116,15 @@ const ImportGoods = (props) => {
 
   useEffect(() => {
     // Tự động chọn kho đầu tiên khi dữ liệu kho được tải về
-    if (warehouseData?.rResult && warehouseData.rResult.length > 0) {
+    if (warehouseData?.rResult && warehouseData.rResult.length > 0 && !isInitialized) {
       const firstWarehouse = warehouseData.rResult[0]
       setSelectedWarehouse({
         value: firstWarehouse.id,
         label: firstWarehouse.name,
       })
+      setIsInitialized(true)
     }
-  }, [warehouseData?.rResult])
+  }, [warehouseData?.rResult, isInitialized])
 
   const handleWarehouseChange = (value) => {
     const selected = warehouseData?.rResult?.find((w) => w.id === value)
@@ -158,35 +166,13 @@ const ImportGoods = (props) => {
   }
 
   const handleSearch = (value) => {
-    setSearchValue(value?.target?.value || value)
+    const searchValue = value?.target?.value || (typeof value === 'string' ? value : '')
+    setSearchValue(searchValue)
   }
 
   // Add limit handler
   const handleLimitChange = (newLimit) => {
     setLimit(newLimit)
-  }
-
-  const handleResetData = () => {
-    // Reset date range
-    setDateRange({
-      startDate: undefined,
-      endDate: undefined,
-    })
-
-    // Reset warehouse selection
-    // setSelectedWarehouse(null)
-
-    // Reset product search and selection
-    setSearchTerm('')
-    setSelectedProducts([])
-
-    // Reset search value
-    setSearchValue('')
-
-    // Reset limit to default
-    setLimit(15)
-
-    // Reset to first page
     router.push({
       pathname: router.pathname,
       query: { ...router.query, page: 1 },
@@ -200,8 +186,11 @@ const ImportGoods = (props) => {
       title={'Báo cáo nhập kho thành phẩm'}
       statusExprired={statusExprired}
       breadcrumbItems={breadcrumbItems}
+      branchValue={selectedBranches}
+      onBranchChange={setSelectedBranches}
+      onBranchClear={() => setSelectedBranches([])}
       filterSection={
-        <div className="w-full items-center flex justify-between gap-10">
+        <div className="w-full items-center flex justify-between gap-4">
           <div className="flex gap-3">
             <DateToDateReport placeholder="Giai đoạn" value={dateRange} onChange={handleDateChange} />
 
@@ -239,7 +228,7 @@ const ImportGoods = (props) => {
               value={searchValue}
               classNameBox="!py-2 2xl:!p-2.5"
             />
-            <OnResetData sOnFetching={handleResetData} onClick={handleResetData} className="!py-3" />
+            <OnResetData sOnFetching={refetchReportImport} className="!py-3" />
             <ExcelFileComponent
               dataLang={dataLang}
               filename="Danh sách nhập kho thành phẩm"
@@ -326,7 +315,7 @@ const ImportGoods = (props) => {
               <RowItemTable className="w-32 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-60 flex-shrink-0 bg-white"></RowItemTable>
               <RowItemTable className="w-60 flex-shrink-0 bg-white"></RowItemTable>
-              <RowItemTable className="w-24 h-10 whitespace-nowrap flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white">
+              <RowItemTable className="w-24 h-10 whitespace-nowrap flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold flex-shrink-0 bg-white uppercase">
                 Tổng cộng
               </RowItemTable>
               <RowItemTable
@@ -342,12 +331,14 @@ const ImportGoods = (props) => {
         />
       }
       totalSection={
-        <Pagination
-          postsPerPage={limit}
-          totalPosts={Number(dataReportImport?.output?.iTotalDisplayRecords) || 0}
-          paginate={paginate}
-          currentPage={currentPage}
-        />
+        dataReportImport?.output?.iTotalDisplayRecords > 0 && (
+          <Pagination
+            postsPerPage={limit}
+            totalPosts={Number(dataReportImport?.output?.iTotalDisplayRecords) || 0}
+            paginate={paginate}
+            currentPage={currentPage}
+          />
+        )
       }
       paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}
     />

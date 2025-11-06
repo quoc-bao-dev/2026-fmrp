@@ -1,7 +1,7 @@
-import RawMaterialsUsed from '@/containers/report-statistical/production-manager/raw-materials-used'
+import RawMaterialsUsed from "@/containers/report-statistical/production-manager/RawMaterialsUsed"
 
-const Page = (props) => {
-    return <RawMaterialsUsed {...props} />
+const Page = () => {
+    return <RawMaterialsUsed />
 }
 
 export default Page

@@ -1,15 +1,11 @@
 import PopupCustom from "@/components/UI/popup";
-import { usePostRecommendation } from "@/hooks/popup/usePostRecommendation";
 import useToast from "@/hooks/useToast";
-import { motion } from 'framer-motion';
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import ButtonSubmit from "../button/buttonSubmit";
-import { Customscrollbar } from "../common/Customscrollbar";
-import ImageUploader from "../common/upload/ImageUploader";
 import { v4 } from "uuid";
-import Image from "next/image";
+import ButtonSubmit from "../button/buttonSubmit";
 
 const PopupUpdateVersion = (props) => {
     const { dataLang } = props

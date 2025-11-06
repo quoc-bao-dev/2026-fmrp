@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { twMerge } from "tailwind-merge";
-import { AnimatePresence, motion } from "framer-motion";
 import LoadingThreeDotsJumping from "@/containers/botAI/components/LoadingThreeDotsJumping";
+import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { twMerge } from "tailwind-merge";
 
 const AnimatedGeneraEachWord = ({
     className = "",

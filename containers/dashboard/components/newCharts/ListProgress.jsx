@@ -1,10 +1,7 @@
-import CalendarDropdown, {
-  productionStatuses,
-} from "@/components/common/dropdown/CalendarDropdown";
 import Loading from "@/components/UI/loading/loading";
 import { useGetProductionProgressByGroup } from "@/hooks/dashboard/useGetProductionProgressByGroup";
 import { getDateRangeFromValue } from "@/utils/helpers/getDateRange";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 const ProgressItem = ({ name, quantity, percentage }) => {
   return (

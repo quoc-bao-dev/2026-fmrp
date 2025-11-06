@@ -1,639 +1,451 @@
-import Loading from "@/components/UI/loading/loading";
-import Head from "next/head";
-import { useRouter } from "next/router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { _ServerInstance as Axios } from "/services/axios";
+import Breadcrumb from '@/components/UI/breadcrumb/BreadcrumbCustom';
+import { EmptyExprired } from '@/components/UI/common/EmptyExprired';
+import { LayOutTableDynamic } from '@/components/UI/common/layout';
+import Loading from '@/components/UI/loading/loading';
+import { useLanguageContext } from '@/context/ui/LanguageContext';
+import useStatusExprired from '@/hooks/useStatusExprired';
+import useToast from '@/hooks/useToast';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
+import Client from './components/client/client';
+import BtnParent from './components/common/btnParent';
+import Progress from './components/common/progress';
+import TitleHeader from './components/common/titleHeader';
+import Materials from './components/materials/materials';
+import Products from './components/products/products';
+import Supplier from './components/supplier/supplier';
+import TabClient from './components/tabExport';
+import { useFetchDataColumn, useFetchDataMaterialsFields, useFetchDataProductsFields, useFetchDataSupplierFields, useFetchDataTemplate } from './hook/queries';
+import { useExportClient } from './hook/useExportClient';
+import { useExportMaterials } from './hook/useExportMaterials';
+import { useExportProducts } from './hook/useExportProducts';
+import { useExportSuppliers } from './hook/useExportSuppliers';
+import { filterSelectedValues, mergeDataColumn, parseTemplateData, transformDataForExcel } from './utils/helpers';
+import { _ServerInstance as Axios } from '/services/axios';
 
-import { EmptyExprired } from "@/components/UI/common/EmptyExprired";
-import { Container, LayOutTableDynamic } from "@/components/UI/common/layout";
-import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
-import useStatusExprired from "@/hooks/useStatusExprired";
-import ToatstNotifi from "@/utils/helpers/alerNotification";
-import { formatMoment } from "@/utils/helpers/formatMoment";
-import Client from "./components/client/client";
-import BtnParent from "./components/common/btnParent";
-import Progress from "./components/common/progress";
-import TitleHeader from "./components/common/titleHeader";
-import Materials from "./components/materials/materials";
-import Products from "./components/products/products";
-import Supplier from "./components/supplier/supplier";
-import TabClient from "./components/tabExport";
-import Breadcrumb from "@/components/UI/breadcrumb/BreadcrumbCustom";
-import useToast from "@/hooks/useToast";
+const dataTab = [
+  {
+    id: 1,
+    name: 'Khách hàng',
+    perm: 'customers',
+  },
+  {
+    id: 2,
+    name: 'Nhà cung cấp',
+    perm: 'suppliers',
+  },
+  {
+    id: 3,
+    name: 'Nguyên vật liệu',
+    perm: 'materials',
+  },
+  {
+    id: 4,
+    name: 'Thành phẩm',
+    perm: 'products',
+  },
+];
 
-const Export = (props) => {
-    const initsArr = {
-        clients: [],
-        contacts: [],
-        address: [],
-        suppliers: [],
-        materials: [],
-        products: [],
+const initsArr = {
+  clients: [],
+  contacts: [],
+  address: [],
+  suppliers: [],
+  materials: [],
+  products: [],
+};
+
+const initsPageLimit = {
+  page: 1,
+  limit: 100,
+};
+
+const Export = props => {
+  const dataLang = useLanguageContext();
+
+  const breadcrumbItems = [
+    {
+      label: `Export dữ liệu`,
+    },
+    {
+      label: `${dataLang?.import_category || 'import_category'}`,
+    },
+  ];
+
+  const showToat = useToast();
+  const statusExprired = useStatusExprired();
+  const router = useRouter();
+  const scrollAreaRef = useRef(null);
+  const tabPage = router.query?.tab;
+
+  const [arrEmty, sArrEmty] = useState(initsArr);
+  const [dataColumnNew, sDataColumnNew] = useState({});
+  const [pageLimit, sPageLimit] = useState(initsPageLimit);
+  const [templateValue, sTemplateValue] = useState(null);
+  const [sampleImport, sSampleImport] = useState(null);
+  const [onSending, sOnSending] = useState(false);
+  const [multipleProgress, sMultipleProgress] = useState(0);
+  const [isShow, sIsShow] = useState(false);
+  const [dataServer, sDataServer] = useState([]);
+
+  const  auth  = useSelector((state) => state.auth)
+
+  // Tính quyền trực tiếp ở nơi dùng để đơn giản hóa
+  const { data: dataColumn, isLoading: isLoadingColumn } = useFetchDataColumn(tabPage, !!tabPage);
+  const { data: dataTemplate = [], isLoading: isLoadingTemplate } = useFetchDataTemplate(tabPage, !!tabPage);
+  const { data: dataSupplierFields, isLoading: isLoadingSupplierFields } = useFetchDataSupplierFields(tabPage == 2);
+  const { data: dataMaterialsFields, isLoading: isLoadingMaterialsFields } = useFetchDataMaterialsFields(tabPage == 3);
+  const { data: dataProductsFields, isLoading: isLoadingProductsFields } = useFetchDataProductsFields(tabPage == 4);
+
+  const { exportClient } = useExportClient({
+    showToat,
+    dataLang,
+    sIsShow,
+    sDataServer,
+    sMultipleProgress,
+    sOnSending,
+  });
+
+  const { exportSuppliers } = useExportSuppliers({
+    showToat,
+    dataLang,
+    sIsShow,
+    sDataServer,
+    sMultipleProgress,
+    sOnSending,
+  });
+
+  const { exportMaterials } = useExportMaterials({
+    showToat,
+    dataLang,
+    sIsShow,
+    sDataServer,
+    sMultipleProgress,
+    sOnSending,
+  });
+
+  const { exportProducts } = useExportProducts({
+    showToat,
+    dataLang,
+    sIsShow,
+    sDataServer,
+    sMultipleProgress,
+    sOnSending,
+  });
+
+  // Không cần handler riêng; check quyền ngay trong onClick của từng tab
+
+  const handleMenuOpen = () => {
+    const menuPortalTarget = scrollAreaRef.current;
+    return { menuPortalTarget };
+  };
+
+  useEffect(() => {
+    const perms = auth?.permissions_current || {};
+    const hasPerms = !!auth?.permissions_current && Object.keys(perms).length > 0;
+    const isAllowed = (t) => {
+      if (!hasPerms) return true; // Không có permissions_current thì full quyền
+      return t.perm === 'products' ? Number(perms?.products?.is_export) === 1 : Number(perms?.[t.perm]?.is_export) === 1;
     };
-    const initsPageLimit = {
-        page: 1,
-        limit: 100,
-    };
-    const statusExprired = useStatusExprired();
+    const current = Number(router.query?.tab || 1);
+    const currentMeta = dataTab.find(t => t.id === current);
+    if (currentMeta && isAllowed(currentMeta)) {
+      router.push({ pathname: router.route, query: { tab: current } });
+      return;
+    }
+    const firstAllowed = dataTab.find(t => isAllowed(t))?.id;
+    if (firstAllowed) {
+      router.push({ pathname: router.route, query: { tab: firstAllowed } });
+      if (currentMeta) showToat('error', 'Bạn không có quyền với tab mặc định, đã chuyển tab được phép');
+    } else {
+      showToat('error', 'Bạn không có quyền truy cập bất kỳ tab nào');
+    }
+  }, [auth]);
 
-    const scrollAreaRef = useRef(null);
+  useEffect(() => {
+    if (router.query?.tab) {
+      sArrEmty(initsArr);
+      sPageLimit(initsPageLimit);
+    }
+  }, [router.query?.tab]);
 
-    const handleMenuOpen = () => {
-        const menuPortalTarget = scrollAreaRef.current;
-        return { menuPortalTarget };
-    };
+  useEffect(() => {
+    if (tabPage == 1 && dataColumn) {
+      // Tab 1 dùng API cũ
+      sDataColumnNew({ ...dataColumn });
+    } else if (tabPage == 2 && dataSupplierFields) {
+      // Tab 2 dùng API mới: suppliers/contacts từ dataSupplierFields
+      const { suppliers = [], contacts = [] } = dataSupplierFields || {};
+      sDataColumnNew({ suppliers, contacts });
+    } else if (tabPage == 3 && dataMaterialsFields) {
+      // Tab 3: Nguyên vật liệu
+      const materials = dataMaterialsFields?.materials || [];
+      sDataColumnNew({ materials });
+    } else if (tabPage == 4 && dataProductsFields) {
+      // Tab 4: Thành phẩm
+      const products = dataProductsFields?.products || [];
+      sDataColumnNew({ products });
+    }
+  }, [tabPage, dataColumn, dataSupplierFields, dataMaterialsFields, dataProductsFields]);
 
-    const dataLang = props?.dataLang;
-
-    const [onFetching, sOnFetching] = useState(false);
-
-    const router = useRouter();
-
-    const tabPage = router.query?.tab;
-
-    const [dataColumn, sDataColumn] = useState([]);
-
-    const [arrEmty, sArrEmty] = useState(initsArr);
-
-    const [dataColumnNew, sDataColumnNew] = useState([]);
-
-    const [dataTemplate, sDataTemplate] = useState([]);
-
-    const [pageLimit, sPageLimit] = useState(initsPageLimit);
-
-    const [templateValue, sTemplateValue] = useState(null);
-
-    const [sampleImport, sSampleImport] = useState(null);
-
-    const [onFetchTemple, sOnFetchTemple] = useState(false);
-    const showToat = useToast();
-    const dataTab = [
-        {
-            id: 1,
-            name: "Khách hàng",
-        },
-        {
-            id: 2,
-            name: "Nhà cung cấp",
-        },
-        {
-            id: 3,
-            name: "Nguyên vật liệu",
-        },
-        {
-            id: 4,
-            name: "Thành phẩm",
-        },
-        {
-            id: 5,
-            name: "Công đoạn",
-        },
-        {
-            id: 6,
-            name: "Định mức BOM",
-        },
-    ];
-
-    const [onSending, sOnSending] = useState(false);
-    const [multipleProgress, sMultipleProgress] = useState(0);
-    const [isShow, sIsShow] = useState(false);
-    const [dataServer, sDataServer] = useState([]);
-    const _HandleSelectTab = useCallback(
-        (e) => {
-            router.push({
-                pathname: router.route,
-                query: { tab: e },
-            });
-        },
-        [router]
-    );
-
-    useEffect(() => {
-        router.push({
-            pathname: router.route,
-            query: { tab: router.query?.tab ? router.query?.tab : 1 },
-        });
-    }, []);
-
-    const _FetchDataColumn = () => {
-        const apiDataComlumn = {
-            1: "/api_web/api_export_data/get_field_client?csrf_protection=true",
-            2: "/api_web/Api_import_data/get_field_suppliers?csrf_protection=true",
-            3: "/api_web/Api_import_data/get_field_materials?csrf_protection=true",
-            4: "/api_web/Api_import_data/get_field_products?csrf_protection=true",
-        };
-        const apiUrlComLumn = apiDataComlumn[tabPage] || "";
-
-        Axios("GET", `${apiUrlComLumn}`, {}, (err, response) => {
-            if (!err) {
-                const arrData = response.data;
-                const db = arrData
-                // const db = { ...arrData };
-                sDataColumn((tabPage == 3 && { materials: db }) || (tabPage == 4 && { products: db }) || db);
-            }
-        });
-        sOnFetching(false);
-    };
-    const _FetchDataTemplate = () => {
-        const apiDataTempalte = {
-            1: "/api_web/api_export_data/get_template_export?csrf_protection=true",
-            2: "/api_web/Api_import_data/get_field_suppliers?csrf_protection=true",
-            3: "/api_web/Api_import_data/get_field_materials?csrf_protection=true",
-            4: "/api_web/Api_import_data/get_field_products?csrf_protection=true",
-        };
-        const apiUrlTemplate = apiDataTempalte[tabPage] || "";
-        Axios(
-            "GET",
-            `${apiUrlTemplate}`,
-            {
-                params: {
-                    tab: tabPage,
-                },
-            },
-            (err, response) => {
-                if (!err) {
-                    var db = response.data;
-                    if (Array.isArray(db)) {
-                        const data = db?.map((e) => ({
-                            label: e?.code,
-                            value: e?.id,
-                            date: formatMoment(e?.date_create, FORMAT_MOMENT.DATE_SLASH_LONG),
-                            setup_colums: e?.setup_colums,
-                        }));
-                        sDataTemplate(data);
-                    }
-                }
-                sOnFetchTemple(false);
-            }
-        );
-        sOnFetching(false);
-    };
-
-    useEffect(() => {
-        onFetching && _FetchDataColumn();
-        onFetching && _FetchDataTemplate();
-    }, [onFetching]);
-
-    useEffect(() => {
-        router.query.tab && sOnFetching(true);
-        router.query.tab && sArrEmty(initsArr);
-        router.query.tab && sPageLimit(initsPageLimit);
-    }, [router.query?.page, router.query?.tab]);
-
-    useEffect(() => {
-        if (dataColumn) {
-            const newDataColumn = { ...dataColumn };
-            sDataColumnNew(newDataColumn);
-        }
-    }, [dataColumn]);
-
-    const _HandleChange = (value, type) => {
-        if (type == "templateValue" && value != templateValue) {
-            sTemplateValue(value);
-            if (value != null) {
-                parseAndSetData(value, arrEmty);
-            } else {
-                sArrEmty(initsArr);
-                const initsColumn = { ...dataColumn };
-                sDataColumnNew(initsColumn);
-            }
-            checkLoadingTemplate();
-        } else if (type == "sampleImport") {
-            sSampleImport(value?.target.checked);
-        }
-    };
-
-    const parseAndSetData = (value, arrEmtyLength) => {
-        const parsedValue = JSON?.parse(value?.setup_colums);
-
-        if (tabPage == 1) {
-            const newArr = {
-                clients: parsedValue?.clients?.map((e) => JSON.parse(e)) || [],
-                contacts: parsedValue?.contacts?.map((e) => JSON.parse(e)) || [],
-                address: parsedValue?.address?.map((e) => JSON.parse(e)) || [],
-            };
-            sArrEmty((prve) => ({
-                ...prve,
-                ...newArr,
-            }));
-            const newDataColumnNew = { ...dataColumnNew };
-            // Thêm lại arrEmtyLength vào newDataColumnNew
-            for (const key in arrEmtyLength) {
-                if (newDataColumnNew[key]) {
-                    newDataColumnNew[key] = [...newDataColumnNew[key], ...arrEmtyLength[key]];
-                }
-            }
-            // Cập nhật dataColumnNew
-            sDataColumnNew(newDataColumnNew);
-            // Gọi functionsCheckValue sau khi cập nhật dữ liệu
-            functionsCheckValue(newDataColumnNew, {
-                ...arrEmty,
-                ...newArr,
-            });
-        }
-    };
-
-    const functionsCheckValue = (dataColumnNew, arrEmty) => {
-        for (const key in dataColumnNew) {
-            if (dataColumnNew[key] && arrEmty[key]) {
-                const temp = {};
-                arrEmty[key].forEach((item) => {
-                    temp[item.value] = true;
-                });
-                dataColumnNew[key] = dataColumnNew[key].filter((item) => !temp[item.value]);
-            }
-        }
-    };
-
-    const checkLoadingTemplate = () => {
-        sOnFetchTemple(true);
-        setTimeout(() => {
-            sOnFetchTemple(false);
-        }, 500);
-    };
-
-    const HandlePushItem = (value, type, dataEmty, sDataEmty) => {
-        const obDataAffter = dataEmty[type].find((item) => item.value === value);
-
-        if (!obDataAffter) {
-            // Thêm dữ liệu vào trường dữ liệu xuất
-            const newData = dataColumnNew[type].filter((e) => value === e.value);
-            sDataEmty((prev) => ({ ...prev, [type]: [...dataEmty[type], ...newData] }));
-            sDataColumnNew((prev) => ({
-                ...prev,
-                [type]: prev[type].filter((e) => value !== e.value),
-            }));
+  const _HandleChange = (value, type) => {
+    if (type == 'templateValue' && value != templateValue) {
+      sTemplateValue(value);
+      if (value != null) {
+        parseAndSetData(value, arrEmty);
+      } else {
+        sArrEmty(initsArr);
+        if (tabPage == 1 && dataColumn) {
+          sDataColumnNew({ ...dataColumn });
+        } else if (tabPage == 2 && dataSupplierFields) {
+          const { suppliers = [], contacts = [] } = dataSupplierFields || {};
+          sDataColumnNew({ suppliers, contacts });
+        } else if (tabPage == 3 && dataMaterialsFields) {
+          const materials = dataMaterialsFields?.materials || [];
+          sDataColumnNew({ materials });
+        } else if (tabPage == 4 && dataProductsFields) {
+          const products = dataProductsFields?.products || [];
+          sDataColumnNew({ products });
         } else {
-            // Thêm dữ liệu xuất vào trường dữ liệu
-            const updatedDataAffter = dataEmty[type].filter((item) => item.value !== value);
-            sDataEmty((prev) => ({ ...prev, [type]: updatedDataAffter }));
-            sDataColumnNew((prev) => ({ ...prev, [type]: [obDataAffter, ...prev[type]] }));
+          sDataColumnNew({});
         }
-    };
+      }
+    } else if (type == 'sampleImport') {
+      sSampleImport(value?.target.checked);
+    }
+  };
 
-    //Chọn tất cả & bỏ chọn tất cả
-    const HandleCheckAll = (type, parent, dataEmty, sDataEmty) => {
-        if (type === "addAll") {
-            sDataEmty((prev) => ({
-                ...prev,
-                [parent]: [...dataEmty[parent], ...dataColumnNew[parent]],
-            }));
-            sDataColumnNew((dataColumn) => ({ ...dataColumn, [parent]: [] }));
-        } else if (type === "deleteAll") {
-            sDataEmty((prev) => ({ ...prev, [parent]: [] }));
-            sDataColumnNew((prev) => ({ ...prev, [parent]: dataColumn[parent] }));
+  const parseAndSetData = (value, arrEmtyLength) => {
+    const parsedValue = JSON?.parse(value?.setup_colums);
+    const newArr = parseTemplateData(parsedValue, tabPage);
+
+    sArrEmty(prev => ({ ...prev, ...newArr }));
+
+    const mergedColumn = mergeDataColumn(dataColumnNew, arrEmtyLength);
+    sDataColumnNew(mergedColumn);
+
+    const filteredColumn = filterSelectedValues(mergedColumn, { ...arrEmty, ...newArr });
+    sDataColumnNew(filteredColumn);
+  };
+
+  const HandlePushItem = (value, type, dataEmty, sDataEmty) => {
+    const obDataAffter = (dataEmty[type] || []).find(item => item.value === value);
+
+    if (!obDataAffter) {
+      // Thêm dữ liệu vào trường dữ liệu xuất
+      const baseList = Array.isArray(dataColumnNew[type]) ? dataColumnNew[type] : [];
+      const newData = baseList.filter(e => value === e.value);
+      sDataEmty(prev => ({ ...prev, [type]: [...(dataEmty[type] || []), ...newData] }));
+      sDataColumnNew(prev => ({
+        ...prev,
+        [type]: (Array.isArray(prev[type]) ? prev[type] : []).filter(e => value !== e.value),
+      }));
+    } else {
+      // Thêm dữ liệu xuất vào trường dữ liệu
+      const updatedDataAffter = (dataEmty[type] || []).filter(item => item.value !== value);
+      sDataEmty(prev => ({ ...prev, [type]: updatedDataAffter }));
+      sDataColumnNew(prev => ({ ...prev, [type]: [obDataAffter, ...(Array.isArray(prev[type]) ? prev[type] : [])] }));
+    }
+  };
+
+  //Chọn tất cả & bỏ chọn tất cả
+  const HandleCheckAll = (type, parent, dataEmty, sDataEmty) => {
+    if (type === 'addAll') {
+      sDataEmty(prev => ({
+        ...prev,
+        [parent]: [...(dataEmty[parent] || []), ...(Array.isArray(dataColumnNew[parent]) ? dataColumnNew[parent] : [])],
+      }));
+      sDataColumnNew(dataColumn => ({ ...dataColumn, [parent]: [] }));
+    } else if (type === 'deleteAll') {
+      sDataEmty(prev => ({ ...prev, [parent]: [] }));
+      // Phục hồi lại toàn bộ danh sách field hiện có (gộp lại những field đang chọn + chưa chọn)
+      sDataColumnNew(prev => ({ ...prev, [parent]: [...(Array.isArray(prev[parent]) ? prev[parent] : []), ...(dataEmty[parent] || [])] }));
+    }
+  };
+
+  const _HandleSubmit = e => {
+    e.preventDefault();
+    sOnSending(true);
+  };
+
+  const _ServerSending = () => {
+    if (tabPage == 1) {
+      exportClient({
+        pageLimit,
+        clients: arrEmty.clients || [],
+        contacts: arrEmty.contacts || [],
+        address: arrEmty.address || [],
+      });
+    } else if (tabPage == 2) {
+      exportSuppliers({
+        pageLimit,
+        suppliers: arrEmty.suppliers || [],
+        contacts: arrEmty.contacts || [],
+      });
+    } else if (tabPage == 3) {
+      exportMaterials({
+        pageLimit,
+        materials: arrEmty.materials || [],
+      });
+    } else if (tabPage == 4) {
+      exportProducts({
+        pageLimit,
+        products: arrEmty.products || [],
+      });
+    }
+  };
+
+  useEffect(() => {
+    onSending && _ServerSending();
+  }, [onSending]);
+
+  const { values, columns } = useMemo(() => {
+    return transformDataForExcel(dataServer, arrEmty, tabPage, dataLang);
+  }, [dataServer, arrEmty.clients, arrEmty.contacts, arrEmty.address, arrEmty.suppliers, arrEmty.materials, arrEmty.products, tabPage, dataLang]);
+
+  const multiDataSet = [
+    {
+      columns: columns,
+      data: values,
+    },
+  ];
+
+  const _ServerSendingTemplate = () => {
+    var formData = new FormData();
+    if (tabPage == 1) {
+      arrEmty.clients.forEach((e, index) => {
+        formData.append(`setup_colums[clients][${index}]`, JSON.stringify(e));
+      });
+      arrEmty.contacts.forEach((e, index) => {
+        formData.append(`setup_colums[contacts][${index}]`, JSON.stringify(e));
+      });
+      arrEmty.address.forEach((e, index) => {
+        formData.append(`setup_colums[address][${index}]`, JSON.stringify(e));
+      });
+    } else if (tabPage == 2) {
+      arrEmty.suppliers.forEach((e, index) => {
+        formData.append(`setup_colums[suppliers][${index}]`, JSON.stringify(e));
+      });
+      arrEmty.contacts.forEach((e, index) => {
+        formData.append(`setup_colums[contacts][${index}]`, JSON.stringify(e));
+      });
+    } else if (tabPage == 3) {
+      arrEmty.materials.forEach((e, index) => {
+        formData.append(`setup_colums[materials][${index}]`, JSON.stringify(e));
+      });
+    } else if (tabPage == 4) {
+      arrEmty.products.forEach((e, index) => {
+        formData.append(`setup_colums[products][${index}]`, JSON.stringify(e));
+      });
+    }
+    formData.append(`tab`, tabPage);
+    Axios(
+      'POST',
+      `${'/api_web/Api_export_data/add_tempate_export?csrf_protection=true'}`,
+      {
+        data: formData,
+        headers: { 'Content-Type': 'multipart/form-data' },
+      },
+      (err, response) => {
+        if (!err) {
+          var { isSuccess, message, alert_type } = response.data;
+          showToat(alert_type || 'success', dataLang[message] || message || 'Lưu mẫu export thành công');
         }
-    };
-
-    const _HandleSubmit = (e) => {
-        e.preventDefault();
-        sOnSending(true);
-    };
-
-    const _ServerSending = () => {
-        const apiPaths = {
-            1: `/api_web/api_export_data/export_data_client/${pageLimit.page}/${pageLimit.limit}?csrf_protection=true`,
-        };
-        const apiUrl = apiPaths[tabPage] || "";
-
-        var formData = new FormData();
-        if (tabPage == 1) {
-            arrEmty.clients?.map((e, index) => {
-                formData.append(`field[${index}]`, e?.value);
-                if (arrEmty.address.length > 0) {
-                    arrEmty.address?.map((a, aIndex) => {
-                        formData.append(`field_arrAddress[${aIndex}]`, a?.value);
-                    });
-                }
-                if (arrEmty.contacts.length > 0) {
-                    arrEmty.contacts?.map((c, cIndex) => {
-                        formData.append(`field_contacts[${cIndex}]`, c?.value);
-                    });
-                }
-            });
-        }
-        Axios(
-            "POST",
-            `${apiUrl}`,
-            {
-                data: formData,
-                headers: { "Content-Type": "multipart/form-data" },
-                onUploadProgress: (progressEvent) => {
-                    const { loaded, total } = progressEvent;
-                    const percentage = Math.floor((loaded * 100) / total);
-                    sMultipleProgress(percentage);
-                },
-            },
-            (err, response) => {
-                if (!err) {
-                    var { success, data, message } = response.data;
-                    if (success) {
-                        sIsShow(true);
-                        sDataServer(data);
-                        showToat("success", "Export dữ liệu thành công");
-                    } else {
-                        setTimeout(() => {
-                            sMultipleProgress(0);
-                        }, 3000);
-                        showToat("error", dataLang[message] || message);
-                    }
-                }
-            }
-        );
         sOnSending(false);
-    };
-
-    useEffect(() => {
-        onSending && _ServerSending();
-    }, [onSending]);
-
-    const borders = {
-        top: { style: "thin" },
-        bottom: { style: "thin" },
-        left: { style: "thin" },
-        right: { style: "thin" },
-    };
-    const alignment = {
-        horizontal: "center",
-    };
-    // const { values, columns } = useMemo(() => {
-    //     const allFields = [...arrEmty.clients, ...arrEmty.contacts, ...arrEmty.address];
-
-    //     const dataCustom = dataServer
-    //         .map((e, index) => {
-    //             const { arrAddress, contacts, ...obBefore } = e;
-    //             let temp = [];
-    //             const contactsLength = e?.contacts?.length;
-    //             const arrAddressLength = e?.arrAddress?.length;
-    //             if (e?.contacts && (contactsLength > arrAddressLength || contactsLength == arrAddressLength)) {
-    //                 temp = e.contacts?.map((contact, index) => {
-    //                     const address = e.arrAddress ? e.arrAddress[index] : null;
-    //                     return {
-    //                         ...obBefore,
-    //                         ...contact,
-    //                         ...address,
-    //                     };
-    //                 });
-    //             } else if (e.arrAddress) {
-    //                 temp = e.arrAddress?.map((address, index) => {
-    //                     const contact = e.contacts ? e.contacts[index] : null;
-    //                     return {
-    //                         ...obBefore,
-    //                         ...address,
-    //                         ...contact,
-    //                     };
-    //                 });
-    //             } else {
-    //                 temp = [obBefore];
-    //             }
-    //             return temp;
-    //         })
-    //         .flat();
-    //     const values = dataCustom.flatMap((item) => {
-    //         const baseRow = allFields.map((field) => {
-    //             return item[field.value] || "";
-
-    //         });
-    //         return [baseRow];
-    //     });
-
-    //     const columns = allFields.map((header) => ({
-    //         title: `${dataLang[header.label] || header.label}`,
-    //         width: { wpx: 170 },
-    //         style: { border: borders, fill: { fgColor: { rgb: "C7DFFB" } }, font: { bold: true } },
-    //     }));
-    //     return { values, columns };
-    // }, [dataServer, arrEmty.clients, arrEmty.contacts, arrEmty.address]);
-    const { values, columns } = useMemo(() => {
-        const examp = {
-            1: [...arrEmty.clients, ...arrEmty.contacts, ...arrEmty.address],
-            2: [...arrEmty.clients, ...arrEmty.contacts],
-        };
-        // const allFields = [...arrEmty.clients, ...arrEmty.contacts, ...arrEmty.address];
-        const allFields = examp[tabPage];
-
-        const checkValue = (e, contacts, arrAddress, temp) => {
-            if (contacts && (contacts?.length > arrAddress?.length || contacts?.length == arrAddress?.length)) {
-                temp = contacts?.map((contact, index) => {
-                    const address = arrAddress ? arrAddress[index] : null;
-                    return {
-                        ...e,
-                        ...contact,
-                        ...address,
-                    };
-                });
-            } else if (arrAddress) {
-                temp = arrAddress?.map((address, index) => {
-                    const contact = contacts ? contacts[index] : null;
-                    return {
-                        ...e,
-                        ...address,
-                        ...contact,
-                    };
-                });
-            } else {
-                temp = [e];
-            }
-            return temp;
-        };
-
-        const dataCustom = dataServer
-            .map((e, index) => {
-                let temp = [];
-                // const { arrAddress, contacts, ...obBefore } = e;
-                const contactsLength = e?.contacts?.length;
-                const arrAddressLength = e?.arrAddress?.length;
-                if (tabPage == 1) {
-                    // if (e?.contacts && (contactsLength > arrAddressLength || contactsLength == arrAddressLength)) {
-                    //     temp = e.contacts?.map((contact, index) => {
-                    //         const address = e.arrAddress ? e.arrAddress[index] : null;
-                    //         return {
-                    //             ...e,
-                    //             ...contact,
-                    //             ...address,
-                    //         };
-                    //     });
-                    // } else if (e.arrAddress) {
-                    //     temp = e.arrAddress?.map((address, index) => {
-                    //         const contact = e.contacts ? e.contacts[index] : null;
-                    //         return {
-                    //             ...e,
-                    //             ...address,
-                    //             ...contact,
-                    //         };
-                    //     });
-                    // } else {
-                    //     temp = [e];
-                    // }
-                    //  const { arrAddress, contacts, ...obBefore } = e;
-                    temp = checkValue(e, e.contacts, e.arrAddress, temp);
-                }
-                // if (tabPage == 2) {
-                //     checkValue(e, [], [], temp);
-                // }
-                return temp;
-            })
-            .flat();
-
-        const values = dataCustom.flatMap((item) => {
-            const baseRow = allFields?.map((field) => item[field?.value] || "");
-            return [baseRow];
-        });
-
-        const columns = allFields?.map((header) => ({
-            title: `${dataLang[header.label] || header.label}`,
-        }));
-        return { values, columns };
-    }, [dataServer, arrEmty.clients, arrEmty.contacts, arrEmty.address]);
-    const multiDataSet = [
-        {
-            columns: columns,
-            data: values,
-        },
-    ];
-
-    const _ServerSendingTemplate = () => {
-        var formData = new FormData();
-        if (tabPage == 1) {
-            arrEmty.clients.forEach((e, index) => {
-                formData.append(`setup_colums[clients][${index}]`, JSON.stringify(e));
-            });
-            arrEmty.contacts.forEach((e, index) => {
-                formData.append(`setup_colums[contacts][${index}]`, JSON.stringify(e));
-            });
-            arrEmty.address.forEach((e, index) => {
-                formData.append(`setup_colums[address][${index}]`, JSON.stringify(e));
-            });
-        }
-        formData.append(`tab`, tabPage);
-        Axios(
-            "POST",
-            `${"/api_web/Api_export_data/add_tempate_export?csrf_protection=true"}`,
-            {
-                data: formData,
-                headers: { "Content-Type": "multipart/form-data" },
-            },
-            (err, response) => {
-                if (!err) {
-                    var { isSuccess, message, alert_type } = response.data;
-                    Toast.fire({
-                        icon: `${alert_type}`,
-                        title: `${dataLang[message]}`,
-                    });
-                }
-                // sOnLoadingDataBack(true);
-                sOnSending(false);
-            }
-        );
-    };
-
-    useEffect(() => {
-        onSending && sampleImport && _ServerSendingTemplate();
-    }, [onSending]);
-
-    const objectProps = {
-        dataLang,
-        dataColumnNew,
-        sDataEmty: sArrEmty,
-        HandleCheckAll,
-        tabPage,
-        HandlePushItem,
-        dataEmty: arrEmty,
-    };
-
-    // breadcrumb
-    const breadcrumbItems = [
-        {
-            label: `Export dữ liệu`,
-            // href: "/",
-        },
-        {
-            label: `${dataLang?.import_category || "import_category"}`,
-        },
-    ];
-
-    return (
-        <>
-            <LayOutTableDynamic
-                head={
-                    <Head>
-                        <title>{"Export dữ liệu"}</title>
-                    </Head>
-                }
-                breadcrumb={
-                    <>
-                        {statusExprired ? (
-                            <EmptyExprired />
-                        ) : (
-                            <Breadcrumb
-                                items={breadcrumbItems}
-                                className="3xl:text-sm 2xl:text-xs xl:text-[10px] lg:text-[10px]"
-                            />
-                        )}
-                    </>
-                }
-                titleButton={
-                    <h2 className="text-title-section text-[#52575E] capitalize font-medium">
-                        Export dữ liệu danh mục
-                    </h2>
-                }
-                fillterTab={
-                    <div className="flex items-center col-span-6 gap-4 flex-nowrap h-fit">
-                        {dataTab &&
-                            dataTab.map((e) => {
-                                return (
-                                    <div>
-                                        <TabClient
-                                            key={e.id}
-                                            onClick={_HandleSelectTab.bind(this, `${e.id}`)}
-                                            active={e.id}
-                                            className="text-[#0F4F9E] my-1 bg-[#e2f0fe] hover:bg-blue-400 hover:text-white transition-all ease-linear"
-                                        >
-                                            {e.name}
-                                        </TabClient>
-                                    </div>
-                                );
-                            })}
-                    </div>
-                }
-                table={
-                    <div className="flex flex-col w-full h-full">
-                        <TitleHeader {...objectProps} />
-                        {onFetchTemple ? (
-                            <Loading />
-                        ) : (
-                            (tabPage == 1 && <Client {...objectProps} />) ||
-                            (tabPage == 2 && <Supplier {...objectProps} />) ||
-                            (tabPage == 3 && <Materials {...objectProps} />) ||
-                            (tabPage == 4 && <Products {...objectProps} />)
-                        )}
-                    </div>
-                }
-                showTotal={true}
-                total={
-                    <Progress multipleProgress={multipleProgress} />
-                }
-                pagination={
-                    <BtnParent
-                        sPageLimit={sPageLimit}
-                        {...objectProps}
-                        pageLimit={pageLimit}
-                        _HandleChange={_HandleChange}
-                        dataTemplate={dataTemplate}
-                        templateValue={templateValue}
-                        sTemplateValue={sTemplateValue}
-                        handleMenuOpen={handleMenuOpen}
-                        sampleImport={sampleImport}
-                        isShow={isShow}
-                        sIsShow={sIsShow}
-                        onSending={onSending}
-                        multiDataSet={multiDataSet}
-                        sMultipleProgress={sMultipleProgress}
-                        _HandleSubmit={_HandleSubmit}
-                    />
-                }
-            />
-        </>
+      }
     );
+  };
+
+  useEffect(() => {
+    onSending && sampleImport && _ServerSendingTemplate();
+  }, [onSending]);
+
+  const objectProps = {
+    dataLang,
+    dataColumnNew,
+    sDataEmty: sArrEmty,
+    HandleCheckAll,
+    tabPage,
+    HandlePushItem,
+    dataEmty: arrEmty,
+  };
+
+  return (
+    <>
+      <LayOutTableDynamic
+        head={
+          <Head>
+            <title>{'Export dữ liệu'}</title>
+          </Head>
+        }
+        breadcrumb={<>{statusExprired ? <EmptyExprired /> : <Breadcrumb items={breadcrumbItems} className='3xl:text-sm 2xl:text-xs xl:text-[10px] lg:text-[10px]' />}</>}
+        titleButton={<h2 className='text-title-section text-[#52575E] capitalize font-medium'>Export dữ liệu danh mục</h2>}
+        fillterTab={
+          <div className='flex items-center col-span-6 gap-4 flex-nowrap h-fit'>
+            {dataTab &&
+              dataTab.map((e, index) => {
+                const perms = auth?.permissions_current || {};
+                const hasPerms = !!auth?.permissions_current && Object.keys(perms).length > 0;
+                const allowed = !hasPerms || (e.perm === 'products' ? Number(perms?.products?.is_export) == 1 : Number(perms?.[e.perm]?.is_export) == 1);
+                return (
+                  <div key={index}>
+                    <TabClient
+                      onClick={() => {
+                        if (!allowed) return showToat('error', 'Bạn không có quyền truy cập tab này');
+                        router.push({ pathname: router.route, query: { tab: e.id } });
+                      }}
+                      active={e.id}
+                      className={`${allowed ? 'text-[#0F4F9E] bg-[#e2f0fe] hover:bg-blue-400 hover:text-white' : 'text-gray-400 bg-gray-100 cursor-not-allowed hover:bg-gray-100 hover:text-gray-400'} my-1 transition-all ease-linear`}
+                    >
+                      {e.name}
+                    </TabClient>
+                  </div>
+                );
+              })}
+          </div>
+        }
+        table={
+          <div className='flex flex-col w-full h-full'>
+            <TitleHeader {...objectProps} />
+            {isLoadingColumn ||
+            isLoadingTemplate ||
+            (tabPage == 2 && isLoadingSupplierFields) ||
+            (tabPage == 3 && isLoadingMaterialsFields) ||
+            (tabPage == 4 && isLoadingProductsFields) ? (
+              <Loading />
+            ) : (
+              (tabPage == 1 && <Client {...objectProps} />) ||
+              (tabPage == 2 && <Supplier {...objectProps} />) ||
+              (tabPage == 3 && <Materials {...objectProps} />) ||
+              (tabPage == 4 && <Products {...objectProps} />)
+            )}
+          </div>
+        }
+        showTotal={true}
+        total={<Progress multipleProgress={multipleProgress} />}
+        pagination={
+          <BtnParent
+            sPageLimit={sPageLimit}
+            {...objectProps}
+            pageLimit={pageLimit}
+            _HandleChange={_HandleChange}
+            dataTemplate={dataTemplate}
+            templateValue={templateValue}
+            sTemplateValue={sTemplateValue}
+            handleMenuOpen={handleMenuOpen}
+            sampleImport={sampleImport}
+            isShow={isShow}
+            sIsShow={sIsShow}
+            onSending={onSending}
+            multiDataSet={multiDataSet}
+            sMultipleProgress={sMultipleProgress}
+            _HandleSubmit={_HandleSubmit}
+          />
+        }
+      />
+    </>
+  );
 };
 export default Export;

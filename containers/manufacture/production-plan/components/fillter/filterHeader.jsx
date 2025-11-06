@@ -2,10 +2,8 @@ import DateToDateComponent from "@/components/UI/filterComponents/dateTodateComp
 import MultiValue from "@/components/UI/mutiValue/multiValue";
 import SelectOptionLever from "@/components/UI/selectOptionLever/selectOptionLever";
 import { FnlocalStorage } from "@/utils/helpers/localStorage";
-import { ArrowDown2 } from "iconsax-react";
 import dynamic from "next/dynamic";
 import React, { useEffect } from "react";
-import DatePicker from "react-datepicker";
 const SelectComponent = dynamic(
     () => import("@/components/UI/filterComponents/selectComponent"),
     { ssr: false }

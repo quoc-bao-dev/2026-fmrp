@@ -1,1 +1,0 @@
-Công nợ phải thu

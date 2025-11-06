@@ -479,6 +479,7 @@ const InternalPlanForm = (props) => {
                   onChange={(value) => {
                     _HandleAddParent(value)
                   }}
+                  setSearch={_HandleSeachApi}
                   value={listData?.map((e) => e?.item)}
                   formatOptionLabel={(option) => selectItemsLabel(option)}
                   placeholder={dataLang?.returns_items || 'returns_items'}
