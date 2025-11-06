@@ -1,6 +1,5 @@
-import { getDateRangeFromValue } from "@/utils/helpers/getDateRange";
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const timeRanges = [
     { label: "Hôm nay", value: "today" },

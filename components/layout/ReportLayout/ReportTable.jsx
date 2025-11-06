@@ -1,5 +1,4 @@
-import React from "react";
-import { HeaderTable, RowTable } from "@/components/UI/common/Table";
+import { HeaderTable } from "@/components/UI/common/Table";
 import Loading from "@/components/UI/loading/loading";
 import NoData from "@/components/UI/noData/nodata";
 

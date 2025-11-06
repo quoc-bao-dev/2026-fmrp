@@ -1,6 +1,3 @@
-
-
-import Image from "next/image";
 import { Lightbox } from "react-modal-image";
 import { useDispatch, useSelector } from "react-redux";
 import Popup from "../popup";

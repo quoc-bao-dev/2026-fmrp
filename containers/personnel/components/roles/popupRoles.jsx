@@ -7,7 +7,7 @@ import PopupCustom from "@/components/UI/popup";
 import SelectOptionLever from "@/components/UI/selectOptionLever/selectOptionLever";
 import useToast from "@/hooks/useToast";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Edit as IconEdit, SearchNormal1 } from "iconsax-react";
+import { SearchNormal1 } from "iconsax-react";
 import React, { useEffect, useState } from "react";
 import { MdClear } from "react-icons/md";
 import { useSelector } from "react-redux";

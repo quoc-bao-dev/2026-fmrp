@@ -210,6 +210,9 @@ const Popup_dspt = (props) => {
                 note: result?.note,
             });
 
+            // Đồng bộ giá trị float hiện tại để khi chưa chỉnh sửa vẫn gửi đúng tổng tiền
+            setCurrentFloatValue(+result?.total || 0);
+
             return result;
         },
         enabled: open && !!id,
@@ -219,6 +222,15 @@ const Popup_dspt = (props) => {
     const _HandleSeachApi = debounce((inputValue) => {
         updateListValue({ searchListTypeofDoc: inputValue });
     }, 500);
+
+    // Đồng bộ currentFloatValue theo price để UI hiển thị gì thì gửi đúng cái đó
+    useEffect(() => {
+        if (listValue?.price === null || listValue?.price === "") {
+            setCurrentFloatValue(0);
+        } else if (typeof listValue?.price !== "undefined") {
+            setCurrentFloatValue(Number(listValue.price) || 0);
+        }
+    }, [listValue.price]);
 
     useEffect(() => {
         if (fetch.onSending) {
@@ -306,7 +318,10 @@ const Popup_dspt = (props) => {
                 }
                 break;
             case "price":
-                const priceChange = parseFloat(value?.target.value.replace(/,/g, ""));
+                // Hỗ trợ cả event (target.value) lẫn object từ NumericFormat (floatValue/value)
+                const rawVal = value?.target?.value ?? value?.value ?? "";
+                const fallbackParsed = rawVal !== "" ? parseFloat(String(rawVal).replace(/,/g, "")) : NaN;
+                const priceChange = typeof value?.floatValue !== "undefined" ? Number(value.floatValue) : fallbackParsed;
                 if (!isNaN(priceChange)) {
                     if (listValue.listTypeOfDocument.length > 0 && listValue.object?.value != "other" && priceChange > totalMoney) {
                         showToat("error", dataLang?.payment_err_aler || "payment_err_aler");
@@ -476,8 +491,8 @@ console.log(currentFloatValue)
         formData.append("branch_id", listValue.branch?.value);
         formData.append("objects", listValue.object?.value);
         formData.append("type_vouchers", listValue.typeOfDocument ? listValue.typeOfDocument?.value : "");
-        // Sử dụng currentFloatValue thay vì listValue.price
-        formData.append("total", currentFloatValue);
+        // Gửi tổng tiền theo giá trị hiển thị (price)
+        formData.append("total", listValue.price);
         formData.append("payment_modes", listValue.method?.value);
 
         if (listValue.object?.value == "other") {
@@ -878,6 +893,8 @@ console.log(currentFloatValue)
                                             }
                                         }
                                         setCurrentFloatValue(floatValue);
+                                        // Đồng bộ ngay price với giá trị vừa nhập để gửi đúng tổng tiền
+                                        updateListValue({ price: floatValue });
                                         
                                         // Cập nhật tỷ lệ số tiền cho từng chứng từ khi tổng số tiền thay đổi
                                         if (listValue.listTypeOfDocument?.length > 0) {

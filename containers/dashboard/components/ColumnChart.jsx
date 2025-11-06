@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react'
-import dynamic from "next/dynamic";
-import { ArrowRight2 } from "iconsax-react";
+import NoData from '@/components/UI/noData/nodata';
 import { useGetProductionPlan } from '@/hooks/dashboard/useGetProductionPlan';
 import useSetingServer from '@/hooks/useConfigNumber';
 import formatNumberConfig from "@/utils/helpers/formatnumber";
-import NoData from '@/components/UI/noData/nodata';
+import dynamic from "next/dynamic";
+import React from 'react';
 
 const Column = dynamic(() => import("@ant-design/plots").then(({ Column }) => Column), { ssr: false });
 

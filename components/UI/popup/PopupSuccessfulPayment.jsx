@@ -1,12 +1,7 @@
-import ButtonAnimationNew from "@/components/common/button/ButtonAnimationNew";
-import CheckIcon from "@/components/icons/common/CheckIcon";
-import DownloadIcon from "@/components/icons/common/DownloadIcon";
-import UpgradeIcon from "@/components/icons/common/UpgradeIcon";
-import PopupCustom from "@/components/UI/popup";
 import { Lexend_Deca } from "@next/font/google";
+import { Add as IconClose } from "iconsax-react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
-import { Add as IconClose } from "iconsax-react";
 
 const deca = Lexend_Deca({
   subsets: ["latin"],

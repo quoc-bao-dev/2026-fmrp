@@ -1,12 +1,10 @@
-import React from "react";
-import Popup from "reactjs-popup";
-
+import useActionRole from "@/hooks/useRole";
+import useToast from "@/hooks/useToast";
 import { Inter, Lexend_Deca } from "@next/font/google";
 import Image from "next/image";
-import Zoom from "../zoomElement/zoomElement";
 import { useSelector } from "react-redux";
-import useToast from "@/hooks/useToast";
-import useActionRole from "@/hooks/useRole";
+import Popup from "reactjs-popup";
+import Zoom from "../zoomElement/zoomElement";
 const deca = Lexend_Deca({
     subsets: ["latin"],
     weight: ["300", "400", "500", "600", "700"],

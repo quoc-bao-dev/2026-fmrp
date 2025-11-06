@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect, cloneElement, isValidElement } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { cloneElement, isValidElement, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { AnimatePresence, motion } from 'framer-motion'
 
 const FilterDropdown = ({ children, trigger, className, classNameContainer, dropdownId, placement = "bottom-right", ...props }) => {
     const dropdownRef = useRef(null);

@@ -1,16 +1,6 @@
-import Head from "next/head";
-import { useRouter } from "next/router";
-import React, { useEffect, useRef, useState } from "react";
-import { _ServerInstance as Axios } from "/services/axios";
-
-import Swal from "sweetalert2";
-
-import * as XLSX from "xlsx";
-
-import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
-
-import { NumericFormat } from "react-number-format";
-
+import Loading from "@/components/UI/loading/loading";
+import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
+import { formatMoment } from "@/utils/helpers/formatMoment";
 import {
     Add,
     ArrowDown,
@@ -21,21 +11,19 @@ import {
     Notification,
     RefreshCircle
 } from "iconsax-react";
-
-import Loading from "@/components/UI/loading/loading";
-
-import dynamic from "next/dynamic";
-
-
-import Select, { components } from "react-select";
-
+import Head from "next/head";
+import { useRouter } from "next/router";
+import React, { useEffect, useRef, useState } from "react";
+import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import { TiTick } from "react-icons/ti";
-
-import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
-import { formatMoment } from "@/utils/helpers/formatMoment";
+import { NumericFormat } from "react-number-format";
+import Select, { components } from "react-select";
+import Swal from "sweetalert2";
+import * as XLSX from "xlsx";
 import FormClient from "./components/formClient";
 import Popup_status from "./components/popup/popup";
 import Popup_stages from "./components/popup/popupStages";
+import { _ServerInstance as Axios } from "/services/axios";
 
 const Toast = Swal.mixin({
     toast: true,

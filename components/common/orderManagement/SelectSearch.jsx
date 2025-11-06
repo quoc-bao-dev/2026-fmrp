@@ -88,7 +88,7 @@ const SelectSearch = ({ options, onChange, value = [], formatOptionLabel, placeh
           <div className="2xl:p-6 p-5 pl-4 flex items-center justify-between gap-4 border-b">
             <CheckboxDefault
               label={'Chọn mặt hàng'}
-              checked={options.every(opt => value.some(item => item.value === opt.value))}
+              checked={options?.every(opt => value.some(item => item.value === opt.value))}
               onChange={handleSelectAll}
             />
             <p className="responsive-text-sm font-normal text-blue-color">{value.length} đã chọn</p>
@@ -103,8 +103,8 @@ const SelectSearch = ({ options, onChange, value = [], formatOptionLabel, placeh
             }}
           >
             <div className="p-1 flex flex-col gap-1">
-              {filteredOptions.length > 0 ? (
-                filteredOptions.map((option, index) => (
+              {filteredOptions?.length > 0 ? (
+                filteredOptions?.map((option, index) => (
                   <React.Fragment key={option.value}>
                     {index > 0 && <hr className="border-[#F3F3F4]" />}
                     <div

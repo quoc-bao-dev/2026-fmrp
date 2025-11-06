@@ -541,8 +541,9 @@ const Products = (props) => {
                                                             dataProduct={e}
                                                             dataProductExpiry={dataProductExpiry}
                                                             dataLang={dataLang}
+                                                            classNameBtn="w-full"
                                                         >
-                                                            <p className=" text-[#0F4F9E] hover:text-blue-500 transition-all ease-linear w-fit outline-none  text-left">
+                                                            <p className="w-full text-left text-[#0F4F9E] hover:text-blue-500 transition-all ease-linear outline-none break-words">
                                                                 {e?.name}
                                                             </p>
                                                         </Popup_Detail>

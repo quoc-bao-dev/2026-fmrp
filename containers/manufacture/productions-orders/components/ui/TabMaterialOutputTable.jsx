@@ -5,19 +5,17 @@ import AnimatedSearchInput from '@/components/common/search/AnimatedSearchInput'
 import ArrowCounterClockwiseIcon from '@/components/icons/common/ArrowCounterClockwiseIcon'
 import Loading from '@/components/UI/loading/loading'
 import NoData from '@/components/UI/noData/nodata'
+import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate'
 import { StateContext } from '@/context/_state/productions-orders/StateContext'
 import useFeature from '@/hooks/useConfigFeature'
 import useSetingServer from '@/hooks/useConfigNumber'
 import { useMaterialReturn } from '@/managers/api/productions-order/useMaterialReturn'
-import React, { useCallback, useContext, useMemo, useState } from 'react'
+import { formatMoment } from '@/utils/helpers/formatMoment'
+import formatNumberConfig from "@/utils/helpers/formatnumber"
+import { useCallback, useContext, useMemo, useState } from 'react'
 import { PiTable } from 'react-icons/pi'
 import ModalImage from 'react-modal-image'
 import { useDebounce } from 'use-debounce'
-import formatNumberConfig from "@/utils/helpers/formatnumber";
-import moment from 'moment/moment'
-import { formatMoment } from '@/utils/helpers/formatMoment'
-import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate'
-import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground'
 
 const tabs = [
     { id: "dashboard", name: "Biểu đồ thống kê" },

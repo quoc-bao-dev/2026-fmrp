@@ -4,7 +4,6 @@ import PlusIcon from "@/components/icons/common/PlusIcon";
 import PopupCustom from "@/components/UI/popup";
 import useToast from "@/hooks/useToast";
 import { useMutation } from "@tanstack/react-query";
-import { Edit as IconEdit } from "iconsax-react";
 import { useEffect, useState } from "react";
 import Select from "react-select";
 

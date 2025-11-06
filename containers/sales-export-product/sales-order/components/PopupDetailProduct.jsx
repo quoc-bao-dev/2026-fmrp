@@ -1,6 +1,7 @@
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { ColumnTablePopup, GeneralInformation, HeaderTablePopup } from "@/components/UI/common/TablePopup";
 import TagBranch from "@/components/UI/common/Tag/TagBranch";
+import Loading from "@/components/UI/loading/loading";
 import NoData from "@/components/UI/noData/nodata";
 import PopupCustom from "@/components/UI/popup";
 import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
@@ -8,7 +9,6 @@ import useSetingServer from "@/hooks/useConfigNumber";
 import { formatMoment } from "@/utils/helpers/formatMoment";
 import formatMoney from "@/utils/helpers/formatMoney";
 import formatNumberConfig from "@/utils/helpers/formatnumber";
-import Loading from "@/components/UI/loading/loading";
 import vi from "date-fns/locale/vi";
 import { TickCircle } from "iconsax-react";
 import { useState } from "react";
@@ -16,7 +16,6 @@ import { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import ModalImage from "react-modal-image";
 import { useSalesOrderDetail } from "../hooks/useSalesOrderDetail";
-import CustomAvatar from "@/components/UI/common/user/CustomAvatar";
 registerLocale("vi", vi);
 
 const PopupDetailProduct = (props) => {

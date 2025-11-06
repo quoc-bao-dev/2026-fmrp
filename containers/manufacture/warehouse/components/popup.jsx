@@ -7,7 +7,6 @@ import PopupCustom from "@/components/UI/popup";
 import useToast from "@/hooks/useToast";
 import { SelectCore } from "@/utils/lib/Select";
 import { useMutation } from "@tanstack/react-query";
-import { Edit as IconEdit } from "iconsax-react";
 import { useEffect, useState } from "react";
 
 const PopupWarehouse = (props) => {

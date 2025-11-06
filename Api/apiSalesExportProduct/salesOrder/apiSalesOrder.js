@@ -12,6 +12,10 @@ const apiSalesOrder = {
         const response = await axiosCustom('GET', `/api_web/api_sale_order/searchOrders?csrf_protection=true`, params);
         return response.data
     },
+    async apiSearchOrderWithBranch(params) {
+        const response = await axiosCustom('GET', `/api_web/api_sale_order/searchOrders?csrf_protection=true`, params);
+        return response.data
+    },
     async apiHandingStatus(id, stt, data) {
         const response = await axiosCustom('POST', `/api_web/Api_sale_order/confirm/${id}/${stt}?csrf_protection=true`, data);
         return response.data

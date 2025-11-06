@@ -1,20 +1,15 @@
-import Image from 'next/image'
-import React, { useCallback, useEffect, useState } from 'react'
-
-import { AnimatePresence, motion } from 'framer-motion'
-
-import Skeleton from '../skeleton/Skeleton'
-import ButtonAnimationNew from '../button/ButtonAnimationNew'
-
-import { PiArrowRightBold, PiImage, PiPaperclip } from 'react-icons/pi'
 import CloseXIcon from '@/components/icons/common/CloseXIcon'
-
-import { useGetEmojiAndImprove } from '@/managers/api/recommen/useGetEmojiAndImprove'
-import { useSelector } from 'react-redux'
-import EmojiItem from './ui/EmojiItem'
-import { usePostRecommendation } from '@/managers/api/recommen/usePostRecommendation'
-import TextareaControlled from './ui/TextareaControlled'
 import useToast from '@/hooks/useToast'
+import { useGetEmojiAndImprove } from '@/managers/api/recommen/useGetEmojiAndImprove'
+import { usePostRecommendation } from '@/managers/api/recommen/usePostRecommendation'
+import { AnimatePresence, motion } from 'framer-motion'
+import React, { useCallback, useState } from 'react'
+import { PiArrowRightBold, PiImage } from 'react-icons/pi'
+import { useSelector } from 'react-redux'
+import ButtonAnimationNew from '../button/ButtonAnimationNew'
+import Skeleton from '../skeleton/Skeleton'
+import EmojiItem from './ui/EmojiItem'
+import TextareaControlled from './ui/TextareaControlled'
 
 const PopupFeelsCustomer = ({ onClose }) => {
     const [activeEmoji, setActiveEmoji] = useState(undefined)

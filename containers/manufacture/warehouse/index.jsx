@@ -1,17 +1,17 @@
 import { BtnAction } from "@/components/UI/BtnAction";
+import Breadcrumb from "@/components/UI/breadcrumb/BreadcrumbCustom";
 import OnResetData from "@/components/UI/btnResetData/btnReset";
 import ContainerPagination from "@/components/UI/common/ContainerPagination/ContainerPagination";
-import TitlePagination from "@/components/UI/common/ContainerPagination/TitlePagination";
+import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { EmptyExprired } from "@/components/UI/common/EmptyExprired";
 import {
     ColumnTable,
     HeaderTable,
     RowItemTable,
 } from "@/components/UI/common/Table";
+import { TagColorProduct } from "@/components/UI/common/Tag/TagStatus";
 import {
-    Container,
-    ContainerBody,
-    LayOutTableDynamic,
+    LayOutTableDynamic
 } from "@/components/UI/common/layout";
 import DropdowLimit from "@/components/UI/dropdowLimit/dropdowLimit";
 import ExcelFileComponent from "@/components/UI/filterComponents/excelFilecomponet";
@@ -46,9 +46,6 @@ import PopupWarehouse from "./components/popup";
 import { useWarehouseDetail } from "./hooks/useWarehouseDetail";
 import { useWarehouseList } from "./hooks/useWarehouseList";
 import { useWarehouseLocation } from "./hooks/useWarehouseLocation";
-import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
-import { TagColorProduct } from "@/components/UI/common/Tag/TagStatus";
-import Breadcrumb from "@/components/UI/breadcrumb/BreadcrumbCustom";
 
 const initialState = {
     idWarehouse: "",
@@ -974,7 +971,7 @@ const Warehouse = (props) => {
                                                                         textAlign={"center"}
                                                                         colSpan={1}
                                                                         // textSize={"text-[13px]"}
-                                                                        className="py-3 font-semibold border-b"
+                                                                        className="py-3 font-semibold border-b responsive-text-base !text-new-blue"
                                                                     >
                                                                         {item?.quantity ? (
                                                                             <>
@@ -982,7 +979,7 @@ const Warehouse = (props) => {
                                                                                     {formatNumber(+item?.quantity)}
                                                                                 </span>
                                                                                 /
-                                                                                <span className="relative pt-1 pl-0.5 text-xs capitalize top-1">
+                                                                                <span className="relative pt-1 pl-0.5 capitalize top-1">
                                                                                     {e?.unit}
                                                                                 </span>
                                                                             </>

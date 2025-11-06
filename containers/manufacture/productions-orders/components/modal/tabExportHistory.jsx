@@ -2,10 +2,8 @@
 import apiProductionsOrders from '@/Api/apiManufacture/manufacture/productionsOrders/apiProductionsOrders';
 import OnResetData from '@/components/UI/btnResetData/btnReset';
 import ContainerPagination from '@/components/UI/common/ContainerPagination/ContainerPagination';
-import TitlePagination from '@/components/UI/common/ContainerPagination/TitlePagination';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { ColumnTable, HeaderTable, RowItemTable, RowTable } from '@/components/UI/common/Table';
-import DropdowLimit from '@/components/UI/dropdowLimit/dropdowLimit';
 import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet';
 import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 import Loading from '@/components/UI/loading/loading';
@@ -20,12 +18,10 @@ import usePagination from '@/hooks/usePagination';
 import { formatMoment } from '@/utils/helpers/formatMoment';
 import formatNumberConfig from "@/utils/helpers/formatnumber";
 import { useQuery } from '@tanstack/react-query';
-import { Grid6 } from 'iconsax-react';
 import { debounce } from 'lodash';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { memo, useState } from 'react';
-import ModalImage from 'react-modal-image';
 import { useSelector } from 'react-redux';
 const TabExportHistory = memo(({ isStateModal, width, dataLang, listTab, typePageMoblie, isState }) => {
 

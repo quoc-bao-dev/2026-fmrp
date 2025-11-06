@@ -1,8 +1,6 @@
-import DatePicker from "react-datepicker";
 import SelectComponent from "@/components/UI/filterComponents/selectComponent";
-import { ArrowDown2 } from "iconsax-react";
-import { memo, useContext } from "react";
 import MultiValue from "@/components/UI/mutiValue/multiValue";
+import { memo, useContext } from "react";
 import { ProductionsOrdersContext } from "../../context/productionsOrders";
 
 const FilterHeader = memo(

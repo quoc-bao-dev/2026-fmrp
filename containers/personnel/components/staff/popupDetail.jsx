@@ -1,16 +1,15 @@
 import apiSatff from "@/Api/apiPersonnel/apiStaff";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import TagBranch from "@/components/UI/common/Tag/TagBranch";
+import Loading from "@/components/UI/loading/loading";
 import PopupCustom from "@/components/UI/popup";
 import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
 import { formatMoment } from "@/utils/helpers/formatMoment";
+import { getColorByParam, getRandomColors } from "@/utils/helpers/radomcolor";
 import { useQuery } from "@tanstack/react-query";
-import Loading from "@/components/UI/loading/loading";
-import { Image as IconImage } from "iconsax-react";
 import Image from "next/image";
 import { useState } from "react";
 import { useStaffDetail } from "../../hooks/staff/useStaffDetail";
-import { getColorByParam, getRandomColors } from "@/utils/helpers/radomcolor";
 const PopupDetail = (props) => {
     const [open, sOpen] = useState(false);
 

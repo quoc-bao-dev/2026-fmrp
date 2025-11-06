@@ -6,7 +6,6 @@ import formatNumberConfig from "@/utils/helpers/formatnumber";
 import Image from "next/image";
 import { memo, useContext } from "react";
 import { FiCornerDownRight } from "react-icons/fi";
-import ModalImage from "react-modal-image";
 import { ProductionsOrdersContext } from "../../context/productionsOrders";
 import TimelineChartStage from "./components/TimelineChartStage";
 

@@ -1,103 +1,16 @@
-import Link from 'next/link'
-import { useRouter } from 'next/router'
-import React, { useEffect, useState } from 'react'
-import { v4 as uuidv4 } from 'uuid'
+import useToast from '@/hooks/useToast';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { v4 as uuidv4 } from 'uuid';
 
-const Navbar = (props) => {
-  const router = useRouter()
-  //báo cáo bán hàng
-  const isNavbarSales = [
-    {
-      id: uuidv4(),
-      name: 'Báo cáo đơn hàng theo báo giá',
-      path: '/report-statistical/sales-report/quote',
-    },
-    {
-      id: uuidv4(),
-      name: 'Báo cáo hàng trả lại',
-      path: '/report-statistical/sales-report/returned-goods',
-    },
-    {
-      id: uuidv4(),
-      name: 'Báo cáo lịch giao hàng',
-      path: '/report-statistical/sales-report/delivery-schedules',
-    },
-    {
-      id: uuidv4(),
-      name: 'Tình trạng đơn hàng',
-      path: '/report-statistical/sales-eport/status-row',
-    },
-    {
-      id: uuidv4(),
-      name: 'Doanh số theo đơn hàng',
-      path: '/report-statistical/sales-report/order-revenue',
-    },
-    {
-      id: uuidv4(),
-      name: 'Phân tích bán hàng',
-      path: '/report-statistical/sales-report/sales-analysis',
-    },
-    {
-      id: uuidv4(),
-      name: 'Bảng kê giá bán gần nhất',
-      path: '/report-statistical/sales-report/price-list',
-    },
-    {
-      id: uuidv4(),
-      name: 'Nhật ký bán hàng',
-      path: '/report-statistical/sales-report/selling-diary',
-    },
-  ]
-  // báo cáo mua hàng
-  const isNavbarPurchase = [
-    {
-      id: uuidv4(),
-      title: ' Báo cáo mặt hàng nhà cung cấp',
-      children: [
-        {
-          id: uuidv4(),
-          name: 'Báo cáo chi tiết yêu cầu mua hàng',
-          path: '/report-statistical/purchase-report/purchases',
-        },
-        {
-          id: uuidv4(),
-          name: 'Báo cáo tổng hợp mua hàng',
-          path: '/report-statistical/purchase-report/summary-of-purchases',
-        },
-        {
-          id: uuidv4(),
-          name: 'Báo cáo sổ chi tiết mua hàng',
-          path: '/report-statistical/purchase-report/purchase-details-book',
-        },
-        {
-          id: uuidv4(),
-          name: 'Theo dõi đặt hàng',
-          path: '/report-statistical/purchase-report/order-tracking',
-        },
-      ],
-    },
-    {
-      id: uuidv4(),
-      title: 'Báo cáo công nợ nhà cung cấp',
-      children: [
-        {
-          id: uuidv4(),
-          name: 'Báo cáo tổng hợp công nợ phải trả',
-          path: '/report-statistical/purchase-report/summary-of_liabilities',
-        },
-        {
-          id: uuidv4(),
-          name: 'Báo cáo chi tiết công nợ phải trả theo mặt hàng',
-          path: '/report-statistical/purchase-report/debt-by-item',
-        },
-        {
-          id: uuidv4(),
-          name: 'Bảng kê mua hàng',
-          path: '/report-statistical/purchase-report/purchases-list',
-        },
-      ],
-    },
-  ]
+const Navbar = props => {
+  const { permissions_current: auth } = useSelector(state => state.auth);
+
+  const router = useRouter();
+  const showToast = useToast();
+
   // báo cáo tồn kho
   const isNavbarWarehouse = [
     {
@@ -143,7 +56,89 @@ const Navbar = (props) => {
         },
       ],
     },
-  ]
+  ];
+
+  // Quản lý sản xuất
+  const isNavbarProductionManager = [
+    {
+      id: uuidv4(),
+      name: 'Tổng quan sản xuất',
+      path: '/report-statistical/production-manager/dashboard',
+      disabled: auth?.report_manufacturing_dashboard?.is_view == 0,
+    },
+    {
+      id: uuidv4(),
+      name: 'Báo cáo định mức NVL',
+      path: '/report-statistical/production-manager/quota-materials',
+      disabled: auth?.report_boms?.is_view == 0,
+    },
+    {
+      id: uuidv4(),
+      name: 'Báo cáo tiến độ đơn hàng',
+      path: '/report-statistical/production-manager/order-progress',
+      disabled: auth?.report_order_progress?.is_view == 0,
+    },
+    {
+      id: uuidv4(),
+      name: 'Báo cáo NVL sử dụng',
+      path: '/report-statistical/production-manager/raw-materials-used',
+      disabled: auth?.report_material_usage?.is_view == 0,
+    },
+  ];
+
+  //báo cáo bán hàng
+  const isNavbarSales = [
+    {
+      id: uuidv4(),
+      name: 'Tổng quan bán hàng',
+      path: '/report-statistical/sales-report/dashboard',
+      disabled: auth?.report_sales_dashboard?.is_view == 0,
+    },
+    {
+      id: uuidv4(),
+      name: 'Doanh số theo bán hàng',
+      path: '/report-statistical/sales-report/sales-revenue',
+      disabled: auth?.report_sales_revenue?.is_view == 0,
+    },
+    {
+      id: uuidv4(),
+      name: 'Báo cáo giao hàng',
+      path: '/report-statistical/sales-report/deliveries',
+      disabled: auth?.report_deliveries?.is_view == 0,
+    },
+    {
+      id: uuidv4(),
+      name: 'Báo cáo trả lại hàng bán',
+      path: '/report-statistical/sales-report/returns',
+      disabled: auth?.report_returns?.is_view == 0,
+    },
+    {
+      id: uuidv4(),
+      name: 'Đối chiếu công nợ KH',
+      path: '/report-statistical/sales-report/customer-debt',
+      disabled: auth?.report_customer_debt?.is_view == 0,
+    },
+  ];
+
+  // báo cáo mua hàng
+  const isNavbarPurchase = [
+    {
+      id: uuidv4(),
+      name: 'Báo cáo nhập hàng',
+      path: '/report-statistical/purchase-report/import-goods',
+    },
+    {
+      id: uuidv4(),
+      name: 'Theo dõi đơn đặt hàng',
+      path: '/report-statistical/purchase-report/order-tracking',
+    },
+    {
+      id: uuidv4(),
+      name: 'Đối chiếu công nợ NCC',
+      path: '/report-statistical/purchase-report/supplier-debt',
+    },
+  ];
+
   // tồn quỹ
   const isNavbarFundBalance = [
     {
@@ -199,7 +194,8 @@ const Navbar = (props) => {
         },
       ],
     },
-  ]
+  ];
+
   // Công nợ phải thu
   const isNavbarReceivables = [
     {
@@ -222,158 +218,124 @@ const Navbar = (props) => {
       name: 'Bảng đối chiếu công nợ',
       path: '/report-statistical/receivables-debt/debt-comparison-table',
     },
-  ]
-  // Quản lý sản xuất
-  const isNavbarProductionManager = [
-    {
-      id: uuidv4(),
-      name: 'Báo cáo định mức NVL',
-      path: '/report-statistical/production-manager/quota-materials',
-    },
-    {
-      id: uuidv4(),
-      name: 'Báo cáo tiến độ theo đơn hàng',
-      path: '/report-statistical/production-manager/order-progress',
-    },
-    {
-      id: uuidv4(),
-      name: 'Báo cáo lệnh sản xuất theo công đoạn',
-      path: '/report-statistical/production-manager/stage-production-order',
-    },
-    {
-      id: uuidv4(),
-      name: 'Báo cáo nguyên liệu sử dụng',
-      path: '/report-statistical/production-manager/raw-materials-used',
-    },
-    {
-      id: uuidv4(),
-      name: 'Báo cáo thời gian sản xuất theo đơn hàng',
-      path: '/report-statistical/production-manager/time-order-production',
-    },
-    {
-      id: uuidv4(),
-      name: 'Báo cáo sản lượng chi tiết',
-      path: '/report-statistical/production-manager/detailed-output',
-    },
-    {
-      id: uuidv4(),
-      name: 'Báo cáo nhập kho thành phẩm',
-      path: '/report-statistical/production-manager/import-warehouse-products',
-    },
-    {
-      id: uuidv4(),
-      name: 'Báo cáo thời gian sản xuất theo sản phẩm',
-      path: '/report-statistical/production-manager/time-by-product',
-    },
-    {
-      id: uuidv4(),
-      name: 'Báo cáo sản xuất tổng hợp',
-      path: '/report-statistical/production-manager/synthetic-production',
-    },
-    {
-      id: uuidv4(),
-      name: 'Báo cáo thời gian sản xuất theo loại sản phẩm',
-      path: '/report-statistical/production-manager/time-type-product',
-    },
-  ]
+  ];
 
-  const [navbar, setNavbar] = useState([])
+  const [navbar, setNavbar] = useState([]);
 
   useEffect(() => {
-    const path = router.pathname
+    const path = router.pathname;
     switch (true) {
       case path.startsWith('/report-statistical/sales-report'):
-        setNavbar(isNavbarSales)
-        break
+        setNavbar(isNavbarSales);
+        break;
       case path.startsWith('/report-statistical/purchase-report'):
-        setNavbar(isNavbarPurchase)
-        break
+        setNavbar(isNavbarPurchase);
+        break;
       case path.startsWith('/report-statistical/warehouse-report'):
-        setNavbar(isNavbarWarehouse)
-        break
+        setNavbar(isNavbarWarehouse);
+        break;
       case path.startsWith('/report-statistical/fund-balance'):
-        setNavbar(isNavbarFundBalance)
-        break
+        setNavbar(isNavbarFundBalance);
+        break;
       case path.startsWith('/report-statistical/receivables-debt'):
-        setNavbar(isNavbarReceivables)
-        break
+        setNavbar(isNavbarReceivables);
+        break;
       case path.startsWith('/report-statistical/production-manager'):
-        setNavbar(isNavbarProductionManager)
-        break
+        setNavbar(isNavbarProductionManager);
+        break;
       default:
-        break
+        break;
     }
-  }, [router.pathname])
+  }, [router.pathname]);
 
   return (
-    <ul className="w-[17%] h-fit xl:p-4 2xl:p-6 pt-4 p-2 flex flex-col gap-6 border border-[#E7F2FE] bg-primary-06 rounded-lg">
+    <ul className={`w-[17%] h-fit xl:p-4 2xl:p-6 pt-4 p-2 flex flex-col border border-[#E7F2FE] bg-primary-06 rounded-lg ${navbar.some(item => item.children) ? 'gap-6' : 'gap-3'}`}>
       {navbar &&
-        navbar.map((item) => {
+        navbar.map(item => {
           return (
-            <div key={item.id} className="flex flex-col gap-4">
-              <h1 className="responsive-text-sm uppercase text-primary-01">{item.title}</h1>
-              <div className="flex flex-col gap-3 px-1.5">
+            <div key={item.id} className='flex flex-col gap-4'>
+              {item.title && <h1 className='responsive-text-sm uppercase text-primary-01'>{item.title}</h1>}
+              <div className={`flex flex-col gap-3 ${item.children ? 'px-1.5' : ''}`}>
                 {item.children ? (
-                  item.children.map((child) => {
+                  item.children.map(child => {
                     return (
-                      <div key={child.id} className="relative">
+                      <div key={child.id} className='relative'>
                         {child.disabled ? (
-                          <li className="group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-not-allowed opacity-50">
-                            <div className="flex items-center gap-2">
-                              <div className="size-1.5 rounded-full flex-shrink-0 bg-gray-400" />
-                              <div className="flex flex-col items-start w-full">
-                                <div className="responsive-text-sm text-gray-400">{child.name}</div>
+                          <li
+                            onClick={() => showToast('error', 'Bạn không có quyền truy cập')}
+                            className='group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer opacity-50'
+                          >
+                            <div className='flex items-center gap-2'>
+                              <div className='size-1.5 rounded-full flex-shrink-0 bg-gray-400' />
+                              <div className='flex flex-col items-start w-full'>
+                                <div className='responsive-text-sm text-gray-400'>{child.name}</div>
                               </div>
                             </div>
                           </li>
                         ) : (
-                          <Link href={child.path} className="relative">
+                          <Link href={child.path} className='relative'>
                             <li
-                              className={`group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
+                              className={`group font-medium flex p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
                                 router.pathname === child.path ? 'bg-typo-blue-5 text-white' : ''
                               } `}
                             >
-                              <div className="flex items-center gap-2">
+                              <div className='flex items-center gap-2'>
                                 <div
                                   className={`size-1.5 rounded-full flex-shrink-0 ${
                                     router.pathname === child.path ? 'bg-white/60' : 'bg-primary-01'
                                   } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
                                 />
-                                <div className="flex flex-col items-start w-full">
-                                  <div className="responsive-text-sm">{child.name}</div>
+                                <div className='flex flex-col items-start w-full'>
+                                  <div className='responsive-text-sm'>{child.name}</div>
                                 </div>
                               </div>
                             </li>
                           </Link>
                         )}
                       </div>
-                    )
+                    );
                   })
                 ) : (
-                  <Link href={item.path} key={item.id} className="relative">
-                    <li
-                      className={`group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
-                        router.pathname === item.path ? 'bg-typo-blue-5 text-white' : ''
-                      } `}
-                    >
-                      <div className="flex xl:w-[90%] xl:max-w-[90%] w-[85%] max-w-[85%] items-center gap-2">
-                        <div
-                          className={`size-1.5 rounded-full flex-shrink-0 ${
-                            router.pathname === item.path ? 'bg-white/60' : 'bg-primary-01'
-                          } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
-                        />
-                        <div className="flex flex-col items-start w-full">
-                          <div className="responsive-text-sm">{item.name}</div>
+                  <div key={item.id} className='relative'>
+                    {item.disabled ? (
+                      <li
+                        onClick={() => showToast('error', 'Bạn không có quyền truy cập')}
+                        className='group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer opacity-50'
+                      >
+                        <div className='flex w-full items-center gap-2'>
+                          <div className='size-1.5 rounded-full flex-shrink-0 bg-gray-400' />
+                          <div className='flex flex-col items-start w-full'>
+                            <div className='responsive-text-sm text-gray-400'>{item.name}</div>
+                          </div>
                         </div>
-                      </div>
-                    </li>
-                  </Link>
+                      </li>
+                    ) : (
+                      <Link href={item.path} className='relative'>
+                        <li
+                          className={`group font-medium flex p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
+                            router.pathname === item.path ? 'bg-typo-blue-5 text-white' : ''
+                          } `}
+                        >
+                          <div className='flex w-full items-center gap-2'>
+                            <div
+                              className={`size-1.5 rounded-full flex-shrink-0 ${
+                                router.pathname === item.path ? 'bg-white/60' : 'bg-primary-01'
+                              } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
+                            />
+                            <div className='flex flex-col items-start w-full'>
+                              <div className='responsive-text-sm'>{item.name}</div>
+                            </div>
+                          </div>
+                        </li>
+                      </Link>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
-          )
+          );
         })}
     </ul>
-  )
-}
-export default Navbar
+  );
+};
+export default Navbar;

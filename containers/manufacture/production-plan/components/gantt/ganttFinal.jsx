@@ -18,7 +18,6 @@ import * as d3 from "d3";
 import Image from "next/image";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import ModalImage from "react-modal-image";
 
 // e74c3c đỏ nhạt
 // 3b82f6  xanh dương
@@ -972,7 +971,7 @@ const GanttChart = ({
                                                             strokeWidth="1"
                                                         >
                                                             <path
-                                                                fill-rule="evenodd"
+                                                                fillRule="evenodd"
                                                                 d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                                                                 clipRule="evenodd"
                                                             ></path>

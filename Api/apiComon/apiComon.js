@@ -5,6 +5,12 @@ const apiComons = {
     const response = await axiosCustom('GET', `/api_web/Api_Branch/branchCombobox/?csrf_protection=true`, param)
     return response.data
   },
+
+  async apiBranchAllCombobox(param) {
+    const response = await axiosCustom('GET', `/api_web/branches/lookup`, param)
+    return response.data.data
+  },
+
   async apiSearchProductsVariant(params) {
     const response = await axiosCustom(
       'POST',
@@ -44,6 +50,12 @@ const apiComons = {
     const response = await axiosCustom('GET', `/api_web/api_client/searchClients?csrf_protection=true`, params)
     return response.data
   },
+
+  async apiSearchClientWithBranch(params) {
+    const response = await axiosCustom('GET', `/api_web/api_client/searchClients?csrf_protection=true`, params)
+    return response.data
+  },
+
   async apiSearcClientFilterByBranch(params) {
     const response = await axiosCustom('GET', `/api_web/api_client/client_option/?csrf_protection=true`, params)
     return response.data

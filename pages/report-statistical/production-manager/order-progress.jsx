@@ -1,7 +1,7 @@
-import OrderProgress from '@/containers/report-statistical/production-manager/order-progress'
+import OrderProgress from '@/containers/report-statistical/production-manager/OrderProgress';
 
-const Page = (props) => {
-    return <OrderProgress {...props} />
-}
+const Page = () => {
+    return <OrderProgress />;
+};
 
-export default Page
+export default Page;

@@ -1,6 +1,4 @@
-import React from "react";
 import { ArrowRight, Notification } from "iconsax-react"; // Đảm bảo bạn đã import các component ArrowRight và Notification từ thư viện react-feather
-import { data } from "autoprefixer";
 
 const SampleImport = ({ dataLang, tabPage }) => {
   return (

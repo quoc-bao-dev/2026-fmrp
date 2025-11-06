@@ -1,9 +1,8 @@
-import Loading from "@/components/UI/loading/loading";
 import Zoom from "components/UI/zoomElement/zoomElement";
 import Image from "next/image";
 import { useState } from "react";
-import Select, { components, MenuListProps } from "react-select";
 import DatePicker from "react-datepicker";
+import Select from "react-select";
 
 const ModalFilter = ({ isShow, handleIsShowFilter }) => {
     const [startDate, setStartDate] = useState(new Date());

@@ -1,17 +1,16 @@
 import apiCategory from "@/Api/apiMaterial/category/apiCategory";
+import EditIcon from "@/components/icons/common/EditIcon";
+import PlusIcon from "@/components/icons/common/PlusIcon";
 import ButtonCancel from "@/components/UI/button/buttonCancel";
 import ButtonSubmit from "@/components/UI/button/buttonSubmit";
 import PopupCustom from "@/components/UI/popup";
 import SelectOptionLever from "@/components/UI/selectOptionLever/selectOptionLever";
 import useToast from "@/hooks/useToast";
 import { useMutation } from "@tanstack/react-query";
-import { Edit as IconEdit } from "iconsax-react";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import Select from "react-select";
 import { useItemCategoryOptoptions } from "../../hooks/category/useItemCategoryOptoptions";
-import EditIcon from "@/components/icons/common/EditIcon";
-import PlusIcon from "@/components/icons/common/PlusIcon";
 
 const Popup_NVL = React.memo((props) => {
     const dataOptBranch = useSelector((state) => state.branch);

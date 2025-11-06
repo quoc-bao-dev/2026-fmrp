@@ -11,6 +11,7 @@ import TableSection from '@/components/layout/ReportLayout/TableSection'
 import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems'
 import PopupDetail from '@/containers/purchase-order/import/components/popup'
 import { useLanguageContext } from '@/context/ui/LanguageContext'
+import { usePersistedBranches } from '@/hooks/common/usePersistedBranches'
 import { useGetWarehouse } from '@/hooks/common/useWarehouses'
 import useFeature from '@/hooks/useConfigFeature'
 import usePagination from '@/hooks/usePagination'
@@ -29,11 +30,14 @@ import { useGetListReportImport } from './hook/useGetListReportImport'
 const breadcrumbItems = [
   {
     label: `Báo cáo`,
-    href: '/report-statistical',
   },
   {
-    label: `Tồn kho`,
+    label: `Chi tiết phiếu`,
   },
+  {
+    label: `Báo cáo nhập kho mua hàng`,
+    href: '/report-statistical/warehouse-report/import-purchase',
+  }
 ]
 
 const ImportPurchase = (props) => {
@@ -42,6 +46,8 @@ const ImportPurchase = (props) => {
   const dataLang = useLanguageContext()
   const statusExprired = useStatusExprired()
   const { dataProductExpiry, dataMaterialExpiry, dataProductSerial } = useFeature()
+  const { selectedBranches, setSelectedBranches } = usePersistedBranches()
+
 //   console.log("material_expiry", dataMaterialExpiry?.is_enable)
 //   console.log("product_expiry", dataProductExpiry?.is_enable)
 // console.log("product_serial", dataProductSerial?.is_enable)
@@ -59,6 +65,7 @@ const ImportPurchase = (props) => {
     endDate: undefined,
   })
   const [selectedWarehouse, setSelectedWarehouse] = useState(null)
+  const [isInitialized, setIsInitialized] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500)
   const [productOptions, setProductOptions] = useState([])
@@ -80,6 +87,7 @@ const ImportPurchase = (props) => {
     limit: limit,
     search: debouncedSearchValue,
     filter: {
+      branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
       warehouses_id: selectedWarehouse?.value,
       ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
       ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
@@ -88,10 +96,10 @@ const ImportPurchase = (props) => {
   })
 
   useEffect(() => {
-    if (refetchReportImport) {
+    if (refetchReportImport && isInitialized) {
       refetchReportImport()
     }
-  }, [limit, dateRange, selectedWarehouse, selectedProducts, debouncedSearchValue, currentPage, refetchReportImport])
+  }, [limit, dateRange, selectedWarehouse, selectedProducts, debouncedSearchValue, currentPage, refetchReportImport, isInitialized])
 
   useEffect(() => {
     // Cập nhật options khi dataProduct thay đổi
@@ -124,14 +132,15 @@ const ImportPurchase = (props) => {
 
   useEffect(() => {
     // Tự động chọn kho đầu tiên khi dữ liệu kho được tải về
-    if (warehouseData?.rResult && warehouseData.rResult.length > 0) {
+    if (warehouseData?.rResult && warehouseData.rResult.length > 0 && !isInitialized) {
       const firstWarehouse = warehouseData.rResult[0]
       setSelectedWarehouse({
         value: firstWarehouse.id,
         label: firstWarehouse.name,
       })
+      setIsInitialized(true)
     }
-  }, [warehouseData?.rResult])
+  }, [warehouseData?.rResult, isInitialized])
 
   const handleWarehouseChange = (value) => {
     const selected = warehouseData?.rResult?.find((w) => w.id === value)
@@ -173,35 +182,13 @@ const ImportPurchase = (props) => {
   }
 
   const handleSearch = (value) => {
-    setSearchValue(value?.target?.value || value)
+    const searchValue = value?.target?.value || (typeof value === 'string' ? value : '')
+    setSearchValue(searchValue)
   }
 
   // Add limit handler
   const handleLimitChange = (newLimit) => {
     setLimit(newLimit)
-  }
-
-  const handleResetData = () => {
-    // Reset date range
-    setDateRange({
-      startDate: undefined,
-      endDate: undefined,
-    })
-
-    // Reset warehouse selection
-    // setSelectedWarehouse(null)
-
-    // Reset product search and selection
-    setSearchTerm('')
-    setSelectedProducts([])
-
-    // Reset search value
-    setSearchValue('')
-
-    // Reset limit to default
-    setLimit(15)
-
-    // Reset to first page
     router.push({
       pathname: router.pathname,
       query: { ...router.query, page: 1 },
@@ -215,8 +202,11 @@ const ImportPurchase = (props) => {
       title={'Báo cáo nhập kho mua hàng'}
       statusExprired={statusExprired}
       breadcrumbItems={breadcrumbItems}
+      branchValue={selectedBranches}
+      onBranchChange={setSelectedBranches}
+      onBranchClear={() => setSelectedBranches([])}
       filterSection={
-        <div className="w-full items-center flex justify-between gap-10">
+        <div className="w-full items-center flex justify-between gap-4">
           <div className="flex gap-3">
             <DateToDateReport placeholder="Giai đoạn" value={dateRange} onChange={handleDateChange} />
 
@@ -254,7 +244,7 @@ const ImportPurchase = (props) => {
               value={searchValue}
               classNameBox="!py-2 2xl:!p-2.5"
             />
-            <OnResetData sOnFetching={handleResetData} onClick={handleResetData} className="!py-3" />
+            <OnResetData sOnFetching={refetchReportImport} className="!py-3" />
             <ExcelFileComponent
               dataLang={dataLang}
               filename="Danh sách nhập kho mua hàng"
@@ -390,7 +380,7 @@ const ImportPurchase = (props) => {
                 <RowItemTable className="w-40 flex-shrink-0 bg-white"></RowItemTable>
               )}
               <RowItemTable className="w-24 flex-shrink-0 bg-white"></RowItemTable>
-              <RowItemTable className="h-10 flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold w-32 flex-shrink-0 bg-white">
+              <RowItemTable className="h-10 flex items-center justify-end px-3 text-neutral-07 !responsive-text-sm font-semibold w-32 flex-shrink-0 bg-white uppercase">
                 Tổng cộng
               </RowItemTable>
               <RowItemTable
@@ -416,12 +406,14 @@ const ImportPurchase = (props) => {
         />
       }
       totalSection={
-        <Pagination
-          postsPerPage={limit}
-          totalPosts={Number(dataReportImport?.output?.iTotalDisplayRecords) || 0}
-          paginate={paginate}
-          currentPage={currentPage}
-        />
+        dataReportImport?.output?.iTotalDisplayRecords > 0 && (
+          <Pagination
+            postsPerPage={limit}
+            totalPosts={Number(dataReportImport?.output?.iTotalDisplayRecords) || 0}
+            paginate={paginate}
+            currentPage={currentPage}
+          />
+        )
       }
       paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}
     />

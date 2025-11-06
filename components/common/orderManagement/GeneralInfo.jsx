@@ -1,10 +1,9 @@
+import CalendarBlankIcon from '@/components/icons/common/CalendarBlankIcon'
 import { ConfigProvider, DatePicker } from 'antd'
 import viVN from 'antd/lib/locale/vi_VN'
 import dayjs from 'dayjs'
-import { BsCalendarEvent } from 'react-icons/bs'
-import InfoFormLabel from './InfoFormLabel'
-import CalendarBlankIcon from '@/components/icons/common/CalendarBlankIcon'
 import { PiHash } from 'react-icons/pi'
+import InfoFormLabel from './InfoFormLabel'
 
 //  Mã chứng từ
 export const DocumentNumber = ({ dataLang, value, onChange }) => (

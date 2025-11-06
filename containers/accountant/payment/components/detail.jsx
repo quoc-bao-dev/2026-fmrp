@@ -1,4 +1,5 @@
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
+import { ColumnTablePopup, HeaderTablePopup } from "@/components/UI/common/TablePopup";
 import TagBranch from "@/components/UI/common/Tag/TagBranch";
 import { TagColorMore, TagColorOrange, TagColorRed, TagColorSky } from "@/components/UI/common/Tag/TagStatus";
 import CustomAvatar from "@/components/UI/common/user/CustomAvatar";
@@ -9,9 +10,8 @@ import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
 import useSetingServer from "@/hooks/useConfigNumber";
 import { formatMoment } from "@/utils/helpers/formatMoment";
 import formatMoneyConfig from "@/utils/helpers/formatMoney";
-import React, { useState } from "react";
+import { useState } from "react";
 import { usePaymentDetail } from "../hooks/usePaymentDetail";
-import { ColumnTablePopup, HeaderTablePopup } from "@/components/UI/common/TablePopup";
 
 
 const PopupDetail = (props) => {

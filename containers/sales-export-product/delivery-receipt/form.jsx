@@ -9,6 +9,7 @@ import SelectCustomLabel from '@/components/common/orderManagement/SelectCustomL
 import SelectSearch from '@/components/common/orderManagement/SelectSearch'
 import SelectWithRadio from '@/components/common/orderManagement/SelectWithRadio'
 import TableHeader from '@/components/common/orderManagement/TableHeader'
+import CalendarBlankIcon from '@/components/icons/common/CalendarBlankIcon'
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar'
 import EmptyData from '@/components/UI/emptyData'
 import InPutMoneyFormat from '@/components/UI/inputNumericFormat/inputMoneyFormat'
@@ -41,7 +42,6 @@ import Image from 'next/image'
 import { useRouter } from 'next/router'
 import React, { useEffect, useState } from 'react'
 import { AiFillPlusCircle } from 'react-icons/ai'
-import { BsCalendarEvent } from 'react-icons/bs'
 import { LuBriefcase } from 'react-icons/lu'
 import { PiMapPinLight, PiUser } from 'react-icons/pi'
 import { TbNotes } from 'react-icons/tb'
@@ -51,7 +51,6 @@ import { routerDeliveryReceipt } from 'routers/sellingGoods'
 import { v4 as uuidv4 } from 'uuid'
 import PopupAddress from './components/PopupAddress'
 import { useDeliveryReceipItemAll } from './hooks/useDeliveryReceipItemAll'
-import CalendarBlankIcon from '@/components/icons/common/CalendarBlankIcon'
 
 const DeliveryReceiptForm = (props) => {
   // Router and API hooks
@@ -1135,6 +1134,14 @@ const DeliveryReceiptForm = (props) => {
                                         formatNumber={formatNumber}
                                         isError={errWarehouse}
                                       />
+                                      {(
+                                        errWarehouse && (
+                                          ce?.warehouse == null ||
+                                          (id && (ce?.warehouse?.label == null || ce?.warehouse?.warehouse_name == null))
+                                        )
+                                      ) && (
+                                        <span className="text-red-500 text-xs mt-1">Vui lòng chọn kho</span>
+                                      )}
                                     </div>
                                     {/* Số lượng */}
                                     <div className="flex items-center justify-center">

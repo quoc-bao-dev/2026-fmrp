@@ -1,55 +1,40 @@
-import { debounce } from "lodash";
-import dynamic from "next/dynamic";
-import Head from "next/head";
-import { useRouter } from "next/router";
-import { useEffect, useMemo, useState } from "react";
-import { v4 as uuid } from "uuid";
-
-import { useChangeValue } from "@/hooks/useChangeValue";
-import { useLimitAndTotalItems } from "@/hooks/useLimitAndTotalItems";
-import usePagination from "@/hooks/usePagination";
-import { useSetData } from "@/hooks/useSetData";
-import useStatusExprired from "@/hooks/useStatusExprired";
-import useTab from "@/hooks/useTab";
-import { useToggle } from "@/hooks/useToggle";
-
+import apiProductionPlan from "@/Api/apiManufacture/manufacture/productionPlan/apiProductionPlan";
+import { EmptyExprired } from "@/components/UI/common/EmptyExprired";
+import { Container } from "@/components/UI/common/layout";
+import PopupConfim from "@/components/UI/popupConfim/popupConfim";
+import { optionsQuery } from "@/configs/optionsQuery";
 import {
     CONFIRMATION_OF_CHANGES,
     TITLE_DELETE_ITEMS,
 } from "@/constants/delete/deleteItems";
-import { formatMoment } from "@/utils/helpers/formatMoment";
-import { FnlocalStorage } from "@/utils/helpers/localStorage";
-
-import ContainerPagination from "@/components/UI/common/ContainerPagination/ContainerPagination";
-import TitlePagination from "@/components/UI/common/ContainerPagination/TitlePagination";
-import { EmptyExprired } from "@/components/UI/common/EmptyExprired";
-import { Container } from "@/components/UI/common/layout";
-import Pagination from "@/components/UI/pagination";
-import PopupConfim from "@/components/UI/popupConfim/popupConfim";
-import useActionRole from "@/hooks/useRole";
-import { useSelector } from "react-redux";
-
-const BodyGantt = dynamic(() => import("./components/gantt"), { ssr: false });
-
-// const Header = dynamic(() => import("./components/header"), { ssr: false });
-import Header from "./components/header";
-
-// const FilterHeader = dynamic(() => import("./components/fillter/filterHeader"), { ssr: false });
-import apiProductionPlan from "@/Api/apiManufacture/manufacture/productionPlan/apiProductionPlan";
-import { optionsQuery } from "@/configs/optionsQuery";
 import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
 import { useCategoryOptions } from "@/containers/products/hooks/product/useCategoryOptions";
 import { useBranchList } from "@/hooks/common/useBranch";
 import { useClientComboboxNoSearchToParams } from "@/hooks/common/useClients";
 import { useProductsVariantByBranchSearch } from "@/hooks/common/useProductTypeProducts";
+import { useChangeValue } from "@/hooks/useChangeValue";
+import { useLimitAndTotalItems } from "@/hooks/useLimitAndTotalItems";
+import usePagination from "@/hooks/usePagination";
+import useActionRole from "@/hooks/useRole";
+import { useSetData } from "@/hooks/useSetData";
+import useStatusExprired from "@/hooks/useStatusExprired";
+import useTab from "@/hooks/useTab";
+import { useToggle } from "@/hooks/useToggle";
+import { formatMoment } from "@/utils/helpers/formatMoment";
+import { FnlocalStorage } from "@/utils/helpers/localStorage";
 import {
-    keepPreviousData,
-    useInfiniteQuery,
-    useQuery,
+    useInfiniteQuery
 } from "@tanstack/react-query";
-import FilterHeader from "./components/fillter/filterHeader";
+import { debounce } from "lodash";
+import dynamic from "next/dynamic";
+import Head from "next/head";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { ProductionsOrdersProvider } from "../productions-orders/context/productionsOrders";
 import GanttChart from "./components/gantt/ganttFinal";
+import Header from "./components/header";
+const BodyGantt = dynamic(() => import("./components/gantt"), { ssr: false });
 
 const initialData = {
     timeLine: [],

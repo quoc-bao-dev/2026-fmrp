@@ -7,7 +7,6 @@ import ContainerPagination from "@/components/UI/common/ContainerPagination/Cont
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { EmptyExprired } from "@/components/UI/common/EmptyExprired";
 import { ColumnTable, HeaderTable, RowItemTable, RowTable } from "@/components/UI/common/Table";
-import TagBranch from "@/components/UI/common/Tag/TagBranch";
 import { LayOutTableDynamic } from "@/components/UI/common/layout";
 import CustomAvatar from "@/components/UI/common/user/CustomAvatar";
 import DropdowLimit from "@/components/UI/dropdowLimit/dropdowLimit";
@@ -18,6 +17,7 @@ import SelectComponent from "@/components/UI/filterComponents/selectComponent";
 import Loading from "@/components/UI/loading/loading";
 import NoData from "@/components/UI/noData/nodata";
 import PopupConfim from "@/components/UI/popupConfim/popupConfim";
+import TrashIcon from "@/components/icons/common/TrashIcon";
 import { CONFIRM_DELETION, TITLE_DELETE } from "@/constants/delete/deleteTable";
 import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
 import { WARNING_STATUS_ROLE } from "@/constants/warningStatus/warningStatus";
@@ -33,7 +33,7 @@ import { routerInventory } from "@/routers/manufacture";
 import { formatMoment } from "@/utils/helpers/formatMoment";
 import formatNumberConfig from "@/utils/helpers/formatnumber";
 import { PopupParent } from "@/utils/lib/Popup";
-import { Grid6, Trash as IconDelete } from "iconsax-react";
+import { Grid6 } from "iconsax-react";
 import { debounce } from "lodash";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -44,7 +44,6 @@ import PopupDetail from "./components/popupDetail";
 import PopupStatus from "./components/popupStatus";
 import { useInventoryList } from "./hooks/useInventoryList";
 import Pagination from "/components/UI/pagination";
-import TrashIcon from "@/components/icons/common/TrashIcon";
 
 const initialState = {
     keySearch: "",

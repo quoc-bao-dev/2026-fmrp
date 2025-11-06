@@ -1,15 +1,12 @@
 "use client";
-import TooltipDefault from "@/components/common/tooltip/TooltipDefault";
-import { useAnimation, motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
+import AnimatedGeneraEachWord from "@/components/animations/animation/AnimatedGeneraEachWord";
 import { useSettingApp } from "@/hooks/useAuth";
+import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import BoxChatAI from "./BoxChatAI";
 import LoadingThreeDotsJumping from "./LoadingThreeDotsJumping";
-import AnimatedGeneraEachWord from "@/components/animations/animation/AnimatedGeneraEachWord";
-import AnimatedGeneraText from "@/components/animations/animation/AnimatedGeneraText";
-import { useDispatch } from "react-redux";
-import { useSelector } from "react-redux";
 
 const ToggleBotAI = ({ dataLang }) => {
   // const [openDrawer, setOpenDrawer] = useState(false);

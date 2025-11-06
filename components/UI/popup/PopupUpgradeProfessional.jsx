@@ -16,11 +16,10 @@ import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { Add as IconClose } from "iconsax-react";
 import Image from "next/image";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IoCopyOutline } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { Tooltip } from "react-tippy";
-import PopupSuccessfulPayment from "./PopupSuccessfulPayment";
 import { Customscrollbar } from "../common/Customscrollbar";
 
 const deca = Lexend_Deca({

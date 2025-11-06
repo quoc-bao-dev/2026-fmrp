@@ -1,7 +1,7 @@
 import { BtnAction } from "@/components/UI/BtnAction";
+import Breadcrumb from "@/components/UI/breadcrumb/BreadcrumbCustom";
 import OnResetData from "@/components/UI/btnResetData/btnReset";
 import ContainerPagination from "@/components/UI/common/ContainerPagination/ContainerPagination";
-import TitlePagination from "@/components/UI/common/ContainerPagination/TitlePagination";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { EmptyExprired } from "@/components/UI/common/EmptyExprired";
 import {
@@ -10,12 +10,8 @@ import {
   RowItemTable,
   RowTable,
 } from "@/components/UI/common/Table";
-import TagBranch from "@/components/UI/common/Tag/TagBranch";
 import {
-  Container,
-  ContainerBody,
-  ContainerTable,
-  LayOutTableDynamic,
+  LayOutTableDynamic
 } from "@/components/UI/common/layout";
 import DropdowLimit from "@/components/UI/dropdowLimit/dropdowLimit";
 import ExcelFileComponent from "@/components/UI/filterComponents/excelFilecomponet";
@@ -28,7 +24,6 @@ import Pagination from "@/components/UI/pagination";
 import SelectOptionLever from "@/components/UI/selectOptionLever/selectOptionLever";
 import { WARNING_STATUS_ROLE } from "@/constants/warningStatus/warningStatus";
 import { useBranchList } from "@/hooks/common/useBranch";
-import { useItemCategoryCombobox } from "@/hooks/common/useItemCategoryCombobox";
 import { useLimitAndTotalItems } from "@/hooks/useLimitAndTotalItems";
 import usePagination from "@/hooks/usePagination";
 import useActionRole from "@/hooks/useRole";
@@ -48,7 +43,6 @@ import { useSelector } from "react-redux";
 import Popup_Products from "./components/category/popup";
 import { useProductCategory } from "./hooks/category/useProductCategory";
 import { useCategoryOptions } from "./hooks/product/useCategoryOptions";
-import Breadcrumb from "@/components/UI/breadcrumb/BreadcrumbCustom";
 
 const ProductsCategory = (props) => {
   const dataLang = props.dataLang;

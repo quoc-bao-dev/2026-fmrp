@@ -1,31 +1,29 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
-import { Drawer } from "antd";
-import { IoClose } from "react-icons/io5";
-import { twMerge } from "tailwind-merge";
-import { PiSparkleBold } from "react-icons/pi";
-import { FaArrowUp } from "react-icons/fa6";
-import { Input } from "antd";
 import CheckIconMessenger from "@/components/icons/common/CheckIconMessenger";
 import ErrorIconMessenger from "@/components/icons/common/ErrorIconMessenger";
-import AvatarBotAI from "./AvatarBotAI";
-import Messenger from "./Messenger";
-import SelectAnswer from "./SelectAnswer";
+import LoadingDataChatBot from "@/components/icons/common/LoadingDataChatBot";
+import { PRODUCT_ANALYSIS } from "@/constants/TypeChatBot/typeChatBot";
 import {
     completeStepChatBot,
     fetchNewMessageAI,
     fetchStartMessageAI,
     useStartMessageAI,
 } from "@/managers/api/bot-AI/useMessageAI";
-import { useDispatch } from "react-redux";
-import { useSelector } from "react-redux";
-import { PRODUCT_ANALYSIS } from "@/constants/TypeChatBot/typeChatBot";
 import { handleDelay } from "@/utils/helpers/common";
-const { TextArea } = Input;
-import { AnimatePresence, motion, useAnimation } from "framer-motion";
-import LoadingDataChatBot from "@/components/icons/common/LoadingDataChatBot";
-import ResultChatBot from "./ResultChatBot";
+import { Drawer, Input } from "antd";
+import { AnimatePresence } from "framer-motion";
 import { useRouter } from "next/router";
+import { useEffect, useRef, useState } from "react";
+import { FaArrowUp } from "react-icons/fa6";
+import { IoClose } from "react-icons/io5";
+import { PiSparkleBold } from "react-icons/pi";
+import { useDispatch, useSelector } from "react-redux";
+import { twMerge } from "tailwind-merge";
+import AvatarBotAI from "./AvatarBotAI";
+import Messenger from "./Messenger";
+import ResultChatBot from "./ResultChatBot";
+import SelectAnswer from "./SelectAnswer";
+const { TextArea } = Input;
 
 const drawerStyles = {
     mask: {

@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react'
-import { ArrowUp, ArrowDown } from "iconsax-react";
 import { useGetStatusManufactures } from '@/hooks/dashboard/useGetStatusManufactures';
 import useSetingServer from '@/hooks/useConfigNumber';
 import formatNumberConfig from "@/utils/helpers/formatnumber";
+import { ArrowDown, ArrowUp } from "iconsax-react";
+import React from 'react';
 
 
 const ListTask = React.memo((props) => {

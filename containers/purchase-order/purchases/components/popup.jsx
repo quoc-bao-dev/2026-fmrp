@@ -3,6 +3,7 @@ import { ColumnTablePopup, GeneralInformation, HeaderTablePopup } from "@/compon
 import TagBranch from "@/components/UI/common/Tag/TagBranch";
 import { TagColorLime, TagColorOrange, TagColorSky } from "@/components/UI/common/Tag/TagStatus";
 import CustomAvatar from "@/components/UI/common/user/CustomAvatar";
+import ImagesItem from "@/components/UI/images/ImagesItem";
 import Loading from "@/components/UI/loading/loading";
 import NoData from "@/components/UI/noData/nodata";
 import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
@@ -12,11 +13,9 @@ import formatNumberConfig from "@/utils/helpers/formatnumber";
 import ExpandableContent from "components/UI/more";
 import { TickCircle } from "iconsax-react";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { usePurChasesDetail } from "../hooks/usePurChasesDetail";
 import PopupCustom from "/components/UI/popup";
-import Image from "next/image";
-import { useDispatch } from "react-redux";
-import ImagesItem from "@/components/UI/images/ImagesItem";
 
 const PopupDetail = (props) => {
     const dispatch = useDispatch();

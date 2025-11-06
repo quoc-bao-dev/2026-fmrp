@@ -5,6 +5,7 @@ export const useGetListReportStock = (data) => {
   return useQuery({
     queryKey: ['api_get_list_report_stock', data],
     queryFn: () => apiReport.apiGetListReportStock({ params: data }),
-    enabled: !!data,
+    staleTime: 5 * 60 * 1000, // 5 phút
+    cacheTime: 10 * 60 * 1000, // 10 phút
   })
 } 
