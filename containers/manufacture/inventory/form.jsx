@@ -123,6 +123,7 @@ const InventoryForm = props => {
         message: item?.message ?? '',
         code_items: item?.code_items ?? '',
         location_code: item?.location_code ?? '',
+        name_items: item?.name_items ?? '',
       }));
 
       setImportErrorBanner({
@@ -808,10 +809,10 @@ const InventoryForm = props => {
                       <p className='text-sm font-medium text-[#991B1B]'>{errorItem.message || 'Dòng dữ liệu không hợp lệ'}</p>
                       <div className='flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-neutral-06'>
                         <span>
-                          Dòng: <span className='font-semibold text-neutral-07'>{errorItem.row ?? '—'}</span>
+                          Mã hàng: <span className='font-semibold text-neutral-07'>{errorItem.code_items || '—'}</span>
                         </span>
                         <span>
-                          Mã hàng: <span className='font-semibold text-neutral-07'>{errorItem.code_items || '—'}</span>
+                          Tên hàng: <span className='font-semibold text-neutral-07'>{errorItem.name_items || '—'}</span>
                         </span>
                         <span>
                           Vị trí kho: <span className='font-semibold text-neutral-07'>{errorItem.location_code || '—'}</span>
