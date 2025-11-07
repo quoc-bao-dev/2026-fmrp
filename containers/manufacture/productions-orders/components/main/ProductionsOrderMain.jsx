@@ -246,6 +246,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
   };
 
   const stateFilterDropdown = useSelector(state => state.stateFilterDropdown);
+  const authState = useSelector(state => state.auth);
 
   // flag của list production
   const flagProductionOrders = useMemo(() => (dataProductionOrders ? dataProductionOrders?.pages?.flatMap(page => page?.productionOrders) : []), [dataProductionOrders]);
@@ -1629,8 +1630,8 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                           <div className='flex items-center gap-2'>
                             <span className='3xl:size-5 size-4 text-[#0375F3] shrink-0'>{tab.icon}</span>
                             <span className='3xl:text-base text-sm font-normal text-[#101828]'>
-                              {tab.label}{' '}
-                              {tab.type === 'complete_stage' && dataSeting?.package == '1' ? <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs'>pro</span> : null}
+                              {tab.label} {/* TODO: fix pro */}
+                              {authState?.is_upgrade && tab.type === 'complete_stage' && <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs'>pro</span>}
                             </span>
                           </div>
                         )}
