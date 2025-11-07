@@ -1,5 +1,6 @@
 import apiReport from '@/Api/apiReport-Statistical/apiReport';
 import apiSalesOrder from '@/Api/apiSalesExportProduct/salesOrder/apiSalesOrder';
+import apiSuppliers from '@/Api/apiSuppliers/suppliers/apiSuppliers';
 import { useQuery } from '@tanstack/react-query';
 
 //Đơn hàng trong báo cáo
@@ -29,6 +30,19 @@ export const useGetItemsWithBranch = params => {
         img: e.images,
         type: e.text_type,
       }));
+    },
+    enabled: !!hasBranch,
+  });
+};
+
+//Nhà cung cấp trong báo cáo
+export const useGetSuppliersWithBranch = params => {
+  const hasBranch = params?.branch_ids && (Array.isArray(params.branch_ids) ? params.branch_ids.length > 0 : true);
+  return useQuery({
+    queryKey: ['api_get_suppliers_with_branch', params],
+    queryFn: async () => {
+      const response = await apiSuppliers.apiListSuppliers({ params });
+      return response;
     },
     enabled: !!hasBranch,
   });

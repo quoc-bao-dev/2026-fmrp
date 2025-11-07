@@ -11,17 +11,17 @@ import ExcelIcon from '@/components/icons/common/Excel';
 import ReportLayout from '@/components/layout/ReportLayout';
 import { useLanguageContext } from '@/context/ui/LanguageContext';
 import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
+import { useGetItemsWithBranch, useGetSuppliersWithBranch } from '@/hooks/useComboBoxReport';
 import usePagination from '@/hooks/usePagination';
 import useStatusExprired from '@/hooks/useStatusExprired';
+import formatNumber from '@/utils/helpers/formatnumber';
 import moment from 'moment';
 import { useRouter } from 'next/router';
 import { useMemo, useState } from 'react';
 import { PiPackage } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
-import { useGetOrderTracking, useSalesOrderComboboxWithBranch } from './hook';
+import { useGetOrderTracking } from './hook';
 import { exportWithMergeSalesRevenue } from './hook/useExportExcel';
-import formatNumber from '@/utils/helpers/formatnumber';
-import { useGetItemsWithBranch } from '@/hooks/useComboBoxReport';
 
 const breadcrumbItems = [
   { label: 'Báo cáo' },
@@ -43,47 +43,32 @@ const OrderTracking = props => {
     startDate: undefined,
     endDate: undefined,
   });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
   const [selectedCustomer, setSelectedCustomer] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState([]);
   const [limit, setLimit] = useState(15);
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearchValue] = useDebounce(searchValue, 500);
-
-  // Search values riêng cho từng API
-  const [customerSearchValue, setCustomerSearchValue] = useState('');
-  const [debouncedCustomerSearchValue] = useDebounce(customerSearchValue, 500);
   const [orderSearchValue, setOrderSearchValue] = useState('');
   const [debouncedOrderSearchValue] = useDebounce(orderSearchValue, 500);
+
+  const [customerSearchValue, setCustomerSearchValue] = useState('');
+  const [debouncedCustomerSearchValue] = useDebounce(customerSearchValue, 500);
+
   const { selectedBranches, setSelectedBranches } = usePersistedBranches('report_branch_ids');
 
   const currentPage = Number(router.query.page) || 1;
-
-  // Hàm chuyển đổi Date object sang định dạng d/m/Y
-  const formatDateToDMY = date => {
-    if (!date) return undefined;
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
-  // Tạo filter với định dạng ngày d/m/Y
-  const getFormattedDateRange = () => {
-    if (!dateRange?.startDate || !dateRange?.endDate) return {};
-
-    return {
-      start_date: formatDateToDMY(new Date(dateRange.startDate)),
-      end_date: formatDateToDMY(new Date(dateRange.endDate)),
-    };
-  };
 
   const { data: itemsWithBranch } = useGetItemsWithBranch({
     search: debouncedOrderSearchValue,
     branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
   });
 
+  const { data: suppliersWithBranch } = useGetSuppliersWithBranch({
+    search: debouncedCustomerSearchValue,
+    branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
+  });
+
+  console.log(suppliersWithBranch);
   const {
     data: dataSalesRevenue,
     isFetching: isFetchingSalesRevenue,
@@ -91,11 +76,14 @@ const OrderTracking = props => {
   } = useGetOrderTracking({
     page: currentPage,
     limit: limit,
-    ...getFormattedDateRange(),
     search: debouncedSearchValue,
-    client_ids: selectedCustomer?.length > 0 ? selectedCustomer : undefined,
-    order_ids: selectedOrder?.length > 0 ? selectedOrder : undefined,
-    branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
+    filter: {
+      product_id: selectedOrder?.length > 0 ? selectedOrder : undefined,
+      id_suppliers: selectedCustomer?.length > 0 ? selectedCustomer : undefined,
+      branch_id: selectedBranches?.length > 0 ? selectedBranches : null,
+      ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
+      ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
+    },
   });
 
   // Dữ liệu dạng phẳng: dùng trực tiếp rResult
@@ -112,6 +100,10 @@ const OrderTracking = props => {
 
   const handleOrderChange = values => {
     setSelectedOrder(Array.isArray(values) ? values : []);
+  };
+
+  const handleCustomerChange = values => {
+    setSelectedCustomer(Array.isArray(values) ? values : []);
   };
 
   const handleSearch = value => {
@@ -221,7 +213,7 @@ const OrderTracking = props => {
       onBranchClear={() => setSelectedBranches([])}
       filterSection={
         <div className='w-full items-center flex justify-between gap-4'>
-          <div className='grid grid-cols-2 gap-3'>
+          <div className='grid grid-cols-3 gap-3'>
             <DateToDateReport placeholder='Từ ngày đến ngày' value={dateRange} onChange={handleDateChange} className='w-full' />
             <SelectSearchReport
               placeholder='Mặt hàng'
@@ -234,6 +226,19 @@ const OrderTracking = props => {
               className='w-full'
               options={itemsWithBranch || []}
               value={selectedOrder}
+              mode='multiple'
+            />
+             <SelectSearchReport
+              placeholder='Nhà cung cấp'
+              onSearch={value => {
+                setCustomerSearchValue(value);
+              }}
+              onChange={handleCustomerChange}
+              onClear={() => setSelectedCustomer([])}
+              icon={<PiPackage color='#9295A4' className='size-4' />}
+              className='w-full'
+              options={suppliersWithBranch || []}
+              value={selectedCustomer}
               mode='multiple'
             />
           </div>
@@ -257,7 +262,13 @@ const OrderTracking = props => {
                 <tr className='responsive-text-sm sticky top-0 z-50 bg-white capitalize'>
                   {columns.map((col, index) => (
                     <th key={col.key} className={col.thClass}>
-                      <div className={`w-full h-full flex ${col.thClass?.includes('text-center') ? 'items-center justify-center' : ''}  px-3 py-2 border-y border-r border-[#E0E0E1] ${index === 0 ? 'border-l' : ''}`}>{col.header}</div>
+                      <div
+                        className={`w-full h-full flex ${col.thClass?.includes('text-center') ? 'items-center justify-center' : ''}  px-3 py-2 border-y border-r border-[#E0E0E1] ${
+                          index === 0 ? 'border-l' : ''
+                        }`}
+                      >
+                        {col.header}
+                      </div>
                     </th>
                   ))}
                 </tr>
@@ -301,15 +312,11 @@ const OrderTracking = props => {
               <tfoot>
                 <tr className='bg-white sticky bottom-[-1px] z-50 responsive-text-sm'>
                   {columns.map((col, idx) => {
-                    const content = typeof col.footer === 'function'
-                      ? col.footer(dataSalesRevenue?.rTotal || {}, idx)
-                      : (idx === 1 ? 'Tổng cộng' : '');
+                    const content = typeof col.footer === 'function' ? col.footer(dataSalesRevenue?.rTotal || {}, idx) : idx === 1 ? 'Tổng cộng' : '';
 
                     return (
                       <td key={col.key} className={`${col.tdClass} font-semibold text-gray-700`}>
-                        <div className={`w-full h-full flex items-center justify-center px-3 py-2 uppercase border-t border-[#E0E0E1]`}>
-                          {content}
-                        </div>
+                        <div className={`w-full h-full flex items-center justify-center px-3 py-2 uppercase border-t border-[#E0E0E1]`}>{content}</div>
                       </td>
                     );
                   })}
