@@ -12,11 +12,13 @@ const PopupImportExcel = React.memo(props => {
   const fileInputRef = useRef(null);
   const [open, sOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [importError, setImportError] = useState(null);
 
   const { data: dataDateExcel, isLoading: isLoadingDateExcel, refetch: refetchDateExcel } = useGetDateExcel();
 
   const _HandleClose = () => {
     setSelectedFile(null);
+    setImportError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -42,6 +44,8 @@ const PopupImportExcel = React.memo(props => {
     },
     onError: error => {
       console.error('Import error:', error);
+      const message = error?.response?.data?.message || error?.message || 'Có lỗi xảy ra khi nhập file. Vui lòng kiểm tra lại.';
+      setImportError(message);
     },
   });
 
@@ -85,6 +89,7 @@ const PopupImportExcel = React.memo(props => {
   const _HandleFileChange = e => {
     const file = e.target.files[0];
     if (file) {
+      setImportError(null);
       // Validate file type
       const validExtensions = ['.xlsx', '.xls'];
       const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
@@ -132,6 +137,7 @@ const PopupImportExcel = React.memo(props => {
       // [Import] [step 6] Reset banner lỗi trên form trước khi gửi request mới
       props.onImportResult(null);
     }
+    setImportError(null);
     importDateExcel(formData);
   };
 
@@ -144,6 +150,7 @@ const PopupImportExcel = React.memo(props => {
       <PopupCustom title={'Nhập excel để kiểm kê mặt hàng'} open={open} onClose={_HandleClose}>
         <div className='py-4 w-[600px] 2xl:space-y-5 space-y-4'>
           {/* Middle section with 2 buttons */}
+
           <div className='flex items-center justify-center gap-4 py-4'>
             <div className='relative flex flex-col items-center'>
               <input ref={fileInputRef} type='file' accept='.xlsx,.xls' onChange={_HandleFileChange} className='hidden' id='excel-file-input' />
@@ -166,6 +173,8 @@ const PopupImportExcel = React.memo(props => {
           <div className='mt-2 text-sm text-gray-600 text-center w-full'>
             <span className='font-medium'>{selectedFile ? 'File đã chọn:' : 'Chưa chọn file'}</span> {selectedFile && <span className='break-all'>{selectedFile.name}</span>}
           </div>
+          {/* Vị trí render thông báo lỗi import dưới dòng hiển thị tên file */}
+          {importError && <div className='mt-2 w-full text-center bg-red-50 border border-red-300 text-red-700 rounded px-3 py-2 break-words'>{importError}</div>}
 
           {/* Bottom section with 2 buttons */}
           <div className='flex justify-end space-x-2 pt-4 border-t'>

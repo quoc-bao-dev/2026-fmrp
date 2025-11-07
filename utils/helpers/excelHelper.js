@@ -56,7 +56,7 @@ export const createExcelFromArray = (data = [], options = {}) => {
     // Style cho header
     worksheet[cellAddress].s = {
       font: { bold: true, color: { rgb: 'FFFFFF' } },
-      alignment: { horizontal: 'center', vertical: 'center' },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
       fill: { fgColor: { rgb: '4472C4' } },
       border: {
         top: { style: 'thin', color: { rgb: '000000' } },
@@ -90,12 +90,12 @@ export const createExcelFromArray = (data = [], options = {}) => {
       } else {
         // Default style
         worksheet[cellAddress].s = {
-          alignment: { vertical: 'center' },
+          alignment: { vertical: 'center', wrapText: true },
           border: {
-            top: { style: 'thin', color: { rgb: 'D9D9D9' } },
-            bottom: { style: 'thin', color: { rgb: 'D9D9D9' } },
-            left: { style: 'thin', color: { rgb: 'D9D9D9' } },
-            right: { style: 'thin', color: { rgb: 'D9D9D9' } },
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } },
           },
         };
       }
@@ -103,8 +103,16 @@ export const createExcelFromArray = (data = [], options = {}) => {
     currentRow++;
   });
 
-  // Set column widths
-  const colWidths = headers.map(() => ({ wch: 15 }));
+  // Set column widths (cap at 300px, wrap handles overflow)
+  const MAX_WPX = 300;
+  const AVG_CHAR_PX = 7; // approximate width per character
+  const colWidths = headers.map((header, colIdx) => {
+    // Find max content length in this column
+    const maxLen = Math.max(String(header || '').length, ...data.map(row => String(row[columns[colIdx]] ?? '').length));
+    // Convert to pixels and cap
+    const wpx = Math.min(Math.max((maxLen + 2) * AVG_CHAR_PX, 80), MAX_WPX);
+    return { wpx };
+  });
   worksheet['!cols'] = colWidths;
 
   // Set row heights
@@ -217,10 +225,10 @@ export const createExcelTemplateFromColumns = (data = [], options = {}) => {
       alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
       fill: { fgColor: { rgb: 'E8EDF5' } }, // Màu xanh nhạt tinh tế hơn
       border: {
-        top: { style: 'medium', color: { rgb: '4472C4' } },
-        bottom: { style: 'medium', color: { rgb: '4472C4' } },
-        left: { style: 'thin', color: { rgb: 'C5D9F1' } },
-        right: { style: 'thin', color: { rgb: 'C5D9F1' } },
+        top: { style: 'medium', color: { rgb: '000000' } },
+        bottom: { style: 'medium', color: { rgb: '000000' } },
+        left: { style: 'thin', color: { rgb: '000000' } },
+        right: { style: 'thin', color: { rgb: '000000' } },
       },
     };
   });
@@ -238,10 +246,10 @@ export const createExcelTemplateFromColumns = (data = [], options = {}) => {
         alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
         fill: { fgColor: { rgb: '4A86C7' } }, // Màu xanh đậm tinh tế hơn
         border: {
-          top: { style: 'medium', color: { rgb: '2E5C8A' } },
-          bottom: { style: 'medium', color: { rgb: '2E5C8A' } },
-          left: { style: 'thin', color: { rgb: '6BA3D6' } },
-          right: { style: 'thin', color: { rgb: '6BA3D6' } },
+          top: { style: 'medium', color: { rgb: '000000' } },
+          bottom: { style: 'medium', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } },
         },
       };
     });
@@ -264,10 +272,10 @@ export const createExcelTemplateFromColumns = (data = [], options = {}) => {
           alignment: { horizontal: 'left', vertical: 'center', wrapText: true, indent: 1 },
           fill: { fgColor: { rgb: 'FFF5F5' } }, // Màu đỏ nhạt tinh tế hơn
           border: {
-            top: { style: 'thin', color: { rgb: 'E8E8E8' } },
-            bottom: { style: 'thin', color: { rgb: 'E8E8E8' } },
-            left: { style: 'thin', color: { rgb: 'E8E8E8' } },
-            right: { style: 'thin', color: { rgb: 'E8E8E8' } },
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } },
           },
         };
       } else {
@@ -281,10 +289,10 @@ export const createExcelTemplateFromColumns = (data = [], options = {}) => {
           alignment: { horizontal: 'left', vertical: 'center', wrapText: true, indent: 1 },
           fill: { fgColor: { rgb: bgColor } },
           border: {
-            top: { style: 'thin', color: { rgb: 'E8E8E8' } },
-            bottom: { style: 'thin', color: { rgb: 'E8E8E8' } },
-            left: { style: 'thin', color: { rgb: 'E8E8E8' } },
-            right: { style: 'thin', color: { rgb: 'E8E8E8' } },
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } },
           },
         };
       }
@@ -293,16 +301,14 @@ export const createExcelTemplateFromColumns = (data = [], options = {}) => {
   });
 
   // Set column widths - tự động điều chỉnh theo nội dung
-  const colWidths = data.map((item, index) => {
-    // Tính toán độ rộng dựa trên tên cột và nội dung mẫu
+  const MAX_WPX_TEMPLATE = 200;
+  const AVG_CHAR_PX_TEMPLATE = 7;
+  const colWidths = data.map(item => {
     const nameLength = (item.name || '').length;
-    const sampleLength = Math.max(
-      (item.code || '').length,
-      (item.name || '').length,
-      (item.note || '').length,
-      15 // minimum width
-    );
-    return { wch: Math.max(nameLength + 5, sampleLength + 3, columnWidth) };
+    const sampleLength = Math.max((item.code || '').length, (item.name || '').length, (item.note || '').length, 15);
+    const ch = Math.max(nameLength + 5, sampleLength + 3, columnWidth);
+    const wpx = Math.min(Math.max(ch * AVG_CHAR_PX_TEMPLATE, 80), MAX_WPX_TEMPLATE);
+    return { wpx };
   });
   worksheet['!cols'] = colWidths;
 
