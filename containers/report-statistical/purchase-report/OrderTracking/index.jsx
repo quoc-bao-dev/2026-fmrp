@@ -21,6 +21,7 @@ import { useDebounce } from 'use-debounce';
 import { useGetOrderTracking, useSalesOrderComboboxWithBranch } from './hook';
 import { exportWithMergeSalesRevenue } from './hook/useExportExcel';
 import formatNumber from '@/utils/helpers/formatnumber';
+import { useGetItemsWithBranch } from '@/hooks/useComboBoxReport';
 
 const breadcrumbItems = [
   { label: 'Báo cáo' },
@@ -78,7 +79,10 @@ const OrderTracking = props => {
     };
   };
 
-  const { data: dataCode } = useSalesOrderComboboxWithBranch(debouncedOrderSearchValue, selectedBranches?.length > 0 ? selectedBranches : null);
+  const { data: itemsWithBranch } = useGetItemsWithBranch({
+    search: debouncedOrderSearchValue,
+    branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
+  });
 
   const {
     data: dataSalesRevenue,
@@ -228,7 +232,7 @@ const OrderTracking = props => {
               onClear={() => setSelectedOrder([])}
               icon={<PiPackage color='#9295A4' className='size-4' />}
               className='w-full'
-              options={dataCode || []}
+              options={itemsWithBranch || []}
               value={selectedOrder}
               mode='multiple'
             />

@@ -124,23 +124,23 @@ const Dashboard = () => {
     }
   };
 
-  const reload = () => {
-    refetchManufacturingPlanCompletion();
-    refetchLateManufacturingOrders();
-    refetchQcErrorRate();
-    refetchOee();
-    refetchManufacturingOrderStatus();
-    refetchTrackProduction();
-    refetchManufacturingOrderCompletionClassification();
-    refetchMainMaterialStock();
-    if (enableInfiniteQuery) {
-      refetchMainMaterialStockInfinite();
-    }
-    // Reset để có thể load more lại từ đầu
-    hasLoadedMoreRef.current = false;
-    setEnableInfiniteQuery(false);
-    setInitialPageParam(0);
-  };
+  // const reload = () => {
+  //   refetchManufacturingPlanCompletion();
+  //   refetchLateManufacturingOrders();
+  //   refetchQcErrorRate();
+  //   refetchOee();
+  //   refetchManufacturingOrderStatus();
+  //   refetchTrackProduction();
+  //   refetchManufacturingOrderCompletionClassification();
+  //   refetchMainMaterialStock();
+  //   if (enableInfiniteQuery) {
+  //     refetchMainMaterialStockInfinite();
+  //   }
+  //   // Reset để có thể load more lại từ đầu
+  //   hasLoadedMoreRef.current = false;
+  //   setEnableInfiniteQuery(false);
+  //   setInitialPageParam(0);
+  // };
 
   // Map quickDate value sang label
   const getQuickDateLabel = value => {
@@ -219,9 +219,9 @@ const Dashboard = () => {
       maginBottom={true}
       filterHeader={
         <div className='flex items-center gap-2'>
-          <button className='bg-white border border-gray-200 rounded-md px-2 py-1 responsive-text-sm text-[#3A3E4C] font-semibold capitalize' onClick={reload}>
+          {/* <button className='bg-white border border-gray-200 rounded-md px-2 py-1 responsive-text-sm text-[#3A3E4C] font-semibold capitalize' onClick={reload}>
             Tải lại
-          </button>
+          </button> */}
           <p className='responsive-text-base text-[#3A3E4C] font-semibold capitalize'>Lọc theo</p>
           <QuickDateDropdown
             value={quickDate}

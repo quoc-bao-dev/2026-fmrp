@@ -12,7 +12,7 @@ import PopupDetail from '@/containers/sales-export-product/delivery-receipt/comp
 import { useLanguageContext } from '@/context/ui/LanguageContext'
 import { usePersistedBranches } from '@/hooks/common/usePersistedBranches'
 import { useGetWarehouse } from '@/hooks/common/useWarehouses'
-import useFeature from '@/hooks/useConfigFeature'
+import { useGetItemsWithBranch } from '@/hooks/useComboBoxReport'
 import usePagination from '@/hooks/usePagination'
 import useStatusExprired from '@/hooks/useStatusExprired'
 import formatMoneyOrDash from '@/utils/helpers/formatMoneyOrDash'
@@ -21,11 +21,9 @@ import moment from 'moment'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { PiPackage, PiWarehouseLight } from 'react-icons/pi'
-import { useSelector } from 'react-redux'
 import { useDebounce } from 'use-debounce'
 import { useExportExcel } from './hook/useExportExcel'
 import { useGetListReportExportDelivery } from './hook/useGetListReportExportDelivery'
-import { useGetItemsWithBranch } from '../../production-manager/OrderProgress/hook'
 
 const breadcrumbItems = [
   {

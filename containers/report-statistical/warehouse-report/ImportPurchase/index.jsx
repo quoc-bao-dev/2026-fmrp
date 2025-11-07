@@ -26,7 +26,7 @@ import { useSelector } from 'react-redux'
 import { useDebounce } from 'use-debounce'
 import { useExportExcel } from './hook/useExportExcel'
 import { useGetListReportImport } from './hook/useGetListReportImport'
-import { useGetItemsWithBranch } from '../../production-manager/OrderProgress/hook'
+import { useGetItemsWithBranch } from '@/hooks/useComboBoxReport'
 
 const breadcrumbItems = [
   {
