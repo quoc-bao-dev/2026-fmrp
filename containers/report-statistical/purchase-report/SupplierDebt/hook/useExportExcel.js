@@ -9,8 +9,8 @@ export const exportSupplierDebtExcel = (dataSupplierDebt, filename = 'Bao_cao_co
 
   // Columns giữ nguyên dữ liệu theo UI hiện tại
   const headers = [
-    'Ngày đơn hàng',
-    'Số đơn hàng',
+    'Ngày chứng từ',
+    'Số chứng từ',
     'Sản phẩm',
     'Biến thể',
     'Đơn vị',
@@ -22,7 +22,7 @@ export const exportSupplierDebtExcel = (dataSupplierDebt, filename = 'Bao_cao_co
   ];
 
   // 1) Phần thông tin tiêu đề + nhà cung cấp (giống bố cục mẫu)
-  const supplierName = dataSupplierDebt?.debt?.supplier_name || '';
+  const supplierName = dataSupplierDebt?.debt?.name || dataSupplierDebt?.debt?.supplier_name || '';
   const supplierAddress = dataSupplierDebt?.debt?.address || '';
   const supplierPhone = dataSupplierDebt?.debt?.phone_number || '';
   const today = new Date();
@@ -59,104 +59,68 @@ export const exportSupplierDebtExcel = (dataSupplierDebt, filename = 'Bao_cao_co
     Array(COLS).fill(''),
   ];
 
-  // 2) Phần dữ liệu bảng (giữ nguyên logic hiện tại)
+  // 2) Phần dữ liệu bảng (bám đúng UI hiện tại)
   // Công nợ đầu kỳ
   bodyRows.push([
     'Công nợ đầu kỳ',
     ...Array(COLS - 2).fill(''),
-    Number(dataSupplierDebt?.debt?.begin_debt ?? dataSupplierDebt?.raw_balance ?? 0)
+    Number(dataSupplierDebt?.debt?.begin_debt ?? 0)
   ]);
 
-  // Phiếu giao hàng
-  if (Array.isArray(dataSupplierDebt?.deliveries) && dataSupplierDebt.deliveries.length > 0) {
-    bodyRows.push(['Phiếu giao hàng', ...Array(COLS - 1).fill('')]);
-    dataSupplierDebt.deliveries.forEach(delivery => {
-      const deliveryQuantity = Number(delivery?.total_quantity ?? delivery?.quantity ?? 0);
+  // Phiếu nhập hàng
+  if (Array.isArray(dataSupplierDebt?.rsImports) && dataSupplierDebt.rsImports.length > 0) {
+    bodyRows.push(['Phiếu nhập hàng', ...Array(COLS - 1).fill('')]);
+    dataSupplierDebt.rsImports.forEach(rsImport => {
       bodyRows.push([
-        delivery?.delivery_date ? delivery.delivery_date : '',
-        delivery?.reference_no || '',
-        '',
-        '',
-        '',
-        deliveryQuantity,
-        '',
-        Number(delivery?.total_discount_percent_items) || 0,
-        Number(delivery?.total_tax_items) || 0,
-        Number(delivery?.grand_total_items) || 0,
+        rsImport?.date || '',
+        rsImport?.code_import || '',
+        rsImport?.item_name || rsImport?.item_code || '',
+        rsImport?.item_variation || '-',
+        rsImport?.unit_name || '',
+        Number(rsImport?.quantity) || 0,
+        Number(rsImport?.price) || 0,
+        Number(rsImport?.price_after_discount) || 0,
+        Number(rsImport?.tax_rate) ? `${Number(rsImport?.tax_rate)}%` : '-',
+        Number(rsImport?.amount) || 0,
       ]);
-      (delivery.items || []).forEach(it => {
-        bodyRows.push([
-          '',
-          '',
-          it?.item_name || it?.item_code || '',
-          it?.variant_name || '-',
-          it?.unit_name || '',
-          Number(it?.quantity) || 0,
-          Number(it?.price) || 0,
-          Number(it?.discount_percent_amount_item) || 0,
-          Number(it?.tax_amount_item) || 0,
-          Number(it?.total_amount) || 0,
-        ]);
-      });
     });
-    const totalDeliveryQuantity = dataSupplierDebt.deliveries.reduce(
-      (acc, curr) => acc + Number(curr?.total_quantity ?? curr?.quantity ?? 0),
-      0
-    );
-    const totalDeliveryAmount = Number(dataSupplierDebt?.total_deliveries) || 0;
+    const totalImportQuantity = dataSupplierDebt.rsImports.reduce((acc, curr) => acc + Number(curr?.quantity || 0), 0);
+    const totalImportAmount = dataSupplierDebt.rsImports.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0);
     bodyRows.push([
-      'Tổng cộng (giao hàng)',
+      'Tổng cộng',
       '',
       '',
       '',
       '',
-      totalDeliveryQuantity,
+      totalImportQuantity,
       '',
       '',
       '',
-      totalDeliveryAmount,
+      totalImportAmount,
     ]);
   }
 
-  // Trả lại hàng bán
-  if (Array.isArray(dataSupplierDebt?.returns) && dataSupplierDebt.returns.length > 0) {
-    bodyRows.push(['Trả lại hàng bán', ...Array(COLS - 1).fill('')]);
-    dataSupplierDebt.returns.forEach(ret => {
-      const returnQuantity = Number(ret?.total_quantity ?? 0);
+  // Trả lại hàng mua
+  if (Array.isArray(dataSupplierDebt?.rsReturns) && dataSupplierDebt.rsReturns.length > 0) {
+    bodyRows.push(['Trả lại hàng mua', ...Array(COLS - 1).fill('')]);
+    dataSupplierDebt.rsReturns.forEach(ret => {
       bodyRows.push([
         ret?.date || '',
-        ret?.reference_no || '',
-        '',
-        '',
-        '',
-        returnQuantity,
-        '',
-        Number(ret?.total_discount_percent_items) || 0,
-        Number(ret?.total_tax_items) || 0,
-        Number(ret?.grand_total_items) || 0,
+        ret?.code_import || '',
+        ret?.item_name || ret?.item_code || '',
+        ret?.item_variation || '-',
+        ret?.unit_name || '',
+        Number(ret?.quantity) || 0,
+        Number(ret?.price) || 0,
+        Number(ret?.price_after_discount) || 0,
+        Number(ret?.tax_rate) ? `${Number(ret?.tax_rate)}%` : '-',
+        Number(ret?.amount) || 0,
       ]);
-      (ret.items || []).forEach(it => {
-        bodyRows.push([
-          '',
-          '',
-          it?.item_name || it?.item_code || '',
-          it?.variant_name || '-',
-          it?.unit_name || '',
-          Number(it?.quantity) || 0,
-          Number(it?.price) || 0,
-          Number(it?.discount_percent_amount_item) || 0,
-          Number(it?.tax_price) || 0,
-          Number(it?.total_amount) || 0,
-        ]);
-      });
     });
-    const totalReturnQuantity = dataSupplierDebt.returns.reduce(
-      (acc, curr) => acc + Number(curr?.total_quantity ?? 0),
-      0
-    );
-    const totalReturnAmount = Number(dataSupplierDebt?.total_returns) || 0;
+    const totalReturnQuantity = dataSupplierDebt.rsReturns.reduce((acc, curr) => acc + Number(curr?.quantity || 0), 0);
+    const totalReturnAmount = dataSupplierDebt.rsReturns.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0);
     bodyRows.push([
-      'Tổng cộng (trả lại)',
+      'Tổng cộng',
       '',
       '',
       '',
@@ -168,15 +132,57 @@ export const exportSupplierDebtExcel = (dataSupplierDebt, filename = 'Bao_cao_co
       totalReturnAmount,
     ]);
   }
-  const tongPhatSinh = (Number(dataSupplierDebt?.total_deliveries) || 0) - (Number(dataSupplierDebt?.total_returns) || 0);
+  // Dịch vụ
+  if (Array.isArray(dataSupplierDebt?.rsServices) && dataSupplierDebt.rsServices.length > 0) {
+    bodyRows.push(['Dịch vụ', ...Array(COLS - 1).fill('')]);
+    dataSupplierDebt.rsServices.forEach(sv => {
+      const priceAfterDiscount = Number(sv?.price) ? Number(sv?.price) * (1 - Number(sv?.discount_percent || 0) / 100) : 0;
+      bodyRows.push([
+        sv?.date || '',
+        sv?.code_import || '',
+        sv?.name_item || sv?.item_code || '',
+        '',
+        '',
+        Number(sv?.quantity) || 0,
+        Number(sv?.price) || 0,
+        priceAfterDiscount || 0,
+        Number(sv?.tax_rate) ? `${Number(sv?.tax_rate)}%` : '-',
+        Number(sv?.amount) || 0,
+      ]);
+    });
+    const totalServiceQuantity = dataSupplierDebt.rsServices.reduce((acc, curr) => acc + Number(curr?.quantity || 0), 0);
+    const totalServiceAmount = dataSupplierDebt.rsServices.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0);
+    bodyRows.push([
+      'Tổng cộng',
+      '',
+      '',
+      '',
+      '',
+      totalServiceQuantity,
+      '',
+      '',
+      '',
+      totalServiceAmount,
+    ]);
+  }
+  const totalImportAmountForCalc = Array.isArray(dataSupplierDebt?.rsImports)
+    ? dataSupplierDebt.rsImports.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+    : 0;
+  const totalReturnAmountForCalc = Array.isArray(dataSupplierDebt?.rsReturns)
+    ? dataSupplierDebt.rsReturns.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+    : 0;
+  const totalServiceAmountForCalc = Array.isArray(dataSupplierDebt?.rsServices)
+    ? dataSupplierDebt.rsServices.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+    : 0;
+  const tongPhatSinh = totalImportAmountForCalc - totalReturnAmountForCalc + totalServiceAmountForCalc;
   bodyRows.push([
     'Tổng cộng phát sinh trong kỳ', ...Array(COLS - 2).fill(''), tongPhatSinh
   ]);
-  // Phiếu thu trong kỳ (header & data đúng giao diện)
-  if (Array.isArray(dataSupplierDebt?.other_payslips_coupon) && dataSupplierDebt.other_payslips_coupon.length > 0) {
+  // Phiếu chi trong kỳ (header & data đúng giao diện)
+  if (Array.isArray(dataSupplierDebt?.rsPaySlips) && dataSupplierDebt.rsPaySlips.length > 0) {
     // Header group title
-    bodyRows.push(['Phiếu thu trong kỳ', ...Array(COLS - 1).fill('')]);
-    // Header phiếu thu trong kỳ
+    bodyRows.push(['Phiếu chi trong kỳ', ...Array(COLS - 1).fill('')]);
+    // Header phiếu chi trong kỳ
     bodyRows.push([
       'Ngày chứng từ',
       'Mã phiếu',
@@ -184,7 +190,7 @@ export const exportSupplierDebtExcel = (dataSupplierDebt, filename = 'Bao_cao_co
       ...Array(COLS - 4).fill(''),
       'Số tiền'
     ]);
-    dataSupplierDebt.other_payslips_coupon.forEach(cp => {
+    dataSupplierDebt.rsPaySlips.forEach(cp => {
       bodyRows.push([
         cp?.date || '',
         cp?.code || '',
@@ -193,8 +199,9 @@ export const exportSupplierDebtExcel = (dataSupplierDebt, filename = 'Bao_cao_co
         Number(cp?.total) || 0
       ]);
     });
+    const totalPaySlip = dataSupplierDebt.rsPaySlips.reduce((acc, curr) => acc + Number(curr?.total || 0), 0);
     bodyRows.push([
-      'Tổng cộng (phiếu thu)',
+      'Tổng cộng',
       '',
       '',
       '',
@@ -203,13 +210,18 @@ export const exportSupplierDebtExcel = (dataSupplierDebt, filename = 'Bao_cao_co
       '',
       '',
       '',
-      Number(dataSupplierDebt?.total_other_payslips_coupon) || 0,
+      totalPaySlip,
     ]);
   }
 
   // SỐ DƯ CUỐI KỲ
+  const totalPaySlipForCalc = Array.isArray(dataSupplierDebt?.rsPaySlips)
+    ? dataSupplierDebt.rsPaySlips.reduce((acc, curr) => acc + Number(curr?.total || 0), 0)
+    : 0;
+  const beginDebtForCalc = Number(dataSupplierDebt?.debt?.begin_debt || 0);
+  const finalDebtCalc = beginDebtForCalc + tongPhatSinh - totalPaySlipForCalc;
   bodyRows.push([
-    'Số dư cuối kỳ', ...Array(COLS - 2).fill(''), Number(dataSupplierDebt?.final_debt) || 0
+    'Số dư cuối kỳ', ...Array(COLS - 2).fill(''), finalDebtCalc
   ]);
 
   // 3) Footer: xác nhận + ghi chú
@@ -341,9 +353,10 @@ export const exportSupplierDebtExcel = (dataSupplierDebt, filename = 'Bao_cao_co
   for (let R = headerRowIndex + 1; R <= range.e.r; R++) {
     const firstRef = XLSX.utils.encode_cell({ r: R, c: 0 });
     const val = ws[firstRef]?.v;
-    if (val === 'Phiếu giao hàng') colorRow(R, 'DBEAFE');
-    if (val === 'Trả lại hàng bán') colorRow(R, 'FEF3C7');
-    if (val === 'Phiếu thu trong kỳ') colorRow(R, 'D1FAE5');
+    if (val === 'Phiếu nhập hàng') colorRow(R, 'DBEAFE');
+    if (val === 'Trả lại hàng mua') colorRow(R, 'FEF3C7');
+    if (val === 'Dịch vụ') colorRow(R, 'EDE9FE');
+    if (val === 'Phiếu chi trong kỳ') colorRow(R, 'D1FAE5');
   }
 
   // Làm đậm các dòng tổng
@@ -359,9 +372,7 @@ export const exportSupplierDebtExcel = (dataSupplierDebt, filename = 'Bao_cao_co
       }
     }
   };
-  boldRowIfStartsWith('Tổng cộng (giao hàng)', '1E3A8A');
-  boldRowIfStartsWith('Tổng cộng (trả lại)', '92400E');
-  boldRowIfStartsWith('Tổng cộng (phiếu thu)', '065F46');
+  boldRowIfStartsWith('Tổng cộng', '111827');
   boldRowIfStartsWith('Tổng cộng phát sinh trong kỳ', '0F4F9E');
   boldRowIfStartsWith('Số dư cuối kỳ', '0F4F9E');
 

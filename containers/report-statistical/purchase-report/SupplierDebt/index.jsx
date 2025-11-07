@@ -397,7 +397,21 @@ const SupplierDebt = () => {
                       <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] font-semibold capitalize'>Tổng cộng phát sinh trong kỳ</div>
                     </td>
                     <td className='p-0 h-2 text-right font-semibold text-new-blue'>
-                      <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>{formatNumber(dataSupplierDebt.total_deliveries - dataSupplierDebt.total_returns || 0)}</div>
+                      <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>
+                        {formatNumber(
+                          (
+                            (Array.isArray(dataSupplierDebt?.rsImports)
+                              ? dataSupplierDebt.rsImports.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+                              : 0) -
+                            (Array.isArray(dataSupplierDebt?.rsReturns)
+                              ? dataSupplierDebt.rsReturns.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+                              : 0) +
+                            (Array.isArray(dataSupplierDebt?.rsServices)
+                              ? dataSupplierDebt.rsServices.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+                              : 0)
+                          ) || 0
+                        )}
+                      </div>
                     </td>
                   </tr>
 
@@ -461,7 +475,27 @@ const SupplierDebt = () => {
                       <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] capitalize'>Số dư cuối kỳ</div>
                     </td>
                     <td className='p-0 h-2 text-right font-bold text-new-blue'>
-                      <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>{formatNumber(dataSupplierDebt?.final_debt || 0)}</div>
+                      <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>
+                        {formatNumber(
+                          (
+                            Number(dataSupplierDebt?.debt?.begin_debt || 0) +
+                            (
+                              (Array.isArray(dataSupplierDebt?.rsImports)
+                                ? dataSupplierDebt.rsImports.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+                                : 0) -
+                              (Array.isArray(dataSupplierDebt?.rsReturns)
+                                ? dataSupplierDebt.rsReturns.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+                                : 0) +
+                              (Array.isArray(dataSupplierDebt?.rsServices)
+                                ? dataSupplierDebt.rsServices.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+                                : 0)
+                            ) -
+                            (Array.isArray(dataSupplierDebt?.rsPaySlips)
+                              ? dataSupplierDebt.rsPaySlips.reduce((acc, curr) => acc + Number(curr?.total || 0), 0)
+                              : 0)
+                          ) || 0
+                        )}
+                      </div>
                     </td>
                   </tr>
                 </tbody>
