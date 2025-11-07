@@ -352,7 +352,7 @@ const Header = () => {
               name: 'Đơn hàng mua',
               link: '/purchase-order/order',
               role: dataSeting?.package,
-              isPro: dataSeting?.package === '1',
+              isPro: authState?.is_upgrade,
             },
             {
               viewOwn: auth?.import?.is_view_own,
