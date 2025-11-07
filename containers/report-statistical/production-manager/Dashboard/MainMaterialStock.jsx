@@ -274,7 +274,7 @@ const MainMaterialStock = ({ thresholds = { lowMax: 40, highMin: 80 }, data, onL
     <div ref={containerRef} className='w-full h-[463px] bg-[#EEF6FF] rounded-[20px] p-4 flex flex-col min-h-0 relative'>
       <h3 className='responsive-text-xl font-semibold text-neutral-04 capitalize text-center'>Tồn Kho Vật Tư Chính</h3>
       <CustomLegend />
-      <Customscrollbar alwaysShowScrollbar={true} ref={scrollRef} className='w-full h-full min-h-0 overflow-y-auto'>
+      <Customscrollbar alwaysShowScrollbar={true} ref={scrollRef} className='w-full h-full pr-1.5 min-h-0 overflow-y-auto'>
         <div style={{ height: chartHeight }}>
           <ResponsiveContainer width='100%' height='100%'>
             <BarChart data={stackedData} layout='vertical' barCategoryGap={10} barGap={8} barSize={30}>
@@ -291,7 +291,7 @@ const MainMaterialStock = ({ thresholds = { lowMax: 40, highMin: 80 }, data, onL
         </div>
       </Customscrollbar>
       {/* XAxis cố định (không cuộn) */}
-      <div className='w-full' style={{ height: 44 }}>
+      <div className='w-full pr-1.5' style={{ height: 44 }}>
         <ResponsiveContainer width='100%' height='100%'>
           <BarChart data={stackedData} layout='vertical' margin={{ left: yAxisWidth }}>
             <XAxis type='number' domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]} stroke='#90A3B0' axisLine={false} tickLine={false} tick={<XAxisTick />} />

@@ -17,11 +17,11 @@ import useStatusExprired from '@/hooks/useStatusExprired';
 import formatNumber from '@/utils/helpers/formatnumber';
 import moment from 'moment';
 import { useRouter } from 'next/router';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { PiPackage } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
 import { useGetOrderTracking } from './hook';
-import { exportWithMergeSalesRevenue } from './hook/useExportExcel';
+import { exportOrderTracking } from './hook/useExportExcel';
 
 const breadcrumbItems = [
   { label: 'Báo cáo' },
@@ -35,75 +35,64 @@ const breadcrumbItems = [
 const OrderTracking = props => {
   const router = useRouter();
   const { paginate } = usePagination();
-  const statusExprired = useStatusExprired();
   const dataLang = useLanguageContext();
+  const statusExprired = useStatusExprired();
+  const currentPage = Number(router.query.page) || 1;
 
-  // State management
   const [dateRange, setDateRange] = useState({
     startDate: undefined,
     endDate: undefined,
   });
-  const [selectedCustomer, setSelectedCustomer] = useState([]);
-  const [selectedOrder, setSelectedOrder] = useState([]);
   const [limit, setLimit] = useState(15);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
+
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearchValue] = useDebounce(searchValue, 500);
-  const [orderSearchValue, setOrderSearchValue] = useState('');
-  const [debouncedOrderSearchValue] = useDebounce(orderSearchValue, 500);
-
-  const [customerSearchValue, setCustomerSearchValue] = useState('');
-  const [debouncedCustomerSearchValue] = useDebounce(customerSearchValue, 500);
+  const [itemSearchValue, setItemSearchValue] = useState('');
+  const [debouncedItemSearchValue] = useDebounce(itemSearchValue, 500);
+  const [supplierSearchValue, setSupplierSearchValue] = useState('');
+  const [debouncedSupplierSearchValue] = useDebounce(supplierSearchValue, 500);
 
   const { selectedBranches, setSelectedBranches } = usePersistedBranches('report_branch_ids');
 
-  const currentPage = Number(router.query.page) || 1;
-
   const { data: itemsWithBranch } = useGetItemsWithBranch({
-    search: debouncedOrderSearchValue,
+    search: debouncedItemSearchValue,
     branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
   });
 
   const { data: suppliersWithBranch } = useGetSuppliersWithBranch({
-    search: debouncedCustomerSearchValue,
+    search: debouncedSupplierSearchValue,
     branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
   });
 
-  console.log(suppliersWithBranch);
   const {
-    data: dataSalesRevenue,
-    isFetching: isFetchingSalesRevenue,
-    refetch: refetchSalesRevenue,
+    data: orderTrackingData,
+    isFetching: isFetchingOrderTracking,
+    refetch: refetchOrderTracking,
   } = useGetOrderTracking({
     page: currentPage,
     limit: limit,
     search: debouncedSearchValue,
     filter: {
-      product_id: selectedOrder?.length > 0 ? selectedOrder : undefined,
-      id_suppliers: selectedCustomer?.length > 0 ? selectedCustomer : undefined,
-      branch_id: selectedBranches?.length > 0 ? selectedBranches : null,
+      product_id: selectedItem ? selectedItem : undefined,
+      id_suppliers: selectedSupplier ? selectedSupplier : undefined,
+      branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
       ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
       ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
     },
   });
 
-  // Dữ liệu dạng phẳng: dùng trực tiếp rResult
-  const flattenedRows = useMemo(() => {
-    return Array.isArray(dataSalesRevenue?.rResult) ? dataSalesRevenue.rResult : [];
-  }, [dataSalesRevenue]);
-
-  const flattenedDataForExport = useMemo(() => flattenedRows.map(r => ({ ...r, ...r.item })), [flattenedRows]);
-
-  // Handler functions
   const handleDateChange = newValue => {
     setDateRange(newValue);
   };
 
-  const handleOrderChange = values => {
-    setSelectedOrder(Array.isArray(values) ? values : []);
+  const handleItemChange = value => {
+    setSelectedItem(value || null);
   };
 
-  const handleCustomerChange = values => {
-    setSelectedCustomer(Array.isArray(values) ? values : []);
+  const handleSupplierChange = value => {
+    setSelectedSupplier(value || null);
   };
 
   const handleSearch = value => {
@@ -120,7 +109,7 @@ const OrderTracking = props => {
   };
 
   const handleExportExcel = () => {
-    exportWithMergeSalesRevenue(flattenedDataForExport || [], 'Báo cáo doanh số theo bán hàng.xlsx');
+    exportOrderTracking(orderTrackingData?.rResult || [], orderTrackingData?.rTotal || {}, 'Theo dõi đơn đặt hàng.xlsx');
   };
 
   // Khai báo cột: dùng chung cho thead/tbody/tfoot
@@ -165,6 +154,14 @@ const OrderTracking = props => {
       tdClass: 'p-0 h-2 text-gray-700',
       rowSpan: false,
       render: row => row?.item_variation || '-',
+    },
+    {
+      key: 'branch_name',
+      header: 'Chi nhánh',
+      thClass: 'min-w-40 h-2 p-0 font-semibold text-gray-700',
+      tdClass: 'p-0 h-2 text-gray-700',
+      rowSpan: false,
+      render: row => row?.branch_name || '-',
     },
     {
       key: 'unit_name',
@@ -218,33 +215,31 @@ const OrderTracking = props => {
             <SelectSearchReport
               placeholder='Mặt hàng'
               onSearch={value => {
-                setSearchTerm(value);
+                setItemSearchValue(value);
               }}
-              onChange={handleOrderChange}
-              onClear={() => setSelectedOrder([])}
+              onChange={handleItemChange}
+              onClear={() => setSelectedItem(null)}
               icon={<PiPackage color='#9295A4' className='size-4' />}
               className='w-full'
               options={itemsWithBranch || []}
-              value={selectedOrder}
-              mode='multiple'
+              value={selectedItem}
             />
-             <SelectSearchReport
+            <SelectSearchReport
               placeholder='Nhà cung cấp'
               onSearch={value => {
-                setCustomerSearchValue(value);
+                setSupplierSearchValue(value);
               }}
-              onChange={handleCustomerChange}
-              onClear={() => setSelectedCustomer([])}
+              onChange={handleSupplierChange}
+              onClear={() => setSelectedSupplier(null)}
               icon={<PiPackage color='#9295A4' className='size-4' />}
               className='w-full'
               options={suppliersWithBranch || []}
-              value={selectedCustomer}
-              mode='multiple'
+              value={selectedSupplier}
             />
           </div>
           <div className='flex gap-3 items-center'>
             <SearchComponent dataLang={dataLang} placeholder='Tìm kiếm theo phiếu' onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' />
-            <OnResetData sOnFetching={refetchSalesRevenue} className='!py-3' />
+            <OnResetData sOnFetching={refetchOrderTracking} className='!py-3' />
             <button onClick={handleExportExcel} className='!py-3 3xl:py-3 3xl:px-4 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded-lg border border-background-blue-2 transition'>
               <ExcelIcon className='3xl:size-5 size-4 text-typo-blue-4' />
               <span className='text-typo-blue-4 responsive-text-sm font-medium whitespace-nowrap'>{dataLang?.client_list_exportexcel}</span>
@@ -253,9 +248,9 @@ const OrderTracking = props => {
         </div>
       }
       tableSection={
-        isFetchingSalesRevenue ? (
+        isFetchingOrderTracking ? (
           <Loading color='#0f4f9e' />
-        ) : dataSalesRevenue?.rResult?.length > 0 ? (
+        ) : orderTrackingData?.rResult?.length > 0 ? (
           <Customscrollbar alwaysShowScrollbar={true} className='h-full flex-1 overflow-auto'>
             <table className='w-full border-0 p-0 m-0'>
               <thead>
@@ -274,7 +269,7 @@ const OrderTracking = props => {
                 </tr>
               </thead>
               <tbody>
-                {flattenedRows.map((row, rowIndex) => (
+                {orderTrackingData?.rResult?.map((row, rowIndex) => (
                   <tr key={`${row.id || 'row'}-${row.purchase_order_item_id || rowIndex}`} className='hover:bg-gray-50 responsive-text-sm relative'>
                     {columns.map((col, index) => {
                       if (col.rowSpan) {
@@ -285,7 +280,7 @@ const OrderTracking = props => {
                               className={`w-full h-full flex items-center px-3 py-2 border-r border-[#E0E0E1] 
                                 ${col.tdClass?.includes('text-center') ? 'justify-center' : ''} 
                                 ${index === 0 ? 'border-l' : ''} 
-                                ${rowIndex === flattenedRows.length - 1 ? '' : 'border-b'}`}
+                                ${rowIndex === (orderTrackingData?.rResult?.length || 0) - 1 ? '' : 'border-b'}`}
                             >
                               {col.render(row)}
                             </div>
@@ -296,7 +291,7 @@ const OrderTracking = props => {
                         <td key={col.key} className={col.tdClass}>
                           <div
                             className={`w-full h-full flex items-center ${col.tdClass?.includes('text-center') ? 'justify-center' : ''} px-3 py-2 border-r ${
-                              rowIndex === flattenedRows.length - 1 ? '' : 'border-b'
+                              rowIndex === (orderTrackingData?.rResult?.length || 0) - 1 ? '' : 'border-b'
                             }
                             ${index === 0 ? 'border-l' : ''}
                             border-[#E0E0E1]`}
@@ -312,7 +307,7 @@ const OrderTracking = props => {
               <tfoot>
                 <tr className='bg-white sticky bottom-[-1px] z-50 responsive-text-sm'>
                   {columns.map((col, idx) => {
-                    const content = typeof col.footer === 'function' ? col.footer(dataSalesRevenue?.rTotal || {}, idx) : idx === 1 ? 'Tổng cộng' : '';
+                    const content = typeof col.footer === 'function' ? col.footer(orderTrackingData?.rTotal || {}, idx) : idx === 1 ? 'Tổng cộng' : '';
 
                     return (
                       <td key={col.key} className={`${col.tdClass} font-semibold text-gray-700`}>
@@ -329,8 +324,8 @@ const OrderTracking = props => {
         )
       }
       totalSection={
-        dataSalesRevenue?.rResult?.length > 0 && (
-          <Pagination postsPerPage={limit} totalPosts={Number(dataSalesRevenue?.output?.iTotalDisplayRecords) || 0} paginate={paginate} currentPage={currentPage} />
+        orderTrackingData?.rResult?.length > 0 && (
+          <Pagination postsPerPage={limit} totalPosts={Number(orderTrackingData?.output?.iTotalDisplayRecords) || 0} paginate={paginate} currentPage={currentPage} />
         )
       }
       paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}

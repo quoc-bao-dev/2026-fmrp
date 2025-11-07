@@ -23,7 +23,7 @@ export const useGetItemsWithBranch = params => {
     queryFn: async () => {
       const response = await apiReport.apiItemsWithBranch({ params });
       return response.data?.result?.map(e => ({
-        label: `${e.name + e.code + e.id}`,
+        label: `${e.name}`,
         name: e.name,
         value: e.id,
         code: e.code,
@@ -42,7 +42,14 @@ export const useGetSuppliersWithBranch = params => {
     queryKey: ['api_get_suppliers_with_branch', params],
     queryFn: async () => {
       const response = await apiSuppliers.apiListSuppliers({ params });
-      return response;
+      return response.rResult.map(e => ({
+        label: `${e.name}`,
+        name: e.name,
+        value: e.id,
+        code: e.code,
+        img: e.images,
+        type: e.text_type,
+      }));
     },
     enabled: !!hasBranch,
   });

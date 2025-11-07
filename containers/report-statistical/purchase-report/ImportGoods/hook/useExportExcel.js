@@ -1,353 +1,209 @@
-import moment from 'moment';
-import * as XLSX from 'xlsx-js-style';
+import moment from 'moment'
 
-export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_doanh_so_theo_ban_hang.xlsx') => {
-  // Chuẩn hóa dữ liệu từ flattenedData (mỗi item đã chứa thông tin order)
-  const rows = [];
-  const groups = [];
-  let currentRow = 0;
+export const useExportExcel = (dataReportImport, hasProductExpiry, hasMaterialExpiry, hasProductSerial) => {
+  const showInfoColumn = hasProductExpiry || hasMaterialExpiry || hasProductSerial;
 
-  // Nhóm dữ liệu theo order để merge cells
-  const orderGroups = {};
-  rawData.forEach((item, index) => {
-    const orderId = item.id || `order_${index}`;
-    if (!orderGroups[orderId]) {
-      orderGroups[orderId] = {
-        order: item,
-        items: []
-      };
-    }
-    orderGroups[orderId].items.push(item);
-  });
-
-  // Tạo rows và groups
-  Object.values(orderGroups).forEach((group, groupIndex) => {
-    const start = currentRow;
-    group.items.forEach((item, itemIndex) => {
-      rows.push({
-        stt: groupIndex + 1,
-        customer_code: item?.customer_code || '',
-        customer_name: item?.customer_name || '',
-        date: item?.date || '',
-        reference_no: item?.reference_no || '',
-        branch_name: item?.branch_name || '',
-        employee_name: item?.employee_name || '',
-        delivery_date: item?.delivery_date || '',
-        item_code: item?.item_code || '',
-        item_name: item?.item_name || '',
-        variant_name: item?.variant_name || '',
-        unit_name: item?.unit_name || '',
-        quantity: Number(item?.quantity) || 0,
-        quantity_delivery: Number(item?.quantity_delivery) || 0,
-        quantity_not_delivery: Number(item?.quantity_not_delivery) || 0,
-        price: Number(item?.price) || 0,
-        discount_percent_item: Number(item?.discount_percent_item) || 0,
-        discount_percent_amount_item: Number(item?.discount_percent_amount_item) || 0,
-        tax_rate_item: Number(item?.tax_rate_item) || 0,
-        tax_amount_item: Number(item?.tax_amount_item) || 0,
-        grand_total: Number(item?.grand_total) || 0,
-        total_payment: Number(item?.total_payment) || 0,
-        total_rest: Number(item?.total_rest) || 0,
-        isFirstItem: itemIndex === 0,
-        totalItems: group.items.length
-      });
-      currentRow += 1;
-    });
-    const end = currentRow - 1;
-    if (end >= start) {
-      groups.push({ start, end });
-    }
-  });
-
-  // Header hàng 1 - các cột chính
-  const headerRow1 = [
-    'STT',
-    'Mã khách hàng', 
-    'Khách hàng',
-    'Ngày',
-    'Phiếu bán hàng',
-    'Chi nhánh',
-    'Nhân viên',
-    'Ngày giao hàng (dự kiến)',
-    'Mã sản phẩm',
-    'Tên sản phẩm',
-    'Biến thể',
-    'Đơn vị',
-    'Số lượng', // Merge 3 cột
-    '', // Đơn hàng
-    '', // Đã giao  
-    '', // Còn lại
-    'Giá trị', // Merge 8 cột
-    '', // Đơn giá
-    '', // % chiết khấu
-    '', // Tiền chiết khấu
-    '', // % thuế
-    '', // Tiền thuế
-    '', // Tổng cộng
-    '', // Đã thu
-    ''  // Còn lại
-  ];
-
-  // Header hàng 2 - các cột chi tiết (chỉ hiển thị cho Số lượng và Giá trị)
-  const headerRow2 = [
-    '', // STT - merge với hàng 1
-    '', // Mã khách hàng - merge với hàng 1
-    '', // Khách hàng - merge với hàng 1
-    '', // Ngày - merge với hàng 1
-    '', // Phiếu bán hàng - merge với hàng 1
-    '', // Chi nhánh - merge với hàng 1
-    '', // Nhân viên - merge với hàng 1
-    '', // Ngày giao hàng (dự kiến) - merge với hàng 1
-    '', // Mã sản phẩm - merge với hàng 1
-    '', // Tên sản phẩm - merge với hàng 1
-    '', // Biến thể - merge với hàng 1
-    '', // Đơn vị - merge với hàng 1
-    'Đơn hàng',
-    'Đã giao',
-    'Còn lại',
-    'Đơn giá',
-    '% chiết khấu',
-    'Tiền chiết khấu',
-    '% thuế',
-    'Tiền thuế',
-    'Tổng cộng',
-    'Đã thu',
-    'Còn lại'
-  ];
-
-  const headerRow1Styled = headerRow1.map(title => ({
-    v: title,
-    s: { 
-      font: { bold: true, color: { rgb: '#0284c7' }, sz: 12 }, 
-      border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } },
-      fill: { fgColor: { rgb: 'F0F8FF' } },
-      alignment: { horizontal: 'center', vertical: 'middle' }
-    },
-  }));
-
-  const headerRow2Styled = headerRow2.map(title => ({
-    v: title,
-    s: { 
-      font: { bold: true, color: { rgb: '#0284c7' }, sz: 12 }, 
-      border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } },
-      fill: { fgColor: { rgb: 'F0F8FF' } },
-      alignment: { horizontal: 'center', vertical: 'middle' }
-    },
-  }));
-
-  const wsData = rows.map((item, rowIndex) => [
-    item.stt,
-    item.customer_code,
-    item.customer_name,
-    item.date ? moment(item.date).format('DD/MM/YYYY') : '',
-    item.reference_no,
-    item.branch_name,
-    item.employee_name,
-    item.delivery_date ? moment(item.delivery_date).format('DD/MM/YYYY') : '',
-    item.item_code,
-    item.item_name,
-    item.variant_name,
-    item.unit_name,
-    item.quantity,
-    item.quantity_delivery,
-    item.quantity_not_delivery,
-    item.price,
-    item.discount_percent_item, // % chiết khấu - giữ nguyên giá trị
-    item.discount_percent_amount_item, // Tiền chiết khấu - không chia 100
-    item.tax_rate_item, // % thuế - giữ nguyên giá trị
-    item.tax_amount_item, // Tiền thuế - không chia 100
-    item.isFirstItem ? item.grand_total : '',
-    item.isFirstItem ? item.total_payment : '',
-    item.isFirstItem ? item.total_rest : ''
-  ]);
-
-  // Tính tổng cộng
-  const totalQuantity = rows.reduce((sum, item) => sum + item.quantity, 0);
-  const totalDelivery = rows.reduce((sum, item) => sum + item.quantity_delivery, 0);
-  const totalNotDelivery = rows.reduce((sum, item) => sum + item.quantity_not_delivery, 0);
-  const totalPrice = rows.reduce((sum, item) => sum + item.price, 0);
-  const totalDiscountAmount = rows.reduce((sum, item) => sum + item.discount_percent_amount_item, 0);
-  const totalTaxAmount = rows.reduce((sum, item) => sum + item.tax_amount_item, 0);
-  const totalGrandTotal = Object.values(orderGroups).reduce((sum, group) => sum + (Number(group.order?.grand_total) || 0), 0);
-  const totalPayment = Object.values(orderGroups).reduce((sum, group) => sum + (Number(group.order?.total_payment) || 0), 0);
-  const totalRest = Object.values(orderGroups).reduce((sum, group) => sum + (Number(group.order?.total_rest) || 0), 0);
-
-  const totalRow = [
-    '',
-    '',
-    '',
-    'Tổng cộng',
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    totalQuantity,
-    totalDelivery,
-    totalNotDelivery,
-    '', // Không tính tổng cho cột Đơn giá
-    '', // Không hiển thị tổng phần trăm chiết khấu
-    totalDiscountAmount,
-    '', // Không hiển thị tổng phần trăm thuế
-    totalTaxAmount,
-    totalGrandTotal,
-    totalPayment,
-    totalRest
-  ];
-
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([headerRow1, headerRow2, ...wsData, totalRow]);
-
-  // Style cơ bản cho toàn sheet
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  for (let R = 0; R <= range.e.r; R++) {
-    for (let C = 0; C <= range.e.c; C++) {
-      const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-      ws[cellRef] = ws[cellRef] || { v: '' };
-      ws[cellRef].s = ws[cellRef].s || { 
-        font: { sz: 11 }, 
-        border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } },
-        alignment: { horizontal: 'center', vertical: 'middle' }
-      };
-    }
-  }
-
-  // Style header hàng 1
-  for (let C = 0; C < headerRow1.length; C++) {
-    const cellRef = XLSX.utils.encode_cell({ r: 0, c: C });
-    ws[cellRef].s = {
-      font: { bold: true, color: { rgb: '#0284c7' }, sz: 12 },
-      border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } },
-      fill: { fgColor: { rgb: 'F0F8FF' } },
-      alignment: { horizontal: 'center', vertical: 'middle' }
-    };
-  }
-
-  // Style header hàng 2
-  for (let C = 0; C < headerRow2.length; C++) {
-    const cellRef = XLSX.utils.encode_cell({ r: 1, c: C });
-    ws[cellRef].s = {
-      font: { bold: true, color: { rgb: '#0284c7' }, sz: 12 },
-      border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } },
-      fill: { fgColor: { rgb: 'F0F8FF' } },
-      alignment: { horizontal: 'center', vertical: 'middle' }
-    };
-  }
-
-  // Merge cells cho header "Số lượng" và "Giá trị"
-  ws['!merges'] = ws['!merges'] || [];
-  
-  // Merge các cột từ STT đến Đơn vị (cột 0-10) thành 2 hàng
-  for (let c = 0; c <= 11; c++) {
-    ws['!merges'].push({ s: { r: 0, c: c }, e: { r: 1, c: c } });
-  }
-  
-  // Merge "Số lượng" (cột 11-13: Đơn hàng, Đã giao, Còn lại)
-  ws['!merges'].push({ s: { r: 0, c: 12 }, e: { r: 0, c: 14 } });
-  
-  // Merge "Giá trị" (cột 14-21: Đơn giá, % chiết khấu, Tiền chiết khấu, % thuế, Tiền thuế, Tổng cộng, Đã thu, Còn lại)
-  ws['!merges'].push({ s: { r: 0, c: 15 }, e: { r: 0, c: 22 } });
-  
-  // Đảm bảo text "Giá trị" hiển thị ở ô đầu tiên của vùng merge
-  const valueCellRef = XLSX.utils.encode_cell({ r: 0, c: 15 });
-  if (ws[valueCellRef]) {
-    ws[valueCellRef].v = 'Giá trị';
-  }
-
-  // Merge cells cho các cột được gộp (STT, Mã khách hàng, Khách hàng, Ngày, Phiếu bán hàng, Nhân viên)
-  groups.forEach(g => {
-    if (g.end > g.start) {
-      const startRow = g.start + 2; // +2 vì có 2 hàng header
-      const endRow = g.end + 2;
-      [0, 1, 2, 3, 4, 5, 6].forEach(colIndex => { // STT, Mã khách hàng, Khách hàng, Ngày, Phiếu bán hàng, Chi nhánh, Nhân viên
-        ws['!merges'].push({ s: { r: startRow, c: colIndex }, e: { r: endRow, c: colIndex } });
-      });
-    }
-  });
-
-  // Merge cells cho Tổng cộng, Đã thu, Còn lại (chỉ hiển thị ở item đầu tiên)
-  groups.forEach(g => {
-    if (g.end > g.start) {
-      const startRow = g.start + 2; // +2 vì có 2 hàng header
-      const endRow = g.end + 2;
-      [20, 21, 22].forEach(colIndex => { // Tổng cộng, Đã thu, Còn lại (đã +1 vì có thêm cột "Số lượng" và "Chi nhánh")
-        ws['!merges'].push({ s: { r: startRow, c: colIndex }, e: { r: endRow, c: colIndex } });
-      });
-    }
-  });
-
-  // Format số cho các cột số
-  const numberCols = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]; // Các cột số lượng và tiền
-  const percentCols = [16, 18]; // Các cột phần trăm (% chiết khấu, % thuế) - format thành phần trăm
-  const moneyCols = [15, 17, 19]; // Các cột tiền (Đơn giá, Tiền chiết khấu, Tiền thuế) - format thành số tiền
-  
-  for (let r = 2; r <= rows.length + 1; r++) { // +2 vì có 2 hàng header
-    numberCols.forEach(c => {
-      const ref = XLSX.utils.encode_cell({ r, c });
-      if (ws[ref] && ws[ref].v !== '') {
-        ws[ref].t = 'n';
-        if (percentCols.includes(c)) {
-          // Chia cho 100 để hiển thị đúng phần trăm trong Excel
-          ws[ref].v = ws[ref].v/100;
-          ws[ref].s = { ...(ws[ref].s || {}), numFmt: '0.00%' };
-        } else if (moneyCols.includes(c)) {
-          // Các cột tiền - format thành số tiền, không chia cho 100
-          ws[ref].s = { ...(ws[ref].s || {}), numFmt: '#,##0' };
-        } else {
-          ws[ref].s = { ...(ws[ref].s || {}), numFmt: '#,##0' };
-        }
-      }
-    });
-  }
-
-  // Style dòng tổng cộng
-  const totalRowIndex = rows.length + 2; // +2 vì có 2 hàng header
-  for (let c = 0; c < headerRow2.length; c++) {
-    const ref = XLSX.utils.encode_cell({ r: totalRowIndex, c });
-    if (ws[ref]) {
-      ws[ref].s = {
-        ...(ws[ref].s || {}),
+  const baseColumns = [
+    {
+      title: 'STT',
+      width: { wch: 5 },
+      style: {
+        fill: { fgColor: { rgb: 'C7DFFB' } },
         font: { bold: true },
-        fill: { fgColor: { rgb: 'E6F3FF' } },
-        border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } }
-      };
-      if (numberCols.includes(c) && ws[ref].v !== '') {
-        ws[ref].t = 'n';
-        if (percentCols.includes(c)) {
-          // Không chia cho 100 ở dòng tổng cộng vì không có ý nghĩa
-          ws[ref].s.numFmt = '#,##0';
-        } else if (moneyCols.includes(c)) {
-          // Các cột tiền - format thành số tiền
-          ws[ref].s.numFmt = '#,##0';
-        } else {
-          ws[ref].s.numFmt = '#,##0';
-        }
-      }
-    }
-  }
+      },
+    },
+    {
+      title: 'Ngày chứng từ',
+      width: { wch: 20 },
+      style: {
+        fill: { fgColor: { rgb: 'C7DFFB' } },
+        font: { bold: true },
+      },
+    },
+    {
+      title: 'Mã chứng từ',
+      width: { wch: 15 },
+      style: {
+        fill: { fgColor: { rgb: 'C7DFFB' } },
+        font: { bold: true },
+      },
+    },
+    {
+      title: 'Nhà cung cấp',
+      width: { wch: 30 },
+      style: {
+        fill: { fgColor: { rgb: 'C7DFFB' } },
+        font: { bold: true },
+      },
+    },
+    {
+      title: 'Mã mặt hàng',
+      width: { wch: 15 },
+      style: {
+        fill: { fgColor: { rgb: 'C7DFFB' } },
+        font: { bold: true },
+      },
+    },
+    {
+      title: 'Mặt hàng',
+      width: { wch: 40 },
+      style: {
+        fill: { fgColor: { rgb: 'C7DFFB' } },
+        font: { bold: true },
+      },
+    },
+  ];
 
-  // Set độ rộng cột
-  ws['!cols'] = headerRow2.map((title, index) => {
-    let width = 12;
-    if (index === 0) width = 8; // STT
-    else if (index === 1) width = 15; // Mã khách hàng
-    else if (index === 2) width = 25; // Khách hàng
-    else if (index === 3) width = 12; // Ngày
-    else if (index === 4) width = 20; // Phiếu bán hàng
-    else if (index === 5) width = 20; // Chi nhánh
-    else if (index === 6) width = 20; // Nhân viên
-    else if (index === 7) width = 20; // Ngày giao hàng
-    else if (index === 8) width = 15; // Mã sản phẩm
-    else if (index === 9) width = 30; // Tên sản phẩm
-    else if (index === 10) width = 20; // Biến thể
-    else if (index === 11) width = 10; // Đơn vị
-    else width = 15; // Các cột số
-    return { wch: width };
-  });
+  const infoColumn = showInfoColumn
+    ? [
+        {
+          title: 'Thông tin',
+          width: { wch: 30 },
+          style: {
+            fill: { fgColor: { rgb: 'C7DFFB' } },
+            font: { bold: true },
+          },
+        },
+      ]
+    : [];
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Doanh số theo bán hàng');
-  XLSX.writeFile(wb, filename);
-};
+  const remainingColumns = [
+    {
+      title: 'ĐVT',
+      width: { wch: 10 },
+      style: {
+        fill: { fgColor: { rgb: 'C7DFFB' } },
+        font: { bold: true },
+      },
+    },
+    {
+      title: 'Chi nhánh',
+      width: { wch: 20 },
+      style: {
+        fill: { fgColor: { rgb: 'C7DFFB' } },
+        font: { bold: true },
+      },
+    },
+    {
+      title: 'Vị trí',
+      width: { wch: 20 },
+      style: {
+        fill: { fgColor: { rgb: 'C7DFFB' } },
+        font: { bold: true },
+      },
+    },
+    {
+      title: 'SL',
+      width: { wch: 10 },
+      style: {
+        fill: { fgColor: { rgb: 'C7DFFB' } },
+        font: { bold: true },
+      },
+    },
+    {
+      title: 'Đơn giá',
+      width: { wch: 15 },
+      style: {
+        fill: { fgColor: { rgb: 'C7DFFB' } },
+        font: { bold: true },
+      },
+    },
+    {
+      title: '%CK',
+      width: { wch: 10 },
+      style: {
+        fill: { fgColor: { rgb: 'C7DFFB' } },
+        font: { bold: true },
+      },
+    },
+    {
+      title: 'Đơn giá SCK',
+      width: { wch: 15 },
+      style: {
+        fill: { fgColor: { rgb: 'C7DFFB' } },
+        font: { bold: true },
+      },
+    },
+    {
+      title: 'Thuế',
+      width: { wch: 10 },
+      style: {
+        fill: { fgColor: { rgb: 'C7DFFB' } },
+        font: { bold: true },
+      },
+    },
+    {
+      title: 'Thành tiền',
+      width: { wch: 20 },
+      style: {
+        fill: { fgColor: { rgb: 'C7DFFB' } },
+        font: { bold: true },
+      },
+    },
+    {
+      title: 'Ghi chú',
+      width: { wch: 30 },
+      style: {
+        fill: { fgColor: { rgb: 'C7DFFB' } },
+        font: { bold: true },
+      },
+    },
+  ];
+
+  const columns = [...baseColumns, ...infoColumn, ...remainingColumns];
+
+  const getInfoValue = (item) => {
+    if (!showInfoColumn) return '';
+    
+    const infoParts = [];
+    if (item.lot) infoParts.push(`LOT: ${item.lot}`);
+    if (item.expiration_date) infoParts.push(`Date: ${moment(item.expiration_date).format('DD/MM/YYYY')}`);
+    if (item.serial) infoParts.push(`Serial: ${item.serial}`);
+    
+    return infoParts.join('\n');
+  };
+
+  const multiDataSet = [
+    {
+      columns: columns,
+      data: dataReportImport?.rResult?.map((item, index) => {
+        const baseData = [
+          { value: String(index + 1) },
+          { value: item.date ? moment(item.date).format('DD/MM/YYYY HH:mm:ss') : '' },
+          { value: item.code_import || '' },
+          { value: item.name_supplier || '' },
+          { value: item.item_code || '' },
+          { value: item.item_name + (item.item_variation ? '\n' + item.item_variation : '') || '' },
+        ];
+
+        const infoData = showInfoColumn ? [{ value: getInfoValue(item) }] : [];
+
+        const remainingData = [
+          { value: item.unit_name || '' },
+          { value: item.branch_name || '' },
+          { value: item.warehouse_name || '' },
+          { value: item.quantity ? Number(item.quantity) : 0, style: { numFmt: '#,##0' } },
+          {
+            value: item.price ? Number(item.price) : 0,
+            style: { numFmt: '#,##0' },
+          },
+          { value: item.discount_percent ? String(item.discount_percent) + '%' : '0%' },
+          {
+            value: item.price_after_discount ? Number(item.price_after_discount) : 0,
+            style: { numFmt: '#,##0' },
+          },
+          { value: item.tax_rate ? String(item.tax_rate) + '%' : '0%' },
+          {
+            value: item.amount ? Number(item.amount) : 0,
+            style: { numFmt: '#,##0' },
+          },
+          { value: item.note || '' },
+        ];
+
+        return [...baseData, ...infoData, ...remainingData];
+      }) || [],
+    },
+  ];
+
+  return { multiDataSet };
+}; 

@@ -167,6 +167,11 @@ const apiReport = {
     const response = await axiosCustom('GET', `/api_web/Api_reports/getListReportPurchaseOrders`, data);
     return response.data;
   },
+
+  async apiGetDebtSuppliers(data) {
+    const response = await axiosCustom('GET', `/api_web/Api_reports/debt_suppliers`, data);
+    return response.data;
+  },
 };
 
 export default apiReport;

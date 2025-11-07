@@ -1,5 +1,4 @@
 import apiReport from '@/Api/apiReport-Statistical/apiReport';
-import apiSalesOrder from '@/Api/apiSalesExportProduct/salesOrder/apiSalesOrder';
 import { useQuery } from '@tanstack/react-query';
 
 export const useGetOrderProgress = data => {
