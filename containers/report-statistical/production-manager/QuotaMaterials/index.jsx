@@ -8,8 +8,9 @@ import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecompon
 import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 import NoData from '@/components/UI/noData/nodata';
 import PaginationComponent from '@/components/UI/pagination';
-import { useInventoryItems } from '@/containers/manufacture/inventory/hooks/useInventoryItems';
 import { useLanguageContext } from '@/context/ui/LanguageContext';
+import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
+import { useGetItemsWithBranch } from '@/hooks/useComboBoxReport';
 import usePagination from '@/hooks/usePagination';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import formatNumber from '@/utils/helpers/formatnumber';
@@ -19,8 +20,6 @@ import { PiPackage } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
 import { useGetBOMs } from './hook';
 import { useExportExcel } from './hook/useExportExcel';
-import { useGetItemsWithBranch } from '../OrderProgress/hook';
-import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
 
 const breadcrumbItems = [
   {

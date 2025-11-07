@@ -1,7 +1,7 @@
-import OrderProgress from '@/containers/report-statistical/production-manager/OrderProgress';
+import SupplierDebt from '@/containers/report-statistical/purchase-report/SupplierDebt';
 
 const Page = () => {
-    return <OrderProgress />;
+    return <SupplierDebt />;
 };
 
 export default Page;

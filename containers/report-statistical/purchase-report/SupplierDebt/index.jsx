@@ -1,73 +1,54 @@
-import SelectSearchReport from '@/components/common/select/SelectSearchReport';
-import ReportLayout from '@/components/layout/ReportLayout';
-import TableSection from '@/components/layout/ReportLayout/TableSection';
 import OnResetData from '@/components/UI/btnResetData/btnReset';
-import { RowItemTable } from '@/components/UI/common/Table';
-import DropdowLimit from '@/components/UI/dropdowLimit/dropdowLimit';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport';
-import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet';
-import SearchComponent from '@/components/UI/filterComponents/searchComponent';
-import PaginationComponent from '@/components/UI/pagination';
+import Loading from '@/components/UI/loading/loading';
+import NoData from '@/components/UI/noData/nodata';
+import SelectSearchReport from '@/components/common/select/SelectSearchReport';
+import ExcelIcon from '@/components/icons/common/Excel';
+import ReportLayout from '@/components/layout/ReportLayout';
 import { useLanguageContext } from '@/context/ui/LanguageContext';
 import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
-import usePagination from '@/hooks/usePagination';
+import { useGetSuppliersWithBranch } from '@/hooks/useComboBoxReport';
+import useSetingServer from '@/hooks/useConfigNumber';
 import useStatusExprired from '@/hooks/useStatusExprired';
-import formatNumber from '@/utils/helpers/formatnumber';
+import formatNumberConfig from '@/utils/helpers/formatnumber';
 import moment from 'moment';
-import { useRouter } from 'next/router';
-import { useEffect, useMemo, useState } from 'react';
-import { PiCalendar, PiPackage, PiShoppingCart } from 'react-icons/pi';
+import { Fragment, useState } from 'react';
+import { FaUsers } from 'react-icons/fa';
 import { useDebounce } from 'use-debounce';
-import { useGetItemsWithBranch, useGetOrderProgress, useGetSalesOrderCombobox } from './hook';
-import { useExportExcel } from './hook/useExportExcel';
+import { useGetDebtSuppliers } from './hook';
+import { exportSupplierDebtExcel } from './hook/useExportExcel';
+import Image from 'next/image';
+import { FaPlus } from 'react-icons/fa6';
 
 const breadcrumbItems = [
+  { label: `Báo cáo` },
+  { label: `Báo cáo mua hàng` },
   {
-    label: `Báo cáo`,
-    href: '/report-statistical',
-  },
-  {
-    label: `Quản lý sản xuất`,
-    href: '/report-statistical/production-manager',
-  },
-  {
-    label: `Tiến độ theo đơn hàng`,
+    label: `Báo cáo công nợ nhà cung cấp`,
+    href: '/report-statistical/purchase-report/supplier-debt',
   },
 ];
 
 const SupplierDebt = () => {
-  const router = useRouter();
-  const { paginate } = usePagination();
-  const dataLang = useLanguageContext();
+  const dataSeting = useSetingServer();
   const statusExprired = useStatusExprired();
-  const { selectedBranches, setSelectedBranches } = usePersistedBranches();
+  const dataLang = useLanguageContext();
 
+  const formatNumber = number => {
+    return formatNumberConfig(+number, dataSeting);
+  };
+
+  // State management
   const [dateRange, setDateRange] = useState({
     startDate: undefined,
     endDate: undefined,
   });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
-  const [selectedOrder, setSelectedOrder] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState([]);
-  const [limit, setLimit] = useState(15);
-  const [searchValue, setSearchValue] = useState('');
-  const [debouncedSearchValue] = useDebounce(searchValue, 500);
-  const [orderSearch, setOrderSearch] = useState('');
-  const [debouncedOrderSearch] = useDebounce(orderSearch, 500);
-  const [productOptions, setProductOptions] = useState([]);
-  const currentPage = Number(router.query.page) || 1;
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [supplierSearchValue, setSupplierSearchValue] = useState('');
+  const [debouncedSupplierSearchValue] = useDebounce(supplierSearchValue, 500);
 
-  const { data: dataProduct } = useGetItemsWithBranch({
-    search: debouncedSearchTerm,
-    branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
-  });
-  // const { data: dataProduct } = useInventoryItems(debouncedSearchTerm);
-
-  const { data: dataSalesOrderCombobox } = useGetSalesOrderCombobox({
-    search: debouncedOrderSearch,
-    branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
-  });
+  const { selectedBranches, setSelectedBranches } = usePersistedBranches();
 
   // Hàm chuyển đổi Date object sang định dạng d/m/Y
   const formatDateToDMY = date => {
@@ -88,295 +69,453 @@ const SupplierDebt = () => {
     };
   };
 
-  const {
-    data,
-    isFetching,
-    refetch: refetchOrderProgress,
-  } = useGetOrderProgress({
-    page: currentPage,
-    limit: limit,
-    search: debouncedSearchValue,
+  const { data: dataSupplier } = useGetSuppliersWithBranch({
+    search: debouncedSupplierSearchValue,
     branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
-    ...getFormattedDateRange(),
-    ...(selectedOrder !== null && { order_ids: selectedOrder.map(item => item.value) }),
-    ...(selectedProduct && selectedProduct.length > 0 && { product_id: selectedProduct.map(item => item.value) }),
   });
 
-  useEffect(() => {
-    if (dataProduct) {
-      const newOptions = Array.isArray(dataProduct)
-        ? dataProduct.map(product => ({
-            value: product.value,
-            label: product.name,
-            code: product.code,
-          }))
-        : [];
-
-      // Giữ lại các options đã được chọn
-      const selectedOptionValues = selectedProduct && selectedProduct.length > 0 ? selectedProduct.map(item => item.value) : [];
-      const existingSelectedOptions = productOptions.filter(opt => selectedOptionValues.includes(opt.value));
-
-      // Kết hợp options mới với các options đã chọn, loại bỏ trùng lặp
-      const combinedOptions = [...existingSelectedOptions, ...newOptions];
-      const uniqueOptions = combinedOptions.filter((option, index, self) => index === self.findIndex(o => o.value === option.value));
-
-      setProductOptions(uniqueOptions);
-    }
-  }, [dataProduct, selectedProduct]);
-
-  const totals = useMemo(() => {
-    const rows = data?.output?.aaData || [];
-    return rows.reduce(
-      (acc, item) => {
-        const q = Number(item.quantity) || 0;
-        const qSx = Number(item.quantity_sx) || 0;
-        const qHt = Number(item.quantity_ht) || 0;
-        const qDelivery = Number(item.quantity_delivery) || 0;
-        const qNotDelivery = Number(item.quantity_not_delivery) || 0;
-        acc.total_quantity += q;
-        acc.total_produced += qSx;
-        acc.total_finished += qHt;
-        acc.total_delivered += qDelivery;
-        acc.total_pending += qNotDelivery;
-        return acc;
-      },
-      { total_quantity: 0, total_produced: 0, total_finished: 0, total_delivered: 0, total_pending: 0 }
-    );
-  }, [data?.output?.aaData]);
-
+  const {
+    data: dataSupplierDebt,
+    isFetching: isFetchingSupplierDebt,
+    refetch: refetchSupplierDebt,
+  } = useGetDebtSuppliers({
+    supplier_id: selectedSupplier || undefined,
+    ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
+    ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
+  });
+  // Handler functions
   const handleDateChange = newValue => {
-    router.push({ pathname: router.pathname, query: { ...router.query, page: 1 } });
     setDateRange(newValue);
   };
 
-  const handleOrderChange = values => {
-    if (!values || values.length === 0) {
-      setSelectedOrder([]);
-      router.push({ pathname: router.pathname, query: { ...router.query, page: 1 } });
-      return;
-    }
-    const orderOptions = (dataSalesOrderCombobox?.orders || []).map(item => ({ value: item.id, label: item.reference_no }));
-    const selectedItems = values.map(v => orderOptions.find(opt => opt.value === v)).filter(Boolean);
-    setSelectedOrder(selectedItems);
-    router.push({ pathname: router.pathname, query: { ...router.query, page: 1 } });
+  const handleSupplierChange = values => {
+    setSelectedSupplier(values);
   };
 
-  const handleProductChange = values => {
-    if (!values || values.length === 0) {
-      setSelectedProduct([]);
-      router.push({ pathname: router.pathname, query: { ...router.query, page: 1 } });
-      return;
-    }
-
-    const selectedItems = values.map(value => {
-      const selectedItem = productOptions.find(opt => opt.value === value);
-      return {
-        value: selectedItem.value,
-        label: selectedItem.label,
-        code: selectedItem.code,
-      };
-    });
-
-    setSelectedProduct(selectedItems);
-    router.push({ pathname: router.pathname, query: { ...router.query, page: 1 } });
+  const handleExportExcel = () => {
+    if (!dataSupplierDebt) return;
+    const supplierName = dataSupplierDebt?.debt?.supplier_name || 'Nhà_cung_cấp';
+    const filename = `Bao_cao_cong_no_${supplierName}.xlsx`;
+    exportSupplierDebtExcel(dataSupplierDebt, filename, dataSeting, getFormattedDateRange());
   };
 
-  const handleClearOrder = () => {
-    setSelectedOrder([]);
-    router.push({ pathname: router.pathname, query: { ...router.query, page: 1 } });
-  };
-
-  const handleClearProduct = () => {
-    setSelectedProduct([]);
-    router.push({ pathname: router.pathname, query: { ...router.query, page: 1 } });
-  };
-
-  const handleSearch = value => {
-    const searchValue = value?.target?.value || (typeof value === 'string' ? value : '');
-    setSearchValue(searchValue);
-    router.push({
-      pathname: router.pathname,
-      query: { ...router.query, page: 1 },
-    });
-  };
-
-  const handleLimitChange = newLimit => {
-    setLimit(newLimit);
-    router.push({
-      pathname: router.pathname,
-      query: { ...router.query, page: 1 },
-    });
-  };
-
-  const { multiDataSet } = useExportExcel(data?.output?.aaData || []);
-
-  const getStatusColor = status => {
-    switch (status) {
-      case 'success':
-        return 'text-green-600 border-green-600';
-      case 'warning':
-        return 'text-blue-600 border-blue-600';
-      case 'secondary':
-        return 'text-red-500 border-red-500';
-      default:
-        return 'text-neutral-07 border-neutral-07';
-    }
-  };
+  const noDataTitle = !selectedSupplier ? 'Chưa chọn nhà cung cấp. Vui lòng chọn nhà cung cấp để xem báo cáo.' : 'Chưa có dữ liệu';
 
   return (
-    <>
-      <ReportLayout
-        title={'Báo cáo tiến độ theo đơn hàng'}
-        statusExprired={statusExprired}
-        breadcrumbItems={breadcrumbItems}
-        branchValue={selectedBranches}
-        onBranchChange={setSelectedBranches}
-        onBranchClear={() => setSelectedBranches([])}
-        filterSection={
-          <div className='w-full items-center flex justify-between gap-4'>
-            <div className='grid grid-cols-3 gap-3'>
-              <DateToDateReport placeholder='Từ ngày đến ngày' value={dateRange} onChange={handleDateChange} icon={<PiCalendar color='#9295A4' className='size-4' />} className='w-full' />
-              <SelectSearchReport
-                placeholder='Đơn hàng bán'
-                onChange={handleOrderChange}
-                onClear={handleClearOrder}
-                onSearch={value => setOrderSearch(value)}
-                icon={<PiShoppingCart color='#9295A4' className='size-4' />}
-                className='w-full'
-                options={dataSalesOrderCombobox?.orders?.map(item => ({ value: item.id, label: item.reference_no }))}
-                value={selectedOrder}
-                mode='multiple'
-              />
-              <SelectSearchReport
-                placeholder='Mặt hàng'
-                onSearch={value => {
-                  setSearchTerm(value);
-                }}
-                onChange={handleProductChange}
-                onClear={handleClearProduct}
-                icon={<PiPackage color='#9295A4' className='size-4' />}
-                className='w-full'
-                options={productOptions}
-                value={selectedProduct}
-                mode='multiple'
-              />
-            </div>
-            <div className='flex gap-3 items-center'>
-              <SearchComponent dataLang={dataLang} onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' placeholder='Tìm kiếm...' />
-              <OnResetData sOnFetching={() => {}} onClick={refetchOrderProgress} className='!py-3' />
-              <ExcelFileComponent dataLang={dataLang} filename='Báo cáo tiến độ theo đơn hàng' title='BCTDTDH' multiDataSet={multiDataSet} classBtn='!py-3' />
-            </div>
+    <ReportLayout
+      title={'Báo cáo công nợ nhà cung cấp'}
+      statusExprired={statusExprired}
+      breadcrumbItems={breadcrumbItems}
+      branchValue={selectedBranches}
+      onBranchChange={setSelectedBranches}
+      onBranchClear={() => setSelectedBranches([])}
+      filterSection={
+        <div className='w-full items-center flex justify-between gap-4'>
+          <div className='grid grid-cols-3 gap-3'>
+            <DateToDateReport placeholder='Từ ngày đến ngày' value={dateRange} onChange={handleDateChange} className='w-full' />
+            <SelectSearchReport
+              placeholder='Nhà cung cấp'
+              onChange={handleSupplierChange}
+              onClear={() => setSelectedSupplier(null)}
+              onSearch={setSupplierSearchValue}
+              icon={<FaUsers color='#9295A4' className='size-4' />}
+              options={dataSupplier || []}
+              value={selectedSupplier}
+            />
           </div>
-        }
-        tableSection={
-          <TableSection
-            fixedColumns={[
-              // { title: 'STT', width: 'w-14', textAlign: 'center' },
-              { title: 'Ngày đơn hàng', width: 'w-32 text-center', textAlign: 'center' },
-              { title: 'Số đơn hàng', width: 'w-32', textAlign: 'left' },
-              { title: 'Chi nhánh', width: 'w-40', textAlign: 'left' },
-            ]}
-            scrollableColumns={[
-              { title: 'Tên sản phẩm', width: 'w-48', textAlign: 'left' },
-              { title: 'Biến thể', width: 'w-48', textAlign: 'left' },
-              { title: 'Đơn vị tính', width: 'w-24 text-center', textAlign: 'center' },
-              { title: 'Ghi chú', width: 'w-40', textAlign: 'left' },
-              { title: 'Số lượng', width: 'w-28', textAlign: 'center' },
-              { title: 'Ngày cần hàng', width: 'w-32 text-center', textAlign: 'center' },
-              { title: 'SL sản xuất', width: 'w-28', textAlign: 'center' },
-              { title: 'SL đã hoàn thành sản xuất', width: 'w-32 text-center', textAlign: 'center' },
-              { title: 'SL đã giao', width: 'w-28', textAlign: 'center' },
-              { title: 'SL chưa giao', width: 'w-28 text-center', textAlign: 'center' },
-              { title: 'Ngày hoàn thành mới nhất', width: 'w-36 text-center', textAlign: 'center' },
-              { title: 'Ngày giao hàng mới nhất', width: 'w-36 text-center', textAlign: 'center' },
-              { title: 'Trạng thái sản xuất', width: 'w-40 text-center', textAlign: 'center' },
-            ]}
-            data={data?.output?.aaData || []}
-            isFetching={isFetching}
-            renderFixedRow={(item, index) => (
-              <>
-                {/* <RowItemTable className='w-14 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>{index + 1}</RowItemTable> */}
-                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {moment(item.date).format('DD/MM/YYYY')}
-                </RowItemTable>
-                <RowItemTable className='w-32 flex items-center py-2 px-3 border-r border-[#E0E0E1] font-normal flex-shrink-0'>{item.reference_no}</RowItemTable>
-                <RowItemTable className='w-40 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  <span className='text-left responsive-text-sm'>{item.branch_name}</span>
-                </RowItemTable>
-              </>
-            )}
-            renderScrollableRow={(item, index) => (
-              <>
-                <RowItemTable className='w-48 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  <span className='text-left responsive-text-sm'>{item.item_name}</span>
-                </RowItemTable>
-                <RowItemTable className='w-48 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  <span className='text-left responsive-text-sm'>{item.item_variant_name}</span>
-                </RowItemTable>
-                <RowItemTable className='w-24 flex items-center justify-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  <span className='text-center responsive-text-sm'>{item.item_unit_name}</span>
-                </RowItemTable>
-                <RowItemTable className='w-40 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  <span className='text-left responsive-text-sm'>{item.note_item || '-'}</span>
-                </RowItemTable>
-                <RowItemTable className='w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {Number(item.quantity) === 0 ? '-' : formatNumber(Number(item.quantity))}
-                </RowItemTable>
-                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {moment(item.delivery_date).format('DD/MM/YYYY')}
-                </RowItemTable>
-                <RowItemTable className='w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {Number(item.quantity_sx) === 0 ? '-' : formatNumber(Number(item.quantity_sx))}
-                </RowItemTable>
-                <RowItemTable className='w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {Number(item.quantity_ht) === 0 ? '-' : formatNumber(Number(item.quantity_ht))}
-                </RowItemTable>
-                <RowItemTable className='w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {Number(item.quantity_delivery) === 0 ? '-' : formatNumber(Number(item.quantity_delivery))}
-                </RowItemTable>
-                <RowItemTable className='w-28 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {Number(item.quantity_not_delivery) === 0 ? '-' : formatNumber(Number(item.quantity_not_delivery))}
-                </RowItemTable>
-                <RowItemTable className='w-36 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {item.max_purchase_date ? moment(item.max_purchase_date).format('DD/MM/YYYY') : '-'}
-                </RowItemTable>
-                <RowItemTable className='w-36 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0'>
-                  {item.max_delivery_date ? moment(item.max_delivery_date).format('DD/MM/YYYY') : '-'}
-                </RowItemTable>
-                <RowItemTable className='w-40 flex justify-center items-center py-2 px-3 text-neutral-07 font-normal flex-shrink-0'>
-                  <span className={`responsive-text-sm font-medium border rounded-full px-2 py-1 ${getStatusColor(item.status_item_po_data.color)}`}>{item.status_item_po_data.name}</span>
-                </RowItemTable>
-              </>
-            )}
-            renderFooter={() => (
-              <>
-                {/* Fixed columns: STT, Ngày đơn hàng, Số đơn hàng, Chi nhánh xưởng */}
-                <RowItemTable className='w-32 flex-shrink-0 bg-white sticky left-0 z-20'></RowItemTable>
-                <RowItemTable className='w-32 flex-shrink-0 bg-white sticky left-[128px] z-20'></RowItemTable>
-                <RowItemTable className='h-10 w-40 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white uppercase sticky left-[256px] z-20'>Tổng cộng</RowItemTable>
+          <div className='flex gap-3 items-center'>
+            <OnResetData sOnFetching={refetchSupplierDebt} className='!py-3' />
+            <button onClick={handleExportExcel} className='!py-3 3xl:py-3 3xl:px-4 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded-lg border border-background-blue-2 transition'>
+              <ExcelIcon className='3xl:size-5 size-4 text-typo-blue-4' />
+              <span className='text-typo-blue-4 responsive-text-sm font-medium whitespace-nowrap'>{dataLang?.client_list_exportexcel}</span>
+            </button>
+          </div>
+        </div>
+      }
+      tableSection={
+        isFetchingSupplierDebt ? (
+          <Loading color='#0f4f9e' />
+        ) : dataSupplierDebt ? (
+          <div className='flex flex-col gap-4 relative h-full'>
+            <div className='flex flex-col gap-1 responsive-text-sm px-4'>
+              <h3>Nhà cung cấp: {dataSupplierDebt?.debt?.name || '-'}</h3>
+              <p>Địa chỉ: {dataSupplierDebt?.debt?.address || '-'}</p>
+            </div>
+            <Customscrollbar alwaysShowScrollbar={true} className='h-full flex-1 overflow-auto border border-[#E0E0E1]'>
+              <table className='w-full border-0 p-0 m-0'>
+                <thead>
+                  <tr className='responsive-text-sm sticky top-0 z-50 bg-white capitalize'>
+                    <th className='min-w-32 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Ngày chứng từ</div>
+                    </th>
+                    <th className='min-w-36 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Số chứng từ</div>
+                    </th>
+                    <th className='min-w-48 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Sản phẩm</div>
+                    </th>
+                    {/* Cột Biến thể mới thêm */}
+                    <th className='min-w-36 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Biến thể</div>
+                    </th>
+                    <th className='min-w-24 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Đơn vị</div>
+                    </th>
+                    <th className='min-w-24 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Số lượng</div>
+                    </th>
+                    <th className='min-w-24 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Đơn giá</div>
+                    </th>
+                    <th className='min-w-28 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Đơn giá SCK</div>
+                    </th>
+                    <th className='min-w-24 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Thuế</div>
+                    </th>
+                    <th className='min-w-28 h-2 p-0 font-semibold text-gray-700'>
+                      <div className='w-full h-full flex items-center justify-end px-3 py-2 border-b border-[#E0E0E1]'>Thành tiền sau thuế</div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Công nợ đầu kỳ */}
+                  <tr className='bg-gray-100 responsive-text-sm'>
+                    <td colSpan={9} className='p-0 h-2 text-left text-gray-700'>
+                      <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] font-bold capitalize'>Công nợ đầu kỳ</div>
+                    </td>
+                    <td className='p-0 h-2 text-right font-semibold text-gray-800'>
+                      <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>{formatNumber(dataSupplierDebt?.debt?.begin_debt || 0)}</div>
+                    </td>
+                  </tr>
+                  {Array.isArray(dataSupplierDebt?.rsImports) && dataSupplierDebt.rsImports?.length > 0 && (
+                    <>
+                      <tr className='bg-blue-100 responsive-text-sm'>
+                        <td colSpan={10} className='p-0 h-2 text-center text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1] font-semibold uppercase'>Phiếu nhập hàng</div>
+                        </td>
+                      </tr>
+                      {/* Deliveries - summary row then items (for all orders) */}
+                      {dataSupplierDebt?.rsImports?.map((rsImport, dIdx) => (
+                        <Fragment key={`rsImport-${dIdx}`}>
+                          {/* Summary row for all deliveries */}
+                          <tr className='bg-blue-50/50 responsive-text-sm'>
+                            <td className='p-0 h-2 text-center text-gray-700'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{moment(rsImport?.date).format('DD/MM/YYYY') || '-'}</div>
+                            </td>
+                            <td className='p-0 h-2 text-center text-gray-700'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{rsImport?.code_import || '-'}</div>
+                            </td>
+                            <td className='p-0 h-2 text-left text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{rsImport?.item_name || rsImport?.item_code || '-'}</div>
+                            </td>
+                            <td className='p-0 h-2 text-left text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{rsImport?.item_variation || '-'}</div>
+                            </td>
+                            <td className='p-0 h-2 text-center text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{rsImport?.unit_name || '-'}</div>
+                            </td>
+                            <td className='p-0 h-2 text-center text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{Number(rsImport?.quantity) === 0 ? '-' : formatNumber(Number(rsImport?.quantity))}</div>
+                            </td>
+                            <td className='p-0 h-2 text-center text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{Number(rsImport?.price) === 0 ? '-' : formatNumber(Number(rsImport?.price))}</div>
+                            </td>
+                            <td className='p-0 h-2 text-center'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                                {Number(rsImport?.price_after_discount) === 0 ? '-' : formatNumber(Number(rsImport?.price_after_discount))}
+                              </div>
+                            </td>
+                            <td className='p-0 h-2 text-center'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{Number(rsImport?.tax_rate) !== 0 ? rsImport?.tax_rate + '%' : '-'}</div>
+                            </td>
+                            <td className='p-0 h-2 text-right text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>{Number(rsImport?.amount) === 0 ? '-' : formatNumber(Number(rsImport?.amount))}</div>
+                            </td>
+                          </tr>
+                        </Fragment>
+                      ))}
+                      <tr className='bg-blue-50  responsive-text-sm'>
+                        <td colSpan={5} className='p-0 h-2 font-semibold text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] capitalize'>Tổng cộng</div>
+                        </td>
+                        <td className='p-0 h-2 text-center font-semibold text-new-blue'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                            {formatNumber(dataSupplierDebt?.rsImports?.reduce((acc, curr) => acc + Number(curr?.quantity), 0) || 0)}
+                          </div>
+                        </td>
+                        <td colSpan={3} className='p-0 h-2 text-right font-semibold text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'></div>
+                        </td>
+                        <td className='p-0 h-2 text-right font-semibold text-new-blue'>
+                          <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>
+                            {formatNumber(dataSupplierDebt?.rsImports?.reduce((acc, curr) => acc + Number(curr?.amount), 0) || 0)}
+                          </div>
+                        </td>
+                      </tr>
+                    </>
+                  )}
 
-                {/* Scrollable columns: Tên SP, Biến thể, ĐVT, Ghi chú, ... */}
-                <RowItemTable className='w-48 flex-shrink-0 bg-white'></RowItemTable>
-                <RowItemTable className='h-10 w-48 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
-                <RowItemTable className='h-10 w-24 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
-                <RowItemTable className='h-10 w-40 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
-                <RowItemTable className='h-10 w-28 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(totals.total_quantity)}</RowItemTable>
-                <RowItemTable className='h-10 w-32 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
-                <RowItemTable className='h-10 w-28 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(totals.total_produced)}</RowItemTable>
-                <RowItemTable className='h-10 w-32 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(totals.total_finished)}</RowItemTable>
-                <RowItemTable className='h-10 w-28 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(totals.total_delivered)}</RowItemTable>
-                <RowItemTable className='h-10 w-28 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>{formatNumber(totals.total_pending)}</RowItemTable>
-                <RowItemTable className='h-10 w-36 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
-                <RowItemTable className='h-10 w-36 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
-                <RowItemTable className='h-10 w-40 flex items-center justify-center px-3 text-neutral-07 font-semibold flex-shrink-0 bg-white'>-</RowItemTable>
-              </>
-            )}
-          />
-        }
-        totalSection={<PaginationComponent postsPerPage={limit} totalPosts={Number(data?.output?.iTotalRecords) || 0} paginate={paginate} currentPage={currentPage} />}
-        paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}
-      />
-    </>
+                  {Array.isArray(dataSupplierDebt?.rsReturns) && dataSupplierDebt.rsReturns?.length > 0 && (
+                    <>
+                      <tr className='bg-amber-100 responsive-text-sm'>
+                        <td colSpan={10} className='p-0 h-2 text-center text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1] font-semibold uppercase'>Trả lại hàng mua</div>
+                        </td>
+                      </tr>
+                      {/* Returns items - từng item */}
+                      {dataSupplierDebt?.rsReturns?.map((ret, rIdx) => (
+                        <Fragment key={`return-${rIdx}`}>
+                          {/* Summary row for all returns */}
+                          <tr className='bg-amber-50/50 responsive-text-sm'>
+                            <td className='p-0 h-2 text-center text-gray-700'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{moment(ret?.date).format('DD/MM/YYYY') || '-'}</div>
+                            </td>
+                            <td className='p-0 h-2 text-center text-gray-700'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{ret?.code_import || '-'}</div>
+                            </td>
+                            <td className='p-0 h-2 text-left text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{ret?.item_name || ret?.item_code || '-'}</div>
+                            </td>
+                            <td className='p-0 h-2 text-left text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{ret?.item_variation || '-'}</div>
+                            </td>
+                            <td className='p-0 h-2 text-center text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{ret?.unit_name || '-'}</div>
+                            </td>
+                            <td className='p-0 h-2 text-center text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{Number(ret?.quantity) === 0 ? '-' : formatNumber(Number(ret?.quantity))}</div>
+                            </td>
+                            <td className='p-0 h-2 text-center text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{Number(ret?.price) === 0 ? '-' : formatNumber(Number(ret?.price))}</div>
+                            </td>
+                            <td className='p-0 h-2 text-center'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                                {Number(ret?.price_after_discount) === 0 ? '-' : formatNumber(Number(ret?.price_after_discount))}
+                              </div>
+                            </td>
+                            <td className='p-0 h-2 text-center'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{Number(ret?.tax_rate) !== 0 ? ret?.tax_rate + '%' : '-'}</div>
+                            </td>
+                            <td className='p-0 h-2 text-right text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>{Number(ret?.amount) === 0 ? '-' : formatNumber(Number(ret?.amount))}</div>
+                            </td>
+                          </tr>
+                        </Fragment>
+                      ))}
+                      <tr className='bg-amber-50 responsive-text-sm'>
+                        <td colSpan={5} className='p-0 h-2 font-semibold text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] capitalize'>Tổng cộng</div>
+                        </td>
+                        <td className='p-0 h-2 text-center font-semibold text-new-blue'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                            {formatNumber(dataSupplierDebt?.rsReturns?.reduce((acc, curr) => acc + Number(curr?.quantity), 0) || 0)}
+                          </div>
+                        </td>
+                        <td colSpan={3} className='p-0 h-2 text-right font-semibold text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'></div>
+                        </td>
+                        <td className='p-0 h-2 text-right font-semibold text-amber-600'>
+                          <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>
+                            {formatNumber(dataSupplierDebt?.rsReturns?.reduce((acc, curr) => acc + Number(curr?.amount), 0) || 0)}
+                          </div>
+                        </td>
+                      </tr>
+                    </>
+                  )}
+
+                  {Array.isArray(dataSupplierDebt?.rsServices) && dataSupplierDebt.rsServices?.length > 0 && (
+                    <>
+                      <tr className='bg-purple-100 responsive-text-sm'>
+                        <td colSpan={10} className='p-0 h-2 text-center text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1] font-semibold uppercase'>Dịch vụ</div>
+                        </td>
+                      </tr>
+                      {/* Returns items - từng item */}
+                      {dataSupplierDebt?.rsServices?.map((rsService, rIdx) => (
+                        <Fragment key={`rsService-${rIdx}`}>
+                          {/* Summary row for all returns */}
+                          <tr className='bg-purple-50/50 responsive-text-sm'>
+                            <td className='p-0 h-2 text-center text-gray-700'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{moment(rsService?.date).format('DD/MM/YYYY') || '-'}</div>
+                            </td>
+                            <td className='p-0 h-2 text-center text-gray-700'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{rsService?.code_import || '-'}</div>
+                            </td>
+                            <td className='p-0 h-2 text-left text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{rsService?.name_item || rsService?.item_code || '-'}</div>
+                            </td>
+                            <td className='p-0 h-2 text-left text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'></div>
+                            </td>
+                            <td className='p-0 h-2 text-center text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'></div>
+                            </td>
+                            <td className='p-0 h-2 text-center text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{Number(rsService?.quantity) === 0 ? '-' : formatNumber(Number(rsService?.quantity))}</div>
+                            </td>
+                            <td className='p-0 h-2 text-center text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{Number(rsService?.price) === 0 ? '-' : formatNumber(Number(rsService?.price))}</div>
+                            </td>
+                            <td className='p-0 h-2 text-center'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                                {Number(rsService?.price) === 0 ? '-' : formatNumber(Number(rsService?.price) * (1 - Number(rsService?.discount_percent) / 100))}
+                              </div>
+                            </td>
+                            <td className='p-0 h-2 text-center'>
+                              <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{Number(rsService?.tax_rate) !== 0 ? rsService?.tax_rate + '%' : '-'}</div>
+                            </td>
+                            <td className='p-0 h-2 text-right text-gray-700 align-middle'>
+                              <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>{Number(rsService?.amount) === 0 ? '-' : formatNumber(Number(rsService?.amount))}</div>
+                            </td>
+                          </tr>
+                        </Fragment>
+                      ))}
+                      <tr className='bg-purple-50 responsive-text-sm'>
+                        <td colSpan={5} className='p-0 h-2 font-semibold text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] capitalize'>Tổng cộng</div>
+                        </td>
+                        <td className='p-0 h-2 text-center font-semibold text-new-blue'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>
+                            {formatNumber(dataSupplierDebt?.rsServices?.reduce((acc, curr) => acc + Number(curr?.quantity), 0) || 0)}
+                          </div>
+                        </td>
+                        <td colSpan={3} className='p-0 h-2 text-right font-semibold text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'></div>
+                        </td>
+                        <td className='p-0 h-2 text-right font-semibold text-purple-600'>
+                          <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>
+                            {formatNumber(dataSupplierDebt?.rsServices?.reduce((acc, curr) => acc + Number(curr?.amount), 0) || 0)}
+                          </div>
+                        </td>
+                      </tr>
+                    </>
+                  )}
+
+                  <tr className='bg-gray-100 responsive-text-sm'>
+                    <td colSpan={9} className='p-0 h-2 text-left text-gray-700'>
+                      <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] font-semibold capitalize'>Tổng cộng phát sinh trong kỳ</div>
+                    </td>
+                    <td className='p-0 h-2 text-right font-semibold text-new-blue'>
+                      <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>
+                        {formatNumber(
+                          (
+                            (Array.isArray(dataSupplierDebt?.rsImports)
+                              ? dataSupplierDebt.rsImports.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+                              : 0) -
+                            (Array.isArray(dataSupplierDebt?.rsReturns)
+                              ? dataSupplierDebt.rsReturns.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+                              : 0) +
+                            (Array.isArray(dataSupplierDebt?.rsServices)
+                              ? dataSupplierDebt.rsServices.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+                              : 0)
+                          ) || 0
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+
+                  {/* Phiếu khác trong kỳ */}
+                  {Array.isArray(dataSupplierDebt?.rsPaySlips) && dataSupplierDebt.rsPaySlips?.length > 0 && (
+                    <>
+                      <tr className='bg-emerald-500/80 responsive-text-sm'>
+                        <td colSpan={10} className='p-0 h-2 text-center text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1] font-semibold uppercase'>Phiếu chi trong kỳ</div>
+                        </td>
+                      </tr>
+                      <tr className='bg-emerald-100 responsive-text-sm'>
+                        <td className='p-0 h-2 font-semibold text-center text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>Ngày chứng từ</div>
+                        </td>
+                        <td className='p-0 h-2 font-semibold text-center text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>Mã phiếu</div>
+                        </td>
+                        <td className='p-0 h-2 font-semibold text-gray-700' colSpan={7}>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>Ghi chú</div>
+                        </td>
+                        <td className='p-0 h-2 text-right font-semibold text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>Số tiền</div>
+                        </td>
+                      </tr>
+
+                      {dataSupplierDebt.rsPaySlips.map((rsPaySlip, cIdx) => (
+                        <tr key={`rsPaySlip-${cIdx}`} className='hover:bg-gray-50 responsive-text-sm'>
+                          <td className='p-0 h-2 text-center text-gray-700'>
+                            <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{rsPaySlip?.date ? moment(rsPaySlip.date).format('DD/MM/YYYY') : '-'}</div>
+                          </td>
+                          <td className='p-0 h-2 text-center text-gray-700'>
+                            <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{rsPaySlip?.code || '-'}</div>
+                          </td>
+                          <td className='p-0 h-2' colSpan={7}>
+                            <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1]'>{rsPaySlip?.note || '-'}</div>
+                          </td>
+                          <td className='p-0 h-2 text-right text-gray-700'>
+                            <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>{Number(rsPaySlip?.total) ? formatNumber(Number(rsPaySlip?.total)) : '-'}</div>
+                          </td>
+                        </tr>
+                      ))}
+
+                      {/* Tổng cộng phiếu thu trong kỳ */}
+                      <tr className='bg-emerald-100 responsive-text-sm'>
+                        <td colSpan={9} className='p-0 h-2 font-semibold text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] capitalize'>Tổng cộng</div>
+                        </td>
+                        <td className='p-0 h-2 text-right font-semibold text-gray-700'>
+                          <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>
+                            {formatNumber(dataSupplierDebt?.rsPaySlips?.reduce((acc, curr) => acc + Number(curr?.total), 0) || 0)}
+                          </div>
+                        </td>
+                      </tr>
+                    </>
+                  )}
+
+                  {/* Số dư cuối kỳ */}
+                  <tr className='bg-gray-100 responsive-text-sm'>
+                    <td colSpan={9} className='p-0 h-2 font-bold text-gray-800'>
+                      <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] capitalize'>Số dư cuối kỳ</div>
+                    </td>
+                    <td className='p-0 h-2 text-right font-bold text-new-blue'>
+                      <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>
+                        {formatNumber(
+                          (
+                            Number(dataSupplierDebt?.debt?.begin_debt || 0) +
+                            (
+                              (Array.isArray(dataSupplierDebt?.rsImports)
+                                ? dataSupplierDebt.rsImports.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+                                : 0) -
+                              (Array.isArray(dataSupplierDebt?.rsReturns)
+                                ? dataSupplierDebt.rsReturns.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+                                : 0) +
+                              (Array.isArray(dataSupplierDebt?.rsServices)
+                                ? dataSupplierDebt.rsServices.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+                                : 0)
+                            ) -
+                            (Array.isArray(dataSupplierDebt?.rsPaySlips)
+                              ? dataSupplierDebt.rsPaySlips.reduce((acc, curr) => acc + Number(curr?.total || 0), 0)
+                              : 0)
+                          ) || 0
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </Customscrollbar>
+          </div>
+        ) : !selectedSupplier ? (
+          <div className='flex flex-col items-center justify-center h-full'>
+            <Image src='/background/system/repostSupplier.png' alt='Không có dữ liệu' width={165} height={100} />
+            <div className='flex items-center gap-2 mt-2'>
+              <FaPlus color='#000' className='size-4' />
+              <p className='responsive-text-base font-semibold text-neutral-05'>Chọn nhà cung cấp</p>
+            </div>
+            <p className='responsive-text-sm text-neutral-03 mt-2'>{noDataTitle}</p>
+          </div>
+        ) : (
+          <NoData titleText={noDataTitle} type='report' classNameImage='w-[245px]' />
+        )
+      }
+    />
   );
 };
 
