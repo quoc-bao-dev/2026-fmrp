@@ -64,8 +64,6 @@ const _ServerInstance = async (method, url, dataObject = {}, callback) => {
     headers['Content-Type'] = dataObject.headers['Content-Type'] ? dataObject.headers['Content-Type'] : 'application/json';
   }
 
-  console.log({ dataObject });
-
   return axios({
     method: method,
     url: url,

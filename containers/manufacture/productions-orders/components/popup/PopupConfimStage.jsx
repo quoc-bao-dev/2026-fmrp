@@ -64,10 +64,10 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
 
   const { data: dataLoadOutOfStock, isLoading: isLoadingLoadOutOfStock, onGetData: onGetDataLoadOutOfStock } = useLoadOutOfStock();
 
-  const resetErrors = () => {
+  function resetErrors() {
     setErrorNVLData({ items: [] });
     setErrorNVLDataBefore({ items: [] });
-  };
+  }
 
   const checkItemFinalStage = isState.dataTableProducts?.data?.items?.some(e => e?.final_stage == 1);
   const showSerialColumns = checkItemFinalStage && dataProductSerial.is_enable === '1';
@@ -626,6 +626,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                 </div>
               </div>
 
+              {/* TODO: */}
               {/* Right Panel */}
               <div className='col-span-13 flex flex-col gap-2'>
                 {errorNVLData && errorNVLData?.items?.length > 0 && (
