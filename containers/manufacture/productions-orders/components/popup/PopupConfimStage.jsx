@@ -65,7 +65,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
 
   const { data: dataLoadOutOfStock, isLoading: isLoadingLoadOutOfStock, onGetData: onGetDataLoadOutOfStock } = useLoadOutOfStock();
 
-  const resetErrors = () => {
+  function resetErrors() {
     setErrorNVLData({ items: [] });
     setErrorNVLDataBefore({ items: [] });
     setIsWarehouseMissing(false);
@@ -632,6 +632,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                 </div>
               </div>
 
+              {/* TODO: */}
               {/* Right Panel */}
               <div className='col-span-13 flex flex-col gap-2'>
                 {errorNVLData && errorNVLData?.items?.length > 0 && (
