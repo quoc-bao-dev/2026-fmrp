@@ -100,7 +100,7 @@ const CustomTooltip = ({ active, payload, label }) => {
             Tổng số lượng:
           </span>
           <span className='responsive-text-sm font-semibold' style={{ color: '#2E3A47' }}>
-            {formatNumber(totalQuantity)}
+            {totalQuantity !== 0 ? formatNumber(totalQuantity) : "-"}
           </span>
         </div>
         <div className='flex gap-1 justify-between items-center'>
@@ -108,7 +108,7 @@ const CustomTooltip = ({ active, payload, label }) => {
             Số lượng tối thiểu:
           </span>
           <span className='responsive-text-sm font-semibold' style={{ color: '#2E3A47' }}>
-            {formatNumber(minimumQuantity)}
+            {minimumQuantity !== 0 ? formatNumber(minimumQuantity) : "-"}
           </span>
         </div>
       </div>

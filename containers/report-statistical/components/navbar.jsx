@@ -6,11 +6,19 @@ import { useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 
 const Navbar = props => {
-  const { permissions_current: auth } = useSelector(state => state.auth);
+  // const auth = useSelector(state => state.auth);
+
+  const { permissions_current: auth, is_upgrade: isUpgrade } = useSelector(state => state.auth);
 
   const router = useRouter();
   const showToast = useToast();
-
+  
+  // Kiểm tra auth có dữ liệu không (không phải mảng rỗng, null, undefined)
+  const hasAuth = auth && (!Array.isArray(auth) || auth.length > 0);
+  
+  // Kiểm tra có gói Pro: isUpgrade === false nghĩa là có Pro
+  const hasPro = isUpgrade === false;
+  console.log(hasPro)
   // báo cáo tồn kho
   const isNavbarWarehouse = [
     {
@@ -126,16 +134,20 @@ const Navbar = props => {
       id: uuidv4(),
       name: 'Báo cáo nhập hàng',
       path: '/report-statistical/purchase-report/import-goods',
+      disabled: auth?.report_import?.is_view == 0,
     },
     {
       id: uuidv4(),
       name: 'Theo dõi đơn đặt hàng',
       path: '/report-statistical/purchase-report/order-tracking',
+      disabled: auth?.report_purchase_orders?.is_view == 0,
+      isPro: true,
     },
     {
       id: uuidv4(),
       name: 'Đối chiếu công nợ NCC',
       path: '/report-statistical/purchase-report/supplier-debt',
+      disabled: auth?.report_debt_suppliers?.is_view == 0,
     },
   ];
 
@@ -258,11 +270,13 @@ const Navbar = props => {
               <div className={`flex flex-col gap-3 ${item.children ? '' : ''}`}>
                 {item.children ? (
                   item.children.map(child => {
+                    const isProRequired = child.isPro === true && hasAuth ;
+                    const isDisabled = child.disabled || (isProRequired && !hasPro);
                     return (
                       <div key={child.id} className='relative'>
-                        {child.disabled ? (
+                        {isDisabled ? (
                           <li
-                            onClick={() => showToast('error', 'Bạn không có quyền truy cập')}
+                            onClick={() => showToast('error', isProRequired && !hasPro ? 'Tính năng này yêu cầu gói Pro' : 'Bạn không có quyền truy cập')}
                             className='group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer opacity-50'
                           >
                             <div className='flex items-center gap-2'>
@@ -271,6 +285,7 @@ const Navbar = props => {
                                 <div className='responsive-text-sm text-gray-400 capitalize'>{child.name}</div>
                               </div>
                             </div>
+                            {child.isPro === true && !hasPro && <span className='bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs'>pro</span>}
                           </li>
                         ) : (
                           <Link href={child.path} className='relative'>
@@ -297,38 +312,44 @@ const Navbar = props => {
                   })
                 ) : (
                   <div key={item.id} className='relative'>
-                    {item.disabled ? (
-                      <li
-                        onClick={() => showToast('error', 'Bạn không có quyền truy cập')}
-                        className='group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer opacity-50'
-                      >
-                        <div className='flex w-full items-center gap-2'>
-                          <div className='size-1.5 rounded-full flex-shrink-0 bg-gray-400' />
-                          <div className='flex flex-col items-start w-full'>
-                            <div className='responsive-text-sm text-gray-400 capitalize'>{item.name}</div>
-                          </div>
-                        </div>
-                      </li>
-                    ) : (
-                      <Link href={item.path} className='relative'>
+                    {(() => {
+                      const isProRequired = item.isPro === true && hasAuth;
+                      const isDisabled = item.disabled || (isProRequired && !hasPro);
+                      console.log(item.isPro === true && !hasPro)
+                      return isDisabled ? (
                         <li
-                          className={`group font-medium flex p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
-                            router.pathname === item.path ? 'bg-typo-blue-5 text-white' : ''
-                          } `}
+                          onClick={() => showToast('error', isProRequired && !hasPro ? 'Tính năng này yêu cầu gói Pro' : 'Bạn không có quyền truy cập')}
+                          className='group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer opacity-50'
                         >
                           <div className='flex w-full items-center gap-2'>
-                            <div
-                              className={`size-1.5 rounded-full flex-shrink-0 ${
-                                router.pathname === item.path ? 'bg-white/60' : 'bg-primary-01'
-                              } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
-                            />
+                            <div className='size-1.5 rounded-full flex-shrink-0 bg-gray-400' />
                             <div className='flex flex-col items-start w-full'>
-                              <div className='responsive-text-sm capitalize'>{item.name}</div>
+                              <div className='responsive-text-sm text-gray-400 capitalize'>{item.name}</div>
                             </div>
                           </div>
+                          {(item.isPro === true && !hasPro) && <span className='bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs'>pro</span>}
                         </li>
-                      </Link>
-                    )}
+                      ) : (
+                        <Link href={item.path} className='relative'>
+                          <li
+                            className={`group font-medium flex p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
+                              router.pathname === item.path ? 'bg-typo-blue-5 text-white' : ''
+                            } `}
+                          >
+                            <div className='flex w-full items-center gap-2'>
+                              <div
+                                className={`size-1.5 rounded-full flex-shrink-0 ${
+                                  router.pathname === item.path ? 'bg-white/60' : 'bg-primary-01'
+                                } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
+                              />
+                              <div className='flex flex-col items-start w-full'>
+                                <div className='responsive-text-sm capitalize'>{item.name}</div>
+                              </div>
+                            </div>
+                          </li>
+                        </Link>
+                      );
+                    })()}
                   </div>
                 )}
               </div>

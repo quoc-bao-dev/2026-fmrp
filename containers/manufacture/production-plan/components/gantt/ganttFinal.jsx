@@ -4,8 +4,10 @@ import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import Loading from "@/components/UI/loading/loading";
 import LoadingButton from "@/components/UI/loading/loadingButton";
 import NoData from "@/components/UI/noData/nodata";
+import TabFilter from "@/components/UI/TabFilter";
 import Zoom from "@/components/UI/zoomElement/zoomElement";
 import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
+import { ContainerFilterTab } from "@/components/UI/common/layout";
 import SheetProductionsOrderDetail from "@/containers/manufacture/productions-orders/components/sheet/SheetProductionsOrderDetail";
 import { ProductionsOrdersContext } from "@/containers/manufacture/productions-orders/context/productionsOrders";
 import { StateContext } from "@/context/_state/productions-orders/StateContext";
@@ -874,7 +876,7 @@ const GanttChart = ({
 
     const TabProduction = () => {
         return (
-            <div className="flex items-center gap-2">
+            <ContainerFilterTab className="w-full">
                 {[
                     {
                         name:
@@ -889,29 +891,26 @@ const GanttChart = ({
                         tab: "plan",
                     },
                 ].map((e) => (
-                    <Zoom className={`${typePageMoblie ? "w-1/2" : "w-fit"}`}>
-                        <button
+                        <TabFilter
                             key={e.tab}
+                            style={{ backgroundColor: "#e2f0fe" }}
                             onClick={() => {
-                                if (arrIdChecked?.length > 0) {
+                                if ((arrIdChecked || []).filter(Boolean).length > 0) {
                                     handleQueryId({ status: true, initialKey: e.tab });
                                 } else {
                                     handleTab(e.tab);
                                 }
                                 queryState({ openModal: false });
                             }}
-                            type="button"
-                            className={`${router == e.tab
-                                ? "bg-sky-200 text-sky-600"
-                                : "bg-sky-50 text-sky-500"
-                                }  hover:bg-sky-200 ${typePageMoblie ? "w-full" : "w-fit min-w-fit"
-                                }  hover:text-sky-600 font-semibold text-[11px] text-sky-400 px-2 py-[5px] rounded-xl transition-all duration-150 ease-linear`}
+                            active={e.tab}
+                            className={`${typePageMoblie ? "w-full" : "w-fit min-w-fit"} font-semibold text-[11px]`}
+                                    // total={e.count}
+                                    // className={"text-[#0F4F9E]"}
                         >
                             {e.name}
-                        </button>
-                    </Zoom>
+                        </TabFilter>
                 ))}
-            </div>
+            </ContainerFilterTab>
         );
     };
 
@@ -929,7 +928,7 @@ const GanttChart = ({
                     >
                         <div
                             className={`${typePageMoblie ? "hidden" : "flex"
-                                } items-center justify-between gap-2 py-0.5 px-2`}
+                                } items-center justify-between gap-2 py-0.5 px-2 w-full`}
                         >
                             <TabProduction />
                             {/* {Legend()} */}

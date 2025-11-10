@@ -701,7 +701,7 @@ const Header = () => {
               link: '/report-statistical/warehouse-report/entry-and-exist',
             },
             {
-              viewOwn: auth?.report_manufacturing_dashboard?.is_view || auth?.report_boms?.is_view || auth?.report_order_progress?.is_view || auth?.report_material_usage?.is_view,
+              viewOwn: auth?.report_manufacturing_dashboard?.is_view_own || auth?.report_boms?.is_view_own || auth?.report_order_progress?.is_view_own || auth?.report_material_usage?.is_view_own,
               view: auth?.report_manufacturing_dashboard?.is_view || auth?.report_boms?.is_view || auth?.report_order_progress?.is_view || auth?.report_material_usage?.is_view,
               name: 'Quản lý sản xuất',
               link: '/report-statistical/production-manager/dashboard',
@@ -715,8 +715,8 @@ const Header = () => {
               // forceDisableForAdmin: true,
             },
             {
-              viewOwn: 0,
-              view: 0,
+              viewOwn: auth?.report_import?.is_view || auth?.report_purchase_orders?.is_view || auth?.report_debt_suppliers?.is_view,
+              view: auth?.report_import?.is_view || auth?.report_purchase_orders?.is_view || auth?.report_debt_suppliers?.is_view,
               name: 'Báo cáo mua hàng',
               link: '/report-statistical/purchase-report/import-goods',
               // forceDisableForAdmin: true,

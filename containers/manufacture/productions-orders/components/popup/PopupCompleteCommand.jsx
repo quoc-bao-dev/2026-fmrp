@@ -1,3 +1,4 @@
+import CheckboxDefault from "@/components/common/checkbox/CheckboxDefault";
 import Loading from "@/components/common/loading/loading/LoadingComponent";
 import CheckIcon from "@/components/icons/common/CheckIcon";
 import CloseXIcon from "@/components/icons/common/CloseXIcon";
@@ -187,7 +188,7 @@ const InputNumberCustom = memo(
     return (
       <div
         className={twMerge(
-          "p-2 flex items-center border rounded-full shadow-sm border-[#D0D5DD] w-fit h-fit overflow-hidden",
+          "p-1 flex items-center border rounded-full shadow-sm border-[#D0D5DD] w-fit h-fit overflow-hidden",
           disabled ? "opacity-50 cursor-not-allowed" : "",
           className
         )}
@@ -233,61 +234,61 @@ const InputNumberCustom = memo(
 
 InputNumberCustom.displayName = "InputNumberCustom";
 
-const CheckboxDefault = memo(
-  ({
-    label,
-    checked,
-    defaultChecked,
-    onChange,
-    disabled = false,
-    className = "",
-  }) => {
-    return (
-      <label
-        className={`inline-flex items-center space-x-2 cursor-pointer ${
-          disabled ? "opacity-50 cursor-not-allowed" : ""
-        } ${className}`}
-      >
-        <input
-          type="checkbox"
-          className="peer hidden"
-          checked={checked}
-          defaultChecked={defaultChecked}
-          onChange={(e) => onChange?.(e.target.checked)}
-          disabled={disabled}
-        />
-        <div
-          className={twMerge(
-            "w-5 h-5 border-[1px] border-[#D0D5DD] rounded-md flex items-center justify-center transition",
-            checked ? "bg-[#0375F3] border-[#0375F3]" : "bg-white"
-          )}
-        >
-          {checked && (
-            <svg
-              width="12"
-              height="9"
-              viewBox="0 0 12 9"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5"
-            >
-              <path
-                d="M10.6663 1L4.24967 7.41667L1.33301 4.5"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          )}
-        </div>
-        {label && <span className="text-sm text-gray-700">{label}</span>}
-      </label>
-    );
-  }
-);
+// const CheckboxDefault = memo(
+//   ({
+//     label,
+//     checked,
+//     defaultChecked,
+//     onChange,
+//     disabled = false,
+//     className = "",
+//   }) => {
+//     return (
+//       <label
+//         className={`inline-flex items-center space-x-2 cursor-pointer ${
+//           disabled ? "opacity-50 cursor-not-allowed" : ""
+//         } ${className}`}
+//       >
+//         <input
+//           type="checkbox"
+//           className="peer hidden"
+//           checked={checked}
+//           defaultChecked={defaultChecked}
+//           onChange={(e) => onChange?.(e.target.checked)}
+//           disabled={disabled}
+//         />
+//         <div
+//           className={twMerge(
+//             "w-5 h-5 border-[1px] border-[#D0D5DD] rounded-md flex items-center justify-center transition",
+//             checked ? "bg-[#0375F3] border-[#0375F3]" : "bg-white"
+//           )}
+//         >
+//           {checked && (
+//             <svg
+//               width="12"
+//               height="9"
+//               viewBox="0 0 12 9"
+//               fill="none"
+//               xmlns="http://www.w3.org/2000/svg"
+//               className="h-5"
+//             >
+//               <path
+//                 d="M10.6663 1L4.24967 7.41667L1.33301 4.5"
+//                 stroke="white"
+//                 strokeWidth="2"
+//                 strokeLinecap="round"
+//                 strokeLinejoin="round"
+//               />
+//             </svg>
+//           )}
+//         </div>
+//         {label && <span className="text-sm text-gray-700">{label}</span>}
+//       </label>
+//     );
+//   }
+// );
 
-CheckboxDefault.displayName = "CheckboxDefault";
+// CheckboxDefault.displayName = "CheckboxDefault";
 
 const ProductRow = memo(
   ({
@@ -297,13 +298,21 @@ const ProductRow = memo(
     updateProductError,
     handleSelectProduct,
   }) => {
+    const handleToggleRowSelect = useCallback(() => {
+      handleSelectProduct(index, !product.selected);
+    }, [index, product.selected, handleSelectProduct]);
+
     return (
-      <tr className="hover:bg-gray-50">
+      <tr className="hover:bg-gray-50 cursor-pointer" onClick={handleToggleRowSelect}>
         <td className="py-2 px-3 text-center border-b border-[#F3F3F4]">
-          <CheckboxDefault
-            checked={product.selected}
-            onChange={(checked) => handleSelectProduct(index, checked)}
-          />
+          <div onClick={(e) => e.stopPropagation()}>
+            <Tooltip title="Chọn" position="bottom" arrow={true}>
+              <CheckboxDefault
+                checked={product.selected}
+                onChange={(checked) => handleSelectProduct(index, checked)}
+              />
+            </Tooltip>
+          </div>
         </td>
         <td className="py-2 px-3 text-center border-b border-[#F3F3F4] text-sm font-semibold">
           {index + 1}
@@ -408,7 +417,8 @@ const PopupCompleteCommand = ({ onClose }) => {
     isStateProvider?.productionsOrders.idDetailProductionOrder
   );
   const [products, setProducts] = useState([]);
-
+  const [showAutoTooltip, setShowAutoTooltip] = useState(false);
+  const [autoTooltipText, setAutoTooltipText] = useState("");
   const { data: QRCode } = useQRCodProductCompleted(
     isStateProvider?.productionsOrders.idDetailProductionOrder
   );
@@ -444,6 +454,30 @@ const PopupCompleteCommand = ({ onClose }) => {
   }, [productCompleted]);
 
   useEffect(() => {
+    if (!isLoading && products && products.length > 0) {
+      setAutoTooltipText("Chọn thành phẩm để hoàn thành");
+      // Trì hoãn 1-2 nhịp để DOM anchor render ổn định rồi mới bật tooltip
+      setShowAutoTooltip(false);
+      let rafId;
+      const openDelay = setTimeout(() => {
+        rafId = requestAnimationFrame(() => setShowAutoTooltip(true));
+      }, 200);
+      const autoCloseTimer = setTimeout(() => {
+        setShowAutoTooltip(false);
+        setAutoTooltipText("");
+      }, 4000);
+      return () => {
+        if (rafId) cancelAnimationFrame(rafId);
+        clearTimeout(openDelay);
+        clearTimeout(autoCloseTimer);
+      };
+    } else {
+      setShowAutoTooltip(false);
+      setAutoTooltipText("");
+    }
+  }, [isLoading, products]);
+
+  useEffect(() => {
     if (isSuccess && data) {
       const responseData = data;
       if (
@@ -476,14 +510,29 @@ const PopupCompleteCommand = ({ onClose }) => {
   }, [isSuccess, data, onClose]);
 
   const handleConfirm = useCallback(async () => {
+    if (isLoadingSubmit) return;
     const selectedProducts = products.filter((product) => product.selected);
+
+    // Điều kiện 1: Phải chọn ít nhất 1 sản phẩm
+    if (selectedProducts.length === 0) {
+      showToast("error", "Vui lòng chọn ít nhất một thành phẩm để hoàn thành!");
+      return;
+    }
+
+    // Điều kiện 2: SL đạt > 0 cho tất cả SP được chọn
+    const invalidQtyZero = selectedProducts.find(
+      (p) => !p.quantity_success || Number(p.quantity_success) <= 0
+    );
+    if (invalidQtyZero) {
+      showToast("error", "Vui lòng nhập SL đạt lớn hơn 0 cho sản phẩm được chọn!");
+      return;
+    }
 
     try {
       const formatData = selectedProducts.map((product) => ({
         ...product,
         quantity_success: product.quantity_success || 0,
         quantity_error: product.error || 0,
-        // quantity1: product.error || 0,
       }));
       await handleProductCompleted({
         po_id: isStateProvider?.productionsOrders.idDetailProductionOrder,
@@ -500,6 +549,7 @@ const PopupCompleteCommand = ({ onClose }) => {
     handleProductCompleted,
     isStateProvider?.productionsOrders.idDetailProductionOrder,
     showToast,
+    isLoadingSubmit,
   ]);
 
   const updateProductQuantity = useCallback(
@@ -566,13 +616,6 @@ const PopupCompleteCommand = ({ onClose }) => {
   const formatNumber = (number) => {
     return formatNumberConfig(+number, dataSeting);
   };
-  const confirmButtonClass = useMemo(
-    () =>
-      `flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white ${
-        selectedCount > 0 ? "bg-background-blue-2" : "bg-neutral-02"
-      } ${isLoadingSubmit ? "opacity-70 cursor-not-allowed" : ""}`,
-    [selectedCount, isLoadingSubmit]
-  );
 
   return (
     <>
@@ -609,8 +652,8 @@ const PopupCompleteCommand = ({ onClose }) => {
               </Tooltip>
               <button
                 onClick={handleConfirm}
-                disabled={selectedCount === 0 || isLoadingSubmit}
-                className={confirmButtonClass}
+                disabled={isLoadingSubmit}
+                className="flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-background-blue-2"
               >
                 {isLoadingSubmit ? (
                   <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
@@ -689,12 +732,31 @@ const PopupCompleteCommand = ({ onClose }) => {
             <thead>
               <tr>
                 <th className="py-2 px-3 border-b border-gray-200 text-center text-sm font-semibold text-neutral-02 w-[62px]">
-                  <Tooltip title="Chọn tất cả" position="bottom" arrow={true}>
-                    <CheckboxDefault
-                      checked={selectAll}
-                      onChange={handleSelectAll}
-                    />
-                  </Tooltip>
+                <Tooltip
+                  key={showAutoTooltip ? "guide-open" : "guide-closed"}
+                  title={autoTooltipText}
+                  position="top"
+                  arrow={true}
+                  trigger="manual"
+                  open={showAutoTooltip && !!autoTooltipText}
+                  onRequestClose={() => {
+                    setShowAutoTooltip(false);
+                    setAutoTooltipText("");
+                  }}
+                >
+                  <span className="inline-flex">
+                    <Tooltip
+                      title={"Chọn tất cả"}
+                      position="top"
+                      arrow={true}
+                    >
+                      <CheckboxDefault
+                        checked={selectAll}
+                        onChange={handleSelectAll}
+                      />
+                    </Tooltip>
+                  </span>
+                </Tooltip>
                 </th>
                 <th className="py-2 px-3 border-b border-gray-200 text-center text-sm font-semibold text-neutral-02 w-[62px]">
                   STT
