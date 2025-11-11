@@ -19,6 +19,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
+import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
 
 const colorScale = d3
   .scaleOrdinal()
@@ -85,6 +86,55 @@ const GanttChart = ({
   // Di chuyển hooks lên top level để tránh vi phạm Rules of Hooks
   const { isOpen: isOpenSheet, openSheet, closeSheet, sheetData } = useSheet();
   const { isStateProvider, queryStateProvider } = useContext(StateContext);
+
+  const nextRouter = useRouter();
+
+  // Tabs cấu hình cho tiêu đề
+  const tabsHeader = useMemo(
+    () => [
+      {
+        id: 'order',
+        name: dataLang?.production_plan_gantt_order || 'production_plan_gantt_order',
+        tab: 'order',
+      },
+      {
+        id: 'plan',
+        name: dataLang?.production_plan_gantt_internal || 'production_plan_gantt_internal',
+        tab: 'plan',
+      },
+    ],
+    [dataLang?.production_plan_gantt_order, dataLang?.production_plan_gantt_internal]
+  );
+
+  // Key tab đang active: ưu tiên prop router (string) → query → mặc định
+  const activeTabKey = useMemo(() => {
+    if (typeof router === 'string') return router;
+    if (nextRouter?.query?.tab) return nextRouter.query.tab;
+    return 'order';
+  }, [router, nextRouter?.query?.tab]);
+
+  const activeTabObj = useMemo(() => tabsHeader.find(t => t.tab === activeTabKey) || tabsHeader[0], [tabsHeader, activeTabKey]);
+
+  const handleChangeTabHeader = useCallback(
+    tabObj => {
+      const tabKey = tabObj?.tab || tabObj?.id;
+      if ((arrIdChecked || []).filter(Boolean).length > 0) {
+        handleQueryId({ status: true, initialKey: tabKey });
+      } else {
+        handleTab(tabKey);
+      }
+
+      try {
+        if (nextRouter?.push) {
+          const nextQuery = { ...(nextRouter?.query || {}), tab: tabKey };
+          nextRouter.push({ pathname: nextRouter.pathname, query: nextQuery }, undefined, { shallow: true });
+        }
+      } catch {}
+
+      queryState({ openModal: false });
+    },
+    [arrIdChecked, handleQueryId, handleTab, nextRouter, queryState]
+  );
 
   const allDates =
     orders?.flatMap(order => order?.listProducts?.flatMap(product => product?.processArr?.flatMap(g => g?.items?.flatMap(item => [new Date(item?.date_start), new Date(item?.date_end)])))) || [];
@@ -581,203 +631,12 @@ const GanttChart = ({
     dataLang,
   };
 
-  const TabProduction = React.memo(() => {
-    const nextRouter = useRouter();
-
-    // Memoize tabs array để tránh tạo mới mỗi lần render
-    const tabs = useMemo(
-      () => [
-        {
-          name: dataLang?.production_plan_gantt_order || 'production_plan_gantt_order',
-          tab: 'order',
-        },
-        {
-          name: dataLang?.production_plan_gantt_internal || 'production_plan_gantt_internal',
-          tab: 'plan',
-        },
-      ],
-      [dataLang?.production_plan_gantt_order, dataLang?.production_plan_gantt_internal]
-    );
-
-    const [activeTabInfo, setActiveTabInfo] = useState(null);
-    const [prevTabInfo, setPrevTabInfo] = useState(null);
-    const tabRefs = useRef({});
-    const containerRef = useRef(null);
-    const prevActiveTabRef = useRef(null);
-
-    // Memoize activeTab để tránh tính toán lại mỗi lần render
-    const activeTab = useMemo(() => {
-      // Nếu router prop là string (tab value)
-      if (typeof router === 'string') {
-        return router;
-      }
-      // Nếu có nextRouter query
-      if (nextRouter?.query?.tab) {
-        return nextRouter.query.tab;
-      }
-      return 'order'; // Default
-    }, [router, nextRouter?.query?.tab]);
-
-    // Cập nhật vị trí underline khi tab active thay đổi
-    useEffect(() => {
-      const updateUnderline = () => {
-        const activeTabRef = tabRefs.current[activeTab];
-
-        if (activeTabRef && containerRef.current) {
-          const containerRect = containerRef.current.getBoundingClientRect();
-          const tabRect = activeTabRef.getBoundingClientRect();
-
-          const newTabInfo = {
-            left: tabRect.left - containerRect.left,
-            width: tabRect.width,
-          };
-
-          // Chỉ cập nhật nếu tab thay đổi
-          if (prevActiveTabRef.current !== activeTab) {
-            // Lưu vị trí trước đó để animate từ đó
-            setActiveTabInfo(prev => {
-              if (prev) {
-                setPrevTabInfo(prev);
-              }
-              return newTabInfo;
-            });
-            prevActiveTabRef.current = activeTab;
-          } else {
-            // Cập nhật vị trí nếu chưa có hoặc vị trí thay đổi (resize)
-            setActiveTabInfo(prev => {
-              if (!prev || prev.left !== newTabInfo.left || prev.width !== newTabInfo.width) {
-                // Khi resize, cũng cập nhật prevTabInfo để animation mượt
-                if (prev) {
-                  setPrevTabInfo(prev);
-                }
-                return newTabInfo;
-              }
-              return prev;
-            });
-          }
-        }
-      };
-
-      // Delay để đảm bảo DOM đã render
-      const timer = setTimeout(() => {
-        updateUnderline();
-      }, 0);
-
-      // Cập nhật khi resize
-      window.addEventListener('resize', updateUnderline);
-
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener('resize', updateUnderline);
-      };
-    }, [activeTab]); // Chỉ phụ thuộc vào activeTab
-
-    const handleTabClick = useCallback(
-      tabKey => {
-        if ((arrIdChecked || []).filter(Boolean).length > 0) {
-          handleQueryId({ status: true, initialKey: tabKey });
-        } else {
-          handleTab(tabKey);
-        }
-
-        // Cập nhật query
-        try {
-          if (nextRouter?.push) {
-            const nextQuery = { ...(nextRouter?.query || {}), tab: tabKey };
-            nextRouter.push({ pathname: nextRouter.pathname, query: nextQuery }, undefined, { shallow: true });
-          }
-        } catch {}
-
-        queryState({ openModal: false });
-
-        // Lưu vị trí hiện tại trước khi cập nhật
-        const currentTabRef = tabRefs.current[activeTab];
-        if (currentTabRef && containerRef.current && activeTabInfo) {
-          setPrevTabInfo(activeTabInfo);
-        }
-
-        // Cập nhật underline ngay lập tức với animation
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            const activeTabRef = tabRefs.current[tabKey];
-
-            if (activeTabRef && containerRef.current) {
-              const containerRect = containerRef.current.getBoundingClientRect();
-              const tabRect = activeTabRef.getBoundingClientRect();
-
-              const newTabInfo = {
-                left: tabRect.left - containerRect.left,
-                width: tabRect.width,
-              };
-
-              // Cập nhật vị trí mới
-              setActiveTabInfo(newTabInfo);
-              prevActiveTabRef.current = tabKey;
-            }
-          });
-        });
-      },
-      [arrIdChecked, handleQueryId, handleTab, nextRouter, queryState, activeTab, activeTabInfo]
-    );
-
-    return (
-      <div ref={containerRef} className='relative w-full h-full'>
-        <div className='flex items-center justify-center space-x-4 h-full'>
-          {tabs.map(e => {
-            const isActive = activeTab === e.tab;
-            return (
-              <button
-                key={e.tab}
-                ref={el => (tabRefs.current[e.tab] = el)}
-                onClick={() => handleTabClick(e.tab)}
-                className={`w-fit min-w-fit py-1 px-4 font-semibold responsive-text-sm whitespace-nowrap transition-colors duration-200 ${
-                  isActive ? 'text-typo-blue-4' : 'text-neutral-02 hover:text-typo-blue-4/80'
-                }`}
-              >
-                {e.name}
-              </button>
-            );
-          })}
-        </div>
-        {/* Underline animation */}
-        {activeTabInfo && (
-          <motion.div
-            className='absolute bottom-0 h-[2px] bg-typo-blue-4 z-10'
-            initial={
-              prevTabInfo
-                ? {
-                    left: prevTabInfo.left,
-                    width: prevTabInfo.width,
-                  }
-                : {
-                    left: activeTabInfo.left,
-                    width: activeTabInfo.width,
-                  }
-            }
-            animate={{
-              left: activeTabInfo.left,
-              width: activeTabInfo.width,
-            }}
-            transition={{
-              type: 'spring',
-              stiffness: 400,
-              damping: 25,
-              mass: 0.8,
-            }}
-          />
-        )}
-        {/* Border bottom */}
-        <hr className='!ml-0 absolute bottom-0 left-0 right-0 border-b border-t-0 border-border-gray-1 z-[-1]' />
-      </div>
-    );
-  });
-
   return (
     <div className='flex flex-col lg:h-[82vh] h-[80vh] overflow-hidden border'>
       <div className='sticky top-0 flex border-b border-b-[#e5e7eb]'>
         <div className='w-[45%] border-r border-[#e5e7eb] h-full'>
           <div className='h-[30px] flex items-center justify-between gap-2 w-full'>
-            <TabProduction />
+            <TabSwitcherWithUnderline tabs={tabsHeader} activeTab={activeTabObj} onChange={handleChangeTabHeader} className='justify-center items-center h-[30px]' />
           </div>
           <div className='flex items-center gap-2 px-1 h-[30px]'>
             <div className='w-[35%] flex items-center gap-1'>

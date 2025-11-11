@@ -515,6 +515,12 @@ const Header = () => {
               name: 'Lệnh sản xuất',
               link: '/manufacture/productions-orders',
             },
+            {
+              viewOwn: auth?.production_orders_fmrp?.is_view_own,
+              view: auth?.production_orders_fmrp?.is_view,
+              name: 'Tổng hợp kế hoạch BTP & NVL',
+              link: '/manufacture/summary-btp-nvl',
+            },
             // {
             //   viewOwn: auth?.production_plans_fmrp?.is_view_own,
             //   view: auth?.production_plans_fmrp?.is_view,

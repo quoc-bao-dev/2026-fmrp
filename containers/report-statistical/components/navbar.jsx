@@ -284,9 +284,9 @@ const Navbar = props => {
                         {isDisabled ? (
                           <li
                             onClick={() => showToast('error', isProRequired && !hasPro ? 'Tính năng này yêu cầu gói Pro' : 'Bạn không có quyền truy cập')}
-                            className='group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer opacity-50'
+                            className='group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer'
                           >
-                            <div className='flex items-center gap-2'>
+                            <div className='flex items-center gap-2 opacity-50'>
                               <div className='size-1.5 rounded-full flex-shrink-0 bg-gray-400' />
                               <div className='flex flex-col items-start w-full'>
                                 <div className='responsive-text-sm text-gray-400 capitalize'>{child.name}</div>
@@ -325,9 +325,9 @@ const Navbar = props => {
                       return isDisabled ? (
                         <li
                           onClick={() => showToast('error', isProRequired && !hasPro ? 'Tính năng này yêu cầu gói Pro' : 'Bạn không có quyền truy cập')}
-                          className='group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer opacity-50'
+                          className='group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer'
                         >
-                          <div className='flex w-full items-center gap-2'>
+                          <div className='flex w-full items-center gap-2 opacity-50'>
                             <div className='size-1.5 rounded-full flex-shrink-0 bg-gray-400' />
                             <div className='flex flex-col items-start w-full'>
                               <div className='responsive-text-sm text-gray-400 capitalize'>{item.name}</div>
