@@ -6,19 +6,26 @@ import { useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 
 const Navbar = props => {
-  // const auth = useSelector(state => state.auth);
-
-  const { permissions_current: auth, is_upgrade: isUpgrade } = useSelector(state => state.auth);
-
+  const { permissions_current: auth, is_upgrade: isUpgrade, is_admin: isAdmin } = useSelector(state => state.auth);
   const router = useRouter();
   const showToast = useToast();
-  
-  // Kiểm tra auth có dữ liệu không (không phải mảng rỗng, null, undefined)
-  const hasAuth = auth && (!Array.isArray(auth) || auth.length > 0);
-  
+
+  const hasAuth =
+    !!auth &&
+    (Array.isArray(auth)
+      ? auth.length > 0
+      : typeof auth === 'object' && Object.keys(auth).length > 0);
+  const isAdminAccount = isAdmin === true || isAdmin === 1 || isAdmin === '1';
+
+  const canView = permission => {
+    if (isAdminAccount) return true;
+    if (!hasAuth) return true;
+    return Number(permission?.is_view) !== 0;
+  };
+
   // Kiểm tra có gói Pro: isUpgrade === false nghĩa là có Pro
   const hasPro = isUpgrade === false;
-  console.log(hasPro)
+
   // báo cáo tồn kho
   const isNavbarWarehouse = [
     {
@@ -72,25 +79,25 @@ const Navbar = props => {
       id: uuidv4(),
       name: 'Tổng quan sản xuất',
       path: '/report-statistical/production-manager/dashboard',
-      disabled: auth?.report_manufacturing_dashboard?.is_view == 0,
+      disabled: !canView(auth?.report_manufacturing_dashboard),
     },
     {
       id: uuidv4(),
       name: 'BC định mức NVL',
       path: '/report-statistical/production-manager/quota-materials',
-      disabled: auth?.report_boms?.is_view == 0,
+      disabled: !canView(auth?.report_boms),
     },
     {
       id: uuidv4(),
       name: 'BC tiến độ đơn hàng',
       path: '/report-statistical/production-manager/order-progress',
-      disabled: auth?.report_order_progress?.is_view == 0,
+      disabled: !canView(auth?.report_order_progress),
     },
     {
       id: uuidv4(),
       name: 'BC NVL sử dụng',
       path: '/report-statistical/production-manager/raw-materials-used',
-      disabled: auth?.report_material_usage?.is_view == 0,
+      disabled: !canView(auth?.report_material_usage),
     },
   ];
 
@@ -100,31 +107,31 @@ const Navbar = props => {
       id: uuidv4(),
       name: 'Tổng quan bán hàng',
       path: '/report-statistical/sales-report/dashboard',
-      disabled: auth?.report_sales_dashboard?.is_view == 0,
+      disabled: !canView(auth?.report_sales_dashboard),
     },
     {
       id: uuidv4(),
       name: 'Doanh số theo bán hàng',
       path: '/report-statistical/sales-report/sales-revenue',
-      disabled: auth?.report_sales_revenue?.is_view == 0,
+      disabled: !canView(auth?.report_sales_revenue),
     },
     {
       id: uuidv4(),
       name: 'Báo cáo giao hàng',
       path: '/report-statistical/sales-report/deliveries',
-      disabled: auth?.report_deliveries?.is_view == 0,
+      disabled: !canView(auth?.report_deliveries),
     },
     {
       id: uuidv4(),
       name: 'Báo cáo trả lại hàng bán',
       path: '/report-statistical/sales-report/returns',
-      disabled: auth?.report_returns?.is_view == 0,
+      disabled: !canView(auth?.report_returns),
     },
     {
       id: uuidv4(),
       name: 'Đối chiếu công nợ KH',
       path: '/report-statistical/sales-report/customer-debt',
-      disabled: auth?.report_customer_debt?.is_view == 0,
+      disabled: !canView(auth?.report_customer_debt),
     },
   ];
 
@@ -134,20 +141,20 @@ const Navbar = props => {
       id: uuidv4(),
       name: 'Báo cáo nhập hàng',
       path: '/report-statistical/purchase-report/import-goods',
-      disabled: auth?.report_import?.is_view == 0,
+      disabled: !canView(auth?.report_import),
     },
     {
       id: uuidv4(),
       name: 'Theo dõi đơn đặt hàng',
       path: '/report-statistical/purchase-report/order-tracking',
-      disabled: auth?.report_purchase_orders?.is_view == 0,
+      disabled: !canView(auth?.report_purchase_orders),
       isPro: true,
     },
     {
       id: uuidv4(),
       name: 'Đối chiếu công nợ NCC',
       path: '/report-statistical/purchase-report/supplier-debt',
-      disabled: auth?.report_debt_suppliers?.is_view == 0,
+      disabled: !canView(auth?.report_debt_suppliers),
     },
   ];
 
@@ -270,7 +277,7 @@ const Navbar = props => {
               <div className={`flex flex-col gap-3 ${item.children ? '' : ''}`}>
                 {item.children ? (
                   item.children.map(child => {
-                    const isProRequired = child.isPro === true && hasAuth ;
+                    const isProRequired = child.isPro === true;
                     const isDisabled = child.disabled || (isProRequired && !hasPro);
                     return (
                       <div key={child.id} className='relative'>
@@ -313,9 +320,8 @@ const Navbar = props => {
                 ) : (
                   <div key={item.id} className='relative'>
                     {(() => {
-                      const isProRequired = item.isPro === true && hasAuth;
+                      const isProRequired = item.isPro === true;
                       const isDisabled = item.disabled || (isProRequired && !hasPro);
-                      console.log(item.isPro === true && !hasPro)
                       return isDisabled ? (
                         <li
                           onClick={() => showToast('error', isProRequired && !hasPro ? 'Tính năng này yêu cầu gói Pro' : 'Bạn không có quyền truy cập')}

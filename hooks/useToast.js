@@ -2,6 +2,7 @@ import Swal from "sweetalert2";
 import "animate.css";
 import SuccessAlertIcon from "@/components/icons/common/SuccessAlertIcon";
 import ErrorAlertIcon from "@/components/icons/common/ErrorAlertIcon";
+import WarningAlertIcon from "@/components/icons/common/WarningAlertIcon";
 import ReactDOMServer from "react-dom/server";
 
 const useToast = () => {
@@ -20,15 +21,21 @@ const useToast = () => {
     });
 
     const showToast = (type, message, time, position = "top") => {
+        let iconHtml;
+        if (type === "success") {
+            iconHtml = ReactDOMServer.renderToStaticMarkup(<SuccessAlertIcon />);
+        } else if (type === "warning") {
+            iconHtml = ReactDOMServer.renderToStaticMarkup(<WarningAlertIcon />);
+        } else {
+            iconHtml = ReactDOMServer.renderToStaticMarkup(<ErrorAlertIcon />);
+        }
+
         Toast.fire({
             icon: type,
             position: position,
             title: message,
             timer: time || 1500,
-            iconHtml:
-                type === "success"
-                    ? ReactDOMServer.renderToStaticMarkup(<SuccessAlertIcon />)
-                    : ReactDOMServer.renderToStaticMarkup(<ErrorAlertIcon />),
+            iconHtml: iconHtml,
             customClass: {
                 popup: `custom-toast-popup custom-toast-popup-${type}`,
                 title: `custom-toast-title-${type} custom-toast-title`,
