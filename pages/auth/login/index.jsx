@@ -335,6 +335,7 @@ const LoginContent = React.memo(props => {
    * @param {AppTokenLoginResponse} res - Response từ socket event app_token_login
    */
   const handleSocketLogin = res => {
+    console.log('handleSocketLogin', res);
     try {
       const { isSuccess, message, token, database_app, data } = res;
 
@@ -351,6 +352,8 @@ const LoginContent = React.memo(props => {
       }
 
       // [login-socket] [step 11.3] Dispatch Redux auth state
+      console.log('dispatch', data);
+
       dispatch({ type: 'auth/update', payload: data });
 
       // [login-socket] [step 11.4] Lưu token vào Cookies
@@ -368,6 +371,7 @@ const LoginContent = React.memo(props => {
       showToat('success', message);
 
       // [login-socket] [step 11.7] Redirect về trang chủ
+      console.log('showToat', message);
       router.push('/');
     } catch (error) {
       console.error('Login error:', error);
@@ -529,7 +533,7 @@ const LoginContent = React.memo(props => {
                             {/* [login-socket] [step 9.1] Avatar người dùng */}
                             <div className='w-24 h-24 rounded-full bg-gradient-to-br from-[#0375f3] to-[#296dc1] flex items-center justify-center text-white text-2xl font-semibold shadow-lg'>
                               {userData.user_avatar ? (
-                                <img src={userData.user_avatar} alt={userData.user_full_name} className='w-full h-full rounded-full object-cover' />
+                                <img src={userData.user_avatar} alt={userData.user_full_name} className='w-full h-full rounded-full object-cover object-center' />
                               ) : (
                                 <span>{userData.user_full_name?.charAt(0)?.toUpperCase() || 'U'}</span>
                               )}
@@ -547,10 +551,13 @@ const LoginContent = React.memo(props => {
                                 <span className='text-[#667085] min-w-[100px]'>Thiết bị:</span>
                                 <span className='text-[#344054] font-medium'>{userData.app_device_name}</span>
                               </div>
-                              <div className='flex items-center gap-2 text-sm'>
-                                <span className='text-[#667085] min-w-[100px]'>Địa điểm:</span>
-                                <span className='text-[#344054] font-medium'>{userData.localtion_name}</span>
-                              </div>
+
+                              {userData.localtion_name && (
+                                <div className='flex items-center gap-2 text-sm'>
+                                  <span className='text-[#667085] min-w-[100px]'>Địa điểm:</span>
+                                  <span className='text-[#344054] font-medium'>{userData.localtion_name}</span>
+                                </div>
+                              )}
                             </div>
 
                             {/* [login-socket] [step 9.4] Thông báo đang xử lý đăng nhập */}
