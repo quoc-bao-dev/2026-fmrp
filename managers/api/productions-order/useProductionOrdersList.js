@@ -1,14 +1,14 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import apiProductionsOrders from "@/Api/apiManufacture/manufacture/productionsOrders/apiProductionsOrders";
 import { useContext } from "react";
-import { ProductionsOrdersContext } from "../../../containers/manufacture/productions-orders/context/productionsOrders";
 import { StateContext } from "@/context/_state/productions-orders/StateContext";
 
 export const useProductionOrdersList = (params) => {
     const { isStateProvider, queryStateProvider } = useContext(StateContext);
 
     const fetchProductionOrdersList = async ({ pageParam = 1 }) => {
-        const { data } = await apiProductionsOrders.apiProductionOrders(pageParam, isStateProvider?.productionsOrders.limit, { params });
+        const limit = isStateProvider?.productionsOrders?.limit || params?.limit || 15;
+        const { data } = await apiProductionsOrders.apiProductionOrders(pageParam, limit, { params });
 
         // if (pageParam === 1) {
         //     queryStateProvider({
@@ -37,24 +37,43 @@ export const useProductionOrdersList = (params) => {
         };
     };
 
+    // Sử dụng params trực tiếp nếu params được truyền vào (như trong SummaryBtpNvl)
+    // Nếu không có params, sử dụng StateContext (như trong ProductionsOrderMain)
+    const useParamsDirectly = params && Object.keys(params).length > 0;
+
     return useInfiniteQuery({
-        queryKey: [
-            "apiProductionOrders",
-            isStateProvider?.productionsOrders.search,
-            isStateProvider?.productionsOrders.limit,
-            isStateProvider?.productionsOrders.date.dateStart,
-            isStateProvider?.productionsOrders.date.dateEnd,
-            isStateProvider?.productionsOrders.valueProductionOrders,
-            isStateProvider?.productionsOrders.valueProductionOrdersDetail,
-            isStateProvider?.productionsOrders.valueBr,
-            isStateProvider?.productionsOrders.valueOrders,
-            isStateProvider?.productionsOrders.valuePlan,
-            isStateProvider?.productionsOrders.valueProducts,
-            isStateProvider?.productionsOrders.selectStatusFilter
-        ],
+        queryKey: useParamsDirectly
+            ? [
+                  "apiProductionOrders",
+                  params?.search,
+                  params?.limit || 15,
+                  params?.date_start,
+                  params?.date_end,
+                  params?._po_id,
+                  params?._pod_id,
+                  params?.branch_id,
+                  params?.orders_id,
+                  params?.internal_plans_id,
+                  params?.item_variation_id,
+                  params?.status,
+              ]
+            : [
+                  "apiProductionOrders",
+                  isStateProvider?.productionsOrders?.search,
+                  isStateProvider?.productionsOrders?.limit,
+                  isStateProvider?.productionsOrders?.date?.dateStart,
+                  isStateProvider?.productionsOrders?.date?.dateEnd,
+                  isStateProvider?.productionsOrders?.valueProductionOrders,
+                  isStateProvider?.productionsOrders?.valueProductionOrdersDetail,
+                  isStateProvider?.productionsOrders?.valueBr,
+                  isStateProvider?.productionsOrders?.valueOrders,
+                  isStateProvider?.productionsOrders?.valuePlan,
+                  isStateProvider?.productionsOrders?.valueProducts,
+                  isStateProvider?.productionsOrders?.selectStatusFilter,
+              ],
         queryFn: fetchProductionOrdersList,
         initialPageParam: 1,
-        getNextPageParam: (lastPage,pages) => {
+        getNextPageParam: (lastPage, pages) => {
             // Kiểm tra nếu còn trang kế tiếp
             if (lastPage?.next === 1) {
                 return pages.length + 1; // Trang tiếp theo
