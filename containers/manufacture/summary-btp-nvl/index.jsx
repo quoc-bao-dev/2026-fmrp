@@ -50,6 +50,11 @@ const tabsMaterialFinishedProduct = [
 ];
 
 const DEFAULT_ITEM_IMAGE = '/icon/default/default.png';
+const EXCEL_HEADER_STYLE = {
+  fill: { fgColor: { rgb: 'C7DFFB' } },
+  font: { bold: true },
+  alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+};
 
 const parseNumber = value => {
   if (value === null || value === undefined || value === '') return 0;
@@ -57,6 +62,40 @@ const parseNumber = value => {
   return Number.isNaN(numeric) ? 0 : numeric;
 };
 
+const createNumberCell = rawValue => {
+  const hasValue = rawValue !== null && rawValue !== undefined && rawValue !== '';
+  if (!hasValue) {
+    return { value: '' };
+  }
+
+  return {
+    value: parseNumber(rawValue),
+    style: { numFmt: '#,##0.##' },
+  };
+};
+
+const getProductTagLabel = type => {
+  switch (type) {
+    case 'semi_products':
+      return 'Bán thành phẩm';
+    case 'semi_products_outside':
+      return 'Bán thành phẩm ngoài';
+    case 'semi_products_inside':
+      return 'Bán thành phẩm nội bộ';
+    default:
+      return '';
+  }
+};
+
+const normalizeForFilename = value => {
+  if (!value) return '';
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '');
+};
 
 const SummaryBtpNvl = () => {
   const [activeTab, setActiveTab] = useState(tabs[0]);
@@ -233,18 +272,110 @@ const SummaryBtpNvl = () => {
     return Math.max(keep, imported);
   };
 
-  const getProductTagLabel = type => {
-    switch (type) {
-      case 'semi_products':
-        return 'Bán thành phẩm';
-      case 'semi_products_outside':
-        return 'Bán thành phẩm ngoài';
-      case 'semi_products_inside':
-        return 'Bán thành phẩm nội bộ';
-      default:
-        return '';
-    }
-  };
+  const excelSheets = useMemo(() => {
+    const createColumn = (title, width) => ({
+      title,
+      width: { wch: width },
+      style: EXCEL_HEADER_STYLE,
+    });
+
+    const materialsColumns = [
+      createColumn('STT', 6),
+      createColumn('Mã NVL', 15),
+      createColumn('Tên NVL', 32),
+      createColumn('Thuộc tính', 25),
+      createColumn('Lệnh sản xuất', 28),
+      createColumn('ĐVT', 10),
+      createColumn('Số lượng cần', 18),
+      createColumn('Quy đổi', 18),
+      createColumn('Đã giữ/Mua', 18),
+      createColumn('Thiếu', 18),
+      createColumn('Đã nhập', 18),
+      createColumn('Còn lại xử lý', 18),
+    ];
+
+    const materialsRows = (materialsData || []).map((item, index) => [
+      { value: index + 1 },
+      { value: item.item_code || '' },
+      { value: item.item_name || '' },
+      { value: item.item_variation || '' },
+      { value: item.reference_no || '' },
+      { value: item.unit_name || item.unit_name_primary || '' },
+      createNumberCell(item.total_quota),
+      createNumberCell(item.quota_primary),
+      createNumberCell(item.quantity_keep),
+      createNumberCell(item.quantity_rest),
+      createNumberCell(item.quantity_import),
+      createNumberCell(item.quantity_rest_process),
+    ]);
+
+    const finishedColumns = [
+      createColumn('STT', 6),
+      createColumn('Mã BTP', 15),
+      createColumn('Tên BTP', 32),
+      createColumn('Thuộc tính', 25),
+      createColumn('Loại', 18),
+      createColumn('Lệnh sản xuất', 28),
+      createColumn('ĐVT', 10),
+      createColumn('Số lượng cần', 18),
+      createColumn('Đã giữ', 18),
+      createColumn('Thiếu', 18),
+      createColumn('Đã nhập', 18),
+      createColumn('Còn lại xử lý', 18),
+    ];
+
+    const finishedRows = (finishedProductsData || []).map((item, index) => [
+      { value: index + 1 },
+      { value: item.item_code || '' },
+      { value: item.item_name || '' },
+      { value: item.item_variation || '' },
+      { value: getProductTagLabel(item.type_products) || '' },
+      { value: item.reference_no || '' },
+      { value: item.unit_name || item.unit_name_primary || '' },
+      createNumberCell(item.total_quota),
+      createNumberCell(item.quantity_keep),
+      createNumberCell(item.quantity_rest),
+      createNumberCell(item.quantity_import),
+      createNumberCell(item.quantity_rest_process),
+    ]);
+
+    return [
+      {
+        name: 'Nguyên vật liệu',
+        dataSet: [
+          {
+            columns: materialsColumns,
+            data: materialsRows,
+          },
+        ],
+      },
+      {
+        name: 'Bán thành phẩm',
+        dataSet: [
+          {
+            columns: finishedColumns,
+            data: finishedRows,
+          },
+        ],
+      },
+    ];
+  }, [materialsData, finishedProductsData]);
+
+  const exportFilename = useMemo(() => {
+    const base = 'Tong_hop_ke_hoach_BTP_NVL';
+    const tabSuffix =
+      activeTab?.id === 'each_order' ? 'Chi_tiet_theo_lenh' : 'Tong_hop_theo_mat_hang';
+
+    const orderCodes =
+      selectedOrders && selectedOrders.length > 0
+        ? selectedOrders
+            .map(order => normalizeForFilename(order?.reference_no || order?.code))
+            .filter(Boolean)
+            .join('_')
+        : 'Tat_ca_lenh';
+
+    return [base, tabSuffix, orderCodes].filter(Boolean).join('_');
+  }, [activeTab, selectedOrders]);
 
   const allSelected = selectedOrders.length > 0 && selectedOrders.length === flagProductionOrders.length;
   const toggleSelectAll = () => {
@@ -325,7 +456,13 @@ const SummaryBtpNvl = () => {
             className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#0375F3] border border-[#0375F3] hover:bg-[#EBF5FF] hover:shadow-hover-button rounded-lg'
             onClick={refetchSummaryBtpNvl}
           />
-          <ExcelFileComponent filename='Tổng hợp kế hoạch BTP & NVL' title='THKHBTPNVL' multiDataSet={[]} classBtn='!py-3' />
+          <ExcelFileComponent
+            filename={exportFilename}
+            title='THKHBTPNVL'
+            multiDataSet={excelSheets?.[0]?.dataSet || []}
+            sheets={excelSheets}
+            classBtn='!py-3'
+          />
           <TabSwitcherWithSlidingBackground tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
           <FilterDropdown
             trigger={triggerFilterAll}
@@ -508,9 +645,9 @@ const SummaryBtpNvl = () => {
               <Image src={IMAGES.summary_LSX} alt='Không có dữ liệu' width={200} height={200} className='object-cover rounded-md' />
               <div className='flex items-center gap-2 mt-2'>
                 <FaPlus color='#000' className='size-4' />
-                <p className='responsive-text-base font-semibold text-neutral-05'>Chọn lệnh sản xuất</p>
+                <p className='responsive-text-xl font-semibold text-neutral-05'>Chọn lệnh sản xuất</p>
               </div>
-              <p className='responsive-text-sm text-neutral-03 mt-2'>Hãy chọn lệnh sản xuất mà bạn muốn tổng hợp kế hoạch</p>
+              <p className='responsive-text-lg text-neutral-03 mt-2'>Hãy chọn lệnh sản xuất mà bạn muốn tổng hợp kế hoạch</p>
             </div>
           ) : isLoadingSummaryBtpNvl ? (
             <div className='flex flex-col items-center justify-center h-full'>
@@ -525,8 +662,8 @@ const SummaryBtpNvl = () => {
 
               const ColNum = ({ value, unit }) => (
                 <div className='flex flex-col items-center gap-0.5'>
-                  <span className='font-semibold text-[#3A3E4C]'>{value}/</span>
-                  <span className='text-xs text-[#9295A4]'>{unit}</span>
+                  <span className='font-semibold text-[#3A3E4C]'>{Number(value) > 0 ? formatNumber(Number(value)) + '/' : '-'}</span>
+                  {value > 0 && <span className='text-xs text-[#9295A4]'>{unit}</span>}
                 </div>
               );
 
@@ -548,8 +685,6 @@ const SummaryBtpNvl = () => {
                     <tbody className='[&>tr]:border-b [&>tr]:border-[#F3F3F4] [&>tr:last-child]:border-b-0'>
                       {data.map((item, index) => {
                         const rowKey = `${item.item_variation_option_value_id || item.item_id || index}-${item.order_id || 'summary'}`;
-                        const unitPrimary = item.unit_name_primary || item.unit_name;
-                        const progressUnit = unitPrimary || item.unit_name || '';
 
                         return (
                           <tr key={rowKey} className='hover:bg-slate-100/40'>
@@ -565,16 +700,16 @@ const SummaryBtpNvl = () => {
                             </td>
                             {activeTab?.id === 'each_order' && <td className='px-3 py-2 text-center text-[#3A3E4C]'>{item.reference_no || '-'}</td>}
                             <td className='px-3 py-2'>
-                              <ColNum value={formatNumber(Number(item.total_quota))} unit={item.unit_name || '-'} />
+                              <ColNum value={item.total_quota} unit={item.unit_name || '-'} />
                             </td>
                             <td className='px-3 py-2'>
-                              <ColNum value={formatNumber(Number(item.quota_primary))} unit={item.unit_name_primary || '-'} />
+                              <ColNum value={item.quota_primary} unit={item.unit_name_primary || '-'} />
                             </td>
                             <td className='px-3 py-2'>
-                              <ColNum value={formatNumber(Number(item.quantity_keep))} unit={item.unit_name_primary || '-'} />
+                              <ColNum value={item.quantity_keep} unit={item.unit_name_primary || '-'} />
                             </td>
                             <td className='px-3 py-2 text-center text-[#9295A4]'>
-                              <ColNum value={formatNumber(Number(item.quantity_rest))} unit={progressUnit || '-'} />
+                              <ColNum value={item.quantity_rest} unit={item.unit_name_primary || '-'} />
                             </td>
                             <td className='px-3 py-2'>
                               <ProgressBar
@@ -617,9 +752,6 @@ const SummaryBtpNvl = () => {
                     <tbody className='[&>tr]:border-b [&>tr]:border-[#F3F3F4] [&>tr:last-child]:border-b-0'>
                       {data.map((item, index) => {
                         const rowKey = `${item.item_variation_option_value_id || item.item_id || index}-${item.order_id || 'summary'}`;
-                        const shortageValue = formatNumber(item.quantity_rest_process || item.quantity_rest);
-                        const reservedValue = formatNumber(getReservedOrPurchased(item));
-                        const progressUnit = item.unit_name_primary || item.unit_name || '';
                         const tagLabel = getProductTagLabel(item.type_products);
 
                         return (
@@ -637,11 +769,16 @@ const SummaryBtpNvl = () => {
                             </td>
                             {activeTab?.id === 'each_order' && <td className='px-3 py-2 text-center text-[#3A3E4C]'>{item.reference_no || '-'}</td>}
                             <td className='px-3 py-2 text-center text-[#3A3E4C]'>{item.unit_name}</td>
-                            <td className='px-3 py-2 text-center text-[#3A3E4C]'>{formatNumber(item.total_quota)}</td>
-                            <td className='px-3 py-2 text-center text-[#3A3E4C]'>{reservedValue}</td>
-                            <td className='px-3 py-2 text-center text-[#3A3E4C]'>{shortageValue}</td>
+                            <td className='px-3 py-2 text-center text-[#3A3E4C]'>{Number(item.total_quota) > 0 ? formatNumber(Number(item.total_quota)) : '-'}</td>
+                            <td className='px-3 py-2 text-center text-[#3A3E4C]'>{Number(item.quantity_keep) > 0 ? formatNumber(Number(item.quantity_keep)) : '-'}</td>
+                            <td className='px-3 py-2 text-center text-[#3A3E4C]'>{Number(item.quantity_rest) > 0 ? formatNumber(Number(item.quantity_rest)) : '-'}</td>
                             <td className='px-3 py-2'>
-                              <ProgressBar current={item.progressCurrent} total={item.progressTotal} name={progressUnit || item.unit_name} typeProgress='tablePlaning' />
+                              <ProgressBar
+                                current={formatNumber(Number(item.quantity_import))}
+                                total={formatNumber(Number(item.quantity_rest_process))}
+                                name={item.unit_name_primary}
+                                typeProgress='tablePlaning'
+                              />
                             </td>
                           </tr>
                         );
