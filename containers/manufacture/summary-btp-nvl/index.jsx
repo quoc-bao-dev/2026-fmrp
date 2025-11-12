@@ -1,29 +1,35 @@
 import BreadcrumbCustom from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { Container } from '@/components/UI/common/layout';
+import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport';
 import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet';
 import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
+import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew';
 import StatusCheckboxGroup from '@/components/common/checkbox/StatusCheckboxGroup';
 import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
 import LimitListDropdown from '@/components/common/dropdown/LimitListDropdown';
 import ProgressBar from '@/components/common/progress/ProgressBar';
+import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
 import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
+import ArrowCounterClockwiseIcon from '@/components/icons/common/ArrowCounterClockwiseIcon';
 import CaretDownIcon from '@/components/icons/common/CaretDownIcon';
 import ChartDonutIcon from '@/components/icons/common/ChartDonutIcon';
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
-import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
-import { formatMoment } from '@/utils/helpers/formatMoment';
-import { Fragment, useEffect, useMemo, useState } from 'react';
-import { listLsxStatus } from '../productions-orders/components/main/constants/listData';
-import Image from 'next/image';
-import { useProductionOrdersList } from '@/managers/api/productions-order/useProductionOrdersList';
-import { FnlocalStorage } from '@/utils/helpers/localStorage';
-import { useSelector } from 'react-redux';
+import { IMAGES } from '@/constants/images';
 import { useBranchList } from '@/hooks/common/useBranch';
-import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport';
+import { useProductionOrdersList } from '@/managers/api/productions-order/useProductionOrdersList';
+import { formatMoment } from '@/utils/helpers/formatMoment';
+import { FnlocalStorage } from '@/utils/helpers/localStorage';
+import Image from 'next/image';
+import { Fragment, useEffect, useMemo, useState } from 'react';
+import { FaPlus } from 'react-icons/fa6';
+import { useSelector } from 'react-redux';
+import { listLsxStatus } from '../productions-orders/components/main/constants/listData';
+import { useSummaryBtpNvl } from './hook';
+import formatNumber from '@/utils/helpers/formatnumber';
 
 const breadcrumbItems = [
   {
@@ -43,102 +49,14 @@ const tabsMaterialFinishedProduct = [
   { id: 'finished_product', name: 'bán thành phẩm' },
 ];
 
-// Dữ liệu mẫu để map ra bảng; thay thế bằng dữ liệu API khi tích hợp
-const mockMaterialRows = [
-  {
-    id: 1,
-    name: 'Đá kích cỡ 10-40mm',
-    image: '/icon/default/default.png',
-    sub: '(None)',
-    code: 'DACUC10_40mm',
-    lsx: 'LSX-20052505',
-    unit: 'Tấn',
-    qty: 400,
-    convert: 400,
-    reserved: 400,
-    lack: '-',
-    current: 400,
-    total: 400,
-  },
-  {
-    id: 2,
-    name: 'tes 1',
-    image: '/icon/default/default.png',
-    sub: '(None)',
-    code: 'test 1',
-    lsx: 'LSX-20052505',
-    unit: 'Tấn',
-    qty: 400,
-    convert: 400,
-    reserved: 400,
-    lack: '-',
-    current: 400,
-    total: 400,
-  },
-  {
-    id: 3,
-    name: 'tes 2',
-    image: '/icon/default/default.png',
-    sub: '(None)',
-    code: 'test 2',
-    lsx: 'LSX-20052505',
-    unit: 'Tấn',
-    qty: 300,
-    convert: 300,
-    reserved: 300,
-    lack: '-',
-    current: 300,
-    total: 300,
-  },
-  {
-    id: 4,
-    name: 'tes 3',
-    image: '/icon/default/default.png',
-    sub: '(None)',
-    code: 'test 3',
-    lsx: 'LSX-20052505',
-    unit: 'Tấn',
-    qty: 200,
-    convert: 200,
-    reserved: 200,
-    lack: '-',
-    current: 200,
-    total: 200,
-  },
-];
+const DEFAULT_ITEM_IMAGE = '/icon/default/default.png';
 
-const mockFinishedRows = [
-  {
-    id: 1,
-    name: 'Khung Xe winner X',
-    image: '/icon/default/default.png',
-    sub: '(None)',
-    code: 'KhungXe',
-    tag: 'Bán thành phẩm',
-    unit: 'Cái',
-    qty: 11,
-    reserved: 0,
-    lack: 11,
-    current: 0,
-    total: 11,
-    lsx: 'LSX-20052505',
-  },
-  {
-    id: 2,
-    name: 'Khung Xe winner X',
-    image: '/icon/default/default.png',
-    sub: '(None)',
-    code: 'KhungXe',
-    tag: 'Bán thành phẩm',
-    unit: 'Cái',
-    qty: 11,
-    reserved: 0,
-    lack: 11,
-    current: 5,
-    total: 11,
-    lsx: 'LSX-20052505',
-  },
-];
+const parseNumber = value => {
+  if (value === null || value === undefined || value === '') return 0;
+  const numeric = typeof value === 'number' ? value : Number(String(value).replace(/,/g, ''));
+  return Number.isNaN(numeric) ? 0 : numeric;
+};
+
 
 const SummaryBtpNvl = () => {
   const [activeTab, setActiveTab] = useState(tabs[0]);
@@ -186,31 +104,147 @@ const SummaryBtpNvl = () => {
     return formatMoment(dateObj, FORMAT_MOMENT.DATE_SLASH_LONG);
   };
 
-  // Params cho API với useMemo để đảm bảo refetch khi selectStatusFilter, limit, valueBr hoặc dateRange thay đổi
-  const params = useMemo(
-    () => ({
-      branch_id: valueBr?.value || '',
-      _po_id: '',
-      search: '',
-      _pod_id: '',
-      orders_id: '',
-      date_end: formatDateToDMY(dateRange.endDate),
-      internal_plans_id: '',
-      date_start: formatDateToDMY(dateRange.startDate),
-      item_variation_id: null,
-      limit: limit,
-      ...(selectStatusFilter?.length > 0 && {
-        status: selectStatusFilter,
-      }),
-    }),
-    [selectStatusFilter, limit, valueBr, dateRange]
-  );
-
   // call api list production
-  const { data: dataProductionOrders, isLoading: isLoadingProductionOrderList } = useProductionOrdersList(params);
-
+  const {
+    data: dataProductionOrders,
+    isLoading: isLoadingProductionOrderList,
+    refetch: refetchProductionOrders,
+  } = useProductionOrdersList({
+    limit: limit,
+    branch_id: valueBr?.value || '',
+    date_start: formatDateToDMY(dateRange.startDate),
+    date_end: formatDateToDMY(dateRange.endDate),
+    ...(selectStatusFilter?.length > 0 && {
+      status: selectStatusFilter,
+    }),
+  });
+  const summaryParams = useMemo(
+    () => ({
+      po_ids: selectedOrders.map(o => o.id),
+      ...(activeTab?.id === 'by_product' ? { is_sumpany: 1 } : {}),
+    }),
+    [selectedOrders, activeTab]
+  );
+  const selectedPoIds = summaryParams.po_ids || [];
+  const { data: dataSummaryBtpNvl, isLoading: isLoadingSummaryBtpNvl, refetch: refetchSummaryBtpNvl } = useSummaryBtpNvl(summaryParams);
   // flag của list production
   const flagProductionOrders = useMemo(() => (dataProductionOrders ? dataProductionOrders?.pages?.flatMap(page => page?.productionOrders) : []), [dataProductionOrders]);
+
+  const isEachOrderTab = activeTab?.id === 'each_order';
+
+  const summaryData = dataSummaryBtpNvl?.data ?? dataSummaryBtpNvl ?? {};
+
+  const productionOrdersSummary = useMemo(() => {
+    if (!isEachOrderTab) return [];
+    const orders = summaryData?.production_orders;
+    if (!orders) return [];
+    const orderEntries = Object.entries(orders);
+    if (selectedPoIds.length > 0) {
+      const selectedSet = new Set(selectedPoIds.map(id => String(id)));
+      return orderEntries.filter(([id]) => selectedSet.has(String(id))).map(([, value]) => value);
+    }
+    return orderEntries.map(([, value]) => value);
+  }, [summaryData, selectedPoIds, isEachOrderTab]);
+
+  const buildBomRows = useMemo(() => {
+    const aggregate = activeTab?.id === 'by_product';
+    const orders = productionOrdersSummary;
+
+    const enhanceRow = row => {
+      const total = parseNumber(Number(row.quota_primary)) || parseNumber(Number(row.total_quota));
+      const remaining = parseNumber(Number(row.quantity_rest_process)) || parseNumber(Number(row.quantity_rest));
+      const progressTotal = total > 0 ? total : parseNumber(Number(row.total_quota));
+      const progressCurrent = Math.max(0, progressTotal - remaining);
+      return {
+        ...row,
+        progressTotal,
+        progressCurrent,
+      };
+    };
+
+    const buildRowsByKey = key => {
+      if (!orders.length) return [];
+      if (!aggregate) {
+        return orders
+          .flatMap(order =>
+            (order?.[key] || []).map(item =>
+              enhanceRow({
+                ...item,
+                reference_no: order?.reference_no,
+                order_id: order?.id,
+              })
+            )
+          )
+          .filter(Boolean);
+      }
+
+      const grouped = new Map();
+      orders.forEach(order => {
+        (order?.[key] || []).forEach(item => {
+          const groupedKey = item.item_variation_option_value_id || `${item.item_id}-${item.unit_name}-${item.unit_name_primary}`;
+          if (!grouped.has(groupedKey)) {
+            grouped.set(groupedKey, {
+              ...item,
+              total_quota: 0,
+              quota_primary: 0,
+              quantity_keep: 0,
+              quantity_import: 0,
+              quantity_rest: 0,
+              quantity_rest_process: 0,
+              reference_numbers: new Set(),
+            });
+          }
+
+          const acc = grouped.get(groupedKey);
+          acc.total_quota += parseNumber(item.total_quota);
+          acc.quota_primary += parseNumber(item.quota_primary);
+          acc.quantity_keep += parseNumber(item.quantity_keep);
+          acc.quantity_import += parseNumber(item.quantity_import);
+          acc.quantity_rest += parseNumber(item.quantity_rest);
+          acc.quantity_rest_process += parseNumber(item.quantity_rest_process);
+          if (order?.reference_no) {
+            acc.reference_numbers.add(order.reference_no);
+          }
+        });
+      });
+
+      return Array.from(grouped.values()).map(item => {
+        const { reference_numbers, ...rest } = item;
+        return enhanceRow({
+          ...rest,
+          reference_no: reference_numbers ? Array.from(reference_numbers).join(', ') : undefined,
+        });
+      });
+    };
+
+    return {
+      materials: buildRowsByKey('materials_boms'),
+      products: buildRowsByKey('products_boms'),
+    };
+  }, [productionOrdersSummary, activeTab]);
+
+  const materialsData = activeTab?.id === 'by_product' ? summaryData?.materials_boms || [] : buildBomRows.materials || [];
+
+  const finishedProductsData = activeTab?.id === 'by_product' ? summaryData?.products_boms || [] : buildBomRows.products || [];
+
+  const getReservedOrPurchased = item => {
+    const keep = parseNumber(Number(item.quantity_keep));
+    const imported = parseNumber(Number(item.quantity_import));
+    return Math.max(keep, imported);
+  };
+
+  const getProductTagLabel = type => {
+    switch (type) {
+      case 'semi_products':
+        return 'Bán thành phẩm';
+      case 'semi_products_outside':
+        return 'Bán thành phẩm ngoài';
+      case 'semi_products_inside':
+        return 'Bán thành phẩm nội bộ';
+      default:
+        return '';
+    }
+  };
 
   const allSelected = selectedOrders.length > 0 && selectedOrders.length === flagProductionOrders.length;
   const toggleSelectAll = () => {
@@ -281,6 +315,16 @@ const SummaryBtpNvl = () => {
       <div className='flex items-center justify-between w-full'>
         <h2 className='text-title-section text-[#52575E] capitalize font-medium'>Tổng hợp kế hoạch BTP & NVL</h2>
         <div className='flex items-center gap-2'>
+          <ButtonAnimationNew
+            icon={
+              <div className='size-4'>
+                <ArrowCounterClockwiseIcon className='size-full' />
+              </div>
+            }
+            title={'Làm mới dữ liệu'}
+            className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#0375F3] border border-[#0375F3] hover:bg-[#EBF5FF] hover:shadow-hover-button rounded-lg'
+            onClick={refetchSummaryBtpNvl}
+          />
           <ExcelFileComponent filename='Tổng hợp kế hoạch BTP & NVL' title='THKHBTPNVL' multiDataSet={[]} classBtn='!py-3' />
           <TabSwitcherWithSlidingBackground tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
           <FilterDropdown
@@ -289,11 +333,11 @@ const SummaryBtpNvl = () => {
               boxShadow: '0px 20px 24px -4px #10182814, 0px 4px 4px 0px #00000040',
             }}
             classNameContainer='!w-fit h-11'
-            className='flex flex-col gap-4 border-[#D8DAE5] rounded-lg 3xl:!min-w-[400px] 2xl:min-w-[350px] xl:min-w-[300px]'
+            className='flex flex-col gap-4 border-[#D8DAE5] rounded-lg w-[600px]'
             dropdownId='dropdownFilterMain'
           >
             <div className='3xl:text-xl text-lg text-[#344054] font-medium'>Bộ lọc</div>
-            <div className='grid w-full grid-cols-1 gap-3'>
+            <div className='grid w-full grid-cols-2 gap-3'>
               <div className='col-span-1 space-y-1'>
                 <h3 className='text-xs text-[#051B44] font-normal'>Chi nhánh</h3>
                 <SelectComponentNew
@@ -460,10 +504,24 @@ const SummaryBtpNvl = () => {
           />
 
           {selectedOrders?.length === 0 ? (
-            <div className='w-full h-[300px] flex items-center justify-center text-[#667085]'>Hãy chọn một lệnh sản xuất ở panel bên trái để hiển thị dữ liệu</div>
+            <div className='flex flex-col items-center justify-center h-full'>
+              <Image src={IMAGES.summary_LSX} alt='Không có dữ liệu' width={200} height={200} className='object-cover rounded-md' />
+              <div className='flex items-center gap-2 mt-2'>
+                <FaPlus color='#000' className='size-4' />
+                <p className='responsive-text-base font-semibold text-neutral-05'>Chọn lệnh sản xuất</p>
+              </div>
+              <p className='responsive-text-sm text-neutral-03 mt-2'>Hãy chọn lệnh sản xuất mà bạn muốn tổng hợp kế hoạch</p>
+            </div>
+          ) : isLoadingSummaryBtpNvl ? (
+            <div className='flex flex-col items-center justify-center h-full'>
+              <Loading className='h-16 w-16' />
+            </div>
           ) : activeTabMaterialFinishedProduct?.id === 'material' ? (
             (() => {
-              const data = mockMaterialRows;
+              const data = materialsData;
+              if (!data.length) {
+                return <NoData className='mt-0' />;
+              }
 
               const ColNum = ({ value, unit }) => (
                 <div className='flex flex-col items-center gap-0.5'>
@@ -473,102 +531,124 @@ const SummaryBtpNvl = () => {
               );
 
               return (
-                <div className='w-full overflow-hidden'>
-                  <div className='overflow-auto'>
-                    <table className='min-w-full table-auto responsive-text-sm'>
-                      <thead className='bg-[#FBFCFE] text-[#667085] capitalize'>
-                        <tr>
-                          <th className='text-left px-3 py-2'>Nguyên vật liệu</th>
-                          {activeTab?.id === 'each_order' && <th className='text-center px-3 py-2'>LSX</th>}
-                          <th className='text-center px-3 py-2'>Số lượng cần</th>
-                          <th className='text-center px-3 py-2'>Quy đổi</th>
-                          <th className='text-center px-3 py-2'>Đã giữ/Mua</th>
-                          <th className='text-center px-3 py-2'>Thiếu</th>
-                          <th className='text-center px-3 py-2'>Tiến độ</th>
-                        </tr>
-                      </thead>
-                      <tbody className='[&>tr]:border-b [&>tr]:border-[#F3F3F4] [&>tr:last-child]:border-b-0'>
-                        {data.map(item => (
-                          <tr key={item.id} className='hover:bg-slate-100/40'>
+                <Customscrollbar className='w-full h-full flex-1 min-h-0'>
+                  <table className='min-w-full table-auto responsive-text-sm relative'>
+                    <thead className='bg-[#FBFCFE] text-[#667085] capitalize sticky top-0 z-20'>
+                      <tr>
+                        <th className='text-left px-3 py-2'>Nguyên vật liệu</th>
+                        {activeTab?.id === 'each_order' && <th className='text-center px-3 py-2'>Lệnh sản xuất</th>}
+                        <th className='text-center px-3 py-2'>Số lượng cần</th>
+                        <th className='text-center px-3 py-2'>Quy đổi</th>
+                        <th className='text-center px-3 py-2'>Đã giữ/Mua</th>
+                        <th className='text-center px-3 py-2'>Thiếu</th>
+                        <th className='text-center px-3 py-2'>Tiến độ</th>
+                      </tr>
+                    </thead>
+
+                    <tbody className='[&>tr]:border-b [&>tr]:border-[#F3F3F4] [&>tr:last-child]:border-b-0'>
+                      {data.map((item, index) => {
+                        const rowKey = `${item.item_variation_option_value_id || item.item_id || index}-${item.order_id || 'summary'}`;
+                        const unitPrimary = item.unit_name_primary || item.unit_name;
+                        const progressUnit = unitPrimary || item.unit_name || '';
+
+                        return (
+                          <tr key={rowKey} className='hover:bg-slate-100/40'>
                             <td className='px-3 py-2'>
                               <div className='flex items-center gap-2'>
-                                <Image src={item.image} alt={item.name} width={40} height={40} className='object-cover rounded-md' />
+                                <Image src={item.images || DEFAULT_ITEM_IMAGE} alt={item.item_name || 'Nguyên vật liệu'} width={40} height={40} className='object-cover rounded-md' />
                                 <div className='flex flex-col'>
-                                  <span className='text-[#3A3E4C] font-semibold'>{item.name}</span>
-                                  <span className='text-xs text-[#9295A4]'>{item.sub}</span>
-                                  <span className='text-[11px] text-[#1D6AE5]'>{item.code}</span>
+                                  <span className='text-[#3A3E4C] font-semibold'>{item.item_name}</span>
+                                  <span className='text-xs text-[#9295A4]'>{item.item_variation || '(None)'}</span>
+                                  <span className='text-[11px] text-[#1D6AE5]'>{item.item_code}</span>
                                 </div>
                               </div>
                             </td>
-                            {activeTab?.id === 'each_order' && <td className='px-3 py-2 text-center text-[#3A3E4C]'>{item.lsx || '-'}</td>}
+                            {activeTab?.id === 'each_order' && <td className='px-3 py-2 text-center text-[#3A3E4C]'>{item.reference_no || '-'}</td>}
                             <td className='px-3 py-2'>
-                              <ColNum value={item.qty} unit={item.unit} />
+                              <ColNum value={formatNumber(Number(item.total_quota))} unit={item.unit_name || '-'} />
                             </td>
                             <td className='px-3 py-2'>
-                              <ColNum value={item.convert} unit={item.unit} />
+                              <ColNum value={formatNumber(Number(item.quota_primary))} unit={item.unit_name_primary || '-'} />
                             </td>
                             <td className='px-3 py-2'>
-                              <ColNum value={item.reserved} unit={item.unit} />
+                              <ColNum value={formatNumber(Number(item.quantity_keep))} unit={item.unit_name_primary || '-'} />
                             </td>
-                            <td className='px-3 py-2 text-center text-[#9295A4]'>{item.lack}</td>
+                            <td className='px-3 py-2 text-center text-[#9295A4]'>
+                              <ColNum value={formatNumber(Number(item.quantity_rest))} unit={progressUnit || '-'} />
+                            </td>
                             <td className='px-3 py-2'>
-                              <ProgressBar current={item.current} total={item.total} name={item.unit} typeProgress='tablePlaning' />
+                              <ProgressBar
+                                current={formatNumber(Number(item.quantity_import))}
+                                total={formatNumber(Number(item.quantity_rest_process))}
+                                name={item.unit_name_primary}
+                                typeProgress='tablePlaning'
+                              />
                             </td>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </Customscrollbar>
               );
             })()
           ) : (
             (() => {
-              const data = mockFinishedRows;
+              const data = finishedProductsData;
+
+              if (!data.length) {
+                return <NoData className='mt-0' />;
+              }
 
               return (
-                <div className='w-full overflow-hidden'>
-                  <div className='overflow-auto'>
-                    <table className='min-w-full table-auto responsive-text-sm'>
-                      <thead className='bg-[#FBFCFE] text-[#667085] capitalize'>
-                        <tr>
-                          <th className='text-left px-3 py-2'>Bán thành phẩm</th>
-                          {activeTab?.id === 'each_order' && <th className='text-center px-3 py-2'>LSX</th>}
-                          <th className='text-center px-3 py-2'>Đơn vị tính</th>
-                          <th className='text-center px-3 py-2'>Số lượng cần</th>
-                          <th className='text-center px-3 py-2'>Đã giữ</th>
-                          <th className='text-center px-3 py-2'>Thiếu</th>
-                          <th className='text-center px-3 py-2'>Tiến độ</th>
-                        </tr>
-                      </thead>
-                      <tbody className='[&>tr]:border-b [&>tr]:border-[#F3F3F4] [&>tr:last-child]:border-b-0'>
-                        {data.map(item => (
-                          <tr key={item.id} className='hover:bg-slate-100/40'>
+                <Customscrollbar className='w-full h-full flex-1 min-h-0'>
+                  <table className='min-w-full table-auto responsive-text-sm relative'>
+                    <thead className='bg-[#FBFCFE] text-[#667085] capitalize sticky top-0 z-20'>
+                      <tr>
+                        <th className='text-left px-3 py-2'>Bán thành phẩm</th>
+                        {activeTab?.id === 'each_order' && <th className='text-center px-3 py-2'>Lệnh sản xuất</th>}
+                        <th className='text-center px-3 py-2'>Đơn vị tính</th>
+                        <th className='text-center px-3 py-2'>Số lượng cần</th>
+                        <th className='text-center px-3 py-2'>Đã giữ</th>
+                        <th className='text-center px-3 py-2'>Thiếu</th>
+                        <th className='text-center px-3 py-2'>Tiến độ</th>
+                      </tr>
+                    </thead>
+                    <tbody className='[&>tr]:border-b [&>tr]:border-[#F3F3F4] [&>tr:last-child]:border-b-0'>
+                      {data.map((item, index) => {
+                        const rowKey = `${item.item_variation_option_value_id || item.item_id || index}-${item.order_id || 'summary'}`;
+                        const shortageValue = formatNumber(item.quantity_rest_process || item.quantity_rest);
+                        const reservedValue = formatNumber(getReservedOrPurchased(item));
+                        const progressUnit = item.unit_name_primary || item.unit_name || '';
+                        const tagLabel = getProductTagLabel(item.type_products);
+
+                        return (
+                          <tr key={rowKey} className='hover:bg-slate-100/40'>
                             <td className='px-3 py-2'>
                               <div className='flex items-center gap-2'>
-                                <Image src={item.image} alt={item.name} width={40} height={40} className='object-cover rounded-md' />
+                                <Image src={item.images || DEFAULT_ITEM_IMAGE} alt={item.item_name || 'Bán thành phẩm'} width={40} height={40} className='object-cover rounded-md' />
                                 <div className='flex flex-col'>
-                                  <span className='text-[#3A3E4C] font-semibold'>{item.name}</span>
-                                  <span className='text-xs text-[#9295A4]'>{item.sub}</span>
-                                  <span className='text-[11px] text-[#1D6AE5] w-fit'>{item.code}</span>
-                                  <span className='px-2 py-0.5 text-[10px] rounded bg-[#E9F9EF] text-[#139D3E] w-fit mt-1'>{item.tag}</span>
+                                  <span className='text-[#3A3E4C] font-semibold'>{item.item_name}</span>
+                                  <span className='text-xs text-[#9295A4]'>{item.item_variation || '(None)'}</span>
+                                  <span className='text-[11px] text-[#1D6AE5] w-fit'>{item.item_code}</span>
+                                  {tagLabel && <span className='px-2 py-0.5 text-[10px] rounded bg-[#E9F9EF] text-[#139D3E] w-fit mt-1'>{tagLabel}</span>}
                                 </div>
                               </div>
                             </td>
-                            {activeTab?.id === 'each_order' && <td className='px-3 py-2 text-center text-[#3A3E4C]'>{item.lsx || 'LSX-20052505'}</td>}
-                            <td className='px-3 py-2 text-center text-[#3A3E4C]'>{item.unit}</td>
-                            <td className='px-3 py-2 text-center text-[#3A3E4C]'>{item.qty}</td>
-                            <td className='px-3 py-2 text-center text-[#3A3E4C]'>{item.reserved || '-'}</td>
-                            <td className='px-3 py-2 text-center text-[#3A3E4C]'>{item.lack}</td>
+                            {activeTab?.id === 'each_order' && <td className='px-3 py-2 text-center text-[#3A3E4C]'>{item.reference_no || '-'}</td>}
+                            <td className='px-3 py-2 text-center text-[#3A3E4C]'>{item.unit_name}</td>
+                            <td className='px-3 py-2 text-center text-[#3A3E4C]'>{formatNumber(item.total_quota)}</td>
+                            <td className='px-3 py-2 text-center text-[#3A3E4C]'>{reservedValue}</td>
+                            <td className='px-3 py-2 text-center text-[#3A3E4C]'>{shortageValue}</td>
                             <td className='px-3 py-2'>
-                              <ProgressBar current={item.current} total={item.total} name={item.unit} typeProgress='tablePlaning' />
+                              <ProgressBar current={item.progressCurrent} total={item.progressTotal} name={progressUnit || item.unit_name} typeProgress='tablePlaning' />
                             </td>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </Customscrollbar>
               );
             })()
           )}

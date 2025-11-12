@@ -800,16 +800,27 @@ const ProductRow = memo(
             </div>
           </td>
           <td className="py-2 px-3 text-center w-[200px]">
-            <div className="flex  justify-center">
+            <div className="flex gap-6 justify-center">
               <div className="text-start">
                 <p className="text-[#EE1E1E] font-medium text-lg">
                   {formatNumber(Number(product.quantity_total_quota))}{" "}
                   <span className="text-[#141522] font-medium text-xs">/</span>
                 </p>
                 <span className="text-[#141522] text-xs font-medium">
-                  {product.unit_name_primary}
+                  {product.unit_name}
                 </span>
               </div>
+              {product.unit_name !== product.unit_name_primary && (
+              <div className="text-start">
+                <p className="text-[#EE1E1E] font-medium text-lg">
+                  {formatNumber(Number(product.quantity_quota_primary))}{" "}
+                  <span className="text-[#141522] font-medium text-xs">/</span>
+                </p>
+                <span className="text-[#141522] text-xs font-medium">
+                    {product.unit_name_primary}
+                  </span>
+                </div>
+              )}
             </div>
           </td>
           <td className="py-2 px-3 text-center w-[100px]">
@@ -1316,7 +1327,7 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
               <th className="py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[200px]">
                 Số lượng
               </th>
-              <th className="py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[115px]">
+              <th className="py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[100px]">
                 Thao tác
               </th>
             </tr>
