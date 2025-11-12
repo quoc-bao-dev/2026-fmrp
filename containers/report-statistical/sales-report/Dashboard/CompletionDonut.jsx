@@ -30,7 +30,9 @@ const CustomTooltip = ({ active, payload }) => {
       <div className='text-[12px] text-[#828383] mb-2 font-medium'>Thông tin chi tiết</div>
       <div className='flex items-center justify-between gap-4 mb-1'>
         <span className='text-[12px] text-[#828383]'>Tỷ lệ hoàn thành</span>
-        <span className='text-[12px] font-semibold text-[#425166]'>{completionRate.toFixed(1)}%</span>
+        <span className='text-[12px] font-semibold text-[#425166]'>
+          {Number.isInteger(completionRate) ? completionRate : completionRate.toFixed(2)}%
+        </span>
       </div>
       <div className='flex items-center justify-between gap-4 mb-1'>
         <span className='text-[12px] text-[#828383]'>Tổng đơn hàng</span>

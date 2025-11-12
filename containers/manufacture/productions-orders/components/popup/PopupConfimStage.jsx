@@ -44,6 +44,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
   const [errorNVLDataBefore, setErrorNVLDataBefore] = useState({ items: [] });
   const [isInputPending, setIsInputPending] = useState(false);
   const [isState, setState] = useState(initialState);
+  const [isWarehouseMissing, setIsWarehouseMissing] = useState(false);
   const [isOrderCompleted, setIsOrderCompleted] = useState(false);
   const [activeStep, setActiveStep] = useState({ type: null, item: null });
 
@@ -67,7 +68,8 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
   function resetErrors() {
     setErrorNVLData({ items: [] });
     setErrorNVLDataBefore({ items: [] });
-  }
+    setIsWarehouseMissing(false);
+  };
 
   const checkItemFinalStage = isState.dataTableProducts?.data?.items?.some(e => e?.final_stage == 1);
   const showSerialColumns = checkItemFinalStage && dataProductSerial.is_enable === '1';
@@ -110,7 +112,8 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
     }
 
     if (!isState.objectWareHouse) {
-      isToast('error', 'Vui lòng kiểm tra dữ liệu');
+      setIsWarehouseMissing(true);
+      isToast('error', 'Vui lòng chọn kho hàng');
       return;
     }
 
@@ -402,10 +405,12 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
   useEffect(() => {
     if (isState.open) {
       queryState({ ...initialState, open: true });
+      setIsWarehouseMissing(false);
       return;
     }
     queryState({ ...initialState });
     setIsOrderCompleted(false);
+    setIsWarehouseMissing(false);
   }, [isState.open]);
 
   const handleQuantityChange = async (value, row, type) => {
@@ -503,6 +508,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
               return;
             }
             queryState({ open: true });
+            setIsWarehouseMissing(false);
           }}
           lockScroll={true}
           open={isState.open}
@@ -529,9 +535,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                   title='Xác nhận'
                   onClick={handleSubmit}
                   icon={<CheckIcon className='size-4' />}
-                  className={`py-2.5 2xl:py-3 px-3 2xl:px-4 text-white rounded-lg !responsive-text-base flex items-center gap-2
-                  ${isState.objectWareHouse && !isInputPending ? 'bg-typo-blue-4' : 'bg-neutral-02 hover:bg-neutral-02 !cursor-not-allowed'}
-                 `}
+                  className={`py-2.5 2xl:py-3 px-3 2xl:px-4 text-white rounded-lg !responsive-text-base flex items-center gap-2 bg-typo-blue-4 hover:bg-typo-blue-5`}
                 />
               </div>
             </div>
@@ -552,6 +556,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
               return;
             }
             queryState({ open: true });
+            setIsWarehouseMissing(false);
           }}
           lockScroll={true}
           open={isState.open}
@@ -559,6 +564,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
           onClose={() => {
             resetErrors();
             queryState({ open: false });
+            setIsWarehouseMissing(false);
           }}
         >
           <div className='w-[90vw] xl:h-[80vh] h-[575px] overflow-'>
@@ -701,25 +707,33 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                       <div className='w-1/3 m-0.5'>
                         <SelectComponent
                           options={data?.warehouses || []}
-                          onChange={e => queryState({ objectWareHouse: e })}
+                          onChange={e => {
+                            setIsWarehouseMissing(false);
+                            queryState({ objectWareHouse: e });
+                          }}
                           value={isState.objectWareHouse}
                           isClearable={true}
                           icon={<PiWarehouseLight color='#9295A4' className='size-4' />}
                           closeMenuOnSelect={true}
                           hideSelectedOptions={false}
-                          placeholder={'Kho thành phẩm'}
+                          placeholder="Chọn kho hàng"
                           styles={{
                             control: (base, state) => ({
                               ...base,
-                              borderColor: state.isFocused ? '#0F4F9E' : isState.objectWareHouse == null ? '#ef4444' : base.borderColor,
+                              borderColor: state.isFocused ? '#0F4F9E' : isWarehouseMissing ? '#ef4444' : base.borderColor,
                               borderRadius: '8px',
                               '&:hover': {
-                                borderColor: state.isFocused ? '#0F4F9E' : isState.objectWareHouse == null ? '#ef4444' : base.borderColor,
+                                borderColor: state.isFocused ? '#0F4F9E' : isWarehouseMissing ? '#ef4444' : base.borderColor,
                               },
+                            }),
+                            placeholder: base => ({
+                              ...base,
+                              color: '#cbd5e1',
                             }),
                           }}
                           isSearchable={true}
                         />
+                        {/* {isWarehouseMissing && <p className='mt-1 text-xs text-[#EE1E1E]'>Chưa chọn kho</p>} */}
                       </div>
                     </div>
 

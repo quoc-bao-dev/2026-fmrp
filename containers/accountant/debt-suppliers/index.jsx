@@ -381,8 +381,8 @@ const DebtSuppliers = (props) => {
                       textAlign={"center"}
                       className={"py-2"}
                     >
-                      {dataLang?.debt_suppliers_Ending ||
-                        "debt_suppliers_Ending"}
+                      {dataLang?.debt_suppliers_Arise ||
+                        "debt_suppliers_Arise"}
                     </ColumnTable>
                     <div className="flex border-t border-gray-200">
                       <ColumnTable
@@ -422,8 +422,8 @@ const DebtSuppliers = (props) => {
                         textAlign={"center"}
                         className={"flex-1 pt-2"}
                       >
-                        {dataLang?.customerDebt_collect ||
-                          "customerDebt_collect"}
+                        {dataLang?.debt_suppliers_Spend ||
+                          "debt_suppliers_Spend"}
                       </ColumnTable>
                     </div>
                   </ColumnTable>

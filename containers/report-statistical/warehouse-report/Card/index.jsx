@@ -24,7 +24,7 @@ import { useDebounce } from 'use-debounce';
 import { useExportExcel } from './hooks/useExportExcel';
 import { useGetCardStock } from './hooks/useGetListReportStock';
 import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
-import { useGetItemsWithBranch } from '../../production-manager/OrderProgress/hook';
+import { useGetItemsWithBranch } from '@/hooks/useComboBoxReport';
 
 const breadcrumbItems = [
   {

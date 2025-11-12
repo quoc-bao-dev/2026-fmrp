@@ -22,7 +22,7 @@ import { useExportExcel } from './hooks/useExportExcel'
 import { useGetListReportStock } from './hooks/useGetListReportStock'
 import PopupWarehouseDetail from './popup/popupWarehouseDetail'
 import { usePersistedBranches } from '@/hooks/common/usePersistedBranches'
-import { useGetItemsWithBranch } from '../../production-manager/OrderProgress/hook'
+import { useGetItemsWithBranch } from '@/hooks/useComboBoxReport'
 
 const breadcrumbItems = [
   {
