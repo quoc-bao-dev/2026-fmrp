@@ -44,7 +44,7 @@ const LoginContent = React.memo(props => {
     checkValidateOtp: false,
   };
 
-  const {} = useSetings();
+  const { refetch: refetchSetings } = useSetings();
 
   // [login-socket] [step 3] Lấy socket, loading, error từ LoginSocketContext
   const { socket, loading: socketLoading, error: socketError } = useLoginSocketContext();
@@ -370,9 +370,12 @@ const LoginContent = React.memo(props => {
       // [login-socket] [step 11.6] Hiển thị toast success
       showToat('success', message);
 
+      refetchSetings();
       // [login-socket] [step 11.7] Redirect về trang chủ
       console.log('showToat', message);
-      router.push('/');
+      setTimeout(() => {
+        router.push('/');
+      }, 300);
     } catch (error) {
       console.error('Login error:', error);
       showToat('error', 'Có lỗi xảy ra khi đăng nhập');
