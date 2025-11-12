@@ -1,4 +1,4 @@
-import apiSummaryBtpNvl from "@/Api/apiManufacture/manufacture/summary-btp-nvl/apisummaryBtpNvl";
+import apiSummaryBtpNvl from "@/Api/apiManufacture/manufacture/summary-btp-nvl/apiSummaryBtpNvl";
 import { useQuery } from "@tanstack/react-query";
 
 export const useSummaryBtpNvl = (data) => {

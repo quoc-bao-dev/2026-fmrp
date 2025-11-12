@@ -482,6 +482,9 @@ const Popup_Products = React.memo((props) => {
         formData.append("note", note);
         branch.forEach((e) => formData.append("branch_id[]", e.value));
         formData.append("images", thumbFile);
+        // gửi kèm id biến thể chính/phụ để backend biết mapping
+        formData.append("variation_main", variantMain || "");
+        formData.append("variation_sub", variantSub || "");
         for (let i = 0; i < dataTotalVariant?.length; i++) {
             var item = dataTotalVariant[i];
 
