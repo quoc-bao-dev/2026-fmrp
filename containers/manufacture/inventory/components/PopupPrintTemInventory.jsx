@@ -23,6 +23,7 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { twMerge } from "tailwind-merge";
 import { useInventoryDetail } from "../hooks/useInventoryDetail";
+import apiInventory from "@/Api/apiManufacture/manufacture/inventory/apiInventory";
 dayjs.extend(customParseFormat);
 
 const deca = Lexend_Deca({
@@ -161,7 +162,7 @@ const PopupPrintTemInventory = ({ id, onClose }) => {
       });
 
       try {
-        const response = await apiProducts.apiPrintItemsImport(formData);
+        const response = await apiInventory.apiPrintTemInventory(formData);
         if (response.isSuccess === 1) {
           setLisTemItem(response);
           setIsPrintTem(true);
@@ -196,7 +197,7 @@ const PopupPrintTemInventory = ({ id, onClose }) => {
           )}
           <div className="flex flex-col items-start">
             <p className="text-typo-black-1 font-bold text-2xl capitalize">
-              {isPrintTem ? "Mẫu tem in của bạn" : "In tem nguyên vật liệu"}
+              {isPrintTem ? "Mẫu tem in của bạn" : "In tem kiểm kê kho"}
             </p>
             {isPrintTem && (
               <p className="text-typo-blue-4 text-base font-medium">
@@ -348,7 +349,7 @@ const PopupPrintTemInventory = ({ id, onClose }) => {
                               handleTemTotal(item?.id, value)
                             }
                             classNameButton="rounded-full bg-[#EBF5FF] hover:bg-[#C7DFFB]"
-                            className="p-[4px]"
+                            className="p-[4px] bg-white"
                           />
                         </div>
                       </RowItemTable>
