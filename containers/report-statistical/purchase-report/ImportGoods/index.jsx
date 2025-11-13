@@ -29,10 +29,10 @@ import { useGetListReportImport } from './hook/useGetListReportImport';
 
 const breadcrumbItems = [
   { label: `Báo cáo` },
-  { label: `Chi tiết phiếu` },
+  { label: `Báo cáo mua hàng` },
   {
-    label: `Báo cáo nhập kho mua hàng`,
-    href: '/report-statistical/warehouse-report/import-purchase',
+    label: `Báo cáo nhập hàng`,
+    href: '/report-statistical/purchase-report/import-goods',
   },
 ];
 

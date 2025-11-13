@@ -397,6 +397,9 @@ const Popup_NVL = React.memo((props) => {
         formData.append("coefficient", unitAmount);
         formData.append("images", thumbFile);
         formData.append("is_delete_image ", isDeleteThumb);
+        // gửi kèm id biến thể chính/phụ để backend biết mapping
+        formData.append("variation_main", variantMain || "");
+        formData.append("variation_sub", variantSub || "");
         branch_id.forEach((id) => formData.append("branch_id[]", id));
 
         for (let i = 0; i < dataTotalVariant?.length; i++) {

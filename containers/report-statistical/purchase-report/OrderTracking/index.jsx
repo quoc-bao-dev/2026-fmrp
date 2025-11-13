@@ -177,8 +177,8 @@ const OrderTracking = props => {
       thClass: 'min-w-28 h-2 p-0 text-center font-semibold text-gray-700',
       tdClass: 'p-0 h-2 text-center text-gray-700',
       rowSpan: false,
-      render: row => formatNumber(Number(row?.quantity)),
-      footer: rTotal => formatNumber(Number(rTotal?.total_quantity) || 0),
+      render: row => Number(row?.quantity) !== 0 ? formatNumber(Number(row?.quantity)) : "-",
+      footer: rTotal => Number(rTotal?.total_quantity) !== 0 ? formatNumber(Number(rTotal?.total_quantity) || 0) : "-",
     },
     {
       key: 'quantity_import',
@@ -186,8 +186,8 @@ const OrderTracking = props => {
       thClass: 'min-w-36 h-2 p-0 text-center font-semibold text-gray-700',
       tdClass: 'p-0 h-2 text-center text-gray-700',
       rowSpan: false,
-      render: row => formatNumber(Number(row?.quantity_import)),
-      footer: rTotal => formatNumber(Number(rTotal?.total_quantity_import) || 0),
+      render: row => Number(row?.quantity_import) !== 0 ? formatNumber(Number(row?.quantity_import)) : "-",
+      footer: rTotal => Number(rTotal?.total_quantity_import) !== 0 ? formatNumber(Number(rTotal?.total_quantity_import) || 0) : "-",
     },
     {
       key: 'quantity_left',
@@ -195,8 +195,8 @@ const OrderTracking = props => {
       thClass: 'min-w-36 h-2 p-0 text-center font-semibold text-gray-700',
       tdClass: 'p-0 h-2 text-center text-gray-700',
       rowSpan: false,
-      render: row => formatNumber(Number(row?.quantity_left)),
-      footer: rTotal => formatNumber(Number(rTotal?.total_quantity_left) || 0),
+      render: row => Number(row?.quantity_left) !== 0 ? formatNumber(Number(row?.quantity_left)) : "-",
+      footer: rTotal => Number(rTotal?.total_quantity_left) !== 0 ? formatNumber(Number(rTotal?.total_quantity_left) || 0) : "-",
     },
   ];
 

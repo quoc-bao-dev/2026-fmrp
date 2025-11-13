@@ -11,6 +11,8 @@ export const useListExportProductionOrder = (id) => {
       return response.data;
     },
     enabled: !!id,
+    staleTime: 0,
+    gcTime: 0,
   });
 };
 

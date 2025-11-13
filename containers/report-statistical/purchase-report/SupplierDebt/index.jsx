@@ -185,7 +185,7 @@ const SupplierDebt = () => {
                       <div className='w-full h-full px-3 py-2 border-r border-b border-[#E0E0E1] font-bold capitalize'>Công nợ đầu kỳ</div>
                     </td>
                     <td className='p-0 h-2 text-right font-semibold text-gray-800'>
-                      <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>{formatNumber(dataSupplierDebt?.debt?.begin_debt || 0)}</div>
+                      <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>{Number(dataSupplierDebt?.debt?.begin_debt) !== 0 ? formatNumber(Number(dataSupplierDebt?.debt?.begin_debt)) : "-"}</div>
                     </td>
                   </tr>
                   {Array.isArray(dataSupplierDebt?.rsImports) && dataSupplierDebt.rsImports?.length > 0 && (
@@ -398,19 +398,22 @@ const SupplierDebt = () => {
                     </td>
                     <td className='p-0 h-2 text-right font-semibold text-new-blue'>
                       <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>
-                        {formatNumber(
-                          (
-                            (Array.isArray(dataSupplierDebt?.rsImports)
-                              ? dataSupplierDebt.rsImports.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
-                              : 0) -
-                            (Array.isArray(dataSupplierDebt?.rsReturns)
-                              ? dataSupplierDebt.rsReturns.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
-                              : 0) +
-                            (Array.isArray(dataSupplierDebt?.rsServices)
-                              ? dataSupplierDebt.rsServices.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
-                              : 0)
-                          ) || 0
-                        )}
+                        {
+                          (() => {
+                            const total = 
+                              (Array.isArray(dataSupplierDebt?.rsImports)
+                                ? dataSupplierDebt.rsImports.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+                                : 0) -
+                              (Array.isArray(dataSupplierDebt?.rsReturns)
+                                ? dataSupplierDebt.rsReturns.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+                                : 0) +
+                              (Array.isArray(dataSupplierDebt?.rsServices)
+                                ? dataSupplierDebt.rsServices.reduce((acc, curr) => acc + Number(curr?.amount || 0), 0)
+                                : 0);
+
+                            return total === 0 ? '-' : formatNumber(total);
+                          })()
+                        }
                       </div>
                     </td>
                   </tr>
@@ -476,8 +479,8 @@ const SupplierDebt = () => {
                     </td>
                     <td className='p-0 h-2 text-right font-bold text-new-blue'>
                       <div className='w-full h-full px-3 py-2 border-b border-[#E0E0E1]'>
-                        {formatNumber(
-                          (
+                        {(() => {
+                          const endingBalance =
                             Number(dataSupplierDebt?.debt?.begin_debt || 0) +
                             (
                               (Array.isArray(dataSupplierDebt?.rsImports)
@@ -492,9 +495,10 @@ const SupplierDebt = () => {
                             ) -
                             (Array.isArray(dataSupplierDebt?.rsPaySlips)
                               ? dataSupplierDebt.rsPaySlips.reduce((acc, curr) => acc + Number(curr?.total || 0), 0)
-                              : 0)
-                          ) || 0
-                        )}
+                              : 0);
+
+                          return Number(endingBalance) === 0 ? "-" : formatNumber(endingBalance);
+                        })()}
                       </div>
                     </td>
                   </tr>

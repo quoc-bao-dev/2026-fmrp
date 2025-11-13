@@ -40,7 +40,7 @@ export const ContainerFilterTab = forwardRef(({ children, className }, ref) => {
 
   return (
     <TabContext.Provider value={{ activeTabInfo, setActiveTabInfo }}>
-      <div className="relative">
+      <div className="relative w-full">
         <Customscrollbar
           forceVisible="x"
           ref={ref}

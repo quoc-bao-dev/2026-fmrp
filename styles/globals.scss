@@ -803,6 +803,9 @@ body {
 .custom-toast-popup-error {
   background-color: #ffe9d5 !important; /* xanh đậm */
 }
+.custom-toast-popup-warning {
+  background-color: #fef3c7 !important; /* vàng nhạt */
+}
 
 .custom-toast-title-success {
   color: #065e49 !important;
@@ -810,6 +813,10 @@ body {
 
 .custom-toast-title-error {
   color: #7a0916 !important;
+}
+
+.custom-toast-title-warning {
+  color: #92400e !important; /* vàng đậm */
 }
 
 .custom-toast-title {
@@ -889,6 +896,9 @@ body {
 
 .custom-toast-close-button-error {
   color: #7a0916 !important;
+}
+.custom-toast-close-button-warning {
+  color: #92400e !important;
 }
 .custom-toast-close-button {
   font-size: 20 !important;

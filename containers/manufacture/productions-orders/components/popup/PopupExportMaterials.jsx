@@ -117,67 +117,72 @@ const CustomDropdownRadioGroup = ({
 
       {open && !disabled && (
         <div className="absolute top-full mt-1 left-0 min-w-max w-full rounded-xl bg-[#FFFFFF] shadow-sm border z-50 p-3">
-          <Customscrollbar className="max-h-80 ">
-            <div className="flex gap-y-2 flex-col">
-              {data.map((group, groupIndex) => (
-                <div
-                  key={groupIndex}
-                  className="flex-shrink-0 w-full"
-                  // style={{ minWidth: `${minColumnWidth}px` }}
-                >
-                  <p className="font-semibold text-[#003DA0] uppercase text-xs ">
-                    {group.label}
-                  </p>
-                  <div>
-                    {group.options.map((option, idx) => {
-                      return (
-                        <div
-                          key={option.id_warehouse_custom}
-                          className="flex items-center gap-2 py-2 rounded cursor-pointer hover:bg-blue-50 transition-colors px-2"
-                          onClick={() => {
-                            onChange(option);
-                            setOpen(false);
-                          }}
-                        >
+          {data && data.length > 0 ? (
+            <Customscrollbar className="max-h-80 ">
+              <div className="flex gap-y-2 flex-col">
+                {data.map((group, groupIndex) => (
+                  <div
+                    key={groupIndex}
+                    className="flex-shrink-0 w-full"
+                  >
+                    <p className="font-semibold text-[#003DA0] uppercase text-xs ">
+                      {group.label}
+                    </p>
+                    <div>
+                      {group.options.map((option) => {
+                        return (
                           <div
-                            className={twMerge(
-                              "w-4 h-4 rounded-full border-2  flex items-center justify-center flex-shrink-0",
-                              value === option.id_warehouse_custom
-                                ? "border-[#0375F3]"
-                                : "border-[#D0D5DD]"
-                            )}
+                            key={option.id_warehouse_custom}
+                            className="flex items-center gap-2 py-2 rounded cursor-pointer hover:bg-blue-50 transition-colors px-2"
+                            onClick={() => {
+                              onChange(option);
+                              setOpen(false);
+                            }}
                           >
-                            {value === option.id_warehouse_custom && (
-                              <div className="w-2 h-2 rounded-full bg-[#0375F3]" />
-                            )}
-                          </div>
-                          <div className="flex flex-col gap-2 w-full">
-                            <span className="text-[#141522] text-xs font-normal">
-                              {option.name_location}
-                            </span>
-                            <div className="flex gap-2 justify-between">
-                              <div className="flex flex-col gap-1">
-                                <span className="text-[#3276FA] text-xs font-normal">
-                                  LOT: {option.lot}
-                                </span>
-                                <span className="text-[#3276FA] text-xs font-normal">
-                                  Date: {formatDate(option.expiration_date)}
+                            <div
+                              className={twMerge(
+                                "w-4 h-4 rounded-full border-2  flex items-center justify-center flex-shrink-0",
+                                value === option.id_warehouse_custom
+                                  ? "border-[#0375F3]"
+                                  : "border-[#D0D5DD]"
+                              )}
+                            >
+                              {value === option.id_warehouse_custom && (
+                                <div className="w-2 h-2 rounded-full bg-[#0375F3]" />
+                              )}
+                            </div>
+                            <div className="flex flex-col gap-2 w-full">
+                              <span className="text-[#141522] text-xs font-normal">
+                                {option.name_location}
+                              </span>
+                              <div className="flex gap-2 justify-between">
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[#3276FA] text-xs font-normal">
+                                    LOT: {option.lot}
+                                  </span>
+                                  <span className="text-[#3276FA] text-xs font-normal">
+                                    Date: {formatDate(option.expiration_date)}
+                                  </span>
+                                </div>
+                                <span className="text-neutral-03 text-xs font-normal">
+                                  Tồn:{" "}
+                                  {formatNumber(Number(option.total_quantity))}
                                 </span>
                               </div>
-                              <span className="text-neutral-03 text-xs font-normal">
-                                Tồn:{" "}
-                                {formatNumber(Number(option.total_quantity))}
-                              </span>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            </Customscrollbar>
+          ) : (
+            <div className="py-4 px-2 text-center text-sm text-[#667085]">
+              Không có dữ liệu
             </div>
-          </Customscrollbar>
+          )}
         </div>
       )}
     </div>
@@ -360,7 +365,7 @@ const InputNumberCustom = memo(
     return (
       <div
         className={twMerge(
-          "p-2 flex items-center border rounded-full shadow-sm border-[#D0D5DD] w-fit h-fit overflow-hidden bg-white",
+          "p-1 flex items-center border rounded-full shadow-sm border-[#D0D5DD] w-fit h-fit overflow-hidden bg-white",
           disabled ? "opacity-50 cursor-not-allowed" : "",
           className
         )}
@@ -748,15 +753,22 @@ const ProductRow = memo(
       }
     };
 
+    const handleToggleRowSelect = useCallback(() => {
+      if (product.type_origin === "semi_products") return;
+      handleSelectProduct(index, !product.selected);
+    }, [product.type_origin, product.selected, index, handleSelectProduct]);
+
     return isVisible ? (
       <>
-        <tr className="hover:bg-gray-50">
+        <tr className="hover:bg-gray-50 cursor-pointer" onClick={handleToggleRowSelect}>
           <td className="py-2 px-3 text-center w-[62px]">
-            <CheckboxDefault
-              checked={product.selected}
-              onChange={(checked) => handleSelectProduct(index, checked)}
-              disabled={product.type_origin === "semi_products"}
-            />
+            <div onClick={(e) => e.stopPropagation()}>
+              <CheckboxDefault
+                checked={product.selected}
+                onChange={(checked) => handleSelectProduct(index, checked)}
+                disabled={product.type_origin === "semi_products"}
+              />
+            </div>
           </td>
           <td className="py-2 px-3 text-center text-sm font-semibold w-[62px]">
             {index + 1}
@@ -788,33 +800,53 @@ const ProductRow = memo(
             </div>
           </td>
           <td className="py-2 px-3 text-center w-[200px]">
-            <div className="flex  justify-center">
+            <div className="flex gap-6 justify-center">
               <div className="text-start">
                 <p className="text-[#EE1E1E] font-medium text-lg">
                   {formatNumber(Number(product.quantity_total_quota))}{" "}
                   <span className="text-[#141522] font-medium text-xs">/</span>
                 </p>
                 <span className="text-[#141522] text-xs font-medium">
-                  {product.unit_name_primary}
+                  {product.unit_name}
                 </span>
               </div>
+              {product.unit_name !== product.unit_name_primary && (
+              <div className="text-start">
+                <p className="text-[#EE1E1E] font-medium text-lg">
+                  {formatNumber(Number(product.quantity_quota_primary))}{" "}
+                  <span className="text-[#141522] font-medium text-xs">/</span>
+                </p>
+                <span className="text-[#141522] text-xs font-medium">
+                    {product.unit_name_primary}
+                  </span>
+                </div>
+              )}
             </div>
           </td>
           <td className="py-2 px-3 text-center w-[100px]">
             <div className="flex justify-center">
               {product.type_origin !== "semi_products" && (
-                <div
-                  onClick={handleAddLotRow}
-                  className={twMerge(
-                    "min-h-[35px] min-w-[35px] flex justify-center items-center flex-row rounded-full bg-[#EBF5FF] border border-transparent hover:border-[#1760B9] hover:bg-[#D0E8FF] hover:scale-110 transition-all duration-200 ease-out",
-                    classNameButton
-                  )}
+                <Tooltip
+                  title="Bổ sung kho xuất nguyên liệu"
+                  position="top"
+                  arrow={true}
                 >
-                  <FiPlus
-                    className="text-[#003DA0] hover:text-green-1"
-                    size={19}
-                  />
-                </div>
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddLotRow();
+                    }}
+                    className={twMerge(
+                      "min-h-[35px] min-w-[35px] cursor-pointer flex justify-center items-center flex-row rounded-full bg-[#EBF5FF] border border-transparent hover:border-[#1760B9] hover:bg-[#D0E8FF] hover:scale-110 transition-all duration-200 ease-out",
+                      classNameButton
+                    )}
+                  >
+                    <FiPlus
+                      className="text-[#003DA0] hover:text-green-1"
+                      size={19}
+                    />
+                  </div>
+                </Tooltip>
               )}
             </div>
           </td>
@@ -878,6 +910,8 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
   const [exportSuccess, setExportSuccess] = useState(0);
   const [isRenderErrorNVL, setIsRenderErrorNVL] = useState(false);
   const [errorNVLData, setErrorNVLData] = useState({ items: [] });
+  const [showAutoTooltip, setShowAutoTooltip] = useState(false);
+  const [autoTooltipText, setAutoTooltipText] = useState("");
 
   useEffect(() => {
     if (data?.bom) {
@@ -941,16 +975,24 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
     }
   }, [products, isLoading]);
 
-  // useEffect(() => {
-  //   if (!searchTerm.trim()) {
-  //     setVisibleProducts(products);
-  //   } else {
-  //     const filtered = products.filter((product) =>
-  //       product.item_name.toLowerCase().includes(searchTerm.toLowerCase())
-  //     );
-  //     setVisibleProducts(filtered);
-  //   }
-  // }, [searchTerm, products]);
+  // Tự động hiển thị tooltip khi API load xong và ẩn sau 4 giây
+  useEffect(() => {
+    // Chỉ hiển thị khi API đã load xong và có data
+    if (!isLoading && data?.bom && products.length > 0) {
+      setAutoTooltipText("Chọn sản phẩm để xuất kho");
+      setShowAutoTooltip(true);
+
+      const timer = setTimeout(() => {
+        setShowAutoTooltip(false);
+        setAutoTooltipText("");
+      }, 4000);
+
+      return () => clearTimeout(timer);
+    } else {
+      setShowAutoTooltip(false);
+      setAutoTooltipText("");
+    }
+  }, [isLoading, data, products.length]);
 
   const formatNumber = (number) => {
     return formatNumberConfig(+number, dataSeting);
@@ -989,13 +1031,6 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
   const selectedCount = useMemo(
     () => products.filter((product) => product.selected).length,
     [products]
-  );
-  const confirmButtonClass = useMemo(
-    () =>
-      `flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white ${
-        selectedCount > 0 ? "bg-background-blue-2" : "bg-neutral-02"
-      } `,
-    [selectedCount]
   );
 
   const handleConfirm = async () => {
@@ -1137,8 +1172,8 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
         <div className="flex gap-8 items-center">
           <button
             onClick={handleConfirm}
-            disabled={selectedCount === 0 || isLoadingSubmit}
-            className={confirmButtonClass}
+            disabled={isLoadingSubmit}
+            className="flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-background-blue-2"
           >
             {isLoadingSubmit ? (
               "Đang xử lý..."
@@ -1260,11 +1295,27 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
           <thead className="bg-white sticky top-0 z-10">
             <tr>
               <th className="py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]">
-                <Tooltip title="Chọn tất cả" position="bottom" arrow={true}>
-                  <CheckboxDefault
-                    checked={selectAll}
-                    onChange={handleSelectAll}
-                  />
+                <Tooltip
+                  title={autoTooltipText}
+                  position="top"
+                  arrow={true}
+                  trigger="manual"
+                  open={showAutoTooltip && !!autoTooltipText}
+                  onRequestClose={() => {
+                    setShowAutoTooltip(false);
+                    setAutoTooltipText("");
+                  }}
+                >
+                  <Tooltip
+                    title={autoTooltipText == "" ? "Chọn tất cả" : autoTooltipText}
+                    position="top"
+                    arrow={true}
+                  >
+                    <CheckboxDefault
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                    />
+                  </Tooltip>
                 </Tooltip>
               </th>
               <th className="py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]">
@@ -1276,7 +1327,7 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
               <th className="py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[200px]">
                 Số lượng
               </th>
-              <th className="py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[115px]">
+              <th className="py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[100px]">
                 Thao tác
               </th>
             </tr>

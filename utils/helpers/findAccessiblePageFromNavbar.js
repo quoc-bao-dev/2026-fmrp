@@ -103,38 +103,18 @@ export const getNavbarDataByPath = (path, auth) => {
   if (path.startsWith('/report-statistical/purchase-report')) {
     return [
       {
-        name: 'Báo cáo chi tiết yêu cầu mua hàng',
-        path: '/report-statistical/purchase-report/purchases',
+        name: 'Báo cáo nhập hàng',
+        path: '/report-statistical/purchase-report/import-goods',
         disabled: false,
       },
       {
-        name: 'Báo cáo tổng hợp mua hàng',
-        path: '/report-statistical/purchase-report/summary-of-purchases',
-        disabled: false,
-      },
-      {
-        name: 'Báo cáo sổ chi tiết mua hàng',
-        path: '/report-statistical/purchase-report/purchase-details-book',
-        disabled: false,
-      },
-      {
-        name: 'Theo dõi đặt hàng',
+        name: 'Theo dõi đơn đặt hàng',
         path: '/report-statistical/purchase-report/order-tracking',
         disabled: false,
       },
       {
-        name: 'Báo cáo tổng hợp công nợ phải trả',
-        path: '/report-statistical/purchase-report/summary-of_liabilities',
-        disabled: false,
-      },
-      {
-        name: 'Báo cáo chi tiết công nợ phải trả theo mặt hàng',
-        path: '/report-statistical/purchase-report/debt-by-item',
-        disabled: false,
-      },
-      {
-        name: 'Bảng kê mua hàng',
-        path: '/report-statistical/purchase-report/purchases-list',
+        name: 'Đối chiếu công nợ NCC',
+        path: '/report-statistical/purchase-report/supplier-debt',
         disabled: false,
       },
     ];
@@ -221,16 +201,18 @@ export const checkPageAccessFromNavbar = (path, auth) => {
   if (!auth) {
     return true;
   }
-  
+
   const navbarData = getNavbarDataByPath(path, auth);
-  
+
+  // Nếu không tìm thấy navbar data (không phải path báo cáo), cho phép truy cập
+  // Vì logic này chỉ áp dụng cho các trang báo cáo
   if (!navbarData || navbarData.length === 0) {
-    return false;
+    return true;
   }
 
   // Tìm item có path khớp
   const item = navbarData.find(item => item.path === path);
-  
+
   if (!item) {
     return false;
   }
