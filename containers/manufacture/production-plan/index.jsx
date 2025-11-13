@@ -60,6 +60,8 @@ const ProductionPlan = (props) => {
     const dataLang = props.dataLang;
 
     const router = useRouter();
+    const tabParam = Array.isArray(router.query?.tab) ? router.query.tab[0] : router.query?.tab;
+    const isTabEnabled = tabParam === undefined || tabParam === "order" || tabParam === "plan";
 
     const statusExprired = useStatusExprired();
 
@@ -192,7 +194,7 @@ const ProductionPlan = (props) => {
             queryKey: [
                 "api_production_internal_plan",
                 { ...params },
-                router.query.tab,
+                tabParam,
             ],
             queryFn: async ({ pageParam = 1 }) => {
                 const data = await _ServerFetching({
@@ -208,7 +210,7 @@ const ProductionPlan = (props) => {
             retry: 5,
             retryDelay: 5000,
             initialPageParam: 1,
-            enabled: router.query.tab == "order" || router.query.tab == "plan",
+            enabled: router.isReady && isTabEnabled,
             ...optionsQuery,
         });
 
@@ -221,7 +223,7 @@ const ProductionPlan = (props) => {
 
     // Tự động chuyển sang tab "plan" nếu tab "order" không có dữ liệu
     useEffect(() => {
-        const currentTab = router.query?.tab || "order";
+        const currentTab = tabParam || "order";
         // Chỉ kiểm tra khi đã fetch xong và đang ở tab "order"
         // Reset ref khi tab thay đổi
         if (currentTab !== "order") {
@@ -250,7 +252,7 @@ const ProductionPlan = (props) => {
                 { shallow: true }
             );
         }
-    }, [convertData, isFetching, isLoading, router.query?.tab, router.isReady, handleTab, router]);
+    }, [convertData, isFetching, isLoading, tabParam, router.isReady, handleTab, router]);
 
     const _HandleSeachApi = debounce(async (inputValue) => {
         try {

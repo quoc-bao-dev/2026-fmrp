@@ -674,7 +674,7 @@ const SummaryBtpNvl = () => {
 
               return (
                 <Customscrollbar className='w-full h-full flex-1 min-h-0'>
-                  <table className='min-w-full table-auto responsive-text-sm relative'>
+                  <table className='min-w-full table-auto responsive-text-base relative'>
                     <thead className='bg-[#FBFCFE] text-[#667085] capitalize sticky top-0 z-20'>
                       <tr>
                         <th className='text-left px-3 py-2'>Nguyên vật liệu</th>
@@ -722,6 +722,7 @@ const SummaryBtpNvl = () => {
                                 total={formatNumber(Number(item.quantity_rest_process))}
                                 name={item.unit_name_primary}
                                 typeProgress='tablePlaning'
+                                textClassName='!responsive-text-sm'
                               />
                             </td>
                           </tr>
@@ -742,7 +743,7 @@ const SummaryBtpNvl = () => {
 
               return (
                 <Customscrollbar className='w-full h-full flex-1 min-h-0'>
-                  <table className='min-w-full table-auto responsive-text-sm relative'>
+                  <table className='min-w-full table-auto responsive-text-base relative'>
                     <thead className='bg-[#FBFCFE] text-[#667085] capitalize sticky top-0 z-20'>
                       <tr>
                         <th className='text-left px-3 py-2'>Bán thành phẩm</th>
@@ -783,6 +784,7 @@ const SummaryBtpNvl = () => {
                                 total={formatNumber(Number(item.quantity_rest_process))}
                                 name={item.unit_name_primary}
                                 typeProgress='tablePlaning'
+                                textClassName='!responsive-text-sm'
                               />
                             </td>
                           </tr>
