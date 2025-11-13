@@ -124,22 +124,29 @@ const LoginContent = React.memo(props => {
 
   // Khôi phục form data khi quay lại tab login (chỉ khi chuyển từ QR về login)
   const prevTabRef = useRef(activeTab?.id);
+  const hasRestoredRef = useRef(false); // Track xem đã khôi phục chưa để tránh reset lại
+  const savedFormDataRef = useRef(savedFormData); // Lưu ref để tránh closure issue
+
+  // Cập nhật ref mỗi khi savedFormData thay đổi
+  useEffect(() => {
+    savedFormDataRef.current = savedFormData;
+  }, [savedFormData]);
+
   useEffect(() => {
     const prevTab = prevTabRef.current;
     const currentTab = activeTab?.id;
 
-    // Chỉ khôi phục khi chuyển từ tab QR về tab login
-    if (currentTab === 'login' && prevTab === 'qr' && savedFormData) {
+    // Chỉ khôi phục khi chuyển từ tab QR về tab login và chưa khôi phục
+    if (currentTab === 'login' && prevTab === 'qr' && savedFormDataRef.current && !hasRestoredRef.current) {
       // Sử dụng setTimeout để đảm bảo form đã được render xong
-      // và Input component đã được mount
       setTimeout(() => {
-        // Sử dụng reset() để reset toàn bộ form với giá trị mới
-        // Điều này sẽ trigger re-render và cập nhật UI
+        // Sử dụng giá trị từ ref để tránh closure issue
+        const dataToRestore = savedFormDataRef.current;
         reset(
           {
-            code: savedFormData.code || '',
-            name: savedFormData.name || '',
-            password: savedFormData.password || '',
+            code: dataToRestore.code || '',
+            name: dataToRestore.name || '',
+            password: dataToRestore.password || '',
             rememberMe: isState.rememberMe || false,
           },
           {
@@ -151,12 +158,18 @@ const LoginContent = React.memo(props => {
             keepSubmitCount: false,
           }
         );
+        hasRestoredRef.current = true; // Đánh dấu đã khôi phục
       }, 0);
+    }
+
+    // Reset flag khi chuyển sang tab QR để cho phép khôi phục lại lần sau
+    if (currentTab === 'qr') {
+      hasRestoredRef.current = false;
     }
 
     // Cập nhật prevTabRef
     prevTabRef.current = currentTab;
-  }, [activeTab?.id, savedFormData]);
+  }, [activeTab?.id]); // Chỉ phụ thuộc vào activeTab, không phụ thuộc vào savedFormData
 
   useEffect(() => {
     if (isState.isRegister && isState.countOtp > 0) {
@@ -561,17 +574,26 @@ const LoginContent = React.memo(props => {
                   /* [login] [step 4] Render Form đăng nhập khi tab "Đăng nhập" đang active */
                   <div className='flex flex-col gap-6'>
                     <div className='space-y-2'>
-                      <Input type='text' name='code' {...register('code', { required: true })} placeholder='Mã công ty' error={errors.code ? { message: 'Vui lòng nhập mã công ty' } : null} />
+                      <Input
+                        type='text'
+                        name='code'
+                        {...register('code', { required: true })}
+                        value={valueForm.code || ''}
+                        placeholder='Mã công ty'
+                        error={errors.code ? { message: 'Vui lòng nhập mã công ty' } : null}
+                      />
                       <Input
                         type='text'
                         name='name'
                         {...register('name', { required: true })}
+                        value={valueForm.name || ''}
                         placeholder={dataLang?.auth_user_name || 'auth_user_name'}
                         error={errors.name ? { message: 'Vui lòng nhập email hoặc số điện thoại' } : null}
                       />
                       <InputPassword
                         name='password'
                         {...register('password', { required: true })}
+                        value={valueForm.password || ''}
                         placeholder={dataLang?.auth_password || 'auth_password'}
                         error={errors.password ? { message: 'Vui lòng nhập mật khẩu' } : null}
                       />
