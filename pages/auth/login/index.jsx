@@ -418,6 +418,11 @@ const LoginContent = React.memo(props => {
     } else {
       ['usernameFMRP', 'usercodeFMRP', 'remembermeFMRP'].forEach(key => localStorage.removeItem(key));
     }
+    setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
+    }, 400);
     router.push('/');
   };
 
@@ -465,8 +470,11 @@ const LoginContent = React.memo(props => {
       // [login-socket] [step 11.7] Redirect về trang chủ
       console.log('showToat', message);
       setTimeout(() => {
-        router.push('/');
-      }, 300);
+        if (typeof window !== 'undefined') {
+          window.location.reload();
+        }
+      }, 400);
+      router.push('/');
     } catch (error) {
       console.error('Login error:', error);
       showToat('error', 'Có lỗi xảy ra khi đăng nhập');
