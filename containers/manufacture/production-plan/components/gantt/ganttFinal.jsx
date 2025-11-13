@@ -105,14 +105,8 @@ const GanttChart = ({
     [dataLang?.production_plan_gantt_order, dataLang?.production_plan_gantt_internal]
   );
 
-  // Key tab đang active: ưu tiên prop router (string) → query → mặc định
-  const activeTabKey = useMemo(() => {
-    if (typeof router === 'string') return router;
-    if (nextRouter?.query?.tab) return nextRouter.query.tab;
-    return 'order';
-  }, [router, nextRouter?.query?.tab]);
+  const [activeTabKey, setActiveTabKey] = useState('order');
 
-  // Ổn định reference của activeTabObj để tránh re-render không cần thiết
   const activeTabObj = useMemo(() => {
     const found = tabsHeader.find(t => t.tab === activeTabKey);
     return found || tabsHeader[0];
@@ -121,6 +115,7 @@ const GanttChart = ({
   const handleChangeTabHeader = useCallback(
     tabObj => {
       const tabKey = tabObj?.tab || tabObj?.id;
+      setActiveTabKey(tabKey);
       if ((arrIdChecked || []).filter(Boolean).length > 0) {
         handleQueryId({ status: true, initialKey: tabKey });
       } else {

@@ -73,7 +73,7 @@ const ProductionPlan = (props) => {
 
     const [arrIdChecked, sArrIdChecked] = useState([]);
 
-    const hasAutoSwitchedRef = useRef(false);
+    // Bỏ auto-switch tab
 
     const { isData, updateData } = useSetData(initialData);
 
@@ -221,38 +221,7 @@ const ProductionPlan = (props) => {
         updateData({ listOrder: convertData });
     }, [data]);
 
-    // Tự động chuyển sang tab "plan" nếu tab "order" không có dữ liệu
-    useEffect(() => {
-        const currentTab = tabParam || "order";
-        // Chỉ kiểm tra khi đã fetch xong và đang ở tab "order"
-        // Reset ref khi tab thay đổi
-        if (currentTab !== "order") {
-            hasAutoSwitchedRef.current = false;
-            return;
-        }
-
-        if (
-            currentTab === "order" &&
-            !isFetching &&
-            !isLoading &&
-            convertData.length === 0 &&
-            router.isReady &&
-            !hasAutoSwitchedRef.current
-        ) {
-            // Đánh dấu đã chuyển tab để tránh chuyển nhiều lần
-            hasAutoSwitchedRef.current = true;
-            // Chuyển sang tab "plan"
-            handleTab("plan");
-            router.push(
-                {
-                    pathname: router.pathname,
-                    query: { ...router.query, tab: "plan" },
-                },
-                undefined,
-                { shallow: true }
-            );
-        }
-    }, [convertData, isFetching, isLoading, tabParam, router.isReady, handleTab, router]);
+    // Bỏ logic tự động chuyển tab
 
     const _HandleSeachApi = debounce(async (inputValue) => {
         try {
