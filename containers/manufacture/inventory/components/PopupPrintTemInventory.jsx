@@ -1,5 +1,5 @@
 "use client";
-import apiProducts from "@/Api/apiProducts/products/apiProducts";
+import apiInventory from "@/Api/apiManufacture/manufacture/inventory/apiInventory";
 import ButtonAnimationNew from "@/components/common/button/ButtonAnimationNew";
 import Cardtable from "@/components/common/card/Cardtable";
 import Carousel from "@/components/common/carousel/Carousel";
@@ -15,6 +15,7 @@ import {
   RowTable,
 } from "@/components/UI/common/Table";
 import NoData from "@/components/UI/noData/nodata";
+import useToast from "@/hooks/useToast";
 import { Lexend_Deca } from "@next/font/google";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -23,7 +24,6 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { twMerge } from "tailwind-merge";
 import { useInventoryDetail } from "../hooks/useInventoryDetail";
-import apiInventory from "@/Api/apiManufacture/manufacture/inventory/apiInventory";
 dayjs.extend(customParseFormat);
 
 const deca = Lexend_Deca({
@@ -32,6 +32,8 @@ const deca = Lexend_Deca({
 });
 
 const PopupPrintTemInventory = ({ id, onClose }) => {
+  const showToat = useToast();
+
   const [open, setOpen] = useState(true);
   const { data, isFetching } = useInventoryDetail(open, id);
   const dispatch = useDispatch();
@@ -170,7 +172,7 @@ const PopupPrintTemInventory = ({ id, onClose }) => {
         }
       } catch (error) {
         setLoading(false);
-        throw new Error(error);
+        showToat("error", error?.message || "Lỗi khi in tem kiểm kê kho");
       }
     } else {
       window.open(lisTemItem?.pdf_url, "_blank");

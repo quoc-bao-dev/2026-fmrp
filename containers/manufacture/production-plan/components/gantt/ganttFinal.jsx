@@ -1,5 +1,6 @@
 'use client';
 
+import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import Loading from '@/components/UI/loading/loading';
 import LoadingButton from '@/components/UI/loading/loadingButton';
@@ -14,12 +15,10 @@ import useToast from '@/hooks/useToast';
 import { formatMoment } from '@/utils/helpers/formatMoment';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
 import * as d3 from 'd3';
-import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
-import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
 
 const colorScale = d3
   .scaleOrdinal()
@@ -79,6 +78,10 @@ const GanttChart = ({
 
   const [expandedOrders, setExpandedOrders] = useState({});
 
+  const [pendingTabChange, setPendingTabChange] = useState(null);
+
+  const [hasCheckedSecondTab, setHasCheckedSecondTab] = useState(false);
+
   const formatNumber = num => formatNumberConfig(+num, dataSeting);
 
   const { isStateProvider: isState, queryState } = useContext(ProductionsOrdersContext);
@@ -118,12 +121,21 @@ const GanttChart = ({
   const handleChangeTabHeader = useCallback(
     tabObj => {
       const tabKey = tabObj?.tab || tabObj?.id;
+      
+      // Nếu đang ở tab này rồi thì không làm gì
+      if (tabKey === activeTabKey) return;
+
+      // Nếu có items đã checked, hiển thị popup xác nhận
       if ((arrIdChecked || []).filter(Boolean).length > 0) {
         handleQueryId({ status: true, initialKey: tabKey });
-      } else {
-        handleTab(tabKey);
+        return;
       }
 
+      // Lưu tab đang chuyển đến để kiểm tra sau khi API hoàn thành
+      setPendingTabChange(tabKey);
+      setHasCheckedSecondTab(false); // Reset flag khi chuyển tab mới
+
+      // Thay đổi query param để trigger API call
       try {
         if (nextRouter?.push) {
           const nextQuery = { ...(nextRouter?.query || {}), tab: tabKey };
@@ -131,9 +143,12 @@ const GanttChart = ({
         }
       } catch {}
 
+      // Gọi handleTab để trigger API call
+      handleTab(tabKey);
+
       queryState({ openModal: false });
     },
-    [arrIdChecked, handleQueryId, handleTab, nextRouter, queryState]
+    [arrIdChecked, handleQueryId, handleTab, nextRouter, queryState, activeTabKey]
   );
 
   const allDates =
@@ -183,6 +198,58 @@ const GanttChart = ({
       setExpandedOrders(initialExpandedState);
     }
   }, [orders]); // Chạy lại khi orders thay đổi
+
+  // Kiểm tra và chuyển tab sau khi API hoàn thành
+  useEffect(() => {
+    // Chỉ kiểm tra khi có tab đang chờ chuyển và API đã hoàn thành
+    if (!pendingTabChange || isFetching) return;
+
+    const currentTab = activeTabKey;
+    const targetTab = pendingTabChange;
+
+    // Chỉ xử lý nếu tab hiện tại khớp với tab đang chờ
+    if (currentTab !== targetTab) return;
+
+    // Kiểm tra dữ liệu sau khi API hoàn thành
+    const hasData = orders && orders.length > 0;
+
+    if (!hasData) {
+      // Nếu không có dữ liệu
+      if (!hasCheckedSecondTab) {
+        // Chưa kiểm tra tab thứ hai, chuyển sang tab khác
+        const otherTab = tabsHeader.find(t => t.tab !== targetTab);
+        if (otherTab) {
+          setHasCheckedSecondTab(true);
+          setPendingTabChange(otherTab.tab);
+          handleTab(otherTab.tab);
+          try {
+            if (nextRouter?.push) {
+              const nextQuery = { ...(nextRouter?.query || {}), tab: otherTab.tab };
+              nextRouter.push({ pathname: nextRouter.pathname, query: nextQuery }, undefined, { shallow: true });
+            }
+          } catch {}
+        }
+      } else {
+        // Đã kiểm tra cả 2 tab, cả 2 đều không có dữ liệu, chuyển về tab đầu tiên
+        const firstTab = tabsHeader[0];
+        if (firstTab) {
+          setPendingTabChange(null);
+          setHasCheckedSecondTab(false);
+          handleTab(firstTab.tab);
+          try {
+            if (nextRouter?.push) {
+              const nextQuery = { ...(nextRouter?.query || {}), tab: firstTab.tab };
+              nextRouter.push({ pathname: nextRouter.pathname, query: nextQuery }, undefined, { shallow: true });
+            }
+          } catch {}
+        }
+      }
+    } else {
+      // Nếu có dữ liệu, xóa pending tab change và reset flag
+      setPendingTabChange(null);
+      setHasCheckedSecondTab(false);
+    }
+  }, [pendingTabChange, isFetching, orders, activeTabKey, tabsHeader, handleTab, nextRouter, hasCheckedSecondTab]);
 
   useEffect(() => {
     if (ganttParentContainerRef.current) {

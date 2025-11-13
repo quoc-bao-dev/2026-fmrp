@@ -5,7 +5,6 @@ import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport'
 import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet';
 import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
-import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew';
 import StatusCheckboxGroup from '@/components/common/checkbox/StatusCheckboxGroup';
 import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
 import LimitListDropdown from '@/components/common/dropdown/LimitListDropdown';
@@ -13,7 +12,6 @@ import ProgressBar from '@/components/common/progress/ProgressBar';
 import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
 import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
-import ArrowCounterClockwiseIcon from '@/components/icons/common/ArrowCounterClockwiseIcon';
 import CaretDownIcon from '@/components/icons/common/CaretDownIcon';
 import ChartDonutIcon from '@/components/icons/common/ChartDonutIcon';
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
@@ -22,6 +20,7 @@ import { IMAGES } from '@/constants/images';
 import { useBranchList } from '@/hooks/common/useBranch';
 import { useProductionOrdersList } from '@/managers/api/productions-order/useProductionOrdersList';
 import { formatMoment } from '@/utils/helpers/formatMoment';
+import formatNumber from '@/utils/helpers/formatnumber';
 import { FnlocalStorage } from '@/utils/helpers/localStorage';
 import Image from 'next/image';
 import { Fragment, useEffect, useMemo, useState } from 'react';
@@ -29,7 +28,6 @@ import { FaPlus } from 'react-icons/fa6';
 import { useSelector } from 'react-redux';
 import { listLsxStatus } from '../productions-orders/components/main/constants/listData';
 import { useSummaryBtpNvl } from './hook';
-import formatNumber from '@/utils/helpers/formatnumber';
 
 const breadcrumbItems = [
   {
@@ -71,7 +69,7 @@ const createNumberCell = rawValue => {
   const numValue = parseNumber(rawValue);
   // Kiểm tra xem số có phải là số nguyên không
   const isInteger = Number.isInteger(numValue);
-  
+
   return {
     value: numValue,
     style: { numFmt: isInteger ? '#,##0' : '#,##0.##' },
@@ -270,12 +268,6 @@ const SummaryBtpNvl = () => {
 
   const finishedProductsData = activeTab?.id === 'by_product' ? summaryData?.products_boms || [] : buildBomRows.products || [];
 
-  const getReservedOrPurchased = item => {
-    const keep = parseNumber(Number(item.quantity_keep));
-    const imported = parseNumber(Number(item.quantity_import));
-    return Math.max(keep, imported);
-  };
-
   const excelSheets = useMemo(() => {
     const createColumn = (title, width) => ({
       title,
@@ -332,12 +324,10 @@ const SummaryBtpNvl = () => {
       createColumn('Thuộc tính', 25),
       createColumn('Loại', 18),
       ...(isByProduct ? [] : [createColumn('Lệnh sản xuất', 28)]),
+      createColumn('Đơn vị tính', 12),
       createColumn('Số lượng cần', 18),
-      createColumn('ĐVT', 10),
       createColumn('Đã giữ', 18),
-      createColumn('ĐVT', 10),
       createColumn('Thiếu', 18),
-      createColumn('ĐVT', 10),
       createColumn('Tiến độ (%)', 18),
     ];
 
@@ -353,12 +343,10 @@ const SummaryBtpNvl = () => {
         { value: item.item_variation || '' },
         { value: getProductTagLabel(item.type_products) || '' },
         ...(isByProduct ? [] : [{ value: item.reference_no || '' }]),
-        createNumberCell(item.total_quota),
         { value: item.unit_name || '' },
+        createNumberCell(item.total_quota),
         createNumberCell(item.quantity_keep),
-        { value: item.unit_name_primary || '' },
         createNumberCell(item.quantity_rest),
-        { value: item.unit_name_primary || '' },
         { value: percent, style: { numFmt: '0' } },
       ];
     });
@@ -387,8 +375,7 @@ const SummaryBtpNvl = () => {
 
   const exportFilename = useMemo(() => {
     const base = 'Tong_hop_ke_hoach_BTP_NVL';
-    const tabSuffix =
-      activeTab?.id === 'each_order' ? 'Chi_tiet_theo_lenh' : 'Tong_hop_theo_mat_hang';
+    const tabSuffix = activeTab?.id === 'each_order' ? 'Chi_tiet_theo_lenh' : 'Tong_hop_theo_mat_hang';
 
     const orderCodes =
       selectedOrders && selectedOrders.length > 0
@@ -480,13 +467,7 @@ const SummaryBtpNvl = () => {
             className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#0375F3] border border-[#0375F3] hover:bg-[#EBF5FF] hover:shadow-hover-button rounded-lg'
             onClick={refetchSummaryBtpNvl}
           /> */}
-          <ExcelFileComponent
-            filename={exportFilename}
-            title='THKHBTPNVL'
-            multiDataSet={excelSheets?.[0]?.dataSet || []}
-            sheets={excelSheets}
-            classBtn='!py-3'
-          />
+          <ExcelFileComponent filename={exportFilename} title='THKHBTPNVL' multiDataSet={excelSheets?.[0]?.dataSet || []} sheets={excelSheets} classBtn='!py-3' />
           <TabSwitcherWithSlidingBackground tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
           <FilterDropdown
             trigger={triggerFilterAll}
