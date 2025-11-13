@@ -13,9 +13,6 @@ import { useBranchList } from "@/hooks/common/useBranch";
 import { useClientComboboxNoSearchToParams } from "@/hooks/common/useClients";
 import { useProductsVariantByBranchSearch } from "@/hooks/common/useProductTypeProducts";
 import { useChangeValue } from "@/hooks/useChangeValue";
-import { useLimitAndTotalItems } from "@/hooks/useLimitAndTotalItems";
-import usePagination from "@/hooks/usePagination";
-import useActionRole from "@/hooks/useRole";
 import { useSetData } from "@/hooks/useSetData";
 import useStatusExprired from "@/hooks/useStatusExprired";
 import useTab from "@/hooks/useTab";
@@ -26,15 +23,12 @@ import {
     useInfiniteQuery
 } from "@tanstack/react-query";
 import { debounce } from "lodash";
-import dynamic from "next/dynamic";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useEffect, useState, useRef } from "react";
 import { ProductionsOrdersProvider } from "../productions-orders/context/productionsOrders";
 import GanttChart from "./components/gantt/ganttFinal";
 import Header from "./components/header";
-const BodyGantt = dynamic(() => import("./components/gantt"), { ssr: false });
 
 const initialData = {
     timeLine: [],
@@ -69,8 +63,6 @@ const ProductionPlan = (props) => {
 
     const statusExprired = useStatusExprired();
 
-    const { paginate } = usePagination();
-
     const { handleTab } = useTab("order");
 
     const [isSort, sIsSort] = useState("");
@@ -79,22 +71,13 @@ const ProductionPlan = (props) => {
 
     const [arrIdChecked, sArrIdChecked] = useState([]);
 
+    const hasAutoSwitchedRef = useRef(false);
+
     const { isData, updateData } = useSetData(initialData);
 
     const { isOpen, isKeyState, handleQueryId } = useToggle();
 
     const { isValue, onChangeValue } = useChangeValue(initialValues);
-
-    const { limit, totalItems, updateTotalItems } = useLimitAndTotalItems();
-
-    const { is_admin: role, permissions_current: auth } = useSelector(
-        (state) => state.auth
-    );
-
-    const { checkAdd, checkEdit, checkExport } = useActionRole(
-        auth,
-        "production_plans_fmrp"
-    );
 
     const { data: listBranch = [] } = useBranchList();
 
@@ -236,6 +219,39 @@ const ProductionPlan = (props) => {
         updateData({ listOrder: convertData });
     }, [data]);
 
+    // Tự động chuyển sang tab "plan" nếu tab "order" không có dữ liệu
+    useEffect(() => {
+        const currentTab = router.query?.tab || "order";
+        // Chỉ kiểm tra khi đã fetch xong và đang ở tab "order"
+        // Reset ref khi tab thay đổi
+        if (currentTab !== "order") {
+            hasAutoSwitchedRef.current = false;
+            return;
+        }
+
+        if (
+            currentTab === "order" &&
+            !isFetching &&
+            !isLoading &&
+            convertData.length === 0 &&
+            router.isReady &&
+            !hasAutoSwitchedRef.current
+        ) {
+            // Đánh dấu đã chuyển tab để tránh chuyển nhiều lần
+            hasAutoSwitchedRef.current = true;
+            // Chuyển sang tab "plan"
+            handleTab("plan");
+            router.push(
+                {
+                    pathname: router.pathname,
+                    query: { ...router.query, tab: "plan" },
+                },
+                undefined,
+                { shallow: true }
+            );
+        }
+    }, [convertData, isFetching, isLoading, router.query?.tab, router.isReady, handleTab, router]);
+
     const _HandleSeachApi = debounce(async (inputValue) => {
         try {
             updateData({ keySearchProducts: inputValue });
@@ -321,7 +337,6 @@ const ProductionPlan = (props) => {
         checkedItems,
         router: router.query?.tab,
         page: router.query?.page,
-        typeScreen: props.type,
         hasNextPage,
         fetchNextPage,
     };
@@ -351,17 +366,7 @@ const ProductionPlan = (props) => {
                 ) : (
                     <Header {...shareProps} onChangeValue={onChangeValue} />
                 )}
-                {/* <FilterHeader {...shareProps} onChangeValue={onChangeValue} /> */}
                 <ProductionsOrdersProvider>
-                    {/* <BodyGantt
-                        {...shareProps}
-                        handleShowSub={handleShowSub}
-                        handleSort={handleSort}
-                        data={data}
-                        timeLine={isData.timeLine}
-                        isSort={isSort == "reference_no" ? false : true}
-                        handleCheked={handleCheked}
-                    /> */}
                     <div className="min-h-full  w-full">
                         <GanttChart
                             {...shareProps}
@@ -375,17 +380,6 @@ const ProductionPlan = (props) => {
                     </div>
 
                 </ProductionsOrdersProvider>
-                {/* {isData.listOrder?.length > 0 && (
-                    <ContainerPagination className="flex items-center space-x-5">
-                        <TitlePagination dataLang={dataLang} totalItems={totalItems?.iTotalDisplayRecords} />
-                        <Pagination
-                            postsPerPage={limit}
-                            totalPosts={Number(totalItems?.iTotalDisplayRecords)}
-                            paginate={paginate}
-                            currentPage={router.query?.page || 1}
-                        />
-                    </ContainerPagination>
-                )} */}
             </Container>
             <PopupConfim
                 dataLang={dataLang}

@@ -6,10 +6,25 @@ import { useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 
 const Navbar = props => {
-  const { permissions_current: auth } = useSelector(state => state.auth);
-
+  const { permissions_current: auth, is_upgrade: isUpgrade, is_admin: isAdmin } = useSelector(state => state.auth);
   const router = useRouter();
   const showToast = useToast();
+
+  const hasAuth =
+    !!auth &&
+    (Array.isArray(auth)
+      ? auth.length > 0
+      : typeof auth === 'object' && Object.keys(auth).length > 0);
+  const isAdminAccount = isAdmin === true || isAdmin === 1 || isAdmin === '1';
+
+  const canView = permission => {
+    if (isAdminAccount) return true;
+    if (!hasAuth) return true;
+    return Number(permission?.is_view) !== 0;
+  };
+
+  // Kiểm tra có gói Pro: isUpgrade === false nghĩa là có Pro
+  const hasPro = isUpgrade === false;
 
   // báo cáo tồn kho
   const isNavbarWarehouse = [
@@ -64,25 +79,25 @@ const Navbar = props => {
       id: uuidv4(),
       name: 'Tổng quan sản xuất',
       path: '/report-statistical/production-manager/dashboard',
-      disabled: auth?.report_manufacturing_dashboard?.is_view == 0,
+      disabled: !canView(auth?.report_manufacturing_dashboard),
     },
     {
       id: uuidv4(),
       name: 'BC định mức NVL',
       path: '/report-statistical/production-manager/quota-materials',
-      disabled: auth?.report_boms?.is_view == 0,
+      disabled: !canView(auth?.report_boms),
     },
     {
       id: uuidv4(),
       name: 'BC tiến độ đơn hàng',
       path: '/report-statistical/production-manager/order-progress',
-      disabled: auth?.report_order_progress?.is_view == 0,
+      disabled: !canView(auth?.report_order_progress),
     },
     {
       id: uuidv4(),
       name: 'BC NVL sử dụng',
       path: '/report-statistical/production-manager/raw-materials-used',
-      disabled: auth?.report_material_usage?.is_view == 0,
+      disabled: !canView(auth?.report_material_usage),
     },
   ];
 
@@ -92,31 +107,31 @@ const Navbar = props => {
       id: uuidv4(),
       name: 'Tổng quan bán hàng',
       path: '/report-statistical/sales-report/dashboard',
-      disabled: auth?.report_sales_dashboard?.is_view == 0,
+      disabled: !canView(auth?.report_sales_dashboard),
     },
     {
       id: uuidv4(),
       name: 'Doanh số theo bán hàng',
       path: '/report-statistical/sales-report/sales-revenue',
-      disabled: auth?.report_sales_revenue?.is_view == 0,
+      disabled: !canView(auth?.report_sales_revenue),
     },
     {
       id: uuidv4(),
       name: 'Báo cáo giao hàng',
       path: '/report-statistical/sales-report/deliveries',
-      disabled: auth?.report_deliveries?.is_view == 0,
+      disabled: !canView(auth?.report_deliveries),
     },
     {
       id: uuidv4(),
       name: 'Báo cáo trả lại hàng bán',
       path: '/report-statistical/sales-report/returns',
-      disabled: auth?.report_returns?.is_view == 0,
+      disabled: !canView(auth?.report_returns),
     },
     {
       id: uuidv4(),
       name: 'Đối chiếu công nợ KH',
       path: '/report-statistical/sales-report/customer-debt',
-      disabled: auth?.report_customer_debt?.is_view == 0,
+      disabled: !canView(auth?.report_customer_debt),
     },
   ];
 
@@ -126,16 +141,20 @@ const Navbar = props => {
       id: uuidv4(),
       name: 'Báo cáo nhập hàng',
       path: '/report-statistical/purchase-report/import-goods',
+      disabled: !canView(auth?.report_import),
     },
     {
       id: uuidv4(),
       name: 'Theo dõi đơn đặt hàng',
       path: '/report-statistical/purchase-report/order-tracking',
+      disabled: !canView(auth?.report_purchase_orders),
+      isPro: true,
     },
     {
       id: uuidv4(),
       name: 'Đối chiếu công nợ NCC',
       path: '/report-statistical/purchase-report/supplier-debt',
+      disabled: !canView(auth?.report_debt_suppliers),
     },
   ];
 
@@ -258,19 +277,22 @@ const Navbar = props => {
               <div className={`flex flex-col gap-3 ${item.children ? '' : ''}`}>
                 {item.children ? (
                   item.children.map(child => {
+                    const isProRequired = child.isPro === true;
+                    const isDisabled = child.disabled || (isProRequired && !hasPro);
                     return (
                       <div key={child.id} className='relative'>
-                        {child.disabled ? (
+                        {isDisabled ? (
                           <li
-                            onClick={() => showToast('error', 'Bạn không có quyền truy cập')}
-                            className='group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer opacity-50'
+                            onClick={() => showToast('error', isProRequired && !hasPro ? 'Tính năng này yêu cầu gói Pro' : 'Bạn không có quyền truy cập')}
+                            className='group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer'
                           >
-                            <div className='flex items-center gap-2'>
+                            <div className='flex items-center gap-2 opacity-50'>
                               <div className='size-1.5 rounded-full flex-shrink-0 bg-gray-400' />
                               <div className='flex flex-col items-start w-full'>
                                 <div className='responsive-text-sm text-gray-400 capitalize'>{child.name}</div>
                               </div>
                             </div>
+                            {child.isPro === true && !hasPro && <span className='bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs'>pro</span>}
                           </li>
                         ) : (
                           <Link href={child.path} className='relative'>
@@ -297,38 +319,43 @@ const Navbar = props => {
                   })
                 ) : (
                   <div key={item.id} className='relative'>
-                    {item.disabled ? (
-                      <li
-                        onClick={() => showToast('error', 'Bạn không có quyền truy cập')}
-                        className='group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer opacity-50'
-                      >
-                        <div className='flex w-full items-center gap-2'>
-                          <div className='size-1.5 rounded-full flex-shrink-0 bg-gray-400' />
-                          <div className='flex flex-col items-start w-full'>
-                            <div className='responsive-text-sm text-gray-400 capitalize'>{item.name}</div>
-                          </div>
-                        </div>
-                      </li>
-                    ) : (
-                      <Link href={item.path} className='relative'>
+                    {(() => {
+                      const isProRequired = item.isPro === true;
+                      const isDisabled = item.disabled || (isProRequired && !hasPro);
+                      return isDisabled ? (
                         <li
-                          className={`group font-medium flex p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
-                            router.pathname === item.path ? 'bg-typo-blue-5 text-white' : ''
-                          } `}
+                          onClick={() => showToast('error', isProRequired && !hasPro ? 'Tính năng này yêu cầu gói Pro' : 'Bạn không có quyền truy cập')}
+                          className='group font-medium flex gap-2 p-2 items-center justify-between w-full rounded-lg cursor-pointer'
                         >
-                          <div className='flex w-full items-center gap-2'>
-                            <div
-                              className={`size-1.5 rounded-full flex-shrink-0 ${
-                                router.pathname === item.path ? 'bg-white/60' : 'bg-primary-01'
-                              } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
-                            />
+                          <div className='flex w-full items-center gap-2 opacity-50'>
+                            <div className='size-1.5 rounded-full flex-shrink-0 bg-gray-400' />
                             <div className='flex flex-col items-start w-full'>
-                              <div className='responsive-text-sm capitalize'>{item.name}</div>
+                              <div className='responsive-text-sm text-gray-400 capitalize'>{item.name}</div>
                             </div>
                           </div>
+                          {(item.isPro === true && !hasPro) && <span className='bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs'>pro</span>}
                         </li>
-                      </Link>
-                    )}
+                      ) : (
+                        <Link href={item.path} className='relative'>
+                          <li
+                            className={`group font-medium flex p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
+                              router.pathname === item.path ? 'bg-typo-blue-5 text-white' : ''
+                            } `}
+                          >
+                            <div className='flex w-full items-center gap-2'>
+                              <div
+                                className={`size-1.5 rounded-full flex-shrink-0 ${
+                                  router.pathname === item.path ? 'bg-white/60' : 'bg-primary-01'
+                                } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
+                              />
+                              <div className='flex flex-col items-start w-full'>
+                                <div className='responsive-text-sm capitalize'>{item.name}</div>
+                              </div>
+                            </div>
+                          </li>
+                        </Link>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
