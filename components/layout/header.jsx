@@ -707,22 +707,44 @@ const Header = () => {
               link: '/report-statistical/warehouse-report/entry-and-exist',
             },
             {
-              viewOwn: auth?.report_manufacturing_dashboard?.is_view_own || auth?.report_boms?.is_view_own || auth?.report_order_progress?.is_view_own || auth?.report_material_usage?.is_view_own,
-              view: auth?.report_manufacturing_dashboard?.is_view || auth?.report_boms?.is_view || auth?.report_order_progress?.is_view || auth?.report_material_usage?.is_view,
+              viewOwn:
+                !!Number(auth?.report_manufacturing_dashboard?.is_view_own) ||
+                !!Number(auth?.report_boms?.is_view_own) ||
+                !!Number(auth?.report_order_progress?.is_view_own) ||
+                !!Number(auth?.report_material_usage?.is_view_own),
+              view:
+                !!Number(auth?.report_manufacturing_dashboard?.is_view) ||
+                !!Number(auth?.report_boms?.is_view) ||
+                !!Number(auth?.report_order_progress?.is_view) ||
+                !!Number(auth?.report_material_usage?.is_view),
               name: 'Quản lý sản xuất',
               link: '/report-statistical/production-manager/dashboard',
               // forceDisableForAdmin: true,
             },
             {
-              viewOwn: auth?.report_sales_dashboard?.is_view || auth?.report_sales_revenue?.is_view || auth?.report_deliveries?.is_view || auth?.report_returns?.is_view,
-              view: auth?.report_sales_dashboard?.is_view || auth?.report_sales_revenue?.is_view || auth?.report_deliveries?.is_view || auth?.report_returns?.is_view,
+              viewOwn:
+                !!Number(auth?.report_sales_dashboard?.is_view) ||
+                !!Number(auth?.report_sales_revenue?.is_view) ||
+                !!Number(auth?.report_deliveries?.is_view) ||
+                !!Number(auth?.report_returns?.is_view),
+              view:
+                !!Number(auth?.report_sales_dashboard?.is_view) ||
+                !!Number(auth?.report_sales_revenue?.is_view) ||
+                !!Number(auth?.report_deliveries?.is_view) ||
+                !!Number(auth?.report_returns?.is_view),
               name: 'Báo cáo bán hàng',
               link: '/report-statistical/sales-report/dashboard',
               // forceDisableForAdmin: true,
             },
             {
-              viewOwn: auth?.report_import?.is_view || auth?.report_purchase_orders?.is_view || auth?.report_debt_suppliers?.is_view,
-              view: auth?.report_import?.is_view || auth?.report_purchase_orders?.is_view || auth?.report_debt_suppliers?.is_view,
+              viewOwn:
+                !!Number(auth?.report_import?.is_view) ||
+                !!Number(auth?.report_purchase_orders?.is_view) ||
+                !!Number(auth?.report_debt_suppliers?.is_view),
+              view:
+                !!Number(auth?.report_import?.is_view) ||
+                !!Number(auth?.report_purchase_orders?.is_view) ||
+                !!Number(auth?.report_debt_suppliers?.is_view),
               name: 'Báo cáo mua hàng',
               link: '/report-statistical/purchase-report/import-goods',
               // forceDisableForAdmin: true,
@@ -1134,8 +1156,15 @@ const Header = () => {
     //     title: "+ Thêm",
     // },
   ];
-
-  useEffect(() => {
+// console.log(auth?.report_manufacturing_dashboard?.is_view || auth?.report_boms?.is_view || auth?.report_order_progress?.is_view || auth?.report_material_usage?.is_view)
+console.log(auth?.report_sales_dashboard?.is_view )
+console.log( auth?.report_sales_revenue?.is_view )
+console.log(auth?.report_deliveries?.is_view )
+console.log(auth?.report_returns?.is_view )
+console.log(auth?.report_sales_dashboard?.is_view || auth?.report_sales_revenue?.is_view || auth?.report_deliveries?.is_view || auth?.report_returns?.is_view)
+// console.log(auth?.report_import?.is_view || auth?.report_purchase_orders?.is_view || auth?.report_debt_suppliers?.is_view)
+                
+useEffect(() => {
     setIsLastDropdown(currentDropdownIndex === dropdowns.length - 1);
   }, [currentDropdownIndex, dropdowns.length]);
 

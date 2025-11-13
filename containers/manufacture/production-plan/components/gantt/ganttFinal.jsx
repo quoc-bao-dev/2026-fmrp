@@ -1,5 +1,6 @@
 'use client';
 
+import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import Loading from '@/components/UI/loading/loading';
 import LoadingButton from '@/components/UI/loading/loadingButton';
@@ -14,12 +15,10 @@ import useToast from '@/hooks/useToast';
 import { formatMoment } from '@/utils/helpers/formatMoment';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
 import * as d3 from 'd3';
-import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
-import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
 
 const colorScale = d3
   .scaleOrdinal()
@@ -106,18 +105,17 @@ const GanttChart = ({
     [dataLang?.production_plan_gantt_order, dataLang?.production_plan_gantt_internal]
   );
 
-  // Key tab đang active: ưu tiên prop router (string) → query → mặc định
-  const activeTabKey = useMemo(() => {
-    if (typeof router === 'string') return router;
-    if (nextRouter?.query?.tab) return nextRouter.query.tab;
-    return 'order';
-  }, [router, nextRouter?.query?.tab]);
+  const [activeTabKey, setActiveTabKey] = useState('order');
 
-  const activeTabObj = useMemo(() => tabsHeader.find(t => t.tab === activeTabKey) || tabsHeader[0], [tabsHeader, activeTabKey]);
+  const activeTabObj = useMemo(() => {
+    const found = tabsHeader.find(t => t.tab === activeTabKey);
+    return found || tabsHeader[0];
+  }, [tabsHeader, activeTabKey]);
 
   const handleChangeTabHeader = useCallback(
     tabObj => {
       const tabKey = tabObj?.tab || tabObj?.id;
+      setActiveTabKey(tabKey);
       if ((arrIdChecked || []).filter(Boolean).length > 0) {
         handleQueryId({ status: true, initialKey: tabKey });
       } else {

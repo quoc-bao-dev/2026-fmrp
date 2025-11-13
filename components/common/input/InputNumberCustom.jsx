@@ -56,7 +56,7 @@ const InputNumberCustom = ({
             <div
                 onClick={() => handleChange("decrement")}
                 className={twMerge(
-                    "min-h-[35px] min-w-[35px] flex justify-center items-center flex-row ",
+                    "min-h-[35px] cursor-pointer min-w-[35px] flex justify-center items-center flex-row ",
                     classNameButton
                 )}
             >
@@ -75,7 +75,7 @@ const InputNumberCustom = ({
             <div
                 onClick={() => handleChange("increment")}
                 className={twMerge(
-                    "min-h-[35px]  min-w-[35px] flex justify-center items-center flex-row",
+                    "min-h-[35px] cursor-pointer min-w-[35px] flex justify-center items-center flex-row",
                     classNameButton
                 )}
             >

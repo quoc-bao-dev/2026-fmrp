@@ -1,5 +1,5 @@
 "use client";
-import apiProducts from "@/Api/apiProducts/products/apiProducts";
+import apiInventory from "@/Api/apiManufacture/manufacture/inventory/apiInventory";
 import ButtonAnimationNew from "@/components/common/button/ButtonAnimationNew";
 import Cardtable from "@/components/common/card/Cardtable";
 import Carousel from "@/components/common/carousel/Carousel";
@@ -15,6 +15,7 @@ import {
   RowTable,
 } from "@/components/UI/common/Table";
 import NoData from "@/components/UI/noData/nodata";
+import useToast from "@/hooks/useToast";
 import { Lexend_Deca } from "@next/font/google";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -31,6 +32,8 @@ const deca = Lexend_Deca({
 });
 
 const PopupPrintTemInventory = ({ id, onClose }) => {
+  const showToat = useToast();
+
   const [open, setOpen] = useState(true);
   const { data, isFetching } = useInventoryDetail(open, id);
   const dispatch = useDispatch();
@@ -161,7 +164,7 @@ const PopupPrintTemInventory = ({ id, onClose }) => {
       });
 
       try {
-        const response = await apiProducts.apiPrintItemsImport(formData);
+        const response = await apiInventory.apiPrintTemInventory(formData);
         if (response.isSuccess === 1) {
           setLisTemItem(response);
           setIsPrintTem(true);
@@ -169,7 +172,7 @@ const PopupPrintTemInventory = ({ id, onClose }) => {
         }
       } catch (error) {
         setLoading(false);
-        throw new Error(error);
+        showToat("error", error?.message || "Lỗi khi in tem kiểm kê kho");
       }
     } else {
       window.open(lisTemItem?.pdf_url, "_blank");
@@ -196,7 +199,7 @@ const PopupPrintTemInventory = ({ id, onClose }) => {
           )}
           <div className="flex flex-col items-start">
             <p className="text-typo-black-1 font-bold text-2xl capitalize">
-              {isPrintTem ? "Mẫu tem in của bạn" : "In tem nguyên vật liệu"}
+              {isPrintTem ? "Mẫu tem in của bạn" : "In tem kiểm kê kho"}
             </p>
             {isPrintTem && (
               <p className="text-typo-blue-4 text-base font-medium">
@@ -348,7 +351,7 @@ const PopupPrintTemInventory = ({ id, onClose }) => {
                               handleTemTotal(item?.id, value)
                             }
                             classNameButton="rounded-full bg-[#EBF5FF] hover:bg-[#C7DFFB]"
-                            className="p-[4px]"
+                            className="p-[4px] bg-white"
                           />
                         </div>
                       </RowItemTable>

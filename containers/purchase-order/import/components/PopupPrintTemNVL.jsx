@@ -164,7 +164,7 @@ const parseDate = (dateStr) => {
         }
       } catch (error) {
         setLoading(false);
-        throw new Error(error);
+        showToat("error", error?.message || "Lỗi khi in tem kiểm kê kho");
       }
     } else {
       window.open(lisTemItem?.pdf_url, "_blank");
