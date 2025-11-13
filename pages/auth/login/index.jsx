@@ -11,7 +11,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useForm } from 'react-hook-form';
 import { FaQuoteLeft, FaQuoteRight, FaRedoAlt } from 'react-icons/fa';
@@ -65,6 +65,13 @@ const LoginContent = React.memo(props => {
   ];
   const [activeTab, setActiveTab] = useState(tabsLogin[0]);
 
+  // State riêng để lưu dữ liệu form khi chuyển tab
+  const [savedFormData, setSavedFormData] = useState({
+    code: '',
+    name: '',
+    password: '',
+  });
+
   const data = useSelector(state => state.availableLang);
 
   const queryState = key => sIsState(pver => ({ ...pver, ...key }));
@@ -74,16 +81,82 @@ const LoginContent = React.memo(props => {
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors },
   } = useForm();
 
   const valueForm = watch();
 
+  // Khởi tạo form từ localStorage chỉ lần đầu mount
   useEffect(() => {
-    setValue('code', localStorage?.getItem('usercodeFMRP') ? localStorage?.getItem('usercodeFMRP') : '');
-    setValue('name', localStorage?.getItem('usernameFMRP') ? localStorage?.getItem('usernameFMRP') : '');
+    const savedCode = localStorage?.getItem('usercodeFMRP') || '';
+    const savedName = localStorage?.getItem('usernameFMRP') || '';
+
+    // Chỉ set lần đầu nếu có dữ liệu trong localStorage
+    // Và cũng lưu vào savedFormData để giữ khi chuyển tab
+    if (savedCode || savedName) {
+      setValue('code', savedCode);
+      setValue('name', savedName);
+      setSavedFormData({
+        code: savedCode,
+        name: savedName,
+        password: '',
+      });
+    }
+
     router.push('/auth/login');
-  }, []);
+  }, []); // Chỉ chạy 1 lần khi mount, không chạy lại khi chuyển tab
+
+  // Lưu form data vào state riêng khi chuyển tab sang QR
+  useEffect(() => {
+    if (activeTab?.id === 'qr') {
+      const currentCode = valueForm.code || '';
+      const currentName = valueForm.name || '';
+      const currentPassword = valueForm.password || '';
+
+      setSavedFormData({
+        code: currentCode,
+        name: currentName,
+        password: currentPassword,
+      });
+    }
+  }, [activeTab?.id, valueForm.code, valueForm.name, valueForm.password]);
+
+  // Khôi phục form data khi quay lại tab login (chỉ khi chuyển từ QR về login)
+  const prevTabRef = useRef(activeTab?.id);
+  useEffect(() => {
+    const prevTab = prevTabRef.current;
+    const currentTab = activeTab?.id;
+
+    // Chỉ khôi phục khi chuyển từ tab QR về tab login
+    if (currentTab === 'login' && prevTab === 'qr' && savedFormData) {
+      // Sử dụng setTimeout để đảm bảo form đã được render xong
+      // và Input component đã được mount
+      setTimeout(() => {
+        // Sử dụng reset() để reset toàn bộ form với giá trị mới
+        // Điều này sẽ trigger re-render và cập nhật UI
+        reset(
+          {
+            code: savedFormData.code || '',
+            name: savedFormData.name || '',
+            password: savedFormData.password || '',
+            rememberMe: isState.rememberMe || false,
+          },
+          {
+            keepErrors: false,
+            keepDirty: false,
+            keepIsSubmitted: false,
+            keepTouched: false,
+            keepIsValid: false,
+            keepSubmitCount: false,
+          }
+        );
+      }, 0);
+    }
+
+    // Cập nhật prevTabRef
+    prevTabRef.current = currentTab;
+  }, [activeTab?.id, savedFormData]);
 
   useEffect(() => {
     if (isState.isRegister && isState.countOtp > 0) {
@@ -200,6 +273,11 @@ const LoginContent = React.memo(props => {
     // [set-qr] [step 4] Đếm ngược TTL; khi 0 thì đánh dấu hết hạn
     // [set-qr] [step 4.1] Chỉ chạy interval khi đang ở tab QR để tránh chạy khi unmount
     const timer = setInterval(() => {
+      if (activeTab?.id !== 'qr') {
+        clearInterval(timer);
+        return;
+      }
+
       setQrTtl(prev => {
         const next = (prev ?? 0) - 1;
         if (next <= 0) {
@@ -212,7 +290,7 @@ const LoginContent = React.memo(props => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [qrTtl, isExpired]);
+  }, [qrTtl, isExpired, activeTab?.id]);
 
   // [set-qr] [step 5] Xử lý reload phiên khi hết hạn
   const handleReloadQR = () => {
