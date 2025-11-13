@@ -96,7 +96,7 @@ console.log(selectedCustomer)
     if (dataStaffs.length > 0 && authState?.staff_id) {
       const staff = dataStaffs.find((e) => e.value === authState?.staff_id)
 
-      setSelectedStaff(staff?.value)
+      setSelectedStaff(staff?.value ?? null)
     }
   }, [dataStaffs, authState?.staff_id])
 
@@ -112,6 +112,21 @@ console.log(selectedCustomer)
       return
     }
 
+    // Nếu là thay đổi chi nhánh do người dùng thao tác trực tiếp -> reset ngay lập tức
+    if (manualBranchChangeRef.current) {
+      manualBranchChangeRef.current = false
+      setSelectedCustomer(null)
+      setSelectedStaff(null)
+      setSelectedPersonalContact(null)
+      // Xoá luôn object fallback để UI không còn hiển thị giá trị cũ
+      setCustomer(null)
+      setStaff(null)
+      setContactPerson(null)
+      setOption([])
+      setItemsAll([])
+      return
+    }
+
     if (!branchInitializedRef.current) {
       if (selectedBranch !== null && selectedBranch !== undefined) {
         branchInitializedRef.current = true
@@ -122,6 +137,12 @@ console.log(selectedCustomer)
     setSelectedCustomer(null)
     setSelectedStaff(null)
     setSelectedPersonalContact(null)
+    // Xoá luôn object fallback để UI không còn hiển thị giá trị cũ
+    setCustomer(null)
+    setStaff(null)
+    setContactPerson(null)
+    setOption([])
+    setItemsAll([])
   }, [selectedBranch])
 
   // Reset state của ô "người liên lạc" khi ô "khách hàng" thay đổi, để đổ dữ liệu mới (khi có)
@@ -201,6 +222,7 @@ console.log(selectedCustomer)
 
   const branchInitializedRef = useRef(false)
   const skipBranchResetRef = useRef(false)
+  const manualBranchChangeRef = useRef(false)
 
   const params = {
     'filter[branch_id]': selectedBranch !== null ? +selectedBranch : null,
@@ -464,12 +486,33 @@ console.log(selectedCustomer)
       setOnFetchingItem(true)
     }
     if (status == 'branch') {
+      manualBranchChangeRef.current = true
       setBranch(isId)
       setSelectedBranch(isId)
       setOption([])
       setCustomer(null)
+      setSelectedCustomer(null)
       setContactPerson(null)
+      setSelectedPersonalContact(null)
       setStaff(null)
+      setSelectedStaff(null)
+      setCodeProduct('')
+      setStartDate(dayjs())
+      setDeliveryDate(null)
+      setNote('')
+      setTotalTax('')
+      setTotalDiscount('')
+      setTypeOrder('0')
+      setQuote(null)
+      setItemsAll([])
+      // Hiển thị ngay cảnh báo thiếu nhân viên và mở phần thông tin
+      setShowMoreInfo(true)
+      setErrQuote(false)
+      setErrBranch(false)
+      setErrDate(false)
+      setErrDeliveryDate(false)
+      sErrCustomer(false)
+      setErrStaff(true)
       // setQuote(null);
     }
     if (status == 'typeOrder') {
@@ -510,11 +553,30 @@ console.log(selectedCustomer)
       if (option?.length >= 1) {
         handleQueryId({ status: true, id: value, idChild: type })
       } else if (value !== selectedBranch) {
+        manualBranchChangeRef.current = true
         setBranch(value)
         setSelectedBranch(value)
         setCustomer(null)
+        setSelectedCustomer(null)
         setContactPerson(null)
+        setSelectedPersonalContact(null)
         setStaff(null)
+        setSelectedStaff(null)
+        setCodeProduct('')
+        setStartDate(dayjs())
+        setDeliveryDate(null)
+        setNote('')
+        setTotalTax('')
+        setTotalDiscount('')
+        setTypeOrder('0')
+        setQuote(null)
+        setItemsAll([])
+        setErrQuote(false)
+        setErrBranch(false)
+        setErrDate(false)
+        setErrDeliveryDate(false)
+        sErrCustomer(false)
+        setErrStaff(false)
         // setQuote(null);
         setOption([])
       }
@@ -824,14 +886,14 @@ console.log(selectedCustomer)
         startDate === null ||
         selectedCustomer === null ||
         selectedBranch === null ||
-        selectedStaff === null ||
+        selectedStaff == null ||
         deliveryDate === null ||
         deliveryDateInOption === true
       ) {
         startDate === null && setErrDate(true)
         selectedCustomer === null && sErrCustomer(true)
         selectedBranch === null && setErrBranch(true)
-        selectedStaff === null && setErrStaff(true)
+        selectedStaff == null && setErrStaff(true)
         deliveryDate === null && setErrDeliveryDate(true)
         deliveryDateInOption === true && setErrDeliveryDate(true)
         isShow('error', `${dataLang?.required_field_null}`)
@@ -843,7 +905,7 @@ console.log(selectedCustomer)
         startDate === null ||
         selectedCustomer === null ||
         selectedBranch === null ||
-        selectedStaff === null ||
+        selectedStaff == null ||
         deliveryDate === null ||
         deliveryDateInOption === true ||
         quote === null
@@ -851,7 +913,7 @@ console.log(selectedCustomer)
         startDate === null && setErrDate(true)
         selectedCustomer === null && sErrCustomer(true)
         selectedBranch === null && setErrBranch(true)
-        selectedStaff === null && setErrStaff(true)
+        selectedStaff == null && setErrStaff(true)
         deliveryDate === null && setErrDeliveryDate(true)
         deliveryDateInOption === true && setErrDeliveryDate(true)
         quote === null && setErrQuote(true)
@@ -1446,7 +1508,18 @@ console.log(selectedCustomer)
                           placeholderText="Chọn chi nhánh"
                           options={dataBranch}
                           value={selectedBranch}
-                          onChange={(value) => setSelectedBranch(value)}
+                          onChange={(value) => {
+                            manualBranchChangeRef.current = true
+                            setSelectedBranch(value)
+                            setCustomer(null)
+                            setSelectedCustomer(null)
+                            setContactPerson(null)
+                            setSelectedPersonalContact(null)
+                            setStaff(null)
+                            setSelectedStaff(null)
+                            setOption([])
+                            setItemsAll([])
+                          }}
                           isError={errBranch}
                         />
                       </div>
