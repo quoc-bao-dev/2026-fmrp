@@ -42,8 +42,13 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useSelector } from "react-redux";
 import PopupDetail from "./components/popupDetail";
 import PopupStatus from "./components/popupStatus";
+import PopupPrintTemInventory from "./components/PopupPrintTemInventory";
 import { useInventoryList } from "./hooks/useInventoryList";
 import Pagination from "/components/UI/pagination";
+import PrinterIcon2 from "@/components/icons/common/PrinterIcon2";
+import StickerIcon from "@/components/icons/common/StickerIcon";
+import PrinterIcon from "@/components/icons/common/PrinterIcon";
+import TooltipDefault from "@/components/common/tooltip/TooltipDefault";
 
 const initialState = {
     keySearch: "",
@@ -74,6 +79,7 @@ const Inventory = (props) => {
     const queryState = (key) => sIsState((prev) => ({ ...prev, ...key }));
 
     const { isOpen, isId, handleQueryId } = useToggle();
+    const { isOpen: isOpenPrint, isId: printId, handleQueryId: handlePrintId } = useToggle();
 
     const { limit, updateLimit: sLimit } = useLimitAndTotalItems();
 
@@ -447,14 +453,25 @@ const Inventory = (props) => {
                                                         {e?.note}
                                                     </RowItemTable>
                                                     <RowItemTable colSpan={1} textAlign={"center"} className={"mx-auto"}>
-                                                        <button
-                                                            onClick={() =>
-                                                                handleQueryId({ id: e.id, status: true })
-                                                            }
-                                                            className="group hover:border-red-01 hover:bg-red-02 rounded-lg w-fit p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer"
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <button
+                                                                onClick={() =>
+                                                                    handlePrintId({ id: e.id, status: true })
+                                                                }
+                                                                className="group hover:border-blue-500 hover:bg-blue-50 rounded-lg w-fit p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer"
+                                                                title="In tem"
                                                             >
-                                                            <TrashIcon className="size-5 text-[#EE1E1E]"/>
-                                                        </button>
+                                                                <PrinterIcon className="size-5 text-[#003DA0]"/>
+                                                            </button>
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleQueryId({ id: e.id, status: true })
+                                                                }
+                                                                className="group hover:border-red-01 hover:bg-red-02 rounded-lg w-fit p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer"
+                                                            >
+                                                                <TrashIcon className="size-5 text-[#EE1E1E]"/>
+                                                            </button>
+                                                        </div>
                                                     </RowItemTable>
                                                 </RowTable>
                                             ))}
@@ -497,6 +514,15 @@ const Inventory = (props) => {
                 save={handleDelete}
                 cancel={() => handleQueryId({ status: false })}
             />
+
+            {isOpenPrint && printId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <PopupPrintTemInventory 
+                        id={printId}
+                        onClose={() => handlePrintId({ status: false })}
+                    />
+                </div>
+            )}
         </>
     );
 };

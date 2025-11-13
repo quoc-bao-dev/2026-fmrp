@@ -68,9 +68,13 @@ const createNumberCell = rawValue => {
     return { value: '' };
   }
 
+  const numValue = parseNumber(rawValue);
+  // Kiểm tra xem số có phải là số nguyên không
+  const isInteger = Number.isInteger(numValue);
+  
   return {
-    value: parseNumber(rawValue),
-    style: { numFmt: '#,##0.##' },
+    value: numValue,
+    style: { numFmt: isInteger ? '#,##0' : '#,##0.##' },
   };
 };
 
@@ -279,35 +283,47 @@ const SummaryBtpNvl = () => {
       style: EXCEL_HEADER_STYLE,
     });
 
+    const isByProduct = activeTab?.id === 'by_product';
+
     const materialsColumns = [
       createColumn('STT', 6),
       createColumn('Mã NVL', 15),
       createColumn('Tên NVL', 32),
       createColumn('Thuộc tính', 25),
-      createColumn('Lệnh sản xuất', 28),
-      createColumn('ĐVT', 10),
+      ...(isByProduct ? [] : [createColumn('Lệnh sản xuất', 28)]),
       createColumn('Số lượng cần', 18),
+      createColumn('ĐVT', 10),
       createColumn('Quy đổi', 18),
+      createColumn('ĐVT quy đổi', 12),
       createColumn('Đã giữ/Mua', 18),
+      createColumn('ĐVT', 10),
       createColumn('Thiếu', 18),
-      createColumn('Đã nhập', 18),
-      createColumn('Còn lại xử lý', 18),
+      createColumn('ĐVT', 10),
+      createColumn('Tiến độ (%)', 18),
     ];
 
-    const materialsRows = (materialsData || []).map((item, index) => [
-      { value: index + 1 },
-      { value: item.item_code || '' },
-      { value: item.item_name || '' },
-      { value: item.item_variation || '' },
-      { value: item.reference_no || '' },
-      { value: item.unit_name || item.unit_name_primary || '' },
-      createNumberCell(item.total_quota),
-      createNumberCell(item.quota_primary),
-      createNumberCell(item.quantity_keep),
-      createNumberCell(item.quantity_rest),
-      createNumberCell(item.quantity_import),
-      createNumberCell(item.quantity_rest_process),
-    ]);
+    const materialsRows = (materialsData || []).map((item, index) => {
+      const quantityImport = parseNumber(Number(item.quantity_import));
+      const quantityRestProcess = parseNumber(Number(item.quantity_rest_process));
+      const percent = quantityRestProcess > 0 ? Math.floor((quantityImport / quantityRestProcess) * 100) : 0;
+
+      return [
+        { value: index + 1 },
+        { value: item.item_code || '' },
+        { value: item.item_name || '' },
+        { value: item.item_variation || '' },
+        ...(isByProduct ? [] : [{ value: item.reference_no || '' }]),
+        createNumberCell(item.total_quota),
+        { value: item.unit_name || '' },
+        createNumberCell(item.quota_primary),
+        { value: item.unit_name_primary || '' },
+        createNumberCell(item.quantity_keep),
+        { value: item.unit_name_primary || '' },
+        createNumberCell(item.quantity_rest),
+        { value: item.unit_name_primary || '' },
+        { value: percent, style: { numFmt: '0' } },
+      ];
+    });
 
     const finishedColumns = [
       createColumn('STT', 6),
@@ -315,29 +331,37 @@ const SummaryBtpNvl = () => {
       createColumn('Tên BTP', 32),
       createColumn('Thuộc tính', 25),
       createColumn('Loại', 18),
-      createColumn('Lệnh sản xuất', 28),
-      createColumn('ĐVT', 10),
+      ...(isByProduct ? [] : [createColumn('Lệnh sản xuất', 28)]),
       createColumn('Số lượng cần', 18),
+      createColumn('ĐVT', 10),
       createColumn('Đã giữ', 18),
+      createColumn('ĐVT', 10),
       createColumn('Thiếu', 18),
-      createColumn('Đã nhập', 18),
-      createColumn('Còn lại xử lý', 18),
+      createColumn('ĐVT', 10),
+      createColumn('Tiến độ (%)', 18),
     ];
 
-    const finishedRows = (finishedProductsData || []).map((item, index) => [
-      { value: index + 1 },
-      { value: item.item_code || '' },
-      { value: item.item_name || '' },
-      { value: item.item_variation || '' },
-      { value: getProductTagLabel(item.type_products) || '' },
-      { value: item.reference_no || '' },
-      { value: item.unit_name || item.unit_name_primary || '' },
-      createNumberCell(item.total_quota),
-      createNumberCell(item.quantity_keep),
-      createNumberCell(item.quantity_rest),
-      createNumberCell(item.quantity_import),
-      createNumberCell(item.quantity_rest_process),
-    ]);
+    const finishedRows = (finishedProductsData || []).map((item, index) => {
+      const quantityImport = parseNumber(Number(item.quantity_import));
+      const quantityRestProcess = parseNumber(Number(item.quantity_rest_process));
+      const percent = quantityRestProcess > 0 ? Math.floor((quantityImport / quantityRestProcess) * 100) : 0;
+
+      return [
+        { value: index + 1 },
+        { value: item.item_code || '' },
+        { value: item.item_name || '' },
+        { value: item.item_variation || '' },
+        { value: getProductTagLabel(item.type_products) || '' },
+        ...(isByProduct ? [] : [{ value: item.reference_no || '' }]),
+        createNumberCell(item.total_quota),
+        { value: item.unit_name || '' },
+        createNumberCell(item.quantity_keep),
+        { value: item.unit_name_primary || '' },
+        createNumberCell(item.quantity_rest),
+        { value: item.unit_name_primary || '' },
+        { value: percent, style: { numFmt: '0' } },
+      ];
+    });
 
     return [
       {
@@ -359,7 +383,7 @@ const SummaryBtpNvl = () => {
         ],
       },
     ];
-  }, [materialsData, finishedProductsData]);
+  }, [materialsData, finishedProductsData, activeTab]);
 
   const exportFilename = useMemo(() => {
     const base = 'Tong_hop_ke_hoach_BTP_NVL';
@@ -446,7 +470,7 @@ const SummaryBtpNvl = () => {
       <div className='flex items-center justify-between w-full'>
         <h2 className='text-title-section text-[#52575E] capitalize font-medium'>Tổng hợp kế hoạch BTP & NVL</h2>
         <div className='flex items-center gap-2'>
-          <ButtonAnimationNew
+          {/* <ButtonAnimationNew
             icon={
               <div className='size-4'>
                 <ArrowCounterClockwiseIcon className='size-full' />
@@ -455,7 +479,7 @@ const SummaryBtpNvl = () => {
             title={'Làm mới dữ liệu'}
             className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#0375F3] border border-[#0375F3] hover:bg-[#EBF5FF] hover:shadow-hover-button rounded-lg'
             onClick={refetchSummaryBtpNvl}
-          />
+          /> */}
           <ExcelFileComponent
             filename={exportFilename}
             title='THKHBTPNVL'
