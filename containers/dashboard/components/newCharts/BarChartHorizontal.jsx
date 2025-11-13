@@ -41,7 +41,7 @@ const BarChartHorizontal = () => {
             const allValues = data?.items?.flatMap((item) => [
                 item.total_quantity
             ]);
-            const dynamicTicks = allValues.length > 0 ? handleTicksBarChart(allValues) : [0, 800, 1600, 2400, 3200];
+            const dynamicTicks = allValues?.length > 0 ? handleTicksBarChart(allValues) : [0, 800, 1600, 2400, 3200];
             setTicks(dynamicTicks);
         }
     }, [isLoading, data]);

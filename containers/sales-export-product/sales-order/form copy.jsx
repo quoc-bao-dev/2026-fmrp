@@ -84,7 +84,6 @@ console.log(selectedCustomer)
     if (dataBranch.length > 0 && dataBranch[0]?.value) {
       if (authState.branch?.length > 0 && !selectedBranch) {
         const firstBranch = authState.branch[0].id
-        skipBranchResetRef.current = true
         setSelectedBranch(firstBranch)
         setBranch({ label: authState.branch[0].name, value: firstBranch })
       }
@@ -103,14 +102,6 @@ console.log(selectedCustomer)
   // Reset state của ô "khách hàng, nhân viên, người liên lạc" khi ô "chi nhánh" thay đổi, để đổ dữ liệu mới (khi có)
   useEffect(() => {
     setFlagStateChange(selectedBranch === undefined)
-
-    if (skipBranchResetRef.current) {
-      skipBranchResetRef.current = false
-      if (selectedBranch !== null && selectedBranch !== undefined) {
-        branchInitializedRef.current = true
-      }
-      return
-    }
 
     if (!branchInitializedRef.current) {
       if (selectedBranch !== null && selectedBranch !== undefined) {
@@ -200,7 +191,6 @@ console.log(selectedCustomer)
   })
 
   const branchInitializedRef = useRef(false)
-  const skipBranchResetRef = useRef(false)
 
   const params = {
     'filter[branch_id]': selectedBranch !== null ? +selectedBranch : null,
@@ -264,7 +254,6 @@ console.log(selectedCustomer)
       )
 
       setBranch({ label: rResult?.branch_name, value: rResult?.branch_id })
-      skipBranchResetRef.current = true
       setSelectedBranch(rResult?.branch_id)
 
       setStaff({ label: rResult?.staff_name, value: rResult?.staff_id })
@@ -868,10 +857,10 @@ console.log(selectedCustomer)
     let formData = new FormData()
     formData.append('code', codeProduct)
     formData.append('date', formatMoment(startDate, FORMAT_MOMENT.DATE_TIME_LONG))
-    formData.append('branch_id', selectedBranch ?? '')
-    formData.append('client_id', selectedCustomer ?? '')
-    formData.append('person_contact_id', (selectedPersonalContact ?? contactPerson?.value) ?? '')
-    formData.append('staff_id', (selectedStaff ?? staff?.value) ?? '')
+    formData.append('branch_id', selectedBranch ? selectedBranch : '')
+    formData.append('client_id', selectedCustomer ? selectedCustomer : '')
+    formData.append('person_contact_id', selectedPersonalContact ? selectedPersonalContact : '')
+    formData.append('staff_id', selectedStaff ? selectedStaff : '')
     formData.append('note', note ? note : '')
     formData.append('quote_id', typeOrder === '1' ? quote?.value : '')
     newDataOption.forEach((item, index) => {
@@ -902,27 +891,25 @@ console.log(selectedCustomer)
         const { isSuccess, message } = await apiSalesOrder.apiHandingSalesOrder(id, formData)
         if (isSuccess) {
           isShow('success', `${dataLang[message]}` || message)
-          // Chỉ reset form khi tạo mới; lúc chỉnh sửa thì giữ lại nhân viên/khách hàng/chi nhánh
-          if (!id) {
-            setCodeProduct('')
-            setStartDate(dayjs())
-            setDeliveryDate(dayjs())
-            setContactPerson(null)
-            setCustomer(null)
-            setBranch(null)
-            setErrQuote(null)
-            setNote('')
-            setErrBranch(false)
-            setErrDate(false)
-            setErrDeliveryDate(false)
-            sErrCustomer(false)
-            setErrStaff(false)
-            setErrQuote(false)
-            setOption([])
-          }
+          setCodeProduct('')
+          setStartDate(dayjs())
+          setDeliveryDate(dayjs())
+          setContactPerson(null)
+          setStaff(null)
+          setCustomer(null)
+          setBranch(null)
+          setErrQuote(null)
+          setNote('')
+          setErrBranch(false)
+          setErrDate(false)
+          setErrDeliveryDate(false)
+          sErrCustomer(false)
+          setErrStaff(false)
+          setErrQuote(false)
+          setOption([])
           router.push(routerSalesOrder.home)
         } else {
-          isShow('error', dataLang && dataLang[message] ? dataLang[message] : message)
+          isShow('error', `${dataLang[message]}` || message)
         }
         setOnSending(false)
       } catch (error) {}
@@ -995,6 +982,753 @@ console.log(selectedCustomer)
     </div>
   )
 
+
+  // const router = useRouter()
+
+  // const isShow = useToast()
+
+  // const dataSeting = useSetingServer()
+
+  // const id = router.query?.id
+
+  // const dataLang = props?.dataLang
+
+  // const { isOpen, isId, isIdChild: status, handleQueryId } = useToggle()
+
+  // const [onFetchingItemsAll, setOnFetchingItemsAll] = useState(false)
+
+  // const [onFetchingItem, setOnFetchingItem] = useState(false)
+
+  // const [onSending, setOnSending] = useState(false)
+
+  // const [option, setOption] = useState([])
+
+  // const [dataItems, setDataItems] = useState([])
+
+  // const [note, setNote] = useState('')
+
+  // const [codeProduct, setCodeProduct] = useState('')
+
+  // const [totalTax, setTotalTax] = useState()
+
+  // const [totalDiscount, setTotalDiscount] = useState(0)
+
+  // const [startDate, setStartDate] = useState(new Date())
+
+  // const [deliveryDate, setDeliveryDate] = useState(null)
+
+  // const [customer, setCustomer] = useState(null)
+
+  // const [contactPerson, setContactPerson] = useState(null)
+
+  // const [staff, setStaff] = useState(null)
+
+  // const [quote, setQuote] = useState(null)
+
+  // const [branch, setBranch] = useState(null)
+
+  // const [errDate, setErrDate] = useState(false)
+
+  // const [errCustomer, sErrCustomer] = useState(false)
+
+  // const [errStaff, setErrStaff] = useState(false)
+
+  // const [errQuote, setErrQuote] = useState(false)
+
+  // const [errDeliveryDate, setErrDeliveryDate] = useState(false)
+
+  // const [errBranch, setErrBranch] = useState(false)
+
+  // const [typeOrder, setTypeOrder] = useState('0')
+
+  // const [itemsAll, setItemsAll] = useState([])
+
+  // const [isTotalMoney, setIsTotalMoney] = useState({
+  //   totalPrice: 0,
+  //   totalDiscountPrice: 0,
+  //   totalDiscountAfterPrice: 0,
+  //   totalTax: 0,
+  //   totalAmount: 0,
+  // })
+
+  // const params = {
+  //   'filter[branch_id]': branch !== null ? +branch?.value : null,
+  //   'filter[client_id]': customer !== null ? +customer?.value : null,
+  // }
+
+  // const { data: dataTasxes = [] } = useTaxList()
+
+  // const { data: dataBranch = [] } = useBranchList()
+
+  // const { data: dataQuotes, refetch: refetchQuote } = useSalesOrderQuotaByBranch(params)
+
+  // const { data: dataPersonContact = [] } = useContactCombobox({
+  //   client_id: customer != null ? customer.value : null,
+  // })
+
+  // const { data: dataStaffs = [] } = useStaffComboboxByBranch({
+  //   branch_id: branch != null ? [+branch?.value]?.map((e) => e) : null,
+  // })
+
+  // const { data: dataCustomer = [] } = useClientComboboxByBranch({
+  //   search: searchClient,
+  //   branch_id: selectedBranch !== null ? [selectedBranch]?.map((e) => e) : null,
+  // })
+
+  // onChange
+  // const handleOnChangeInput = (type, value) => {
+  //   if (type === 'codeProduct') {
+  //     setCodeProduct(value.target.value)
+  //   } else if (type === 'customer') {
+  //     if (option?.length >= 1) {
+  //       handleQueryId({ status: true, id: value, idChild: type })
+  //     } else {
+  //       setCustomer(value)
+  //       setContactPerson(null)
+  //       // setQuote(null);
+  //     }
+  //   } else if (type === 'branch') {
+  //     if (option?.length >= 1) {
+  //       handleQueryId({ status: true, id: value, idChild: type })
+  //     } else if (value !== selectedBranch) {
+  //       setBranch(value)
+  //       setCustomer(null)
+  //       setContactPerson(null)
+  //       setStaff(null)
+  //       // setQuote(null);
+  //       setOption([])
+  //     }
+  //   } else if (type === 'contactPerson') {
+  //     setContactPerson(value)
+  //   } else if (type === 'staff') {
+  //     setStaff(value)
+  //   } else if (type === 'typeOrder') {
+  //     handleQueryId({ status: true, idChild: type, id: value.target.value })
+  //   } else if (type === 'quote') {
+  //     if (option?.length >= 1) {
+  //       handleQueryId({ status: true, idChild: type, id: value })
+  //     } else {
+  //       // setQuote(value);
+  //       setOnFetchingItem(true)
+  //     }
+  //   } else if (type === 'note') {
+  //     setNote(value.target.value)
+  //   } else if (type === 'total_tax') {
+  //     setTotalTax(value)
+  //   } else if (type === 'total_delivery_date') {
+  //     setDeliveryDate(value)
+  //   } else if (type === 'totaldiscount') {
+  //     setTotalDiscount(value?.value)
+  //   } else if (type == 'itemAll') {
+  //     setItemsAll(value)
+  //     if (value?.length === 0) {
+  //       //new
+  //       setOption([])
+  //     } else if (value?.length > 0) {
+  //       if (typeOrder === '0') {
+  //         const newData = value?.map((e, index) => {
+  //           const check = option?.find((x) => x?.item?.e?.id == e?.e?.id)
+  //           if (check) {
+  //             return check
+  //           }
+
+  //           let money = 0
+  //           if (e.e?.tax?.tax_rate == undefined) {
+  //             money = Number(1) * (1 + Number(0) / 100) * Number(e?.e?.quantity)
+  //           } else {
+  //             money = Number(e?.e?.affterDiscount) * (1 + Number(e?.e?.tax?.tax_rate) / 100) * Number(e?.e?.quantity)
+  //           }
+
+  //           return {
+  //             id: uuidv4(),
+  //             item: {
+  //               e: e?.e,
+  //               label: e?.label,
+  //               value: e?.value,
+  //             },
+  //             unit: e?.e?.unit_name,
+  //             quantity: 1,
+  //             sortIndex: index,
+  //             price: e?.e?.price_sell,
+  //             discount: 0,
+  //             price_after_discount: 1,
+  //             tax: 0,
+  //             price_after_tax: 1,
+  //             total_amount: Number(money.toFixed(2)),
+  //             note: '',
+  //             delivery_date: deliveryDate || null,
+  //           }
+  //         })
+  //         setOption([...newData])
+  //       }
+  //       if (typeOrder === '1' && quote !== null) {
+  //         const newData = value
+  //           ?.map((e, index) => {
+  //             return {
+  //               id: uuidv4(),
+  //               item: {
+  //                 e: e?.e,
+  //                 label: e?.label,
+  //                 value: e?.value,
+  //               },
+  //               unit: e?.e?.unit_name,
+  //               quantity: e?.e?.quantity,
+  //               sortIndex: index,
+  //               price: e?.e?.price_sell,
+  //               discount: e?.e?.discount_percent,
+  //               price_after_discount: +e?.e?.price_sell * (1 - +e?.e?.discount_percent / 100),
+  //               tax: {
+  //                 label: e?.e?.tax_name,
+  //                 value: e?.e?.tax_id,
+  //                 tax_rate: e?.e?.tax_rate,
+  //               },
+  //               price_after_tax:
+  //                 +e?.e?.price_sell * e?.e?.quantity * (1 - +e?.e?.discount_percent / 100) * (1 + e?.e?.tax_rate / 100),
+  //               total_amount:
+  //                 +e?.e?.price_sell *
+  //                 (1 - +e?.e?.discount_percent / 100) *
+  //                 (1 + +e?.e?.tax_rate / 100) *
+  //                 +e?.e?.quantity,
+  //               note: e?.e?.note_item,
+  //               delivery_date: deliveryDate || null,
+  //             }
+  //           })
+  //           .sort((a, b) => b.sortIndex - a.sortIndex)
+
+  //         setOption([...newData])
+  //       } else if (typeOrder === '1' && quote === null) {
+  //         isShow('error', `${dataLang?.N_quote_selection_required}`)
+  //       }
+  //     }
+  //   }
+  // }
+
+  // // Validate submit
+  // const handleSubmitValidate = (e) => {
+  //   e.preventDefault()
+
+  //   let deliveryDateInOption = option.some((e) => e?.delivery_date === null)
+
+  //   let checkQuantity = option.some((e) => e?.quantity <= 0)
+
+  //   if (checkQuantity) {
+  //     isShow('error', `${dataLang?.required_field_null}`)
+  //     return
+  //   }
+
+  //   if (selectedBranch === null || selectedStaff === null) {
+  //     setShowMoreInfo(true)
+  //   }
+
+  //   if (typeOrder === '0') {
+  //     if (
+  //       startDate == null ||
+  //       selectedCustomer == null ||
+  //       selectedBranch == null ||
+  //       selectedStaff == null ||
+  //       deliveryDateInOption === true
+  //     ) {
+  //       startDate == null && setErrDate(true)
+  //       selectedCustomer == null && sErrCustomer(true)
+  //       selectedBranch == null && setErrBranch(true)
+  //       selectedStaff == null && setErrStaff(true)
+  //       deliveryDateInOption === true && setErrDeliveryDate(true)
+  //       // deliveryDate == null && setErrDeliveryDate(true)
+  //       isShow('error', `${dataLang?.required_field_null}`)
+  //     } else {
+  //       setOnSending(true)
+  //     }
+  //   } else if (typeOrder === '1') {
+  //     if (
+  //       startDate == null ||
+  //       selectedCustomer == null ||
+  //       selectedBranch == null ||
+  //       selectedStaff == null ||
+  //       deliveryDateInOption === true ||
+  //       quote == null
+  //     ) {
+  //       startDate == null && setErrDate(true)
+  //       selectedCustomer == null && sErrCustomer(true)
+  //       selectedBranch == null && setErrBranch(true)
+  //       selectedStaff == null && setErrStaff(true)
+  //       deliveryDateInOption === true && setErrDeliveryDate(true)
+  //       quote?.value == null && setErrQuote(true)
+  //       // deliveryDate == null && setErrDeliveryDate(true)
+
+  //       isShow('error', `${dataLang?.required_field_null}`)
+  //     } else {
+  //       setOnSending(true)
+  //     }
+  //   }
+  // }
+
+  // const selectItemsLabel = (option) => (
+  //   <div className="flex p-2 rounded-md cursor-pointer items-center justify-between font-deca">
+  //     <div className="flex gap-3 items-start w-[calc(100%-80px)]">
+  //       <img
+  //         src={option.e?.images ?? '/icon/noimagelogo.png'}
+  //         alt={option.e?.name}
+  //         className="xl:size-16 size-12 object-cover rounded-md"
+  //       />
+  //       <div className="flex flex-col 3xl:text-[10px] text-[9px] overflow-hidden w-full">
+  //         <div className="font-semibold responsive-text-sm truncate text-black">{option.e?.name}</div>
+  //         {(option.e?.product_variation || option.e?.product_variation_1) && (
+  //           <div className="text-blue-600 truncate">
+  //             {option.e?.product_variation && `Màu sắc: ${option.e?.product_variation} `}
+  //             {option.e?.product_variation_1 && `- Size: ${option.e?.product_variation_1}`}
+  //           </div>
+  //         )}
+  //         <div className="text-gray-500">
+  //           ĐVT: {option.e?.unit_name} - Tồn: {formatNumber(option.e?.qty_warehouse)}
+  //         </div>
+  //       </div>
+  //     </div>
+  //     <div className="text-red-500 responsive-text-sm min-w-[80px] text-right whitespace-nowrap">
+  //       {formatNumber(option.e?.price_sell || option.e?.price)} đ
+  //     </div>
+  //   </div>
+  // )
+
+  // useEffect(() => {
+  //   onSending && handleSubmit()
+  // }, [onSending])
+
+  // useEffect(() => {
+  //   router.query && setErrDate(false)
+  //   router.query && sErrCustomer(false)
+  //   router.query && setErrStaff(false)
+  //   router.query && setErrDeliveryDate(false)
+  //   router.query && setErrBranch(false)
+  //   router.query && setStartDate(dayjs())
+  //   router.query && setDeliveryDate(null)
+  //   router.query && setNote('')
+  // }, [id, router.query])
+
+  // // Fetch edit
+  // useQuery({
+  //   queryKey: ['api_detail_sale_order', id],
+  //   queryFn: async () => {
+  //     const rResult = await apiSalesOrder.apiDetail(id)
+  //     const items = rResult?.items?.map((e) => ({
+  //       price_quote_order_item_id: e?.id,
+  //       id: e.id,
+  //       item: {
+  //         e: e?.item,
+  //         label: `${e.item?.item_name} <span style={{display: none}}>${
+  //           e.item?.code + e.item?.product_variation + e.item?.text_type + e.item?.unit_name
+  //         }</span>`,
+  //         value: e.item?.id,
+  //       },
+  //       quantity: +e?.quantity,
+  //       price: +e?.price,
+  //       discount: +e?.discount_percent,
+  //       tax: { tax_rate: e?.tax_rate, value: e?.tax_id },
+  //       unit: e.item?.unit_name,
+  //       price_after_discount: +e?.price_after_discount,
+  //       note: e?.note,
+  //       total_amount: +e?.price_after_discount * (1 + +e?.tax_rate / 100) * +e?.quantity,
+  //       delivery_date: moment(e?.delivery_date).toDate(),
+  //     }))
+
+  //     setItemsAll(
+  //       rResult?.items?.map((e) => ({
+  //         label: `${e.item?.item_name} <span style={{display: none}}>${e.item?.code}</span><span style={{display: none}}>${e.item?.product_variation} </span><span style={{display: none}}>${e.item?.text_type} ${e.item?.unit_name} </span>`,
+  //         value: e.item?.id,
+  //         e: e.item,
+  //       }))
+  //     )
+  //     setOption(items)
+  //     setCodeProduct(rResult?.code)
+
+  //     setContactPerson(
+  //       rResult?.contact_name !== null && rResult?.contact_name !== '0'
+  //         ? { label: rResult?.contact_name, value: rResult?.contact_id }
+  //         : null
+  //     )
+  //     setSelectedPersonalContact(
+  //       rResult?.contact_id !== null && rResult?.contact_id !== '0' ? rResult?.contact_id : null
+  //     )
+
+  //     setBranch({ label: rResult?.branch_name, value: rResult?.branch_id })
+  //     setSelectedBranch(rResult?.branch_id)
+
+  //     setStaff({ label: rResult?.staff_name, value: rResult?.staff_id })
+  //     setSelectedStaff(rResult?.staff_id)
+
+  //     setCustomer({ label: rResult?.client_name, value: rResult?.client_id })
+  //     setSelectedCustomer(rResult?.client_id)
+
+  //     setStartDate(moment(rResult?.date).toDate())
+  //     setDeliveryDate(moment(rResult?.items[0]?.delivery_date).toDate())
+
+  //     setNote(rResult?.note)
+
+  //     if (rResult?.quote_id !== '0' && rResult?.quote_code !== null) {
+  //       setTypeOrder('1')
+  //       // setHidden(true);
+  //       // setQuote({ label: rResult?.quote_code, value: rResult?.quote_id, });
+  //     }
+  //     return rResult
+  //   },
+  //   ...optionsQuery,
+  //   enabled: !!id,
+  // })
+
+  // // Set hàng loại % Thuế
+  // useEffect(() => {
+  //   if (totalTax == null) return
+  //   setOption((prevOption) => {
+  //     const newOption = [...prevOption]
+  //     const thueValue = totalTax?.tax_rate || 0
+  //     const chietKhauValue = totalDiscount || 0
+  //     newOption.forEach((item) => {
+  //       const dongiasauchietkhau = item?.price * (1 - chietKhauValue / 100)
+  //       const thanhTien = dongiasauchietkhau * (1 + thueValue / 100) * item.quantity
+  //       item.tax = totalTax
+  //       item.total_amount = isNaN(thanhTien) ? 0 : thanhTien
+  //     })
+  //     return newOption
+  //   })
+  // }, [totalTax])
+
+  // useEffect(() => {
+  //   if (deliveryDate == null) return
+  //   setOption((prevOption) => {
+  //     const newOption = [...prevOption]
+
+  //     newOption.forEach((item) => {
+  //       item.delivery_date = deliveryDate || null
+  //     })
+  //     return newOption
+  //   })
+  // }, [deliveryDate])
+
+  // // Set hàng loạt % Chiết khẩu
+  // useEffect(() => {
+  //   if (totalDiscount == null) return
+  //   setOption((prevOption) => {
+  //     const newOption = [...prevOption]
+  //     const thueValue = totalTax?.tax_rate != undefined ? totalTax?.tax_rate : 0
+  //     const chietKhauValue = totalDiscount ? totalDiscount : 0
+
+  //     newOption.forEach((item) => {
+  //       const dongiasauchietkhau = item?.price * (1 - chietKhauValue / 100)
+  //       const thanhTien = dongiasauchietkhau * (1 + thueValue / 100) * item.quantity
+  //       // item.tax = totalTax
+  //       item.discount = Number(totalDiscount)
+  //       item.price_after_discount = isNaN(dongiasauchietkhau) ? 0 : dongiasauchietkhau
+  //       item.total_amount = isNaN(thanhTien) ? 0 : thanhTien
+  //     })
+  //     return newOption
+  //   })
+  // }, [totalDiscount])
+
+  // useEffect(() => {
+  //   setCustomer(null) || setContactPerson(null) || setStaff(null)
+  // }, [])
+
+  // useEffect(() => {
+  //   selectedBranch !== null && setOnFetchingItemsAll(true)
+  //   selectedBranch == null && setItemsAll([])
+  // }, [selectedBranch])
+
+  // useEffect(() => {
+  //   quote !== null && setOnFetchingItem(true)
+  // }, [quote])
+
+  // // useEffect(() => {
+  // //   onFetchingItemsAll && handleFetchingItemsAll()
+  // // }, [onFetchingItemsAll])
+
+  // useEffect(() => {
+  //   onFetchingItem && handleFetchingItem()
+  // }, [onFetchingItem])
+
+  // // Validate state
+  // useEffect(() => {
+  //   setErrDate(false)
+  // }, [startDate != null])
+
+  // useEffect(() => {
+  //   sErrCustomer(false)
+  // }, [selectedCustomer != null])
+
+  // useEffect(() => {
+  //   setErrDeliveryDate(false)
+  // }, [deliveryDate != null])
+
+  // useEffect(() => {
+  //   setErrBranch(false)
+  // }, [selectedBranch != null])
+
+  // useEffect(() => {
+  //   setErrStaff(false)
+  // }, [selectedStaff != null])
+
+  // // const { data: dataCustomer = [] } = useClientComboboxByBranch({ search: "", branch_id: branch !== null ? [branch?.value]?.map((e) => e) : null, });
+
+  // useEffect(() => {
+  //   router.query && setErrDate(false)
+  //   router.query && sErrCustomer(false)
+  //   router.query && setErrStaff(false)
+  //   router.query && setErrDeliveryDate(false)
+  //   router.query && setErrBranch(false)
+  //   router.query && setStartDate(new Date())
+  //   router.query && setDeliveryDate(null)
+  //   router.query && setNote('')
+  // }, [id, router.query])
+
+  // // Gán chi nhánh đầu tiên vào state selectedBranch khi render
+  // useEffect(() => {
+  //   if (dataBranch.length > 0 && dataBranch[0]?.value) {
+  //     if (authState.branch?.length > 0 && !selectedBranch) {
+  //       const firstBranch = authState.branch[0].id
+  //       setSelectedBranch(firstBranch)
+  //       setBranch({ label: authState.branch[0].name, value: firstBranch })
+  //     }
+  //   }
+  // }, [dataBranch, authState.branch])
+
+  // // Gán nhân viên theo staff_id từ authState lọc từ mảng dataStaffs
+  // useEffect(() => {
+  //   if (dataStaffs.length > 0 && authState?.staff_id) {
+  //     const staff = dataStaffs.find((e) => e.value === authState?.staff_id)
+
+  //     setSelectedStaff(staff?.value)
+  //   }
+  // }, [dataStaffs, authState?.staff_id])
+
+  // // Reset state của ô "khách hàng, nhân viên, người liên lạc" khi ô "chi nhánh" thay đổi, để đổ dữ liệu mới (khi có)
+  // useEffect(() => {
+  //   if (selectedBranch === undefined) {
+  //     setFlagStateChange(true)
+  //   } else {
+  //     setFlagStateChange(false)
+  //   }
+  //   setSelectedCustomer(null)
+  //   setSelectedStaff(null)
+  //   setSelectedPersonalContact(null)
+  // }, [selectedBranch])
+
+  // // Reset state của ô "người liên lạc" khi ô "khách hàng" thay đổi, để đổ dữ liệu mới (khi có)
+  // useEffect(() => {
+  //   setSelectedPersonalContact(null)
+  // }, [selectedCustomer])
+
+  // // Fetch edit
+  // useQuery({
+  //   queryKey: ['api_detail_sale_order', id],
+  //   queryFn: async () => {
+  //     const rResult = await apiSalesOrder.apiDetail(id)
+  //     const items = rResult?.items?.map((e) => ({
+  //       price_quote_order_item_id: e?.id,
+  //       id: e.id,
+  //       item: {
+  //         e: e?.item,
+  //         label: `${e.item?.item_name} <span style={{display: none}}>${
+  //           e.item?.code + e.item?.product_variation + e.item?.text_type + e.item?.unit_name
+  //         }</span>`,
+  //         value: e.item?.id,
+  //       },
+  //       quantity: +e?.quantity,
+  //       price: +e?.price,
+  //       discount: +e?.discount_percent,
+  //       tax: { tax_rate: e?.tax_rate, value: e?.tax_id },
+  //       unit: e.item?.unit_name,
+  //       price_after_discount: +e?.price_after_discount,
+  //       note: e?.note,
+  //       total_amount: +e?.price_after_discount * (1 + +e?.tax_rate / 100) * +e?.quantity,
+  //       delivery_date: moment(e?.delivery_date).toDate(),
+  //     }))
+
+  //     setOption(items)
+  //     setCodeProduct(rResult?.code)
+  //     setContactPerson(
+  //       rResult?.contact_name !== null && rResult?.contact_name !== '0'
+  //         ? { label: rResult?.contact_name, value: rResult?.contact_id }
+  //         : null
+  //     )
+  //     setBranch({ label: rResult?.branch_name, value: rResult?.branch_id })
+  //     setStaff({ label: rResult?.staff_name, value: rResult?.staff_id })
+  //     setCustomer({ label: rResult?.client_name, value: rResult?.client_id })
+  //     setStartDate(moment(rResult?.date).toDate())
+  //     setNote(rResult?.note)
+
+  //     if (rResult?.quote_id !== '0' && rResult?.quote_code !== null) {
+  //       setTypeOrder('1')
+  //       // setHidden(true);
+  //       // setQuote({ label: rResult?.quote_code, value: rResult?.quote_id, });
+  //     }
+  //     return rResult
+  //   },
+  //   ...optionsQuery,
+  //   enabled: !!id,
+  // })
+
+  // // fetch items
+  // const handleFetchingItemsAll = async () => {
+  //   let form = new FormData()
+
+  //   if (branch != null) {
+  //     ;[+branch?.value].forEach((e, index) => form.append(`branch_id[${index}]`, e))
+  //     option.forEach((item, idx) => {
+  //       form.append(`items_id_selected[${idx}]`, item?.item?.value ?? '')
+  //     })
+  //   }
+  //   try {
+  //     const {
+  //       data: { result },
+  //     } = await apiSalesOrder.apiItems(form)
+
+  //     setDataItems(result)
+
+  //     setOnFetchingItemsAll(false)
+  //   } catch (error) {}
+  // }
+
+  // const handleFetchingItem = async () => {
+  //   let form = new FormData()
+  //   if (branch && branch != null) {
+  //     [+branch?.value].forEach((e, index) => form.append(`branch_id[${index}]`, e))
+  //     // option.forEach((item, idx) => {
+  //     //   form.append(`items_id_selected[${idx}]`, item?.item?.value ?? "");
+  //     // });
+  //   }
+  //   if (typeOrder === '1') {
+  //     if (quote && quote.value !== null) {
+  //       try {
+  //         const {
+  //           data: { result },
+  //         } = await apiSalesOrder.apiQuotaItems({
+  //           params: {
+  //             'filter[quote_id]': quote !== null ? +quote?.value : null,
+  //           },
+  //         })
+  //         setDataItems(result)
+
+  //         setOnFetchingItem(false)
+  //       } catch (error) {}
+  //     } else {
+  //       try {
+  //         const {
+  //           data: { result },
+  //         } = await apiSalesOrder.apiItems(form)
+
+  //         setDataItems(result)
+
+  //         setOnFetchingItem(false)
+  //       } catch (error) {}
+  //     }
+  //   } else if (typeOrder === '0') {
+  //     try {
+  //       const {
+  //         data: { result },
+  //       } = await apiSalesOrder.apiItems(form)
+
+  //       setDataItems(result)
+
+  //       setOnFetchingItem(false)
+  //     } catch (error) {}
+  //   }
+  // }
+
+  // const options = dataItems?.map((e) => {
+  //   return {
+  //     label: `${e.name} <span style={{display: none}}>${e.code}</span><span style={{display: none}}>${e.product_variation} </span><span style={{display: none}}>${e.text_type} ${e.unit_name} </span>`,
+  //     value: e.id,
+  //     e,
+  //   }
+  // })
+
+  // // tổng thay đổi
+  // useEffect(() => {
+  //   if (totalTax == null) return
+  //   setOption((prevOption) => {
+  //     const newOption = [...prevOption]
+  //     const thueValue = totalTax?.tax_rate || 0
+  //     const chietKhauValue = totalDiscount || 0
+  //     newOption.forEach((item, index) => {
+  //       const dongiasauchietkhau = item?.price * (1 - chietKhauValue / 100)
+  //       const thanhTien = dongiasauchietkhau * (1 + thueValue / 100) * item.quantity
+  //       item.tax = totalTax
+  //       item.total_amount = isNaN(thanhTien) ? 0 : thanhTien
+  //     })
+  //     return newOption
+  //   })
+  // }, [totalTax])
+
+  // useEffect(() => {
+  //   if (deliveryDate == null) return
+  //   setOption((prevOption) => {
+  //     const newOption = [...prevOption]
+
+  //     newOption.forEach((item, index) => {
+  //       item.delivery_date = deliveryDate || null
+  //     })
+  //     return newOption
+  //   })
+  // }, [deliveryDate])
+
+  // useEffect(() => {
+  //   if (totalDiscount == null) return
+  //   setOption((prevOption) => {
+  //     const newOption = [...prevOption]
+  //     const thueValue = totalTax?.tax_rate != undefined ? totalTax?.tax_rate : 0
+  //     const chietKhauValue = totalDiscount ? totalDiscount : 0
+
+  //     newOption.forEach((item, index) => {
+  //       const dongiasauchietkhau = item?.price * (1 - chietKhauValue / 100)
+  //       const thanhTien = dongiasauchietkhau * (1 + thueValue / 100) * item.quantity
+  //       item.tax = totalTax
+  //       item.discount = Number(totalDiscount)
+  //       item.price_after_discount = isNaN(dongiasauchietkhau) ? 0 : dongiasauchietkhau
+  //       item.total_amount = isNaN(thanhTien) ? 0 : thanhTien
+  //     })
+  //     return newOption
+  //   })
+  // }, [totalDiscount])
+
+  // useEffect(() => {
+  //   setCustomer(null) || setContactPerson(null) || setStaff(null)
+  // }, [])
+
+  // useEffect(() => {
+  //   branch !== null && setOnFetchingItemsAll(true)
+  //   branch == null && setItemsAll([])
+  // }, [branch])
+
+  // useEffect(() => {
+  //   quote !== null && setOnFetchingItem(true)
+  // }, [quote])
+
+  // useEffect(() => {
+  //   onFetchingItemsAll && handleFetchingItemsAll()
+  // }, [onFetchingItemsAll, option, branch])
+
+  // useEffect(() => {
+  //   onFetchingItem && handleFetchingItem()
+  // }, [onFetchingItem])
+
+  // useEffect(() => {
+  //   setErrDate(false)
+  // }, [startDate != null])
+
+  // useEffect(() => {
+  //   sErrCustomer(false)
+  // }, [customer != null])
+
+  // useEffect(() => {
+  //   setErrDeliveryDate(false)
+  // }, [deliveryDate != null])
+
+  // useEffect(() => {
+  //   setErrBranch(false)
+  // }, [branch != null])
+
+  // useEffect(() => {
+  //   setErrStaff(false)
+  // }, [staff != null])
+
   // search api
   const _HandleSeachApi = debounce(async (inputValue) => {
     if (selectedBranch == null) return
@@ -1034,7 +1768,304 @@ console.log(selectedCustomer)
     }
   }, 500)
 
- 
+  // format number
+  // const formatNumber = (number) => {
+  //   return formatNumberConfig(+number, dataSeting)
+  // }
+
+  // const formatMoney = (number) => {
+  //   return formatMoneyConfig(+number, dataSeting)
+  // }
+
+  // const resetValue = () => {
+  //   if (status == 'customer') {
+  //     setCustomer(isId)
+  //     setContactPerson(null)
+  //     // setQuote(null);
+  //     setOption([])
+
+  //     setOnFetchingItem(true)
+  //   }
+  //   if (status == 'branch') {
+  //     setBranch(isId)
+  //     setOption([])
+  //     setCustomer(null)
+  //     setContactPerson(null)
+  //     setStaff(null)
+  //     // setQuote(null);
+  //   }
+  //   if (status == 'typeOrder') {
+  //     setTypeOrder(isId)
+  //     // setHidden(isId === "1");
+  //     // setQuote(isId === "0" ? null : quote);
+  //     isId == 1 && refetchQuote()
+  //     setOnFetchingItem(isId === '0' && true)
+  //     setOnFetchingItemsAll(isId === '1' && true)
+
+  //     // setDataItems([])
+  //     setTotalTax('')
+  //     setTotalDiscount('')
+  //     setOption([])
+  //   }
+  //   if (status == 'quote') {
+  //     // setQuote(isId);
+  //     setOption([])
+  //     setOnFetchingItemsAll(true)
+  //     setOnFetchingItem(true)
+  //   }
+  //   handleQueryId({ status: false })
+  // }
+
+  // change items
+  // const handleOnChangeInputOption = (id, type, value) => {
+  //   var index = option.findIndex((x) => x.id === id)
+
+  //   if (type == 'unit') {
+  //     option[index].unit = value.target?.value
+  //   } else if (type === 'quantity') {
+  //     option[index].quantity = Number(value?.value)
+  //     if (option[index].tax?.tax_rate == undefined) {
+  //       const tien = Number(option[index].price_after_discount) * (1 + Number(0) / 100) * Number(option[index].quantity)
+  //       option[index].total_amount = Number(tien.toFixed(2))
+  //     } else {
+  //       const tien =
+  //         Number(option[index].price_after_discount) *
+  //         (1 + Number(option[index].tax?.tax_rate) / 100) *
+  //         Number(option[index].quantity)
+  //       option[index].total_amount = Number(tien.toFixed(2))
+  //     }
+  //     setOption([...option])
+  //   } else if (type == 'price') {
+  //     option[index].price = Number(value.value)
+  //     option[index].price_after_discount = +option[index].price * (1 - option[index].discount / 100)
+  //     option[index].price_after_discount = +(Math.round(option[index].price_after_discount + 'e+2') + 'e-2')
+  //     if (option[index].tax?.tax_rate == undefined) {
+  //       const tien = Number(option[index].price_after_discount) * (1 + Number(0) / 100) * Number(option[index].quantity)
+  //       option[index].total_amount = Number(tien.toFixed(2))
+  //     } else {
+  //       const tien =
+  //         Number(option[index].price_after_discount) *
+  //         (1 + Number(option[index].tax?.tax_rate) / 100) *
+  //         Number(option[index].quantity)
+  //       option[index].total_amount = Number(tien.toFixed(2))
+  //     }
+  //   } else if (type == 'discount') {
+  //     option[index].discount = Number(value.value)
+  //     option[index].price_after_discount = +option[index].price * (1 - option[index].discount / 100)
+  //     option[index].price_after_discount = +(Math.round(option[index].price_after_discount + 'e+2') + 'e-2')
+  //     if (option[index].tax?.tax_rate == undefined) {
+  //       const tien = Number(option[index].price_after_discount) * (1 + Number(0) / 100) * Number(option[index].quantity)
+  //       option[index].total_amount = Number(tien.toFixed(2))
+  //     } else {
+  //       const tien =
+  //         Number(option[index].price_after_discount) *
+  //         (1 + Number(option[index].tax?.tax_rate) / 100) *
+  //         Number(option[index].quantity)
+  //       option[index].total_amount = Number(tien.toFixed(2))
+  //     }
+  //   } else if (type == 'tax') {
+  //     option[index].tax = value
+  //     if (option[index].tax?.tax_rate == undefined) {
+  //       const tien = Number(option[index].price_after_discount) * (1 + Number(0) / 100) * Number(option[index].quantity)
+  //       option[index].total_amount = Number(tien.toFixed(2))
+  //     } else {
+  //       const tien =
+  //         Number(option[index].price_after_discount) *
+  //         (1 + Number(option[index].tax?.tax_rate) / 100) *
+  //         Number(option[index].quantity)
+  //       option[index].total_amount = Number(tien.toFixed(2))
+  //     }
+  //   } else if (type == 'note') {
+  //     option[index].note = value?.target?.value
+  //   } else if (type == 'delivery_date') {
+  //     option[index].delivery_date = value
+  //   } else if (type == 'clear_delivery_date') {
+  //     option[index].delivery_date = null
+  //     setDeliveryDate(null)
+  //   } else if (type == 'clearDeliveryDate') {
+  //     setDeliveryDate(null)
+  //     // option[index].delivery_date = null
+  //   }
+
+  //   setOption([...option])
+  // }
+  // const handleIncrease = (id) => {
+  //   const index = option.findIndex((x) => x.id === id)
+  //   const newQuantity = +option[index].quantity + 1
+
+  //   option[index].quantity = newQuantity
+  //   if (option[index].tax?.tax_rate == undefined) {
+  //     const tien = Number(option[index].price_after_discount) * (1 + Number(0) / 100) * Number(option[index].quantity)
+  //     option[index].total_amount = Number(tien.toFixed(2))
+  //   } else {
+  //     const tien =
+  //       Number(option[index].price_after_discount) *
+  //       (1 + Number(option[index].tax?.tax_rate) / 100) *
+  //       Number(option[index].quantity)
+  //     option[index].total_amount = Number(tien.toFixed(2))
+  //   }
+  //   setOption([...option])
+  // }
+
+  // const handleDecrease = (id) => {
+  //   const index = option.findIndex((x) => x.id === id)
+  //   const newQuantity = Number(option[index].quantity) - 1
+  //   // chỉ giảm số lượng khi nó lớn hơn hoặc bằng 1
+  //   if (newQuantity >= 1) {
+  //     option[index].quantity = Number(newQuantity)
+  //     if (option[index].tax?.tax_rate == undefined) {
+  //       const tien = Number(option[index].price_after_discount) * (1 + Number(0) / 100) * Number(option[index].quantity)
+  //       option[index].total_amount = Number(tien.toFixed(2))
+  //     } else {
+  //       const tien =
+  //         Number(option[index].price_after_discount) *
+  //         (1 + Number(option[index].tax?.tax_rate) / 100) *
+  //         Number(option[index].quantity)
+  //       option[index].total_amount = Number(tien.toFixed(2))
+  //     }
+  //     setOption([...option])
+  //   } else {
+  //     return isShow('error', `${'Số lượng tối thiểu là 1 không thể giảm !'}`)
+  //   }
+  // }
+  // const _HandleDelete = (id, type) => {
+  //   if (type === 'default') {
+  //     return isShow('error', `${'Mặc định của hệ thống, không thể xóa'}`)
+  //   }
+  //   const newOption = option.filter((x) => x.id !== id) // loại bỏ phần tử cần xóa
+  //   setOption(newOption) // cập nhật lại mảng
+  // }
+
+  // const taxOptions = [{ label: 'Miễn thuế', value: '0', tax_rate: '0' }, ...dataTasxes]
+
+  // const totalMoney = (option) => {
+  //   const totalPrice = option.reduce((acc, item) => {
+  //     const totalPrice = item?.price * item?.quantity
+  //     return acc + totalPrice
+  //   }, 0)
+
+  //   const totalDiscountPrice = option.reduce((acc, item) => {
+  //     const totalDiscountPrice = item?.price * (item?.discount / 100) * item?.quantity
+  //     return acc + totalDiscountPrice
+  //   }, 0)
+
+  //   const totalDiscountAfterPrice = option.reduce((acc, item) => {
+  //     const tienSauCK = item?.quantity * item?.price_after_discount
+  //     return acc + tienSauCK
+  //   }, 0)
+
+  //   const totalTax = option.reduce((acc, item) => {
+  //     const totalTaxIem =
+  //       item?.price_after_discount * (isNaN(item?.tax?.tax_rate) ? 0 : item?.tax?.tax_rate / 100) * item?.quantity
+  //     return acc + totalTaxIem
+  //   }, 0)
+
+  //   const totalAmount = option.reduce((acc, item) => {
+  //     const totalAmount = item?.total_amount
+  //     return acc + totalAmount
+  //   }, 0)
+  //   return {
+  //     totalPrice: totalPrice || 0,
+  //     totalDiscountPrice: totalDiscountPrice || 0,
+  //     totalDiscountAfterPrice: totalDiscountAfterPrice || 0,
+  //     totalTax: totalTax || 0,
+  //     totalAmount: totalAmount || 0,
+  //   }
+  // }
+
+  // useEffect(() => {
+  //   const totalPrice = totalMoney(option)
+  //   setIsTotalMoney(totalPrice)
+  // }, [option])
+
+  // const dataOption = option?.map((e) => {
+  //   return {
+  //     item: e?.item?.value,
+  //     quantity: Number(e?.quantity),
+  //     price: e?.price,
+  //     discount_percent: e?.discount,
+  //     tax_id: e?.tax?.value,
+  //     price_quote_item_id: e?.item?.e?.price_quote_item_id,
+  //     note: e?.note,
+  //     id: e?.id,
+  //     delivery_date: e?.delivery_date,
+  //     price_quote_order_item_id: e?.price_quote_order_item_id,
+  //   }
+  // })
+
+  // let newDataOption = dataOption?.filter((e) => e?.item !== undefined)
+
+  // // handle submit
+  // const handleSubmit = async () => {
+  //   let formData = new FormData()
+  //   formData.append('code', codeProduct)
+  //   formData.append('date', formatMoment(startDate, FORMAT_MOMENT.DATE_TIME_LONG))
+  //   formData.append('branch_id', branch?.value ? branch?.value : '')
+  //   formData.append('client_id', selectedCustomer ? selectedCustomer : '')
+  //   formData.append('person_contact_id', contactPerson?.value ? contactPerson?.value : '')
+  //   formData.append('staff_id', staff?.value ? staff?.value : '')
+  //   formData.append('note', note ? note : '')
+  //   formData.append('quote_id', typeOrder === '1' ? quote?.value : '')
+  //   newDataOption.forEach((item, index) => {
+  //     formData.append(`items[${index}][item]`, item?.item != undefined ? item?.item : '')
+  //     formData.append(
+  //       `items[${index}][id]`,
+  //       item?.price_quote_order_item_id != undefined ? item?.price_quote_order_item_id : ''
+  //     )
+  //     formData.append(`items[${index}][quantity]`, item?.quantity.toString())
+  //     formData.append(`items[${index}][price]`, item?.price)
+  //     formData.append(`items[${index}][discount_percent]`, item?.discount_percent)
+  //     formData.append(`items[${index}][tax_id]`, item?.tax_id != undefined ? item?.tax_id : '')
+  //     formData.append(`items[${index}][note]`, item?.note != undefined ? item?.note : '')
+  //     formData.append(
+  //       `items[${index}][delivery_date]`,
+  //       item?.delivery_date != undefined ? formatMoment(item?.delivery_date, FORMAT_MOMENT.DATE_TIME_LONG) : ''
+  //     )
+  //   })
+
+  //   // if (
+  //   //     isTotalMoney?.totalPrice > 0 &&
+  //   //     isTotalMoney?.totalDiscountPrice >= 0 &&
+  //   //     isTotalMoney?.totalDiscountAfterPrice > 0 &&
+  //   //     isTotalMoney?.totalTax >= 0 &&
+  //   //     isTotalMoney?.totalAmount > 0
+  //   // ) {
+  //   try {
+  //     const { isSuccess, message } = await apiSalesOrder.apiHandingSalesOrder(id, formData)
+  //     if (isSuccess) {
+  //       isShow('success', `${dataLang[message]}` || message)
+  //       setCodeProduct('')
+  //       setStartDate(dayjs())
+  //       setDeliveryDate(dayjs())
+  //       setContactPerson(null)
+  //       setStaff(null)
+  //       setCustomer(null)
+  //       setBranch(null)
+  //       setErrQuote(null)
+  //       setNote('')
+  //       setErrBranch(false)
+  //       setErrDate(false)
+  //       setErrDeliveryDate(false)
+  //       sErrCustomer(false)
+  //       setErrStaff(false)
+  //       setErrQuote(false)
+  //       setOption([])
+  //       router.push(routerSalesOrder.home)
+  //     } else {
+  //       isShow('error', `${dataLang[message]}` || message)
+  //     }
+  //     setOnSending(false)
+  //   } catch (error) {}
+  //   // } else {
+  //   //     isShow(
+  //   //         'error',
+  //   //         newDataOption?.length === 0
+  //   //             ? `Chưa chọn thông tin mặt hàng!`
+  //   //             : 'Tiền không được âm, vui lòng kiểm tra lại thông tin mặt hàng!'
+  //   //     )
+  //   //     setOnSending(false)
+  //   // }
+  // }
   return (
     <LayoutOrderManagement
       dataLang={dataLang}
@@ -1371,7 +2402,7 @@ console.log(selectedCustomer)
             title="Khách hàng"
             placeholderText="Chọn khách hàng"
             options={!!flagStateChange ? [] : dataCustomer}
-            value={selectedCustomer ?? customer?.value}
+            value={selectedCustomer || customer}
             onChange={(value) => setSelectedCustomer(value)}
             isError={errCustomer}
             errMess={dataLang?.sales_product_err_customer || 'sales_product_err_customer'}
@@ -1405,7 +2436,7 @@ console.log(selectedCustomer)
                           title={dataLang?.sales_product_staff_in_charge || 'Nhân viên'}
                           placeholderText="Chọn nhân viên"
                           options={!!flagStateChange ? [] : dataStaffs}
-                          value={selectedStaff ?? staff?.value}
+                          value={selectedStaff || staff}
                           onChange={(value) => setSelectedStaff(value)}
                           isError={errStaff}
                         />
@@ -1428,7 +2459,7 @@ console.log(selectedCustomer)
                         title="Người liên lạc"
                         placeholderText="Chọn người liên lạc"
                         options={!!flagStateChange ? [] : dataPersonContact}
-                        value={selectedPersonalContact ?? contactPerson?.value}
+                        value={selectedPersonalContact || contactPerson}
                         onChange={(value) => setSelectedPersonalContact(value)}
                       />
                     </div>
