@@ -14,10 +14,12 @@ import { IoClose } from 'react-icons/io5';
 import { PiSparkleBold } from 'react-icons/pi';
 import { useDispatch, useSelector } from 'react-redux';
 import { twMerge } from 'tailwind-merge';
-import AvatarBotAI from './AvatarBotAI';
-import Messenger from './Messenger';
-import ResultChatBot from './ResultChatBot';
-import SelectAnswer from './SelectAnswer';
+import AvatarBotAI from '../AvatarBotAI';
+import Messenger from '../Messenger';
+import ResultChatBot from '../ResultChatBot';
+import SelectAnswer from '../SelectAnswer';
+import { useActiveRobotDetail } from '@/managers/api/bot-AI/useActiveRobotDetail';
+import { _ServerInstance as axiosCustom } from '@/services/axios';
 
 const { TextArea } = Input;
 
@@ -27,7 +29,7 @@ const drawerStyles = {
   },
 };
 
-const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting }) => {
+const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId }) => {
   const endRef = useRef(null);
   const router = useRouter();
   const dispatch = useDispatch();
@@ -46,6 +48,15 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting }) => {
     enable: openChatBox && !hasFetchedFirstMessage.current,
     authState: authState,
   });
+
+  const { data: dataActiveRobotDetail, isLoading: isLoadingActiveRobotDetail } = useActiveRobotDetail({
+    id: chatId,
+    enabled: !!chatId,
+  });
+
+  // console.log('dataActiveRobotDetail', dataActiveRobotDetail);
+
+  // Lấy tin nhắn dựa trên id
 
   const { messenger, options, chatScenariosId, sessionId, step, response } = useSelector(state => state.stateBoxChatAi);
 
@@ -265,28 +276,70 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting }) => {
     }
   }, [options?.value]);
 
-  // fetch lời chào đầu tiên
+  // hàm xử lý next response
+  const handleNext = async response => {
+    const fetchNextMessage = async next => {
+      const res = await axiosCustom('GET', next);
+      return res.data;
+    };
+
+    console.log({ response });
+
+    const next = response.next;
+    if (next) {
+      try {
+        setIsLoadingGeneraAnswer(true);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        setIsLoadingGeneraAnswer(false);
+        const nextResponse = await fetchNextMessage(next);
+
+        if (nextResponse.data) {
+          dispatch({
+            type: 'chatbot/addAiMessageOnly',
+            payload: {
+              text: nextResponse.data.message,
+              response: nextResponse.response,
+            },
+          });
+        }
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        if (nextResponse.next) {
+          handleNext(nextResponse);
+        }
+      } catch (err) {
+        console.error('Lỗi khi gọi fetchNextMessage:', err);
+      }
+    }
+  };
+
+  // [load-first-message] fetch lời chào đầu tiên
   useEffect(() => {
-    if (openChatBox && !hasFetchedFirstMessage.current && !isLoadingNewChatAi && dataNewChatAI) {
+    if (openChatBox && !hasFetchedFirstMessage.current && !isLoadingActiveRobotDetail && !!dataActiveRobotDetail) {
       hasFetchedFirstMessage.current = true;
-      const scenario = dataNewChatAI.chat_scenarios;
+
+      const message = dataActiveRobotDetail?.data?.message;
+
       handleDelay({
-        delay: 2000,
+        delay: 0,
         setIsLoading: setIsLoadingGeneraAnswer,
         actionFn: () =>
           dispatch({
             type: 'chatbot/addInitialBotMessage',
             payload: {
-              message: scenario.message,
-              options: scenario.options,
-              chat_scenarios_id: scenario.chat_scenarios_id,
-              session_id: scenario.session_id,
-              step: scenario.step,
+              message: message,
             },
           }),
       });
+
+      // kiểm tra có next thì gọi next
+      const next = dataActiveRobotDetail.next;
+
+      if (!!next) {
+        handleNext(dataActiveRobotDetail);
+      }
     }
-  }, [openChatBox, dataNewChatAI, isLoadingNewChatAi, dispatch]);
+  }, [openChatBox, dataActiveRobotDetail, isLoadingActiveRobotDetail, dispatch]);
 
   useEffect(() => {
     const handleCompleteStep = async () => {
@@ -344,17 +397,12 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting }) => {
             <p className='text-xl font-semibold text-typo-blue-5 font-deca'>{dataSetting?.assistant_fmrp ?? 'Trợ lý AI Fimo'}</p>
           </div>
 
-          <button
-            className='!bg-white p-1 rounded-full shadow hover:bg-gray-100'
-            // onClick={() => setOpenChatBox(false)}
-            onClick={() => dispatch({ type: 'chatbot/openBoxChatAi', payload: false })}
-          >
+          <button className='!bg-white p-1 rounded-full shadow hover:bg-gray-100' onClick={() => dispatch({ type: 'chatbot/openBoxChatAi', payload: false })}>
             <IoClose />
           </button>
         </div>
       }
       placement='right'
-      // onClose={() => setOpenChatBox(false)}
       onClose={() => dispatch({ type: 'chatbot/openBoxChatAi', payload: false })}
       open={openChatBox}
       styles={drawerStyles}
@@ -428,6 +476,7 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting }) => {
               isAnimationCompleted={isAnimationCompleted}
               botName={dataSetting?.assistant_fmrp_short ?? 'Fimo'}
               dataLang={dataLang}
+              response={msg?.response}
             >
               {msg.text}
             </Messenger>
