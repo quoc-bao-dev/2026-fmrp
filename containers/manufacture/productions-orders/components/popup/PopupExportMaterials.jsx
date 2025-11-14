@@ -434,6 +434,7 @@ export const PopupOrderCompleted = ({ onClose, className }) => {
           src={"/popup/exportMaterials.png"}
           alt="exportMaterials"
           className="object-cover size-full"
+          priority
         />
       </div>
       <button

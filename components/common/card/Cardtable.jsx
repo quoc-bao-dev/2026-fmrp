@@ -35,7 +35,7 @@ const Cardtable = ({
 
     return (
         <div className=" w-full h-full flex flex-row items-start gap-x-2">
-            <div
+            {/* <div
                 className={twMerge(
                     "rounded bg-gray-100 2xl:size-14 size-10 shrink-0 overflow-hidden",
                     classNameImage
@@ -49,26 +49,26 @@ const Cardtable = ({
                     quality={100}
                     className="size-full object-cover"
                 />
-            </div>
+            </div> */}
             <div
                 className={twMerge(
-                    "flex flex-col items-start justify-start gap-y-1 w-full",
+                    "flex flex-col items-start justify-start gap-y-0.5 w-full",
                     classNameContent
                 )}
             >
-                <h3 className="font-semibold text-[10px] xl:text-[12px] text-typo-black-1 xlg:text-sm">
+                <h3 className="font-semibold responsive-text-sm text-typo-black-1">
                     {name}
                 </h3>
-                <p className="xlg:text-[10px] xl:text-[8px] text-[6px] font-normal text-typo-gray-2">
+                <p className="responsive-text-xxs font-normal text-typo-gray-2">
                     {variation || "(none)"}
                 </p>
                 {warehouse_name && location_name && (
-                    <p className="xlg:text-[10px] xl:text-[8px] text-[6px] font-normal text-typo-gray-2">
+                    <p className="responsive-text-xs font-normal text-typo-gray-2">
                         {warehouse_name} - {location_name}
                     </p>
                 )}
                 {code && (
-                    <p className="xlg:text-[10px] xl:text-[8px] text-[6px] font-normal text-typo-blue-2">
+                    <p className="responsive-text-xs font-normal text-typo-blue-2">
                         {code}
                     </p>
                 )}
@@ -77,18 +77,18 @@ const Cardtable = ({
                     <>
                         {dataMaterialExpiry?.is_enable === "1" &&
                             dataProductExpiry?.is_enable === "1" && (
-                                <p className="xlg:text-[10px] xl:text-[8px] text-[6px] font-normal text-typo-blue-2">
+                                <p className="responsive-text-xs font-normal text-typo-blue-2">
                                     LOT: {lot ?? " - "}
                                 </p>
                             )}
                         {dataMaterialExpiry?.is_enable === "1" &&
                             dataProductExpiry?.is_enable === "1" && (
-                                <p className="xlg:text-[10px] xl:text-[8px] text-[6px] font-normal text-typo-blue-2">
+                                <p className="responsive-text-xs font-normal text-typo-blue-2">
                                     Date: {date ?? " - "}
                                 </p>
                             )}
                         {dataProductSerial?.is_enable === "1" && (
-                            <p className="xlg:text-[10px] xl:text-[8px] text-[6px] font-normal text-typo-blue-2">
+                            <p className="responsive-text-xs font-normal text-typo-blue-2">
                                 Serial: {serial ?? " - "}
                             </p>
                         )}
