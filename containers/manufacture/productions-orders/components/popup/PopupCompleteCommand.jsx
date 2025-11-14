@@ -400,7 +400,8 @@ export const PopupOrderCompleted = ({ onClose, className }) => {
           height={200}
           src={"/popup/commandCompleted.webp"}
           alt="commandCompleted"
-          className="object-cover size-full"
+          className="object-cover size-full w-[384px]"
+          unoptimized
         />
       </div>
       <p className="text-base text-typo-black-4">

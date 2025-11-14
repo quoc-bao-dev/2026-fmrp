@@ -433,7 +433,8 @@ export const PopupOrderCompleted = ({ onClose, className }) => {
           height={200}
           src={"/popup/exportMaterials.webp"}
           alt="exportMaterials"
-          className="object-cover size-full"
+          className="object-cover size-full w-[384px]"
+          unoptimized
           priority
         />
       </div>
