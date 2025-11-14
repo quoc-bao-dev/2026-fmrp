@@ -97,7 +97,7 @@ const ProgressPathExample = () => {
       <div className='grid grid-cols-4 gap-4 w-full'>
         {steps.map(step => {
           const isActive = progress >= step.percent;
-          const numberColor = isActive ? '#FE4C00' : '#696969';
+          const numberColor = isActive ? '#FFDBCC' : '#696969';
           const titleColor = isActive ? '#FE4C00' : '#696969';
 
           return (
