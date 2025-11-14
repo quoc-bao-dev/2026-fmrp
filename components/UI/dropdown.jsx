@@ -99,9 +99,9 @@ export const Dropdown = props => {
         position={props.position}
       >
         <div className={`w-auto ${deca.className} bg-white  rounded-2xl shadow-lg`}>
-          <div className={twMerge(' xl:py-6 2xl:pr-6 2xl:pl-5  py-4 pr-4 pl-2 justify-between grid ', props.data.length > 1 ? 'grid-cols-2 gap-8' : 'grid-cols-1')}>
+          <div className={twMerge(' xl:py-6 2xl:pr-6 2xl:pl-5  py-4 pr-4 pl-2 justify-between grid ', props.data.length > 1 ? 'grid-cols-2 gap-8' : 'grid-cols-1', props.wFit ? 'flex' : 'grid')}>
             {props.data?.map((e, i) => (
-              <div key={i} className={`${e.title ? '3xl:px-6 3xl:py-3 2xl:px-3 2xl:py-1 xl:px-0.5 xl:py-0.5 lg:px-0.5 lg:py-0.5' : 'px-1'} space-y-1 w-full `}>
+              <div key={i} className={`${e.title ? '3xl:px-6 3xl:py-3 2xl:px-3 2xl:py-1 xl:px-0.5 xl:py-0.5 lg:px-0.5 lg:py-0.5' : 'px-1'} space-y-1 ${props.wFit ? 'w-fit' : 'w-full'} `}>
                 {e.title && <h3 className='px-3 text-[14.5px] uppercase'>{e.title}</h3>}
                 <div className='flex flex-col gap-8'>
                   {e.sub?.map((ce, ci) => (
@@ -255,11 +255,11 @@ export const Dropdown = props => {
                                     });
                                   }}
                                 >
-                                  <li className='relative pl-4 text-[#637381] std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none group hover:text-[#0375F3]'>
+                                  <li className='relative pl-4 text-[#637381] std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none group hover:text-[#0375F3] flex items-center'>
                                     <span className="before:content-['•'] before:absolute before:left-0 before:text-blue-600 before:opacity-0 group-hover:before:opacity-100">{e?.name}</span>
                                     {e?.isPro && (
                                       // Render badge "pro" ngay cạnh tên item khi item có key isPro
-                                      <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-[10px]'>pro</span>
+                                      <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full h-fit text-[10px] leading-[130%]'>pro</span>
                                     )}
                                   </li>
                                 </Link>

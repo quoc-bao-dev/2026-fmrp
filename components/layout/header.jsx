@@ -1226,7 +1226,7 @@ const Header = () => {
                   theme='light'
                   arrow={true}
                 >
-                  <Dropdown data={dropdown.data} position={dropdown.position} className={dropdown.className} link={dropdown.link} style={dataPstWH} icon={true}>
+                  <Dropdown data={dropdown.data} position={dropdown.position} className={dropdown.className} link={dropdown.link} style={dataPstWH} icon={true} wFit={true}>
                     {dropdown.title}
                   </Dropdown>
                 </Tooltip>
