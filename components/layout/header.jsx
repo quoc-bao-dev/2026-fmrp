@@ -737,14 +737,8 @@ const Header = () => {
               // forceDisableForAdmin: true,
             },
             {
-              viewOwn:
-                !!Number(auth?.report_import?.is_view) ||
-                !!Number(auth?.report_purchase_orders?.is_view) ||
-                !!Number(auth?.report_debt_suppliers?.is_view),
-              view:
-                !!Number(auth?.report_import?.is_view) ||
-                !!Number(auth?.report_purchase_orders?.is_view) ||
-                !!Number(auth?.report_debt_suppliers?.is_view),
+              viewOwn: !!Number(auth?.report_import?.is_view) || !!Number(auth?.report_purchase_orders?.is_view) || !!Number(auth?.report_debt_suppliers?.is_view),
+              view: !!Number(auth?.report_import?.is_view) || !!Number(auth?.report_purchase_orders?.is_view) || !!Number(auth?.report_debt_suppliers?.is_view),
               name: 'Báo cáo mua hàng',
               link: '/report-statistical/purchase-report/import-goods',
               // forceDisableForAdmin: true,
@@ -1156,15 +1150,8 @@ const Header = () => {
     //     title: "+ Thêm",
     // },
   ];
-// console.log(auth?.report_manufacturing_dashboard?.is_view || auth?.report_boms?.is_view || auth?.report_order_progress?.is_view || auth?.report_material_usage?.is_view)
-console.log(auth?.report_sales_dashboard?.is_view )
-console.log( auth?.report_sales_revenue?.is_view )
-console.log(auth?.report_deliveries?.is_view )
-console.log(auth?.report_returns?.is_view )
-console.log(auth?.report_sales_dashboard?.is_view || auth?.report_sales_revenue?.is_view || auth?.report_deliveries?.is_view || auth?.report_returns?.is_view)
-// console.log(auth?.report_import?.is_view || auth?.report_purchase_orders?.is_view || auth?.report_debt_suppliers?.is_view)
-                
-useEffect(() => {
+
+  useEffect(() => {
     setIsLastDropdown(currentDropdownIndex === dropdowns.length - 1);
   }, [currentDropdownIndex, dropdowns.length]);
 
