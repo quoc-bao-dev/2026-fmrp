@@ -43,7 +43,7 @@ const Messenger = ({
 
       <div className={twMerge('max-w-full flex flex-col gap-y-1 justify-start', className)}>
         {!isMe && (
-          <div className='flex flex-row items-center gap-x-[6px]'>
+          <div className='flex flex-row items-center gap-x-[6px] '>
             <span className='font-semibold font-deca text-typo-black-5 text-sm'>{botName ?? 'Fimo'}</span>
             <div className='h-[10px] w-[1px] bg-[#E5E5EA]' />
             <span className='text-sm font-deca font-normal text-typo-gray-7'>{dataLang?.S_bot_chat ?? 'Trợ lý AI'}</span>
