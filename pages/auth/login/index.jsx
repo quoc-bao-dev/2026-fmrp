@@ -555,14 +555,14 @@ const LoginContent = React.memo(props => {
       <div className='bg-[#EEF1F8]'>
         <div className="bg-[url('/Logo-BG.png')] relative bg-repeat-round h-screen w-screen flex flex-col justify-center items-center overflow-hidden">
           <div className='z-10 flex justify-center w-full space-x-20'>
-            <div className=''>
-              <form onSubmit={handleSubmit(data => onSubmit(data, 'login'))} className='bg-white px-16 py-8 flex flex-col gap-6 rounded-lg w-[600px]'>
+            <div className='mx-4 lg:mx-0 w-full'>
+              <form onSubmit={handleSubmit(data => onSubmit(data, 'login'))} className='bg-white px-4 lg:px-16 py-8 flex flex-col gap-6 rounded-lg w-full lg:w-[600px]'>
                 <div className=''>
                   <h1 className='text-[#11315B] font-medium text-3xl text-center capitalize'>{dataLang?.auth_login || 'auth_login'}</h1>
                 </div>
 
                 {/* [login] [step 1] Render Tabs underline để chuyển giữa Form đăng nhập và QR */}
-                <div className='w-fit'>
+                <div className='w-fit mx-auto'>
                   <TabSwitcherWithUnderline tabs={tabsLogin} activeTab={activeTab} onChange={setActiveTab} />
                 </div>
 
@@ -597,7 +597,7 @@ const LoginContent = React.memo(props => {
                         placeholder={dataLang?.auth_password || 'auth_password'}
                         error={errors.password ? { message: 'Vui lòng nhập mật khẩu' } : null}
                       />
-                      <div className='flex justify-between w-full'>
+                      <div className='flex flex-col lg:flex-row gap-2 justify-between w-full'>
                         <div className='flex items-center space-x-1.5'>
                           <input
                             type='checkbox'
@@ -774,7 +774,7 @@ const LoginContent = React.memo(props => {
                                                 ))}
                                             </div> */}
             </div>
-            <div className='space-y-4'>
+            <div className='space-y-4 hidden lg:block'>
               <div className='pointer-events-none select-none'>
                 <Image
                   alt=''

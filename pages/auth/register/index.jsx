@@ -272,7 +272,7 @@ const Register = React.memo(props => {
                 `}
             </Script>
             <div className='grid w-screen h-screen grid-cols-5 overflow-hidden'>
-                <div className='col-span-2 bg-[#11315B] h-screen relative'>
+                <div className='hidden lg:block col-span-2 bg-[#11315B] h-screen relative'>
                     <Image
                         src='/register/img.png'
                         alt='background'
@@ -303,10 +303,10 @@ const Register = React.memo(props => {
                         <h6 className='mt-3 text-white'>Hỗ trợ đăng ký: 0901.13.6968 - 0981.89.3353</h6>
                     </div>
                 </div>
-                <div className='h-full col-span-3 bg-white '>
+                <div className='h-full col-span-5 lg:col-span-3 bg-white '>
                     <Customscrollbar scrollableNodePropsClassName={`  ${Object.keys(errors).length === 0 ? '[&>div]:h-full' : '[&>div]:my-3'}`} className='h-screen'>
-                        <div className={`flex flex-col gap-1 items-center  h-full  ${Object.keys(errors).length === 0 ? 'justify-center ' : 'justify-start'}`}>
-                            <div className='flex flex-row items-center gap-2'>
+                        <div className={`flex flex-col gap-1 items-center px-2 lg:px-0 h-full  ${Object.keys(errors).length === 0 ? 'justify-center ' : 'justify-start'}`}>
+                            <div className='flex flex-col-reverse lg:flex-row items-center gap-2'>
                                 <h1 className='text-[#11315B] font-semibold 2xl:text-xl text-[18.5px] text-center capitalize'>Bước Vào Kỷ Nguyên Số Hóa Sản Xuất Cùng</h1>
                                 <div className='w-[80px] h-auto '>
                                     <Image src={'/LOGOLOGIN-1.png'} width={1280} height={1024} alt='@logo' className='object-cover w-full h-full' />
