@@ -11,6 +11,7 @@ const ProgressBar = ({
   name,
   typeProgress,
   percentUpdateVersion,
+  textClassName
 }) => {
 
   let percent = 0;
@@ -45,7 +46,7 @@ const ProgressBar = ({
         />
       </div>
       {typeTable[typeProgress] === "text" && (
-        <p className="mt-2 xl:text-[10px] text-[8px] font-normal text-typo-gray-3">{`${current}/${total} ${name}`}</p>
+        <p className={`mt-2 xl:text-[10px] text-[8px] font-normal text-typo-gray-3 ${textClassName}`}>{`${current}/${total} ${name}`}</p>
       )}
       {typeTable[typeProgress] === "percent" && (
         <p className="font-medium text-sm text-typo-black-3 text-end">

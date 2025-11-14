@@ -60,6 +60,8 @@ const ProductionPlan = (props) => {
     const dataLang = props.dataLang;
 
     const router = useRouter();
+    const tabParam = Array.isArray(router.query?.tab) ? router.query.tab[0] : router.query?.tab;
+    const isTabEnabled = tabParam === undefined || tabParam === "order" || tabParam === "plan";
 
     const statusExprired = useStatusExprired();
 
@@ -71,7 +73,7 @@ const ProductionPlan = (props) => {
 
     const [arrIdChecked, sArrIdChecked] = useState([]);
 
-    const hasAutoSwitchedRef = useRef(false);
+    // Bỏ auto-switch tab
 
     const { isData, updateData } = useSetData(initialData);
 
@@ -192,7 +194,7 @@ const ProductionPlan = (props) => {
             queryKey: [
                 "api_production_internal_plan",
                 { ...params },
-                router.query.tab,
+                tabParam,
             ],
             queryFn: async ({ pageParam = 1 }) => {
                 const data = await _ServerFetching({
@@ -208,7 +210,7 @@ const ProductionPlan = (props) => {
             retry: 5,
             retryDelay: 5000,
             initialPageParam: 1,
-            enabled: router.query.tab == "order" || router.query.tab == "plan",
+            enabled: router.isReady && isTabEnabled,
             ...optionsQuery,
         });
 
@@ -219,38 +221,7 @@ const ProductionPlan = (props) => {
         updateData({ listOrder: convertData });
     }, [data]);
 
-    // Tự động chuyển sang tab "plan" nếu tab "order" không có dữ liệu
-    useEffect(() => {
-        const currentTab = router.query?.tab || "order";
-        // Chỉ kiểm tra khi đã fetch xong và đang ở tab "order"
-        // Reset ref khi tab thay đổi
-        if (currentTab !== "order") {
-            hasAutoSwitchedRef.current = false;
-            return;
-        }
-
-        if (
-            currentTab === "order" &&
-            !isFetching &&
-            !isLoading &&
-            convertData.length === 0 &&
-            router.isReady &&
-            !hasAutoSwitchedRef.current
-        ) {
-            // Đánh dấu đã chuyển tab để tránh chuyển nhiều lần
-            hasAutoSwitchedRef.current = true;
-            // Chuyển sang tab "plan"
-            handleTab("plan");
-            router.push(
-                {
-                    pathname: router.pathname,
-                    query: { ...router.query, tab: "plan" },
-                },
-                undefined,
-                { shallow: true }
-            );
-        }
-    }, [convertData, isFetching, isLoading, router.query?.tab, router.isReady, handleTab, router]);
+    // Bỏ logic tự động chuyển tab
 
     const _HandleSeachApi = debounce(async (inputValue) => {
         try {

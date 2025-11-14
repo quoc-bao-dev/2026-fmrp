@@ -353,7 +353,7 @@ const TabMaterialOutputTab = ({ dataLang, ...props }) => {
               </h4>
 
               <h4 className="text-xs-default text-center text-[#9295A4] font-semibold block col-span-2 px-1">
-                Đề xuất
+                Đã xuất
               </h4>
 
               <h4 className="text-xs-default text-center text-[#9295A4] font-semibold block col-span-2 px-1">
