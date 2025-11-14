@@ -86,7 +86,7 @@ const ProgressPathExample = () => {
 
   return (
     <div className='w-full h-full flex flex-col items-center justify-center bg-[#FDFDFE] relative'>
-      <h2 className='px-6 responsive-text-3xl font-bold text-new-blue capitalize w-full'>
+      <h2 className='px-6 responsive-text-3xl leading-[140%] font-bold text-new-blue capitalize w-full'>
         Tiến trình hoàn thiện vận hành <br />
         xưởng sản xuất
       </h2>
