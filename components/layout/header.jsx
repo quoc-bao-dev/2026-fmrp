@@ -520,6 +520,8 @@ const Header = () => {
               view: auth?.production_orders_fmrp?.is_view,
               name: 'Tổng hợp kế hoạch BTP & NVL',
               link: '/manufacture/summary-btp-nvl',
+              role: dataSeting?.package,
+              isPro: authState?.is_upgrade,
             },
             // {
             //   viewOwn: auth?.production_plans_fmrp?.is_view_own,

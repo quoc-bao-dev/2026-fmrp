@@ -230,17 +230,27 @@ export const Dropdown = props => {
                                   className='outline-none'
                                   key={i}
                                   onClick={() => {
-                                    dispatch({
-                                      type: 'statePopupGlobal',
-                                      payload: {
-                                        open: true,
-                                        children: (
+                                    const popupContent = e.name === 'Tổng hợp kế hoạch BTP & NVL' 
+                                      ? (
+                                          <PopupRequestUpdateVersion>
+                                            <p className='text-start xlg:text-2xl text-xl leading-[32px] font-semibold text-[#141522]'>
+                                              Theo dõi chặt <span className='text-[#0375F3]'>Tổng hợp nhu cầu nguyên vật liệu & BTP</span> rõ ràng hiệu quả nhất !
+                                            </p>
+                                          </PopupRequestUpdateVersion>
+                                        )
+                                      : (
                                           <PopupRequestUpdateVersion>
                                             <p className='text-start xlg:text-2xl text-xl leading-[32px] font-semibold text-[#141522]'>
                                               Theo dõi đơn hàng theo nhà cung cấp để nguyên vật liệu luôn <span className='text-[#0375F3]'>đúng và đủ</span>.
                                             </p>
                                           </PopupRequestUpdateVersion>
-                                        ),
+                                        );
+                                    
+                                    dispatch({
+                                      type: 'statePopupGlobal',
+                                      payload: {
+                                        open: true,
+                                        children: popupContent,
                                       },
                                     });
                                   }}
