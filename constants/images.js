@@ -23,7 +23,7 @@ export const IMAGES = {
   // u
   // v
   // w
-  warningMobile: "/popup/warningMobile.webp"
+  warningMobile: "/popup/Code.webp"
   // x
   // y
   // z
