@@ -1,66 +1,120 @@
-import React, { useState, useEffect } from "react";
-import AnimatedProgressPath from "./AnimatedProgressPath";
+import { useState } from 'react';
+import { MdArrowOutward } from 'react-icons/md';
+import AnimatedProgressPath from './AnimatedProgressPath';
 
 const ProgressPathExample = () => {
   const [progress, setProgress] = useState(0);
 
-  useEffect(() => {
-    // Demo: tự động tăng progress
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          return 0; // Reset về 0 khi đạt 100%
-        }
-        return prev + 10;
-      });
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const steps = [
+    {
+      id: 1,
+      percent: 25,
+      number: 1,
+      accentColor: '#FE4C00',
+      title: 'Chuẩn Hóa Dữ Liệu Nền Tảng',
+      items: [
+        { text: 'Khai báo NVL & BTP', color: '#0375F3' },
+        { text: 'Khai báo Thành Phẩm (TP)', color: '#898989' },
+        { text: 'Xây dựng Định Mức Nguyên Vật Liệu (BOM)', color: '#898989' },
+      ],
+    },
+    {
+      id: 2,
+      percent: 50,
+      number: 2,
+      accentColor: '#696969',
+      title: 'Hoạch Định & Lập Kế Hoạch',
+      items: [
+        { text: 'Quản Lý Đơn Hàng', color: '#898989' },
+        { text: 'Lập Kế Hoạch Sản Xuất', color: '#898989' },
+        { text: 'Lập Kế Hoạch Mua Hàng', color: '#898989' },
+      ],
+    },
+    {
+      id: 3,
+      percent: 75,
+      number: 3,
+      accentColor: '#696969',
+      title: 'Thực Thi Sản Xuất & Quản Lý Kho',
+      items: [
+        { text: 'Triển Khai Lệnh Sản Xuất', color: '#898989' },
+        { text: 'Nhập Kho Nguyên Vật Liệu', color: '#898989' },
+        { text: 'Xuất Kho Vật Tư Sản Xuất', color: '#898989' },
+        { text: 'Ghi Nhận Hoàn Thành Sản Xuất', color: '#898989' },
+      ],
+    },
+    {
+      id: 4,
+      percent: 100,
+      number: 4,
+      accentColor: '#696969',
+      title: 'Giao Hàng',
+      items: [{ text: 'Xuất Kho Giao Hàng', color: '#898989' }],
+    },
+  ];
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-[#FDFDFE] relative">
-      <h2 className="text-2xl md:text-3xl font-semibold mb-8 text-typo-black-1">
-        Tiến độ hoàn thành
+    <div className='w-full h-full flex flex-col items-center justify-center bg-[#FDFDFE] relative'>
+      <h2 className='px-6 responsive-text-3xl font-bold text-new-blue capitalize w-full'>
+        Tiến trình hoàn thiện vận hành <br />
+        xưởng sản xuất
       </h2>
-      <div className="w-full flex-1 flex items-center justify-center px-4">
-        <AnimatedProgressPath 
-          percentage={progress} 
-          height={400}
-          showPercentage={true}
-        />
+      <div className='w-full flex-1 flex items-center justify-center -mt-5'>
+        <AnimatedProgressPath percentage={progress} height={240} showPercentage={true} />
       </div>
-      
+
+      <div className='grid grid-cols-4 gap-4 w-full'>
+        {steps.map(step => {
+          const isActive = progress >= step.percent;
+          const numberColor = isActive ? '#FE4C00' : '#696969';
+          const titleColor = isActive ? '#FE4C00' : '#696969';
+
+          return (
+            <button key={step.id} type='button' className='flex gap-4 text-left'>
+              <span className='text-[128px]/[100px] font-semibold transition-all duration-500' style={{ color: numberColor }}>
+                {step.number}
+              </span>
+              <div className='flex flex-col gap-[2px]'>
+                <div className='flex items-center gap-3'>
+                  <h3 className='font-bold responsive-text-xl capitalize transition-all duration-500' style={{ color: titleColor }}>
+                    {step.title}
+                  </h3>
+                </div>
+                <ul className='list-disc list-inside'>
+                  {step.items.map((item, idx) => (
+                    <li
+                      key={idx}
+                      className='responsive-text-base transition-all duration-500 text-left leading-tight'
+                      style={{ color: item.color }}
+                    >
+                      <span className='inline text-inherit'>
+                        {item.text}
+                        <MdArrowOutward className='inline-block align-middle ml-1 text-base' />
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Control buttons (optional) */}
-      <div className="mt-8 mb-8 flex flex-wrap justify-center gap-3">
-        <button
-          onClick={() => setProgress(0)}
-          className="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
-        >
+      <div className='mt-8 mb-8 flex flex-wrap justify-center gap-3'>
+        <button onClick={() => setProgress(0)} className='px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors'>
           Reset
         </button>
-        <button
-          onClick={() => setProgress(25)}
-          className="px-6 py-2 bg-blue-200 rounded-lg hover:bg-blue-300 transition-colors"
-        >
+        <button onClick={() => setProgress(25)} className='px-6 py-2 bg-blue-200 rounded-lg hover:bg-blue-300 transition-colors'>
           25%
         </button>
-        <button
-          onClick={() => setProgress(50)}
-          className="px-6 py-2 bg-blue-300 rounded-lg hover:bg-blue-400 transition-colors"
-        >
+        <button onClick={() => setProgress(50)} className='px-6 py-2 bg-blue-300 rounded-lg hover:bg-blue-400 transition-colors'>
           50%
         </button>
-        <button
-          onClick={() => setProgress(75)}
-          className="px-6 py-2 bg-blue-400 rounded-lg hover:bg-blue-500 transition-colors"
-        >
+        <button onClick={() => setProgress(75)} className='px-6 py-2 bg-blue-400 rounded-lg hover:bg-blue-500 transition-colors'>
           75%
         </button>
-        <button
-          onClick={() => setProgress(100)}
-          className="px-6 py-2 bg-blue-500 rounded-lg hover:bg-blue-600 text-white transition-colors"
-        >
+        <button onClick={() => setProgress(100)} className='px-6 py-2 bg-blue-500 rounded-lg hover:bg-blue-600 text-white transition-colors'>
           100%
         </button>
       </div>
@@ -69,4 +123,3 @@ const ProgressPathExample = () => {
 };
 
 export default ProgressPathExample;
-

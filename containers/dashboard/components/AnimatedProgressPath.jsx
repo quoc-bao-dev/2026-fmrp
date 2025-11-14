@@ -1,18 +1,17 @@
-import React, { useEffect, useRef, useState } from "react";
+import { IMAGES } from '@/constants/images';
+import { useEffect, useRef, useState } from 'react';
 
-const AnimatedProgressPath = ({ 
-  percentage = 0, 
-  width = "100%", 
-  height = 200,
-  showPercentage = true 
-}) => {
+const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, showPercentage = true }) => {
   const svgRef = useRef(null);
   const pathRef = useRef(null);
   const [pathLength, setPathLength] = useState(0);
   const [currentProgress, setCurrentProgress] = useState(0);
+  const [displayPercentage, setDisplayPercentage] = useState(percentage);
+  const [initialAnimationDone, setInitialAnimationDone] = useState(false);
 
-  // Đường dẫn cong (wavy path) - mở rộng cho full screen
-  const pathData = "M 50 100 Q 200 30, 350 100 T 650 100 T 950 100 T 1250 100";
+  // Đường dẫn cong lấy theo vector mẫu
+  const pathData =
+    'M13.837 64.5884C65.9136 91.0994 167.945 136.927 237.337 131.174C333.837 123.174 357.415 74.3256 490.663 64.5884C626.337 54.6741 716.859 166.141 847.337 102.083C1050.84 2.17406 1200.84 120.174 1330.84 102.083C1515.84 76.3367 1498.84 -6.32617 1695.34 75.6738C1775.45 109.104 1915.61 136.774 2025.84 21.0347';
 
   useEffect(() => {
     if (pathRef.current) {
@@ -22,22 +21,37 @@ const AnimatedProgressPath = ({
   }, []);
 
   useEffect(() => {
+    setDisplayPercentage(100);
+    const timeout = setTimeout(() => {
+      setInitialAnimationDone(true);
+      setDisplayPercentage(percentage);
+    }, 3000);
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  useEffect(() => {
+    if (!initialAnimationDone) return;
+    setDisplayPercentage(percentage);
+  }, [percentage, initialAnimationDone]);
+
+  useEffect(() => {
     // Animation mượt mà cho progress
-    const duration = 1500; // 1.5 giây
+    const duration = 3000; // 3 giây
     const startProgress = currentProgress;
-    const endProgress = Math.min(Math.max(percentage, 0), 100); // Clamp between 0-100
+    const endProgress = Math.min(Math.max(displayPercentage, 0), 100); // Clamp between 0-100
     const startTime = Date.now();
 
     const animate = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      
+
       // Easing function (ease-out)
       const easedProgress = 1 - Math.pow(1 - progress, 3);
       const newProgress = startProgress + (endProgress - startProgress) * easedProgress;
-      
+
       setCurrentProgress(Math.min(Math.max(newProgress, 0), 100));
-      
+
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
@@ -50,219 +64,118 @@ const AnimatedProgressPath = ({
     } else {
       setCurrentProgress(endProgress);
     }
-  }, [percentage]);
+  }, [displayPercentage]);
 
   // Tính toán vị trí của character trên path
-  const getPointAtLength = (length) => {
-    if (!pathRef.current || pathLength === 0) return { x: 50, y: 100 };
+  const getPointAtLength = length => {
+    if (!pathRef.current || pathLength === 0) return { x: 0, y: 100 };
     const point = pathRef.current.getPointAtLength(length);
     return point;
   };
 
-  const progressLength = (currentProgress / 100) * pathLength;
-  const characterPosition = getPointAtLength(progressLength);
+  const fractionAnchors = [
+    { percent: 0, fraction: 0 },
+    { percent: 25, fraction: 0.1 },
+    { percent: 50, fraction: 0.38 },
+    { percent: 75, fraction: 0.64 },
+    { percent: 100, fraction: 0.9 },
+  ];
 
-  // Tính toán màu của đường dựa trên progress
-  const getPathColor = (progress) => {
-    if (progress < 25) return "#E0E0E0"; // Grey
-    if (progress < 50) return "#BBDEFB"; // Light blue
-    if (progress < 75) return "#81D4FA"; // Medium blue
-    return "#4FC3F7"; // Bright blue
+  const getFractionForProgress = progress => {
+    if (progress <= fractionAnchors[0].percent) {
+      return fractionAnchors[0].fraction;
+    }
+
+    for (let i = 1; i < fractionAnchors.length; i++) {
+      const prev = fractionAnchors[i - 1];
+      const next = fractionAnchors[i];
+
+      if (progress <= next.percent) {
+        const rangePercent = next.percent - prev.percent;
+        const rangeFraction = next.fraction - prev.fraction;
+        const ratio = rangePercent === 0 ? 0 : (progress - prev.percent) / rangePercent;
+        return prev.fraction + ratio * rangeFraction;
+      }
+    }
+
+    return fractionAnchors[fractionAnchors.length - 1].fraction;
   };
 
-  const pathColor = getPathColor(currentProgress);
+  const adjustedFraction = getFractionForProgress(currentProgress);
+  const progressLength = adjustedFraction * pathLength;
+  const characterPosition = getPointAtLength(progressLength);
+
+  const milestones = fractionAnchors.slice(1);
 
   return (
-    <div className="relative w-full" style={{ width, height }}>
-      <svg
-        ref={svgRef}
-        width="100%"
-        height={height}
-        viewBox="0 0 1300 200"
-        className="overflow-visible"
-        preserveAspectRatio="xMidYMid meet"
+    <div className='relative w-full' style={{ width, height, overflowX: 'hidden', overflowY: 'visible' }}>
+      <div
+        style={{
+          width: 'calc(100% + 7%)',
+          marginLeft: '-3%',
+        }}
       >
-        {/* Đường nền (màu xám) */}
-        <path
-          d={pathData}
-          fill="none"
-          stroke="#E0E0E0"
-          strokeWidth="12"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        
-        {/* Đường đã hoàn thành (đổi màu theo progress) */}
-        <path
-          ref={pathRef}
-          d={pathData}
-          fill="none"
-          stroke={pathColor}
-          strokeWidth="12"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeDasharray={pathLength}
-          strokeDashoffset={pathLength - progressLength}
-          style={{
-            transition: "stroke 0.3s ease",
-          }}
-        />
+        <svg ref={svgRef} width='100%' height={height} viewBox='0 0 2048 163' className='overflow-visible' preserveAspectRatio='xMidYMid meet'>
+          {/* Đường nền (màu xám) */}
+          <path d={pathData} fill='none' stroke='#A9A9A9' strokeWidth='120' strokeLinecap='butt' strokeLinejoin='round' />
 
-        {/* Đường kẻ giữa (dashed line) */}
-        <path
-          d={pathData}
-          fill="none"
-          stroke="white"
-          strokeWidth="2"
-          strokeDasharray="8, 8"
-          strokeLinecap="round"
-        />
+          {/* Đường đã hoàn thành (đổi màu theo progress) */}
+          <path
+            ref={pathRef}
+            d={pathData}
+            fill='none'
+            stroke="#0E70DD"
+            strokeWidth='120'
+            strokeLinecap='butt'
+            strokeLinejoin='round'
+            strokeDasharray={pathLength}
+            strokeDashoffset={pathLength - progressLength}
+            style={{
+              transition: 'stroke 0.3s ease',
+            }}
+          />
 
-        {/* Các điểm mốc (milestones) */}
-        {[0, 25, 50, 75, 100].map((milestone, index) => {
-          const milestoneLength = (milestone / 100) * pathLength;
-          const milestonePoint = getPointAtLength(milestoneLength);
-          const isPassed = currentProgress >= milestone;
-          
-          return (
-            <g key={index}>
-              <circle
-                cx={milestonePoint.x}
-                cy={milestonePoint.y}
-                r="8"
-                fill={isPassed ? pathColor : "white"}
-                stroke={isPassed ? pathColor : "#E0E0E0"}
-                strokeWidth="2"
-                style={{ transition: "all 0.3s ease" }}
-              />
-              <circle
-                cx={milestonePoint.x}
-                cy={milestonePoint.y}
-                r="4"
-                fill={isPassed ? "white" : "#E0E0E0"}
-                style={{ transition: "all 0.3s ease" }}
-              />
-            </g>
-          );
-        })}
+          {/* Đường kẻ giữa (dashed line) */}
+          <path d={pathData} fill='none' stroke='white' strokeWidth='5' strokeDasharray='16, 16' strokeLinecap='round' />
 
-        {/* Character (Boy on Rocket) */}
-        <g
-          transform={`translate(${characterPosition.x}, ${characterPosition.y})`}
-          style={{
-            transition: "transform 0.1s linear",
-          }}
-        >
-          {/* Rocket */}
-          <g transform="translate(-20, -25)">
-            {/* Rocket body */}
-            <ellipse
-              cx="20"
-              cy="30"
-              rx="12"
-              ry="18"
-              fill="#FFFFFF"
-              stroke="#4FC3F7"
-              strokeWidth="2"
-            />
-            {/* Rocket nose */}
-            <polygon
-              points="20,12 28,20 12,20"
-              fill="#FF9800"
-            />
-            {/* Rocket fins */}
-            <polygon
-              points="8,28 8,38 12,35"
-              fill="#2196F3"
-            />
-            <polygon
-              points="32,28 32,38 28,35"
-              fill="#2196F3"
-            />
-            {/* Fire */}
-            <ellipse
-              cx="20"
-              cy="48"
-              rx="6"
-              ry="8"
-              fill="#FFC107"
-              opacity="0.8"
-            />
-            <ellipse
-              cx="20"
-              cy="50"
-              rx="4"
-              ry="6"
-              fill="#FF5722"
-              opacity="0.6"
-            />
-          </g>
-          
-          {/* Boy */}
-          <g transform="translate(-15, -15)">
-            {/* Head */}
-            <circle cx="15" cy="15" r="8" fill="#FFDBAC" />
-            {/* Cap */}
-            <path
-              d="M 10 12 Q 15 8, 20 12 L 18 15 L 12 15 Z"
-              fill="#2196F3"
-            />
-            {/* Body */}
-            <rect x="11" y="23" width="8" height="10" rx="2" fill="#FFFFFF" />
-            {/* Collar */}
-            <path
-              d="M 11 23 L 15 25 L 19 23"
-              stroke="#2196F3"
-              strokeWidth="1.5"
-              fill="none"
-            />
-            {/* Cape */}
-            <path
-              d="M 15 25 Q 20 30, 15 35 Q 10 30, 15 25"
-              fill="#F44336"
-            />
-            {/* Arm raised */}
-            <ellipse
-              cx="22"
-              cy="26"
-              rx="3"
-              ry="6"
-              fill="#FFDBAC"
-              transform="rotate(45 22 26)"
-            />
-          </g>
-        </g>
+          {/* Các điểm mốc (milestones) */}
+          {milestones.map((milestone, index) => {
+            const milestoneLength = milestone.fraction * pathLength;
+            const milestonePoint = getPointAtLength(milestoneLength);
+            const isPassed = currentProgress >= milestone.percent;
 
-        {/* Percentage bubble */}
-        {showPercentage && (
+            return (
+              <g key={index}>
+                <circle cx={milestonePoint.x} cy={milestonePoint.y} r='14' fill='white' style={{ transition: 'all 0.3s ease' }} />
+                <circle cx={milestonePoint.x} cy={milestonePoint.y} r='7' fill='#E0E0E0' style={{ transition: 'all 0.3s ease' }} />
+              </g>
+            );
+          })}
+
+          {/* Character (Boy on Rocket) */}
           <g
-            transform={`translate(${characterPosition.x}, ${characterPosition.y - 40})`}
+            transform={`translate(${characterPosition.x}, ${characterPosition.y})`}
+            style={{
+              transition: 'transform 0.1s linear',
+            }}
+            className='z-[999]'
           >
-            <rect
-              x="-25"
-              y="-15"
-              width="50"
-              height="30"
-              rx="15"
-              fill="#4FC3F7"
-              opacity="0.9"
-            />
-            <text
-              x="0"
-              y="5"
-              textAnchor="middle"
-              fill="white"
-              fontSize="14"
-              fontWeight="bold"
-            >
-              {Math.round(currentProgress)}%
-            </text>
+            <image href={IMAGES.rocketBoy} width='145' height='145' x='-80' y='-140' preserveAspectRatio='xMidYMid meet' />
           </g>
-        )}
-      </svg>
+
+          {/* Percentage bubble */}
+          {showPercentage && (
+            <g transform={`translate(${characterPosition.x}, ${characterPosition.y - 40})`}>
+              <rect x='40' y='-60' width='50' height='30' rx='15' fill='#1F9285' opacity='0.9' />
+              <text x='65' y='-40' textAnchor='middle' fill='white' fontSize='12' fontWeight='bold'>
+                {Math.round(currentProgress)}%
+              </text>
+            </g>
+          )}
+        </svg>
+      </div>
     </div>
   );
 };
 
 export default AnimatedProgressPath;
-
