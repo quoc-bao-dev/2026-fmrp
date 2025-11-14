@@ -198,7 +198,7 @@ const PrintTemplate = props => {
                             <div className='w-full flex flex-col items-center'>
                               {/* Khung item: dùng đúng UI mục tiêu */}
                               <div className='p-3 bg-white- rounded-lg bg-gray-50 w-full'>
-                                <div className='flex items-center gap-2 h-[400px]'>
+                                <div className='flex items-center gap-2 h-[300px] 2xl:h-[400px]'>
                                   {item?.image ? (
                                     <Image alt={`template-${index + 1}`} src={item.image} width={600} height={600} className='w-[360px] h-full object-contain mx-auto' loading='eager' />
                                   ) : (

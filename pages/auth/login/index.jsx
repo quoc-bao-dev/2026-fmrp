@@ -286,11 +286,6 @@ const LoginContent = React.memo(props => {
     // [set-qr] [step 4] Đếm ngược TTL; khi 0 thì đánh dấu hết hạn
     // [set-qr] [step 4.1] Chỉ chạy interval khi đang ở tab QR để tránh chạy khi unmount
     const timer = setInterval(() => {
-      if (activeTab?.id !== 'qr') {
-        clearInterval(timer);
-        return;
-      }
-
       setQrTtl(prev => {
         const next = (prev ?? 0) - 1;
         if (next <= 0) {
@@ -303,7 +298,7 @@ const LoginContent = React.memo(props => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [qrTtl, isExpired, activeTab?.id]);
+  }, [qrTtl, isExpired]);
 
   // [set-qr] [step 5] Xử lý reload phiên khi hết hạn
   const handleReloadQR = () => {
@@ -327,7 +322,6 @@ const LoginContent = React.memo(props => {
      * @param {AppApprovedLoginData} data - Dữ liệu người dùng đã approve login từ mobile app
      */
     const handleAppApprovedLogin = data => {
-      console.log('App approved login:', data);
       // [login-socket] [step 6.1] Lưu dữ liệu vào state để render UI
 
       setApprovedLoginData(data.data);
@@ -338,13 +332,11 @@ const LoginContent = React.memo(props => {
      * @param {AppTokenLoginResponse} data - Dữ liệu login response từ server
      */
     const handleAppTokenLogin = ({ data }) => {
-      console.log('App token login:', data);
       // [login-socket] [step 10.1] Gọi hàm xử lý login tự động
       handleSocketLogin(data);
     };
 
     const handleAppRejectLogin = ({ data }) => {
-      console.log('App reject login:', data);
       // const { login } = data;
 
       if (true) {
@@ -431,7 +423,6 @@ const LoginContent = React.memo(props => {
    * @param {AppTokenLoginResponse} res - Response từ socket event app_token_login
    */
   const handleSocketLogin = res => {
-    console.log('handleSocketLogin', res);
     try {
       const { isSuccess, message, token, database_app, data } = res;
 
@@ -448,7 +439,6 @@ const LoginContent = React.memo(props => {
       }
 
       // [login-socket] [step 11.3] Dispatch Redux auth state
-      console.log('dispatch', data);
 
       dispatch({ type: 'auth/update', payload: data });
 
@@ -468,7 +458,6 @@ const LoginContent = React.memo(props => {
 
       refetchSetings();
       // [login-socket] [step 11.7] Redirect về trang chủ
-      console.log('showToat', message);
       setTimeout(() => {
         if (typeof window !== 'undefined') {
           window.location.reload();
@@ -587,6 +576,7 @@ const LoginContent = React.memo(props => {
                         name='code'
                         {...register('code', { required: true })}
                         value={valueForm.code || ''}
+                        onClear={() => setValue('code', '')}
                         placeholder='Mã công ty'
                         error={errors.code ? { message: 'Vui lòng nhập mã công ty' } : null}
                       />
@@ -595,6 +585,7 @@ const LoginContent = React.memo(props => {
                         name='name'
                         {...register('name', { required: true })}
                         value={valueForm.name || ''}
+                        onClear={() => setValue('name', '')}
                         placeholder={dataLang?.auth_user_name || 'auth_user_name'}
                         error={errors.name ? { message: 'Vui lòng nhập email hoặc số điện thoại' } : null}
                       />
@@ -602,6 +593,7 @@ const LoginContent = React.memo(props => {
                         name='password'
                         {...register('password', { required: true })}
                         value={valueForm.password || ''}
+                        onClear={() => setValue('password', '')}
                         placeholder={dataLang?.auth_password || 'auth_password'}
                         error={errors.password ? { message: 'Vui lòng nhập mật khẩu' } : null}
                       />
