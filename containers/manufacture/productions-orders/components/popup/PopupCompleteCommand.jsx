@@ -439,6 +439,12 @@ const PopupCompleteCommand = ({ onClose }) => {
     message: "",
   });
 
+  // Preload hình ảnh commandCompleted.webp khi component mount
+  useEffect(() => {
+    const img = document.createElement("img");
+    img.src = "/popup/commandCompleted.webp";
+  }, []);
+
   useEffect(() => {
     if (productCompleted?.data?.items) {
       const itemsWithDefaults = productCompleted.data.items.map((item) => ({
