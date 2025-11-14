@@ -75,7 +75,7 @@ const PopupSuccessfulPayment = (props) => {
             alt="commandCompleted"
             className="object-cover w-[270px] 2xl:w-[323px] "
             priority
-            // unoptimized
+            unoptimized
           />
         </div>
         <div className="flex gap-4 w-full">

@@ -476,7 +476,7 @@ const CustomerDebt = props => {
           </div>
         ) : !selectedCustomer ? (
           <div className='flex flex-col items-center justify-center h-full'>
-            <Image src='/background/system/reportCustomer.png' alt='Không có dữ liệu' width={165} height={100} priority/>
+            <Image src='/background/system/reportCustomer.webp' alt='Không có dữ liệu' width={165} height={100} priority unoptimized/>
             <div className='flex items-center gap-2 mt-2'>
               <FaPlus color='#000' className='size-4' />
               <p className='responsive-text-xl font-semibold text-neutral-05'>Chọn khách hàng</p>
