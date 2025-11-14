@@ -1,9 +1,38 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MdArrowOutward } from 'react-icons/md';
 import AnimatedProgressPath from './AnimatedProgressPath';
+import MobileIcon from '@/components/icons/common/MobileIcon';
 
 const ProgressPathExample = () => {
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState(50);
+  const [pathHeight, setPathHeight] = useState(240);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const mediaQuery = window.matchMedia('(min-width: 1536px)');
+
+    const updateHeight = event => {
+      const matches = event?.matches ?? mediaQuery.matches;
+      setPathHeight(matches ? 300 : 240);
+    };
+
+    updateHeight(mediaQuery);
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', updateHeight);
+    } else {
+      mediaQuery.addListener(updateHeight);
+    }
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', updateHeight);
+      } else {
+        mediaQuery.removeListener(updateHeight);
+      }
+    };
+  }, []);
 
   const steps = [
     {
@@ -14,8 +43,8 @@ const ProgressPathExample = () => {
       title: 'Chuẩn Hóa Dữ Liệu Nền Tảng',
       items: [
         { text: 'Khai báo NVL & BTP', color: '#0375F3' },
-        { text: 'Khai báo Thành Phẩm (TP)', color: '#898989' },
-        { text: 'Xây dựng Định Mức Nguyên Vật Liệu (BOM)', color: '#898989' },
+        { text: 'Khai báo Thành Phẩm (TP)', color: '#0375F3' },
+        { text: 'Xây dựng Định Mức Nguyên Vật Liệu (BOM)', color: '#0375F3' },
       ],
     },
     {
@@ -36,6 +65,7 @@ const ProgressPathExample = () => {
       number: 3,
       accentColor: '#696969',
       title: 'Thực Thi Sản Xuất & Quản Lý Kho',
+      phone: true,
       items: [
         { text: 'Triển Khai Lệnh Sản Xuất', color: '#898989' },
         { text: 'Nhập Kho Nguyên Vật Liệu', color: '#898989' },
@@ -49,6 +79,7 @@ const ProgressPathExample = () => {
       number: 4,
       accentColor: '#696969',
       title: 'Giao Hàng',
+      phone: true,
       items: [{ text: 'Xuất Kho Giao Hàng', color: '#898989' }],
     },
   ];
@@ -60,7 +91,7 @@ const ProgressPathExample = () => {
         xưởng sản xuất
       </h2>
       <div className='w-full flex-1 flex items-center justify-center -mt-5'>
-        <AnimatedProgressPath percentage={progress} height={240} showPercentage={true} />
+        <AnimatedProgressPath percentage={50} height={pathHeight} showPercentage={true} />
       </div>
 
       <div className='grid grid-cols-4 gap-4 w-full'>
@@ -75,18 +106,15 @@ const ProgressPathExample = () => {
                 {step.number}
               </span>
               <div className='flex flex-col gap-[2px]'>
-                <div className='flex items-center gap-3'>
-                  <h3 className='font-bold responsive-text-xl capitalize transition-all duration-500' style={{ color: titleColor }}>
+                <div className='flex items-center'>
+                  <h3 className='inline font-bold responsive-text-xl capitalize transition-all duration-500' style={{ color: titleColor }}>
                     {step.title}
                   </h3>
+                  {step.phone && <MobileIcon className='flex-shrink-0' />}
                 </div>
                 <ul className='list-disc list-inside'>
                   {step.items.map((item, idx) => (
-                    <li
-                      key={idx}
-                      className='responsive-text-base transition-all duration-500 text-left leading-tight'
-                      style={{ color: item.color }}
-                    >
+                    <li key={idx} className='responsive-text-base transition-all duration-500 text-left leading-tight' style={{ color: item.color }}>
                       <span className='inline text-inherit'>
                         {item.text}
                         <MdArrowOutward className='inline-block align-middle ml-1 text-base' />
@@ -101,7 +129,7 @@ const ProgressPathExample = () => {
       </div>
 
       {/* Control buttons (optional) */}
-      <div className='mt-8 mb-8 flex flex-wrap justify-center gap-3'>
+      {/* <div className='mt-8 mb-8 flex flex-wrap justify-center gap-3'>
         <button onClick={() => setProgress(0)} className='px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors'>
           Reset
         </button>
@@ -117,7 +145,7 @@ const ProgressPathExample = () => {
         <button onClick={() => setProgress(100)} className='px-6 py-2 bg-blue-500 rounded-lg hover:bg-blue-600 text-white transition-colors'>
           100%
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };

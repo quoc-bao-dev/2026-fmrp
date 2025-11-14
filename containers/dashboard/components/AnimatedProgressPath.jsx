@@ -10,6 +10,9 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, sh
   const [initialAnimationDone, setInitialAnimationDone] = useState(false);
 
   // Đường dẫn cong lấy theo vector mẫu
+  const animationDuration = 6000;
+
+  // Đường dẫn cong lấy theo vector mẫu
   const pathData =
     'M13.837 64.5884C65.9136 91.0994 167.945 136.927 237.337 131.174C333.837 123.174 357.415 74.3256 490.663 64.5884C626.337 54.6741 716.859 166.141 847.337 102.083C1050.84 2.17406 1200.84 120.174 1330.84 102.083C1515.84 76.3367 1498.84 -6.32617 1695.34 75.6738C1775.45 109.104 1915.61 136.774 2025.84 21.0347';
 
@@ -25,7 +28,7 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, sh
     const timeout = setTimeout(() => {
       setInitialAnimationDone(true);
       setDisplayPercentage(percentage);
-    }, 3000);
+    }, animationDuration - 1000);
 
     return () => clearTimeout(timeout);
   }, []);
@@ -37,7 +40,7 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, sh
 
   useEffect(() => {
     // Animation mượt mà cho progress
-    const duration = 3000; // 3 giây
+    const duration = animationDuration;
     const startProgress = currentProgress;
     const endProgress = Math.min(Math.max(displayPercentage, 0), 100); // Clamp between 0-100
     const startTime = Date.now();
@@ -102,7 +105,9 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, sh
   };
 
   const adjustedFraction = getFractionForProgress(currentProgress);
-  const progressLength = adjustedFraction * pathLength;
+  const minimumFraction = 0.06;
+  const safeFraction = Math.max(adjustedFraction, minimumFraction);
+  const progressLength = safeFraction * pathLength;
   const characterPosition = getPointAtLength(progressLength);
 
   const milestones = fractionAnchors.slice(1);
@@ -124,7 +129,7 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, sh
             ref={pathRef}
             d={pathData}
             fill='none'
-            stroke="#0E70DD"
+            stroke='#0E70DD'
             strokeWidth='120'
             strokeLinecap='butt'
             strokeLinejoin='round'
@@ -153,21 +158,22 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, sh
           })}
 
           {/* Character (Boy on Rocket) */}
-          <g
-            transform={`translate(${characterPosition.x}, ${characterPosition.y})`}
-            style={{
-              transition: 'transform 0.1s linear',
-            }}
-            className='z-[999]'
-          >
+          <g transform={`translate(${characterPosition.x}, ${characterPosition.y})`}>
             <image href={IMAGES.rocketBoy} width='145' height='145' x='-80' y='-140' preserveAspectRatio='xMidYMid meet' />
           </g>
 
           {/* Percentage bubble */}
           {showPercentage && (
             <g transform={`translate(${characterPosition.x}, ${characterPosition.y - 40})`}>
-              <rect x='40' y='-60' width='50' height='30' rx='15' fill='#1F9285' opacity='0.9' />
-              <text x='65' y='-40' textAnchor='middle' fill='white' fontSize='12' fontWeight='bold'>
+              <image
+                href={IMAGES.mess}
+                x='30'
+                y='-85'
+                width='60'
+                height='70'
+                preserveAspectRatio='xMidYMid meet'
+              />
+              <text x='60' y='-52' textAnchor='middle' fill='white' fontSize='12' fontWeight='bold'>
                 {Math.round(currentProgress)}%
               </text>
             </g>

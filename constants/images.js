@@ -13,6 +13,7 @@ export const IMAGES = {
   // k
   // l
   // m
+  mess: "/dashboard/mess.png",
   // n
   // o
   // p
