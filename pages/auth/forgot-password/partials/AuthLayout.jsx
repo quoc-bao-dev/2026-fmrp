@@ -14,7 +14,7 @@ const AuthLayout = React.memo(({ children, title = 'Auth' }) => {
                 <div className="bg-[url('/Logo-BG.png')] relative bg-repeat-round h-screen w-screen flex flex-col justify-center items-center overflow-hidden">
                     <div className='z-10 flex justify-center w-full space-x-20'>
                         {/* === LEFT SIDE === */}
-                        <div className='mx-4 lg:mx-0 w-full'>
+                        <div className='mx-4 lg:mx-0 w-full lg:w-fit'>
                             <div className='bg-white px-4 lg:px-16 py-8 flex flex-col gap-6 rounded-lg w-full lg:w-[600px]'>{children}</div>
                         </div>
                         {/* === RIGHT SIDE === */}
