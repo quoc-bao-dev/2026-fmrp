@@ -979,6 +979,13 @@ body {
   }
 }
 
+// CSS cho SelectSearchReport - không cho xuống hàng
+.select-with-radio .ant-select-selection-item {
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .select-with-sort,
 .select-with-radio {
   .ant-select-single {

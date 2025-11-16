@@ -124,7 +124,7 @@ const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
                     key={item.item_id}
                   >
                     {
-                      <RowTable gridCols={12}>
+                      <RowTable gridCols={12} className={"!px-1 !py-2"}>
                         {/* stt */}
                         <RowItemTable
                           colSpan={1}
@@ -334,7 +334,7 @@ const PlaningProductionOrder = memo(({ dataLang }) => {
   return (
     <div className="flex flex-row w-full h-full items-start justify-between">
       {/* bảng nguyên liêu */}
-      <div className=" w-[50%] h-full  border-r border-border-gray-1 pr-4">
+      <div className=" w-[50%] h-full  border-r border-border-gray-1 pr-2">
         {isLoadingDataListBom ? (
           <Loading className="h-80" color="#0f4f9e" />
         ) : (
@@ -348,7 +348,7 @@ const PlaningProductionOrder = memo(({ dataLang }) => {
       </div>
 
       {/* bảng bán thành phẩm  */}
-      <div className="w-[50%] h-full  pl-4">
+      <div className="w-[50%] h-full pl-2">
         {isLoadingDataListBom ? (
           <Loading className="h-80" color="#0f4f9e" />
         ) : (

@@ -242,7 +242,7 @@ const parseDate = (dateStr) => {
           </div>
         ) : (
           <Customscrollbar
-            className={`min-h-0 h-full w-full overflow-x-auto bg-white`}
+            className={`min-h-0 h-full w-full overflow-x-auto bg-white max-h-[60vh]`}
           >
             <div>
               <HeaderTable
