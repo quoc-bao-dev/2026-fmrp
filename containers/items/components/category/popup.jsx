@@ -66,7 +66,7 @@ const Popup_NVL = React.memo(props => {
       };
       sBranch([defaultBranch]);
     }
-  }, [open, branch?.length, authState?.branch, props.data?.id]);
+  }, [open, authState?.branch, props.data?.id]);
 
   const _HandleChangeInput = (type, value) => {
     if (type == 'name') {

@@ -321,7 +321,7 @@ const Popup_NVL = React.memo(props => {
       };
       sBranch([defaultBranch]);
     }
-  }, [open, props.id, branch.length, authState?.branch]);
+  }, [open, props.id, authState?.branch]);
 
   // change các trường input
   const _HandleChangeInput = (type, value) => {
