@@ -8,11 +8,9 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) 
   const [pathLength, setPathLength] = useState(0);
   const [currentProgress, setCurrentProgress] = useState(introStartPercent);
   const [displayPercentage, setDisplayPercentage] = useState(percentage);
-  const [initialAnimationDone, setInitialAnimationDone] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
 
   // Thời gian chạy animation
-  const animationDuration = 6000;
+  const animationDuration = 4000;
 
   // Đường dẫn cong lấy theo vector mẫu
   const pathData =
@@ -31,8 +29,6 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) 
     const clamped = clampPercentage(percentage);
     setCurrentProgress(introStartPercent);
     setDisplayPercentage(clamped);
-    setIsResetting(false);
-    setInitialAnimationDone(true);
   }, [percentage]);
 
   // Hàm convert từ fraction về progress
@@ -58,44 +54,39 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) 
 
   useEffect(() => {
     const startProgress = currentProgress;
-    const maxProgress = initialAnimationDone ? 100 : 120;
-    const allowNegativeProgress = !initialAnimationDone || displayPercentage < 0 || currentProgress < 0 || isResetting;
+    const allowNegativeProgress = displayPercentage < 0 || currentProgress < 0;
     const minProgress = allowNegativeProgress ? introStartPercent : 0;
-    const endProgress = Math.min(Math.max(displayPercentage, minProgress), maxProgress);
-    
+    const endProgress = Math.max(displayPercentage, minProgress);
+
     const startFraction = getFractionForProgress(startProgress);
     const endFraction = getFractionForProgress(endProgress);
     const fractionDistance = Math.abs(endFraction - startFraction);
-  
-    let duration = fractionDistance * animationDuration;
-    const isIntroPhase = !initialAnimationDone && startProgress <= introStartPercent + 0.01;
-    if (isIntroPhase) {
-      duration *= 2;
-    }
+
+    const duration = fractionDistance * animationDuration;
     const startTime = Date.now();
 
     const animate = () => {
       const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
+      const progress = duration === 0 ? 1 : Math.min(elapsed / duration, 1);
 
       const currentFraction = startFraction + (endFraction - startFraction) * progress;
       const newProgress = getProgressForFraction(currentFraction);
 
-      setCurrentProgress(Math.min(Math.max(newProgress, minProgress), maxProgress));
+      setCurrentProgress(Math.min(Math.max(newProgress, minProgress), 100));
 
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        setCurrentProgress(endProgress);
+        setCurrentProgress(Math.min(endProgress, 100));
       }
     };
 
     if (Math.abs(endProgress - startProgress) > 0.1) {
       requestAnimationFrame(animate);
     } else {
-      setCurrentProgress(endProgress);
+      setCurrentProgress(Math.min(endProgress, 100));
     }
-  }, [displayPercentage, initialAnimationDone]);
+  }, [displayPercentage]);
 
   // Tính toán vị trí của character trên path
   const getPointAtLength = length => {
@@ -134,7 +125,7 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) 
   };
 
   const adjustedFraction = getFractionForProgress(currentProgress);
-  const allowNegativeFraction = currentProgress < 0 || displayPercentage < 0 || !initialAnimationDone || isResetting;
+  const allowNegativeFraction = currentProgress < 0 || displayPercentage < 0;
   // Khi không cho phép âm, cho phép vẽ từ đúng đầu path (fraction = 0)
   const minimumFraction = allowNegativeFraction ? fractionAnchors[0].fraction : 0;
   const safeFraction = Math.max(adjustedFraction, minimumFraction);
@@ -148,10 +139,7 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) 
 
   // Khi progress < 0, cho rocket nằm lệch ra ngoài bên trái điểm 0% rồi bay vào
   const introMaxOffsetX = 80; // px lệch tối đa khi ở introStartPercent
-  const introOffsetX =
-    currentProgress < 0
-      ? (currentProgress / introStartPercent) * -introMaxOffsetX // -20% -> -introMaxOffsetX, 0% -> 0
-      : 0;
+  const introOffsetX = currentProgress < 0 ? (currentProgress / introStartPercent) * -introMaxOffsetX : 0;
 
   const characterPosition = {
     x: baseCharacterPosition.x + introOffsetX,
@@ -219,20 +207,16 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) 
           })}
 
           {/* Character (Boy on Rocket) */}
-          {!isResetting && (
-            <g transform={`translate(${characterPosition.x}, ${characterPosition.y})`} style={{ opacity: isResetting ? 0 : 1, transition: 'opacity 0.3s ease' }}>
-              <image href={IMAGES.rocketBoyGif || IMAGES.rocketBoy} width='135' height='135' x='-80' y='-140' preserveAspectRatio='xMidYMid meet' />
-            </g>
-          )}
+          <g transform={`translate(${characterPosition.x}, ${characterPosition.y})`}>
+            <image href={IMAGES.rocketBoyGif || IMAGES.rocketBoy} width='135' height='135' x='-80' y='-140' preserveAspectRatio='xMidYMid meet' />
+          </g>
 
-          {!isResetting && (
-            <g transform={`translate(${characterPosition.x}, ${characterPosition.y - 40})`} style={{ opacity: isResetting ? 0 : 1, transition: 'opacity 0.3s ease' }}>
-              <image href={IMAGES.mess} x='30' y='-85' width='60' height='70' preserveAspectRatio='xMidYMid meet' />
-              <text x='60' y='-52' textAnchor='middle' fill='white' fontSize='12' fontWeight='bold'>
-                {Math.round(visualProgress)}%
-              </text>
-            </g>
-          )}
+          <g transform={`translate(${characterPosition.x}, ${characterPosition.y - 40})`}>
+            <image href={IMAGES.mess} x='30' y='-85' width='60' height='70' preserveAspectRatio='xMidYMid meet' />
+            <text x='60' y='-52' textAnchor='middle' fill='white' fontSize='12' fontWeight='bold'>
+              {Math.round(visualProgress)}%
+            </text>
+          </g>
         </svg>
       </div>
     </div>
