@@ -70,7 +70,7 @@ const Popup_Products = React.memo(props => {
       };
       sBranch([defaultBranch]);
     }
-  }, [open, props.id, branch?.length, authState?.branch]);
+  }, [open, props.id, authState?.branch]);
 
   const _HandleChangeInput = (type, value) => {
     if (type == 'name') {
