@@ -66,7 +66,7 @@ const ToggleBotAI = ({ dataLang }) => {
   return (
     <>
       {/* toggle */}
-      {isImageLoaded && (
+      {isImageLoaded && !openDrawer && (
         <div
           className='fixed bottom-6 right-6 z-50 cursor-pointer'
           // onClick={() => setOpenDrawer(true)}

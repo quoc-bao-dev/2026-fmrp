@@ -6,9 +6,7 @@ import { twMerge } from 'tailwind-merge';
 import AvatarBotAI from './AvatarBotAI';
 import LoadingThreeDotsJumping from './LoadingThreeDotsJumping';
 import TableBOM from './TableBOM';
-import SelectAnswer from './SelectAnswer';
-import CheckIconMessenger from '@/components/icons/common/CheckIconMessenger';
-import ErrorIconMessenger from '@/components/icons/common/ErrorIconMessenger';
+import ResponseOptions from './ResponseOptions';
 const Messenger = ({
   className,
   children,
@@ -24,6 +22,7 @@ const Messenger = ({
   dataLang,
   response,
   onSelectOption,
+  disableOptions = false,
 }) => {
   const parsedMessage = useMemo(() => {
     if (!children) return null;
@@ -58,10 +57,10 @@ const Messenger = ({
           {isLoading ? (
             <LoadingThreeDotsJumping />
           ) : isMe ? (
-            <p>{children}</p>
+            <p>{parsedMessage}</p>
           ) : (
             <>
-              <div className='w-full flex items-center justify-start gap-x-1'>
+              <div className='w-full flex items-center justify-start gap-x-1 min-h-[20px]'>
                 {icon && (
                   <motion.div
                     animate={{
@@ -79,37 +78,7 @@ const Messenger = ({
                 <AnimatedGeneraText onAnimationComplete={onAnimationComplete}>{parsedMessage}</AnimatedGeneraText>
               </div>
 
-              {response?.options && Array.isArray(response.options) && response.options.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: 'easeOut', delay: 0.5 }} className='mt-4 w-full flex flex-col gap-y-3'>
-                  {response.options.map((option, index) => {
-                    const isPositive = option.type_send === '1';
-                    const optionIcon = isPositive ? <CheckIconMessenger /> : <ErrorIconMessenger />;
-                    const optionContent = parse(option.content || option.name || '');
-                    console.log({ option });
-
-                    return (
-                      <SelectAnswer
-                        key={option.id || index}
-                        icon={optionIcon}
-                        typeAnswer={isPositive ? 1 : 0}
-                        onClick={() => {
-                          if (onSelectOption) {
-                            onSelectOption({
-                              id: option.id,
-                              content: option.content,
-                              next: option.next,
-                              option: option,
-                            });
-                          }
-                        }}
-                        stepNext={option.next && typeof option.next === 'string' ? option.next : null}
-                      >
-                        {optionContent}
-                      </SelectAnswer>
-                    );
-                  })}
-                </motion.div>
-              )}
+              <ResponseOptions response={response} onSelectOption={onSelectOption} disabled={disableOptions} />
               {ResponseAI && showTable && (
                 <div className='mt-4 w-full'>
                   {ResponseAI?.stages.length > 0 && (
