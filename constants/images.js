@@ -18,11 +18,12 @@ export const IMAGES = {
   // q
   // r
   // s
-  summary_LSX: "/background/system/summaryLSX.png",
+  summary_LSX: "/background/system/summaryLSX.webp",
   // t
   // u
   // v
   // w
+  warningMobile: "/popup/Code.webp"
   // x
   // y
   // z

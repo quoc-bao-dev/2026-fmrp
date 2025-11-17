@@ -54,6 +54,12 @@ import { createStore } from 'redux';
  * @property {string} sessionId Chuỗi session để server giữ context hội thoại.
  * @property {number|string} step Bước hiện tại trong flow (string khi server trả '2','3',...).
  * @property {boolean} isPending Cho biết bot đang chờ API trả lời để disable input.
+ * @property {boolean} isLoadingGeneraAnswer Trạng thái loading khi đang generate answer.
+ * @property {string|null} nextWait URL để fetch message tiếp theo sau khi chờ (nếu có từ next_wait trong response).
+ * @property {number|null} sendChat Trạng thái cho phép mở ô chat: 1 = cho phép mở ô chat, 0 = không cho mở ô chat.
+ * @property {number|null} isChat Trạng thái mở ô chat: 2 = mở ô chat 1 lần rồi đóng, 1 = mở luôn.
+ * @property {Object|null} dataPost Dữ liệu gửi kèm cho next_wait (nếu có từ data_post trong response.data). Thường chứa id_robot, id_robot_detail, id_items, ...
+ * @property {string|null} sessionRobot Session robot ID dùng để gửi kèm tin nhắn (nếu có từ session_robot trong response.data).
  * @property {ChatScenarioOptions} options Metadata điều khiển input và chuyển bước tiếp theo.
  * @property {ChatBotResponseData} response Payload thô dùng để render kết quả cuối (materials/stages/...).
  */
@@ -104,6 +110,12 @@ const initialChatBotState = {
   sessionId: '',
   step: 0,
   isPending: false,
+  isLoadingGeneraAnswer: false,
+  nextWait: null,
+  sendChat: null,
+  isChat: null,
+  dataPost: null,
+  sessionRobot: null,
   options: {
     required: false,
     type: 'text',
@@ -190,6 +202,12 @@ const adminState = {
     sessionId: '',
     step: 0,
     isPending: false,
+    isLoadingGeneraAnswer: false,
+    nextWait: null,
+    sendChat: null,
+    isChat: null,
+    dataPost: null,
+    sessionRobot: null,
     options: {
       required: false,
       type: 'text',
@@ -365,6 +383,60 @@ function adminReducer(state = adminState, action) {
       return {
         ...state,
         options: action.payload,
+      };
+
+    case 'chatbot/setIsLoadingGeneraAnswer':
+      return {
+        ...state,
+        stateBoxChatAi: {
+          ...state.stateBoxChatAi,
+          isLoadingGeneraAnswer: action.payload,
+        },
+      };
+
+    case 'chatbot/setNextWait':
+      return {
+        ...state,
+        stateBoxChatAi: {
+          ...state.stateBoxChatAi,
+          nextWait: action.payload,
+        },
+      };
+
+    case 'chatbot/setSendChat':
+      return {
+        ...state,
+        stateBoxChatAi: {
+          ...state.stateBoxChatAi,
+          sendChat: action.payload,
+        },
+      };
+
+    case 'chatbot/setIsChat':
+      return {
+        ...state,
+        stateBoxChatAi: {
+          ...state.stateBoxChatAi,
+          isChat: action.payload,
+        },
+      };
+
+    case 'chatbot/setDataPost':
+      return {
+        ...state,
+        stateBoxChatAi: {
+          ...state.stateBoxChatAi,
+          dataPost: action.payload,
+        },
+      };
+
+    case 'chatbot/setSessionRobot':
+      return {
+        ...state,
+        stateBoxChatAi: {
+          ...state.stateBoxChatAi,
+          sessionRobot: action.payload,
+        },
       };
 
     case 'chatbot/reset':

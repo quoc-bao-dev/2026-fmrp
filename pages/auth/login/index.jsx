@@ -24,6 +24,8 @@ import InputPassword from '../forgot-password/partials/InputPassword';
 import { LoginSocketProvider, useLoginSocketContext } from '@/context/socket/LoginSocketContext';
 // [session-web] Import hàm getOrCreateTabSession từ utils
 import { getOrCreateTabSession } from '@/utils/helpers/sessionStorage';
+import MobileWarningModal from './MobileWarningModal';
+// [mobile-warning] Import MobileWarningModal
 
 // [login-socket] [step 2] Component con để sử dụng socket hook (bên trong Provider)
 const LoginContent = React.memo(props => {
@@ -214,6 +216,19 @@ const LoginContent = React.memo(props => {
   const [qrTtl, setQrTtl] = useState(0);
   const [isExpired, setIsExpired] = useState(false);
 
+  const detectMobileDevice = () => {
+    if (typeof window === 'undefined') return false;
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+    const isSmallScreen = window.innerWidth <= 768;
+    return isMobile || isSmallScreen;
+  };
+
+  const [showMobileWarning] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return detectMobileDevice();
+  });
+
   /**
    * @typedef {Object} AppApprovedLoginData
    * @property {string} app_device_name - Tên thiết bị (ví dụ: "Iphone 17 ProMax")
@@ -391,9 +406,20 @@ const LoginContent = React.memo(props => {
     retryDelay: 5000,
   });
 
-  const fnSetDataAuth = (value, res) => {
+  /**
+   * Hàm xử lý đăng nhập chung cho cả 2 luồng (normal login và QR login)
+   * @param {object} value - Form data (có thể null cho QR login)
+   * @param {object} res - Response từ API hoặc Socket
+   * @param {object} options - Options bổ sung { needReload: boolean, needRefetchSettings: boolean }
+   */
+  const fnSetDataAuth = async (value, res, options = {}) => {
+    const { needReload = false, needRefetchSettings = false } = options;
     const { isSuccess, message, token, database_app } = res;
-    dispatch({ type: 'auth/update', payload: res.data?.data });
+
+    // Dispatch Redux auth state
+    dispatch({ type: 'auth/update', payload: res.data?.data || res.data });
+
+    // Set cookies
     Cookies.set('tokenFMRP', token, {
       expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
       sameSite: true,
@@ -401,28 +427,30 @@ const LoginContent = React.memo(props => {
     Cookies.set('databaseappFMRP', database_app, {
       expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
     });
-    showToat('success', message);
 
-    if (isState.rememberMe) {
-      localStorage.setItem('usernameFMRP', value.name);
-      localStorage.setItem('usercodeFMRP', value.code);
-      localStorage.setItem('remembermeFMRP', isState.rememberMe);
-    } else {
-      ['usernameFMRP', 'usercodeFMRP', 'remembermeFMRP'].forEach(key => localStorage.removeItem(key));
-    }
-    setTimeout(() => {
-      if (typeof window !== 'undefined') {
-        window.location.reload();
+    // Xử lý rememberMe chỉ khi có form data (normal login)
+    if (value) {
+      if (isState.rememberMe) {
+        localStorage.setItem('usernameFMRP', value.name);
+        localStorage.setItem('usercodeFMRP', value.code);
+        localStorage.setItem('remembermeFMRP', isState.rememberMe);
+      } else {
+        ['usernameFMRP', 'usercodeFMRP', 'remembermeFMRP'].forEach(key => localStorage.removeItem(key));
       }
-    }, 400);
-    router.push('/');
+    }
+
+    // Đợi 1 giây để đảm bảo cookie được set xong trước khi redirect
+    // await new Promise(resolve => setTimeout(resolve, 10000));
+
+    showToat('success', message);
+    window.location.href = '/';
   };
 
   /**
    * [login-socket] [step 11] Xử lý login từ socket event (không cần form data)
    * @param {AppTokenLoginResponse} res - Response từ socket event app_token_login
    */
-  const handleSocketLogin = res => {
+  const handleSocketLogin = async res => {
     try {
       const { isSuccess, message, token, database_app, data } = res;
 
@@ -438,32 +466,13 @@ const LoginContent = React.memo(props => {
         return;
       }
 
-      // [login-socket] [step 11.3] Dispatch Redux auth state
-
-      dispatch({ type: 'auth/update', payload: data });
-
-      // [login-socket] [step 11.4] Lưu token vào Cookies
-      Cookies.set('tokenFMRP', token, {
-        expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-        sameSite: true,
+      // [login-socket] [step 11.3] Sử dụng fnSetDataAuth để đồng bộ logic login
+      // Truyền null cho value vì QR login không có form data
+      // Truyền options: needReload và needRefetchSettings cho QR login
+      await fnSetDataAuth(null, res, {
+        needReload: true,
+        needRefetchSettings: true,
       });
-
-      // [login-socket] [step 11.5] Lưu database_app vào Cookies
-      Cookies.set('databaseappFMRP', database_app, {
-        expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-      });
-
-      // [login-socket] [step 11.6] Hiển thị toast success
-      showToat('success', message);
-
-      refetchSetings();
-      // [login-socket] [step 11.7] Redirect về trang chủ
-      setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          window.location.reload();
-        }
-      }, 400);
-      router.push('/');
     } catch (error) {
       console.error('Login error:', error);
       showToat('error', 'Có lỗi xảy ra khi đăng nhập');
@@ -481,7 +490,7 @@ const LoginContent = React.memo(props => {
           },
         });
         if (res?.isSuccess) {
-          fnSetDataAuth(data, res);
+          await fnSetDataAuth(data, res);
           return;
         }
         showToat('error', `${res?.message || 'Đăng nhập thất bại'}`);
@@ -538,7 +547,7 @@ const LoginContent = React.memo(props => {
         const res = await submitOtp.mutateAsync(dataSubmit);
         if (res?.isSuccess) {
           queryState({ name: res?.email, code: res?.code, isRegister: false, isLogin: true, countOtp: 0 });
-          fnSetDataAuth(data, res);
+          await fnSetDataAuth(data, res);
           return;
         }
         queryState({ sendOtp: false });
@@ -552,11 +561,14 @@ const LoginContent = React.memo(props => {
       <Head>
         <title>{dataLang?.auth_login || 'auth_login'}</title>
       </Head>
+      {/* [mobile-warning] Modal cảnh báo thiết bị di động - không cho đóng */}
+      <MobileWarningModal isOpen={showMobileWarning} />
+
       <div className='bg-[#EEF1F8]'>
         <div className="bg-[url('/Logo-BG.png')] relative bg-repeat-round h-screen w-screen flex flex-col justify-center items-center overflow-hidden">
           <div className='z-10 flex justify-center w-full space-x-20'>
-            <div className=''>
-              <form onSubmit={handleSubmit(data => onSubmit(data, 'login'))} className='bg-white px-16 py-8 flex flex-col gap-6 rounded-lg w-[600px]'>
+            <div className='mx-4 lg:mx-0 w-full lg:w-fit'>
+              <form onSubmit={handleSubmit(data => onSubmit(data, 'login'))} className='bg-white px-4 lg:px-16 py-8 flex flex-col gap-6 rounded-lg w-full lg:w-[600px]'>
                 <div className=''>
                   <h1 className='text-[#11315B] font-medium text-3xl text-center capitalize'>{dataLang?.auth_login || 'auth_login'}</h1>
                 </div>
@@ -597,7 +609,7 @@ const LoginContent = React.memo(props => {
                         placeholder={dataLang?.auth_password || 'auth_password'}
                         error={errors.password ? { message: 'Vui lòng nhập mật khẩu' } : null}
                       />
-                      <div className='flex justify-between w-full'>
+                      <div className='flex flex-col lg:flex-row gap-2 justify-between w-full'>
                         <div className='flex items-center space-x-1.5'>
                           <input
                             type='checkbox'
@@ -615,7 +627,6 @@ const LoginContent = React.memo(props => {
                     </div>
                     <button
                       type='submit'
-                      onClick={handleSubmit(data => onSubmit(data, 'login'))}
                       className='text-[#FFFFFF] font-normal text-lg py-3 w-full rounded-md bg-gradient-to-l from-[#0375f3]  via-[#296dc1] to-[#0375f3] btn-animation hover:scale-105'
                     >
                       {dataLang?.auth_login || 'auth_login'}
@@ -774,7 +785,7 @@ const LoginContent = React.memo(props => {
                                                 ))}
                                             </div> */}
             </div>
-            <div className='space-y-4'>
+            <div className='space-y-4 hidden lg:block'>
               <div className='pointer-events-none select-none'>
                 <Image
                   alt=''

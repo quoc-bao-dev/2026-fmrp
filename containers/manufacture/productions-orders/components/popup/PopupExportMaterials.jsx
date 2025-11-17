@@ -431,9 +431,11 @@ export const PopupOrderCompleted = ({ onClose, className }) => {
         <Image
           width={267}
           height={200}
-          src={"/popup/exportMaterials.png"}
+          src={"/popup/exportMaterials.webp"}
           alt="exportMaterials"
-          className="object-cover size-full"
+          className="object-cover size-full w-[384px]"
+          unoptimized
+          priority
         />
       </div>
       <button
@@ -912,6 +914,12 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
   const [errorNVLData, setErrorNVLData] = useState({ items: [] });
   const [showAutoTooltip, setShowAutoTooltip] = useState(false);
   const [autoTooltipText, setAutoTooltipText] = useState("");
+
+  // Preload hình ảnh exportMaterials.webp khi component mount
+  useEffect(() => {
+    const img = document.createElement("img");
+    img.src = "/popup/exportMaterials.webp";
+  }, []);
 
   useEffect(() => {
     if (data?.bom) {

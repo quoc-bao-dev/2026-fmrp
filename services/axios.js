@@ -103,4 +103,4 @@ const _ServerInstance = async (method, url, dataObject = {}, callback) => {
     });
 };
 
-export { _ServerInstance, axios };
+export { _ServerInstance, _ServerInstance as axiosCustom, axios };

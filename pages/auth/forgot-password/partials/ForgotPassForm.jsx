@@ -84,7 +84,7 @@ const ForgotPassForm = ({ onSubmit: onSubmitProp }) => {
 
     return (
         <>
-            <form onSubmit={handleSubmit(onSubmit)} className='space-y-8 mt-20'>
+            <form onSubmit={handleSubmit(onSubmit)} className='space-y-8 mt-6 lg:mt-20'>
                 {/* [Form Fields] */}
                 <Input type='text' placeholder='Nhập số điện thoại' {...register('phone')} error={errors.phone} />
 

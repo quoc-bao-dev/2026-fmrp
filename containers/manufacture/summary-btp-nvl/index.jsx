@@ -76,18 +76,18 @@ const createNumberCell = rawValue => {
   };
 };
 
-const getProductTagLabel = type => {
-  switch (type) {
-    case 'semi_products':
-      return 'Bán thành phẩm';
-    case 'semi_products_outside':
-      return 'Bán thành phẩm ngoài';
-    case 'semi_products_inside':
-      return 'Bán thành phẩm nội bộ';
-    default:
-      return '';
-  }
-};
+// const getProductTagLabel = type => {
+//   switch (type) {
+//     case 'semi_products':
+//       return 'Bán thành phẩm';
+//     case 'semi_products_outside':
+//       return 'Bán thành phẩm ngoài';
+//     case 'semi_products_inside':
+//       return 'Bán thành phẩm nội bộ';
+//     default:
+//       return '';
+//   }
+// };
 
 const normalizeForFilename = value => {
   if (!value) return '';
@@ -322,7 +322,7 @@ const SummaryBtpNvl = () => {
       createColumn('Mã BTP', 15),
       createColumn('Tên BTP', 32),
       createColumn('Thuộc tính', 25),
-      createColumn('Loại', 18),
+      // createColumn('Loại', 18),
       ...(isByProduct ? [] : [createColumn('Lệnh sản xuất', 28)]),
       createColumn('Đơn vị tính', 12),
       createColumn('Số lượng cần', 18),
@@ -341,7 +341,7 @@ const SummaryBtpNvl = () => {
         { value: item.item_code || '' },
         { value: item.item_name || '' },
         { value: item.item_variation || '' },
-        { value: getProductTagLabel(item.type_products) || '' },
+        // { value: getProductTagLabel(item.type_products) || '' },
         ...(isByProduct ? [] : [{ value: item.reference_no || '' }]),
         { value: item.unit_name || '' },
         createNumberCell(item.total_quota),
@@ -758,7 +758,7 @@ const SummaryBtpNvl = () => {
                     <tbody className='[&>tr]:border-b [&>tr]:border-[#F3F3F4] [&>tr:last-child]:border-b-0'>
                       {data.map((item, index) => {
                         const rowKey = `${item.item_variation_option_value_id || item.item_id || index}-${item.order_id || 'summary'}`;
-                        const tagLabel = getProductTagLabel(item.type_products);
+                        // const tagLabel = getProductTagLabel(item.type_products);
 
                         return (
                           <tr key={rowKey} className='hover:bg-slate-100/40'>
@@ -769,7 +769,7 @@ const SummaryBtpNvl = () => {
                                   <span className='text-[#3A3E4C] font-semibold'>{item.item_name}</span>
                                   <span className='text-xs text-[#9295A4]'>{item.item_variation || '(None)'}</span>
                                   <span className='text-[11px] text-[#1D6AE5] w-fit'>{item.item_code}</span>
-                                  {tagLabel && <span className='px-2 py-0.5 text-[10px] rounded bg-[#E9F9EF] text-[#139D3E] w-fit mt-1'>{tagLabel}</span>}
+                                  {/* {tagLabel && <span className='px-2 py-0.5 text-[10px] rounded bg-[#E9F9EF] text-[#139D3E] w-fit mt-1'>{tagLabel}</span>} */}
                                 </div>
                               </div>
                             </td>
