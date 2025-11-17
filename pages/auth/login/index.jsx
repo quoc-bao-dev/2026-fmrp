@@ -24,6 +24,8 @@ import InputPassword from '../forgot-password/partials/InputPassword';
 import { LoginSocketProvider, useLoginSocketContext } from '@/context/socket/LoginSocketContext';
 // [session-web] Import hàm getOrCreateTabSession từ utils
 import { getOrCreateTabSession } from '@/utils/helpers/sessionStorage';
+import MobileWarningModal from './MobileWarningModal';
+// [mobile-warning] Import MobileWarningModal
 
 // [login-socket] [step 2] Component con để sử dụng socket hook (bên trong Provider)
 const LoginContent = React.memo(props => {
@@ -213,6 +215,19 @@ const LoginContent = React.memo(props => {
   });
   const [qrTtl, setQrTtl] = useState(0);
   const [isExpired, setIsExpired] = useState(false);
+
+  const detectMobileDevice = () => {
+    if (typeof window === 'undefined') return false;
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+    const isSmallScreen = window.innerWidth <= 768;
+    return isMobile || isSmallScreen;
+  };
+
+  const [showMobileWarning] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return detectMobileDevice();
+  });
 
   /**
    * @typedef {Object} AppApprovedLoginData
@@ -552,11 +567,14 @@ const LoginContent = React.memo(props => {
       <Head>
         <title>{dataLang?.auth_login || 'auth_login'}</title>
       </Head>
+      {/* [mobile-warning] Modal cảnh báo thiết bị di động - không cho đóng */}
+      <MobileWarningModal isOpen={showMobileWarning} />
+
       <div className='bg-[#EEF1F8]'>
         <div className="bg-[url('/Logo-BG.png')] relative bg-repeat-round h-screen w-screen flex flex-col justify-center items-center overflow-hidden">
           <div className='z-10 flex justify-center w-full space-x-20'>
-            <div className=''>
-              <form onSubmit={handleSubmit(data => onSubmit(data, 'login'))} className='bg-white px-16 py-8 flex flex-col gap-6 rounded-lg w-[600px]'>
+            <div className='mx-4 lg:mx-0 w-full lg:w-fit'>
+              <form onSubmit={handleSubmit(data => onSubmit(data, 'login'))} className='bg-white px-4 lg:px-16 py-8 flex flex-col gap-6 rounded-lg w-full lg:w-[600px]'>
                 <div className=''>
                   <h1 className='text-[#11315B] font-medium text-3xl text-center capitalize'>{dataLang?.auth_login || 'auth_login'}</h1>
                 </div>
@@ -597,7 +615,7 @@ const LoginContent = React.memo(props => {
                         placeholder={dataLang?.auth_password || 'auth_password'}
                         error={errors.password ? { message: 'Vui lòng nhập mật khẩu' } : null}
                       />
-                      <div className='flex justify-between w-full'>
+                      <div className='flex flex-col lg:flex-row gap-2 justify-between w-full'>
                         <div className='flex items-center space-x-1.5'>
                           <input
                             type='checkbox'
@@ -774,7 +792,7 @@ const LoginContent = React.memo(props => {
                                                 ))}
                                             </div> */}
             </div>
-            <div className='space-y-4'>
+            <div className='space-y-4 hidden lg:block'>
               <div className='pointer-events-none select-none'>
                 <Image
                   alt=''

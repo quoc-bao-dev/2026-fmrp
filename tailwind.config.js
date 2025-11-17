@@ -209,6 +209,21 @@ module.exports = {
         'linear-background-toggle-bot': 'linear-gradient(155.11deg, #1FC583 0%, #1F9285 100%)',
         'linear-background-button-chat': 'linear-gradient(170.14deg, #1FC583 5.11%, #1F9285 95.28%)',
       },
+      keyframes: {
+        'slide-up': {
+          '0%': {
+            transform: 'translateY(100%)',
+            opacity: '0',
+          },
+          '100%': {
+            transform: 'translateY(0)',
+            opacity: '1',
+          },
+        },
+      },
+      animation: {
+        'slide-up': 'slide-up 0.5s ease-out',
+      },
     },
   },
   plugins: [
