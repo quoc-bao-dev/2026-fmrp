@@ -122,7 +122,7 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, sh
       >
         <svg ref={svgRef} width='100%' height={height} viewBox='0 0 2048 163' className='overflow-visible' preserveAspectRatio='xMidYMid meet'>
           {/* Đường nền (màu xám) */}
-          <path d={pathData} fill='none' stroke='#A9A9A9' strokeWidth='120' strokeLinecap='butt' strokeLinejoin='round' />
+          <path d={pathData} fill='none' stroke='#A9A9A9' strokeWidth='70' strokeLinecap='butt' strokeLinejoin='round' />
 
           {/* Đường đã hoàn thành (đổi màu theo progress) */}
           <path
@@ -130,7 +130,7 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, sh
             d={pathData}
             fill='none'
             stroke='#0E70DD'
-            strokeWidth='120'
+            strokeWidth='70'
             strokeLinecap='butt'
             strokeLinejoin='round'
             strokeDasharray={pathLength}

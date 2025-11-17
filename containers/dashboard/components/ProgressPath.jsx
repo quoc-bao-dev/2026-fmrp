@@ -3,7 +3,7 @@ import { MdArrowOutward } from 'react-icons/md';
 import AnimatedProgressPath from './AnimatedProgressPath';
 import MobileIcon from '@/components/icons/common/MobileIcon';
 
-const ProgressPathExample = () => {
+const ProgressPath = () => {
   const [progress, setProgress] = useState(50);
   const [pathHeight, setPathHeight] = useState(240);
 
@@ -14,7 +14,7 @@ const ProgressPathExample = () => {
 
     const updateHeight = event => {
       const matches = event?.matches ?? mediaQuery.matches;
-      setPathHeight(matches ? 300 : 240);
+      setPathHeight(matches ? 350 : 240);
     };
 
     updateHeight(mediaQuery);
@@ -54,9 +54,9 @@ const ProgressPathExample = () => {
       accentColor: '#696969',
       title: 'Hoạch Định & Lập Kế Hoạch',
       items: [
-        { text: 'Quản Lý Đơn Hàng', color: '#898989' },
-        { text: 'Lập Kế Hoạch Sản Xuất', color: '#898989' },
-        { text: 'Lập Kế Hoạch Mua Hàng', color: '#898989' },
+        { text: 'Quản Lý Đơn Hàng', color: '#0375F3' },
+        { text: 'Lập Kế Hoạch Sản Xuất', color: '#0375F3' },
+        { text: 'Lập Kế Hoạch Mua Hàng', color: '#0375F3' },
       ],
     },
     {
@@ -85,36 +85,36 @@ const ProgressPathExample = () => {
   ];
 
   return (
-    <div className='w-full h-full flex flex-col items-center justify-center bg-[#FDFDFE] relative'>
+    <div className='-mt-4 w-full h-full flex flex-col items-center justify-center bg-[#FDFDFE] relative'>
       <h2 className='px-6 responsive-text-3xl leading-[140%] font-bold text-new-blue capitalize w-full'>
         Tiến trình hoàn thiện vận hành <br />
         xưởng sản xuất
       </h2>
-      <div className='w-full flex-1 flex items-center justify-center -mt-5'>
-        <AnimatedProgressPath percentage={50} height={pathHeight} showPercentage={true} />
+      <div className='w-full flex-1 flex items-center justify-center -mt-[5%] 2xl:-mt-[4%] pointer-events-none'>
+        <AnimatedProgressPath percentage={progress} height={pathHeight} showPercentage={true} />
       </div>
 
-      <div className='grid grid-cols-4 gap-4 w-full'>
+      <div className='grid grid-cols-4 gap-4 w-full -mt-[3%] px-4'>
         {steps.map(step => {
           const isActive = progress >= step.percent;
           const numberColor = isActive ? '#FFDBCC' : '#696969';
           const titleColor = isActive ? '#FE4C00' : '#696969';
 
           return (
-            <button key={step.id} type='button' className='flex gap-4 text-left'>
-              <span className='text-[128px]/[100px] font-semibold transition-all duration-500' style={{ color: numberColor }}>
+            <div key={step.id} className='flex gap-2 text-left'>
+              <span className='text-[100px]/[80px] font-semibold transition-all duration-500' style={{ color: numberColor }}>
                 {step.number}
               </span>
-              <div className='flex flex-col gap-[2px]'>
+              <div className='flex flex-col gap-1'>
                 <div className='flex items-center'>
-                  <h3 className='inline font-bold responsive-text-xl capitalize transition-all duration-500' style={{ color: titleColor }}>
+                  <h3 className='inline font-bold responsive-text-lg capitalize transition-all duration-500' style={{ color: titleColor }}>
                     {step.title}
                   </h3>
-                  {step.phone && <MobileIcon className='flex-shrink-0' />}
+                  {step.phone && <MobileIcon className='size-7 flex-shrink-0' />}
                 </div>
-                <ul className='list-disc list-inside'>
+                <ul className='list-disc list-inside space-y-0.5 ml-1'>
                   {step.items.map((item, idx) => (
-                    <li key={idx} className='responsive-text-base transition-all duration-500 text-left leading-tight' style={{ color: item.color }}>
+                    <li key={idx} className='responsive-text-sm transition-all duration-500 text-left leading-tight' style={{ color: item.color }}>
                       <span className='inline text-inherit'>
                         {item.text}
                         <MdArrowOutward className='inline-block align-middle ml-1 text-base' />
@@ -123,7 +123,7 @@ const ProgressPathExample = () => {
                   ))}
                 </ul>
               </div>
-            </button>
+            </div>
           );
         })}
       </div>
@@ -150,4 +150,4 @@ const ProgressPathExample = () => {
   );
 };
 
-export default ProgressPathExample;
+export default ProgressPath;
