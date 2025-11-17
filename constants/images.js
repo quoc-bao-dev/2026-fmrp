@@ -6,6 +6,7 @@ export const IMAGES = {
   // e
   // f
   rocketBoy: "/dashboard/rocket-boy.png",
+  rocketBoyGif: "/dashboard/rocket-boy.gif",
   // g
   // h
   // i

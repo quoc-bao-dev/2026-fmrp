@@ -63,7 +63,7 @@ const ProgressPath = () => {
       id: 3,
       percent: 75,
       number: 3,
-      accentColor: '#696969',
+      accentColor: '#E1E1E1',
       title: 'Thực Thi Sản Xuất & Quản Lý Kho',
       phone: true,
       items: [
@@ -77,7 +77,7 @@ const ProgressPath = () => {
       id: 4,
       percent: 100,
       number: 4,
-      accentColor: '#696969',
+      accentColor: '#E1E1E1',
       title: 'Giao Hàng',
       phone: true,
       items: [{ text: 'Xuất Kho Giao Hàng', color: '#898989' }],
@@ -85,24 +85,24 @@ const ProgressPath = () => {
   ];
 
   return (
-    <div className='-mt-4 w-full h-full flex flex-col items-center justify-center bg-[#FDFDFE] relative'>
-      <h2 className='px-6 responsive-text-3xl leading-[140%] font-bold text-new-blue capitalize w-full'>
+    <div className='w-full h-full flex flex-col items-center justify-center bg-[#FDFDFE] relative'>
+      <h2 className='px-6 responsive-text-3xl leading-[160%] font-bold text-new-blue capitalize w-full'>
         Tiến trình hoàn thiện vận hành <br />
         xưởng sản xuất
       </h2>
       <div className='w-full flex-1 flex items-center justify-center -mt-[5%] 2xl:-mt-[4%] pointer-events-none'>
-        <AnimatedProgressPath percentage={progress} height={pathHeight} showPercentage={true} />
+        <AnimatedProgressPath percentage={progress} height={pathHeight} />
       </div>
 
-      <div className='grid grid-cols-4 gap-4 w-full -mt-[3%] px-4'>
+      <div className='flex justify-around gap-4 w-full -mt-[3%] px-4'>
         {steps.map(step => {
           const isActive = progress >= step.percent;
-          const numberColor = isActive ? '#FFDBCC' : '#696969';
+          const numberColor = isActive ? '#FFDBCC' : '#E1E1E1';
           const titleColor = isActive ? '#FE4C00' : '#696969';
 
           return (
             <div key={step.id} className='flex gap-2 text-left'>
-              <span className='text-[100px]/[80px] font-semibold transition-all duration-500' style={{ color: numberColor }}>
+              <span className='text-[100px]/[80px] font-medium transition-all duration-500' style={{ color: numberColor }}>
                 {step.number}
               </span>
               <div className='flex flex-col gap-1'>
@@ -129,7 +129,7 @@ const ProgressPath = () => {
       </div>
 
       {/* Control buttons (optional) */}
-      {/* <div className='mt-8 mb-8 flex flex-wrap justify-center gap-3'>
+      <div className='mt-8 mb-8 flex flex-wrap justify-center gap-3'>
         <button onClick={() => setProgress(0)} className='px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors'>
           Reset
         </button>
@@ -145,7 +145,7 @@ const ProgressPath = () => {
         <button onClick={() => setProgress(100)} className='px-6 py-2 bg-blue-500 rounded-lg hover:bg-blue-600 text-white transition-colors'>
           100%
         </button>
-      </div> */}
+      </div>
     </div>
   );
 };

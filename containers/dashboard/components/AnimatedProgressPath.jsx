@@ -1,13 +1,14 @@
 import { IMAGES } from '@/constants/images';
 import { useEffect, useRef, useState } from 'react';
 
-const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, showPercentage = true }) => {
+const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) => {
   const svgRef = useRef(null);
   const pathRef = useRef(null);
   const [pathLength, setPathLength] = useState(0);
   const [currentProgress, setCurrentProgress] = useState(0);
   const [displayPercentage, setDisplayPercentage] = useState(percentage);
   const [initialAnimationDone, setInitialAnimationDone] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   // Đường dẫn cong lấy theo vector mẫu
   const animationDuration = 6000;
@@ -24,36 +25,98 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, sh
   }, []);
 
   useEffect(() => {
-    setDisplayPercentage(100);
+    setDisplayPercentage(120); // Chạy đến 120% để ra khỏi view
+    let resetTimeout;
+    let finalTimeout;
+    
+    // Tính toán thời gian thực tế để chạy từ 0% đến 120% dựa trên fraction
+    const startFraction = 0; // fraction của 0%
+    const endFraction = 1.0; // fraction của 120%
+    const fractionDistance = Math.abs(endFraction - startFraction);
+    const actualDuration = fractionDistance * animationDuration;
+    
     const timeout = setTimeout(() => {
-      setInitialAnimationDone(true);
-      setDisplayPercentage(percentage);
-    }, animationDuration - 1000);
+      // Ẩn character ở vị trí 120% (ra khỏi view)
+      setIsResetting(true);
+      
+      // Sau khi ẩn, reset về 0% để character xuất hiện ở đầu
+      resetTimeout = setTimeout(() => {
+        setCurrentProgress(0); // Bắt đầu từ 0%
+        setDisplayPercentage(0); // Reset displayPercentage về 0
+        setIsResetting(false);
+        setInitialAnimationDone(true);
+        // Không cần set displayPercentage ở đây, useEffect sẽ tự động cập nhật khi percentage thay đổi
+      }, 300); // Delay ngắn để tạo hiệu ứng biến mất/xuất hiện
+    }, actualDuration + 100); // Đợi animation hoàn thành + buffer nhỏ
 
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      if (resetTimeout) clearTimeout(resetTimeout);
+      if (finalTimeout) clearTimeout(finalTimeout);
+    };
   }, []);
 
   useEffect(() => {
     if (!initialAnimationDone) return;
-    setDisplayPercentage(percentage);
+    // Chỉ update khi percentage thay đổi, clamp trong 0-100% để không chạy ra ngoài
+    const targetPercentage = Math.min(Math.max(percentage, 0), 100);
+    // Delay nhỏ để đảm bảo state đã được reset về 0 trước khi update
+    const timeout = setTimeout(() => {
+      setDisplayPercentage(targetPercentage);
+    }, 100);
+    return () => clearTimeout(timeout);
   }, [percentage, initialAnimationDone]);
 
+  // Hàm convert từ fraction về progress
+  const getProgressForFraction = targetFraction => {
+    if (targetFraction <= fractionAnchors[0].fraction) {
+      return fractionAnchors[0].percent;
+    }
+
+    for (let i = 1; i < fractionAnchors.length; i++) {
+      const prev = fractionAnchors[i - 1];
+      const next = fractionAnchors[i];
+
+      if (targetFraction <= next.fraction) {
+        const rangeFraction = next.fraction - prev.fraction;
+        const rangePercent = next.percent - prev.percent;
+        const ratio = rangeFraction === 0 ? 0 : (targetFraction - prev.fraction) / rangeFraction;
+        return prev.percent + ratio * rangePercent;
+      }
+    }
+
+    return fractionAnchors[fractionAnchors.length - 1].percent;
+  };
+
   useEffect(() => {
-    // Animation mượt mà cho progress
-    const duration = animationDuration;
+    // Animation với tốc độ đều dựa trên khoảng cách thực tế trên path
     const startProgress = currentProgress;
-    const endProgress = Math.min(Math.max(displayPercentage, 0), 100); // Clamp between 0-100
+    // Cho phép vượt quá 100% khi đang chạy initial animation (đến 120%)
+    // Sau khi initialAnimationDone, chạy đến đúng percentage được truyền vào (clamp ở 100% để không chạy ra ngoài)
+    const maxProgress = initialAnimationDone ? 100 : 120;
+    const minProgress = 0; // Không cho phép progress âm
+    // Khi đã initialAnimationDone, chạy đến đúng displayPercentage (đã được clamp trong 0-100%)
+    const endProgress = Math.min(Math.max(displayPercentage, minProgress), maxProgress);
+    
+    // Tính toán duration dựa trên khoảng cách thực tế trên path (fraction)
+    const startFraction = getFractionForProgress(startProgress);
+    const endFraction = getFractionForProgress(endProgress);
+    const fractionDistance = Math.abs(endFraction - startFraction);
+    
+    // Tốc độ đều: 1.0 fraction trong animationDuration
+    const duration = fractionDistance * animationDuration;
     const startTime = Date.now();
 
     const animate = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
-      // Easing function (ease-out)
-      const easedProgress = 1 - Math.pow(1 - progress, 3);
-      const newProgress = startProgress + (endProgress - startProgress) * easedProgress;
+      // Interpolate trên fraction (khoảng cách thực tế) để tốc độ đều
+      const currentFraction = startFraction + (endFraction - startFraction) * progress;
+      // Convert ngược lại thành progress để hiển thị
+      const newProgress = getProgressForFraction(currentFraction);
 
-      setCurrentProgress(Math.min(Math.max(newProgress, 0), 100));
+      setCurrentProgress(Math.min(Math.max(newProgress, minProgress), maxProgress));
 
       if (progress < 1) {
         requestAnimationFrame(animate);
@@ -67,7 +130,7 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, sh
     } else {
       setCurrentProgress(endProgress);
     }
-  }, [displayPercentage]);
+  }, [displayPercentage, initialAnimationDone]);
 
   // Tính toán vị trí của character trên path
   const getPointAtLength = length => {
@@ -82,6 +145,7 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, sh
     { percent: 50, fraction: 0.38 },
     { percent: 75, fraction: 0.64 },
     { percent: 100, fraction: 0.9 },
+    { percent: 120, fraction: 1.0 }, // Cho phép chạy đến 120%
   ];
 
   const getFractionForProgress = progress => {
@@ -106,6 +170,8 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, sh
 
   const adjustedFraction = getFractionForProgress(currentProgress);
   const minimumFraction = 0.06;
+  // Vì giờ fraction không còn âm nữa (đã map thành dương), chỉ cần xử lý minimumFraction
+  // Khi progress < 0, fraction sẽ từ 0 đến fraction của 0%, nên không cần xử lý đặc biệt
   const safeFraction = Math.max(adjustedFraction, minimumFraction);
   const progressLength = safeFraction * pathLength;
   const characterPosition = getPointAtLength(progressLength);
@@ -121,15 +187,27 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, sh
         }}
       >
         <svg ref={svgRef} width='100%' height={height} viewBox='0 0 2048 163' className='overflow-visible' preserveAspectRatio='xMidYMid meet'>
+          <defs>
+            <filter id='dropShadow' x='-50%' y='-50%' width='200%' height='200%'>
+              <feGaussianBlur in='SourceAlpha' stdDeviation='19.4' />
+              <feOffset dx='0' dy='4' result='offsetblur' />
+              <feFlood floodColor='#000000' floodOpacity='0.149' />
+              <feComposite in2='offsetblur' operator='in' />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in='SourceGraphic' />
+              </feMerge>
+            </filter>
+          </defs>
           {/* Đường nền (màu xám) */}
-          <path d={pathData} fill='none' stroke='#A9A9A9' strokeWidth='70' strokeLinecap='butt' strokeLinejoin='round' />
+          <path d={pathData} fill='none' stroke='#C2BEBE' strokeWidth='70' strokeLinecap='butt' strokeLinejoin='round' filter='url(#dropShadow)' />
 
           {/* Đường đã hoàn thành (đổi màu theo progress) */}
           <path
             ref={pathRef}
             d={pathData}
             fill='none'
-            stroke='#0E70DD'
+            stroke='#237ADB'
             strokeWidth='70'
             strokeLinecap='butt'
             strokeLinejoin='round'
@@ -158,21 +236,15 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, sh
           })}
 
           {/* Character (Boy on Rocket) */}
-          <g transform={`translate(${characterPosition.x}, ${characterPosition.y})`}>
-            <image href={IMAGES.rocketBoy} width='145' height='145' x='-80' y='-140' preserveAspectRatio='xMidYMid meet' />
-          </g>
+          {!isResetting && (
+            <g transform={`translate(${characterPosition.x}, ${characterPosition.y})`} style={{ opacity: isResetting ? 0 : 1, transition: 'opacity 0.3s ease' }}>
+              <image href={IMAGES.rocketBoyGif || IMAGES.rocketBoy} width='135' height='135' x='-80' y='-140' preserveAspectRatio='xMidYMid meet' />
+            </g>
+          )}
 
-          {/* Percentage bubble */}
-          {showPercentage && (
-            <g transform={`translate(${characterPosition.x}, ${characterPosition.y - 40})`}>
-              <image
-                href={IMAGES.mess}
-                x='30'
-                y='-85'
-                width='60'
-                height='70'
-                preserveAspectRatio='xMidYMid meet'
-              />
+          {!isResetting && (
+            <g transform={`translate(${characterPosition.x}, ${characterPosition.y - 40})`} style={{ opacity: isResetting ? 0 : 1, transition: 'opacity 0.3s ease' }}>
+              <image href={IMAGES.mess} x='30' y='-85' width='60' height='70' preserveAspectRatio='xMidYMid meet' />
               <text x='60' y='-52' textAnchor='middle' fill='white' fontSize='12' fontWeight='bold'>
                 {Math.round(currentProgress)}%
               </text>
