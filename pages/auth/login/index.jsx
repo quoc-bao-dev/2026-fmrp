@@ -580,7 +580,7 @@ const LoginContent = React.memo(props => {
                 </div>
 
                 {/* [login] [step 1] Render Tabs underline để chuyển giữa Form đăng nhập và QR */}
-                <div className='w-fit mx-auto'>
+                <div className='w-fit'>
                   <TabSwitcherWithUnderline tabs={tabsLogin} activeTab={activeTab} onChange={setActiveTab} />
                 </div>
 
