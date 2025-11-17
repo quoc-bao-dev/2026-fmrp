@@ -292,7 +292,7 @@ const Popup_Products = React.memo(props => {
       };
       sBranch([defaultBranch]);
     }
-  }, [isOpen, props.id, branch?.length, authState?.branch]);
+  }, [isOpen, props.id, authState?.branch]);
 
   // change các input
   const _HandleChangeInput = (type, value) => {
