@@ -91,7 +91,7 @@ const ProgressPath = () => {
         xưởng sản xuất
       </h2>
       <div className='w-full flex-1 flex items-center justify-center -mt-[5%] 2xl:-mt-[4%] pointer-events-none'>
-        <AnimatedProgressPath percentage={progress} height={pathHeight} />
+        <AnimatedProgressPath percentage={0} height={pathHeight} />
       </div>
 
       <div className='flex justify-around gap-4 w-full -mt-[3%] px-4'>
@@ -129,7 +129,7 @@ const ProgressPath = () => {
       </div>
 
       {/* Control buttons (optional) */}
-      <div className='mt-8 mb-8 flex flex-wrap justify-center gap-3'>
+      {/* <div className='mt-8 mb-8 flex flex-wrap justify-center gap-3'>
         <button onClick={() => setProgress(0)} className='px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors'>
           Reset
         </button>
@@ -145,7 +145,7 @@ const ProgressPath = () => {
         <button onClick={() => setProgress(100)} className='px-6 py-2 bg-blue-500 rounded-lg hover:bg-blue-600 text-white transition-colors'>
           100%
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };

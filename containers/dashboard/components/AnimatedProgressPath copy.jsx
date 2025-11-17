@@ -2,17 +2,17 @@ import { IMAGES } from '@/constants/images';
 import { useEffect, useRef, useState } from 'react';
 
 const introStartPercent = -20;
-const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) => {
+const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200, autoIntro = false }) => {
   const svgRef = useRef(null);
   const pathRef = useRef(null);
   const [pathLength, setPathLength] = useState(0);
-  const [currentProgress, setCurrentProgress] = useState(introStartPercent);
+  const [currentProgress, setCurrentProgress] = useState(0);
   const [displayPercentage, setDisplayPercentage] = useState(percentage);
   const [initialAnimationDone, setInitialAnimationDone] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
-  // Thời gian chạy animation
-  const animationDuration = 6000;
+  // Đường dẫn cong lấy theo vector mẫu
+  const animationDuration = 4500;
 
   // Đường dẫn cong lấy theo vector mẫu
   const pathData =
@@ -28,12 +28,63 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) 
   const clampPercentage = value => Math.min(Math.max(value, 0), 100);
 
   useEffect(() => {
-    const clamped = clampPercentage(percentage);
-    setCurrentProgress(introStartPercent);
-    setDisplayPercentage(clamped);
+    if (!autoIntro) return;
     setIsResetting(false);
+    setInitialAnimationDone(false);
+    setDisplayPercentage(120); // Chạy đến 120% để ra khỏi view
+    let resetTimeout;
+    let finalTimeout;
+    
+    // Tính toán thời gian thực tế để chạy từ 0% đến 120% dựa trên fraction
+    const startFraction = 0; // fraction của 0%
+    const endFraction = 1.0; // fraction của 120%
+    const fractionDistance = Math.abs(endFraction - startFraction);
+    const actualDuration = fractionDistance * animationDuration;
+    
+    const timeout = setTimeout(() => {
+      // Ẩn character ở vị trí 120% (ra khỏi view)
+      setIsResetting(true);
+      
+      // Sau khi ẩn, reset về vị trí âm để character xuất hiện ngoài màn hình
+      resetTimeout = setTimeout(() => {
+        setCurrentProgress(introStartPercent);
+        setDisplayPercentage(introStartPercent);
+
+        // Tạo độ trễ nhỏ rồi cho nhân vật chạy từ âm -> 0
+        finalTimeout = setTimeout(() => {
+          setIsResetting(false);
+          setInitialAnimationDone(true);
+          setDisplayPercentage(0);
+        }, 200);
+      }, 300); // Delay ngắn để tạo hiệu ứng biến mất/xuất hiện
+    }, actualDuration + 100); // Đợi animation hoàn thành + buffer nhỏ
+
+    return () => {
+      clearTimeout(timeout);
+      if (resetTimeout) clearTimeout(resetTimeout);
+      if (finalTimeout) clearTimeout(finalTimeout);
+    };
+  }, [autoIntro]);
+
+  useEffect(() => {
+    if (autoIntro) return;
+    const clamped = clampPercentage(percentage);
+    setDisplayPercentage(clamped);
+    setCurrentProgress(clamped);
     setInitialAnimationDone(true);
-  }, [percentage]);
+    setIsResetting(false);
+  }, [autoIntro, percentage]);
+
+  useEffect(() => {
+    if (!initialAnimationDone) return;
+    // Chỉ update khi percentage thay đổi, clamp trong 0-100% để không chạy ra ngoài
+    const targetPercentage = clampPercentage(percentage);
+    // Delay nhỏ để đảm bảo state đã được reset về 0 trước khi update
+    const timeout = setTimeout(() => {
+      setDisplayPercentage(targetPercentage);
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, [percentage, initialAnimationDone]);
 
   // Hàm convert từ fraction về progress
   const getProgressForFraction = targetFraction => {
@@ -57,28 +108,32 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) 
   };
 
   useEffect(() => {
+    // Animation với tốc độ đều dựa trên khoảng cách thực tế trên path
     const startProgress = currentProgress;
+    // Cho phép vượt quá 100% khi đang chạy initial animation (đến 120%)
+    // Sau khi initialAnimationDone, chạy đến đúng percentage được truyền vào (clamp ở 100% để không chạy ra ngoài)
     const maxProgress = initialAnimationDone ? 100 : 120;
     const allowNegativeProgress = !initialAnimationDone || displayPercentage < 0 || currentProgress < 0 || isResetting;
     const minProgress = allowNegativeProgress ? introStartPercent : 0;
+    // Khi đã initialAnimationDone, chạy đến đúng displayPercentage (đã được clamp trong 0-100%)
     const endProgress = Math.min(Math.max(displayPercentage, minProgress), maxProgress);
     
+    // Tính toán duration dựa trên khoảng cách thực tế trên path (fraction)
     const startFraction = getFractionForProgress(startProgress);
     const endFraction = getFractionForProgress(endProgress);
     const fractionDistance = Math.abs(endFraction - startFraction);
-  
-    let duration = fractionDistance * animationDuration;
-    const isIntroPhase = !initialAnimationDone && startProgress <= introStartPercent + 0.01;
-    if (isIntroPhase) {
-      duration *= 2;
-    }
+    
+    // Tốc độ đều: 1.0 fraction trong animationDuration
+    const duration = fractionDistance * animationDuration;
     const startTime = Date.now();
 
     const animate = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
+      // Interpolate trên fraction (khoảng cách thực tế) để tốc độ đều
       const currentFraction = startFraction + (endFraction - startFraction) * progress;
+      // Convert ngược lại thành progress để hiển thị
       const newProgress = getProgressForFraction(currentFraction);
 
       setCurrentProgress(Math.min(Math.max(newProgress, minProgress), maxProgress));
@@ -106,11 +161,12 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) 
 
   const fractionAnchors = [
     { percent: introStartPercent, fraction: -0.12 },
-    { percent: 0, fraction: 0.06 },
+    { percent: 0, fraction: 0 },
     { percent: 25, fraction: 0.1 },
     { percent: 50, fraction: 0.38 },
     { percent: 75, fraction: 0.64 },
     { percent: 100, fraction: 0.9 },
+    { percent: 120, fraction: 1.0 }, // Cho phép chạy đến 120%
   ];
 
   const getFractionForProgress = progress => {
@@ -135,32 +191,13 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) 
 
   const adjustedFraction = getFractionForProgress(currentProgress);
   const allowNegativeFraction = currentProgress < 0 || displayPercentage < 0 || !initialAnimationDone || isResetting;
-  // Khi không cho phép âm, cho phép vẽ từ đúng đầu path (fraction = 0)
-  const minimumFraction = allowNegativeFraction ? fractionAnchors[0].fraction : 0;
+  const minimumFraction = allowNegativeFraction ? fractionAnchors[0].fraction : 0.06;
   const safeFraction = Math.max(adjustedFraction, minimumFraction);
-
-  // Độ dài dành cho đoạn đường đã hoàn thành: không cho âm để tránh vẽ từ cuối path
-  const strokeFraction = Math.max(safeFraction, 0);
-  const progressLength = strokeFraction * pathLength;
-
-  // Vị trí cơ bản của nhân vật trên path
-  const baseCharacterPosition = getPointAtLength(safeFraction * pathLength);
-
-  // Khi progress < 0, cho rocket nằm lệch ra ngoài bên trái điểm 0% rồi bay vào
-  const introMaxOffsetX = 80; // px lệch tối đa khi ở introStartPercent
-  const introOffsetX =
-    currentProgress < 0
-      ? (currentProgress / introStartPercent) * -introMaxOffsetX // -20% -> -introMaxOffsetX, 0% -> 0
-      : 0;
-
-  const characterPosition = {
-    x: baseCharacterPosition.x + introOffsetX,
-    y: baseCharacterPosition.y,
-  };
+  const progressLength = safeFraction * pathLength;
+  const characterPosition = getPointAtLength(progressLength);
   const visualProgress = Math.min(Math.max(currentProgress, 0), 100);
 
-  // Các điểm mốc hiển thị, bỏ qua mốc 0%
-  const milestones = fractionAnchors.slice(1).filter(milestone => milestone.percent !== 0);
+  const milestones = fractionAnchors.slice(1);
 
   return (
     <div className='relative w-full' style={{ width, height, overflowX: 'hidden', overflowY: 'visible' }}>
@@ -209,6 +246,7 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) 
           {milestones.map((milestone, index) => {
             const milestoneLength = milestone.fraction * pathLength;
             const milestonePoint = getPointAtLength(milestoneLength);
+            const isPassed = currentProgress >= milestone.percent;
 
             return (
               <g key={index}>
