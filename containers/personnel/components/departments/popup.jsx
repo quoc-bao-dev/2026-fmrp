@@ -155,6 +155,7 @@ const Popup_phongban = props => {
                 onChange={_HandleChangeInput.bind(this, 'name')}
                 name='fname'
                 type='text'
+                placeholder='Nhập tên phòng ban'
                 className={`${
                   errInput ? 'border-red-500' : 'focus:border-[#92BFF7] border-[#d0d5dd]'
                 } placeholder:text-slate-300 w-full bg-[#ffffff] rounded-lg text-[#52575E] font-normal p-2 border outline-none mb-2`}
@@ -169,6 +170,7 @@ const Popup_phongban = props => {
                 onChange={_HandleChangeInput.bind(this, 'email')}
                 name='email'
                 type='email'
+                placeholder='Nhập email phòng ban'
                 className='focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded-lg text-[#52575E] font-normal p-2 border outline-none mb-2'
               />
             </div>
