@@ -1,7 +1,5 @@
-import useStatusExprired from '@/hooks/useStatusExprired';
 import Head from 'next/head';
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import ToggleBotAI from '../botAI/components/ToggleBotAI';
 import BarChartHorizontal from './components/newCharts/BarChartHorizontal';
 import BarChartVertical from './components/newCharts/BarChartVertical';
@@ -12,8 +10,6 @@ import ProgressPath from './components/ProgressPath';
 
 const Dashboard = props => {
   const { dataLang } = props;
-  const dispatch = useDispatch();
-  const dataPstWH = useSelector(state => state.statusUser);
 
   return (
     <React.Fragment>
