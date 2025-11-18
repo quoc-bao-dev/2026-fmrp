@@ -42,21 +42,19 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
   const [isReloading, setIsReloading] = useState(false);
   const authState = useSelector(state => state.auth);
 
-  const { data: dataNewChatAI, isLoadingNewChatAi } = useStartMessageAI({
-    type: PRODUCT_ANALYSIS,
-    enable: openChatBox && !hasFetchedFirstMessage.current,
-    authState: authState,
-  });
+  // const { data: dataNewChatAI, isLoadingNewChatAi } = useStartMessageAI({
+  //   type: PRODUCT_ANALYSIS,
+  //   enable: openChatBox && !hasFetchedFirstMessage.current,
+  //   authState: authState,
+  // });
 
   const { data: dataActiveRobotDetail, isLoading: isLoadingActiveRobotDetail } = useActiveRobotDetail({
     id: chatId,
     enabled: !!chatId,
   });
 
-  // console.log('dataActiveRobotDetail', dataActiveRobotDetail);
-
   // Lấy tin nhắn dựa trên id
-  const { messenger, options, chatScenariosId, sessionId, step, response, isLoadingGeneraAnswer, sendChat, nextWait, dataPost, sessionRobot, isChat } = useSelector(state => state.stateBoxChatAi);
+  const { messenger, options, response, isLoadingGeneraAnswer, sendChat, nextWait, dataPost, sessionRobot, isChat } = useSelector(state => state.stateBoxChatAi);
   const handleNext = useHandleNext();
 
   // Hàm xử lý gửi tin nhắn mới
@@ -105,15 +103,40 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
           payload: null,
         });
         dispatch({
-          type: 'chatbot/setSessionRobot',
-          payload: null,
-        });
-        dispatch({
           type: 'chatbot/setIsChat',
           payload: null,
         });
+      }
 
-        return;
+      if (response?.data?.message) {
+        dispatch({
+          type: 'chatbot/addAiMessageOnly',
+          payload: {
+            text: response.data.message,
+            response: response,
+          },
+        });
+      }
+
+      if (response?.next_wait) {
+        dispatch({
+          type: 'chatbot/setNextWait',
+          payload: response.next_wait,
+        });
+      }
+
+      if (response?.send_chat !== undefined) {
+        dispatch({
+          type: 'chatbot/setSendChat',
+          payload: response.send_chat,
+        });
+      }
+
+      if (response?.is_chat !== undefined) {
+        dispatch({
+          type: 'chatbot/setIsChat',
+          payload: response.is_chat,
+        });
       }
 
       if (response?.next) {
@@ -222,6 +245,7 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
   useEffect(() => {
     startInitialScenario();
   }, [startInitialScenario]);
+
   const handleReload = async () => {
     if (isReloading) return;
 
@@ -244,38 +268,38 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
     }
   };
 
-  useEffect(() => {
-    const handleCompleteStep = async () => {
-      if (options?.isFinished) {
-        setResultDataChatBot(false);
-        try {
-          const payload = {
-            data: {
-              stages: response.stages,
-              materials_primary: response.materialsPrimary,
-              semi_products: response.semiProducts,
-              product: response.product,
-            },
-            api: options.api,
-          };
-          const res = await completeStepChatBot(payload);
+  // useEffect(() => {
+  //   const handleCompleteStep = async () => {
+  //     if (options?.isFinished) {
+  //       setResultDataChatBot(false);
+  //       try {
+  //         const payload = {
+  //           data: {
+  //             stages: response.stages,
+  //             materials_primary: response.materialsPrimary,
+  //             semi_products: response.semiProducts,
+  //             product: response.product,
+  //           },
+  //           api: options.api,
+  //         };
+  //         const res = await completeStepChatBot(payload);
 
-          if (res) {
-            setProductAnalysis(res);
-            setTimeout(() => {
-              dispatch({ type: 'chatbot/reset' });
-              setResultDataChatBot(true);
-            }, 10000);
-          }
-        } catch (err) {
-          setResultDataChatBot(false);
-          console.error('Lỗi khi gọi completeStepChatBot:', err);
-        }
-      }
-    };
+  //         if (res) {
+  //           setProductAnalysis(res);
+  //           setTimeout(() => {
+  //             dispatch({ type: 'chatbot/reset' });
+  //             setResultDataChatBot(true);
+  //           }, 10000);
+  //         }
+  //       } catch (err) {
+  //         setResultDataChatBot(false);
+  //         console.error('Lỗi khi gọi completeStepChatBot:', err);
+  //       }
+  //     }
+  //   };
 
-    handleCompleteStep();
-  }, [options?.isFinished]);
+  //   handleCompleteStep();
+  // }, [options?.isFinished]);
 
   useEffect(() => {
     const lastMessage = messenger[messenger.length - 1];
@@ -349,9 +373,20 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
               <TextArea
                 value={textUser}
                 onChange={e => setTextUser(e?.target?.value)}
+                onKeyDown={e => {
+                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    if (textUser.trim() && sendChat === 1 && !isSendingMessage) {
+                      handleSend();
+                    }
+                  }
+                }}
                 placeholder={dataLang?.S_placehoder_input_bot_chat}
                 autoSize={{ minRows: 5, maxRows: 6 }}
-                className='w-full placeholder:font-deca font-deca font-normal text-sm text-[#1C252E]'
+                className={twMerge(
+                  'w-full placeholder:font-deca font-deca font-normal text-sm text-[#1C252E]',
+                  (sendChat !== 1 || isSendingMessage) && '!bg-gray-100 !text-gray-400 cursor-not-allowed'
+                )}
                 disabled={sendChat !== 1 || isSendingMessage}
               />
               <div className='absolute bottom-2 right-2 w-fit z-10'>
@@ -386,7 +421,6 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
                 if (isLast && options?.type === 'radio') {
                   setAnimationCompleted(true);
                 }
-                // ✅ kiểm tra khi message cuối là AI và KHÔNG có response
                 if (isLast && msg.sender === 'ai' && !msg.hasResponse) {
                   setIsLastMessageAnimationDone(true);
                 }

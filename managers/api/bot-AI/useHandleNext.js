@@ -37,7 +37,7 @@ const useHandleNext = options => {
       const currentEnableLogging = currentOptions?.enableLogging ?? enableLogging;
 
       if (currentEnableLogging) {
-        console.log({ response });
+        console.log({ useHandleNext: response });
       }
 
       const next = response.next;
@@ -54,7 +54,7 @@ const useHandleNext = options => {
             dispatchRef.current({
               type: 'chatbot/addAiMessageOnly',
               payload: {
-                text: nextResponse.data.message,
+                text: nextResponse.data?.message,
                 response: nextResponse.data,
               },
             });
