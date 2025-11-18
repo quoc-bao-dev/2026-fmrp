@@ -7,6 +7,7 @@ import AvatarBotAI from './AvatarBotAI';
 import LoadingThreeDotsJumping from './LoadingThreeDotsJumping';
 import TableBOM from './TableBOM';
 import ResponseOptions from './ResponseOptions';
+import ChooseVariant from './ChooseVariant';
 const Messenger = ({
   className,
   children,
@@ -78,7 +79,12 @@ const Messenger = ({
                 <AnimatedGeneraText onAnimationComplete={onAnimationComplete}>{parsedMessage}</AnimatedGeneraText>
               </div>
 
+              {/* [options]  */}
               <ResponseOptions response={response} onSelectOption={onSelectOption} disabled={disableOptions} />
+
+              {/* [choose_variant] */}
+              <ChooseVariant response={response} disabled={disableOptions} />
+
               {ResponseAI && showTable && (
                 <div className='mt-4 w-full'>
                   {ResponseAI?.stages.length > 0 && (

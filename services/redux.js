@@ -116,6 +116,7 @@ const initialChatBotState = {
   isChat: null,
   dataPost: null,
   sessionRobot: null,
+  isGreeting: false,
   options: {
     required: false,
     type: 'text',
@@ -316,6 +317,7 @@ function adminReducer(state = adminState, action) {
             type: action.payload.options?.type,
             stepNext: action.payload.options?.step_next,
           },
+          isGreeting: true, // Đánh dấu đã load tin nhắn đầu tiên
         },
       };
 
@@ -436,6 +438,15 @@ function adminReducer(state = adminState, action) {
         stateBoxChatAi: {
           ...state.stateBoxChatAi,
           sessionRobot: action.payload,
+        },
+      };
+
+    case 'chatbot/setIsGreeting':
+      return {
+        ...state,
+        stateBoxChatAi: {
+          ...state.stateBoxChatAi,
+          isGreeting: action.payload,
         },
       };
 

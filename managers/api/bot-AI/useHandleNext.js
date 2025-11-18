@@ -2,6 +2,7 @@ import { useCallback, useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { delay, calculateMessageRenderTime } from '@/utils/helpers/common';
 import { _ServerInstance as axiosCustom } from '@/services/axios';
+import { useHandleChatbotResponse } from '@/utils/helpers/handleChatbotResponse';
 
 /**
  * Custom hook để xử lý next response trong chatbot
@@ -15,6 +16,7 @@ import { _ServerInstance as axiosCustom } from '@/services/axios';
 const useHandleNext = options => {
   const dispatch = useDispatch();
   const { delayTime = 2000, onError, onSuccess, enableLogging = true } = options || {};
+  const handleChatbotResponse = useHandleChatbotResponse();
 
   const dispatchRef = useRef(dispatch);
   const optionsRef = useRef(options);
@@ -37,71 +39,25 @@ const useHandleNext = options => {
       const currentEnableLogging = currentOptions?.enableLogging ?? enableLogging;
 
       if (currentEnableLogging) {
-        console.log({ response });
+        console.log({ useHandleNext: response });
       }
 
       const next = response.next;
       if (next) {
         try {
           dispatchRef.current({ type: 'chatbot/setIsLoadingGeneraAnswer', payload: true });
+          console.log('currentDelayTime');
           await delay(currentDelayTime);
           const nextResponse = await fetchNextMessage(next);
 
           dispatchRef.current({ type: 'chatbot/setIsLoadingGeneraAnswer', payload: false });
 
-          //   Xử lý response
-          if (nextResponse.data) {
-            dispatchRef.current({
-              type: 'chatbot/addAiMessageOnly',
-              payload: {
-                text: nextResponse.data.message,
-                response: nextResponse.data,
-              },
-            });
+          // Xử lý response sử dụng hook chung
+          handleChatbotResponse({ response: nextResponse });
 
-            // Set data_post vào store nếu có (dữ liệu gửi kèm cho next_wait)
-            if (nextResponse.data.data_post) {
-              dispatchRef.current({
-                type: 'chatbot/setDataPost',
-                payload: nextResponse.data.data_post,
-              });
-            }
-
-            // Set session_robot vào store nếu có (dùng để gửi kèm tin nhắn)
-            if (nextResponse.data.session_robot) {
-              dispatchRef.current({
-                type: 'chatbot/setSessionRobot',
-                payload: nextResponse.data.session_robot,
-              });
-            }
-
-            // Gọi callback onSuccess nếu có
-            if (currentOptions?.onSuccess) {
-              currentOptions.onSuccess(nextResponse);
-            }
-          }
-
-          if (nextResponse.next_wait) {
-            // Set next_wait vào store
-            dispatchRef.current({
-              type: 'chatbot/setNextWait',
-              payload: nextResponse.next_wait,
-            });
-          }
-
-          // Set send_chat và is_chat vào store nếu có
-          if (nextResponse.send_chat !== undefined) {
-            dispatchRef.current({
-              type: 'chatbot/setSendChat',
-              payload: nextResponse.send_chat,
-            });
-          }
-
-          if (nextResponse.is_chat !== undefined) {
-            dispatchRef.current({
-              type: 'chatbot/setIsChat',
-              payload: nextResponse.is_chat,
-            });
+          // Gọi callback onSuccess nếu có (gọi ở ngoài)
+          if (currentOptions?.onSuccess) {
+            currentOptions.onSuccess(nextResponse);
           }
 
           await delay(calculateMessageRenderTime(nextResponse.data.message));
@@ -120,7 +76,7 @@ const useHandleNext = options => {
         }
       }
     },
-    [dispatch, delayTime, enableLogging]
+    [dispatch, delayTime, enableLogging, handleChatbotResponse]
   );
 
   return handleNext;
