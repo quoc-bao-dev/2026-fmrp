@@ -5,6 +5,7 @@ import { useActiveRobotDetail } from '@/managers/api/bot-AI/useActiveRobotDetail
 import useHandleNext from '@/managers/api/bot-AI/useHandleNext';
 import { completeStepChatBot, fetchStartMessageAI, useStartMessageAI, sendChatbotMessage } from '@/managers/api/bot-AI/useMessageAI';
 import { calculateMessageRenderTime, delay, handleDelay } from '@/utils/helpers/common';
+import { useHandleChatbotResponse } from '@/utils/helpers/handleChatbotResponse';
 import { Drawer, Input } from 'antd';
 import { AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/router';
@@ -20,7 +21,6 @@ import Messenger from '../Messenger';
 import ResultChatBot from '../ResultChatBot';
 
 const { TextArea } = Input;
-
 const drawerStyles = {
   mask: {
     backdropFilter: 'blur(10px)',
@@ -31,6 +31,7 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
   const endRef = useRef(null);
   const router = useRouter();
   const dispatch = useDispatch();
+  const handleChatbotResponse = useHandleChatbotResponse();
   const isDevelopment = process.env.NODE_ENV === 'development';
   const hasFetchedFirstMessage = useRef(false);
   const [isAnimationCompleted, setAnimationCompleted] = useState(false);
@@ -54,7 +55,7 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
   });
 
   // Lấy tin nhắn dựa trên id
-  const { messenger, options, response, isLoadingGeneraAnswer, sendChat, nextWait, dataPost, sessionRobot, isChat } = useSelector(state => state.stateBoxChatAi);
+  const { messenger, options, response, isLoadingGeneraAnswer, sendChat, nextWait, dataPost, sessionRobot, isChat, isGreeting } = useSelector(state => state.stateBoxChatAi);
   const handleNext = useHandleNext();
 
   // Hàm xử lý gửi tin nhắn mới
@@ -75,7 +76,6 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
       // Set pending state
       setIsSendingMessage(true);
 
-      // Gửi tin nhắn sử dụng hàm riêng
       const response = await sendChatbotMessage({
         nextWait,
         dataPost,
@@ -83,6 +83,7 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
         message: messageText,
       });
 
+      console.log('addUserMessage');
       // Thêm message của user vào store để hiển thị
       dispatch({
         type: 'chatbot/addUserMessage',
@@ -90,6 +91,8 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
       });
       // Clear input sau khi gửi thành công
       setTextUser('');
+
+      // console.log({ isChat });
 
       if (isChat === 2) {
         dispatch({ type: 'chatbot/setSendChat', payload: null });
@@ -108,36 +111,8 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
         });
       }
 
-      if (response?.data?.message) {
-        dispatch({
-          type: 'chatbot/addAiMessageOnly',
-          payload: {
-            text: response.data.message,
-            response: response,
-          },
-        });
-      }
-
-      if (response?.next_wait) {
-        dispatch({
-          type: 'chatbot/setNextWait',
-          payload: response.next_wait,
-        });
-      }
-
-      if (response?.send_chat !== undefined) {
-        dispatch({
-          type: 'chatbot/setSendChat',
-          payload: response.send_chat,
-        });
-      }
-
-      if (response?.is_chat !== undefined) {
-        dispatch({
-          type: 'chatbot/setIsChat',
-          payload: response.is_chat,
-        });
-      }
+      // Xử lý response sử dụng hook chung
+      handleChatbotResponse({ response });
 
       if (response?.next) {
         handleNext(response);
@@ -205,6 +180,11 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
         return;
       }
 
+      // Check isGreeting trong store - nếu đã load rồi thì không load nữa
+      if (!force && isGreeting) {
+        return;
+      }
+
       if (!force && hasFetchedFirstMessage.current) {
         return;
       }
@@ -238,7 +218,7 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
         handleNext(dataActiveRobotDetail);
       }
     },
-    [openChatBox, isLoadingActiveRobotDetail, dataActiveRobotDetail, dispatch, handleNext]
+    [openChatBox, isLoadingActiveRobotDetail, dataActiveRobotDetail, dispatch, handleNext, isGreeting]
   );
 
   // [load-first-message] fetch lời chào đầu tiên
@@ -283,7 +263,6 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
   //           api: options.api,
   //         };
   //         const res = await completeStepChatBot(payload);
-
   //         if (res) {
   //           setProductAnalysis(res);
   //           setTimeout(() => {
@@ -297,9 +276,14 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
   //       }
   //     }
   //   };
-
   //   handleCompleteStep();
   // }, [options?.isFinished]);
+
+  useEffect(() => {
+    if (endRef.current) {
+      endRef.current?.scrollIntoView({ behavior: '' });
+    }
+  }, [endRef]);
 
   useEffect(() => {
     const lastMessage = messenger[messenger.length - 1];
@@ -348,7 +332,7 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
       }}
       zIndex={9999}
       footer={
-        <div className='px-6 pb-6 pt-2'>
+        <div className='px-6 pb-6 pt-2 z-[999999] relative'>
           <div className='relative rounded-xl p-5 bg-linear-background-chat space-y-3'>
             {isDevelopment && (
               <div className='absolute -top-10 left-0 z-50'>
@@ -431,7 +415,7 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
               botName={dataSetting?.assistant_fmrp_short ?? 'Fimo'}
               dataLang={dataLang}
               response={msg?.response}
-              disableOptions={index < messenger.length - 1}
+              disableOptions={index < messenger.length - 1 || isLoadingGeneraAnswer}
             >
               {msg.text}
             </Messenger>

@@ -22,13 +22,14 @@ const ToggleBotAI = ({ dataLang }) => {
 
   const dispatch = useDispatch();
   const openDrawer = useSelector(state => state.stateBoxChatAi.open);
+  const { isGreeting } = useSelector(state => state.stateBoxChatAi);
 
   // Bật chat bot lên khi có "chatbot"
   useEffect(() => {
-    if (!!dataChatBot?.chatbot) {
+    if (!!dataChatBot?.chatbot && !isGreeting) {
       dispatch({ type: 'chatbot/openBoxChatAi', payload: true });
     }
-  }, [dataChatBot]);
+  }, [dataChatBot, isGreeting]);
 
   useEffect(() => {
     let interval;

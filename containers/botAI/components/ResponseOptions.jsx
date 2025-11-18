@@ -1,19 +1,21 @@
 'use client';
-import { useState } from 'react';
 import CheckIconMessenger from '@/components/icons/common/CheckIconMessenger';
+import { isAiSender, isUserSender } from '@/constants/TypeChatBot/chatbotResponseTypes';
 import useHandleNext from '@/managers/api/bot-AI/useHandleNext';
+import { _ServerInstance as axiosCustom } from '@/services/axios';
+import { calculateMessageRenderTime, delay } from '@/utils/helpers/common';
+import { useHandleChatbotResponse } from '@/utils/helpers/handleChatbotResponse';
 import { motion } from 'framer-motion';
 import parse from 'html-react-parser';
-import SelectAnswer from './SelectAnswer';
+import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { _ServerInstance as axiosCustom } from '@/services/axios';
-import { delay, calculateMessageRenderTime } from '@/utils/helpers/common';
-import { isAiSender, isUserSender } from '@/constants/TypeChatBot/chatbotResponseTypes';
+import SelectAnswer from './SelectAnswer';
 
 const ResponseOptions = ({ response, onSelectOption, disabled }) => {
   const dispatch = useDispatch();
   const handleNext = useHandleNext();
   const [loadingOptionId, setLoadingOptionId] = useState(null);
+  const handleChatbotResponse = useHandleChatbotResponse();
 
   const handleSelectOption = async (option, optionKey) => {
     if (loadingOptionId !== null) return;
@@ -26,6 +28,8 @@ const ResponseOptions = ({ response, onSelectOption, disabled }) => {
       try {
         // Fetch next response
         const res = await axiosCustom('GET', next);
+        setLoadingOptionId(null);
+
         const nextResponse = res.data;
 
         if (nextResponse?.data) {
@@ -39,14 +43,9 @@ const ResponseOptions = ({ response, onSelectOption, disabled }) => {
             await delay(2000);
             // Tắt loading
             dispatch({ type: 'chatbot/setIsLoadingGeneraAnswer', payload: false });
-            dispatch({
-              type: 'chatbot/addAiMessageOnly',
-              payload: {
-                text: messageData.message,
-                response: messageData,
-              },
-            });
 
+            // xử lý response ở đây
+            handleChatbotResponse({ response: nextResponse });
             // Delay để tính thời gian render message (chỉ cho AI message)
             await delay(calculateMessageRenderTime(messageData.message));
           } else if (isUserSender(messageData.type_send)) {
@@ -74,6 +73,10 @@ const ResponseOptions = ({ response, onSelectOption, disabled }) => {
   };
 
   if (!response?.options || !Array.isArray(response.options) || response.options.length === 0) {
+    return null;
+  }
+
+  if (response?.event_show !== 'select') {
     return null;
   }
 
