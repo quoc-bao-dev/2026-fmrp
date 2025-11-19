@@ -143,12 +143,10 @@ const PopupPurchaseBeta = ({
           quantityKeepp: formatNumber(e?.quantity_keep),
           // sl còn lại
           quantityRest: formatNumber(e?.quantity_rest),
+          quantityNeedAI: e?.quantity_need_ai,
           // sl đã mua
           quantityPurchased: formatNumber(e?.quantity_purchase),
-          quantity:
-            (+e?.quantity_rest - +e?.quantity_purchase) > 0
-              ? formatNumber(+e?.quantity_rest - +e?.quantity_purchase)
-              : "",
+          quantity: e?.quantity_need_ai && +e?.quantity_need_ai > 0 ? formatNumber(e?.quantity_need_ai) : "",
 
           itemVariationOptionValueId: e?.item_variation_option_value_id,
         };
@@ -200,7 +198,12 @@ const PopupPurchaseBeta = ({
       formData.append(`items[${index}][quantity]`, typeof e?.quantity == 'number' ? e?.quantity : parseFloat(e?.quantity?.replace(/,/g, '')));
       formData.append(`items[${index}][item_id]`, e?.item?.item_id);
       formData.append(`items[${index}][item_variation_option_value_id]`, e?.itemVariationOptionValueId);
-      formData.append(`items[${index}][quantity_rest]`, typeof e?.quantityRest == 'number' ? e?.quantityRest : parseFloat(e?.quantityRest?.replace(/,/g, '')))
+      formData.append(
+        `items[${index}][quantity_rest]`,
+        typeof e?.quantityNeedAI === "number"
+          ? e?.quantityNeedAI
+          : parseFloat(e?.quantityNeedAI?.replace(/,/g, ""))
+      );
       formData.append(`items[${index}][quantity_purchase]`, typeof e?.quantityPurchased == 'number' ? e?.quantityPurchased : parseFloat(e?.quantityPurchased?.replace(/,/g, '')))
     });
 
@@ -466,6 +469,10 @@ const PopupPurchaseBeta = ({
             <ColumnTablePopup colSpan={2}>
               {dataLang?.materials_planning_qty_buys ||
                 "materials_planning_qty_buys"}
+                <span className='whitespace-nowrap flex items-center justify-center gap-1 responsive-text-xxs text-blue-600 font-medium'>
+                  <Image src='/icon/SparkleYellow.png' alt='logo' width={10} height={10} />
+                  Gợi ý AI
+                </span>
             </ColumnTablePopup>
             <ColumnTablePopup colSpan={1}>
               {dataLang?.inventory_operatione || "inventory_operatione"}

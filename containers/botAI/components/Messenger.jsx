@@ -8,6 +8,7 @@ import LoadingThreeDotsJumping from './LoadingThreeDotsJumping';
 import TableBOM from './TableBOM';
 import ResponseOptions from './ResponseOptions';
 import ChooseVariant from './ChooseVariant';
+import ConfirmProduct from './ConfirmProduct';
 const Messenger = ({
   className,
   children,
@@ -84,6 +85,9 @@ const Messenger = ({
 
               {/* [choose_variant] */}
               <ChooseVariant response={response} disabled={disableOptions} />
+
+              {/* [confirm_product] */}
+              <ConfirmProduct response={response} disabled={disableOptions} />
 
               {ResponseAI && showTable && (
                 <div className='mt-4 w-full'>

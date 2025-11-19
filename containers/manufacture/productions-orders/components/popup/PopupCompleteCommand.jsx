@@ -3,6 +3,7 @@ import Loading from "@/components/common/loading/loading/LoadingComponent";
 import CheckIcon from "@/components/icons/common/CheckIcon";
 import CloseXIcon from "@/components/icons/common/CloseXIcon";
 import WarningIcon from "@/components/icons/common/WarningIcon";
+import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { StateContext } from "@/context/_state/productions-orders/StateContext";
 import useSetingServer from "@/hooks/useConfigNumber";
 import useToast from "@/hooks/useToast";
@@ -734,9 +735,9 @@ const PopupCompleteCommand = ({ onClose }) => {
               </div>
             </div>
           )}
-
+          <Customscrollbar className="max-h-[60vh] pr-2">
           <table className="min-w-full border-separate border-spacing-0">
-            <thead>
+            <thead className="sticky top-0 bg-white">
               <tr>
                 <th className="py-2 px-3 border-b border-gray-200 text-center text-sm font-semibold text-neutral-02 w-[62px]">
                 <Tooltip
@@ -792,6 +793,7 @@ const PopupCompleteCommand = ({ onClose }) => {
               ))}
             </tbody>
           </table>
+          </Customscrollbar>
         </div>
       )}
     </>

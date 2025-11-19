@@ -1,5 +1,10 @@
 import { _ServerInstance as axiosCustom } from "@/services/axios";
 const apiDashboard = {
+    // lấy thông tin bước sử dụng
+    async apiGetInfoStepUse() {
+        const response = await axiosCustom('GET', `/api_web/api_setting/getInfoStepUse`);
+        return response.data
+    },
     // api 5 ô nhưng hiện tại chỉ có data 3 ô
     async apiGetDashboardStatusManufactures() {
         const response = await axiosCustom('GET', `/api_web/Api_Dashboard/dashboardStatusManufactures`);

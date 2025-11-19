@@ -3,17 +3,17 @@ import LoadingDataChatBot from '@/components/icons/common/LoadingDataChatBot';
 import { PRODUCT_ANALYSIS } from '@/constants/TypeChatBot/typeChatBot';
 import { useActiveRobotDetail } from '@/managers/api/bot-AI/useActiveRobotDetail';
 import useHandleNext from '@/managers/api/bot-AI/useHandleNext';
-import { completeStepChatBot, fetchStartMessageAI, useStartMessageAI, sendChatbotMessage } from '@/managers/api/bot-AI/useMessageAI';
+import { fetchStartMessageAI, sendChatbotMessage } from '@/managers/api/bot-AI/useMessageAI';
 import { calculateMessageRenderTime, delay, handleDelay } from '@/utils/helpers/common';
 import { useHandleChatbotResponse } from '@/utils/helpers/handleChatbotResponse';
 import { Drawer, Input } from 'antd';
 import { AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 import { FaArrowUp } from 'react-icons/fa6';
 import { IoClose, IoReloadOutline } from 'react-icons/io5';
 import { PiSparkleBold } from 'react-icons/pi';
-import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 import { useDispatch, useSelector } from 'react-redux';
 import { twMerge } from 'tailwind-merge';
 import AvatarBotAI from '../AvatarBotAI';
@@ -42,12 +42,6 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [isReloading, setIsReloading] = useState(false);
   const authState = useSelector(state => state.auth);
-
-  // const { data: dataNewChatAI, isLoadingNewChatAi } = useStartMessageAI({
-  //   type: PRODUCT_ANALYSIS,
-  //   enable: openChatBox && !hasFetchedFirstMessage.current,
-  //   authState: authState,
-  // });
 
   const { data: dataActiveRobotDetail, isLoading: isLoadingActiveRobotDetail } = useActiveRobotDetail({
     id: chatId,
@@ -329,6 +323,8 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
         background: 'transparent',
         borderTop: 'none',
         padding: '0px 0px',
+        zIndex: 999999,
+        position: 'relative',
       }}
       zIndex={9999}
       footer={
@@ -353,7 +349,7 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
               <PiSparkleBold />
               <p className='text-typo-black-4 font-deca text-base'>{dataLang?.S_title_input_bot_chat || 'S_title_input_bot_chat'}</p>
             </div>
-            <div className='relative w-full'>
+            <div className='relative w-full z-[10000]'>
               <TextArea
                 value={textUser}
                 onChange={e => setTextUser(e?.target?.value)}
