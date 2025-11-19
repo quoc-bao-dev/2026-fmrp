@@ -37,11 +37,11 @@ const Header = () => {
   const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
   const { data: upgradePackageData, isLoading, error } = useGetUpgradePackage();
   const authState = useSelector(state => state.auth);
-
+console.log(authState)
   const dataPstWH = useSelector(state => state.statusUser);
 
   const dataSeting = useSetingServer();
-
+console.log(dataSeting)
   // Khai báo biến state
   const [currentDropdownIndex, setCurrentDropdownIndex] = useState(0);
 

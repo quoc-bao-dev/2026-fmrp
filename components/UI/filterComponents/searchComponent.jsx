@@ -13,8 +13,9 @@ const SearchComponent = ({
   classNameIcon,
   sizeIcon = 24,
   value,
+  alwaysOpen = false,
 }) => {
-  const [isActive, setIsActive] = useState(false)
+  const [isActive, setIsActive] = useState(alwaysOpen)
   const [inputValue, setInputValue] = useState(value || '')
 
   // Sync với value prop nếu có
@@ -24,8 +25,17 @@ const SearchComponent = ({
     }
   }, [value])
 
+  // Sync với alwaysOpen prop
+  useEffect(() => {
+    if (alwaysOpen) {
+      setIsActive(true)
+    }
+  }, [alwaysOpen])
+
   const handleBoxClick = () => {
-    setIsActive(!isActive)
+    if (!alwaysOpen) {
+      setIsActive(!isActive)
+    }
   }
 
   const handleInputChange = (e) => {
@@ -38,8 +48,10 @@ const SearchComponent = ({
     onChange && onChange({ target: { value: '' } })
   }
 
-  // Đóng search khi click ra ngoài
+  // Đóng search khi click ra ngoài (chỉ khi không phải alwaysOpen)
   useEffect(() => {
+    if (alwaysOpen) return
+
     const handleClickOutside = (event) => {
       if (isActive && !event.target.closest('.search-component')) {
         setIsActive(false)
@@ -53,7 +65,7 @@ const SearchComponent = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [isActive])
+  }, [isActive, alwaysOpen])
 
   return (
     <div
@@ -62,14 +74,14 @@ const SearchComponent = ({
       }`}
       style={{ height: '42px', minHeight: '42px' }}
     >
-      <form className="flex items-center gap-2 h-full">
+      <form className="flex items-center gap-2 h-full w-full">
         <AnimatePresence mode="wait">
           {isActive && (
             <motion.div 
-              className="flex items-center h-full"
+              className="flex items-center h-full flex-1 min-w-0"
               initial={{ width: 0, opacity: 0, x: -10 }}
               animate={{ 
-                width: 'auto', 
+                width: 'auto',
                 opacity: 1, 
                 x: 0,
                 transition: {
@@ -90,7 +102,7 @@ const SearchComponent = ({
               }}
             >
               <motion.input
-                className={`${classInput} min-w-[180px] 2xl:min-w-[210px] relative placeholder:text-neutral-05 bg-transparent border-none outline-none focus:outline-none focus:ring-0 responsive-text-base`}
+                className={`${classInput} w-full min-w-0 relative placeholder:text-neutral-05 bg-transparent border-none outline-none focus:outline-none focus:ring-0 responsive-text-base`}
                 type="text"
                 onChange={handleInputChange}
                 value={inputValue}
@@ -105,7 +117,7 @@ const SearchComponent = ({
                   <motion.button
                     type="button"
                     onClick={handleClearInput}
-                    className="size-4 text-[#9295A4] hover:text-[#344054] focus:outline-none ml-1"
+                    className="size-4 text-[#9295A4] hover:text-[#344054] focus:outline-none ml-1 flex-shrink-0"
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.8 }}
@@ -121,7 +133,7 @@ const SearchComponent = ({
           )}
         </AnimatePresence>
         <div
-          className={`transition-all duration-300 ease-in-out ${
+          className={`transition-all duration-300 ease-in-out flex-shrink-0 ${
             isActive ? 'p-1 rounded-lg bg-[#003DA0]' : 'p-0'
           }`}
           onClick={handleBoxClick}
