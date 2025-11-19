@@ -329,6 +329,8 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
         background: 'transparent',
         borderTop: 'none',
         padding: '0px 0px',
+        zIndex: 999999,
+        position: 'relative',
       }}
       zIndex={9999}
       footer={
@@ -353,7 +355,7 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
               <PiSparkleBold />
               <p className='text-typo-black-4 font-deca text-base'>{dataLang?.S_title_input_bot_chat || 'S_title_input_bot_chat'}</p>
             </div>
-            <div className='relative w-full'>
+            <div className='relative w-full z-[10000]'>
               <TextArea
                 value={textUser}
                 onChange={e => setTextUser(e?.target?.value)}
