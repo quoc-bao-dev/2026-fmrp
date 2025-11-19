@@ -127,7 +127,7 @@ const PrintTemplate = props => {
 
             {/* ========= View Template ========= */}
             <div className='col-span-2'>
-              <div className='flex flex-col items-center gap-2 w-[80%] 2xl:w-[55%] mx-auto'>
+              <div className='flex flex-col items-center gap-2 w-[80%] 2xl:w-[55%] mx-auto -mt-8  2xl:mt-0'>
                 <h3 className=' text-lg font-semibold text-[#25387A] text-center'> {message[activeTab]?.title} </h3>
 
                 <p className='text-base text-[#3A3E4C] text-center'>{message[activeTab]?.description}</p>
