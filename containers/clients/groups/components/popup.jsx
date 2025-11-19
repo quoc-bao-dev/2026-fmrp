@@ -144,6 +144,7 @@ const Popup_groupKh = props => {
                 onChange={e => queryState({ name: e.target.value })}
                 name='fname'
                 type='text'
+                placeholder='Nhập tên nhóm'
                 className={`${
                   isState.errInputName ? 'border-red-500' : 'focus:border-[#92BFF7] border-[#d0d5dd]'
                 } placeholder:text-slate-300 w-full bg-[#ffffff] rounded-md text-[#52575E] font-normal p-2 border outline-none mb-2`}
