@@ -69,7 +69,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
     setErrorNVLData({ items: [] });
     setErrorNVLDataBefore({ items: [] });
     setIsWarehouseMissing(false);
-  };
+  }
 
   const checkItemFinalStage = isState.dataTableProducts?.data?.items?.some(e => e?.final_stage == 1);
   const showSerialColumns = checkItemFinalStage && dataProductSerial.is_enable === '1';
@@ -567,16 +567,16 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
             setIsWarehouseMissing(false);
           }}
         >
-          <div className='w-[90vw] xl:h-[80vh] h-[575px] overflow-'>
-            <div className='grid grid-cols-16 h-full gap-4'>
+          <div className='w-[90vw] xl:h-[80vh] h-[575px]'>
+            <div className='grid grid-cols-16 h-full gap-4 max-h-[80vh]'>
               {/* Left Panels */}
               <div className='flex col-span-3 max-h-full min-h-0'>
                 <div className='flex flex-col h-full max-h-full border border-primary-05 rounded-lg flex-1'>
                   {/* Công đoạn BTP */}
                   {data?.stage_semi_products?.length > 0 && (
-                    <div className='flex-1 border-b border-primary-05'>
-                      <div className='p-3 font-medium responsive-text-base border-b border-primary-05'>Công đoạn BTP</div>
-                      <Customscrollbar className='hover:overflow-y-auto overflow-y-hidden'>
+                    <div className='flex-1 border-b border-primary-05 min-h-0 flex flex-col overflow-hidden'>
+                      <div className='p-3 font-medium responsive-text-base border-b border-primary-05 flex-shrink-0'>Công đoạn BTP</div>
+                      <Customscrollbar className='flex-1 min-h-0'>
                         {data?.stage_semi_products?.length > 0 ? (
                           data?.stage_semi_products?.map(e => (
                             <li
@@ -603,9 +603,9 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
 
                   {/* Công đoạn TP */}
                   {data?.stage_products?.length > 0 && (
-                    <div className='flex-1'>
-                      <div className='p-3 font-medium responsive-text-base border-b border-primary-05'>Công đoạn TP</div>
-                      <Customscrollbar className='hover:overflow-y-auto overflow-y-hidden'>
+                    <div className='flex-1 min-h-0 flex flex-col overflow-hidden'>
+                      <div className='p-3 font-medium responsive-text-base border-b border-primary-05 flex-shrink-0'>Công đoạn TP</div>
+                      <Customscrollbar className='flex-1 min-h-0'>
                         {data?.stage_products?.length > 0 ? (
                           data?.stage_products?.map(e => (
                             <li
@@ -634,9 +634,9 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
 
               {/* TODO: */}
               {/* Right Panel */}
-              <div className='col-span-13 flex flex-col gap-2'>
+              <div className='col-span-13 flex flex-col gap-2 min-h-0'>
                 {errorNVLData && errorNVLData?.items?.length > 0 && (
-                  <div className='py-2 px-3 flex flex-col gap-2 bg-[#FFEEF0] border border-[#991B1B] rounded-lg'>
+                  <div className='py-2 px-3 flex flex-col gap-2 bg-[#FFEEF0] border border-[#991B1B] rounded-lg flex-shrink-0'>
                     <div className='flex items-center justify-between gap-2'>
                       <div className='flex items-center gap-1'>
                         <WarningIcon className='size-5' />
@@ -666,7 +666,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                 )}
 
                 {errorNVLDataBefore && errorNVLDataBefore?.items?.length > 0 && (
-                  <div className='py-2 px-3 flex flex-col gap-2 bg-[#FFEEF0] border border-[#991B1B] rounded-lg'>
+                  <div className='py-2 px-3 flex flex-col gap-2 bg-[#FFEEF0] border border-[#991B1B] rounded-lg flex-shrink-0'>
                     <div className='flex items-center justify-between gap-2'>
                       <div className='flex items-center gap-1'>
                         <WarningIcon className='size-5' />
@@ -699,10 +699,10 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                   </div>
                 )}
 
-                <div className='flex col-span-13 h-full w-full max-h-full overflow-auto'>
-                  <div className='flex flex-col gap-6 max-h-full w-full'>
+                <div className='flex col-span-13 h-full w-full min-h-0'>
+                  <div className='flex flex-col gap-6 h-full w-full min-h-0 flex-1'>
                     {/* Nhập thành phẩm */}
-                    <div className='flex items-center justify-between'>
+                    <div className='flex items-center justify-between flex-shrink-0'>
                       <div className='responsive-text-xl font-normal'>Nhập thành phẩm</div>
                       <div className='w-1/3 m-0.5'>
                         <SelectComponent
@@ -716,7 +716,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                           icon={<PiWarehouseLight color='#9295A4' className='size-4' />}
                           closeMenuOnSelect={true}
                           hideSelectedOptions={false}
-                          placeholder="Chọn kho hàng"
+                          placeholder='Chọn kho hàng'
                           styles={{
                             control: (base, state) => ({
                               ...base,
@@ -737,8 +737,8 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                       </div>
                     </div>
 
-                    <div className='flex flex-col overflow-hidden flex-1'>
-                      <div className='grid grid-cols-25 items-center border-b border-[#F3F3F4]'>
+                    <div className='flex flex-col overflow-hidden flex-1 min-h-0'>
+                      <div className='grid grid-cols-25 items-center border-b border-[#F3F3F4] sticky top-0 bg-white flex-shrink-0 z-10'>
                         <h3 className='col-span-1 responsive-text-sm text-neutral-02 py-2 px-1 font-semibold text-center'>STT</h3>
                         <h3 className={`responsive-text-sm text-neutral-02 p-2 font-semibold ${showExpiryColumns || showSerialColumns ? 'col-span-4' : 'col-span-6'}`}>Mặt hàng</h3>
                         <h3 className='col-span-2 responsive-text-sm text-neutral-02 font-semibold '>Đơn vị tính</h3>
@@ -780,7 +780,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                         </div>
                         <div className='col-span-2 responsive-text-sm text-neutral-02 text-center font-semibold '>Thao tác</div>
                       </div>
-                      <Customscrollbar className='flex-1 max-h-full'>
+                      <Customscrollbar className='flex-1 min-h-0'>
                         {isLoadingActiveStages && activeStep.type == 'TP' ? (
                           <div className='flex justify-center items-center h-40'>
                             <Loading className='!h-[100px] w-full mx-auto' />
@@ -961,7 +961,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                           <div className='col-span-25 p-2 text-center text-red-500 h-40 my-auto flex justify-center items-center'>Không có mặt hàng để hoàn thành</div>
                         )}
                       </Customscrollbar>
-                      <div className='grid grid-cols-25 items-center bg-[#CCCCCC40] rounded'>
+                      <div className='grid grid-cols-25 items-center bg-[#CCCCCC40] rounded flex-shrink-0'>
                         <h3
                           className={`p-2 text-center text-neutral-07 responsive-text-base font-medium
                           ${showExpiryColumns || showSerialColumns ? 'col-span-7' : 'col-span-9'}
