@@ -34,7 +34,7 @@ const useToast = () => {
             icon: type,
             position: position,
             title: message,
-            timer: time || 1500,
+            timer: time || 3000,
             iconHtml: iconHtml,
             customClass: {
                 popup: `custom-toast-popup custom-toast-popup-${type}`,

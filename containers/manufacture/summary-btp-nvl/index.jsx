@@ -19,6 +19,7 @@ import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import { IMAGES } from '@/constants/images';
 import { useBranchList } from '@/hooks/common/useBranch';
 import { useProductionOrdersList } from '@/managers/api/productions-order/useProductionOrdersList';
+import { useDebounce } from 'use-debounce';
 import { formatMoment } from '@/utils/helpers/formatMoment';
 import formatNumber from '@/utils/helpers/formatnumber';
 import { FnlocalStorage } from '@/utils/helpers/localStorage';
@@ -28,6 +29,7 @@ import { FaPlus } from 'react-icons/fa6';
 import { useSelector } from 'react-redux';
 import { listLsxStatus } from '../productions-orders/components/main/constants/listData';
 import { useSummaryBtpNvl } from './hook';
+import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 
 const breadcrumbItems = [
   {
@@ -76,19 +78,6 @@ const createNumberCell = rawValue => {
   };
 };
 
-// const getProductTagLabel = type => {
-//   switch (type) {
-//     case 'semi_products':
-//       return 'Bán thành phẩm';
-//     case 'semi_products_outside':
-//       return 'Bán thành phẩm ngoài';
-//     case 'semi_products_inside':
-//       return 'Bán thành phẩm nội bộ';
-//     default:
-//       return '';
-//   }
-// };
-
 const normalizeForFilename = value => {
   if (!value) return '';
   return value
@@ -106,10 +95,14 @@ const SummaryBtpNvl = () => {
   const [selectStatusFilter, setSelectStatusFilter] = useState([]);
   const [limit, setLimit] = useState(10);
   const [valueBr, setValueBr] = useState(null);
+  const [searchMaterial, setSearchMaterial] = useState('');
   const [dateRange, setDateRange] = useState({
     startDate: undefined,
     endDate: undefined,
   });
+
+  // Debounce search value để tránh gọi API quá nhiều
+  const [debouncedSearchMaterial] = useDebounce(searchMaterial, 500);
   const { setItem, getItem } = FnlocalStorage();
   const stateFilterDropdown = useSelector(state => state.stateFilterDropdown);
   const { data: listBr = [] } = useBranchList();
@@ -163,8 +156,11 @@ const SummaryBtpNvl = () => {
     () => ({
       po_ids: selectedOrders.map(o => o.id),
       ...(activeTab?.id === 'by_product' ? { is_sumpany: 1 } : {}),
+      ...(debouncedSearchMaterial && {
+        search: debouncedSearchMaterial,
+      }),
     }),
-    [selectedOrders, activeTab]
+    [selectedOrders, activeTab, debouncedSearchMaterial]
   );
   const selectedPoIds = summaryParams.po_ids || [];
   const { data: dataSummaryBtpNvl, isLoading: isLoadingSummaryBtpNvl, refetch: refetchSummaryBtpNvl } = useSummaryBtpNvl(summaryParams);
@@ -479,9 +475,21 @@ const SummaryBtpNvl = () => {
             dropdownId='dropdownFilterMain'
           >
             <div className='3xl:text-xl text-lg text-[#344054] font-medium'>Bộ lọc</div>
-            <div className='grid w-full grid-cols-2 gap-3'>
+            <div className='grid w-full grid-cols-3 gap-3'>
               <div className='col-span-1 space-y-1'>
                 <h3 className='text-xs text-[#051B44] font-normal'>Chi nhánh</h3>
+                <SelectComponentNew
+                  isClearable={true}
+                  value={valueBr}
+                  onChange={e => handleFilter('valueBr', e)}
+                  options={listBr}
+                  classParent='ml-0 !font-semibold focus:ring-none focus:outline-none text-sm focus-visible:ring-none focus-visible:outline-none placeholder:text-sm placeholder:text-[#52575E]'
+                  classNamePrefix={'productionSmoothing'}
+                  placeholder='Tất cả chi nhánh'
+                />
+              </div>
+              <div className='col-span-1 space-y-1'>
+                <h3 className='text-xs text-[#051B44] font-normal'>Lệnh sản xuất</h3>
                 <SelectComponentNew
                   isClearable={true}
                   value={valueBr}
@@ -520,6 +528,7 @@ const SummaryBtpNvl = () => {
           >
             <StatusCheckboxGroup list={listLsxStatus} selected={selectStatusFilter} onChange={value => toggleStatus(value)} />
           </FilterDropdown>
+
           <div className='flex flex-col flex-1 min-h-0 gap-2'>
             <div onClick={toggleSelectAll} className='flex items-center justify-between px-2 py-1.5 rounded-md border border-[#E6E7EC] bg-[#FBFCFE] cursor-pointer'>
               <button type='button' className='flex items-center gap-2 select-none'>
@@ -634,16 +643,28 @@ const SummaryBtpNvl = () => {
           </div>
         </div>
         <div className='flex-1 h-full flex flex-col gap-2'>
-          <TabSwitcherWithUnderline
-            tabs={tabsMaterialFinishedProduct}
-            activeTab={activeTabMaterialFinishedProduct}
-            onChange={setActiveTabMaterialFinishedProduct}
-            renderLabel={(tab, activeTab) => (
-              <h3 className={`${activeTab?.id === tab.id ? 'text-[#0375F3]' : 'text-[#9295A4]'} font-medium group-hover:text-[#0375F3] transition-all duration-100 ease-linear origin-left capitalize`}>
-                <span>{tab.name}</span>
-              </h3>
-            )}
-          />
+          <div className='flex items-center gap-4'>
+            <TabSwitcherWithUnderline
+              tabs={tabsMaterialFinishedProduct}
+              activeTab={activeTabMaterialFinishedProduct}
+              onChange={setActiveTabMaterialFinishedProduct}
+              renderLabel={(tab, activeTab) => (
+                <h3
+                  className={`${activeTab?.id === tab.id ? 'text-[#0375F3]' : 'text-[#9295A4]'} font-medium group-hover:text-[#0375F3] transition-all duration-100 ease-linear origin-left capitalize`}
+                >
+                  <span>{tab.name}</span>
+                </h3>
+              )}
+            />
+            <SearchComponent
+              onChange={e => setSearchMaterial(e?.target?.value || '')}
+              value={searchMaterial}
+              classNameBox='!py-2 2xl:!p-2.5 w-1/2 ml-auto'
+              placeholder='Tìm kiếm mã/tên ...'
+              classInput='w-full'
+              alwaysOpen={true}
+            />
+          </div>
 
           {selectedOrders?.length === 0 ? (
             <div className='flex flex-col items-center justify-center h-full'>
@@ -681,6 +702,13 @@ const SummaryBtpNvl = () => {
                         {activeTab?.id === 'each_order' && <th className='text-center px-3 py-2'>Lệnh sản xuất</th>}
                         <th className='text-center px-3 py-2'>Số lượng cần</th>
                         <th className='text-center px-3 py-2'>Quy đổi</th>
+                        <th className='text-center px-3 py-2 flex flex-col'>
+                          <span>Quy đổi </span>
+                          <span className='whitespace-nowrap flex items-center justify-center gap-1 responsive-text-xxs text-blue-600 font-medium'>
+                            <Image src='/icon/SparkleYellow.png' alt='logo' width={10} height={10} />
+                            Gợi ý AI
+                          </span>
+                        </th>
                         <th className='text-center px-3 py-2'>Đã giữ/Mua</th>
                         <th className='text-center px-3 py-2'>Thiếu</th>
                         <th className='text-center px-3 py-2'>Tiến độ</th>
@@ -709,6 +737,9 @@ const SummaryBtpNvl = () => {
                             </td>
                             <td className='px-3 py-2'>
                               <ColNum value={item.quota_primary} unit={item.unit_name_primary || '-'} />
+                            </td>
+                            <td className='px-3 py-2'>
+                              <ColNum value={item.quota_primary_ai} unit={item.unit_name_primary || '-'} />
                             </td>
                             <td className='px-3 py-2'>
                               <ColNum value={item.quantity_keep} unit={item.unit_name_primary || '-'} />

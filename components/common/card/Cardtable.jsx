@@ -95,7 +95,7 @@ const Cardtable = ({
                     </>
                 )}
 
-                {typeTable === "products" && (
+                {/* {typeTable === "products" && (
                     <div
                         className={twMerge(
                             "rounded xl:px-1 px-[2px] w-fit",
@@ -110,7 +110,7 @@ const Cardtable = ({
                                 : dataLang?.semi_products_outside}
                         </p>
                     </div>
-                )}
+                )} */}
             </div>
         </div>
     );

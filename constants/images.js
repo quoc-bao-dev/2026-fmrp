@@ -5,6 +5,8 @@ export const IMAGES = {
   // d
   // e
   // f
+  rocketBoy: "/dashboard/rocket-boy.png",
+  rocketBoyGif: "/dashboard/rocket-boy.gif",
   // g
   // h
   // i
@@ -12,6 +14,7 @@ export const IMAGES = {
   // k
   // l
   // m
+  mess: "/dashboard/mess.png",
   // n
   // o
   // p

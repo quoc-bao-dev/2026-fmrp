@@ -247,7 +247,7 @@ const PopupKeepStock = ({
                     },
                     unit: e?.unit_name_parent,
                     //sl cần
-                    quantityNeed: formatNumber(e?.quota_primary),
+                    quantityNeed: formatNumber(e?.quantity_purchase),
                     // sl giữ
                     quantityKeepp: formatNumber(e?.quantity_keep),
                     // sl tồn
@@ -646,6 +646,10 @@ const PopupKeepStock = ({
                         <ColumnTablePopup>
                             {dataLang?.materials_planning_qty_need ||
                                 "materials_planning_qty_need"}
+                            <span className='whitespace-nowrap flex items-center justify-center gap-1 responsive-text-xxs text-blue-600 font-medium'>
+                                <Image src='/icon/SparkleYellow.png' alt='logo' width={10} height={10} />
+                                Gợi ý AI
+                            </span>
                         </ColumnTablePopup>
                         <ColumnTablePopup>
                             {dataLang?.materials_planning_qty_held ||
@@ -699,12 +703,6 @@ const PopupKeepStock = ({
                                                             className="custom-modal-image z-10 object-cover rounded w-[50px] h-[50px] mx-auto"
                                                         />
                                                     ) : (
-                                                        // <ModalImage
-                                                        //     small={e?.item?.image}
-                                                        //     large={e?.item?.image}
-                                                        //     alt="Product Image"
-                                                        //     className="custom-modal-image z-10 object-cover rounded w-[50px] h-[50px] mx-auto"
-                                                        // />
                                                         <div className="w-[50px] h-[50px] object-cover  mx-auto">
                                                             <Image
                                                                 src="/icon/noimagelogo.png"
