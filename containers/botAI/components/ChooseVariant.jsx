@@ -422,8 +422,14 @@ const ChooseVariant = ({ response, disabled = false }) => {
         </div>
         <div className='w-full mt-auto'>
           {shouldShowNoData && (
-            <div className='w-full py-6 -mt-20'>
-              <NoData type='table' titleText='Không có biến thể' className='py-4' classNameTitle='3xl:text-base!' classNameImage='max-w-[180px] w-full h-auto object-contain' />
+            <div className='w-full -mt-[60px]'>
+              <NoData
+                type='table'
+                titleText='Không có biến thể'
+                className='py-4'
+                classNameTitle='xl:text-base  2xl:text-base 3xl:text-base -mt-6'
+                classNameImage='max-w-[120px] w-full h-auto object-contain'
+              />
             </div>
           )}
           {!canSubmit && <p className='mb-2 text-xs text-[#0F4F9E]/80 italic'>Vui lòng chọn biến thể chính trước khi tiếp tục.</p>}

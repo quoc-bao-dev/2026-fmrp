@@ -95,7 +95,7 @@ const ConfirmProduct = ({ response, disabled = false }) => {
           {/* Biến thể */}
           {bien_the && (variantMain || variantSub) && (
             <div className='space-y-3 '>
-              <div className='my-7 border-t border-[#E5E7EB]'></div>
+              <div className='mt-7 mb-4  border-t border-[#E5E7EB]'></div>
 
               <label className='text-sm font-medium text-[#344054]'>Biến thể</label>
 
