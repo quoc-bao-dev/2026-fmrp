@@ -37,6 +37,13 @@ const CustomCheckbox = ({ checked }) => {
   )
 }
 
+const normalizeText = (text) =>
+  (text ?? '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+
 const SelectSearchReport = ({
   isRequired = false,
   label,
@@ -65,11 +72,14 @@ const SelectSearchReport = ({
   }
 
   // Lọc options dựa trên searchValue để hiển thị
-  const filteredOptions = searchValue 
-    ? options?.filter(opt => 
-        (opt?.label?.toLowerCase() ?? '').includes(searchValue.toLowerCase()) ||
-        (opt?.code?.toLowerCase() ?? '').includes(searchValue.toLowerCase())
-      ) 
+  const normalizedSearch = normalizeText(searchValue)
+
+  const filteredOptions = normalizedSearch
+    ? options?.filter((opt) => {
+        const normalizedLabel = normalizeText(opt?.label)
+        const normalizedCode = normalizeText(opt?.code)
+        return normalizedLabel.includes(normalizedSearch) || normalizedCode.includes(normalizedSearch)
+      })
     : options
 
   // Xử lý khi chọn giá trị
