@@ -3,8 +3,17 @@
 
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { axiosCustom } from '@/services/axios';
+import { useSelector } from 'react-redux';
+import { useHandleChatbotResponse } from '@/utils/helpers/handleChatbotResponse';
+import useHandleNext from '@/managers/api/bot-AI/useHandleNext';
 
 const ConfirmProduct = ({ response, disabled = false }) => {
+  const { nextWait, dataPost } = useSelector(state => state.stateBoxChatAi);
+
+  const handleResponse = useHandleChatbotResponse();
+  const handleNext = useHandleNext();
+
   // Lấy dữ liệu từ data_array
   const productData = useMemo(() => {
     if (!response) return null;
@@ -34,18 +43,22 @@ const ConfirmProduct = ({ response, disabled = false }) => {
   const variantMain = bien_the?.main;
   const variantSub = bien_the?.sub;
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (disabled) return;
 
-    const confirmData = {
-      ten_nvl,
-      gia_nhap,
-      don_vi_tinh,
-      bien_the,
-    };
+    const formData = new FormData();
+
+    dataPost &&
+      Object.keys(dataPost).forEach(key => {
+        formData.append(key, dataPost[key]);
+      });
 
     // eslint-disable-next-line no-console
-    console.log('[ConfirmProduct] Data:', confirmData);
+    const res = await axiosCustom('POST', nextWait, formData);
+    handleResponse({ response: res.data });
+    if (res.data.next) {
+      handleNext(res.data);
+    }
   };
 
   return (
@@ -79,11 +92,11 @@ const ConfirmProduct = ({ response, disabled = false }) => {
             )}
           </div>
 
-          <div className='my-7 border-t border-[#E5E7EB]'></div>
-
           {/* Biến thể */}
           {bien_the && (variantMain || variantSub) && (
             <div className='space-y-3 '>
+              <div className='my-7 border-t border-[#E5E7EB]'></div>
+
               <label className='text-sm font-medium text-[#344054]'>Biến thể</label>
 
               <div className='grid grid-cols-2 gap-4'>

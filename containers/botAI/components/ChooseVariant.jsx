@@ -1,13 +1,15 @@
 /* eslint-disable react/prop-types */
 'use client';
 
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import NoData from '@/components/UI/noData/nodata';
+import useHandleNext from '@/managers/api/bot-AI/useHandleNext';
+import { _ServerInstance as axiosCustom } from '@/services/axios';
+import { useHandleChatbotResponse } from '@/utils/helpers/handleChatbotResponse';
+import { motion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { motion } from 'framer-motion';
 import Select from 'react-select';
-import { _ServerInstance as axiosCustom } from '@/services/axios';
-import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
-import { useHandleChatbotResponse } from '@/utils/helpers/handleChatbotResponse';
 
 const mapVariantGroupsFromResponse = response => {
   if (!response) return [];
@@ -44,6 +46,7 @@ const ChooseVariant = ({ response, disabled = false }) => {
   const hasAutoSelected = useRef(false);
 
   const handleChatbotResponse = useHandleChatbotResponse();
+  const handleNext = useHandleNext();
 
   const selectOptions = useMemo(() => buildSelectOptions(variantGroups), [variantGroups]);
   const subSelectOptions = useMemo(() => selectOptions.filter(option => `${option.value}` !== `${variantMain}`), [selectOptions, variantMain]);
@@ -66,6 +69,7 @@ const ChooseVariant = ({ response, disabled = false }) => {
    * - Nếu có 2 biến thể → active cả 2 (variant đầu tiên → main, variant thứ 2 → sub)
    * Sau đó không tự động active nữa, để user tự chọn
    */
+
   useEffect(() => {
     // Chỉ chạy 1 lần khi có dữ liệu và chưa auto-select
     if (hasAutoSelected.current || !variantGroups.length) return;
@@ -163,6 +167,7 @@ const ChooseVariant = ({ response, disabled = false }) => {
   };
 
   const canSubmit = variantMain && selectedMainOptions.length > 0;
+  const shouldShowNoData = !mainGroup?.options?.length && !subGroup?.options?.length;
 
   const sendVariantRequest = async () => {
     if (!nextWait) {
@@ -207,13 +212,10 @@ const ChooseVariant = ({ response, disabled = false }) => {
       // Gửi POST request
       const res = await axiosCustom('POST', nextWait, formData);
 
-      // Log response
-      // eslint-disable-next-line no-console
-      console.log('[ChooseVariant] Response:', res.data);
-      // eslint-disable-next-line no-console
-      console.log('[ChooseVariant] Response status:', res.status);
-
       handleChatbotResponse({ response: res.data });
+      if (res.data.next) {
+        handleNext(res.data);
+      }
 
       return res.data;
     } catch (error) {
@@ -242,7 +244,7 @@ const ChooseVariant = ({ response, disabled = false }) => {
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: 'easeOut', delay: 0.5 }} className='mt-4 w-full min-w-[550px]'>
-      <div className={`flex flex-col gap-4 w-full bg-white rounded-lg p-4 min-h-[400px]`}>
+      <div className={`flex flex-col gap-4 w-full bg-white rounded-lg p-4 min-h-[380px]`}>
         <div className={`grid grid-cols-1 gap-4 ${groupsWithOptionsCount >= 2 ? 'md:grid-cols-2' : ''} w-full flex-1 items-stretch`}>
           {/* Main variant */}
           <div className='flex flex-col space-y-3 h-full'>
@@ -350,7 +352,7 @@ const ChooseVariant = ({ response, disabled = false }) => {
                   isDisabled={disabled}
                   placeholder='Chọn biến thể phụ'
                   noOptionsMessage={() => 'Không có dữ liệu'}
-                  menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
+                  // menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
                   className='placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border'
                   theme={theme => ({
                     ...theme,
@@ -419,6 +421,11 @@ const ChooseVariant = ({ response, disabled = false }) => {
           )}
         </div>
         <div className='w-full mt-auto'>
+          {shouldShowNoData && (
+            <div className='w-full py-6 -mt-20'>
+              <NoData type='table' titleText='Không có biến thể' className='py-4' classNameTitle='3xl:text-base!' classNameImage='max-w-[180px] w-full h-auto object-contain' />
+            </div>
+          )}
           {!canSubmit && <p className='mb-2 text-xs text-[#0F4F9E]/80 italic'>Vui lòng chọn biến thể chính trước khi tiếp tục.</p>}
           <button
             type='button'
