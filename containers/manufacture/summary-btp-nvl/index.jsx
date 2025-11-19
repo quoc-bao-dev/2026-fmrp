@@ -471,7 +471,7 @@ const SummaryBtpNvl = () => {
               boxShadow: '0px 20px 24px -4px #10182814, 0px 4px 4px 0px #00000040',
             }}
             classNameContainer='!w-fit h-11'
-            className='flex flex-col gap-4 border-[#D8DAE5] rounded-lg w-[600px]'
+            className='flex flex-col gap-4 border-[#D8DAE5] rounded-lg w-[800px]'
             dropdownId='dropdownFilterMain'
           >
             <div className='3xl:text-xl text-lg text-[#344054] font-medium'>Bộ lọc</div>
@@ -702,11 +702,11 @@ const SummaryBtpNvl = () => {
                         {activeTab?.id === 'each_order' && <th className='text-center px-3 py-2'>Lệnh sản xuất</th>}
                         <th className='text-center px-3 py-2'>Số lượng cần</th>
                         <th className='text-center px-3 py-2'>Quy đổi</th>
-                        <th className='text-center px-3 py-2 flex flex-col'>
+                        <th className='text-center px-3 py-2 flex flex-col relative'>
                           <span>Quy đổi </span>
-                          <span className='whitespace-nowrap flex items-center justify-center gap-1 responsive-text-xxs text-blue-600 font-medium'>
+                          <span className='normal-case whitespace-nowrap flex items-center justify-center gap-1 responsive-text-xxs text-blue-600 font-medium ai-shine-badge'>
                             <Image src='/icon/SparkleYellow.png' alt='logo' width={10} height={10} />
-                            Gợi ý AI
+                            <span className='ai-shine-text'>Gợi ý AI</span>
                           </span>
                         </th>
                         <th className='text-center px-3 py-2'>Đã giữ/Mua</th>

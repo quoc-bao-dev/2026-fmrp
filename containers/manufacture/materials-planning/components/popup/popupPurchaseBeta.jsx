@@ -466,13 +466,13 @@ const PopupPurchaseBeta = ({
               {dataLang?.materials_planning_qty_requested ||
                 "materials_planning_qty_requested"}
             </ColumnTablePopup>
-            <ColumnTablePopup colSpan={2}>
+            <ColumnTablePopup colSpan={2} className="relative">
               {dataLang?.materials_planning_qty_buys ||
                 "materials_planning_qty_buys"}
-                <span className='whitespace-nowrap flex items-center justify-center gap-1 responsive-text-xxs text-blue-600 font-medium'>
+                <span className='normal-case whitespace-nowrap flex items-center justify-center gap-1 responsive-text-xxs text-blue-600 font-medium ai-shine-badge'>
                   <Image src='/icon/SparkleYellow.png' alt='logo' width={10} height={10} />
-                  Gợi ý AI
-                </span>
+                  <span className="ai-shine-text">Gợi ý AI</span>
+                  </span>
             </ColumnTablePopup>
             <ColumnTablePopup colSpan={1}>
               {dataLang?.inventory_operatione || "inventory_operatione"}
@@ -515,6 +515,7 @@ const PopupPurchaseBeta = ({
                                                                 ></ModalImage> */}
                                 <Image
                                   src="/icon/noimagelogo.png"
+                                  alt="Product Image"
                                   width={1280}
                                   height={1024}
                                   className="object-contain w-full h-full p-1 rounded"
@@ -583,7 +584,7 @@ const PopupPurchaseBeta = ({
                           render={({ field, fieldState }) => {
 
                             return (
-                              <duv className="flex flex-col items-center justify-center">
+                              <div className="flex flex-col items-center justify-center">
                                 <InPutNumericFormat
                                   className={`${fieldState.error && "border-red-500"
                                     } cursor-default appearance-none text-center 3xl:text-[13px] 2xl:text-[12px] xl:text-[11px] text-[10px] py-1 px-0.5 font-normal 2xl:w-24 xl:w-[90px] w-[63px]  focus:outline-none border-b-2 border-gray-200`}
@@ -614,7 +615,7 @@ const PopupPurchaseBeta = ({
                                     {fieldState.error.message}{" "}
                                   </span>
                                 )}
-                              </duv>
+                              </div>
                             );
                           }}
                         />

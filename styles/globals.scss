@@ -1409,3 +1409,40 @@ svg:focus {
 .recharts-sector {
   -webkit-tap-highlight-color: transparent;
 }
+
+@keyframes aiShine {
+  0% {
+      background-position: -200% center;
+  }
+  50% {
+      background-position: 200% center;
+  }
+  100% {
+      background-position: -200% center;
+  }
+}
+.ai-shine-badge {
+  position: relative;
+  overflow: hidden;
+}
+.ai-shine-badge::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -30%;
+  width: 40%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 60%);
+  transform: rotate(25deg);
+  animation: aiShine 4s linear infinite;
+  opacity: 0.7;
+}
+.ai-shine-text {
+  background: linear-gradient(120deg, #2563eb 20%, #60a5fa 50%, #2563eb 80%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: aiShine 4s linear infinite;
+  font-weight: 600;
+}
