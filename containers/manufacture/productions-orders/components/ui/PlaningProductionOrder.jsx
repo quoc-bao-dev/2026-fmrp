@@ -68,9 +68,9 @@ const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
                   </ColumnTable>
                 </>
               )}
-              <ColumnTable colSpan={2} textAlign={'center'} className={`border-none  normal-case  px-0  leading-2 text-typo-gray-1 !responsive-text-sm`}>
+              <ColumnTable colSpan={2} textAlign={'center'} className={`border-none normal-case leading-2 text-typo-gray-1 !responsive-text-sm`}>
                 {dataLang?.materials_planning_held || ' Đã giữ'}
-                {typeTable === 'materials' ? '/Mua' : ''}
+                {typeTable === 'materials' ? '/Đã mua' : ''}
               </ColumnTable>
               <ColumnTable colSpan={1} textAlign={'center'} className={`border-none normal-case leading-2 text-typo-gray-1 px-0 !responsive-text-sm`}>
                 {dataLang?.materials_planning_lack || ' Thiếu'}
