@@ -5,7 +5,6 @@ import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import PopupCustom from '@/components/UI/popup';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
 import EditIcon from '@/components/icons/common/EditIcon';
-import PlusIcon from '@/components/icons/common/PlusIcon';
 import { CONFIRM_DELETION, TITLE_DELETE } from '@/constants/delete/deleteTable';
 import { useDistrictList, useWardList } from '@/hooks/common/useAddress';
 import useActionRole from '@/hooks/useRole';
@@ -22,6 +21,7 @@ import ButtoonAdd from '../button/buttonAdd';
 import Form from '../form/form';
 import FormContactInfo from '../form/formContactInfo';
 import FormContactDelivery from '../form/formDelivery';
+import { PlusIcon } from '@/components/icons';
 
 const initalState = {
   open: false,

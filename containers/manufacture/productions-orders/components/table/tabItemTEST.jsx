@@ -1,5 +1,4 @@
 import ProgressStageBar from "@/components/common/progress/ProgressStageBar";
-import NoteIcon from "@/components/icons/common/NoteIcon";
 import Loading from "@/components/UI/loading/loading";
 import NoData from "@/components/UI/noData/nodata";
 import useSetingServer from "@/hooks/useConfigNumber";
@@ -8,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import React, { memo, useContext, useState } from "react";
 import { ProductionsOrdersContext } from "../../context/productionsOrders";
-import { CaretDownIcon } from "@/components/icons";
+import { CaretDownIcon, NoteIcon } from "@/components/icons";
 
 const TabItem = memo(({ handShowItem, isLoadingRight, dataLang, handleShowModel, typePageMoblie }) => {
     const dataSeting = useSetingServer();

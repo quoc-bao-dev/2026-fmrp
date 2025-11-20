@@ -1,6 +1,5 @@
 import CheckThinIcon from '@/components/icons/common/CheckThinIcon';
 import DocumentTemplateIcon from '@/components/icons/common/DocumentTemplateIcon';
-import PrintTemplateIcon from '@/components/icons/common/PrintTemplateIcon';
 import { useGetPrintConfig } from '@/managers/api/print/useGetPrintConfig';
 import { useSetPrintConfig } from '@/managers/api/print/useSetPrintConfig';
 import Head from 'next/head';
@@ -13,7 +12,7 @@ import 'swiper/css/pagination';
 import { Navigation, Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import SettingLayout from './components/SettingLayout';
-import { TemplateChecklistIcon } from '@/components/icons';
+import { PrintTemplateIcon, TemplateChecklistIcon } from '@/components/icons';
 
 const PrintTemplate = props => {
   const dataLang = props.dataLang;

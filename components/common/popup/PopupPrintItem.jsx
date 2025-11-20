@@ -1,4 +1,4 @@
-import PrinterTem from "@/components/icons/common/PrinterTem";
+import { PrinterTemIcon } from "@/components/icons";
 
 const PopupPrintItem = ({
     dataLang,
@@ -26,7 +26,7 @@ const PopupPrintItem = ({
                         onClick={() => onCLick("notPrice")}
                         className="group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer px-1.5 py-2 rounded-lg hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap"
                     >
-                        <PrinterTem className="size-5"/>
+                        <PrinterTemIcon className="size-5"/>
                         <p className="whitespace-nowrap">
                             {["payment", "receipts"].includes(type)
                                 ? dataLang?.PDF_PrintOnelink || "PDF_PrintOnelink"
@@ -37,7 +37,7 @@ const PopupPrintItem = ({
                         onClick={() => onCLick("price")}
                         className="group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer px-1.5 py-2 rounded-lg hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap"
                     >
-                        <PrinterTem className="size-5"/>
+                        <PrinterTemIcon className="size-5"/>
                         <p className="whitespace-nowrap">
                             {["payment", "receipts"].includes(type)
                                 ? dataLang?.PDF_PrintTwolink || "PDF_PrintTwolink"

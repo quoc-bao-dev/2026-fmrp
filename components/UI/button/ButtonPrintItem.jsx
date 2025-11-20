@@ -1,4 +1,4 @@
-import PrinterIcon from "@/components/icons/common/PrinterIcon";
+import { PrinterIcon } from "@/components/icons";
 import { twMerge } from "tailwind-merge";
 
 const ButtonPrintItem = ({
@@ -35,7 +35,7 @@ const ButtonPrintItem = ({
         />
       )}
       {!isLoading && (
-        <PrinterIcon 
+        <PrinterIcon
           className={`size-5 transition-all duration-300 
             ${totalButtons > 3 ? "text-neutral-03 group-hover:text-neutral-07" : "text-[#003DA0]"}`}
         />

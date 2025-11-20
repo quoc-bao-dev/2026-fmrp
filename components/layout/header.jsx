@@ -18,13 +18,10 @@ import 'react-tippy/dist/tippy.css';
 import Popup from 'reactjs-popup';
 import PopupFeelsCustomer from '../common/popup/PopupFeelsCustomer';
 import ChatIcon from '../icons/common/ChatIcon';
-import PasswordIcon from '../icons/common/PasswordIcon';
-import SignOutIcon from '../icons/common/SignOutIcon';
-import SparkleIcon from '../icons/common/SparkleIcon';
 import AvatarText from '../UI/common/user/AvatarText';
 import { Dropdown, DropdownThongBao } from '../UI/dropdown';
 import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
-import { SparkleOutlineIcon, UserCircleIcon } from '../icons';
+import { PasswordIcon, SignOutIcon, SparkleIcon, SparkleOutlineIcon, UserCircleIcon } from '../icons';
 
 const Header = () => {
   const router = useRouter();

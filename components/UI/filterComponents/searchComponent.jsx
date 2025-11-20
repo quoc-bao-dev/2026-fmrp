@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import SearchIcon from '@/components/icons/common/SearchIcon'
 import CloseXIcon from '@/components/icons/common/CloseXIcon'
 import { motion, AnimatePresence } from 'framer-motion'
+import { SearchIcon } from '@/components/icons'
 
 const SearchComponent = ({
   placeholder,
@@ -142,7 +142,7 @@ const SearchComponent = ({
           <SearchIcon
             size={sizeIcon}
             color={`${isActive ? 'white' : '#9295A4'}`}
-            className={`${classNameIcon} flex-shrink-0 transition-colors duration-300`}
+            className={`${classNameIcon} size-6 flex-shrink-0 transition-colors duration-300`}
           />
         </div>
       </form>

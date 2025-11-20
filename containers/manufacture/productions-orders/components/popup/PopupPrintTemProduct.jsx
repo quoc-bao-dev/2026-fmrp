@@ -3,7 +3,6 @@ import { Lexend_Deca } from "@next/font/google";
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Add as IconClose } from "iconsax-react";
-import PrinterIcon2 from "@/components/icons/common/PrinterIcon2";
 import CheckboxDefault from "@/components/common/checkbox/CheckboxDefault";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import InputNumberCustom from "@/components/common/input/InputNumberCustom";
@@ -21,7 +20,7 @@ import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import apiProducts from "@/Api/apiProducts/products/apiProducts";
 import ButtonAnimationNew from "@/components/common/button/ButtonAnimationNew";
-import { BackIcon } from "@/components/icons";
+import { BackIcon, PrinterIcon2 } from "@/components/icons";
 dayjs.extend(customParseFormat);
 
 const deca = Lexend_Deca({
@@ -195,7 +194,7 @@ const PopupPrintTemProduct = ({ dataItem, idManufacture }) => {
                     <ButtonAnimationNew
                         icon={
                             <div className="size-4">
-                                <PrinterIcon2 className="size-full" />
+                                <PrinterIcon2 className="size-full text-white" />
                             </div>
                         }
                         title="In tem"

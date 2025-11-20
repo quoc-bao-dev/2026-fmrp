@@ -1,4 +1,3 @@
-import SaleIcon from '@/components/icons/common/SaleIcon';
 import ReportLayout from '@/components/layout/ReportLayout';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
@@ -13,6 +12,7 @@ import DebtChart from './DebtChart';
 import { useGetCustomerTypeSales, useGetDebtTrend, useGetMonthlyReorderRate, useGetOrderCompletionRate, useGetProductGroupRevenue, useGetSalesSummary } from './hook';
 import RepeatOrderDonut from './RepeatOrderDonut';
 import RevenueStructurePie from './RevenueStructurePie';
+import { SaleIcon } from '@/components/icons';
 
 const breadcrumbItems = [
   {

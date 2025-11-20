@@ -1,5 +1,4 @@
 import apiMaterialsPlanning from "@/Api/apiManufacture/manufacture/materialsPlanning/apiMaterialsPlanning";
-import PlusIcon from "@/components/icons/common/PlusIcon";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { TagColorOrange } from "@/components/UI/common/Tag/TagStatus";
 import PopupConfim from "@/components/UI/popupConfim/popupConfim";
@@ -31,6 +30,7 @@ import PopupPurchaseBeta from "../popup/popupPurchaseBeta";
 import TabItem from "./tabItem";
 import TabKeepStock from "./tabKeepStock";
 import TabPlan from "./tabPlan";
+import { PlusIcon } from "@/components/icons";
 
 const ModalDetail = dynamic(
     () =>

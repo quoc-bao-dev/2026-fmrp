@@ -1,6 +1,5 @@
 import apiCategory from '@/Api/apiProducts/category/apiCategory';
 import EditIcon from '@/components/icons/common/EditIcon';
-import PlusIcon from '@/components/icons/common/PlusIcon';
 import ButtonCancel from '@/components/UI/button/buttonCancel';
 import ButtonSubmit from '@/components/UI/button/buttonSubmit';
 import PopupCustom from '@/components/UI/popup';
@@ -12,6 +11,7 @@ import { useSelector } from 'react-redux';
 import Select from 'react-select';
 import { useProductCategoryDetailOptions } from '../../hooks/category/useProductCategoryDetailOptions';
 import { useCategoryOptions } from '../../hooks/product/useCategoryOptions';
+import { PlusIcon } from '@/components/icons';
 
 const Popup_Products = React.memo(props => {
   const isShow = useToast();
