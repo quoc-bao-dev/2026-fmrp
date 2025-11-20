@@ -5,10 +5,10 @@ import formatNumberConfig from "@/utils/helpers/formatnumber";
 import Image from "next/image";
 import React, { memo, useContext, useState, useCallback } from "react";
 import NoteIcon from "@/components/icons/common/NoteIcon";
-import CaretDownIcon from "@/components/icons/common/CaretDownIcon";
 import ProgressStageBar from "@/components/common/progress/ProgressStageBar";
 import { AnimatePresence, motion } from "framer-motion";
 import { StateContext } from "@/context/_state/productions-orders/StateContext";
+import { CaretDownIcon } from "@/components/icons";
 
 const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRight, dataLang, handleToggleSheetDetail }) => {
     const dataSeting = useSetingServer();

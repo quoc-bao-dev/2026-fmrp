@@ -14,8 +14,6 @@ import ProgressBar from '@/components/common/progress/ProgressBar';
 import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
 import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
-import CaretDownIcon from '@/components/icons/common/CaretDownIcon';
-import ChartDonutIcon from '@/components/icons/common/ChartDonutIcon';
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import { IMAGES } from '@/constants/images';
@@ -32,7 +30,7 @@ import { useSelector } from 'react-redux';
 import { listLsxStatus } from '../productions-orders/components/main/constants/listData';
 import { useProductionOrdersCombobox } from '../productions-orders/hooks/useProductionOrdersCombobox';
 import { useSummaryBtpNvl } from './hook';
-import { SearchIcon } from '@/components/icons';
+import { CaretDownIcon, ChartDonutIcon, SearchIcon } from '@/components/icons';
 
 const breadcrumbItems = [
   {

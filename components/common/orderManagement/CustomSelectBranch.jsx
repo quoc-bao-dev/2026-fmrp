@@ -1,4 +1,4 @@
-import CaretDownIcon from '@/components/icons/common/CaretDownIcon';
+import { CaretDownIcon } from "@/components/icons";
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { useBranchAllList } from '@/hooks/common/useBranch';

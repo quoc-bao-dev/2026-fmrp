@@ -1,10 +1,9 @@
 import InputCustom from '@/components/common/input/InputCustom';
-import { CalendarIcon } from '@/components/icons';
+import { CalendarIcon, WarningIcon } from '@/components/icons';
 import CheckIcon from '@/components/icons/common/CheckIcon';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import KanbanIcon from '@/components/icons/common/KanbanIcon';
 import TrashIcon from '@/components/icons/common/TrashIcon';
-import WarningIcon from '@/components/icons/common/WarningIcon';
 import ButtonSubmit from '@/components/UI/button/buttonSubmit';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';

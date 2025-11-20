@@ -1,4 +1,4 @@
-import CaretDownIcon from "@/components/icons/common/CaretDownIcon";
+import { CaretDownIcon } from "@/components/icons";
 import useSetingServer from "@/hooks/useConfigNumber";
 import { useEffect, useRef, useState } from "react";
 

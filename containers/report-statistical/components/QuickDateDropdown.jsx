@@ -1,5 +1,5 @@
+import { CaretDownIcon } from '@/components/icons';
 import { useEffect, useRef, useState } from 'react';
-import CaretDownIcon from '@/components/icons/common/CaretDownIcon';
 
 const OPTIONS = [
   { value: 'today', label: 'Hôm nay' },

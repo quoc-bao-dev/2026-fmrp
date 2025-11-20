@@ -15,10 +15,7 @@ import LoadingComponent from '@/components/common/loading/loading/LoadingCompone
 import PopupRequestUpdateVersion from '@/components/common/popup/PopupRequestUpdateVersion';
 import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
-import { ArrowCounterClockWiseIcon, CalendarIcon } from '@/components/icons';
-import CaretDownIcon from '@/components/icons/common/CaretDownIcon';
-import CaretDropdownThinIcon from '@/components/icons/common/CaretDropdownThinIcon';
-import ChartDonutIcon from '@/components/icons/common/ChartDonutIcon';
+import { ArrowCounterClockWiseIcon, CalendarIcon, CaretDownIcon, CaretDropDownThinIcon, ChartDonutIcon } from '@/components/icons';
 import CheckThinIcon from '@/components/icons/common/CheckThinIcon';
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
 import MagnifyingGlassIcon from '@/components/icons/common/MagnifyingGlassIcon';
@@ -906,7 +903,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
       </span>
 
       <span className='xl:size-4 size-3.5 shrink-0'>
-        <CaretDropdownThinIcon className={`size-full`} />
+        <CaretDropDownThinIcon className={`size-full`} />
       </span>
     </div>
   );

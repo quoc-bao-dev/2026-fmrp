@@ -10,7 +10,6 @@ import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
 import PopupCustom from '@/components/UI/popup';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
-import WarningIcon from '@/components/icons/common/WarningIcon';
 import { useBranchList } from '@/hooks/common/useBranch';
 import { useLocationByWarehouseInventory, useWarehouseInventory } from '@/hooks/common/useWarehouses';
 import useFeature from '@/hooks/useConfigFeature';
@@ -31,6 +30,7 @@ import DatePicker from 'react-datepicker';
 import PopupImportExcel from './components/popupImportExcel';
 import PopupProduct from './components/popupProduct';
 import { useAuththentication } from '@/hooks/useAuth';
+import { WarningIcon } from '@/components/icons';
 
 const InventoryForm = props => {
   const dataLang = props.dataLang;
