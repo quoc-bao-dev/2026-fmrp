@@ -36,7 +36,7 @@ import ChartDonutIcon from './source/chart-donut.svg';
 import ChatIcon from './source/chat.svg';
 import CheckCircleOutlineIcon from './source/check-circle-outline.svg';
 import CheckCircleIcon from './source/check-circle.svg';
-import CheckThinIconAlt from './source/check-thin.svg';
+import CheckThinIcon from './source/check-thin.svg';
 import CheckIcon from './source/check.svg';
 import CloseXIcon from './source/close-x.svg';
 import CompleteKHIcon from './source/complete-k-h.svg';
@@ -103,7 +103,7 @@ export {
   ChatIcon,
   CheckCircleOutlineIcon,
   CheckCircleIcon,
-  CheckThinIconAlt,
+  CheckThinIcon,
   CheckIcon,
   CloseXIcon,
   CompleteKHIcon,

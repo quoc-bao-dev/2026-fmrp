@@ -779,7 +779,7 @@ const Popup_Products = React.memo(props => {
                         className={`focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal p-2 border outline-none`}
                       />
                     </div>
-                    {props.dataProductExpiry?.is_enable === '1' && (
+                    {props.dataProductExpiry?.is_enable == '1' && (
                       <div className='2xl:space-y-1'>
                         <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>{props.dataLang?.category_material_list_expiry_date || 'category_material_list_expiry_date'}</label>
                         <div className='relative flex flex-col items-center justify-center'>

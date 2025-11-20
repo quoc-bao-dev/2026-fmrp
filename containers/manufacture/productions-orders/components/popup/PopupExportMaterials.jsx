@@ -1,10 +1,8 @@
 import apiProductionsOrders from "@/Api/apiManufacture/manufacture/productionsOrders/apiProductionsOrders";
 import CheckboxDefault from "@/components/common/checkbox/CheckboxDefault";
-import { WarningIcon } from "@/components/icons";
-import CheckCircle from "@/components/icons/common/CheckCircle";
+import { CheckCircleIcon, MagnifyingGlassIcon, WarningIcon } from "@/components/icons";
 import CheckIcon from "@/components/icons/common/CheckIcon";
 import CloseXIcon from "@/components/icons/common/CloseXIcon";
-import MagnifyingGlassIcon from "@/components/icons/common/MagnifyingGlassIcon";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import useSetingServer from "@/hooks/useConfigNumber";
 import useToast from "@/hooks/useToast";
@@ -1220,7 +1218,7 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
       {exportSuccess > 0 && (
         <div className="py-2 px-3 flex gap-2 items-center justify-between bg-green-02 border border-green-00 rounded-lg">
           <div className="flex items-center gap-1">
-            <CheckCircle className="text-[#064E3B]" />
+            <CheckCircleIcon className="size-6 text-[#064E3B]" />
             <p className="text-sm font-normal text-neutral-07">
               Xin chúc mừng,{" "}
               <span className="font-semibold">{exportSuccess}</span> nguyên vật

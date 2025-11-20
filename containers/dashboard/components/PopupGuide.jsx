@@ -1,14 +1,13 @@
 'use client';
 
-import MobileIcon from '@/components/icons/common/MobileIcon';
+import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew';
+import { MobileIcon } from '@/components/icons';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import PopupCustom from '@/components/UI/popup';
 import Image from 'next/image';
-import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { MdArrowOutward } from 'react-icons/md';
-import { PiArrowRightBold, PiCircleFill } from 'react-icons/pi';
-import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew';
+import { useEffect, useState } from 'react';
+import { PiArrowRightBold } from 'react-icons/pi';
 
 /**
  * Component icon cho bullet của li

@@ -17,11 +17,10 @@ import { Tooltip } from 'react-tippy';
 import 'react-tippy/dist/tippy.css';
 import Popup from 'reactjs-popup';
 import PopupFeelsCustomer from '../common/popup/PopupFeelsCustomer';
-import ChatIcon from '../icons/common/ChatIcon';
 import AvatarText from '../UI/common/user/AvatarText';
 import { Dropdown, DropdownThongBao } from '../UI/dropdown';
 import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
-import { PasswordIcon, SignOutIcon, SparkleIcon, SparkleOutlineIcon, UserCircleIcon } from '../icons';
+import { ChatIcon, PasswordIcon, SignOutIcon, SparkleIcon, SparkleOutlineIcon, UserCircleIcon } from '../icons';
 
 const Header = () => {
   const router = useRouter();
@@ -1430,7 +1429,7 @@ const DropdownAvatar = React.memo(() => {
     },
     {
       name: 'Góp ý',
-      icon: <ChatIcon size={16} className='size-4 text-neutral-03 group-hover:text-neutral-07' />,
+      icon: <ChatIcon className='size-4 text-neutral-03 group-hover:text-neutral-07' />,
       group: 1,
       onClick: () => {
         dispatch({

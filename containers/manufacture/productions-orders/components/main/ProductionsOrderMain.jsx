@@ -15,10 +15,8 @@ import LoadingComponent from '@/components/common/loading/loading/LoadingCompone
 import PopupRequestUpdateVersion from '@/components/common/popup/PopupRequestUpdateVersion';
 import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
-import { ArrowCounterClockWiseIcon, CalendarIcon, CaretDownIcon, CaretDropDownThinIcon, ChartDonutIcon, PlusIcon, PrinterIcon, StickerIcon, TrashIcon } from '@/components/icons';
-import CheckThinIcon from '@/components/icons/common/CheckThinIcon';
+import { ArrowCounterClockWiseIcon, CalendarIcon, CaretDownIcon, CaretDropDownThinIcon, ChartDonutIcon, CheckThinIcon, MagnifyingGlassIcon, PlusIcon, PrinterIcon, StickerIcon, TrashIcon } from '@/components/icons';
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
-import MagnifyingGlassIcon from '@/components/icons/common/MagnifyingGlassIcon';
 import { CONFIRM_DELETION, TITLE_DELETE_COMMAND, TITLE_DELETE_PRODUCTIONS_ORDER } from '@/constants/delete/deleteTable';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import PopupKeepStock from '@/containers/manufacture/materials-planning/components/popup/popupKeepStock';

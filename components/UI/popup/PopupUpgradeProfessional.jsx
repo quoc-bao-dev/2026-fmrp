@@ -2,7 +2,6 @@ import apiUpgradePackage from "@/Api/apiUpgradePackage/apiUpgradePackage";
 import CheckboxDefault from "@/components/common/checkbox/CheckboxDefault";
 import InputNumberCustom from "@/components/common/input/InputNumberCustom";
 import Skeleton from "@/components/common/skeleton/Skeleton";
-import DropdownIcon from "@/components/icons/common/DropdownIcon";
 import {
   useGetPackage,
   useGetServiceAdd,
@@ -21,6 +20,7 @@ import { IoCopyOutline } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { Tooltip } from "react-tippy";
 import { Customscrollbar } from "../common/Customscrollbar";
+import { DropdownIcon } from "@/components/icons";
 
 const deca = Lexend_Deca({
   subsets: ["latin"],

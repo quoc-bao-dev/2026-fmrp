@@ -127,7 +127,7 @@ const Products = (props) => {
     // set state trạng thái thành phẩm
     useEffect(() => {
         sDataProductExpiry(feature?.dataProductExpiry);
-    }, []);
+    }, [feature]);
     // change bộ lọc
     const _HandleFilterOpt = (type, value) => {
         if (type == "category") {

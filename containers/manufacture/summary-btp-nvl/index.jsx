@@ -685,27 +685,33 @@ const SummaryBtpNvl = () => {
           </div>
         </div>
         <div className='flex-1 h-full flex flex-col gap-2'>
-          <div className='flex items-center gap-4'>
-            <TabSwitcherWithUnderline
-              tabs={tabsMaterialFinishedProduct}
-              activeTab={activeTabMaterialFinishedProduct}
-              onChange={setActiveTabMaterialFinishedProduct}
-              renderLabel={(tab, activeTab) => (
-                <h3
-                  className={`${activeTab?.id === tab.id ? 'text-[#0375F3]' : 'text-[#9295A4]'} font-medium group-hover:text-[#0375F3] transition-all duration-100 ease-linear origin-left capitalize`}
-                >
-                  <span>{tab.name}</span>
-                </h3>
-              )}
-            />
-            <SearchComponent
-              onChange={e => setSearchMaterial(e?.target?.value || '')}
-              value={searchMaterial}
-              classNameBox='!py-2 2xl:!p-2.5 w-1/2 ml-auto'
-              placeholder='Tìm kiếm mã/tên ...'
-              classInput='w-full'
-              alwaysOpen={true}
-            />
+          <div className='flex items-center gap-4 w-full justify-between'>
+            <div className='w-[300px] 2xl:w-[330px] flex-shrink-0'>
+              <TabSwitcherWithUnderline
+                tabs={tabsMaterialFinishedProduct}
+                activeTab={activeTabMaterialFinishedProduct}
+                onChange={setActiveTabMaterialFinishedProduct}
+                renderLabel={(tab, activeTab) => (
+                  <h3
+                    className={`${
+                      activeTab?.id === tab.id ? 'text-[#0375F3]' : 'text-[#9295A4]'
+                    } font-medium group-hover:text-[#0375F3] transition-all duration-100 ease-linear origin-left capitalize`}
+                  >
+                    <span>{tab.name}</span>
+                  </h3>
+                )}
+              />
+            </div>
+            {/* <div className='w-full'> */}
+              <SearchComponent
+                onChange={e => setSearchMaterial(e?.target?.value || '')}
+                value={searchMaterial}
+                classNameBox='!py-2 2xl:!p-2.5 w-1/2'
+                placeholder='Tìm kiếm mã/tên ...'
+                classInput='w-full'
+                alwaysOpen={true}
+              />
+            {/* </div> */}
           </div>
 
           {selectedOrders?.length === 0 ? (
