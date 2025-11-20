@@ -626,7 +626,7 @@ const Popup_Products = React.memo(props => {
             {props.dataLang?.category_material_list_variant || 'category_material_list_variant'}
           </button>
         </div>
-        <Customscrollbar className='3xl:h-[600px]  2xl:h-[470px] xl:h-[380px] lg:h-[350px] h-[400px]'>
+        <Customscrollbar className='max-h-[50vh]'>
           {onFetching ? (
             <Loading className='h-80' color='#0f4f9e' />
           ) : (

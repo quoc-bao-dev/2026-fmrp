@@ -142,6 +142,10 @@ const Popup_Stage = React.memo((props) => {
 
     // ad thêm công đoạn
     const _HandleAddNew = () => {
+        if (statusBtnAdd) {
+            isShow("error", "Vui lòng thêm công đoạn sản xuất ở danh mục cài đặt để thêm công đoạn");
+            return;
+        }
         sOption([...option, { id: uddidV4(), name: name, radio1: radio1, radio2: radio2 }]);
         sName(null);
         sRadio1(0);
@@ -375,9 +379,8 @@ const Popup_Stage = React.memo((props) => {
                             <button
                                 type="button"
                                 onClick={_HandleAddNew.bind(this)}
-                                disabled={statusBtnAdd}
                                 title="Thêm"
-                                className={`${statusBtnAdd ? "opacity-50" : "opacity-100 hover:text-[#0F4F9E] hover:bg-[#e2f0fe]"} transition mt-5 w-full min-h-[100px] h-35 rounded-[5.5px] bg-slate-100 flex flex-col justify-center items-center`}
+                                className={`${statusBtnAdd ? "opacity-50 cursor-not-allowed" : "opacity-100 hover:text-[#0F4F9E] hover:bg-[#e2f0fe]"} transition mt-5 w-full min-h-[100px] h-35 rounded-[5.5px] bg-slate-100 flex flex-col justify-center items-center`}
                             >
                                 <IconAdd />
                                 {props.dataLang?.stage_add_finishedProduct}

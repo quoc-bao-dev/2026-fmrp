@@ -12,6 +12,7 @@ const InPutMoneyFormat = ({
   thousandSeparator,
   decimalSeparator,
   isSuffix = '',
+  placeholder='Nhập số lượng'
 }) => {
   const dataSeting = useSetingServer()
   return (
@@ -27,6 +28,7 @@ const InPutMoneyFormat = ({
       decimalScale={decimalScale}
       readOnly={readOnly}
       suffix={isSuffix}
+      placeholder={placeholder}
     />
   )
 }
