@@ -63,6 +63,17 @@ const parseNumber = value => {
   return Number.isNaN(numeric) ? 0 : numeric;
 };
 
+const normalizeText = value => {
+  if (!value) return '';
+  return String(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'd')
+    .toLowerCase()
+    .trim();
+};
+
 const createNumberCell = rawValue => {
   const hasValue = rawValue !== null && rawValue !== undefined && rawValue !== '';
   if (!hasValue) {
@@ -268,10 +279,10 @@ const SummaryBtpNvl = () => {
       return materialsDataRaw;
     }
 
-    const searchTerm = searchMaterial.toLowerCase().trim();
+    const searchTerm = normalizeText(searchMaterial);
     return materialsDataRaw.filter(item => {
-      const itemCode = (item?.item_code || '').toLowerCase();
-      const itemName = (item?.item_name || '').toLowerCase();
+      const itemCode = normalizeText(item?.item_code);
+      const itemName = normalizeText(item?.item_name);
       return itemCode.includes(searchTerm) || itemName.includes(searchTerm);
     });
   }, [materialsDataRaw, searchMaterial]);
@@ -281,10 +292,10 @@ const SummaryBtpNvl = () => {
       return finishedProductsDataRaw;
     }
 
-    const searchTerm = searchMaterial.toLowerCase().trim();
+    const searchTerm = normalizeText(searchMaterial);
     return finishedProductsDataRaw.filter(item => {
-      const itemCode = (item?.item_code || '').toLowerCase();
-      const itemName = (item?.item_name || '').toLowerCase();
+      const itemCode = normalizeText(item?.item_code);
+      const itemName = normalizeText(item?.item_name);
       return itemCode.includes(searchTerm) || itemName.includes(searchTerm);
     });
   }, [finishedProductsDataRaw, searchMaterial]);
@@ -308,6 +319,8 @@ const SummaryBtpNvl = () => {
       createColumn('ĐVT', 10),
       createColumn('Quy đổi', 18),
       createColumn('ĐVT quy đổi', 12),
+      createColumn('Quy đổi AI', 18),
+      createColumn('ĐVT', 10),
       createColumn('Đã giữ/Đã Mua', 18),
       createColumn('ĐVT', 10),
       createColumn('Thiếu', 18),
@@ -329,6 +342,8 @@ const SummaryBtpNvl = () => {
         createNumberCell(item.total_quota),
         { value: item.unit_name || '' },
         createNumberCell(item.quota_primary),
+        { value: item.unit_name_primary || '' },
+        createNumberCell(item.quota_primary_ai),
         { value: item.unit_name_primary || '' },
         createNumberCell(item.quantity_keep),
         { value: item.unit_name_primary || '' },
