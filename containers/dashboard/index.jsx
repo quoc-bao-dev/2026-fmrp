@@ -18,7 +18,11 @@ const Dashboard = props => {
       </Head>
 
       <div className='py-6 flex flex-col gap-6 bg-[#FDFDFE] min-h-screen pt-[96px] relative'>
-        <ProgressPath />
+        <div className='relative'>
+          <div className='absolute -top-[46px] left-0 w-full h-[60px] bg-[#FDFDFE]  z-10'></div>
+          <ProgressPath />
+        </div>
+
         {/* <TopProducts /> */}
         <div className='flex flex-col md:flex-row gap-6 px-4 md:px-6'>
           <BarChartVertical />
