@@ -56,11 +56,10 @@ import PopupPrintItem from "../common/popup/PopupPrintItem";
 import EditIcon from "../icons/common/EditIcon";
 import PrinterIcon from "../icons/common/PrinterIcon";
 import PrinterTem from "../icons/common/PrinterTem";
-import StickerIcon from "../icons/common/StickerIcon";
-import TrashIcon from "../icons/common/TrashIcon";
 import ButtonPrintItem from "./button/ButtonPrintItem";
 import FilePDF from "./FilePDF";
 import PopupConfim from "./popupConfim/popupConfim";
+import { StickerIcon, TrashIcon } from "../icons";
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
