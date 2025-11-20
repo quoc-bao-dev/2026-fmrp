@@ -139,12 +139,8 @@ const ProgressPath = () => {
         </div>
 
         <div className='w-full flex flex-col items-center justify-center relative z-10 transition-all duration-500'>
-          <div className={`-mt-6 pb-4 min-h-[60px] w-full transition-all duration-500 ease-in-out`}>
-            <h2
-              className={`px-6 responsive-text-3xl leading-[160%] font-bold text-new-blue capitalize w-full transition-all duration-500 ease-in-out ${
-                isCollapsed ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'
-              }`}
-            >
+          <div className={`-mt-6  w-full transition-all duration-500 easse-in-out ${isCollapsed ? 'mb-[-24px]' : 'pb-4'}`}>
+            <h2 className={`px-6 responsive-text-3xl leading-[160%] font-bold text-new-blue capitalize w-full transition-all duration-500 ease-in-out `}>
               Tiến trình hoàn thiện vận hành <br />
               xưởng sản xuất
             </h2>
@@ -152,6 +148,7 @@ const ProgressPath = () => {
 
           <div className='w-full flex-1 flex items-center justify-center -mt-[3%] 2xl:-mt-[4%] pointer-events-none'>
             <AnimatedProgressPath percentage={infoStepUse?.total_radio} height={pathHeight} />
+            {/* <AnimatedProgressPath percentage={25} height={pathHeight} /> */}
           </div>
 
           <div className='flex justify-around gap-4 w-full -mt-[3%] px-4'>
