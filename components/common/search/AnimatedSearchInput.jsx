@@ -2,8 +2,8 @@
 import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew'
-import MagnifyingGlassIcon from '@/components/icons/common/MagnifyingGlassIcon'
 import CloseXIcon from '@/components/icons/common/CloseXIcon'
+import { MagnifyingGlassIcon } from '@/components/icons'
 
 const AnimatedSearchInput = ({
     isOpen,

@@ -54,13 +54,10 @@ import { Tooltip } from "react-tooltip";
 import { _ServerInstance as Axios } from "services/axios";
 import PopupPrintItem from "../common/popup/PopupPrintItem";
 import EditIcon from "../icons/common/EditIcon";
-import PrinterIcon from "../icons/common/PrinterIcon";
-import PrinterTem from "../icons/common/PrinterTem";
-import StickerIcon from "../icons/common/StickerIcon";
-import TrashIcon from "../icons/common/TrashIcon";
 import ButtonPrintItem from "./button/ButtonPrintItem";
 import FilePDF from "./FilePDF";
 import PopupConfim from "./popupConfim/popupConfim";
+import { PrinterIcon, PrinterTemIcon, StickerIcon, TrashIcon } from "../icons";
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -177,8 +174,7 @@ const Popup_Pdf = (props) => {
                 className="group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer rounded-lg p-1 border border-transparent hover:border-[#003DA0] hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap"
             >
                 <PrinterIcon
-                    color="#003DA0"
-                    className="size-5"
+                    className="size-5 text-[#003DA0]"
                 />
             </button>
             {isOpen && (
@@ -1001,8 +997,7 @@ export const BtnAction = React.memo((props) => {
                         data-id={currentId} /* Store the ID as a data attribute */
                     >
                         <PrinterIcon
-                            color="#003DA0"
-                            className="size-5"
+                            className="size-5 text-[#003DA0]"
                         />
                     </button>
                     {printDropdownOpen && (
@@ -1035,7 +1030,7 @@ export const BtnAction = React.memo((props) => {
                                     }}
                                     className="group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer px-1.5 py-2 rounded-lg hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap"
                                 >
-                                    <PrinterTem className="size-5"/>
+                                    <PrinterTemIcon className="size-5"/>
                                     <p className="whitespace-nowrap">
                                         {props?.dataLang?.btn_table_print_notprice || "In không giá"}
                                     </p>
@@ -1047,7 +1042,7 @@ export const BtnAction = React.memo((props) => {
                                     }}
                                     className="group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer px-1.5 py-2 rounded-lg hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap"
                                 >
-                                    <PrinterTem className="size-5"/>
+                                    <PrinterTemIcon className="size-5"/>
                                     <p className="whitespace-nowrap">
                                         {props?.dataLang?.btn_table_print_price || "In có giá"}
                                     </p>

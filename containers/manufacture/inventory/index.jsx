@@ -17,7 +17,7 @@ import SelectComponent from "@/components/UI/filterComponents/selectComponent";
 import Loading from "@/components/UI/loading/loading";
 import NoData from "@/components/UI/noData/nodata";
 import PopupConfim from "@/components/UI/popupConfim/popupConfim";
-import TrashIcon from "@/components/icons/common/TrashIcon";
+import { PrinterIcon, TrashIcon } from "@/components/icons";
 import { CONFIRM_DELETION, TITLE_DELETE } from "@/constants/delete/deleteTable";
 import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
 import { WARNING_STATUS_ROLE } from "@/constants/warningStatus/warningStatus";
@@ -40,15 +40,11 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useSelector } from "react-redux";
+import PopupPrintTemInventory from "./components/PopupPrintTemInventory";
 import PopupDetail from "./components/popupDetail";
 import PopupStatus from "./components/popupStatus";
-import PopupPrintTemInventory from "./components/PopupPrintTemInventory";
 import { useInventoryList } from "./hooks/useInventoryList";
 import Pagination from "/components/UI/pagination";
-import PrinterIcon2 from "@/components/icons/common/PrinterIcon2";
-import StickerIcon from "@/components/icons/common/StickerIcon";
-import PrinterIcon from "@/components/icons/common/PrinterIcon";
-import TooltipDefault from "@/components/common/tooltip/TooltipDefault";
 
 const initialState = {
     keySearch: "",

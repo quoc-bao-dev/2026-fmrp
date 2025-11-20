@@ -1,6 +1,6 @@
 import React from "react";
 
-const SuccessChatIcon = () => {
+const SuccessChatIcon = () => { 
     return (
         <svg
             width="33"

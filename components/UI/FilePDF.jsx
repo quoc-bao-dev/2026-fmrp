@@ -24,8 +24,8 @@ import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 import React, { useEffect, useState } from "react";
 import { _ServerInstance as Axios } from "services/axios";
-import PrinterIcon from "../icons/common/PrinterIcon";
-import PrinterTem from "../icons/common/PrinterTem";
+import { PrinterTemIcon, PrinterIcon } from "../icons";
+
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 const FilePDF = ({
@@ -7384,8 +7384,7 @@ const FilePDF = ({
                     className="group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer rounded-lg p-1 border border-transparent hover:border-[#003DA0] hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap"
                 >
                    <PrinterIcon
-                        color="#003DA0"
-                        className="size-5"
+                        className="size-5 text-[#003DA0]"
                     />
                     {/* <p className="group-hover:text-[#65a30d]">
                         {props?.dataLang?.btn_table_print || "btn_table_print"}
@@ -7400,7 +7399,7 @@ const FilePDF = ({
                             onClick={() => handlePrintPdf("noprice")}
                             className="group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer px-1.5 py-2 rounded-lg hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap"
                         >
-                            <PrinterTem className="size-5"/>
+                            <PrinterTemIcon className="size-5"/>
                             <p className="whitespace-nowrap">
                                 {["payment", "receipts"].includes(props.type) 
                                     ? props.dataLang?.PDF_PrintOnelink || "PDF_PrintOnelink" 
@@ -7411,7 +7410,7 @@ const FilePDF = ({
                             onClick={() => handlePrintPdf("fullTitle")}
                             className="group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer px-1.5 py-2 rounded-lg hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap"
                         >
-                            <PrinterTem className="size-5"/>
+                            <PrinterTemIcon className="size-5"/>
                             <p className="whitespace-nowrap">
                                 {["payment", "receipts"].includes(props.type) 
                                     ? props.dataLang?.PDF_PrintTwolink || "PDF_PrintTwolink" 

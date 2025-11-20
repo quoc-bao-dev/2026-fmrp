@@ -1,12 +1,12 @@
 import apiDepartments from '@/Api/apiPersonnel/apiDepartments';
 import EditIcon from '@/components/icons/common/EditIcon';
-import PlusIcon from '@/components/icons/common/PlusIcon';
 import PopupCustom from '@/components/UI/popup';
 import useToast from '@/hooks/useToast';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import Select from 'react-select';
 import { useSelector } from 'react-redux';
+import { PlusIcon } from '@/components/icons';
 
 const Popup_phongban = props => {
   const [open, sOpen] = useState(false);

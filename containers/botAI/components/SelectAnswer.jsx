@@ -1,7 +1,7 @@
-import SendMessengerIcon from '@/components/icons/common/SendMessengerIcon';
 import { motion } from 'framer-motion';
 import { twMerge } from 'tailwind-merge';
 import { AiOutlineLoading3Quarters } from 'react-icons/ai';
+import { SendMessengerIcon } from '@/components/icons';
 
 const SelectAnswer = ({ className, children, typeAnswer, onClick, icon, stepNext, disabled, isLoading = false }) => {
   return (
@@ -37,7 +37,6 @@ const SelectAnswer = ({ className, children, typeAnswer, onClick, icon, stepNext
         </p>
       </div>
 
-      {/* <SendMessengerIcon /> */}
       <motion.div className={twMerge('transform transition-transform duration-300 ease-in-out group-hover:translate-x-2', (disabled || isLoading) && 'group-hover:translate-x-0')}>
         {isLoading ? <AiOutlineLoading3Quarters className='animate-spin text-typo-blue-5' /> : <SendMessengerIcon />}
       </motion.div>

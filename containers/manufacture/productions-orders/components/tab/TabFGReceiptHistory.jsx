@@ -2,7 +2,7 @@ import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew'
 import LimitListDropdown from '@/components/common/dropdown/LimitListDropdown'
 import ExcelFileComponent from '@/components/common/excel/ExcelFileComponent'
 import AnimatedSearchInput from '@/components/common/search/AnimatedSearchInput'
-import ArrowCounterClockwiseIcon from '@/components/icons/common/ArrowCounterClockwiseIcon'
+import { ArrowCounterClockWiseIcon } from '@/components/icons'
 import Loading from '@/components/UI/loading/loading'
 import NoData from '@/components/UI/noData/nodata'
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate'
@@ -220,7 +220,7 @@ const TabFGReceiptHistory = ({ dataLang, ...props }) => {
         <ButtonAnimationNew
           icon={
             <div className="3xl:size-5 size-4">
-              <ArrowCounterClockwiseIcon className="size-full" />
+              <ArrowCounterClockWiseIcon className="size-full" />
             </div>
           }
           onClick={() => {

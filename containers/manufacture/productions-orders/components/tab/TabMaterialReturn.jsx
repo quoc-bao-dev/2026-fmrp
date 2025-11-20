@@ -2,7 +2,6 @@ import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew'
 import LimitListDropdown from '@/components/common/dropdown/LimitListDropdown'
 import ExcelFileComponent from '@/components/common/excel/ExcelFileComponent'
 import AnimatedSearchInput from '@/components/common/search/AnimatedSearchInput'
-import ArrowCounterClockwiseIcon from '@/components/icons/common/ArrowCounterClockwiseIcon'
 import Loading from '@/components/UI/loading/loading'
 import NoData from '@/components/UI/noData/nodata'
 import { StateContext } from '@/context/_state/productions-orders/StateContext'
@@ -14,9 +13,9 @@ import { PiCaretDownBold, PiTable } from 'react-icons/pi'
 import ModalImage from 'react-modal-image'
 import { useDebounce } from 'use-debounce'
 import formatNumberConfig from "@/utils/helpers/formatnumber";
-import moment from 'moment/moment'
 import { formatMoment } from '@/utils/helpers/formatMoment'
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate'
+import { ArrowCounterClockWiseIcon } from '@/components/icons'
 
 const TabMaterialReturn = ({ dataLang, ...props }) => {
     const [isLoadingTable, setIsLoadingTable] = useState(false)
@@ -216,7 +215,7 @@ const TabMaterialReturn = ({ dataLang, ...props }) => {
                 <ButtonAnimationNew
                     icon={
                         <div className='3xl:size-5 size-4'>
-                            <ArrowCounterClockwiseIcon className='size-full' />
+                            <ArrowCounterClockWiseIcon className='size-full' />
                         </div>
                     }
                     onClick={() => {

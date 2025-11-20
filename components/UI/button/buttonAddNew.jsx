@@ -1,4 +1,4 @@
-import PlusIcon from "@/components/icons/common/PlusIcon";
+import { PlusIcon } from "@/components/icons";
 
 const ButtonAddNew = ({ onClick, dataLang, ...rest }) => {
   return (

@@ -1,6 +1,6 @@
 import apiLocationWarehouse from "@/Api/apiManufacture/warehouse/apiWarehouseLocation/apiWarehouseLocation";
+import { PlusIcon } from "@/components/icons";
 import EditIcon from "@/components/icons/common/EditIcon";
-import PlusIcon from "@/components/icons/common/PlusIcon";
 import ButtonCancel from "@/components/UI/button/buttonCancel";
 import ButtonSubmit from "@/components/UI/button/buttonSubmit";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";

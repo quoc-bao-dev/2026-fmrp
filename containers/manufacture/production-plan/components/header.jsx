@@ -1,8 +1,6 @@
 import Breadcrumb from "@/components/UI/breadcrumb/BreadcrumbCustom";
 import FilterDropdown from "@/components/common/dropdown/FilterDropdown";
-import CaretDownIcon from "@/components/icons/common/CaretDownIcon";
 import FunnelIcon from "@/components/icons/common/FunnelIcon";
-import PlusIcon from "@/components/icons/common/PlusIcon";
 import { WARNING_STATUS_ROLE } from "@/constants/warningStatus/warningStatus";
 import useActionRole from "@/hooks/useRole";
 import useToast from "@/hooks/useToast";
@@ -11,6 +9,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { useSelector } from "react-redux";
 import FilterHeader from "./fillter/filterHeader";
+import { CaretDownIcon, PlusIcon } from "@/components/icons";
 
 const Zoom = dynamic(() => import("@/components/UI/zoomElement/zoomElement"), {
     ssr: false,

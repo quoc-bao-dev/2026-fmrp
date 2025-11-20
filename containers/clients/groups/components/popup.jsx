@@ -1,6 +1,6 @@
 import apiGroup from '@/Api/apiClients/group/apiGroup';
+import { PlusIcon } from '@/components/icons';
 import EditIcon from '@/components/icons/common/EditIcon';
-import PlusIcon from '@/components/icons/common/PlusIcon';
 import PopupCustom from '@/components/UI/popup';
 import useToast from '@/hooks/useToast';
 import { useMutation } from '@tanstack/react-query';

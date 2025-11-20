@@ -11,10 +11,10 @@ import { Tooltip } from 'react-tippy';
 import Popup from 'reactjs-popup';
 import { twMerge } from 'tailwind-merge';
 import PopupRequestUpdateVersion from '../common/popup/PopupRequestUpdateVersion';
-import DropdownIcon from '../icons/common/DropdownIcon';
 import Loading from './loading/loading';
 import NoData from './noData/nodata';
 import Zoom from './zoomElement/zoomElement';
+import { DropdownIcon } from '../icons';
 
 const deca = Lexend_Deca({
   subsets: ['latin'],

@@ -1,4 +1,4 @@
-import RefreshIcon from "@/components/icons/common/Refresh";
+import { RefreshIcon } from "@/components/icons";
 
 const OnResetData = ({ sOnFetching, className, ...res }) => {
   const _HandleFresh = () => {

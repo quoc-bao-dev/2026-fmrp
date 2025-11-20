@@ -1,6 +1,6 @@
 import apiReceipts from "@/Api/apiAccountant/apiReceipts";
+import { PlusIcon } from "@/components/icons";
 import EditIcon from "@/components/icons/common/EditIcon";
-import PlusIcon from "@/components/icons/common/PlusIcon";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import InPutMoneyFormat from "@/components/UI/inputNumericFormat/inputMoneyFormat";
 import MultiValue from "@/components/UI/mutiValue/multiValue";

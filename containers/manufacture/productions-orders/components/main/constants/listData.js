@@ -1,6 +1,4 @@
-import ExportMaterialsIcon from '@/components/icons/common/ExportMaterialsIcon'
-import KanbanIcon from '@/components/icons/common/KanbanIcon'
-import ListChecksIcon from '@/components/icons/common/ListChecksIcon'
+import { ExportMaterialsIcon, KanbanIcon, ListChecksIcon } from '@/components/icons'
 
 // export const listTab = [
 //   {
@@ -66,7 +64,7 @@ export const listDropdownCompleteStage = [
   {
     id: 2,
     label: 'Hoàn thành tổng lệnh',
-    icon: <ListChecksIcon className="size-full" />, // bạn thay bằng icon tương ứng
+    icon: <ListChecksIcon className="size-full " />, // bạn thay bằng icon tương ứng
     isPremium: false,
     type: 'normal',
   },

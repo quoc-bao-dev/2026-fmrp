@@ -17,15 +17,10 @@ import { Tooltip } from 'react-tippy';
 import 'react-tippy/dist/tippy.css';
 import Popup from 'reactjs-popup';
 import PopupFeelsCustomer from '../common/popup/PopupFeelsCustomer';
-import ChatIcon from '../icons/common/ChatIcon';
-import PasswordIcon from '../icons/common/PasswordIcon';
-import SignOutIcon from '../icons/common/SignOutIcon';
-import SparkleIcon from '../icons/common/SparkleIcon';
-import SparkleOutlineIcon from '../icons/common/SparkleOutlineIcon';
-import UserCircleIcon from '../icons/common/UserCircleIcon';
 import AvatarText from '../UI/common/user/AvatarText';
 import { Dropdown, DropdownThongBao } from '../UI/dropdown';
 import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
+import { ChatIcon, PasswordIcon, SignOutIcon, SparkleIcon, SparkleOutlineIcon, UserCircleIcon } from '../icons';
 
 const Header = () => {
   const router = useRouter();
@@ -41,7 +36,6 @@ const Header = () => {
   const dataPstWH = useSelector(state => state.statusUser);
 
   const dataSeting = useSetingServer();
-
   // Khai báo biến state
   const [currentDropdownIndex, setCurrentDropdownIndex] = useState(0);
 
@@ -1409,7 +1403,7 @@ const DropdownAvatar = React.memo(() => {
     // Nhóm 1
     {
       name: 'Thông tin tài khoản',
-      icon: <UserCircleIcon size={16} className='size-4 text-neutral-03 group-hover:text-neutral-07' />,
+      icon: <UserCircleIcon className='size-4 text-neutral-03 group-hover:text-neutral-07' />,
       group: 1,
       onClick: () => {
         dispatch({
@@ -1435,7 +1429,7 @@ const DropdownAvatar = React.memo(() => {
     },
     {
       name: 'Góp ý',
-      icon: <ChatIcon size={16} className='size-4 text-neutral-03 group-hover:text-neutral-07' />,
+      icon: <ChatIcon className='size-4 text-neutral-03 group-hover:text-neutral-07' />,
       group: 1,
       onClick: () => {
         dispatch({

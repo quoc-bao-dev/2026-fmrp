@@ -1,7 +1,7 @@
 import apiCategory from '@/Api/apiProducts/category/apiCategory';
 import apiProducts from '@/Api/apiProducts/products/apiProducts';
+import { PlusIcon } from '@/components/icons';
 import EditIcon from '@/components/icons/common/EditIcon';
-import PlusIcon from '@/components/icons/common/PlusIcon';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import InPutMoneyFormat from '@/components/UI/inputNumericFormat/inputMoneyFormat';
 import InPutNumericFormat from '@/components/UI/inputNumericFormat/inputNumericFormat';
@@ -626,7 +626,7 @@ const Popup_Products = React.memo(props => {
             {props.dataLang?.category_material_list_variant || 'category_material_list_variant'}
           </button>
         </div>
-        <Customscrollbar className='3xl:h-[600px]  2xl:h-[470px] xl:h-[380px] lg:h-[350px] h-[400px]'>
+        <Customscrollbar className='max-h-[50vh]'>
           {onFetching ? (
             <Loading className='h-80' color='#0f4f9e' />
           ) : (
@@ -779,7 +779,7 @@ const Popup_Products = React.memo(props => {
                         className={`focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal p-2 border outline-none`}
                       />
                     </div>
-                    {props.dataProductExpiry?.is_enable === '1' && (
+                    {props.dataProductExpiry?.is_enable == '1' && (
                       <div className='2xl:space-y-1'>
                         <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>{props.dataLang?.category_material_list_expiry_date || 'category_material_list_expiry_date'}</label>
                         <div className='relative flex flex-col items-center justify-center'>

@@ -1,4 +1,4 @@
-import CaretDropdownThinIcon from '@/components/icons/common/CaretDropdownThinIcon';
+import { CaretDropDownThinIcon } from '@/components/icons';
 import { StateContext } from '@/context/_state/productions-orders/StateContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useContext, useEffect, useRef, useState } from 'react';
@@ -43,7 +43,7 @@ const RadioDropdown = () => {
                             <span className='text-sm font-light text-[#52575E]'>Chọn bộ lọc</span>
                     }
                 </span>
-                <CaretDropdownThinIcon className={`${open ? 'rotate-180' : ''} w-4 h-4 text-[#9295A4]`} />
+                <CaretDropDownThinIcon className={`${open ? 'rotate-180' : ''} w-4 h-4 text-[#9295A4]`} />
             </button>
 
             <AnimatePresence>

@@ -15,18 +15,8 @@ import LoadingComponent from '@/components/common/loading/loading/LoadingCompone
 import PopupRequestUpdateVersion from '@/components/common/popup/PopupRequestUpdateVersion';
 import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
-import ArrowCounterClockwiseIcon from '@/components/icons/common/ArrowCounterClockwiseIcon';
-import CalendarBlankIcon from '@/components/icons/common/CalendarBlankIcon';
-import CaretDownIcon from '@/components/icons/common/CaretDownIcon';
-import CaretDropdownThinIcon from '@/components/icons/common/CaretDropdownThinIcon';
-import ChartDonutIcon from '@/components/icons/common/ChartDonutIcon';
-import CheckThinIcon from '@/components/icons/common/CheckThinIcon';
+import { ArrowCounterClockWiseIcon, CalendarIcon, CaretDownIcon, CaretDropDownThinIcon, ChartDonutIcon, CheckThinIcon, MagnifyingGlassIcon, PlusIcon, PrinterIcon, StickerIcon, TrashIcon } from '@/components/icons';
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
-import MagnifyingGlassIcon from '@/components/icons/common/MagnifyingGlassIcon';
-import PlusIcon from '@/components/icons/common/PlusIcon';
-import PrinterIcon from '@/components/icons/common/PrinterIcon';
-import StickerIcon from '@/components/icons/common/StickerIcon';
-import TrashIcon from '@/components/icons/common/TrashIcon';
 import { CONFIRM_DELETION, TITLE_DELETE_COMMAND, TITLE_DELETE_PRODUCTIONS_ORDER } from '@/constants/delete/deleteTable';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import PopupKeepStock from '@/containers/manufacture/materials-planning/components/popup/popupKeepStock';
@@ -907,7 +897,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
       </span>
 
       <span className='xl:size-4 size-3.5 shrink-0'>
-        <CaretDropdownThinIcon className={`size-full`} />
+        <CaretDropDownThinIcon className={`size-full`} />
       </span>
     </div>
   );
@@ -1168,7 +1158,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
           <ButtonAnimationNew
             icon={
               <div className='size-4'>
-                <ArrowCounterClockwiseIcon className='size-full' />
+                <ArrowCounterClockWiseIcon className='size-full' />
               </div>
             }
             title={dataLang?.refresh_data || 'Làm mới dữ liệu'}
@@ -1219,7 +1209,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
 
           <div className='relative'>
             <div className='3xl:size-5 size-4 absolute top-1/2 -translate-y-1/2 left-2 z-[2] pointer-events-none'>
-              <CalendarBlankIcon className='size-full text-[#9295A4]' />
+              <CalendarIcon className='size-full text-[#9295A4]' />
             </div>
 
             <DatePicker

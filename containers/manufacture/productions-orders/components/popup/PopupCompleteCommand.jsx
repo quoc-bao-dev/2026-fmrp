@@ -1,8 +1,8 @@
 import CheckboxDefault from "@/components/common/checkbox/CheckboxDefault";
 import Loading from "@/components/common/loading/loading/LoadingComponent";
+import { WarningIcon } from "@/components/icons";
 import CheckIcon from "@/components/icons/common/CheckIcon";
 import CloseXIcon from "@/components/icons/common/CloseXIcon";
-import WarningIcon from "@/components/icons/common/WarningIcon";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { StateContext } from "@/context/_state/productions-orders/StateContext";
 import useSetingServer from "@/hooks/useConfigNumber";
