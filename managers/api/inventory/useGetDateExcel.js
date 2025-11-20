@@ -11,8 +11,8 @@ import useToast from '@/hooks/useToast';
  * @typedef {Object} GetDateExcelResponse
  * @property {boolean} isSuccess - Indicates if the request was successful
  * @property {string} [message] - Response message
- * @property {Object} [data] - Response data payload
- * @property {Array} [data.items] - List of items for Excel template
+ * @property {Object} [id] - Response data payload
+ * @property {Array} [id.items] - List of items for Excel template
  * @property {number} [status] - HTTP status code
  */
 

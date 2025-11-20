@@ -248,6 +248,7 @@ const PopupKeepStock = ({
                     unit: e?.unit_name_parent,
                     //sl cần
                     quantityNeed: formatNumber(e?.quota_primary),
+                    quantityNeedAi: formatNumber(e?.quota_primary_ai),
                     // sl giữ
                     quantityKeepp: formatNumber(e?.quantity_keep),
                     // sl tồn
@@ -300,7 +301,11 @@ const PopupKeepStock = ({
                 const quantityNeed = parseFloat(
                     findValue.arrayItem
                         .find((e) => e.id === item.id)
-                        ?.quantityNeed.replace(/,/g, "") || 0
+                        ?.quantityNeedAi?.replace(/,/g, "") ||
+                        findValue.arrayItem
+                            .find((e) => e.id === item.id)
+                            ?.quantityNeed?.replace(/,/g, "") ||
+                        0
                     ); // Chuyển đổi quantityNeed thành số
                 let quantityKeepp = parseFloat(item.quantityKeepp.replace(/,/g, ''));
                 let remainingQuantity = quantityNeed - quantityKeepp;
@@ -635,7 +640,7 @@ const PopupKeepStock = ({
                     </div>
                 </div>
                 <div className="3xl:w-[1300px] 2xl:w-[1150px] xl:w-[999px] w-[950px] 3xl:h-auto 2xl:max-h-auto xl:h-auto h-auto ">
-                    <HeaderTablePopup gridCols={13} className={"!z-0"}>
+                    <HeaderTablePopup gridCols={14} className={"!z-0"}>
                         <ColumnTablePopup colSpan={3}>
                             {dataLang?.price_quote_item || "price_quote_item"}
                         </ColumnTablePopup>
@@ -643,9 +648,17 @@ const PopupKeepStock = ({
                             {dataLang?.materials_planning_purchase_unit ||
                                 "materials_planning_purchase_unit"}
                         </ColumnTablePopup>
-                        <ColumnTablePopup>
+                        <ColumnTablePopup className="relative">
                             {dataLang?.materials_planning_qty_need ||
                                 "materials_planning_qty_need"}
+                        </ColumnTablePopup>
+                        <ColumnTablePopup className="relative">
+                            {dataLang?.materials_planning_qty_need ||
+                                "materials_planning_qty_need"}
+                            <span className='normal-case whitespace-nowrap flex items-center justify-center gap-1 responsive-text-xxs text-blue-600 font-medium ai-shine-badge'>
+                                <Image src='/icon/SparkleYellow.png' alt='logo' width={10} height={10} />
+                                <span className="ai-shine-text">Gợi ý AI</span>
+                            </span>
                         </ColumnTablePopup>
                         <ColumnTablePopup>
                             {dataLang?.materials_planning_qty_held ||
@@ -674,7 +687,7 @@ const PopupKeepStock = ({
                                 {findValue.arrayItem?.map((e, index) => (
                                     <div
                                         key={e?.id?.toString()}
-                                        className="grid items-center grid-cols-13 3xl:py-1.5 py-0.5 px-2 hover:bg-slate-100/40"
+                                        className="grid items-center grid-cols-14 3xl:py-1.5 py-0.5 px-2 hover:bg-slate-100/40"
                                     >
                                         <h6 className="text-[13px] flex items-center gap-1 font-medium py-1 col-span-3 text-left">
                                             {!e?.child && (
@@ -699,15 +712,10 @@ const PopupKeepStock = ({
                                                             className="custom-modal-image z-10 object-cover rounded w-[50px] h-[50px] mx-auto"
                                                         />
                                                     ) : (
-                                                        // <ModalImage
-                                                        //     small={e?.item?.image}
-                                                        //     large={e?.item?.image}
-                                                        //     alt="Product Image"
-                                                        //     className="custom-modal-image z-10 object-cover rounded w-[50px] h-[50px] mx-auto"
-                                                        // />
                                                         <div className="w-[50px] h-[50px] object-cover  mx-auto">
                                                             <Image
                                                                 src="/icon/noimagelogo.png"
+                                                                alt="Product Image"
                                                                 width={1280}
                                                                 height={1024}
                                                                 className="object-contain w-full h-full p-1 rounded"
@@ -730,6 +738,9 @@ const PopupKeepStock = ({
                                         </h6>
                                         <h6 className="2xl:text-[13px] xl:text-[12px] text-[11px] px-2 py-0.5 col-span-1 rounded-md text-center break-words">
                                             {e?.quantityNeed == 0 ? "-" : e?.quantityNeed}
+                                        </h6>
+                                        <h6 className="2xl:text-[13px] xl:text-[12px] text-[11px] px-2 py-0.5 col-span-1 rounded-md text-center break-words">
+                                            {e?.quantityNeedAi == 0 ? "-" : e?.quantityNeedAi}
                                         </h6>
                                         <h6 className="2xl:text-[13px] xl:text-[12px] text-[11px] px-2 py-0.5 col-span-1 rounded-md text-center break-words">
                                             {e?.quantityKeepp == 0 ? "-" : e?.quantityKeepp}

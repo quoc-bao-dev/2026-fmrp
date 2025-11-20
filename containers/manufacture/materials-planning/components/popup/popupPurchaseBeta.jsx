@@ -143,12 +143,10 @@ const PopupPurchaseBeta = ({
           quantityKeepp: formatNumber(e?.quantity_keep),
           // sl còn lại
           quantityRest: formatNumber(e?.quantity_rest),
+          quantityNeedAI: e?.quantity_need_ai,
           // sl đã mua
           quantityPurchased: formatNumber(e?.quantity_purchase),
-          quantity:
-            (+e?.quantity_rest - +e?.quantity_purchase) > 0
-              ? formatNumber(+e?.quantity_rest - +e?.quantity_purchase)
-              : "",
+          quantity: e?.quantity_need_ai && +e?.quantity_need_ai > 0 ? formatNumber(e?.quantity_need_ai) : "",
 
           itemVariationOptionValueId: e?.item_variation_option_value_id,
         };
@@ -200,7 +198,12 @@ const PopupPurchaseBeta = ({
       formData.append(`items[${index}][quantity]`, typeof e?.quantity == 'number' ? e?.quantity : parseFloat(e?.quantity?.replace(/,/g, '')));
       formData.append(`items[${index}][item_id]`, e?.item?.item_id);
       formData.append(`items[${index}][item_variation_option_value_id]`, e?.itemVariationOptionValueId);
-      formData.append(`items[${index}][quantity_rest]`, typeof e?.quantityRest == 'number' ? e?.quantityRest : parseFloat(e?.quantityRest?.replace(/,/g, '')))
+      formData.append(
+        `items[${index}][quantity_rest]`,
+        typeof e?.quantityNeedAI === "number"
+          ? e?.quantityNeedAI
+          : parseFloat(e?.quantityNeedAI?.replace(/,/g, ""))
+      );
       formData.append(`items[${index}][quantity_purchase]`, typeof e?.quantityPurchased == 'number' ? e?.quantityPurchased : parseFloat(e?.quantityPurchased?.replace(/,/g, '')))
     });
 
@@ -463,9 +466,13 @@ const PopupPurchaseBeta = ({
               {dataLang?.materials_planning_qty_requested ||
                 "materials_planning_qty_requested"}
             </ColumnTablePopup>
-            <ColumnTablePopup colSpan={2}>
+            <ColumnTablePopup colSpan={2} className="relative">
               {dataLang?.materials_planning_qty_buys ||
                 "materials_planning_qty_buys"}
+                <span className='normal-case whitespace-nowrap flex items-center justify-center gap-1 responsive-text-xxs text-blue-600 font-medium ai-shine-badge'>
+                  <Image src='/icon/SparkleYellow.png' alt='logo' width={10} height={10} />
+                  <span className="ai-shine-text">Gợi ý AI</span>
+                  </span>
             </ColumnTablePopup>
             <ColumnTablePopup colSpan={1}>
               {dataLang?.inventory_operatione || "inventory_operatione"}
@@ -508,6 +515,7 @@ const PopupPurchaseBeta = ({
                                                                 ></ModalImage> */}
                                 <Image
                                   src="/icon/noimagelogo.png"
+                                  alt="Product Image"
                                   width={1280}
                                   height={1024}
                                   className="object-contain w-full h-full p-1 rounded"
@@ -576,7 +584,7 @@ const PopupPurchaseBeta = ({
                           render={({ field, fieldState }) => {
 
                             return (
-                              <duv className="flex flex-col items-center justify-center">
+                              <div className="flex flex-col items-center justify-center">
                                 <InPutNumericFormat
                                   className={`${fieldState.error && "border-red-500"
                                     } cursor-default appearance-none text-center 3xl:text-[13px] 2xl:text-[12px] xl:text-[11px] text-[10px] py-1 px-0.5 font-normal 2xl:w-24 xl:w-[90px] w-[63px]  focus:outline-none border-b-2 border-gray-200`}
@@ -607,7 +615,7 @@ const PopupPurchaseBeta = ({
                                     {fieldState.error.message}{" "}
                                   </span>
                                 )}
-                              </duv>
+                              </div>
                             );
                           }}
                         />
