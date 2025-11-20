@@ -71,7 +71,7 @@ const Card = props => {
     search: debouncedSearchTerm,
     branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
   });
-
+console.log(dataProduct)
   const {
     data: dataReportStock,
     isFetching,

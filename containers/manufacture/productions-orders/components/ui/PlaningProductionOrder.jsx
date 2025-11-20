@@ -59,18 +59,18 @@ const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
                     <span>Quy đổi </span>
                     <span className='responsive-text-xxs'> (BOM)</span>
                   </ColumnTable>
-                  <ColumnTable colSpan={2} textAlign={'center'} className={`px-0 border-none normal-case leading-2 text-typo-gray-1 !responsive-text-sm`}>
+                  <ColumnTable colSpan={2} textAlign={'center'} className={`px-0 border-none normal-case leading-2 text-typo-gray-1 !responsive-text-sm relative`}>
                     <span>Quy đổi </span>
-                    <span className='whitespace-nowrap flex items-center justify-center gap-1 responsive-text-xxs text-blue-600 font-medium'>
+                    <span className='normal-case whitespace-nowrap flex items-center justify-center gap-1 responsive-text-xxs text-blue-600 font-medium ai-shine-badge'>
                       <Image src='/icon/SparkleYellow.png' alt='logo' width={10} height={10} />
-                      Gợi ý AI
-                    </span>
+                      <span className="ai-shine-text">Gợi ý AI</span>
+                      </span>
                   </ColumnTable>
                 </>
               )}
-              <ColumnTable colSpan={2} textAlign={'center'} className={`border-none  normal-case  px-0  leading-2 text-typo-gray-1 !responsive-text-sm`}>
+              <ColumnTable colSpan={2} textAlign={'center'} className={`border-none normal-case leading-2 text-typo-gray-1 !responsive-text-sm`}>
                 {dataLang?.materials_planning_held || ' Đã giữ'}
-                {typeTable === 'materials' ? '/Mua' : ''}
+                {typeTable === 'materials' ? '/Đã mua' : ''}
               </ColumnTable>
               <ColumnTable colSpan={1} textAlign={'center'} className={`border-none normal-case leading-2 text-typo-gray-1 px-0 !responsive-text-sm`}>
                 {dataLang?.materials_planning_lack || ' Thiếu'}
