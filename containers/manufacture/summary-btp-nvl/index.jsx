@@ -606,7 +606,7 @@ const SummaryBtpNvl = () => {
                     const color = {
                       0: {
                         color: 'bg-[#FF811A]/15 text-[#C25705]',
-                        title: 'Đã sản xuất',
+                        title: 'Chưa sản xuất',
                       },
                       1: {
                         color: 'bg-[#3ECeF7]/20 text-[#076A94]',
