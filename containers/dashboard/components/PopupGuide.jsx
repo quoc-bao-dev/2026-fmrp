@@ -4,6 +4,8 @@ import PopupCustom from '@/components/UI/popup';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { MdArrowOutward } from 'react-icons/md';
+import { PiArrowRightBold } from 'react-icons/pi';
+import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew';
 
 const PopupGuide = ({ open, onClose, selectedItem, stepsData, allStepsData, onItemSelect }) => {
   const [expandedSteps, setExpandedSteps] = useState(new Set());
@@ -133,6 +135,20 @@ const PopupGuide = ({ open, onClose, selectedItem, stepsData, allStepsData, onIt
           <Customscrollbar className='h-full w-full pr-2'>
             <div className='prose prose-sm max-w-none text-gray-700 leading-relaxed' dangerouslySetInnerHTML={{ __html: currentItem?.content }} />
           </Customscrollbar>
+          <div className='mt-auto flex justify-center'>
+            <ButtonAnimationNew
+              title='Bắt đầu ngay'
+              icon={<PiArrowRightBold className='3xl:size-5 size-4' />}
+              reverse
+              className='flex items-center justify-center gap-2 py-3 px-4 2xl:text-lg text-base text-white font-medium w-fit rounded-xl mt-auto z-50'
+              style={{
+                background: 'linear-gradient(170.14deg, #1FC583 5.11%, #1F9285 95.28%)',
+              }}
+              onClick={() => {
+                // TODO: Xử lý khi click button
+              }}
+            />
+          </div>
         </div>
       </div>
     </PopupCustom>
