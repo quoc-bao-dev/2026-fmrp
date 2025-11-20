@@ -1,10 +1,10 @@
-import CalendarBlankIcon from '@/components/icons/common/CalendarBlankIcon'
+import { CalendarIcon } from '@/components/icons'
 import DropdownFilledIcon from '@/components/icons/common/DropdownFilledIcon'
 import styleDatePickerReport from '@/configs/configDatePickerReport'
 import { useEffect, useState } from 'react'
 import 'react-datepicker/dist/react-datepicker.css'
-import Datepicker from 'react-tailwindcss-datepicker'
 import { IoClose } from 'react-icons/io5'
+import Datepicker from 'react-tailwindcss-datepicker'
 
 const DateToDateReport = ({ placeholder, value, onChange, className }) => {
   const [dateValue, setDateValue] = useState(
@@ -69,7 +69,7 @@ const DateToDateReport = ({ placeholder, value, onChange, className }) => {
         hasSelectedDates ? 'w-auto' : 'w-[150px]'
       } ${className}`}
     >
-      <CalendarBlankIcon size={17} color="#9295A4" className="absolute left-3 top-1/2 -translate-y-1/2 z-10" />
+      <CalendarIcon color="#9295A4" className="size-4 absolute left-3 top-1/2 -translate-y-1/2 z-10" />
       <Datepicker
         {...styleDatePickerReport}
         value={dateValue}

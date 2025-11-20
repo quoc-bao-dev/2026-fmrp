@@ -197,7 +197,7 @@ const Table = ({ dataLang, data, isLoading, handleRemoveItem, handChangeTable, d
                                     : 'border-[#E1E1E1]'
                                 }  `}
                       />
-                      <CalendarBlankIcon className="size-4 absolute left-1 -translate-y-1/2 top-1/2" />
+                      <CalendarIcon className="size-4 absolute left-1 -translate-y-1/2 top-1/2" />
                     </div>
                   </div> */}
                   <h3 className="text-[#64748B] col-span-3 py-2 text-center font-medium responsive-text-sm capitalize px-2">

@@ -1,6 +1,6 @@
 import apiVersionApplication from "@/Api/apiVersion/apiNewVersion";
 import ProgressBar from "@/components/common/progress/ProgressBar";
-import SealCheck from "@/components/icons/SealCheck";
+import { SealCheckIcon } from "@/components/icons";
 import useToast from "@/hooks/useToast";
 import { Lexend_Deca } from "@next/font/google";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -127,7 +127,7 @@ const PopupUpdateNewVersion = ({ version, setHasNewVersion }) => {
                                 className="flex flex-row gap-x-2 items-center justify-center"
                                 key={index}
                             >
-                                <SealCheck />
+                                <SealCheckIcon />
                                 <p className="flex-1 text-sm font-medium text-typo-gray-3">
                                     {item}
                                 </p>

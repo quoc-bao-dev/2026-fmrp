@@ -15,8 +15,7 @@ import LoadingComponent from '@/components/common/loading/loading/LoadingCompone
 import PopupRequestUpdateVersion from '@/components/common/popup/PopupRequestUpdateVersion';
 import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
-import ArrowCounterClockwiseIcon from '@/components/icons/common/ArrowCounterClockwiseIcon';
-import CalendarBlankIcon from '@/components/icons/common/CalendarBlankIcon';
+import { ArrowCounterClockWiseIcon, CalendarIcon } from '@/components/icons';
 import CaretDownIcon from '@/components/icons/common/CaretDownIcon';
 import CaretDropdownThinIcon from '@/components/icons/common/CaretDropdownThinIcon';
 import ChartDonutIcon from '@/components/icons/common/ChartDonutIcon';
@@ -1168,7 +1167,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
           <ButtonAnimationNew
             icon={
               <div className='size-4'>
-                <ArrowCounterClockwiseIcon className='size-full' />
+                <ArrowCounterClockWiseIcon className='size-full' />
               </div>
             }
             title={dataLang?.refresh_data || 'Làm mới dữ liệu'}
@@ -1219,7 +1218,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
 
           <div className='relative'>
             <div className='3xl:size-5 size-4 absolute top-1/2 -translate-y-1/2 left-2 z-[2] pointer-events-none'>
-              <CalendarBlankIcon className='size-full text-[#9295A4]' />
+              <CalendarIcon className='size-full text-[#9295A4]' />
             </div>
 
             <DatePicker

@@ -50,6 +50,7 @@ export const useProductionOrdersList = (params) => {
                   params?.date_start,
                   params?.date_end,
                   params?._po_id,
+                  params?._po_ids,
                   params?._pod_id,
                   params?.branch_id,
                   params?.orders_id,

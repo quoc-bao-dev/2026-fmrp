@@ -14,7 +14,6 @@ import {
     RowItemTable,
     RowTable,
 } from "@/components/UI/common/Table";
-import BackIcon from "@/components/icons/common/BackIcon";
 import { twMerge } from "tailwind-merge";
 import Carousel from "@/components/common/carousel/Carousel";
 import NoData from "@/components/UI/noData/nodata";
@@ -22,6 +21,7 @@ import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import apiProducts from "@/Api/apiProducts/products/apiProducts";
 import ButtonAnimationNew from "@/components/common/button/ButtonAnimationNew";
+import { BackIcon } from "@/components/icons";
 dayjs.extend(customParseFormat);
 
 const deca = Lexend_Deca({

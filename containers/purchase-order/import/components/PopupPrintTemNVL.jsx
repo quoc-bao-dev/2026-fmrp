@@ -5,7 +5,6 @@ import Cardtable from "@/components/common/card/Cardtable";
 import Carousel from "@/components/common/carousel/Carousel";
 import CheckboxDefault from "@/components/common/checkbox/CheckboxDefault";
 import InputNumberCustom from "@/components/common/input/InputNumberCustom";
-import BackIcon from "@/components/icons/common/BackIcon";
 import PrinterIcon2 from "@/components/icons/common/PrinterIcon2";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import {
@@ -23,6 +22,7 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { twMerge } from "tailwind-merge";
 import { useImportDetail } from "../hooks/useImportDetail";
+import { BackIcon } from "@/components/icons";
 dayjs.extend(customParseFormat);
 
 const deca = Lexend_Deca({

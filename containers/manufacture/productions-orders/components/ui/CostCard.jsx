@@ -1,8 +1,7 @@
-import ArrowDownIcon from "@/components/icons/common/ArrowDownIcon";
-import ArrowUpIcon from "@/components/icons/common/ArrowUpIcon";
+import { ArrowBendUpRightIcon, ArrowDownIcon } from "@/components/icons";
 
 const CostCard = ({ className, title, amount, color, percent, isUp }) => {
-    const arrow = isUp ? <ArrowUpIcon className='size-4 shrink-0' /> : <ArrowDownIcon className='size-4 shrink-0' />;
+    const arrow = isUp ? <ArrowBendUpRightIcon className='size-4 shrink-0' /> : <ArrowDownIcon className='size-4 shrink-0' />;
     const percentColor = isUp ? 'bg-[#0BAA2E] text-[#EBFEF2]' : 'bg-[#EE1E1E] text-[#FFEEF0]';
 
     return (

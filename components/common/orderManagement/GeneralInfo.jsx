@@ -1,9 +1,9 @@
-import CalendarBlankIcon from '@/components/icons/common/CalendarBlankIcon'
 import { ConfigProvider, DatePicker } from 'antd'
 import viVN from 'antd/lib/locale/vi_VN'
 import dayjs from 'dayjs'
 import { PiHash } from 'react-icons/pi'
 import InfoFormLabel from './InfoFormLabel'
+import { CalendarIcon } from '@/components/icons'
 
 //  Mã chứng từ
 export const DocumentNumber = ({ dataLang, value, onChange }) => (
@@ -44,7 +44,7 @@ export const DocumentDate = ({
 
     <div className="relative w-full flex flex-row custom-date-picker date-form">
       <span className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
-        <CalendarBlankIcon color="#7a7a7a" className="size-4 opacity-60" />
+        <CalendarIcon color="#7a7a7a" className="size-4 opacity-60" />
       </span>
       <ConfigProvider locale={viVN}>
         <DatePicker
