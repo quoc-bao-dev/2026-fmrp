@@ -1185,7 +1185,8 @@ export const BtnAction = React.memo((props) => {
         }
 
         // Hiển thị tối đa 3 nút, phần còn lại nằm trong popover (đối với products thì đưa hết vào popover)
-        const maxVisibleButtons = props.type === "products" ? 0 : 3;
+        const popoverOnlyTypes = ["products", "sales_product"];
+        const maxVisibleButtons = popoverOnlyTypes.includes(props.type) ? 0 : 3;
         const visibleButtons = allButtons.slice(0, maxVisibleButtons);
         const hiddenButtons = allButtons.slice(maxVisibleButtons);
 
@@ -1212,7 +1213,7 @@ export const BtnAction = React.memo((props) => {
                     </svg>
                 </button>
                 <div
-                    className={`absolute ${isMoreMenuDropUp ? "bottom-full mb-1" : "top-full mt-1"} right-0 p-1 min-w-[160px] bg-white rounded-xl border border-gray-200 shadow-[0px_20px_40px_-4px_#919EAB3D,0px_0px_2px_0px_#919EAB3D] z-[10] ${showMoreIcons ? "block" : "hidden"}`}
+                    className={`absolute ${isMoreMenuDropUp ? "bottom-full mb-1" : "top-full mt-1"} right-0 p-1 min-w-[160px] bg-white rounded-xl border border-gray-200 shadow-[0px_20px_40px_-4px_#919EAB3D,0px_0px_2px_0px_#919EAB3D] z-[999999999] ${showMoreIcons ? "block" : "hidden"}`}
                     data-row-id={currentId}
                     onClick={(event) => {
                         event.stopPropagation();
