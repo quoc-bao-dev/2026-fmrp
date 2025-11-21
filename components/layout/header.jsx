@@ -17,6 +17,7 @@ import { Tooltip } from 'react-tippy';
 import 'react-tippy/dist/tippy.css';
 import Popup from 'reactjs-popup';
 import PopupFeelsCustomer from '../common/popup/PopupFeelsCustomer';
+import PopupQRCodeHeader from '../common/popup/PopupQRCodeHeader';
 import ChatIcon from '../icons/common/ChatIcon';
 import PasswordIcon from '../icons/common/PasswordIcon';
 import SignOutIcon from '../icons/common/SignOutIcon';
@@ -1265,6 +1266,35 @@ const Header = () => {
           </button>
         )}
         <div className='flex items-center gap-3'>
+          <Tooltip title={'Quét QR'} arrow theme='dark'>
+            <button
+              type='button'
+              onClick={() =>
+                dispatch({
+                  type: 'statePopupGlobal',
+                  payload: {
+                    open: true,
+                    children: <PopupQRCodeHeader />,
+                    allowOutsideClick: true,
+                    allowEscape: true,
+                  },
+                })
+              }
+              className='2xl:size-5 xl:size-4 size-3 shink-0 cursor-pointer flex items-center justify-center rounded-full hover:bg-slate-100 transition'
+            >
+              <Image
+                alt='qr-code'
+                src='/qr.png'
+                width={20}
+                height={20}
+                quality={100}
+                className='object-contain w-full h-full transition'
+                loading='lazy'
+                crossOrigin='anonymous'
+                blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+              />
+            </button>
+          </Tooltip>
           <Dropdown data={ListQuyTrinh} type='procedure' className='popover-quytrinh' position={'bottom'} classNameTrigger={'2xl:!p-0 !p-0'}>
             <div className='2xl:size-5 xl:size-4 size-3 shink-0'>
               <Image
