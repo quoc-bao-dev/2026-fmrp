@@ -119,17 +119,18 @@ const Popup_Products = React.memo(props => {
     branch.forEach(id => formData.append('branch_id[]', id.value));
 
     handingCategory.mutate(formData, {
-      onSuccess: ({ isSuccess, message }) => {
+      onSuccess: ({ isSuccess, message, data, rResult }) => {
         if (isSuccess) {
           isShow('success', props.dataLang[message] || message);
           sOpen(false);
+          const categoryId = data?.id || rResult?.id || data?.category_id || rResult?.category_id;
           sName('');
           sCode('');
           sNote('');
           sGroup(null);
           sBranch([]);
-          props.onRefresh && props.onRefresh();
-          props.onRefreshSub && props.onRefreshSub();
+          props.onRefresh && props.onRefresh(categoryId);
+          props.onRefreshSub && props.onRefreshSub(categoryId);
         } else {
           isShow('error', props.dataLang[message] || message);
         }
