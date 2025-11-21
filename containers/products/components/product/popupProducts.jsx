@@ -1,5 +1,7 @@
 import apiCategory from '@/Api/apiProducts/category/apiCategory';
 import apiProducts from '@/Api/apiProducts/products/apiProducts';
+import apiComons from '@/Api/apiComon/apiComon';
+import { ButtonAddNew } from '@/components/common/button/AddNew';
 import { PlusIcon } from '@/components/icons';
 import EditIcon from '@/components/icons/common/EditIcon';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
@@ -14,16 +16,18 @@ import { WARNING_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 import useActionRole from '@/hooks/useRole';
 import useToast from '@/hooks/useToast';
 import { useToggle } from '@/hooks/useToggle';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Trash as IconDelete, GalleryEdit as IconEditImg, Image as IconImage } from 'iconsax-react';
 import Image from 'next/image';
 import React, { useEffect, useRef, useState } from 'react';
-import { BiEdit } from 'react-icons/bi';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Select from 'react-select';
+import PopupCategory from '../category/popup';
+import PopupUnit from './popupUnit';
 
 const Popup_Products = React.memo(props => {
   const isShow = useToast();
+  const dispatch = useDispatch();
   // danh sách chi nhánh
   const dataOptBranch = useSelector(state => state.branch);
   //    danh sách loại thành phẩm
@@ -41,6 +45,14 @@ const Popup_Products = React.memo(props => {
   const { checkAdd, checkEdit } = useActionRole(auth, 'products');
   // cờ để show popup khi xóa
   const { isOpen: openDelete, isId, isIdChild, handleOpen, handleToggle, handleQueryId } = useToggle();
+
+  // state để mở popup thêm nhanh danh mục
+  const [openCategoryPopup, sOpenCategoryPopup] = useState(false);
+
+  // state để mở popup thêm nhanh đơn vị
+  const [openUnitPopup, sOpenUnitPopup] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const scrollAreaRef = useRef(null);
 
@@ -676,43 +688,55 @@ const Popup_Products = React.memo(props => {
                       {errBranch && branch?.length == 0 && <label className='text-sm text-red-500'>{props.dataLang?.client_list_bran || 'client_list_bran'}</label>}
                     </div>
                     <div className='2xl:space-y-1'>
-                      <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
-                        {props.dataLang?.category_titel} <span className='text-red-500'>*</span>
-                      </label>
-                      <Select
-                        options={dataCategory}
-                        formatOptionLabel={SelectOptionLever}
-                        value={category}
-                        onChange={_HandleChangeInput.bind(this, 'category')}
-                        isClearable={true}
-                        noOptionsMessage={() => `${props.dataLang?.no_data_found}`}
-                        placeholder={props.dataLang?.category_titel}
-                        menuPortalTarget={document.body}
-                        onMenuOpen={handleMenuOpen}
-                        className={`${
-                          errGroup && category?.value == null ? 'border-red-500' : 'border-transparent'
-                        } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
-                        theme={theme => ({
-                          ...theme,
-                          colors: {
-                            ...theme.colors,
-                            primary25: '#EBF5FF',
-                            primary50: '#92BFF7',
-                            primary: '#0F4F9E',
-                          },
-                        })}
-                        styles={{
-                          placeholder: base => ({
-                            ...base,
-                            color: '#cbd5e1',
-                          }),
-                          menuPortal: base => ({
-                            ...base,
-                            zIndex: 9999,
-                            position: 'absolute',
-                          }),
-                        }}
-                      />
+                      <div className='flex items-center justify-between'>
+                        <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
+                          {props.dataLang?.category_titel} <span className='text-red-500'>*</span>
+                        </label>
+                        <ButtonAddNew
+                          onClick={() => {
+                            sOpenCategoryPopup(true);
+                          }}
+                          title='Thêm nhanh danh mục'
+                        />
+                      </div>
+                      <div className='flex items-center gap-2'>
+                        <div className='flex-1'>
+                          <Select
+                            options={dataCategory}
+                            formatOptionLabel={SelectOptionLever}
+                            value={category}
+                            onChange={_HandleChangeInput.bind(this, 'category')}
+                            isClearable={true}
+                            noOptionsMessage={() => `${props.dataLang?.no_data_found}`}
+                            placeholder={props.dataLang?.category_titel}
+                            menuPortalTarget={document.body}
+                            onMenuOpen={handleMenuOpen}
+                            className={`${
+                              errGroup && category?.value == null ? 'border-red-500' : 'border-transparent'
+                            } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
+                            theme={theme => ({
+                              ...theme,
+                              colors: {
+                                ...theme.colors,
+                                primary25: '#EBF5FF',
+                                primary50: '#92BFF7',
+                                primary: '#0F4F9E',
+                              },
+                            })}
+                            styles={{
+                              placeholder: base => ({
+                                ...base,
+                                color: '#cbd5e1',
+                              }),
+                              menuPortal: base => ({
+                                ...base,
+                                zIndex: 9999,
+                                position: 'absolute',
+                              }),
+                            }}
+                          />
+                        </div>
+                      </div>
                       {errGroup && category?.value == null && <label className='text-sm text-red-500'>{props.dataLang?.category_material_group_err_name}</label>}
                     </div>
                     <div className='2xl:space-y-1'>
@@ -843,9 +867,17 @@ const Popup_Products = React.memo(props => {
                       {errType && type?.value == null && <label className='text-sm text-red-500'>{props.dataLang?.please_choose_type_finishedProduct}</label>}
                     </div>
                     <div className='2xl:space-y-1'>
-                      <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
-                        {props.dataLang?.unit} <span className='text-red-500'>*</span>
-                      </label>
+                      <div className='flex items-center justify-between'>
+                        <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
+                          {props.dataLang?.unit} <span className='text-red-500'>*</span>
+                        </label>
+                        <ButtonAddNew
+                          onClick={() => {
+                            sOpenUnitPopup(true);
+                          }}
+                          title='Thêm nhanh đơn vị'
+                        />
+                      </div>
                       <Select
                         options={dataOptUnit}
                         value={unit}
@@ -884,7 +916,7 @@ const Popup_Products = React.memo(props => {
                     <div className='2xl:space-y-1'>
                       <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>{props.dataLang?.avatar || 'avatar'}</label>
                       <div className='flex justify-center'>
-                        <div className='relative rounded h-36 w-36 bg-slate-200'>
+                        <div className='relative rounded h-[170px] w-[170px] bg-slate-200'>
                           {thumb && (
                             <Image
                               width={120}
@@ -1283,6 +1315,115 @@ const Popup_Products = React.memo(props => {
           </button>
         </div>
       </div>
+
+      {openCategoryPopup && (
+        <PopupCategory
+          dataLang={props.dataLang}
+          openExternal={openCategoryPopup}
+          branchExternal={branch?.length > 0 ? branch : undefined}
+          onCloseExternal={() => {
+            sOpenCategoryPopup(false);
+          }}
+          onRefresh={async (categoryId) => {
+            // Refresh danh sách danh mục sau khi thêm thành công
+            await queryClient.invalidateQueries({ queryKey: ['api_category', branch] });
+            
+            // Fetch lại trực tiếp từ API để đảm bảo có data mới nhất
+            if (categoryId && branch?.length > 0) {
+              try {
+                const params = {
+                  'filter[branch_id][]': branch.map(e => e.value),
+                };
+                const { rResult } = await apiCategory.apiOptionCategory({ params });
+                
+                // Tìm category vừa thêm
+                const foundCategory = rResult?.find(cat => String(cat.id) === String(categoryId));
+                if (foundCategory) {
+                  sCategory({
+                    label: `${foundCategory.name + ' ' + '(' + foundCategory.code + ')'}`,
+                    value: foundCategory.id,
+                    level: foundCategory.level,
+                    code: foundCategory.code,
+                    parent_id: foundCategory.parent_id,
+                  });
+                }
+              } catch (error) {
+                console.error('Error fetching category:', error);
+              }
+            }
+            sOpenCategoryPopup(false);
+          }}
+          onRefreshSub={async (categoryId) => {
+            // Refresh danh sách danh mục sau khi thêm thành công
+            await queryClient.invalidateQueries({ queryKey: ['api_category', branch] });
+            
+            // Fetch lại trực tiếp từ API để đảm bảo có data mới nhất
+            if (categoryId && branch?.length > 0) {
+              try {
+                const params = {
+                  'filter[branch_id][]': branch.map(e => e.value),
+                };
+                const { rResult } = await apiCategory.apiOptionCategory({ params });
+                
+                // Tìm category vừa thêm
+                const foundCategory = rResult?.find(cat => String(cat.id) === String(categoryId));
+                if (foundCategory) {
+                  sCategory({
+                    label: `${foundCategory.name + ' ' + '(' + foundCategory.code + ')'}`,
+                    value: foundCategory.id,
+                    level: foundCategory.level,
+                    code: foundCategory.code,
+                    parent_id: foundCategory.parent_id,
+                  });
+                }
+              } catch (error) {
+                console.error('Error fetching category:', error);
+              }
+            }
+            sOpenCategoryPopup(false);
+          }}
+          className='hidden'
+        />
+      )}
+
+      {openUnitPopup && (
+        <PopupUnit
+          dataLang={props.dataLang}
+          openExternal={openUnitPopup}
+          onCloseExternal={() => {
+            sOpenUnitPopup(false);
+          }}
+          onRefresh={async (unitId) => {
+            // Refresh danh sách đơn vị sau khi thêm thành công
+            // Invalidate query để trigger refetch
+            await queryClient.invalidateQueries({ queryKey: ['api_unit_list'] });
+            
+            // Fetch lại từ API và cập nhật Redux state
+            try {
+              const { rResult } = await apiComons.apiUnit({});
+              const unitList = rResult?.map((e) => ({ label: e.unit, value: e.id }));
+              
+              // Cập nhật Redux state
+              dispatch({
+                type: 'unit_finishedProduct/update',
+                payload: unitList,
+              });
+              
+              // Tìm và tự động chọn đơn vị vừa thêm
+              if (unitId) {
+                const foundUnit = unitList?.find(u => String(u.value) === String(unitId));
+                if (foundUnit) {
+                  sUnit(foundUnit);
+                }
+              }
+            } catch (error) {
+              console.error('Error fetching units:', error);
+            }
+            sOpenUnitPopup(false);
+          }}
+          className='hidden'
+        />
+      )}
     </PopupCustom>
   );
 });

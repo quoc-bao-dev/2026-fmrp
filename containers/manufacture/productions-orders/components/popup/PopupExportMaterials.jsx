@@ -255,13 +255,13 @@ const InputNumberCustom = memo(
           ? parseFloat(numericValue) 
           : parseInt(numericValue);
         
-        if (numValue > max) {
-          showToast(
-            "error",
-            `Số lượng không được vượt quá ${formatNumber(max)}`
-          );
-          return;
-        }
+        // if (numValue > max) {
+        //   showToast(
+        //     "error",
+        //     `Số lượng không được vượt quá ${formatNumber(max)}`
+        //   );
+        //   return;
+        // }
         
         setInputValue(numValue);
 
@@ -308,12 +308,14 @@ const InputNumberCustom = memo(
         setState(min);
         setInputValue(min);
         setFormattedValue(formatNumber(min));
-      } else if (number > max) {
-        showToast("error", `Số lượng không được vượt quá ${formatNumber(max)}`);
-        setState(max);
-        setInputValue(max);
-        setFormattedValue(formatNumber(max));
-      } else {
+      } 
+      // else if (number > max) {
+      //   showToast("error", `Số lượng không được vượt quá ${formatNumber(max)}`);
+      //   setState(max);
+      //   setInputValue(max);
+      //   setFormattedValue(formatNumber(max));
+      // } 
+      else {
         setState(number);
         setInputValue(number);
         setFormattedValue(formatNumber(number));
@@ -326,15 +328,19 @@ const InputNumberCustom = memo(
         if (disabled) return;
         const current = parseToNumber(inputValue);
         let result = current;
-        if (type === "increment" && current < max) {
+        if (type === "increment") {
           result = current + 1;
-        } else if (type === "increment" && current >= max) {
-          showToast(
-            "error",
-            `Số lượng không được vượt quá ${formatNumber(max)}`
-          );
-          return;
         }
+        // if (type === "increment" && current < max) {
+        //   result = current + 1;
+        // } else 
+        // if (type === "increment" && current >= max) {
+        //   showToast(
+        //     "error",
+        //     `Số lượng không được vượt quá ${formatNumber(max)}`
+        //   );
+        //   return;
+        // }
         if (type === "decrement" && current > min) result = current - 1;
         setState(result);
         setInputValue(result);

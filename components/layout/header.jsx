@@ -21,6 +21,7 @@ import AvatarText from '../UI/common/user/AvatarText';
 import { Dropdown, DropdownThongBao } from '../UI/dropdown';
 import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
 import { ChatIcon, PasswordIcon, SignOutIcon, SparkleIcon, SparkleOutlineIcon, UserCircleIcon } from '../icons';
+import PopupQRCodeHeader from '../common/popup/PopupQRCodeHeader';
 
 const Header = () => {
   const router = useRouter();
@@ -1259,6 +1260,35 @@ const Header = () => {
           </button>
         )}
         <div className='flex items-center gap-3'>
+          <Tooltip title={'Quét QR để đăng nhập app'} arrow theme='dark'>
+            <button
+              type='button'
+              onClick={() =>
+                dispatch({
+                  type: 'statePopupGlobal',
+                  payload: {
+                    open: true,
+                    children: <PopupQRCodeHeader />,
+                    allowOutsideClick: true,
+                    allowEscape: true,
+                  },
+                })
+              }
+              className='2xl:size-6 xl:size-5 size-3 shink-0 cursor-pointer flex items-center justify-center rounded-full opacity-80'
+            >
+              <Image
+                alt='qr-code'
+                src='/icon/icon-qr.png'
+                width={24}
+                height={24}
+                quality={100}
+                className='object-contain transition size-6'
+                loading='lazy'
+                crossOrigin='anonymous'
+                blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+              />
+            </button>
+          </Tooltip>
           <Dropdown data={ListQuyTrinh} type='procedure' className='popover-quytrinh' position={'bottom'} classNameTrigger={'2xl:!p-0 !p-0'}>
             <div className='2xl:size-5 xl:size-4 size-3 shink-0'>
               <Image

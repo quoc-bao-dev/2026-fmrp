@@ -1,4 +1,6 @@
 import apiProducts from "@/Api/apiProducts/products/apiProducts";
+import apiCategory from "@/Api/apiSettings/apiCategory";
+import { ButtonAddNew } from "@/components/common/button/AddNew";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import Loading from "@/components/UI/loading/loading";
 import PopupCustom from "@/components/UI/popup";
@@ -6,23 +8,37 @@ import { WARNING_STATUS_ROLE } from "@/constants/warningStatus/warningStatus";
 import useDragAndDrop from "@/hooks/useDragAndDrop";
 import useActionRole from "@/hooks/useRole";
 import useToast from "@/hooks/useToast";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { I3Square, Add as IconAdd, Trash as IconDelete, Maximize4 as IconMax } from "iconsax-react";
 import React, { useEffect, useRef, useState } from "react";
 import { DragDropContext, Draggable, Droppable, } from 'react-beautiful-dnd';
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Select from "react-select";
 import { v4 as uddidV4 } from "uuid";
+import PopupStageAdd from "./popupStageAdd";
+import { TrashIcon } from "@/components/icons";
 
 const Popup_Stage = React.memo((props) => {
     // lấy danh sách công đoạn trong redux
     const listCd = useSelector((state) => state.stage_finishedProduct);
 
     const isShow = useToast();
+    const dispatch = useDispatch();
+    const queryClient = useQueryClient();
 
     const [isOpen, sIsOpen] = useState(false);
 
+    // state để mở popup thêm nhanh công đoạn
+    const [openStageAddPopup, sOpenStageAddPopup] = useState(false);
+
     const _ToggleModal = (e) => sIsOpen(e);
+
+    // Nếu có prop openExternal, sử dụng nó để điều khiển popup từ bên ngoài
+    useEffect(() => {
+        if (props.openExternal !== undefined) {
+            sIsOpen(props.openExternal);
+        }
+    }, [props.openExternal]);
 
     const scrollAreaRef = useRef(null);
     const handleMenuOpen = () => {
@@ -53,8 +69,31 @@ const Popup_Stage = React.memo((props) => {
     const [radio2, sRadio2] = useState(0);
 
     const [enabled, setEnabled] = useState(false);
+    
+    // Hàm tự động set radio cho phần tử đầu và cuối
+    const autoSetRadio = (data) => {
+        if (!data || data.length === 0) return data;
+        
+        const updatedData = data.map((item, index) => {
+            const isFirst = index === 0;
+            const isLast = index === data.length - 1;
+            const isOnly = data.length === 1;
+            
+            return {
+                ...item,
+                radio1: (isFirst || isOnly) ? 1 : 0,
+                radio2: (isLast || isOnly) ? 1 : 0,
+            };
+        });
+        
+        return updatedData;
+    };
+    
     // hook drag item
-    const { onDragEnd } = useDragAndDrop(option, (updatedData) => { sOption(updatedData) })
+    const { onDragEnd } = useDragAndDrop(option, (updatedData) => { 
+        const autoUpdatedData = autoSetRadio(updatedData);
+        sOption(autoUpdatedData);
+    })
 
     useEffect(() => {
         setEnabled(true)
@@ -78,14 +117,15 @@ const Popup_Stage = React.memo((props) => {
         queryKey: ["api_product_getDesignStages", props.id],
         queryFn: async () => {
             const data = await apiProducts.apiDataDesignStage(props.id);
-            sOption(
-                data.map((e) => ({
-                    id: `${e.id}`,
-                    name: { label: e.stage_name, value: e.stage_id },
-                    radio1: e.type !== "0" ? 1 : 0,
-                    radio2: e.final_stage !== "0" ? 1 : 0,
-                }))
-            );
+            const mappedData = data.map((e) => ({
+                id: `${e.id}`,
+                name: { label: e.stage_name, value: e.stage_id },
+                radio1: e.type !== "0" ? 1 : 0,
+                radio2: e.final_stage !== "0" ? 1 : 0,
+            }));
+            // Tự động set radio cho phần tử đầu và cuối
+            const autoSetData = autoSetRadio(mappedData);
+            sOption(autoSetData);
             sListCdChosen(
                 data.map((e) => ({
                     label: e.stage_name,
@@ -136,6 +176,33 @@ const Popup_Stage = React.memo((props) => {
             isShow("error", props.dataLang?.required_field_null);
             return
         }
+
+        const validStageCount = option.filter(item => item.name !== null).length;
+        if (validStageCount < 2) {
+            isShow("error", props.dataLang?.stage_minimum_two || "Vui lòng thêm ít nhất 2 công đoạn");
+            return;
+        }
+
+        const firstStages = option.filter(item => item.radio1 === 1 && item.name);
+        const lastStages = option.filter(item => item.radio2 === 1 && item.name);
+
+        if (firstStages.length !== 1 || lastStages.length !== 1) {
+            isShow("error", props.dataLang?.stage_required_first_last || "Vui lòng chọn duy nhất 1 công đoạn bắt đầu và 1 công đoạn cuối");
+            return;
+        }
+
+        if (firstStages[0].id === lastStages[0].id) {
+            isShow("error", props.dataLang?.stage_first_last_not_same || "Công đoạn bắt đầu và công đoạn cuối không thể trùng nhau");
+            return;
+        }
+
+        const firstIndex = option.findIndex(item => item.id === firstStages[0].id);
+        const lastIndex = option.findIndex(item => item.id === lastStages[0].id);
+        if (firstIndex === -1 || lastIndex === -1 || firstIndex >= lastIndex) {
+            isShow("error", props.dataLang?.stage_first_before_last || "Công đoạn bắt đầu phải nằm trên công đoạn cuối");
+            return;
+        }
+
         sErrName(false);
         sOnSending(true);
     };
@@ -146,7 +213,10 @@ const Popup_Stage = React.memo((props) => {
             isShow("error", "Vui lòng thêm công đoạn sản xuất ở danh mục cài đặt để thêm công đoạn");
             return;
         }
-        sOption([...option, { id: uddidV4(), name: name, radio1: radio1, radio2: radio2 }]);
+        const newOption = [...option, { id: uddidV4(), name: name, radio1: radio1, radio2: radio2 }];
+        // Tự động set radio cho phần tử đầu và cuối sau khi thêm
+        const autoSetData = autoSetRadio(newOption);
+        sOption(autoSetData);
         sName(null);
         sRadio1(0);
         sRadio2(0);
@@ -154,13 +224,17 @@ const Popup_Stage = React.memo((props) => {
 
     // check value trong từng công đoạn có rồi thì filter ra khỏi select
     useEffect(() => {
-        isOpen && listCdChosen && sListCdRest(listCd?.filter((item1) => !listCdChosen.some((item2) => item1.label === item2?.label && item1.value === item2?.value)));
-    }, [listCdChosen]);
+        if (isOpen && listCd && listCdChosen) {
+            sListCdRest(listCd?.filter((item1) => !listCdChosen.some((item2) => item1.label === item2?.label && item1.value === item2?.value)));
+        }
+    }, [listCd, listCdChosen, isOpen]);
 
     // xóa công đoạn
     const handleDelete = (id) => {
         const updatedData = option.filter((item) => item.id != id);
-        sOption(updatedData);
+        // Tự động set radio cho phần tử đầu và cuối sau khi xóa
+        const autoSetData = autoSetRadio(updatedData);
+        sOption(autoSetData);
     };
 
     // change option trong công đoạn
@@ -168,9 +242,9 @@ const Popup_Stage = React.memo((props) => {
         const updatedData = option.map((item) => {
             if (item.id == id) {
                 if (type == "radio1") {
-                    return { ...item, radio1: 1 };
+                    return { ...item, radio1: item.radio1 === 1 ? 0 : 1 };
                 } else if (type == "radio2") {
-                    return { ...item, radio2: 1 };
+                    return { ...item, radio2: item.radio2 === 1 ? 0 : 1 };
                 }
             } else {
                 if (type == "radio1") {
@@ -179,6 +253,7 @@ const Popup_Stage = React.memo((props) => {
                     return { ...item, radio2: 0 };
                 }
             }
+            return item;
         });
         sOption(updatedData);
     };
@@ -209,9 +284,9 @@ const Popup_Stage = React.memo((props) => {
                             position: 'static'
                         }}
                     >
-                        <div className="grid items-center h-full grid-cols-9 py-1 bg-white hover:bg-slate-50">
+                        <div className="grid items-center h-full grid-cols-15 py-1 bg-white hover:bg-slate-50">
                             <h6 className="col-span-1 px-2 text-center">{index + 1}</h6>
-                            <div className="col-span-2 px-2 ">
+                            <div className="col-span-6 px-2 ">
                                 <Select
                                     closeMenuOnSelect={true}
                                     placeholder={props.dataLang?.stage_finishedProduct}
@@ -256,7 +331,7 @@ const Popup_Stage = React.memo((props) => {
                                     {"Chọn"}
                                 </label>
                             </div>
-                            <div className="flex items-center justify-center col-span-2">
+                            <div className="flex items-center justify-center col-span-3">
                                 <input
                                     type="radio"
                                     id={`radio2 + ${value.id}`}
@@ -273,15 +348,15 @@ const Popup_Stage = React.memo((props) => {
                                     {"Chọn"}
                                 </label>
                             </div>
-                            <div className="flex items-center justify-center col-span-1 space-x-4">
+                            <div className="flex items-center justify-center col-span-2 gap-2">
                                 <div
                                     {...provided.dragHandleProps}
-                                    className="relative flex flex-col items-center justify-center text-blue-500 cursor-move">
+                                    className="relative flex flex-col items-center justify-center text-blue-500 cursor-move p-1 rounded-lg border border-transparent hover:border-blue-500">
                                     <IconMax size="18" className="-rotate-45" />
                                     <IconMax size="18" className="absolute rotate-45" />
                                 </div>
-                                <button onClick={() => handleDelete(value?.id)} type="button" className="text-red-500">
-                                    <IconDelete />
+                                <button onClick={() => handleDelete(value?.id)} type="button" className="text-red-500 p-0.5 rounded-lg border border-transparent hover:border-red-500">
+                                    <TrashIcon className="size-6 text-red-500"/>
                                 </button>
                             </div>
                         </div>
@@ -347,24 +422,37 @@ const Popup_Stage = React.memo((props) => {
                 </div>
             }
             open={isOpen}
-            onClose={_ToggleModal.bind(this, false)}
+            onClose={(e) => {
+                _ToggleModal(false);
+                props.onCloseExternal && props.onCloseExternal();
+            }}
+            onClickOpen={props.openExternal === undefined ? _ToggleModal.bind(this, true) : undefined}
             classNameBtn={props.className}
         >
-            <div className="py-4 w-[800px]">
-                <div className="grid grid-cols-9 py-2">
+            <div className="py-4 w-[900px]">
+                <div className="grid grid-cols-15 py-2">
                     <h4 className="xl:text-[14px] text-[12px] px-2 text-[#667085] uppercase col-span-1 font-[400] text-center">
                         {props.dataLang?.no || "no"}
                     </h4>
-                    <h4 className="xl:text-[14px] text-[12px] px-2 text-[#667085] uppercase col-span-2 font-[400] text-left">
-                        {props.dataLang?.stage_name_finishedProduct}
+                    <div className="col-span-6 flex gap-4 px-2">
+                        <h4 className="xl:text-[14px] text-[12px] text-[#667085] font-[400] text-left">
+                            {props.dataLang?.stage_name_finishedProduct}
+                        </h4>
+                        <ButtonAddNew
+                            onClick={() => {
+                                sOpenStageAddPopup(true);
+                            }}
+                            className="whitespace-nowrap h-fit mt-0.5"
+                            title="Thêm nhanh công đoạn"
+                        />
+                    </div>
+                    <h4 className="col-span-3 xl:text-[14px] text-[12px] px-2 text-[#667085] font-[400] text-center">
+                        Công đoạn bắt đầu
                     </h4>
-                    <h4 className="xl:text-[14px] text-[12px] px-2 text-[#667085] uppercase col-span-3 font-[400] text-left">
-                        {props.dataLang?.check_first_stage_finishedProduct || "check_first_stage_finishedProduct"}
-                    </h4>
-                    <h4 className="xl:text-[14px] text-[12px] px-2 text-[#667085] uppercase col-span-2 font-[400] text-center">
+                    <h4 className="col-span-3 xl:text-[14px] text-[12px] px-2 text-[#667085] font-[400] text-center">
                         {props.dataLang?.stage_last_finishedProduct}
                     </h4>
-                    <h4 className="xl:text-[14px] text-[12px] px-2 text-[#667085] uppercase col-span-1 font-[400] text-center">
+                    <h4 className="col-span-2 xl:text-[14px] text-[12px] px-2 text-[#667085] font-[400] text-center">
                         {props.dataLang?.branch_popup_properties}
                     </h4>
                 </div>
@@ -404,6 +492,56 @@ const Popup_Stage = React.memo((props) => {
                     </>
                 )}
             </div>
+            {openStageAddPopup && (
+                <PopupStageAdd
+                    dataLang={props.dataLang}
+                    openExternal={openStageAddPopup}
+                    onCloseExternal={() => {
+                        sOpenStageAddPopup(false);
+                    }}
+                    onRefresh={async (stageId) => {
+                        // Fetch lại từ API và cập nhật Redux state (chỉ gọi 1 lần)
+                        try {
+                            const { rResult: stage } = await apiProducts.apiStageProducts();
+                            const stageList = stage?.map((e) => ({
+                                label: e.name,
+                                value: e.id,
+                            }));
+                            
+                            // Cập nhật Redux state - useEffect sẽ tự động tính toán lại listCdRest
+                            dispatch({
+                                type: 'stage_finishedProduct/update',
+                                payload: stageList,
+                            });
+                            
+                            // Nếu có stageId, có thể tự động thêm vào danh sách hoặc chọn
+                            if (stageId) {
+                                const foundStage = stageList?.find(s => String(s.value) === String(stageId));
+                                if (foundStage && option.length > 0) {
+                                    // Tự động thêm công đoạn vừa tạo vào dòng đầu tiên nếu chưa có name
+                                    const firstItem = option[0];
+                                    if (!firstItem.name) {
+                                        const currentListCdChosen = option.map((e) => e.name).filter(Boolean);
+                                        const updatedOption = option.map((item, index) => {
+                                            if (index === 0) {
+                                                return { ...item, name: foundStage };
+                                            }
+                                            return item;
+                                        });
+                                        const autoSetData = autoSetRadio(updatedOption);
+                                        sOption(autoSetData);
+                                        sListCdChosen([...currentListCdChosen, foundStage]);
+                                    }
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error fetching stages:', error);
+                        }
+                        sOpenStageAddPopup(false);
+                    }}
+                    className="hidden"
+                />
+            )}
         </PopupCustom>
     );
 });

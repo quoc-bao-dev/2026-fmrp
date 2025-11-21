@@ -542,7 +542,7 @@ const Products = props => {
           </div>
         }
         pagination={
-          <div className='flex items-center justify-between gap-2 pr-32'>
+          <div className='flex items-center justify-between gap-2'>
             {data?.rResult?.length != 0 && (
               <ContainerPagination>
                 {/* <TitlePagination
