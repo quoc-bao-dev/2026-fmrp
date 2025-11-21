@@ -18,6 +18,8 @@ import { useSelector } from 'react-redux';
 import Select from 'react-select';
 import { useItemCategoryOptions } from '../../hooks/items/useItemCategoryOptions';
 import { PlusIcon } from '@/components/icons';
+import { ButtonAddNew } from '@/components/common/button/AddNew';
+import PopupCategory from '../category/popup';
 const Popup_NVL = React.memo(props => {
   const dataOptUnit = useSelector(state => state.unit_NVL);
 
@@ -111,11 +113,13 @@ const Popup_NVL = React.memo(props => {
   const [dataVariantSending, sDataVariantSending] = useState([]);
 
   // danh sách nhóm nguyên vật liệu
-  const { data: dataOptGr = [] } = useItemCategoryOptions({
+  const { data: dataOptGr = [], refetch: refetchCategoryOptions } = useItemCategoryOptions({
     params: {
       'branch_id[]': branch_id.length > 0 ? branch_id : -1,
     },
   });
+
+  const [openCategoryModal, sOpenCategoryModal] = useState(false);
 
   // check khi biến thể bị trùng
   useEffect(() => {
@@ -653,9 +657,11 @@ const Popup_NVL = React.memo(props => {
                 <div className='grid grid-cols-2 gap-5'>
                   <div className='space-y-2 2xl:space-y-3'>
                     <div className='2xl:space-y-1'>
-                      <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
-                        {props.dataLang?.client_list_brand || 'client_list_brand'} <span className='text-red-500'>*</span>
-                      </label>
+                      <div className='flex justify-between'>
+                        <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
+                          {props.dataLang?.client_list_brand || 'client_list_brand'} <span className='text-red-500'>*</span>
+                        </label>
+                      </div>
                       <Select
                         options={dataOptBranch}
                         formatOptionLabel={SelectOptionLever}
@@ -693,9 +699,12 @@ const Popup_NVL = React.memo(props => {
                       {errBranch && <label className='text-sm text-red-500'>{props.dataLang?.client_list_bran || 'client_list_bran'}</label>}
                     </div>
                     <div className='2xl:space-y-1'>
-                      <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
-                        {props.dataLang?.header_category_material_group} <span className='text-red-500'>*</span>
-                      </label>
+                      <div className='flex justify-between'>
+                        <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
+                          {props.dataLang?.header_category_material_group} <span className='text-red-500'>*</span>
+                        </label>
+                        <ButtonAddNew onClick={() => sOpenCategoryModal(true)} title='Thêm mới' text='Thêm mới' className='text-sm font-normal' />
+                      </div>
                       <Select
                         options={dataOptGr}
                         formatOptionLabel={SelectOptionLever}
@@ -1291,6 +1300,32 @@ const Popup_NVL = React.memo(props => {
           </button>
         </div>
       </div>
+      <PopupCategory
+        dataLang={props.dataLang}
+        data={{}}
+        openExternal={openCategoryModal}
+        branchExternal={branch?.length > 0 ? branch : undefined}
+        onCloseExternal={() => {
+          sOpenCategoryModal(false);
+        }}
+        onSuccess={categoryData => {
+          // Tự động chọn danh mục vừa tạo vào field "Nhóm nguyên vật liệu"
+          if (categoryData?.id && categoryData?.name) {
+            sGroupId({
+              label: categoryData.name,
+              value: categoryData.id,
+            });
+          }
+        }}
+        onRefresh={() => {
+          refetchCategoryOptions();
+          sOpenCategoryModal(false);
+        }}
+        onRefreshOpt={() => {
+          refetchCategoryOptions();
+          sOpenCategoryModal(false);
+        }}
+      />
     </PopupCustom>
   );
 });
