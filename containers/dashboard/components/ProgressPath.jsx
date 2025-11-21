@@ -73,6 +73,26 @@ const ProgressPath = () => {
 
   const stepsData = infoStepUse?.data || [];
 
+  // Xác định bước active cao nhất (dựa vào step.active hoặc children.active)
+  const getIsStepActive = step => {
+    const hasActiveChildren =
+      step.children && step.children.length > 0 && step.children.some(child => child.active === 1 || child.active === true);
+    return hasActiveChildren || step.active === 1 || step.active === true;
+  };
+
+  const activeStepIndex = stepsData.reduce((maxIndex, step, index) => {
+    return getIsStepActive(step) ? index : maxIndex;
+  }, -1);
+
+  // Ánh xạ index bước active sang các mốc % tương ứng với fraction 0.1 / 0.38 / 0.64 / 0.9
+  // 0  -> 25%  (0.1)
+  // 1  -> 50%  (0.38)
+  // 2  -> 75%  (0.64)
+  // 3+ -> 100% (0.9)
+  const milestonePercents = [25, 50, 75, 100];
+  const snappedPercentage =
+    activeStepIndex >= 0 ? milestonePercents[Math.min(activeStepIndex, milestonePercents.length - 1)] : 0;
+
   const WrapContainer = () => {
     return (
       <svg width='100%' height='100%' viewBox='22.7 18.7 1920 470' preserveAspectRatio='none' fill='none' xmlns='http://www.w3.org/2000/svg' className='absolute inset-0'>
@@ -147,14 +167,13 @@ const ProgressPath = () => {
           </div>
 
           <div className='w-full flex-1 flex items-center justify-center -mt-[3%] 2xl:-mt-[4%] pointer-events-none'>
-            <AnimatedProgressPath percentage={infoStepUse?.total_radio} height={pathHeight} />
+            <AnimatedProgressPath percentage={snappedPercentage} height={pathHeight} />
             {/* <AnimatedProgressPath percentage={25} height={pathHeight} /> */}
           </div>
 
           <div className='flex justify-around gap-4 w-full -mt-[3%] px-4'>
             {stepsData.map((step, index) => {
-              const hasActiveChildren = step.children && step.children.length > 0 && step.children.some(child => child.active === 1 || child.active === true);
-              const isActive = hasActiveChildren || step.active === 1 || step.active === true;
+              const isActive = getIsStepActive(step);
               const numberColor = isActive ? '#FFDBCC' : '#E1E1E1';
               const titleColor = isActive ? '#FE4C00' : '#696969';
               const isPhone = Number(step.order_by) >= 3 || step.is_mobile === '1';
