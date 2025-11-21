@@ -21,6 +21,7 @@ import AvatarText from '../UI/common/user/AvatarText';
 import { Dropdown, DropdownThongBao } from '../UI/dropdown';
 import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
 import { ChatIcon, PasswordIcon, SignOutIcon, SparkleIcon, SparkleOutlineIcon, UserCircleIcon } from '../icons';
+import PopupQRCodeHeader from '../common/popup/PopupQRCodeHeader';
 
 const Header = () => {
   const router = useRouter();
