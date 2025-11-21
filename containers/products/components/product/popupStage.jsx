@@ -187,19 +187,19 @@ const Popup_Stage = React.memo((props) => {
         const lastStages = option.filter(item => item.radio2 === 1 && item.name);
 
         if (firstStages.length !== 1 || lastStages.length !== 1) {
-            isShow("error", props.dataLang?.stage_required_first_last || "Vui lòng chọn duy nhất 1 công đoạn bắt đầu và 1 công đoạn kết thúc");
+            isShow("error", props.dataLang?.stage_required_first_last || "Vui lòng chọn duy nhất 1 công đoạn bắt đầu và 1 công đoạn cuối");
             return;
         }
 
         if (firstStages[0].id === lastStages[0].id) {
-            isShow("error", props.dataLang?.stage_first_last_not_same || "Công đoạn bắt đầu và kết thúc không thể trùng nhau");
+            isShow("error", props.dataLang?.stage_first_last_not_same || "Công đoạn bắt đầu và công đoạn cuối không thể trùng nhau");
             return;
         }
 
         const firstIndex = option.findIndex(item => item.id === firstStages[0].id);
         const lastIndex = option.findIndex(item => item.id === lastStages[0].id);
         if (firstIndex === -1 || lastIndex === -1 || firstIndex >= lastIndex) {
-            isShow("error", props.dataLang?.stage_first_before_last || "Công đoạn bắt đầu phải nằm trên công đoạn kết thúc");
+            isShow("error", props.dataLang?.stage_first_before_last || "Công đoạn bắt đầu phải nằm trên công đoạn cuối");
             return;
         }
 
@@ -348,10 +348,10 @@ const Popup_Stage = React.memo((props) => {
                                     {"Chọn"}
                                 </label>
                             </div>
-                            <div className="flex items-center justify-center col-span-2 space-x-4">
+                            <div className="flex items-center justify-center col-span-2 gap-2">
                                 <div
                                     {...provided.dragHandleProps}
-                                    className="relative flex flex-col items-center justify-center text-blue-500 cursor-move">
+                                    className="relative flex flex-col items-center justify-center text-blue-500 cursor-move p-1 rounded-lg border border-transparent hover:border-blue-500">
                                     <IconMax size="18" className="-rotate-45" />
                                     <IconMax size="18" className="absolute rotate-45" />
                                 </div>

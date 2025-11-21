@@ -1,3 +1,4 @@
+import apiInternalPlan from "@/Api/apiManufacture/manufacture/internalPlan/apiInternalPlan";
 import apiServiceVoucher from "@/Api/apiPurchaseOrder/apiServicevVoucher";
 import apiReturnSales from "@/Api/apiSalesExportProduct/returnSales/apiReturnSales";
 import { CONFIRM_DELETION, TITLE_DELETE } from "@/constants/delete/deleteTable";
@@ -214,6 +215,36 @@ export const BtnAction = React.memo((props) => {
     const dropdownRef = useRef(null);
     const moreIconsRef = useRef(null);
     const printDropdownRef = useRef(null);
+    const [isMoreMenuDropUp, setIsMoreMenuDropUp] = useState(false);
+
+    const router = useRouter();
+
+    const isShow = useToast();
+
+    const { isOpen, handleQueryId } = useToggle();
+
+    const { isData, updateData } = useSetData();
+
+    const [isOpenValidate, sIsOpenValidate] = useState(false);
+
+    const [openAction, setOpenAction] = useState(false);
+
+    const [isOpenBomConfirm, sIsOpenBomConfirm] = useState(false);
+
+    const [openStagePopup, sOpenStagePopup] = useState(false);
+
+    const _ToggleModal = (e) => setOpenAction(e);
+
+    const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } =
+        useFeature();
+
+    const dataSeting = useSetingServer();
+
+    const { is_admin: role, permissions_current: auth } = useSelector(
+        (state) => state.auth
+    );
+
+    const { checkDelete, checkEdit } = useActionRole(auth, props?.type);
 
     // Hàm để mở/đóng dropdown in cho component này
     const togglePrintDropdown = () => {
@@ -225,15 +256,24 @@ export const BtnAction = React.memo((props) => {
         setPrintDropdownOpen(false);
         setShowDropdown(false);
         setShowMoreIcons(false);
+        setIsMoreMenuDropUp(false);
     };
+
+    useEffect(() => {
+        if (isOpen || isOpenBomConfirm || openStagePopup || openAction) {
+            closeAllDropdowns();
+        }
+    }, [isOpen, isOpenBomConfirm, openStagePopup, openAction]);
 
     // Xử lý đóng dropdown khi click ra ngoài
     useEffect(() => {
         const handleClickOutside = (event) => {
             // Kiểm tra xem event.target có thuộc về popup nào không
-            const isInsidePopup = event.target.closest('.popup-edit') || 
-                                event.target.closest('.popup-content') || 
-                                event.target.closest('.reactjs-popup');
+            const isInsidePopup =
+                event.target.closest('.popup-edit') ||
+                event.target.closest('.popup-content') ||
+                event.target.closest('.popup-overlay') ||
+                event.target.closest('.reactjs-popup');
             
             // Chỉ đóng dropdown nếu click outside và không nằm trong bất kỳ popup nào
             if (!isInsidePopup) {
@@ -259,6 +299,20 @@ export const BtnAction = React.memo((props) => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [showDropdown, showMoreIcons, printDropdownOpen]);
+
+    useEffect(() => {
+        if (showMoreIcons && typeof window !== "undefined") {
+            requestAnimationFrame(() => {
+                if (moreIconsRef.current) {
+                    const rect = moreIconsRef.current.getBoundingClientRect();
+                    const spaceBelow = window.innerHeight - rect.bottom;
+                    setIsMoreMenuDropUp(spaceBelow < 220);
+                }
+            });
+        } else {
+            setIsMoreMenuDropUp(false);
+        }
+    }, [showMoreIcons]);
 
     //kiếm hàm fetchPDF theo page 
     const fetchPDFMultiplePage = {
@@ -324,35 +378,30 @@ export const BtnAction = React.memo((props) => {
         }
     };
 
+    const handlePrintInternalPlan = async () => {
+        if (!props?.id) {
+            isShow("error", "Không tìm thấy kế hoạch nội bộ để in");
+            return;
+        }
 
-    const router = useRouter();
+        setLoadingButtonPrint(true);
 
-    const isShow = useToast();
+        try {
+            const response = await apiInternalPlan.apiPrintInternalPlan(
+                props?.id
+            );
 
-    const { isOpen, handleQueryId } = useToggle();
-
-    const { isData, updateData } = useSetData();
-
-    const [isOpenValidate, sIsOpenValidate] = useState(false);
-
-    const [openAction, setOpenAction] = useState(false);
-
-    const [isOpenBomConfirm, sIsOpenBomConfirm] = useState(false);
-
-    const [openStagePopup, sOpenStagePopup] = useState(false);
-
-    const _ToggleModal = (e) => setOpenAction(e);
-
-    const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } =
-        useFeature();
-
-    const dataSeting = useSetingServer();
-
-    const { is_admin: role, permissions_current: auth } = useSelector(
-        (state) => state.auth
-    );
-
-    const { checkDelete, checkEdit } = useActionRole(auth, props?.type);
+            if (response?.isSuccess === 1 && response?.pdf_url) {
+                window.open(response.pdf_url, "_blank");
+            } else {
+                isShow("error", response?.message || "Không thể in kế hoạch nội bộ. Vui lòng thử lại.");
+            }
+        } catch (error) {
+            isShow("error", error?.message || "Không thể in kế hoạch nội bộ. Vui lòng thử lại.");
+        } finally {
+            setLoadingButtonPrint(false);
+        }
+    };
 
     const confimDelete = (url) => {
         Axios("DELETE", url, {}, (err, response) => {
@@ -946,6 +995,16 @@ export const BtnAction = React.memo((props) => {
                     totalButtons={totalButtons}
                 />
             );
+        } else if (props?.type === "internal_plan") {
+            allButtons.push(
+                <ButtonPrintItem
+                    key="print-internal-plan"
+                    onCLick={handlePrintInternalPlan}
+                    dataLang={props?.dataLang}
+                    isLoading={loadingButtonPrint}
+                    totalButtons={totalButtons}
+                />
+            );
         } else {
             allButtons.push(
                 <FilePDF
@@ -1125,61 +1184,49 @@ export const BtnAction = React.memo((props) => {
             );
         }
 
-        // Hiển thị tối đa 3 nút, nếu nhiều hơn thì hiển thị dấu "..."
-        if (allButtons.length <= 3) {
+        // Hiển thị tối đa 3 nút, phần còn lại nằm trong popover (đối với products thì đưa hết vào popover)
+        const maxVisibleButtons = props.type === "products" ? 0 : 3;
+        const visibleButtons = allButtons.slice(0, maxVisibleButtons);
+        const hiddenButtons = allButtons.slice(maxVisibleButtons);
+
+        if (hiddenButtons.length === 0) {
             return allButtons;
-        } else {
-            // Lưu ID của phần tử hiện tại để đảm bảo sử dụng đúng ID khi xử lý các thao tác
-            const currentId = props?.id;
-            
-            return [
-                <div key={`more-${currentId}`} className="relative" ref={moreIconsRef}>
-                    <button
-                        onClick={() => setShowMoreIcons(!showMoreIcons)}
-                        data-tooltip-id={`more-actions-tooltip-${currentId}`}
-                        data-tooltip-place="bottom-end"
-                        className="group rounded-lg p-1 border border-transparent hover:border-[#555] hover:bg-gray-100 transition-all ease-in-out flex items-center justify-center text-left cursor-pointer"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="size-5" viewBox="0 0 24 24" fill="#003DA0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="1" />
-                            <circle cx="19" cy="12" r="1" />
-                            <circle cx="5" cy="12" r="1" />
-                        </svg>
-                    </button>
-                    <Tooltip
-                        id={`more-actions-tooltip-${currentId}`}
-                        place="bottom-end"
-                        variant="light"
-                        clickable={true}
-                        isOpen={showMoreIcons}
-                        setIsOpen={setShowMoreIcons}
-                        className="z-[999999999] !border !border-gray-200 !rounded-xl !p-0 !bg-white opacity-100 overflow-hidden"
-                        style={{
-                            backgroundColor: 'white',
-                            opacity: '1 !important',
-                            borderRadius: '12px',
-                            overflow: 'hidden'
-                        }}
-                        noArrow={true}
-                        opacity={1}
-                        delayHide={100}
-                        trigger="mouseenter"
-                        openOnClick={true}
-                        onClickOutside={() => setShowMoreIcons(false)}
-                    >
-                        <div
-                            className="flex flex-col gap-1 min-w-[120px] p-1 bg-white"
-                            style={{ opacity: 1, borderRadius: '10px' }}
-                            data-row-id={currentId} /* Store the ID as a data attribute */
-                        >
-                            {allButtons.map((button, index) => (
-                                <div key={`action-${currentId}-${index}`} className="">{button}</div>
-                            ))}
-                        </div>
-                    </Tooltip>
-                </div>
-            ];
         }
+
+        // Lưu ID của phần tử hiện tại để đảm bảo sử dụng đúng ID khi xử lý các thao tác
+        const currentId = props?.id;
+
+        return [
+            ...visibleButtons,
+            <div key={`more-${currentId}`} className="relative" ref={moreIconsRef}>
+                <button
+                    onClick={() => setShowMoreIcons(!showMoreIcons)}
+                    data-tooltip-id={`more-actions-tooltip-${currentId}`}
+                    data-tooltip-place="bottom-end"
+                    className="group rounded-lg p-1 border border-transparent hover:border-[#555] hover:bg-gray-100 transition-all ease-in-out flex items-center justify-center text-left cursor-pointer"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="size-5" viewBox="0 0 24 24" fill="#003DA0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="1" />
+                        <circle cx="19" cy="12" r="1" />
+                        <circle cx="5" cy="12" r="1" />
+                    </svg>
+                </button>
+                <div
+                    className={`absolute ${isMoreMenuDropUp ? "bottom-full mb-1" : "top-full mt-1"} right-0 p-1 min-w-[160px] bg-white rounded-xl border border-gray-200 shadow-[0px_20px_40px_-4px_#919EAB3D,0px_0px_2px_0px_#919EAB3D] z-[10] ${showMoreIcons ? "block" : "hidden"}`}
+                    data-row-id={currentId}
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        setTimeout(() => closeAllDropdowns(), 0);
+                    }}
+                >
+                    <div className="flex flex-col gap-1">
+                        {hiddenButtons.map((button, index) => (
+                            <div key={`action-${currentId}-${index}`}>{button}</div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        ];
     };
 
     return (
