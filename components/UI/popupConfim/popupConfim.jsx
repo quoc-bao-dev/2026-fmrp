@@ -44,6 +44,10 @@ const PopupConfim = (props) => {
                 // Đổi trạng thái hoạt động của người dùng
                 props.save();
                 break;
+            case 'bom_require_stage':
+                // Cảnh báo phải thiết kế công đoạn trước khi thiết kế BOM
+                props.save();
+                break;
             case "personnel_staff":
                 ///Xóa người dùng
                 if (role) {
@@ -70,7 +74,7 @@ const PopupConfim = (props) => {
             className={`${props.className} popup-edit`}
         >
             <div
-                className={`min-w-[400px] ${props.nameModel == "price_quote_status" && "min-w-[500px]"
+                className={`min-w-[400px] max-w-[400px] ${props.nameModel == "price_quote_status" && "min-w-[500px]"
                     // className={`3xl:mt-48 2xl:mt-32 xl:mt-32 mt-36 min-w-[400px] ${props.nameModel == "price_quote_status" && "min-w-[500px]"
                     }`}
             >
@@ -97,16 +101,16 @@ const PopupConfim = (props) => {
                     <h1 className="text-[#101828] font-medium 3xl:text-[22px] 2xl:text-[18px] text-lg">
                         {props.title}
                     </h1>
-                    <h1 className="text-[#667085] font-medium text-sm tracking-widest-[0.14px]	">
+                    <h2 className="text-[#667085] font-medium responsive-text-lg tracking-widest-[0.14px]	">
                         {props.subtitle}
-                    </h1>
+                    </h2>
                     <div className="flex items-center justify-between gap-4">
                         {props.nameModel == "price_quote_status" && (
                             <>
                                 <Zoom className="w-1/2">
                                     <button
                                         onClick={props.cancel}
-                                        className="text-base text-white bg-red-600 transition-all duration-150 ease-linear tran font-normal rounded-lg w-full  border-red-600 border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
+                                        className="text-base text-white transition-all duration-150 ease-linear tran font-normal rounded-lg w-full  border-red-600 border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
                                     >
                                         Hủy
                                     </button>
@@ -123,8 +127,8 @@ const PopupConfim = (props) => {
                                                 showToat('error', 'Bạn không có quyền thay đổi trạng thái')
                                             }
                                         }}
-                                        className="text-base hover:text-white hover:bg-[#003DA0] transition-all duration-150 ease-linear tran font-normal rounded-lg w-full  text-[#344054] border-[#D0D5DD] border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
-                                    >
+                                        className="text-base text-red-600 hover:bg-red-100 transition-all duration-150 ease-linear tran font-normal rounded-lg w-full  border-red-600 border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
+                                        >
                                         {props.status === "confirmed" ? props.dataLang?.aler_not_yet_approved : props.dataLang?.aler_approved}
                                     </button>
                                 </Zoom>
@@ -140,8 +144,8 @@ const PopupConfim = (props) => {
                                                 showToat('error', 'Bạn không có quyền thay đổi trạng thái')
                                             }
                                         }}
-                                        className="text-base hover:text-white hover:bg-[#003DA0] transition-all duration-150 ease-linear tran font-normal rounded-lg w-full text-[#344054] border-[#D0D5DD] border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
-                                    >
+                                        className="text-base text-white bg-[#003DA0] hover:bg-[#0375F3] transition-all duration-150 ease-linear tran font-normal rounded-lg w-full border-[#D0D5DD] border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
+                                        >
                                         {props.status === "no_confirmed" ? props.dataLang?.aler_not_yet_approved : props.dataLang?.aler_no_approved}
                                     </button>
                                 </Zoom>
@@ -152,8 +156,8 @@ const PopupConfim = (props) => {
                                 <Zoom className="w-1/2">
                                     <button
                                         onClick={props.cancel}
-                                        className="text-base text-white bg-red-600 transition-all duration-150 ease-linear tran font-normal rounded-lg w-full  border-red-600 border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
-                                    >
+                                        className="text-base text-red-600 hover:bg-red-100 transition-all duration-150 ease-linear tran font-normal rounded-lg w-full  border-red-600 border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
+                                        >
                                         Hủy
                                     </button>
                                 </Zoom>
@@ -169,8 +173,8 @@ const PopupConfim = (props) => {
                                                 showToat('error', 'Bạn không có quyền thay đổi trạng thái')
                                             }
                                         }}
-                                        className="text-base hover:text-white hover:bg-[#003DA0] transition-all duration-150 ease-linear tran font-normal rounded-lg w-full  text-[#344054] border-[#D0D5DD] border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
-                                    >
+                                        className="text-base text-white bg-[#003DA0] hover:bg-[#0375F3] transition-all duration-150 ease-linear tran font-normal rounded-lg w-full border-[#D0D5DD] border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
+                                        >
                                         {props.status === "approved" ? props.dataLang?.aler_not_yet_approved : props.dataLang?.aler_approved}
                                     </button>
                                 </Zoom>
@@ -199,13 +203,14 @@ const PopupConfim = (props) => {
                                 'warehouse',
                                 'warehouse_location',
                                 'inventory',
-                                'change_item'
+                                'change_item',
+                                'bom_require_stage'
                             ].includes(props.nameModel) && (
                                 <>
                                     <Zoom className="w-1/2">
                                         <button
                                             onClick={props.cancel}
-                                            className="text-base text-white bg-red-600 transition-all duration-150 ease-linear tran font-normal rounded-lg w-full  border-red-600 border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
+                                            className="text-base text-red-600 hover:bg-red-100 transition-all duration-150 ease-linear tran font-normal rounded-lg w-full  border-red-600 border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
                                         >
                                             Hủy
                                         </button>
@@ -213,7 +218,7 @@ const PopupConfim = (props) => {
                                     <Zoom className="w-1/2">
                                         <button
                                             onClick={() => handleConfimDelete()}
-                                            className="text-base hover:text-white hover:bg-[#003DA0] transition-all duration-150 ease-linear tran font-normal rounded-lg w-full  text-[#344054] border-[#D0D5DD] border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
+                                            className="text-base text-white bg-[#003DA0] hover:bg-[#0375F3] transition-all duration-150 ease-linear tran font-normal rounded-lg w-full border-[#D0D5DD] border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
                                         >
                                             Xác nhận
                                         </button>
@@ -245,13 +250,14 @@ const PopupConfim = (props) => {
                             'warehouse',
                             'warehouse_location',
                             'inventory',
-                            'change_item'
+                            'change_item',
+                            'bom_require_stage'
                         ].includes(props.nameModel) && (
                                 <>
                                     <Zoom className="w-1/2">
                                         <button
                                             onClick={props.cancel}
-                                            className="text-base text-white bg-red-600 transition-all duration-150 ease-linear tran font-normal rounded-lg w-full  border-red-600 border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
+                                            className="text-base text-red-600 hover:bg-red-100 transition-all duration-150 ease-linear tran font-normal rounded-lg w-full  border-red-600 border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
                                         >
                                             Hủy
                                         </button>
@@ -268,7 +274,7 @@ const PopupConfim = (props) => {
                                                     showToat('error', 'Bạn không có quyền thay đổi trạng thái')
                                                 }
                                             }}
-                                            className="text-base hover:text-white hover:bg-[#003DA0] transition-all duration-150 ease-linear tran font-normal rounded-lg w-full  text-[#344054] border-[#D0D5DD] border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
+                                            className="text-base text-white bg-[#003DA0] hover:bg-[#0375F3] transition-all duration-150 ease-linear tran font-normal rounded-lg w-full border-[#D0D5DD] border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]"
                                         >
                                             Xác nhận
                                         </button>

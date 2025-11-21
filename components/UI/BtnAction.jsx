@@ -44,7 +44,7 @@ import {
     routerReturnSales,
     routerSalesOrder,
 } from "@/routers/sellingGoods";
-import { Box1, BoxSearch } from "iconsax-react";
+import { AttachCircle, Box1, BoxSearch } from "iconsax-react";
 import { useRouter } from "next/router";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
@@ -336,6 +336,10 @@ export const BtnAction = React.memo((props) => {
     const [isOpenValidate, sIsOpenValidate] = useState(false);
 
     const [openAction, setOpenAction] = useState(false);
+
+    const [isOpenBomConfirm, sIsOpenBomConfirm] = useState(false);
+
+    const [openStagePopup, sOpenStagePopup] = useState(false);
 
     const _ToggleModal = (e) => setOpenAction(e);
 
@@ -802,20 +806,38 @@ export const BtnAction = React.memo((props) => {
                     className="text-sm hover:bg-slate-50 text-left cursor-pointer whitespace-nowrap w-full"
                 />
             );
-            allButtons.push(
-                <Popup_Bom
-                    key="bom"
-                    dataLang={props.dataLang}
-                    id={props.id}
-                    name={props?.name}
-                    code={props?.code}
-                    onRefresh={props.onRefresh}
-                    type={props?.typeOpen}
-                    dataProduct={props?.dataProduct}
-                    bom={props?.bom}
-                    className="text-sm hover:bg-slate-50 text-left cursor-pointer whitespace-nowrap w-full"
-                />
-            );
+            // Kiểm tra nếu có ct_versions_stage thì mới cho mở BOM, nếu không thì hiển thị popup confirm
+            if (props?.stage && Number(props?.stage) > 0) {
+                allButtons.push(
+                    <Popup_Bom
+                        key="bom"
+                        dataLang={props.dataLang}
+                        id={props.id}
+                        name={props?.name}
+                        code={props?.code}
+                        onRefresh={props.onRefresh}
+                        type={props?.typeOpen}
+                        dataProduct={props?.dataProduct}
+                        bom={props?.bom}
+                        className="text-sm hover:bg-slate-50 text-left cursor-pointer whitespace-nowrap w-full"
+                    />
+                );
+            } else {
+                allButtons.push(
+                    <div
+                        key="bom"
+                        onClick={() => {
+                            sIsOpenBomConfirm(true);
+                        }}
+                        className="hover:bg-primary-05 group rounded-lg w-full p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer"
+                    >
+                        <AttachCircle size={20} className="text-neutral-03 group-hover:text-neutral-07" />
+                        <button type="button" className="text-neutral-03 group-hover:text-neutral-07 font-normal whitespace-nowrap">
+                            {props.dataLang?.bom_finishedProduct || 'bom_finishedProduct'}
+                        </button>
+                    </div>
+                );
+            }
             allButtons.push(
                 <Popup_Products
                     key="products"
@@ -1173,6 +1195,40 @@ export const BtnAction = React.memo((props) => {
                 save={() => handleDelete()}
                 cancel={() => handleQueryId({ status: false })}
             />
+            {/* Popup confirm cho BOM khi chưa có công đoạn */}
+            {props.type === "products" && (
+                <PopupConfim
+                    dataLang={props.dataLang}
+                    type="warning"
+                    nameModel="bom_require_stage"
+                    title={props.dataLang?.warning || 'Cảnh Báo'}
+                    subtitle={<span>Bạn phải <span className="font-bold capitalize text-new-blue">thiết kế công đoạn</span> cho thành phẩm này trước khi thiết kế BOM. Bạn có muốn mở thiết kế công đoạn không?</span>}
+                    isOpen={isOpenBomConfirm}
+                    save={() => {
+                        sIsOpenBomConfirm(false);
+                        sOpenStagePopup(true);
+                    }}
+                    cancel={() => sIsOpenBomConfirm(false)}
+                />
+            )}
+            {/* Popup Stage khi cần thiết kế công đoạn */}
+            {props.type === "products" && openStagePopup && (
+                <Popup_Stage
+                    dataLang={props.dataLang}
+                    id={props.id}
+                    name={props?.name}
+                    code={props?.code}
+                    type={props?.typeOpen}
+                    dataProduct={props?.dataProduct}
+                    onRefresh={() => {
+                        props.onRefresh && props.onRefresh();
+                        sOpenStagePopup(false);
+                    }}
+                    openExternal={openStagePopup}
+                    onCloseExternal={() => sOpenStagePopup(false)}
+                    className="hidden"
+                />
+            )}
             <Tooltip id="delete-tooltip" place="top" className="z-[999999]" style={{ borderRadius: '6px' }} />
         </div>
     );
