@@ -17,16 +17,6 @@ import { Tooltip } from 'react-tippy';
 import 'react-tippy/dist/tippy.css';
 import Popup from 'reactjs-popup';
 import PopupFeelsCustomer from '../common/popup/PopupFeelsCustomer';
-<<<<<<< HEAD
-import PopupQRCodeHeader from '../common/popup/PopupQRCodeHeader';
-import ChatIcon from '../icons/common/ChatIcon';
-import PasswordIcon from '../icons/common/PasswordIcon';
-import SignOutIcon from '../icons/common/SignOutIcon';
-import SparkleIcon from '../icons/common/SparkleIcon';
-import SparkleOutlineIcon from '../icons/common/SparkleOutlineIcon';
-import UserCircleIcon from '../icons/common/UserCircleIcon';
-=======
->>>>>>> origin/develop
 import AvatarText from '../UI/common/user/AvatarText';
 import { Dropdown, DropdownThongBao } from '../UI/dropdown';
 import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
