@@ -32,14 +32,14 @@ export const useCreateSessionAppLoginQR = (options = {}) => {
     },
     onSuccess: data => {
       if (data?.isSuccess) {
-        showToast('success', data?.message || 'Tạo phiên đăng nhập QR (App) thành công');
+        // showToast('success', data?.message || 'Tạo phiên đăng nhập QR (App) thành công');
       } else {
-        showToast('error', data?.message || 'Tạo phiên đăng nhập QR (App) thất bại');
+        // showToast('error', data?.message || 'Tạo phiên đăng nhập QR (App) thất bại');
       }
       if (options.onSuccess) options.onSuccess(data);
     },
     onError: error => {
-      showToast('error', 'Không thể tạo phiên đăng nhập QR (App)');
+      //   showToast('error', 'Không thể tạo phiên đăng nhập QR (App)');
       if (options.onError) options.onError(error);
     },
   });
