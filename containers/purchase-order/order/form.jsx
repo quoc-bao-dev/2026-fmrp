@@ -1165,9 +1165,7 @@ const OrderForm = props => {
                                   </div>
                                   <div className='flex flex-col gap-1'>
                                     <h3 className='responsive-text-sm font-semibold text-new-blue'>{e?.items?.e?.name}</h3>
-                                    {e?.items?.e?.text_type && (
-                                      <TagColorProduct dataLang={dataLang} dataKey={getTypeDataKey(e?.items?.e?.text_type)} name={e?.items?.e?.text_type} className='!px-1' textSize='text-[11px]' />
-                                    )}
+
                                     <div className='flex gap-1'>
                                       <h5 className='responsive-text-xxs text-neutral-03 font-normal'>{e?.items?.e?.code}</h5>
                                       <h5 className='responsive-text-xxs text-neutral-03 font-normal'>{e?.items?.e?.product_variation}</h5>
@@ -1182,6 +1180,10 @@ const OrderForm = props => {
                                         </>
                                       )}
                                     </h5>
+
+                                    {e?.items?.e?.text_type && (
+                                      <TagColorProduct dataLang={dataLang} dataKey={getTypeDataKey(e?.items?.e?.text_type)} name={e?.items?.e?.text_type} className='!px-1' textSize='text-[11px]' />
+                                    )}
                                     {optionType == '1' && (
                                       <div className='flex items-center gap-2 text-gray-400'>
                                         <h5 className='responsive-text-xxs text-neutral-03 font-normal'>Số lượng:</h5>
