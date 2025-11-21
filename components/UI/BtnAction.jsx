@@ -1,3 +1,4 @@
+import apiInternalPlan from "@/Api/apiManufacture/manufacture/internalPlan/apiInternalPlan";
 import apiServiceVoucher from "@/Api/apiPurchaseOrder/apiServicevVoucher";
 import apiReturnSales from "@/Api/apiSalesExportProduct/returnSales/apiReturnSales";
 import { CONFIRM_DELETION, TITLE_DELETE } from "@/constants/delete/deleteTable";
@@ -320,6 +321,31 @@ export const BtnAction = React.memo((props) => {
             setLoadingButtonPrint(false);
         } catch (error) {
             isShow("error", `Lỗi khi in phiếu: ${error.message || "Không xác định"}`);
+            setLoadingButtonPrint(false);
+        }
+    };
+
+    const handlePrintInternalPlan = async () => {
+        if (!props?.id) {
+            isShow("error", "Không tìm thấy kế hoạch nội bộ để in");
+            return;
+        }
+
+        setLoadingButtonPrint(true);
+
+        try {
+            const response = await apiInternalPlan.apiPrintInternalPlan(
+                props?.id
+            );
+
+            if (response?.isSuccess === 1 && response?.pdf_url) {
+                window.open(response.pdf_url, "_blank");
+            } else {
+                isShow("error", response?.message || "Không thể in kế hoạch nội bộ. Vui lòng thử lại.");
+            }
+        } catch (error) {
+            isShow("error", error?.message || "Không thể in kế hoạch nội bộ. Vui lòng thử lại.");
+        } finally {
             setLoadingButtonPrint(false);
         }
     };
@@ -941,6 +967,16 @@ export const BtnAction = React.memo((props) => {
                     onCLick={() =>
                         handlePrintTem({ idTem: props?.id, typePage: props?.type })
                     }
+                    dataLang={props?.dataLang}
+                    isLoading={loadingButtonPrint}
+                    totalButtons={totalButtons}
+                />
+            );
+        } else if (props?.type === "internal_plan") {
+            allButtons.push(
+                <ButtonPrintItem
+                    key="print-internal-plan"
+                    onCLick={handlePrintInternalPlan}
                     dataLang={props?.dataLang}
                     isLoading={loadingButtonPrint}
                     totalButtons={totalButtons}
