@@ -1274,15 +1274,15 @@ const Header = () => {
                   },
                 })
               }
-              className='2xl:size-5 xl:size-4 size-3 shink-0 cursor-pointer flex items-center justify-center rounded-full opacity-80'
+              className='2xl:size-6 xl:size-5 size-3 shink-0 cursor-pointer flex items-center justify-center rounded-full opacity-80'
             >
               <Image
                 alt='qr-code'
                 src='/icon/icon-qr.png'
-                width={20}
-                height={20}
+                width={24}
+                height={24}
                 quality={100}
-                className='object-contain w-full h-full transition'
+                className='object-contain transition size-6'
                 loading='lazy'
                 crossOrigin='anonymous'
                 blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
