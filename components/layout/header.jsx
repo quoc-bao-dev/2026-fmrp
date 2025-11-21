@@ -1259,7 +1259,7 @@ const Header = () => {
           </button>
         )}
         <div className='flex items-center gap-3'>
-          <Tooltip title={'Quét QR'} arrow theme='dark'>
+          <Tooltip title={'Quét QR để đăng nhập app'} arrow theme='dark'>
             <button
               type='button'
               onClick={() =>
@@ -1273,11 +1273,11 @@ const Header = () => {
                   },
                 })
               }
-              className='2xl:size-5 xl:size-4 size-3 shink-0 cursor-pointer flex items-center justify-center rounded-full hover:bg-slate-100 transition'
+              className='2xl:size-5 xl:size-4 size-3 shink-0 cursor-pointer flex items-center justify-center rounded-full opacity-80'
             >
               <Image
                 alt='qr-code'
-                src='/qr.png'
+                src='/icon/icon-qr.png'
                 width={20}
                 height={20}
                 quality={100}
