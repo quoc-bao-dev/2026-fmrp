@@ -1,9 +1,7 @@
 import Swal from "sweetalert2";
 import "animate.css";
-import SuccessAlertIcon from "@/components/icons/common/SuccessAlertIcon";
-import ErrorAlertIcon from "@/components/icons/common/ErrorAlertIcon";
-import WarningAlertIcon from "@/components/icons/common/WarningAlertIcon";
 import ReactDOMServer from "react-dom/server";
+import { ErrorAlertIcon, SuccessAlertIcon, WarningAlertIcon } from "@/components/icons";
 
 const useToast = () => {
     const Toast = Swal.mixin({

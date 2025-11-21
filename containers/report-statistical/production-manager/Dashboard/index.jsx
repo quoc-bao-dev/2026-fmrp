@@ -1,13 +1,10 @@
-import CompleteKH from '@/components/icons/common/CompleteKH';
-import ErrorQCIcon from '@/components/icons/common/ErrorQC';
-import LateLSXIcon from '@/components/icons/common/LateLSX';
-import SaleIcon from '@/components/icons/common/SaleIcon';
+import { CompleteKHIcon, ErrorQCIcon, LateLSXIcon, SaleIcon } from '@/components/icons';
 import ReportLayout from '@/components/layout/ReportLayout';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import formatNumber from '@/utils/helpers/formatnumber';
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
 import QuickDateDropdown, { getDateRangeByQuickValue } from '../../components/QuickDateDropdown';
 import {
   useGetLateManufacturingOrders,
@@ -171,7 +168,7 @@ const Dashboard = () => {
   const kpiItems = [
     {
       key: 'completion',
-      icon: <CompleteKH className='w-6 h-6' />,
+      icon: <CompleteKHIcon className='w-6 h-6 text-white' />,
       label: 'Hoàn thành kế hoạch',
       containerBg: '#DCFCE7',
       iconBg: '#14B32E',
@@ -181,7 +178,7 @@ const Dashboard = () => {
     },
     {
       key: 'late_orders',
-      icon: <LateLSXIcon className='w-6 h-6' />,
+      icon: <LateLSXIcon className='w-6 h-6 text-white' />,
       label: 'Lệnh sản xuất trễ hạn',
       containerBg: '#FFE2E5',
       iconBg: '#FA5A7D',
@@ -191,7 +188,7 @@ const Dashboard = () => {
     },
     {
       key: 'qc_rate',
-      icon: <ErrorQCIcon className='w-6 h-6' />,
+      icon: <ErrorQCIcon className='w-6 h-6 text-white' />,
       label: 'Tỷ lệ lỗi (QC)',
       containerBg: '#FFF4DE',
       iconBg: '#FF947A',
@@ -201,7 +198,7 @@ const Dashboard = () => {
     },
     {
       key: 'oee',
-      icon: <SaleIcon className='w-6 h-6' />,
+      icon: <SaleIcon className='w-6 h-6 text-white' />,
       label: 'Hiệu suất TB tổng thể (OEE)',
       containerBg: '#F3E8FF',
       iconBg: '#BF83FF',

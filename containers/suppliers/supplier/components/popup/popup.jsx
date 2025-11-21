@@ -18,7 +18,7 @@ import FormContact from '../form/formContact';
 import FormInfo from '../form/formInfo';
 import { useWardList } from '@/hooks/common/useAddress';
 import EditIcon from '@/components/icons/common/EditIcon';
-import PlusIcon from '@/components/icons/common/PlusIcon';
+import { PlusIcon } from '@/components/icons';
 
 const initalState = {
   open: false,

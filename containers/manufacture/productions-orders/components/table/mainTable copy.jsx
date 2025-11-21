@@ -3,9 +3,7 @@ import ButtonAnimationNew from "@/components/common/button/ButtonAnimationNew";
 import FilterDropdown from "@/components/common/dropdown/FilterDropdown";
 import RadioDropdown from "@/components/common/dropdown/RadioDropdown";
 import SelectComponentNew from "@/components/common/select/SelectComponentNew";
-import CaretDownIcon from "@/components/icons/common/CaretDownIcon";
 import FunnelIcon from "@/components/icons/common/FunnelIcon";
-import MagnifyingGlassIcon from "@/components/icons/common/MagnifyingGlassIcon";
 import OnResetData from "@/components/UI/btnResetData/btnReset";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { ContainerFilterTab } from "@/components/UI/common/layout";
@@ -42,6 +40,7 @@ import ModalDetail from "../modal/modalDetail";
 import PopupConfimStage from "../popup/PopupConfimStage";
 import TabItem from "../ui/DetailProductionOrderList";
 import TabSemi from "./tabSemi";
+import { CaretDownIcon, MagnifyingGlassIcon } from "@/components/icons";
 
 const listTab = [
     {

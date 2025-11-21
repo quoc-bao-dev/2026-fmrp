@@ -1,10 +1,7 @@
 import InputCustom from '@/components/common/input/InputCustom';
-import CalendarBlankIcon from '@/components/icons/common/CalendarBlankIcon';
+import { CalendarIcon, KanbanIcon, TrashIcon, WarningIcon } from '@/components/icons';
 import CheckIcon from '@/components/icons/common/CheckIcon';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
-import KanbanIcon from '@/components/icons/common/KanbanIcon';
-import TrashIcon from '@/components/icons/common/TrashIcon';
-import WarningIcon from '@/components/icons/common/WarningIcon';
 import ButtonSubmit from '@/components/UI/button/buttonSubmit';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';
@@ -928,7 +925,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                                         }}
                                         className='border-gray-200 bg-transparent disabled:bg-gray-100 relative z-1 placeholder:text-slate-300 w-full rounded-lg text-[#52575E] p-2 pl-6 border outline-none responsive-text-sm'
                                       />
-                                      <CalendarBlankIcon className='size-4 absolute left-1.5 -translate-y-1/2 top-1/2 opacity-60' />
+                                      <CalendarIcon className='size-4 absolute left-1.5 -translate-y-1/2 top-1/2 opacity-60' />
                                     </div>
                                   </div>
                                 </>

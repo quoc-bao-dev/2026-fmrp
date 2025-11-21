@@ -1,6 +1,6 @@
 import apiSatff from '@/Api/apiPersonnel/apiStaff';
+import { PlusIcon } from '@/components/icons';
 import EditIcon from '@/components/icons/common/EditIcon';
-import PlusIcon from '@/components/icons/common/PlusIcon';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';
 import PopupCustom from '@/components/UI/popup';

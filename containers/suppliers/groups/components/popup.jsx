@@ -1,6 +1,5 @@
 import apiGroups from '@/Api/apiSuppliers/groups/apiGroups';
 import EditIcon from '@/components/icons/common/EditIcon';
-import PlusIcon from '@/components/icons/common/PlusIcon';
 import PopupCustom from '@/components/UI/popup';
 import useToast from '@/hooks/useToast';
 import { useMutation } from '@tanstack/react-query';
@@ -8,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import 'react-phone-input-2/lib/style.css';
 import Select from 'react-select';
 import { useSelector } from 'react-redux';
+import { PlusIcon } from '@/components/icons';
 
 const initialData = {
   name: '',

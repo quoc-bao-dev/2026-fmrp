@@ -9,7 +9,7 @@ import SelectSearch from '@/components/common/orderManagement/SelectSearch'
 import SelectWithRadio from '@/components/common/orderManagement/SelectWithRadio'
 import TableHeader from '@/components/common/orderManagement/TableHeader'
 import SelectWithSort from '@/components/common/select/SelectWithSort'
-import CalendarBlankIcon from '@/components/icons/common/CalendarBlankIcon'
+import { CalendarIcon } from '@/components/icons'
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar'
 import EmptyData from '@/components/UI/emptyData'
 import InPutMoneyFormat from '@/components/UI/inputNumericFormat/inputMoneyFormat'
@@ -2331,7 +2331,7 @@ console.log(selectedCustomer)
             <div className="w-full">
               <div className="relative w-full flex flex-row custom-date-picker date-form">
                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
-                  <CalendarBlankIcon color="#7a7a7a" className="size-4 opacity-60" />
+                  <CalendarIcon color="#7a7a7a" className="size-4 opacity-60" />
                 </span>
                 <ConfigProvider locale={viVN}>
                   <DatePicker
@@ -2367,7 +2367,7 @@ console.log(selectedCustomer)
             <div className="w-full">
               <div className="relative flex flex-row custom-date-picker date-form">
                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
-                  <CalendarBlankIcon color="#7a7a7a" className="size-4 opacity-60" />
+                  <CalendarIcon color="#7a7a7a" className="size-4 opacity-60" />
                 </span>
                 <ConfigProvider locale={viVN}>
                   <DatePicker

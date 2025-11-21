@@ -384,11 +384,11 @@ const Popup_Detail = React.memo((props) => {
                                                         </button>
                                                     ))}
                                                 </div>
-                                                <HeaderTablePopup gridCols={13}    >
+                                                <HeaderTablePopup gridCols={13}>
                                                     <ColumnTablePopup colSpan={3}>
                                                         {props.dataLang?.warehouses_detail_type || "warehouses_detail_type"}
                                                     </ColumnTablePopup>
-                                                    <ColumnTablePopup colSpan={2}>
+                                                    <ColumnTablePopup colSpan={2} className="!text-left">
                                                         {props.dataLang?.name || "name"}
                                                     </ColumnTablePopup>
                                                     <ColumnTablePopup colSpan={2}>

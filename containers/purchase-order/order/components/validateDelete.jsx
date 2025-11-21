@@ -1,5 +1,5 @@
 import apiOrder from "@/Api/apiPurchaseOrder/apiOrder";
-import TrashIcon from "@/components/icons/common/TrashIcon";
+import { TrashIcon } from "@/components/icons";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import NoData from "@/components/UI/noData/nodata";
 import PopupCustom from "@/components/UI/popup";

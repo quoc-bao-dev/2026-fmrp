@@ -1,7 +1,7 @@
 import apiComons from "@/Api/apiComon/apiComon";
 import apiWarehouse from "@/Api/apiManufacture/warehouse/apiWarehouse/apiWarehouse";
+import { PlusIcon } from "@/components/icons";
 import EditIcon from "@/components/icons/common/EditIcon";
-import PlusIcon from "@/components/icons/common/PlusIcon";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import PopupCustom from "@/components/UI/popup";
 import useToast from "@/hooks/useToast";

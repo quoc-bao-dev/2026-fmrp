@@ -1,4 +1,3 @@
-import UpgradeIcon from "@/components/icons/common/UpgradeIcon";
 import PopupUpgradeProfessional from "@/components/UI/popup/PopupUpgradeProfessional";
 import { useGetUpgradePackage } from "@/hooks/useAuth";
 import { Lexend_Deca } from "@next/font/google";
@@ -7,6 +6,7 @@ import Image from "next/image";
 import { PiSparkleFill } from "react-icons/pi";
 import { useDispatch } from "react-redux";
 import ButtonAnimationNew from "../button/ButtonAnimationNew";
+import { UpgradeIcon } from "@/components/icons";
 
 // const inter = Inter({ subsets: ['latin'] });
 

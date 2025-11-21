@@ -405,10 +405,24 @@ const Popup_Bom = React.memo((props) => {
         sDataSelectedVariant(newData);
     };
 
+    // kiểm tra loại có phải là bán thành phẩm không
+    const _CheckIsSemiProduct = (type) => {
+        if (!type) return false;
+        // Kiểm tra value === "product" (theo cấu trúc typeDesignBom: "product": "Bán thành phẩm")
+        if (type?.value === "product") return true;
+        // Kiểm tra label chứa "Bán thành phẩm" (để đảm bảo tương thích)
+        const typeLabel = type?.label?.toLowerCase() || '';
+        return typeLabel.includes('bán thành phẩm') || typeLabel.includes('ban thanh pham');
+    };
+
     // tìm bom ajax
     const _HandleSeachApi = debounce(async (value, Idparent, type, id, name) => {
         try {
-            const { data } = await apiProducts.apiSearchItemsVariants({ data: { term: value, type: type?.value } })
+            const requestData = { term: value, type: type?.value };
+            if (_CheckIsSemiProduct(type)) {
+                requestData.is_semi_products = 1;
+            }
+            const { data } = await apiProducts.apiSearchItemsVariants({ data: requestData })
 
             const getdata = data?.items?.map((item) => ({
                 label: item?.name,
@@ -467,8 +481,13 @@ const Popup_Bom = React.memo((props) => {
                 const child = found.child.find((child) => child?.id === childId);
                 if (child) {
                     const type = child.type?.value;
+                    const typeObj = child.type;
                     try {
-                        const { data } = await apiProducts.apiSearchItemsVariants({ data: { type: type } })
+                        const requestData = { type: type };
+                        if (_CheckIsSemiProduct(typeObj)) {
+                            requestData.is_semi_products = 1;
+                        }
+                        const { data } = await apiProducts.apiSearchItemsVariants({ data: requestData })
                         const updatedData = newData.map((parent) => {
                             if (parent?.value === parentId) {
                                 const newChild = parent?.child.map((child) => {
@@ -621,8 +640,12 @@ const Popup_Bom = React.memo((props) => {
                             e?.child.map(async (ce) => {
                                 try {
                                     if (ce.name) {
+                                        const requestData = { type: ce?.type?.value };
+                                        if (_CheckIsSemiProduct(ce?.type)) {
+                                            requestData.is_semi_products = 1;
+                                        }
                                         const { data } = await apiProducts.apiSearchItemsVariants({
-                                            data: { type: ce?.type?.value },
+                                            data: requestData,
                                         });
 
                                         const newDataName = data?.items.map((item) => ({

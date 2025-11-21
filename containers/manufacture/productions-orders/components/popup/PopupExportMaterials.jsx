@@ -1,10 +1,8 @@
 import apiProductionsOrders from "@/Api/apiManufacture/manufacture/productionsOrders/apiProductionsOrders";
 import CheckboxDefault from "@/components/common/checkbox/CheckboxDefault";
-import CheckCircle from "@/components/icons/common/CheckCircle";
+import { CheckCircleIcon, MagnifyingGlassIcon, WarningIcon } from "@/components/icons";
 import CheckIcon from "@/components/icons/common/CheckIcon";
 import CloseXIcon from "@/components/icons/common/CloseXIcon";
-import MagnifyingGlassIcon from "@/components/icons/common/MagnifyingGlassIcon";
-import WarningIcon from "@/components/icons/common/WarningIcon";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import useSetingServer from "@/hooks/useConfigNumber";
 import useToast from "@/hooks/useToast";
@@ -257,13 +255,13 @@ const InputNumberCustom = memo(
           ? parseFloat(numericValue) 
           : parseInt(numericValue);
         
-        if (numValue > max) {
-          showToast(
-            "error",
-            `Số lượng không được vượt quá ${formatNumber(max)}`
-          );
-          return;
-        }
+        // if (numValue > max) {
+        //   showToast(
+        //     "error",
+        //     `Số lượng không được vượt quá ${formatNumber(max)}`
+        //   );
+        //   return;
+        // }
         
         setInputValue(numValue);
 
@@ -310,12 +308,14 @@ const InputNumberCustom = memo(
         setState(min);
         setInputValue(min);
         setFormattedValue(formatNumber(min));
-      } else if (number > max) {
-        showToast("error", `Số lượng không được vượt quá ${formatNumber(max)}`);
-        setState(max);
-        setInputValue(max);
-        setFormattedValue(formatNumber(max));
-      } else {
+      } 
+      // else if (number > max) {
+      //   showToast("error", `Số lượng không được vượt quá ${formatNumber(max)}`);
+      //   setState(max);
+      //   setInputValue(max);
+      //   setFormattedValue(formatNumber(max));
+      // } 
+      else {
         setState(number);
         setInputValue(number);
         setFormattedValue(formatNumber(number));
@@ -328,15 +328,19 @@ const InputNumberCustom = memo(
         if (disabled) return;
         const current = parseToNumber(inputValue);
         let result = current;
-        if (type === "increment" && current < max) {
+        if (type === "increment") {
           result = current + 1;
-        } else if (type === "increment" && current >= max) {
-          showToast(
-            "error",
-            `Số lượng không được vượt quá ${formatNumber(max)}`
-          );
-          return;
         }
+        // if (type === "increment" && current < max) {
+        //   result = current + 1;
+        // } else 
+        // if (type === "increment" && current >= max) {
+        //   showToast(
+        //     "error",
+        //     `Số lượng không được vượt quá ${formatNumber(max)}`
+        //   );
+        //   return;
+        // }
         if (type === "decrement" && current > min) result = current - 1;
         setState(result);
         setInputValue(result);
@@ -1220,7 +1224,7 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
       {exportSuccess > 0 && (
         <div className="py-2 px-3 flex gap-2 items-center justify-between bg-green-02 border border-green-00 rounded-lg">
           <div className="flex items-center gap-1">
-            <CheckCircle className="text-[#064E3B]" />
+            <CheckCircleIcon className="size-6 text-[#064E3B]" />
             <p className="text-sm font-normal text-neutral-07">
               Xin chúc mừng,{" "}
               <span className="font-semibold">{exportSuccess}</span> nguyên vật

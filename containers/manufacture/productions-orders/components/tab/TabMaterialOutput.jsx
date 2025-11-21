@@ -2,7 +2,6 @@ import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew'
 import LimitListDropdown from '@/components/common/dropdown/LimitListDropdown'
 import ExcelFileComponent from '@/components/common/excel/ExcelFileComponent'
 import AnimatedSearchInput from '@/components/common/search/AnimatedSearchInput'
-import ArrowCounterClockwiseIcon from '@/components/icons/common/ArrowCounterClockwiseIcon'
 import Loading from '@/components/UI/loading/loading'
 import NoData from '@/components/UI/noData/nodata'
 import { StateContext } from '@/context/_state/productions-orders/StateContext'
@@ -17,6 +16,7 @@ import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitche
 import { useMaterialOutput } from '@/managers/api/productions-order/useMaterialOutput'
 import { TagColorProductNew } from '@/components/common/tag/TagStatusNew'
 import StackedBarChart from '../ui/StackedBarChart'
+import { ArrowCounterClockWiseIcon } from '@/components/icons'
 
 const tabs = [
   { id: 'dashboard', name: 'Biểu đồ thống kê' },
@@ -279,7 +279,7 @@ const TabMaterialOutputTab = ({ dataLang, ...props }) => {
             <ButtonAnimationNew
               icon={
                 <div className="3xl:size-5 size-4">
-                  <ArrowCounterClockwiseIcon className="size-full" />
+                  <ArrowCounterClockWiseIcon className="size-full" />
                 </div>
               }
               onClick={() => {

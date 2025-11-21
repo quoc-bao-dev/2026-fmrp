@@ -1,4 +1,4 @@
-import CaretDropdownThinIcon from "@/components/icons/common/CaretDropdownThinIcon";
+import { CaretDropDownThinIcon } from "@/components/icons";
 import configSelectFillter from "@/configs/configSelectFillter";
 import { SelectCore } from "@/utils/lib/Select";
 import { FaCheck } from "react-icons/fa";
@@ -21,7 +21,7 @@ const DropdownIndicator = (props) => (
     <components.DropdownIndicator
         {...props}
     >
-        <CaretDropdownThinIcon className="w-4 h-4 text-[#9295A4]" />
+        <CaretDropDownThinIcon className="w-4 h-4 text-[#9295A4]" />
     </components.DropdownIndicator>
 );
 

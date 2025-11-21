@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ReactPaginate from "react-paginate";
-import ArrowRightIcon from "../icons/common/ArrowRight";
+import { ArrowRightIcon } from "../icons";
 
 const Index = React.memo(
   ({ postsPerPage, paginate, totalPosts, currentPage }) => {

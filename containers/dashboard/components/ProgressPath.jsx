@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { MdArrowOutward } from 'react-icons/md';
 import AnimatedProgressPath from './AnimatedProgressPath';
-import MobileIcon from '@/components/icons/common/MobileIcon';
 import ProgressWatermarkIcon from '@/components/icons/common/ProgressWatermarkIcon';
 import ProgressCollapseArrowIcon from '@/components/icons/common/ProgressCollapseArrowIcon';
 import { useGetInfoStepUse } from '@/hooks/dashboard/useGetInfoStepUse';
 import PopupGuide from './PopupGuide';
+import { MobileIcon } from '@/components/icons';
 
 const ProgressPath = () => {
   // const [progress, setProgress] = useState(null);

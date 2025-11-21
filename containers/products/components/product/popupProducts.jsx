@@ -1,7 +1,7 @@
 import apiCategory from '@/Api/apiProducts/category/apiCategory';
 import apiProducts from '@/Api/apiProducts/products/apiProducts';
+import { PlusIcon } from '@/components/icons';
 import EditIcon from '@/components/icons/common/EditIcon';
-import PlusIcon from '@/components/icons/common/PlusIcon';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import InPutMoneyFormat from '@/components/UI/inputNumericFormat/inputMoneyFormat';
 import InPutNumericFormat from '@/components/UI/inputNumericFormat/inputNumericFormat';
@@ -14,13 +14,14 @@ import { WARNING_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 import useActionRole from '@/hooks/useRole';
 import useToast from '@/hooks/useToast';
 import { useToggle } from '@/hooks/useToggle';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Trash as IconDelete, GalleryEdit as IconEditImg, Image as IconImage } from 'iconsax-react';
 import Image from 'next/image';
 import React, { useEffect, useRef, useState } from 'react';
-import { BiEdit } from 'react-icons/bi';
 import { useSelector } from 'react-redux';
 import Select from 'react-select';
+import PopupCategory from '../category/popup';
+import { ButtonAddNew } from '@/components/common/button/AddNew';
 
 const Popup_Products = React.memo(props => {
   const isShow = useToast();
@@ -41,6 +42,11 @@ const Popup_Products = React.memo(props => {
   const { checkAdd, checkEdit } = useActionRole(auth, 'products');
   // cờ để show popup khi xóa
   const { isOpen: openDelete, isId, isIdChild, handleOpen, handleToggle, handleQueryId } = useToggle();
+
+  // state để mở popup thêm nhanh danh mục
+  const [openCategoryPopup, sOpenCategoryPopup] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const scrollAreaRef = useRef(null);
 
@@ -626,7 +632,7 @@ const Popup_Products = React.memo(props => {
             {props.dataLang?.category_material_list_variant || 'category_material_list_variant'}
           </button>
         </div>
-        <Customscrollbar className='3xl:h-[600px]  2xl:h-[470px] xl:h-[380px] lg:h-[350px] h-[400px]'>
+        <Customscrollbar className='max-h-[50vh]'>
           {onFetching ? (
             <Loading className='h-80' color='#0f4f9e' />
           ) : (
@@ -679,40 +685,50 @@ const Popup_Products = React.memo(props => {
                       <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
                         {props.dataLang?.category_titel} <span className='text-red-500'>*</span>
                       </label>
-                      <Select
-                        options={dataCategory}
-                        formatOptionLabel={SelectOptionLever}
-                        value={category}
-                        onChange={_HandleChangeInput.bind(this, 'category')}
-                        isClearable={true}
-                        noOptionsMessage={() => `${props.dataLang?.no_data_found}`}
-                        placeholder={props.dataLang?.category_titel}
-                        menuPortalTarget={document.body}
-                        onMenuOpen={handleMenuOpen}
-                        className={`${
-                          errGroup && category?.value == null ? 'border-red-500' : 'border-transparent'
-                        } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
-                        theme={theme => ({
-                          ...theme,
-                          colors: {
-                            ...theme.colors,
-                            primary25: '#EBF5FF',
-                            primary50: '#92BFF7',
-                            primary: '#0F4F9E',
-                          },
-                        })}
-                        styles={{
-                          placeholder: base => ({
-                            ...base,
-                            color: '#cbd5e1',
-                          }),
-                          menuPortal: base => ({
-                            ...base,
-                            zIndex: 9999,
-                            position: 'absolute',
-                          }),
-                        }}
-                      />
+                      <div className='flex items-center gap-2'>
+                        <div className='flex-1'>
+                          <Select
+                            options={dataCategory}
+                            formatOptionLabel={SelectOptionLever}
+                            value={category}
+                            onChange={_HandleChangeInput.bind(this, 'category')}
+                            isClearable={true}
+                            noOptionsMessage={() => `${props.dataLang?.no_data_found}`}
+                            placeholder={props.dataLang?.category_titel}
+                            menuPortalTarget={document.body}
+                            onMenuOpen={handleMenuOpen}
+                            className={`${
+                              errGroup && category?.value == null ? 'border-red-500' : 'border-transparent'
+                            } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
+                            theme={theme => ({
+                              ...theme,
+                              colors: {
+                                ...theme.colors,
+                                primary25: '#EBF5FF',
+                                primary50: '#92BFF7',
+                                primary: '#0F4F9E',
+                              },
+                            })}
+                            styles={{
+                              placeholder: base => ({
+                                ...base,
+                                color: '#cbd5e1',
+                              }),
+                              menuPortal: base => ({
+                                ...base,
+                                zIndex: 9999,
+                                position: 'absolute',
+                              }),
+                            }}
+                          />
+                        </div>
+                        <ButtonAddNew
+                          onClick={() => {
+                            sOpenCategoryPopup(true);
+                          }}
+                          title='Thêm nhanh danh mục'
+                        />
+                      </div>
                       {errGroup && category?.value == null && <label className='text-sm text-red-500'>{props.dataLang?.category_material_group_err_name}</label>}
                     </div>
                     <div className='2xl:space-y-1'>
@@ -779,7 +795,7 @@ const Popup_Products = React.memo(props => {
                         className={`focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal p-2 border outline-none`}
                       />
                     </div>
-                    {props.dataProductExpiry?.is_enable === '1' && (
+                    {props.dataProductExpiry?.is_enable == '1' && (
                       <div className='2xl:space-y-1'>
                         <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>{props.dataLang?.category_material_list_expiry_date || 'category_material_list_expiry_date'}</label>
                         <div className='relative flex flex-col items-center justify-center'>
@@ -1283,6 +1299,27 @@ const Popup_Products = React.memo(props => {
           </button>
         </div>
       </div>
+      {openCategoryPopup && (
+        <PopupCategory
+          dataLang={props.dataLang}
+          openExternal={openCategoryPopup}
+          branchExternal={branch?.length > 0 ? branch : undefined}
+          onCloseExternal={() => {
+            sOpenCategoryPopup(false);
+          }}
+          onRefresh={() => {
+            // Refresh danh sách danh mục sau khi thêm thành công
+            queryClient.invalidateQueries({ queryKey: ['api_category', branch] });
+            sOpenCategoryPopup(false);
+          }}
+          onRefreshSub={() => {
+            // Refresh danh sách danh mục sau khi thêm thành công
+            queryClient.invalidateQueries({ queryKey: ['api_category', branch] });
+            sOpenCategoryPopup(false);
+          }}
+          className='hidden'
+        />
+      )}
     </PopupCustom>
   );
 });

@@ -3,7 +3,9 @@ import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { Container } from '@/components/UI/common/layout';
 import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport';
 import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet';
+import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 import Loading from '@/components/UI/loading/loading';
+import MultiValue from '@/components/UI/mutiValue/multiValue';
 import NoData from '@/components/UI/noData/nodata';
 import StatusCheckboxGroup from '@/components/common/checkbox/StatusCheckboxGroup';
 import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
@@ -12,24 +14,23 @@ import ProgressBar from '@/components/common/progress/ProgressBar';
 import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
 import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
-import CaretDownIcon from '@/components/icons/common/CaretDownIcon';
-import ChartDonutIcon from '@/components/icons/common/ChartDonutIcon';
+import { CaretDownIcon, ChartDonutIcon } from '@/components/icons';
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import { IMAGES } from '@/constants/images';
 import { useBranchList } from '@/hooks/common/useBranch';
 import { useProductionOrdersList } from '@/managers/api/productions-order/useProductionOrdersList';
-import { useDebounce } from 'use-debounce';
 import { formatMoment } from '@/utils/helpers/formatMoment';
 import formatNumber from '@/utils/helpers/formatnumber';
 import { FnlocalStorage } from '@/utils/helpers/localStorage';
+import { debounce } from 'lodash';
 import Image from 'next/image';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { FaPlus } from 'react-icons/fa6';
 import { useSelector } from 'react-redux';
 import { listLsxStatus } from '../productions-orders/components/main/constants/listData';
+import { useProductionOrdersCombobox } from '../productions-orders/hooks/useProductionOrdersCombobox';
 import { useSummaryBtpNvl } from './hook';
-import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 
 const breadcrumbItems = [
   {
@@ -60,6 +61,17 @@ const parseNumber = value => {
   if (value === null || value === undefined || value === '') return 0;
   const numeric = typeof value === 'number' ? value : Number(String(value).replace(/,/g, ''));
   return Number.isNaN(numeric) ? 0 : numeric;
+};
+
+const normalizeText = value => {
+  if (!value) return '';
+  return String(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'd')
+    .toLowerCase()
+    .trim();
 };
 
 const createNumberCell = rawValue => {
@@ -95,17 +107,18 @@ const SummaryBtpNvl = () => {
   const [selectStatusFilter, setSelectStatusFilter] = useState([]);
   const [limit, setLimit] = useState(10);
   const [valueBr, setValueBr] = useState(null);
+  const [valueProductionOrders, setValueProductionOrders] = useState([]);
+  const [searchProductionOrders, setSearchProductionOrders] = useState('');
   const [searchMaterial, setSearchMaterial] = useState('');
   const [dateRange, setDateRange] = useState({
     startDate: undefined,
     endDate: undefined,
   });
 
-  // Debounce search value để tránh gọi API quá nhiều
-  const [debouncedSearchMaterial] = useDebounce(searchMaterial, 500);
   const { setItem, getItem } = FnlocalStorage();
   const stateFilterDropdown = useSelector(state => state.stateFilterDropdown);
   const { data: listBr = [] } = useBranchList();
+  const { data: comboboxProductionOrders = [] } = useProductionOrdersCombobox(searchProductionOrders);
 
   // Load trạng thái từ localStorage khi component mount
   useEffect(() => {
@@ -139,29 +152,25 @@ const SummaryBtpNvl = () => {
   };
 
   // call api list production
-  const {
-    data: dataProductionOrders,
-    isLoading: isLoadingProductionOrderList,
-    refetch: refetchProductionOrders,
-  } = useProductionOrdersList({
+  const { data: dataProductionOrders, isLoading: isLoadingProductionOrderList } = useProductionOrdersList({
     limit: limit,
     branch_id: valueBr?.value || '',
+    _po_ids: Array.isArray(valueProductionOrders) && valueProductionOrders.length > 0 ? valueProductionOrders.map(po => po.value) : '',
     date_start: formatDateToDMY(dateRange.startDate),
     date_end: formatDateToDMY(dateRange.endDate),
     ...(selectStatusFilter?.length > 0 && {
       status: selectStatusFilter,
     }),
   });
+
   const summaryParams = useMemo(
     () => ({
       po_ids: selectedOrders.map(o => o.id),
       ...(activeTab?.id === 'by_product' ? { is_sumpany: 1 } : {}),
-      ...(debouncedSearchMaterial && {
-        search: debouncedSearchMaterial,
-      }),
     }),
-    [selectedOrders, activeTab, debouncedSearchMaterial]
+    [selectedOrders, activeTab]
   );
+
   const selectedPoIds = summaryParams.po_ids || [];
   const { data: dataSummaryBtpNvl, isLoading: isLoadingSummaryBtpNvl, refetch: refetchSummaryBtpNvl } = useSummaryBtpNvl(summaryParams);
   // flag của list production
@@ -260,9 +269,36 @@ const SummaryBtpNvl = () => {
     };
   }, [productionOrdersSummary, activeTab]);
 
-  const materialsData = activeTab?.id === 'by_product' ? summaryData?.materials_boms || [] : buildBomRows.materials || [];
+  const materialsDataRaw = activeTab?.id === 'by_product' ? summaryData?.materials_boms || [] : buildBomRows.materials || [];
 
-  const finishedProductsData = activeTab?.id === 'by_product' ? summaryData?.products_boms || [] : buildBomRows.products || [];
+  const finishedProductsDataRaw = activeTab?.id === 'by_product' ? summaryData?.products_boms || [] : buildBomRows.products || [];
+
+  // Lọc dữ liệu theo mã/tên ở frontend
+  const materialsData = useMemo(() => {
+    if (!searchMaterial || searchMaterial.trim() === '') {
+      return materialsDataRaw;
+    }
+
+    const searchTerm = normalizeText(searchMaterial);
+    return materialsDataRaw.filter(item => {
+      const itemCode = normalizeText(item?.item_code);
+      const itemName = normalizeText(item?.item_name);
+      return itemCode.includes(searchTerm) || itemName.includes(searchTerm);
+    });
+  }, [materialsDataRaw, searchMaterial]);
+
+  const finishedProductsData = useMemo(() => {
+    if (!searchMaterial || searchMaterial.trim() === '') {
+      return finishedProductsDataRaw;
+    }
+
+    const searchTerm = normalizeText(searchMaterial);
+    return finishedProductsDataRaw.filter(item => {
+      const itemCode = normalizeText(item?.item_code);
+      const itemName = normalizeText(item?.item_name);
+      return itemCode.includes(searchTerm) || itemName.includes(searchTerm);
+    });
+  }, [finishedProductsDataRaw, searchMaterial]);
 
   const excelSheets = useMemo(() => {
     const createColumn = (title, width) => ({
@@ -283,7 +319,9 @@ const SummaryBtpNvl = () => {
       createColumn('ĐVT', 10),
       createColumn('Quy đổi', 18),
       createColumn('ĐVT quy đổi', 12),
-      createColumn('Đã giữ/Mua', 18),
+      createColumn('Quy đổi AI', 18),
+      createColumn('ĐVT', 10),
+      createColumn('Đã giữ/Đã Mua', 18),
       createColumn('ĐVT', 10),
       createColumn('Thiếu', 18),
       createColumn('ĐVT', 10),
@@ -305,6 +343,8 @@ const SummaryBtpNvl = () => {
         { value: item.unit_name || '' },
         createNumberCell(item.quota_primary),
         { value: item.unit_name_primary || '' },
+        createNumberCell(item.quota_primary_ai),
+        { value: item.unit_name_primary || '' },
         createNumberCell(item.quantity_keep),
         { value: item.unit_name_primary || '' },
         createNumberCell(item.quantity_rest),
@@ -318,7 +358,6 @@ const SummaryBtpNvl = () => {
       createColumn('Mã BTP', 15),
       createColumn('Tên BTP', 32),
       createColumn('Thuộc tính', 25),
-      // createColumn('Loại', 18),
       ...(isByProduct ? [] : [createColumn('Lệnh sản xuất', 28)]),
       createColumn('Đơn vị tính', 12),
       createColumn('Số lượng cần', 18),
@@ -337,7 +376,6 @@ const SummaryBtpNvl = () => {
         { value: item.item_code || '' },
         { value: item.item_name || '' },
         { value: item.item_variation || '' },
-        // { value: getProductTagLabel(item.type_products) || '' },
         ...(isByProduct ? [] : [{ value: item.reference_no || '' }]),
         { value: item.unit_name || '' },
         createNumberCell(item.total_quota),
@@ -397,11 +435,23 @@ const SummaryBtpNvl = () => {
   const handleFilter = (type, value) => {
     if (type === 'valueBr') {
       setValueBr(value);
+    } else if (type === 'valueProductionOrders') {
+      setValueProductionOrders(value);
     }
   };
 
+  // Hàm search lệnh sản xuất với debounce
+  const handleSearchProductionOrders = debounce(value => {
+    setSearchProductionOrders(value);
+  }, 500);
+
   // Đếm số bộ lọc đang active
-  const activeFilterCount = [valueBr, dateRange.startDate].filter(item => item !== null && item !== undefined).length;
+  const activeFilterCount = [valueBr, Array.isArray(valueProductionOrders) ? (valueProductionOrders.length > 0 ? valueProductionOrders : null) : valueProductionOrders, dateRange.startDate].filter(
+    item => {
+      if (Array.isArray(item)) return item.length > 0;
+      return item !== null && item !== undefined;
+    }
+  ).length;
 
   // trigger của bộ lọc tổng
   const triggerFilterAll = (
@@ -485,19 +535,26 @@ const SummaryBtpNvl = () => {
                   options={listBr}
                   classParent='ml-0 !font-semibold focus:ring-none focus:outline-none text-sm focus-visible:ring-none focus-visible:outline-none placeholder:text-sm placeholder:text-[#52575E]'
                   classNamePrefix={'productionSmoothing'}
-                  placeholder='Tất cả chi nhánh'
+                  placeholder='Tất cả'
                 />
               </div>
               <div className='col-span-1 space-y-1'>
                 <h3 className='text-xs text-[#051B44] font-normal'>Lệnh sản xuất</h3>
                 <SelectComponentNew
                   isClearable={true}
-                  value={valueBr}
-                  onChange={e => handleFilter('valueBr', e)}
-                  options={listBr}
-                  classParent='ml-0 !font-semibold focus:ring-none focus:outline-none text-sm focus-visible:ring-none focus-visible:outline-none placeholder:text-sm placeholder:text-[#52575E]'
+                  value={valueProductionOrders}
+                  onInputChange={e => {
+                    handleSearchProductionOrders(e);
+                  }}
+                  onChange={e => handleFilter('valueProductionOrders', e)}
+                  options={comboboxProductionOrders}
+                  classParent='ml-0 text-sm'
                   classNamePrefix={'productionSmoothing'}
-                  placeholder='Tất cả chi nhánh'
+                  placeholder='Tất cả lệnh sản xuất'
+                  isMulti={true}
+                  components={{ MultiValue }}
+                  maxShowMuti={1}
+                  closeMenuOnSelect={false}
                 />
               </div>
               <div className='col-span-1 space-y-1'>
@@ -549,7 +606,7 @@ const SummaryBtpNvl = () => {
                     const color = {
                       0: {
                         color: 'bg-[#FF811A]/15 text-[#C25705]',
-                        title: 'Đã sản xuất',
+                        title: 'Chưa sản xuất',
                       },
                       1: {
                         color: 'bg-[#3ECeF7]/20 text-[#076A94]',
@@ -643,27 +700,33 @@ const SummaryBtpNvl = () => {
           </div>
         </div>
         <div className='flex-1 h-full flex flex-col gap-2'>
-          <div className='flex items-center gap-4'>
-            <TabSwitcherWithUnderline
-              tabs={tabsMaterialFinishedProduct}
-              activeTab={activeTabMaterialFinishedProduct}
-              onChange={setActiveTabMaterialFinishedProduct}
-              renderLabel={(tab, activeTab) => (
-                <h3
-                  className={`${activeTab?.id === tab.id ? 'text-[#0375F3]' : 'text-[#9295A4]'} font-medium group-hover:text-[#0375F3] transition-all duration-100 ease-linear origin-left capitalize`}
-                >
-                  <span>{tab.name}</span>
-                </h3>
-              )}
-            />
-            <SearchComponent
-              onChange={e => setSearchMaterial(e?.target?.value || '')}
-              value={searchMaterial}
-              classNameBox='!py-2 2xl:!p-2.5 w-1/2 ml-auto'
-              placeholder='Tìm kiếm mã/tên ...'
-              classInput='w-full'
-              alwaysOpen={true}
-            />
+          <div className='flex items-center gap-4 w-full justify-between'>
+            <div className='w-[300px] 2xl:w-[330px] flex-shrink-0'>
+              <TabSwitcherWithUnderline
+                tabs={tabsMaterialFinishedProduct}
+                activeTab={activeTabMaterialFinishedProduct}
+                onChange={setActiveTabMaterialFinishedProduct}
+                renderLabel={(tab, activeTab) => (
+                  <h3
+                    className={`${
+                      activeTab?.id === tab.id ? 'text-[#0375F3]' : 'text-[#9295A4]'
+                    } font-medium group-hover:text-[#0375F3] transition-all duration-100 ease-linear origin-left capitalize`}
+                  >
+                    <span>{tab.name}</span>
+                  </h3>
+                )}
+              />
+            </div>
+            {/* <div className='w-full'> */}
+              <SearchComponent
+                onChange={e => setSearchMaterial(e?.target?.value || '')}
+                value={searchMaterial}
+                classNameBox='!py-2 2xl:!p-2.5 w-1/2'
+                placeholder='Tìm kiếm mã/tên ...'
+                classInput='w-full'
+                alwaysOpen={true}
+              />
+            {/* </div> */}
           </div>
 
           {selectedOrders?.length === 0 ? (
@@ -709,7 +772,7 @@ const SummaryBtpNvl = () => {
                             <span className='ai-shine-text'>Gợi ý AI</span>
                           </span>
                         </th>
-                        <th className='text-center px-3 py-2'>Đã giữ/Mua</th>
+                        <th className='text-center px-3 py-2'>Đã giữ/Đã mua</th>
                         <th className='text-center px-3 py-2'>Thiếu</th>
                         <th className='text-center px-3 py-2'>Tiến độ</th>
                       </tr>
