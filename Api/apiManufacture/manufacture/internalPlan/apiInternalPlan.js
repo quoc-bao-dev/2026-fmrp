@@ -18,5 +18,10 @@ const apiInternalPlan = {
         const response = await axiosCustom('POST', `${url}`, data);
         return response.data
     },
+
+    async apiPrintInternalPlan(id) {
+        const response = await axiosCustom('GET', `/api_web/Api_print/Print_InternalPlan?id=${id}&csrf_protection=true`)
+        return response.data
+    },
 }
 export default apiInternalPlan

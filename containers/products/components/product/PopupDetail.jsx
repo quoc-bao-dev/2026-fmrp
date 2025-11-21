@@ -117,6 +117,7 @@ const Popup_Detail = React.memo((props) => {
                 <div className="flex items-center space-x-4 border-[#E7EAEE] border-opacity-70 border-b-[1px]">
                     {dataTab?.map((item) => (
                         <button
+                            key={item.id}
                             onClick={() => {
                                 if ([2, 3].includes(item.id) && props?.dataProduct?.type_products?.id == 2) {
                                     isShow("error", `Bán thành phẩm mua ngoài, không có ${item.name.toLowerCase()}`);
