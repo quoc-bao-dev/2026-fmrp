@@ -1,17 +1,36 @@
-import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
-import { useDispatch } from 'react-redux';
+import { RefreshIcon } from '@/components/icons';
+import { useCreateSessionAppLoginQR } from '@/managers/api/auth/useCreateSessionAppLoginQR';
+import { getOrCreateTabSession } from '@/utils/helpers/sessionStorage';
 import { Add as IconClose } from 'iconsax-react';
-import RefreshIcon from '@/components/icons/common/Refresh';
+import { useEffect, useState } from 'react';
+import QRCode from 'react-qr-code';
+import { useDispatch } from 'react-redux';
 
 const PopupQRCodeHeader = () => {
   const dispatch = useDispatch();
-  const DEFAULT_COUNTDOWN = 1;
   const [timerKey, setTimerKey] = useState(0);
-  const [countdown, setCountdown] = useState(DEFAULT_COUNTDOWN);
+  const [countdown, setCountdown] = useState(0);
+  const [sessionData, setSessionData] = useState(null);
+
+  const { createSessionApp, isLoading } = useCreateSessionAppLoginQR({
+    onSuccess: res => {
+      const ttl = Number(res?.data?.ttl) || 0;
+      setSessionData(res?.data || null);
+      setCountdown(ttl);
+      // Khi tạo session mới thành công thì reset lại countdown theo ttl
+      setTimerKey(prev => prev + 1);
+    },
+  });
+
+  // Tự động load session QR khi mở modal (component mount)
+  useEffect(() => {
+    const session_web = getOrCreateTabSession();
+    createSessionApp({ session_web });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    setCountdown(DEFAULT_COUNTDOWN);
+    if (!countdown) return;
     const interval = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
@@ -33,7 +52,8 @@ const PopupQRCodeHeader = () => {
   };
 
   const handleReset = () => {
-    setTimerKey(prev => prev + 1);
+    const session_web = getOrCreateTabSession();
+    createSessionApp({ session_web });
   };
 
   return (
@@ -50,26 +70,30 @@ const PopupQRCodeHeader = () => {
         <p className='text-sm text-[#667085]'>Mở ứng dụng FMRP trên điện thoại và quét mã dưới đây.</p>
       </div>
       <div className='p-3 rounded-2xl bg-[#F9FAFB] border border-[#EAECF0] flex flex-col items-center gap-3'>
-        <Image
-          alt='qr-code'
-          src='/qr.png'
-          width={220}
-          height={220}
-          quality={100}
-          className='object-contain'
-          loading='lazy'
-          crossOrigin='anonymous'
-          blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
-        />
+        <div className='relative'>
+          <div className={`bg-white p-3 rounded-xl shadow-sm ${!sessionData?.session_token || countdown <= 0 ? 'blur-md' : ''}`}>
+            {sessionData?.session_token ? (
+              <QRCode value={sessionData.session_token} size={220} bgColor='#ffffff' fgColor='#000000' level='M' />
+            ) : (
+              <div className='w-[220px] h-[220px] flex items-center justify-center text-xs text-[#98A2B3]'>Đang tạo mã QR...</div>
+            )}
+          </div>
+          {(!sessionData?.session_token || countdown <= 0) && (
+            <div className='absolute inset-0 flex items-center justify-center pointer-events-none'>
+              <span className='px-3 py-1 rounded-full bg-black/60 text-white text-xs'>{countdown <= 0 ? 'Mã đã hết hạn' : 'Đang tạo mã QR...'}</span>
+            </div>
+          )}
+        </div>
         {countdown > 0 ? <p className='text-sm text-[#98A2B3] font-medium'>Mã sẽ hết hạn sau {countdown}s</p> : <p className='text-sm text-[#98A2B3] font-medium'>Mã đã hết hạn, vui lòng tạo lại.</p>}
       </div>
       <div className='w-full flex flex-col gap-2'>
         {countdown === 0 && (
           <button
             onClick={handleReset}
+            disabled={isLoading}
             className='w-full py-2.5 rounded-xl bg-typo-blue-1/10 text-typo-blue-5/90 font-medium text-sm hover:bg-[#EFF4FF] transition flex items-center justify-center gap-2'
           >
-            <span>Tạo lại mã QR</span>
+            <span>{isLoading ? 'Đang tạo mã QR...' : 'Tạo lại mã QR'}</span>
             <RefreshIcon size={16} color='currentColor' className='text-typo-blue-5/90 size-5' />
           </button>
         )}
