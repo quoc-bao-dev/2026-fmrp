@@ -20,7 +20,17 @@ const Popup_NVL = React.memo(props => {
 
   const [open, sOpen] = useState(false);
 
-  const _ToggleModal = e => sOpen(e);
+  // Sử dụng openExternal nếu được truyền vào, nếu không thì dùng state nội bộ
+  const isOpen = props.openExternal !== undefined ? props.openExternal : open;
+
+  const _ToggleModal = e => {
+    if (props.openExternal !== undefined) {
+      // Nếu có openExternal, gọi callback để đóng
+      props.onCloseExternal && props.onCloseExternal();
+    } else {
+      sOpen(e);
+    }
+  };
 
   const [onSending, sOnSending] = useState(false);
 
@@ -46,19 +56,30 @@ const Popup_NVL = React.memo(props => {
 
   // set state các input chi nhánh, mã, tên, nhóm, ghi chú khi sửa, lấy data từ props
   useEffect(() => {
-    open && sCode(props.data?.code ? props.data?.code : '');
-    open && sName(props.data?.name ? props.data?.name : '');
-    open && sEditorValue(props.data?.note ? props.data?.note : '');
-    open && sIdCategory(props.data?.parent_id ? props.data?.parent_id : null);
-    open && sBranch(props.data?.branch?.length > 0 ? props.data?.branch?.map(e => ({ label: e.name, value: e.id })) : []);
-    open && sErrCode(false);
-    open && sErrName(false);
-    open && sErrBranch(false);
-  }, [open]);
+    isOpen && sCode(props.data?.code ? props.data?.code : '');
+    isOpen && sName(props.data?.name ? props.data?.name : '');
+    isOpen && sEditorValue(props.data?.note ? props.data?.note : '');
+    isOpen && sIdCategory(props.data?.parent_id ? props.data?.parent_id : null);
+    // Nếu có branchExternal, sử dụng nó, nếu không thì dùng từ props.data
+    if (isOpen) {
+      if (props.branchExternal?.length > 0) {
+        sBranch(props.branchExternal);
+      } else if (props.data?.branch?.length > 0) {
+        sBranch(props.data?.branch?.map(e => ({ label: e.name, value: e.id })));
+      } else {
+        sBranch([]);
+      }
+    }
+    isOpen && sErrCode(false);
+    isOpen && sErrName(false);
+    isOpen && sErrBranch(false);
+  }, [isOpen]);
 
   useEffect(() => {
-    if (!open || props.data?.id) return;
+    if (!isOpen || props.data?.id) return;
     if (branch?.length > 0) return;
+    // Nếu có branchExternal, không set default branch
+    if (props.branchExternal?.length > 0) return;
     if (authState?.branch?.length > 0) {
       const defaultBranch = {
         value: authState.branch[0].id,
@@ -66,7 +87,7 @@ const Popup_NVL = React.memo(props => {
       };
       sBranch([defaultBranch]);
     }
-  }, [open, authState?.branch, props.data?.id]);
+  }, [isOpen, authState?.branch, props.data?.id, props.branchExternal]);
 
   const _HandleChangeInput = (type, value) => {
     if (type == 'name') {
@@ -98,7 +119,7 @@ const Popup_NVL = React.memo(props => {
     branch_id.forEach(id => formData.append('branch_id[]', id));
 
     handingCategory.mutate(formData, {
-      onSuccess: ({ isSuccess, message }) => {
+      onSuccess: ({ isSuccess, message, data }) => {
         if (isSuccess) {
           isShow('success', props.dataLang[message] || message);
           sName('');
@@ -107,7 +128,18 @@ const Popup_NVL = React.memo(props => {
           sIdCategory([]);
           props.onRefresh && props.onRefresh();
           props.onRefreshOpt && props.onRefreshOpt();
-          sOpen(false);
+
+          // Nếu có callback onSuccess và có data, truyền data về component cha
+          if (props.onSuccess && data) {
+            props.onSuccess(data);
+          }
+
+          // Nếu có openExternal, gọi callback để đóng, nếu không thì dùng state nội bộ
+          if (props.openExternal !== undefined) {
+            props.onCloseExternal && props.onCloseExternal();
+          } else {
+            sOpen(false);
+          }
         } else {
           isShow('error', props.dataLang[message] || message);
         }
@@ -164,7 +196,7 @@ const Popup_NVL = React.memo(props => {
         )
       }
       onClickOpen={_ToggleModal.bind(this, true)}
-      open={open}
+      open={isOpen}
       onClose={_ToggleModal.bind(this, false)}
       classNameBtn={props.className}
     >

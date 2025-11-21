@@ -77,7 +77,6 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
         message: messageText,
       });
 
-      console.log('addUserMessage');
       // Thêm message của user vào store để hiển thị
       dispatch({
         type: 'chatbot/addUserMessage',
@@ -85,8 +84,6 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
       });
       // Clear input sau khi gửi thành công
       setTextUser('');
-
-      // console.log({ isChat });
 
       if (isChat === 2) {
         dispatch({ type: 'chatbot/setSendChat', payload: null });
@@ -241,37 +238,6 @@ const BoxChatAI = ({ openChatBox, setOpenChatBox, dataLang, dataSetting, chatId 
       setIsReloading(false);
     }
   };
-
-  // useEffect(() => {
-  //   const handleCompleteStep = async () => {
-  //     if (options?.isFinished) {
-  //       setResultDataChatBot(false);
-  //       try {
-  //         const payload = {
-  //           data: {
-  //             stages: response.stages,
-  //             materials_primary: response.materialsPrimary,
-  //             semi_products: response.semiProducts,
-  //             product: response.product,
-  //           },
-  //           api: options.api,
-  //         };
-  //         const res = await completeStepChatBot(payload);
-  //         if (res) {
-  //           setProductAnalysis(res);
-  //           setTimeout(() => {
-  //             dispatch({ type: 'chatbot/reset' });
-  //             setResultDataChatBot(true);
-  //           }, 10000);
-  //         }
-  //       } catch (err) {
-  //         setResultDataChatBot(false);
-  //         console.error('Lỗi khi gọi completeStepChatBot:', err);
-  //       }
-  //     }
-  //   };
-  //   handleCompleteStep();
-  // }, [options?.isFinished]);
 
   useEffect(() => {
     if (endRef.current) {

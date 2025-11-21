@@ -1,4 +1,7 @@
+import apiComons from '@/Api/apiComon/apiComon';
 import apiItems from '@/Api/apiMaterial/items/apiItems';
+import { ButtonAddNew } from '@/components/common/button/AddNew';
+import { PlusIcon } from '@/components/icons';
 import EditIcon from '@/components/icons/common/EditIcon';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import InPutMoneyFormat from '@/components/UI/inputNumericFormat/inputMoneyFormat';
@@ -10,14 +13,15 @@ import SelectOptionLever from '@/components/UI/selectOptionLever/selectOptionLev
 import { CONFIRM_DELETION, TITLE_DELETE } from '@/constants/delete/deleteTable';
 import useToast from '@/hooks/useToast';
 import { useToggle } from '@/hooks/useToggle';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Trash as IconDelete, GalleryEdit as IconEditImg, Image as IconImage } from 'iconsax-react';
 import Image from 'next/image';
 import React, { useEffect, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Select from 'react-select';
 import { useItemCategoryOptions } from '../../hooks/items/useItemCategoryOptions';
-import { PlusIcon } from '@/components/icons';
+import PopupCategory from '../category/popup';
+import PopupUnit from '../unit/popup';
 const Popup_NVL = React.memo(props => {
   const dataOptUnit = useSelector(state => state.unit_NVL);
 
@@ -111,11 +115,21 @@ const Popup_NVL = React.memo(props => {
   const [dataVariantSending, sDataVariantSending] = useState([]);
 
   // danh sách nhóm nguyên vật liệu
-  const { data: dataOptGr = [] } = useItemCategoryOptions({
+  const { data: dataOptGr = [], refetch: refetchCategoryOptions } = useItemCategoryOptions({
     params: {
       'branch_id[]': branch_id.length > 0 ? branch_id : -1,
     },
   });
+
+  const [openCategoryModal, sOpenCategoryModal] = useState(false);
+
+  const [openUnitModal, sOpenUnitModal] = useState(false); // Modal cho field "Đơn vị mua"
+
+  const [openUnitChildModal, sOpenUnitChildModal] = useState(false); // Modal cho field "Đơn vị quy đổi"
+
+  const dispatch = useDispatch();
+
+  const queryClient = useQueryClient();
 
   // check khi biến thể bị trùng
   useEffect(() => {
@@ -653,9 +667,11 @@ const Popup_NVL = React.memo(props => {
                 <div className='grid grid-cols-2 gap-5'>
                   <div className='space-y-2 2xl:space-y-3'>
                     <div className='2xl:space-y-1'>
-                      <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
-                        {props.dataLang?.client_list_brand || 'client_list_brand'} <span className='text-red-500'>*</span>
-                      </label>
+                      <div className='flex justify-between'>
+                        <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
+                          {props.dataLang?.client_list_brand || 'client_list_brand'} <span className='text-red-500'>*</span>
+                        </label>
+                      </div>
                       <Select
                         options={dataOptBranch}
                         formatOptionLabel={SelectOptionLever}
@@ -693,9 +709,12 @@ const Popup_NVL = React.memo(props => {
                       {errBranch && <label className='text-sm text-red-500'>{props.dataLang?.client_list_bran || 'client_list_bran'}</label>}
                     </div>
                     <div className='2xl:space-y-1'>
-                      <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
-                        {props.dataLang?.header_category_material_group} <span className='text-red-500'>*</span>
-                      </label>
+                      <div className='flex justify-between'>
+                        <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
+                          {props.dataLang?.header_category_material_group} <span className='text-red-500'>*</span>
+                        </label>
+                        <ButtonAddNew onClick={() => sOpenCategoryModal(true)} title='Thêm mới' text='Thêm mới' className='text-sm font-normal' />
+                      </div>
                       <Select
                         options={dataOptGr}
                         formatOptionLabel={SelectOptionLever}
@@ -830,9 +849,13 @@ const Popup_NVL = React.memo(props => {
                   </div>
                   <div className='space-y-2 2xl:space-y-3'>
                     <div className='2xl:space-y-1'>
-                      <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
-                        {props.dataLang?.category_material_list_purchase_unit || 'category_material_list_purchase_unit'} <span className='text-red-500'>*</span>
-                      </label>
+                      <div className='flex justify-between'>
+                        <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
+                          {props.dataLang?.category_material_list_purchase_unit || 'category_material_list_purchase_unit'} <span className='text-red-500'>*</span>
+                        </label>
+                        <ButtonAddNew onClick={() => sOpenUnitModal(true)} title='Thêm mới' text='Thêm mới' className='text-sm font-normal' />
+                      </div>
+
                       <Select
                         options={dataOptUnit}
                         value={
@@ -1290,6 +1313,83 @@ const Popup_NVL = React.memo(props => {
             {props.dataLang?.branch_popup_save}
           </button>
         </div>
+      </div>
+      <div className='hidden'>
+        <PopupCategory
+          dataLang={props.dataLang}
+          data={{}}
+          openExternal={openCategoryModal}
+          branchExternal={branch?.length > 0 ? branch : undefined}
+          onCloseExternal={() => {
+            sOpenCategoryModal(false);
+          }}
+          onSuccess={categoryData => {
+            // Tự động chọn danh mục vừa tạo vào field "Nhóm nguyên vật liệu"
+            if (categoryData?.id && categoryData?.name) {
+              sGroupId({
+                label: categoryData.name,
+                value: categoryData.id,
+              });
+            }
+          }}
+          onRefresh={() => {
+            refetchCategoryOptions();
+            sOpenCategoryModal(false);
+          }}
+          onRefreshOpt={() => {
+            refetchCategoryOptions();
+            sOpenCategoryModal(false);
+          }}
+        />
+        {/* Modal cho field "Đơn vị mua" */}
+        <PopupUnit
+          dataLang={props.dataLang}
+          openExternal={openUnitModal}
+          onCloseExternal={() => {
+            sOpenUnitModal(false);
+          }}
+          onSuccess={async unitData => {
+            // Tự động chọn đơn vị vừa tạo vào field "Đơn vị mua"
+            if (unitData?.id) {
+              sUnit(unitData.id);
+            }
+
+            // Refresh danh sách đơn vị sau khi thêm thành công
+            await queryClient.invalidateQueries({ queryKey: ['api_unit_list'] });
+
+            // Fetch lại từ API và cập nhật Redux state
+            try {
+              const { rResult } = await apiComons.apiUnit({});
+              const unitList = rResult?.map(e => ({ label: e.unit, value: e.id }));
+
+              // Cập nhật Redux state
+              dispatch({
+                type: 'unit_NVL/update',
+                payload: unitList,
+              });
+            } catch (error) {
+              console.error('Error fetching units:', error);
+            }
+          }}
+          onRefresh={async () => {
+            // Refresh danh sách đơn vị
+            await queryClient.invalidateQueries({ queryKey: ['api_unit_list'] });
+
+            try {
+              const { rResult } = await apiComons.apiUnit({});
+              const unitList = rResult?.map(e => ({ label: e.unit, value: e.id }));
+
+              dispatch({
+                type: 'unit_NVL/update',
+                payload: unitList,
+              });
+            } catch (error) {
+              console.error('Error fetching units:', error);
+            }
+
+            sOpenUnitModal(false);
+          }}
+        />
       </div>
     </PopupCustom>
   );
