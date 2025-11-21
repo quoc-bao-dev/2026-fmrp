@@ -1,4 +1,5 @@
 import apiCategory from '@/Api/apiProducts/category/apiCategory';
+import { PlusIcon } from '@/components/icons';
 import EditIcon from '@/components/icons/common/EditIcon';
 import ButtonCancel from '@/components/UI/button/buttonCancel';
 import ButtonSubmit from '@/components/UI/button/buttonSubmit';
@@ -11,7 +12,6 @@ import { useSelector } from 'react-redux';
 import Select from 'react-select';
 import { useProductCategoryDetailOptions } from '../../hooks/category/useProductCategoryDetailOptions';
 import { useCategoryOptions } from '../../hooks/product/useCategoryOptions';
-import { PlusIcon } from '@/components/icons';
 
 const Popup_Products = React.memo(props => {
   const isShow = useToast();
@@ -23,6 +23,13 @@ const Popup_Products = React.memo(props => {
   const [open, sOpen] = useState(false);
 
   const _ToggleModal = e => sOpen(e);
+
+  // Nếu có prop openExternal, sử dụng nó để điều khiển popup từ bên ngoài
+  useEffect(() => {
+    if (props.openExternal !== undefined) {
+      sOpen(props.openExternal);
+    }
+  }, [props.openExternal]);
 
   const [onSending, sOnSending] = useState(false);
 
@@ -50,18 +57,27 @@ const Popup_Products = React.memo(props => {
 
   // set initital cho các sate khi mở poup
   useEffect(() => {
-    open && sErrBranch(false);
-    open && sErrName(false);
-    open && sErrCode(false);
-    open && sName('');
-    open && sCode('');
-    open && sNote('');
-    open && sBranch([]);
-    open && sGroup(null);
-  }, [open]);
+    if (!open) return;
+    sErrBranch(false);
+    sErrName(false);
+    sErrCode(false);
+    sName('');
+    sCode('');
+    sNote('');
+    sGroup(null);
+    // Chỉ reset branch nếu không có branchExternal
+    if (!props.branchExternal || props.branchExternal.length === 0) {
+      sBranch([]);
+    }
+  }, [open, props.branchExternal]);
 
   useEffect(() => {
     if (!open || props.id) return;
+    // Nếu có branch từ props, sử dụng nó
+    if (props.branchExternal && props.branchExternal.length > 0) {
+      sBranch(props.branchExternal);
+      return;
+    }
     if (branch?.length > 0) return;
     if (authState?.branch?.length > 0) {
       const defaultBranch = {
@@ -70,7 +86,7 @@ const Popup_Products = React.memo(props => {
       };
       sBranch([defaultBranch]);
     }
-  }, [open, props.id, authState?.branch]);
+  }, [open, props.id, authState?.branch, props.branchExternal]);
 
   const _HandleChangeInput = (type, value) => {
     if (type == 'name') {
@@ -190,9 +206,12 @@ const Popup_Products = React.memo(props => {
           </p>
         )
       }
-      onClickOpen={_ToggleModal.bind(this, true)}
+      onClickOpen={props.openExternal === undefined ? _ToggleModal.bind(this, true) : undefined}
       open={open}
-      onClose={_ToggleModal.bind(this, false)}
+      onClose={e => {
+        _ToggleModal(false);
+        props.onCloseExternal && props.onCloseExternal();
+      }}
       classNameBtn={props.className}
     >
       <div className='py-4 w-[600px] space-y-5'>
