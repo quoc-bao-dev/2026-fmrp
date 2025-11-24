@@ -180,7 +180,7 @@ const Information = props => {
                                 onMouseEnter={_HoverImg.bind(this, true)}
                                 onMouseLeave={_HoverImg.bind(this, false)}
                                 onError={() => setImageError(true)}
-                                src={imageError ? '/icon/default/default.png' : typeof data?.company_logo === 'string' ? data?.company_logo : URL.createObjectURL(data?.company_logo)}
+                                src={imageError ? '/icon/default/logo.png' : typeof data?.company_logo === 'string' ? data?.company_logo : URL.createObjectURL(data?.company_logo)}
                                 quality={100}
                                 className='object-cover w-full h-full'
                                 loading='lazy'
@@ -389,9 +389,9 @@ const ListBtn_Setting = React.memo(props => {
         <Btn_Setting url='/settings' isActive='/settings/information'>
           {props.dataLang?.list_btn_seting_information}
         </Btn_Setting>
-        {/* <Btn_Setting url="/settings/service-information" isActive="/settings/service-information">
-                    {props.dataLang?.list_btn_seting_services}
-                </Btn_Setting> */}
+        <Btn_Setting url='/settings/service-information' isActive='/settings/service-information'>
+          {props.dataLang?.list_btn_seting_services}
+        </Btn_Setting>
         <Btn_Setting url='/settings/branch' isActive='/settings/branch'>
           {props.dataLang?.list_btn_seting_setup}
         </Btn_Setting>
