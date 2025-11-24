@@ -12,6 +12,9 @@ const AnimatedGeneraEachWord = ({
     cursorColor = "#21B972",
     typingSpeed = 70,
     text = "",
+    loadingDotClassName1 = "bg-[#54E79E]",
+    loadingDotClassName2 = "bg-[#21B972]",
+    loadingDotClassName3 = "bg-[#027A48]",
 }) => {
     const fullText = text
         ? Array.isArray(text)
@@ -143,9 +146,9 @@ const AnimatedGeneraEachWord = ({
                         transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
                     >
                         <LoadingThreeDotsJumping
-                            classNameDot1="bg-[#54E79E]"
-                            classNameDot2="bg-[#21B972]"
-                            classNameDot3="bg-[#027A48]"
+                            classNameDot1={loadingDotClassName1}
+                            classNameDot2={loadingDotClassName2}
+                            classNameDot3={loadingDotClassName3}
                         />
                     </motion.div>
                 )}

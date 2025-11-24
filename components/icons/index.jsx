@@ -85,6 +85,7 @@ import UpgradeIcon from './source/upgrade-icon.svg';
 import UserCircleIcon from './source/user-circle-icon.svg';
 import WarningAlertIcon from './source/warning-alert-icon.svg';
 import WarningIcon from './source/warning-icon.svg';
+import ZaloIcon from './source/zalo.svg';
 
 // Export tất cả các icon
 export {
@@ -151,4 +152,5 @@ export {
   UserCircleIcon,
   WarningAlertIcon,
   WarningIcon,
+  ZaloIcon,
 };
