@@ -821,7 +821,7 @@ const LoginContent = React.memo(props => {
                                                     </p> */}
                 </div>
               </div>
-              <div className='pointer-events-none select-none'>
+              <Link href='https://zalo.me/fososoft' target='_blank'>
                 <Image
                   alt=''
                   src='/qr.png'
@@ -834,7 +834,7 @@ const LoginContent = React.memo(props => {
                   placeholder='blur'
                   blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
                 />
-              </div>
+              </Link>
             </div>
           </div>
           <div className='absolute -bottom-10 -right-10 pointer-events-none select-none'>
