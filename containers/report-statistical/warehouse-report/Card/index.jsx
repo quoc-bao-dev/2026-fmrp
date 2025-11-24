@@ -312,16 +312,16 @@ const Card = props => {
             <TableSection
               fixedColumns={[
                 { title: 'STT', width: 'w-14', textAlign: 'center' },
-                { title: 'Ngày duyệt kho', width: 'w-44', textAlign: 'center' },
-                { title: 'Ngày chứng từ', width: 'w-44', textAlign: 'center' },
-                { title: 'Mã chứng từ', width: 'w-44', textAlign: 'left' },
+                { title: 'Ngày duyệt kho', width: 'w-44 3xl:w-[200px]', textAlign: 'center' },
+                { title: 'Ngày chứng từ', width: 'w-44 3xl:w-[200px]', textAlign: 'center' },
+                { title: 'Mã chứng từ', width: 'w-44 3xl:w-[200px]', textAlign: 'left' },
               ]}
               scrollableColumns={[
                 { title: 'Diễn giải', width: 'w-60', textAlign: 'center' },
                 // { title: 'Đơn giá', width: 'w-48', textAlign: 'center' },
-                { title: 'Số lượng nhập', width: 'w-40 2xl:w-44', textAlign: 'center' },
-                { title: 'Số lượng xuất', width: 'w-40 2xl:w-44', textAlign: 'center' },
-                { title: 'Số lượng tồn lũy kế', width: 'w-40 2xl:w-44 !text-[#003DA0] ', textAlign: 'center' },
+                { title: 'Số lượng nhập', width: 'w-40 2xl:w-[220px] 3xl:w-[300px]', textAlign: 'center' },
+                { title: 'Số lượng xuất', width: 'w-40 2xl:w-[220px] 3xl:w-[300px]', textAlign: 'center' },
+                { title: 'Số lượng tồn lũy kế', width: 'w-40 2xl:w-[220px] 3xl:w-[300px] !text-[#003DA0] ', textAlign: 'center' },
               ]}
               data={displayedData}
               isFetching={isFetching}
@@ -330,13 +330,17 @@ const Card = props => {
                   <RowItemTable className={`w-14 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
                     {item._rowType ? '' : index}
                   </RowItemTable>
-                  <RowItemTable className={`w-44 flex flex-col justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
+                  <RowItemTable
+                    className={`w-44 3xl:w-[200px] flex flex-col justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}
+                  >
                     <span>{item._rowType ? (item._rowType === 'opening' ? 'Tồn đầu kỳ' : 'Tồn cuối kỳ') : moment(item.warehouseman_date).format('DD/MM/YYYY')}</span>
                   </RowItemTable>
-                  <RowItemTable className={`w-44 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
+                  <RowItemTable
+                    className={`w-44 3xl:w-[200px] flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}
+                  >
                     <div className='flex flex-col gap-1 justify-start'>{item.document_date ? moment(item.document_date).format('DD/MM/YYYY') : ''}</div>
                   </RowItemTable>
-                  <RowItemTable className={`w-44 flex items-center py-2 px-3 border-r border-[#E0E0E1] font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
+                  <RowItemTable className={`w-44 3xl:w-[200px] flex items-center py-2 px-3 border-r border-[#E0E0E1] font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
                     <div className='flex flex-col gap-1 justify-start'>{item.document_code}</div>
                   </RowItemTable>
                 </>
@@ -349,13 +353,23 @@ const Card = props => {
                   {/* <RowItemTable className={`w-48 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
                     {item._rowType === 'opening' ? '' : formatMoneyOrDash(Number(item.price || 0))}
                   </RowItemTable> */}
-                  <RowItemTable className={`w-40 2xl:w-44 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
+                  <RowItemTable
+                    className={`w-40 2xl:w-[220px] 3xl:w-[300px] flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(
+                      item
+                    )}`}
+                  >
                     {item._rowType ? '' : Number(item.in_qty || 0) === 0 ? '-' : formatNumber(Number(item.in_qty || 0))}
                   </RowItemTable>
-                  <RowItemTable className={`w-40 2xl:w-44 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
+                  <RowItemTable
+                    className={`w-40 2xl:w-[220px] 3xl:w-[300px] flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(
+                      item
+                    )}`}
+                  >
                     {item._rowType ? '' : Number(item.out_qty || 0) === 0 ? '-' : formatNumber(Number(item.out_qty || 0))}
                   </RowItemTable>
-                  <RowItemTable className={`w-40 2xl:w-44 flex justify-center items-center py-2 px-3  text-neutral-07- font-normal flex-shrink-0 !text-[#003DA0] ${getSpecialRowBg(item)}`}>
+                  <RowItemTable
+                    className={`w-40 2xl:w-[220px] 3xl:w-[300px] flex justify-center items-center py-2 px-3  text-neutral-07- font-normal flex-shrink-0 !text-[#003DA0] ${getSpecialRowBg(item)}`}
+                  >
                     {Number(item.closing_qty || 0) === 0 ? '-' : formatNumber(Number(item.closing_qty || 0))}
                   </RowItemTable>
                 </>

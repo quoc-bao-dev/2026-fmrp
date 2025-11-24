@@ -1,5 +1,6 @@
 import { EmptyExprired } from '@/components/UI/common/EmptyExprired';
 import { Container } from '@/components/UI/common/layout';
+import NoData from '@/components/UI/noData/nodata';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import { formatMoment } from '@/utils/helpers/formatMoment';
@@ -11,6 +12,70 @@ import { ListBtn_Setting } from './information';
 import { UpgradeIcon } from '@/components/icons';
 import PopupUpgradeProfessional from '@/components/UI/popup/PopupUpgradeProfessional';
 import { useGetUpgradePackage } from '@/hooks/useAuth';
+
+const transactionTypeMap = {
+  extend: {
+    label: 'Gia hạn',
+    className: 'text-[#155EEF] bg-[#155EEF]/10',
+  },
+  upgrade: {
+    label: 'Nâng cấp gói Pro',
+    className: 'text-[#F2994A] bg-[#F2994A]/10',
+  },
+  add_user: {
+    label: 'Mua thêm user',
+    className: 'text-[#12B76A] bg-[#12B76A]/10',
+  },
+};
+
+const transactionStatusMap = {
+  success: {
+    label: 'Hoàn tất',
+    className: 'text-[#027A48] bg-[#ECFDF3]',
+  },
+  pending: {
+    label: 'Đang xử lý',
+    className: 'text-[#B54708] bg-[#FEF4E6]',
+  },
+  failed: {
+    label: 'Thất bại',
+    className: 'text-[#B42318] bg-[#FEF3F2]',
+  },
+};
+
+const renderBadge = (map, key) => {
+  const config = map[key] || { label: 'Khác', className: 'text-[#475467] bg-[#F2F4F7]' };
+  return <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${config.className}`}>{config.label}</span>;
+};
+
+const renderTransactionType = type => renderBadge(transactionTypeMap, type);
+
+const renderTransactionStatus = status => renderBadge(transactionStatusMap, status);
+
+const formatCurrency = amount => {
+  if (typeof amount !== 'number') return amount;
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
+const createMockTransaction = (type, amount, status, description, daysAgo = 0) => ({
+  id: `${type}-${status}-${daysAgo}`,
+  transactionDate: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString(),
+  type,
+  amount,
+  status,
+  description,
+});
+
+const mockData = [
+  createMockTransaction('extend', 2300000, 'success', 'Gia hạn gói Pro thêm 12 tháng', 1),
+  createMockTransaction('upgrade', 5600000, 'pending', 'Nâng cấp gói Start Up lên Pro', 3),
+  createMockTransaction('add_user', 1200000, 'success', 'Mua thêm 5 user cho team kế toán', 7),
+  createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
+];
 
 const initialPackage = {
   title: 'Dùng thử',
@@ -32,6 +97,8 @@ const ServiceInformation = props => {
   const { data: upgradePackageData } = useGetUpgradePackage();
 
   const [listPackage, setListPackage] = useState(initialPackage);
+  const historyTransactions = mockData;
+  const hasHistoryData = historyTransactions?.length > 0;
 
   useEffect(() => {
     setListPackage({
@@ -159,14 +226,39 @@ const ServiceInformation = props => {
               </button> */}
             </div>
 
-            {/* <div className='flex justify-between- items-center bg-[#ECF0F4] mt-3 px-3 py-3'>
+            <div className='flex justify-between- items-center bg-[#ECF0F4] mt-3 px-3 py-3'>
               <h3 className='text-[15px] uppercase w-full  rounded  flex items-center space-x-3 '>
                 {' '}
                 <IconClock size='20' className='' /> <p>Lịch sử gói sử dụng</p>{' '}
               </h3>
-            </div> */}
+            </div>
 
-            {/* ===== hidden ===== */}
+            {/* ===== table history package ===== */}
+            <div className='mt-4 border border-[#E4E7EC] rounded-lg overflow-hidden bg-white'>
+              <div className='grid grid-cols-12 bg-[#F9FAFB] text-[#667085] uppercase text-[12px] 3xl:text-sm font-semibold px-4 py-3'>
+                <div className='col-span-2'>Ngày giao dịch</div>
+                <div className='col-span-2'>Loại</div>
+                <div className='col-span-2 text-right'>Số tiền</div>
+                <div className='col-span-2 text-center'>Trạng thái</div>
+                <div className='col-span-4'>Nội dung giao dịch</div>
+              </div>
+
+              {!hasHistoryData ? (
+                <div className='divide-y divide-[#EAECF0]'>
+                  {historyTransactions.map(item => (
+                    <div key={item.id} className='grid grid-cols-12 px-4 py-4 items-center 3xl:text-base text-sm text-[#1D2939] hover:bg-[#F9FAFB]/50 cursor-pointer'>
+                      <div className='col-span-2 font-medium'>{item.transactionDate ? formatMoment(item.transactionDate, FORMAT_MOMENT.DATE_TIME_SLASH_LONG) : '-'}</div>
+                      <div className='col-span-2'>{renderTransactionType(item.type)}</div>
+                      <div className='col-span-2 text-right font-semibold text-[#003DA0]'>{formatCurrency(item.amount)}</div>
+                      <div className='col-span-2 flex justify-center'>{renderTransactionStatus(item.status)}</div>
+                      <div className='col-span-4 text-[#475467]'>{item.description}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <NoData className='py-10' type='table' titleText='Chưa có giao dịch' />
+              )}
+            </div>
           </div>
         </div>
       </Container>
