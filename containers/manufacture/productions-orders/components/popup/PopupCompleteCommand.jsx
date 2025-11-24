@@ -25,6 +25,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa";
@@ -440,6 +441,7 @@ const PopupCompleteCommand = ({ onClose }) => {
     items: [],
     message: "",
   });
+  const hasShownTooltipRef = useRef(false);
 
   // Preload hình ảnh commandCompleted.webp khi component mount
   useEffect(() => {
@@ -460,17 +462,23 @@ const PopupCompleteCommand = ({ onClose }) => {
       }));
       setProducts(itemsWithDefaults);
       setSelectAll(false);
+      // Reset flag khi data mới được load
+      hasShownTooltipRef.current = false;
     }
   }, [productCompleted]);
 
   useEffect(() => {
-    if (!isLoading && products && products.length > 0) {
+    // Chỉ hiển thị tooltip một lần khi data mới được load, không phải mỗi lần products thay đổi
+    if (!isLoading && productCompleted?.data?.items && productCompleted.data.items.length > 0 && !hasShownTooltipRef.current) {
       setAutoTooltipText("Chọn thành phẩm để hoàn thành");
       // Trì hoãn 1-2 nhịp để DOM anchor render ổn định rồi mới bật tooltip
       setShowAutoTooltip(false);
       let rafId;
       const openDelay = setTimeout(() => {
-        rafId = requestAnimationFrame(() => setShowAutoTooltip(true));
+        rafId = requestAnimationFrame(() => {
+          setShowAutoTooltip(true);
+          hasShownTooltipRef.current = true;
+        });
       }, 200);
       const autoCloseTimer = setTimeout(() => {
         setShowAutoTooltip(false);
@@ -482,10 +490,11 @@ const PopupCompleteCommand = ({ onClose }) => {
         clearTimeout(autoCloseTimer);
       };
     } else {
+      // Nếu đã hiển thị tooltip rồi hoặc không có data, đảm bảo nó không hiển thị
       setShowAutoTooltip(false);
       setAutoTooltipText("");
     }
-  }, [isLoading, products]);
+  }, [isLoading, productCompleted]);
 
   useEffect(() => {
     if (isSuccess && data) {
