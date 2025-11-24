@@ -29,12 +29,13 @@ const SupportZalo = () => {
   }, []);
 
   return (
-    <Link href='https://zalo.me/fososoft' target='_blank' className='fixed bottom-16 right-4 z-[9999] flex items-center gap-1 bg-white rounded-2xl p-1 shadow-lg border border-new-blue/50'>
+    <Link href='https://zalo.me/fososoft' target='_blank' className='fixed bottom-[52px] 2xl:bottom-16 left-4 2xl:left-6 z-[9999] flex items-center gap-1 bg-white rounded-xl p-1 shadow-lg border border-new-blue/50'>
+      <ZaloIcon className='size-7 2xl:size-8'/>
       {showText && (
         <AnimatedGeneraEachWord
           key={typingCycle}
           text='Hỗ Trợ'
-          className='!responsive-text-base font-medium text-new-blue !font-deca pl-1'
+          className='!responsive-text-base font-medium text-new-blue !font-deca px-1'
           classNameWrapper='min-w-0'
           typingSpeed={300}
           loadingDotClassName1='bg-[#BFDBFE]'
@@ -42,7 +43,6 @@ const SupportZalo = () => {
           loadingDotClassName3='bg-[#2563EB]'
         />
       )}
-      <ZaloIcon />
     </Link>
   );
 };
