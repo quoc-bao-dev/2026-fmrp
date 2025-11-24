@@ -1,6 +1,8 @@
+import { LuEqualApproximately } from "react-icons/lu";
+
 import apiProductionsOrders from "@/Api/apiManufacture/manufacture/productionsOrders/apiProductionsOrders";
 import CheckboxDefault from "@/components/common/checkbox/CheckboxDefault";
-import { CheckCircleIcon, MagnifyingGlassIcon, WarningIcon } from "@/components/icons";
+import { ApproximateEqualsIcon, CheckCircleIcon, MagnifyingGlassIcon, WarningIcon } from "@/components/icons";
 import CheckIcon from "@/components/icons/common/CheckIcon";
 import CloseXIcon from "@/components/icons/common/CloseXIcon";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
@@ -19,11 +21,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa";
+import { FaHotjar } from "react-icons/fa6";
 import { FiPlus } from "react-icons/fi";
 import { IoIosAlert } from "react-icons/io";
 import { MdArrowDropDown } from "react-icons/md";
 import { Tooltip } from "react-tippy";
 import { twMerge } from "tailwind-merge";
+// import { PiApproximateEqualsBold } from "react-icons/pi";
 
 const deca = Lexend_Deca({
   subsets: ["latin"],
@@ -511,7 +515,8 @@ const SubProductRow = memo(
           )
         );
       }
-    }, [total_quantity, id, setLotRows]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [total_quantity, id]);
 
     const handleWarehouseChange = (option) => {
       const isDuplicate = lotRows.some(
@@ -630,7 +635,7 @@ const SubProductRow = memo(
                     </div>
                   </td>
                   <td className="py-2 px-3 text-center w-[200px]">
-                    <div className="flex justify-start">
+                    <div className="flex justify-center">
                       <InputNumberCustom
                         state={inputValue}
                         setState={handleQuantityChange}
@@ -680,9 +685,17 @@ const ProductRow = memo(
   }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [lotRows, setLotRows] = useState([]);
+    const prevWarehousesRef = useRef(null);
 
     // Khởi tạo lotRows khi component mount hoặc product thay đổi
     useEffect(() => {
+      // So sánh với warehouses trước đó để tránh cập nhật không cần thiết
+      const warehousesKey = JSON.stringify(product.warehouses);
+      if (prevWarehousesRef.current === warehousesKey) {
+        return;
+      }
+      prevWarehousesRef.current = warehousesKey;
+
       if (product.warehouses?.length > 0) {
         setLotRows(
           product.warehouses.map((w) => ({
@@ -693,24 +706,31 @@ const ProductRow = memo(
           }))
         );
         setIsOpen(true);
+      } else {
+        setLotRows([]);
+        setIsOpen(false);
       }
-    }, [product]);
+    }, [
+      product.warehouses,
+      product.list_warehouses,
+      product.item_id,
+      product.item_variation_option_value_id,
+    ]);
 
-    // Cập nhật warehouses của product khi lotRows thay đổi
-    useEffect(() => {
-      // Chỉ cập nhật nếu lotRows thực sự thay đổi và khác với warehouses hiện tại
-      const updatedWarehouses = lotRows.map((row) => ({
-        ...row,
-        quantity_enter: row.quantity_enter || row.total_quantity || 0,
-      }));
-
-      // So sánh với warehouses hiện tại
-      const isWarehousesChanged =
-        JSON.stringify(updatedWarehouses) !==
-        JSON.stringify(product.warehouses);
-
-      if (isWarehousesChanged) {
-        product.warehouses = updatedWarehouses;
+    // Cập nhật warehouses của product khi lotRows thay đổi (chỉ khi user thay đổi)
+    // Sử dụng useMemo để tránh vòng lặp vô hạn
+    useMemo(() => {
+      if (lotRows.length > 0) {
+        const updatedWarehouses = lotRows.map((row) => ({
+          ...row,
+          quantity_enter: row.quantity_enter || row.total_quantity || 0,
+        }));
+        // Chỉ cập nhật nếu thực sự khác với warehouses hiện tại
+        const currentKey = JSON.stringify(product.warehouses);
+        const updatedKey = JSON.stringify(updatedWarehouses);
+        if (currentKey !== updatedKey) {
+          product.warehouses = updatedWarehouses;
+        }
       }
     }, [lotRows]);
 
@@ -806,27 +826,32 @@ const ProductRow = memo(
             </div>
           </td>
           <td className="py-2 px-3 text-center w-[200px]">
-            <div className="flex gap-6 justify-center">
-              <div className="text-start">
-                <p className="text-[#EE1E1E] font-medium text-lg">
-                  {formatNumber(Number(product.quantity_total_quota))}{" "}
-                  <span className="text-[#141522] font-medium text-xs">/</span>
-                </p>
-                <span className="text-[#141522] text-xs font-medium">
-                  {product.unit_name}
+            <div className="flex gap-5 justify-center items-center">
+            {product.unit_name !== product.unit_name_primary && (
+              <>
+                <div className="text-start">
+                  <p className="text-[#EE1E1E] font-medium text-lg">
+                    {formatNumber(Number(product.quantity_total_quota))}{" "}
+                    <span className="text-[#141522] font-medium text-xs">/</span>
+                  </p>
+                  <span className="text-[#141522] text-xs font-medium">
+                    {product.unit_name}
+                  </span>
+                </div>
+                <span className="text-[#141522] text-base font-medium">
+                  <ApproximateEqualsIcon className="size-4" />
                 </span>
-              </div>
-              {product.unit_name !== product.unit_name_primary && (
+               </>
+              )}
               <div className="text-start">
                 <p className="text-[#EE1E1E] font-medium text-lg">
                   {formatNumber(Number(product.quantity_quota_primary))}{" "}
                   <span className="text-[#141522] font-medium text-xs">/</span>
                 </p>
                 <span className="text-[#141522] text-xs font-medium">
-                    {product.unit_name_primary}
-                  </span>
-                </div>
-              )}
+                  {product.unit_name_primary}
+                </span>
+              </div>
             </div>
           </td>
           <td className="py-2 px-3 text-center w-[100px]">
@@ -927,54 +952,73 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
 
   useEffect(() => {
     if (data?.bom) {
-      setProducts(
-        data.bom.map((product) => {
-          // Xử lý đặc biệt cho semi_products
-          if (product.type_origin === "semi_products") {
-            // Nếu không có warehouses, tạo một warehouse mặc định
-            const defaultWarehouse = {
-              type_items: product.type_item,
-              item_variation_id: product.item_variation_option_value_id,
-              warehouse_id: 0,
-              location_id: 0,
-              serial: "",
-              expiration_date: "",
-              lot: "",
-              pois_id: 0,
-              name_location: "Mặc định",
-              name_warehouse: "Mặc định",
-              total_quantity: product.quantity_total_quota,
-              quantity_warehouse: product.quantity_total_quota,
-              quantity_enter: product.quantity_total_quota,
-            };
+      const now = Date.now();
+      const mappedProducts = data.bom.map((product, index) => {
+        // Xử lý đặc biệt cho semi_products
+        if (product.type_origin === "semi_products") {
+          // Nếu không có warehouses, tạo một warehouse mặc định
+          const defaultWarehouse = {
+            type_items: product.type_item,
+            item_variation_id: product.item_variation_option_value_id,
+            warehouse_id: 0,
+            location_id: 0,
+            serial: "",
+            expiration_date: "",
+            lot: "",
+            pois_id: 0,
+            name_location: "Mặc định",
+            name_warehouse: "Mặc định",
+            total_quantity: product.quantity_total_quota,
+            quantity_warehouse: product.quantity_total_quota,
+            quantity_enter: product.quantity_total_quota,
+          };
 
-            return {
-              ...product,
-              selected: true,
-              warehouses:
-                product.warehouses?.length > 0
-                  ? product.warehouses.map((w) => ({
-                      ...w,
-                      quantity_enter: product.quantity_total_quota,
-                      total_quantity: product.quantity_total_quota,
-                      quantity_warehouse: product.quantity_total_quota,
-                    }))
-                  : [defaultWarehouse],
-            };
-          }
-
-          // Xử lý cho các sản phẩm thông thường
           return {
             ...product,
-            selected: false,
+            selected: true,
+            originalIndex: index,
+            checkOrder: now - index, // Đảm bảo semi_products ở đầu và giữ thứ tự ban đầu
             warehouses:
-              product.warehouses?.map((w) => ({
-                ...w,
-                quantity_enter: w.total_quantity || 0,
-              })) || [],
+              product.warehouses?.length > 0
+                ? product.warehouses.map((w) => ({
+                    ...w,
+                    quantity_enter: product.quantity_total_quota,
+                    total_quantity: product.quantity_total_quota,
+                    quantity_warehouse: product.quantity_total_quota,
+                  }))
+                : [defaultWarehouse],
           };
-        })
-      );
+        }
+
+        // Xử lý cho các sản phẩm thông thường
+        return {
+          ...product,
+          selected: false,
+          originalIndex: index,
+          warehouses:
+            product.warehouses?.map((w) => ({
+              ...w,
+              quantity_enter: w.total_quantity || 0,
+            })) || [],
+        };
+      });
+      
+      // Sắp xếp lại: các phần tử được check lên đầu (theo checkOrder), các phần tử uncheck sắp xếp theo originalIndex
+      mappedProducts.sort((a, b) => {
+        // Phần tử được check luôn ở đầu
+        if (a.selected && !b.selected) return -1;
+        if (!a.selected && b.selected) return 1;
+        
+        // Nếu cả hai đều được check, sắp xếp theo checkOrder (check gần nhất ở đầu)
+        if (a.selected && b.selected) {
+          return (b.checkOrder || 0) - (a.checkOrder || 0);
+        }
+        
+        // Cả hai đều uncheck, sắp xếp theo originalIndex
+        return (a.originalIndex || 0) - (b.originalIndex || 0);
+      });
+      
+      setProducts(mappedProducts);
     }
   }, [data]);
 
@@ -1012,24 +1056,98 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
 
   const handleSelectAll = useCallback((checked) => {
     setSelectAll(checked);
-    setProducts((prevProducts) =>
-      prevProducts.map((product) => ({
-        ...product,
-        selected: product.type_origin === "semi_products" ? true : checked,
-      }))
-    );
+    setProducts((prevProducts) => {
+      const now = Date.now();
+      const updatedProducts = prevProducts.map((product, index) => {
+        const isSemiProduct = product.type_origin === "semi_products";
+        const newSelected = isSemiProduct ? true : checked;
+        
+        const updatedProduct = {
+          ...product,
+          selected: newSelected,
+        };
+        
+        // Nếu check, thêm checkOrder (giữ nguyên thứ tự ban đầu bằng cách dùng originalIndex)
+        if (newSelected) {
+          updatedProduct.checkOrder = now - (product.originalIndex || index);
+        } else {
+          // Nếu uncheck, xóa checkOrder
+          delete updatedProduct.checkOrder;
+        }
+        
+        return updatedProduct;
+      });
+      
+      // Sắp xếp lại: các phần tử được check lên đầu (theo checkOrder), các phần tử uncheck sắp xếp theo originalIndex
+      updatedProducts.sort((a, b) => {
+        // Phần tử được check luôn ở đầu
+        if (a.selected && !b.selected) return -1;
+        if (!a.selected && b.selected) return 1;
+        
+        // Nếu cả hai đều được check, sắp xếp theo checkOrder (check gần nhất ở đầu)
+        if (a.selected && b.selected) {
+          return (b.checkOrder || 0) - (a.checkOrder || 0);
+        }
+        
+        // Cả hai đều uncheck, sắp xếp theo originalIndex
+        return (a.originalIndex || 0) - (b.originalIndex || 0);
+      });
+      
+      return updatedProducts;
+    });
   }, []);
 
   const handleSelectProduct = useCallback((index, checked) => {
     setProducts((prevProducts) => {
       const updatedProducts = [...prevProducts];
-      updatedProducts[index] = {
-        ...updatedProducts[index],
-        selected:
-          updatedProducts[index].type_origin === "semi_products"
-            ? true
-            : checked,
+      const product = updatedProducts[index];
+      const isSemiProduct = product.type_origin === "semi_products";
+      
+      // Kiểm tra nếu user đang cố check một product không có kho
+      if (checked && !isSemiProduct) {
+        const hasWarehouses = product.warehouses && product.warehouses.length > 0;
+        if (!hasWarehouses) {
+          showToast("error", `Sản phẩm "${product.item_name}" không có kho hàng. Vui lòng bổ sung kho hàng trước khi chọn!`);
+          return prevProducts; // Không thay đổi gì, giữ nguyên state
+        }
+      }
+      
+      const newSelected = isSemiProduct ? true : checked;
+
+      // Cập nhật trạng thái selected
+      const updatedProduct = {
+        ...product,
+        selected: newSelected,
       };
+
+      // Nếu được check, chuyển phần tử lên đầu và thêm checkOrder
+      if (newSelected) {
+        // Xóa phần tử khỏi vị trí hiện tại
+        updatedProducts.splice(index, 1);
+        // Thêm checkOrder để giữ thứ tự check
+        updatedProduct.checkOrder = Date.now();
+        // Chèn vào đầu mảng
+        updatedProducts.unshift(updatedProduct);
+      } else {
+        // Nếu uncheck, xóa checkOrder và cập nhật
+        delete updatedProduct.checkOrder;
+        updatedProducts[index] = updatedProduct;
+        
+        // Sắp xếp lại: các phần tử được check lên đầu (theo checkOrder), các phần tử uncheck sắp xếp theo originalIndex
+        updatedProducts.sort((a, b) => {
+          // Phần tử được check luôn ở đầu
+          if (a.selected && !b.selected) return -1;
+          if (!a.selected && b.selected) return 1;
+          
+          // Nếu cả hai đều được check, sắp xếp theo checkOrder (check gần nhất ở đầu)
+          if (a.selected && b.selected) {
+            return (b.checkOrder || 0) - (a.checkOrder || 0);
+          }
+          
+          // Cả hai đều uncheck, sắp xếp theo originalIndex
+          return (a.originalIndex || 0) - (b.originalIndex || 0);
+        });
+      }
 
       const allSelected = updatedProducts.every((product) =>
         product.type_origin === "semi_products" ? true : product.selected
@@ -1169,7 +1287,7 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
     },
     [searchTerm]
   );
-
+console.log(products)
   return showCompleted ? (
     <PopupOrderCompleted onClose={onClose} />
   ) : (
@@ -1267,7 +1385,7 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
                 <div className="flex items-center gap-2">
                   <Image
                     src={item.images || "/icon/default/default.png"}
-                    alt={item.item_name}
+                    alt={item.item_name || item.name}
                     width={36}
                     height={36}
                     className="object-cover rounded"
@@ -1350,7 +1468,7 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
             <tbody>
               {products.map((product, index) => (
                 <ProductRow
-                  key={`product-row-${product.id || index}`}
+                  key={`product-row-${product.item_id}-${product.item_variation_option_value_id}-${product.pp_id || index}`}
                   product={product}
                   index={index}
                   handleSelectProduct={handleSelectProduct}
