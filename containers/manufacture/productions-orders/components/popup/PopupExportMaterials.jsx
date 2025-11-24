@@ -491,6 +491,7 @@ const SubProductRow = memo(
     listWarehouses,
     total_quantity,
     lotRows,
+    onQuantityChange,
   }) => {
     const [selectedWarehouse, setSelectedWarehouse] = useState(warehouse ?? "");
     const [inputValue, setInputValue] = useState(total_quantity || 0);
@@ -582,6 +583,9 @@ const SubProductRow = memo(
         );
         return newLotRows;
       });
+      if (typeof onQuantityChange === "function") {
+        onQuantityChange();
+      }
     };
 
     return (
@@ -884,7 +888,7 @@ const ProductRow = memo(
         </tr>
 
         {lotRows.length > 0 ? (
-          lotRows.map((lot, index) => (
+          lotRows.map((lot, lotIndex) => (
             <SubProductRow
               key={lot.id}
               id={lot.id}
@@ -893,13 +897,13 @@ const ProductRow = memo(
               quantity={lot.quantity_enter || lot.total_quantity || 0}
               warehouse={lot.id_warehouse_custom}
               isOpen={isOpen}
-              index={index}
+              index={lotIndex}
               setLotRows={setLotRows}
               listWarehouses={lot.list_warehouses ?? product.list_warehouses}
               updateProductQuantity={(i, value) =>
                 setLotRows((prev) =>
                   prev.map((row, j) =>
-                    j === index
+                    j === lotIndex
                       ? {
                           ...row,
                           quantity_enter: value,
@@ -912,6 +916,14 @@ const ProductRow = memo(
               typeOrigin={product.type_origin}
               total_quantity={Number(lot.total_quantity)}
               lotRows={lotRows}
+              onQuantityChange={() => {
+                if (
+                  !product.selected &&
+                  product.type_origin !== "semi_products"
+                ) {
+                  handleSelectProduct(index, true);
+                }
+              }}
             />
           ))
         ) : (
