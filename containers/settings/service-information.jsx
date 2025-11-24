@@ -145,7 +145,7 @@ const ServiceInformation = props => {
                 </div>
                 <div className=' font-[400] text-center'>{listPackage?.member?.length > 0 ? listPackage?.member : '-'}</div>
                 <div className=' font-[400] text-right'>{listPackage?.capacity?.toLocaleString()}</div>
-                <div className=' font-[400] text-center'>{listPackage?.expDate}</div>
+                <div className=' font-[400] text-center'>{auth?.expiration_date ? formatMoment(auth?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}</div>
               </div>
             </div>
             <div className='flex space-x-4 mt-4'>
