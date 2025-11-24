@@ -1,6 +1,7 @@
 'use client';
 import Head from 'next/head';
 import Image from 'next/image';
+import Link from 'next/link';
 import React from 'react';
 import { FaQuoteLeft, FaQuoteRight } from 'react-icons/fa';
 
@@ -47,7 +48,7 @@ const AuthLayout = React.memo(({ children, title = 'Auth' }) => {
                                     </p>
                                 </div>
                             </div>
-                            <div className='pointer-events-none select-none'>
+                            <Link href='https://zalo.me/fososoft' target='_blank'>
                                 <Image
                                     alt=''
                                     src='/qr.png'
@@ -60,7 +61,7 @@ const AuthLayout = React.memo(({ children, title = 'Auth' }) => {
                                     placeholder='blur'
                                     blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
                                 />
-                            </div>
+                            </Link>
                         </div>
                     </div>
                     <div className='absolute -bottom-10 -right-10 pointer-events-none select-none'>

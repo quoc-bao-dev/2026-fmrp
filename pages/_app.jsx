@@ -24,6 +24,7 @@ import { SocketProvider } from '@/context/socket/SocketContext';
 import { VersionProvider } from '@/context/_state/version-application/VersionContext';
 import ForgotPassPage from './auth/forgot-password';
 import { LanguageProvider } from '@/context/ui/LanguageContext';
+import SupportZalo from '@/components/common/button/SupportZalo';
 
 // const t = Lark
 const deca = Lexend_Deca({
@@ -189,6 +190,7 @@ function MainPage({ Component, pageProps }) {
             <Layout dataLang={data}>
                 <Component dataLang={data} {...pageProps} />
                 <ReusableSheet dataLang={data} />
+                <SupportZalo />
             </Layout>
         </Customscrollbar>
     );
