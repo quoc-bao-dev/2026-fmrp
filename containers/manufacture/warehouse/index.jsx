@@ -38,9 +38,9 @@ import { PopupParent } from "@/utils/lib/Popup";
 import { Grid6, Edit as IconEdit } from "iconsax-react";
 import { debounce } from "lodash";
 import Head from "next/head";
+import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
-import ModalImage from "react-modal-image";
 import { useSelector } from "react-redux";
 import PopupWarehouse from "./components/popup";
 import { useWarehouseDetail } from "./hooks/useWarehouseDetail";
@@ -703,9 +703,11 @@ const Warehouse = (props) => {
                                                                 {e?.image == null ? (
                                                                     <div className="flex w-full gap-2 px-2 3xl:gap-3">
                                                                         <div className="3xl:w-[25%] 3xl:max-w-[25%] xl:w-[35%] xl:max-w-[35%] w-[30%] max-w-[30%] flex items-center">
-                                                                            <ModalImage
-                                                                                small="/icon/noimagelogo.png"
-                                                                                large="/icon/noimagelogo.png"
+                                                                            <Image
+                                                                                src="/icon/noimagelogo.png"
+                                                                                alt="no image"
+                                                                                width={70}
+                                                                                height={70}
                                                                                 className="xxl:w-[70px] xxl:min-w-[70px] xxl:h-[70px] xl:w-[50px] xl:min-w-[50px] xl:h-[50px] w-[40px] min-w-[40px] h-[40px] rounded object-contain"
                                                                             />
                                                                         </div>
@@ -781,9 +783,11 @@ const Warehouse = (props) => {
                                                                 ) : (
                                                                     <div className="flex w-full gap-2 px-2 3xl:gap-3">
                                                                         <div className="3xl:w-[25%] 3xl:max-w-[25%] xl:w-[35%] xl:max-w-[35%] w-[30%] max-w-[30%] flex items-center">
-                                                                            <ModalImage
-                                                                                small={e?.image}
-                                                                                large={e?.image}
+                                                                            <Image
+                                                                                src={e?.image}
+                                                                                alt="no image"
+                                                                                width={70}
+                                                                                height={70}
                                                                                 className="xxl:w-[70px] xxl:min-w-[70px] xxl:h-[70px] xl:w-[50px] xl:min-w-[50px] xl:h-[50px] w-[40px] min-w-[40px] h-[40px] rounded-lg object-cover"
                                                                             />
                                                                         </div>

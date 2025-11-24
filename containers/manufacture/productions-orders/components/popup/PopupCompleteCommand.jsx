@@ -449,9 +449,11 @@ const PopupCompleteCommand = ({ onClose }) => {
 
   useEffect(() => {
     if (productCompleted?.data?.items) {
-      const itemsWithDefaults = productCompleted.data.items.map((item) => ({
+      const itemsWithDefaults = productCompleted.data.items.map((item, index) => ({
         ...item,
         selected: false,
+        originalIndex: index,
+        uniqueId: `product-${item.item_id || item.id || index}-${item.item_variation_option_value_id || item.reference_no_detail || index}-${index}`,
         quantity_rest: item.quantity_rest || 0,
         quantity_success: item.quantity_rest || 0,
         error: item.error || 0,
@@ -592,21 +594,83 @@ const PopupCompleteCommand = ({ onClose }) => {
 
   const handleSelectAll = useCallback((checked) => {
     setSelectAll(checked);
-    setProducts((prevProducts) =>
-      prevProducts.map((product) => ({
-        ...product,
-        selected: checked,
-      }))
-    );
+    setProducts((prevProducts) => {
+      const now = Date.now();
+      const updatedProducts = prevProducts.map((product, index) => {
+        const updatedProduct = {
+          ...product,
+          selected: checked,
+        };
+        
+        // Nếu check, thêm checkOrder (giữ nguyên thứ tự ban đầu bằng cách dùng originalIndex)
+        if (checked) {
+          updatedProduct.checkOrder = now - (product.originalIndex || index);
+        } else {
+          // Nếu uncheck, xóa checkOrder
+          delete updatedProduct.checkOrder;
+        }
+        
+        return updatedProduct;
+      });
+      
+      // Sắp xếp lại: các phần tử được check lên đầu (theo checkOrder), các phần tử uncheck sắp xếp theo originalIndex
+      updatedProducts.sort((a, b) => {
+        // Phần tử được check luôn ở đầu
+        if (a.selected && !b.selected) return -1;
+        if (!a.selected && b.selected) return 1;
+        
+        // Nếu cả hai đều được check, sắp xếp theo checkOrder (check gần nhất ở đầu)
+        if (a.selected && b.selected) {
+          return (b.checkOrder || 0) - (a.checkOrder || 0);
+        }
+        
+        // Cả hai đều uncheck, sắp xếp theo originalIndex
+        return (a.originalIndex || 0) - (b.originalIndex || 0);
+      });
+      
+      return updatedProducts;
+    });
   }, []);
 
   const handleSelectProduct = useCallback((index, checked) => {
     setProducts((prevProducts) => {
       const updatedProducts = [...prevProducts];
-      updatedProducts[index] = {
-        ...updatedProducts[index],
+      const product = updatedProducts[index];
+
+      // Cập nhật trạng thái selected
+      const updatedProduct = {
+        ...product,
         selected: checked,
       };
+
+      // Nếu được check, chuyển phần tử lên đầu và thêm checkOrder
+      if (checked) {
+        // Xóa phần tử khỏi vị trí hiện tại
+        updatedProducts.splice(index, 1);
+        // Thêm checkOrder để giữ thứ tự check
+        updatedProduct.checkOrder = Date.now();
+        // Chèn vào đầu mảng
+        updatedProducts.unshift(updatedProduct);
+      } else {
+        // Nếu uncheck, xóa checkOrder và cập nhật
+        delete updatedProduct.checkOrder;
+        updatedProducts[index] = updatedProduct;
+        
+        // Sắp xếp lại: các phần tử được check lên đầu (theo checkOrder), các phần tử uncheck sắp xếp theo originalIndex
+        updatedProducts.sort((a, b) => {
+          // Phần tử được check luôn ở đầu
+          if (a.selected && !b.selected) return -1;
+          if (!a.selected && b.selected) return 1;
+          
+          // Nếu cả hai đều được check, sắp xếp theo checkOrder (check gần nhất ở đầu)
+          if (a.selected && b.selected) {
+            return (b.checkOrder || 0) - (a.checkOrder || 0);
+          }
+          
+          // Cả hai đều uncheck, sắp xếp theo originalIndex
+          return (a.originalIndex || 0) - (b.originalIndex || 0);
+        });
+      }
 
       const allSelected = updatedProducts.every((product) => product.selected);
       setSelectAll(allSelected);
@@ -624,7 +688,7 @@ const PopupCompleteCommand = ({ onClose }) => {
   const formatNumber = (number) => {
     return formatNumberConfig(+number, dataSeting);
   };
-
+console.log(products)
   return (
     <>
       {isLoading ? (
@@ -783,7 +847,7 @@ const PopupCompleteCommand = ({ onClose }) => {
             <tbody>
               {products.map((product, index) => (
                 <ProductRow
-                  key={`product-row-${product.id || index}`}
+                  key={product.uniqueId || `product-row-${product.originalIndex !== undefined ? product.originalIndex : index}`}
                   product={product}
                   index={index}
                   updateProductQuantity={updateProductQuantity}

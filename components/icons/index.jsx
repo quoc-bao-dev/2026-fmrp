@@ -22,7 +22,7 @@
  * - Sử dụng className để thay đổi kích thước, màu sắc
  * - Icon được import thông qua @svgr/webpack, tự động chuyển thành React component
  */
-
+import ApproximateEqualsIcon from './source/approximate-equals.svg';
 import ArrowBendUpRightIcon from './source/arrow-bend-up-right.svg';
 import ArrowCounterClockWiseIcon from './source/arrow-counter-clock-wise.svg';
 import ArrowDownIcon from './source/arrow-down.svg';
@@ -34,10 +34,10 @@ import CaretDownIcon from './source/caret-down.svg';
 import CaretDropDownThinIcon from './source/caret-drop-down-thin.svg';
 import ChartDonutIcon from './source/chart-donut.svg';
 import ChatIcon from './source/chat.svg';
-import CheckCircleOutlineIcon from './source/check-circle-outline.svg';
 import CheckCircleIcon from './source/check-circle.svg';
-import CheckThinIcon from './source/check-thin.svg';
+import CheckCircleOutlineIcon from './source/check-circle-outline.svg';
 import CheckIcon from './source/check.svg';
+import CheckThinIcon from './source/check-thin.svg';
 import CloseXIcon from './source/close-x.svg';
 import CompleteKHIcon from './source/complete-k-h.svg';
 import DocumentTemplateIcon from './source/document-template-icon.svg';
@@ -68,9 +68,9 @@ import PrinterIcon from './source/printer-icon.svg';
 import PrinterIcon2 from './source/printer-icon2.svg';
 import PrinterTemIcon from './source/printer-tem.svg';
 import RefreshIcon from './source/refresh.svg';
-import SealCheckIcon from './source/seal-check.svg';
 import SaleIcon from './source/sale-icon.svg';
 import SaveIcon from './source/save-icon.svg';
+import SealCheckIcon from './source/seal-check.svg';
 import SearchIcon from './source/search.svg';
 import SendMessengerIcon from './source/send-messenger-icon.svg';
 import SignOutIcon from './source/sign-out-icon.svg';
@@ -87,9 +87,8 @@ import WarningAlertIcon from './source/warning-alert-icon.svg';
 import WarningIcon from './source/warning-icon.svg';
 
 // Export tất cả các icon
-export { 
-  SearchIcon,
-  SealCheckIcon,
+export {
+  ApproximateEqualsIcon,
   ArrowBendUpRightIcon,
   ArrowCounterClockWiseIcon,
   ArrowDownIcon,
@@ -101,10 +100,10 @@ export {
   CaretDropDownThinIcon,
   ChartDonutIcon,
   ChatIcon,
-  CheckCircleOutlineIcon,
   CheckCircleIcon,
-  CheckThinIcon,
+  CheckCircleOutlineIcon,
   CheckIcon,
+  CheckThinIcon,
   CloseXIcon,
   CompleteKHIcon,
   DocumentTemplateIcon,
@@ -137,6 +136,8 @@ export {
   RefreshIcon,
   SaleIcon,
   SaveIcon,
+  SealCheckIcon,
+  SearchIcon,
   SendMessengerIcon,
   SignOutIcon,
   SparkleIcon,
