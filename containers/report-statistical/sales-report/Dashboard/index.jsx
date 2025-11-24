@@ -65,7 +65,11 @@ const Dashboard = () => {
     end_date: dateRange.end_date,
     branch_ids: selectedBranches,
   });
-  const { data: orderCompletionRate, refetch: refetchOrderCompletionRate } = useGetOrderCompletionRate({ start_date: dateRange.start_date, end_date: dateRange.end_date, branch_ids: selectedBranches });
+  const { data: orderCompletionRate, refetch: refetchOrderCompletionRate } = useGetOrderCompletionRate({
+    start_date: dateRange.start_date,
+    end_date: dateRange.end_date,
+    branch_ids: selectedBranches,
+  });
   const { data: customerTypeSales, refetch: refetchCustomerTypeSales } = useGetCustomerTypeSales({ start_date: dateRange.start_date, end_date: dateRange.end_date, branch_ids: selectedBranches });
   const { data: monthlyReorderRate, refetch: refetchMonthlyReorderRate } = useGetMonthlyReorderRate({ start_date: dateRange.start_date, end_date: dateRange.end_date, branch_ids: selectedBranches });
 
@@ -162,7 +166,7 @@ const Dashboard = () => {
                       <div key={item.key} className={`flex flex-col gap-3 rounded-2xl shadow-[0px_1px_8px_0px_#00000012] py-3 px-4 2xl:px-6`} style={{ backgroundColor: item.containerBg }}>
                         <div className='flex gap-2 items-center'>
                           <div className='rounded-full p-2' style={{ backgroundColor: item.iconBg }}>
-                            <SaleIcon className='w-6 h-6' />
+                            <SaleIcon className='w-6 h-6' style={{ color: item.containerBg }} />
                           </div>
                           <h3 className='responsive-text-sm font-medium capitalize' style={{ color: item.labelColor }}>
                             {item.label}
@@ -186,19 +190,19 @@ const Dashboard = () => {
               </div>
             </div>
             <div className='col-span-2 h-full min-h-0'>
-              <RevenueStructurePie data={productGroupRevenue}/>
+              <RevenueStructurePie data={productGroupRevenue} />
             </div>
           </div>
           {/* Hàng 2 */}
           <div className='grid grid-cols-3 gap-4 h-[400px] min-h-[400px]'>
             <div className='rounded-[20px] h-full'>
-              <CompletionDonut data={orderCompletionRate}/>
+              <CompletionDonut data={orderCompletionRate} />
             </div>
             <div className='rounded-[20px] h-full'>
-              <CustomerTypeSales data={customerTypeSales}/>
+              <CustomerTypeSales data={customerTypeSales} />
             </div>
             <div className='rounded-[20px] h-full'>
-              <RepeatOrderDonut dataRepeatRate={monthlyReorderRate}/>
+              <RepeatOrderDonut dataRepeatRate={monthlyReorderRate} />
             </div>
           </div>
         </div>
