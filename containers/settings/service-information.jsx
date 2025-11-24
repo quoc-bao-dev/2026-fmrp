@@ -160,7 +160,10 @@ const ServiceInformation = props => {
             </div>
 
             <div className='flex justify-between- items-center bg-[#ECF0F4] mt-3 px-3 py-3'>
-              <h3 className='text-[15px] uppercase w-full  rounded  flex items-center space-x-3 '>Lịch sử gói sử dụng</h3>
+              <h3 className='text-[15px] uppercase w-full  rounded  flex items-center space-x-3 '>
+                {' '}
+                <IconClock size='20' className='' /> <p>Lịch sử gói sử dụng</p>{' '}
+              </h3>
             </div>
 
             {/* ===== hidden ===== */}
