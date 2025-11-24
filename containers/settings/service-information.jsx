@@ -226,15 +226,15 @@ const ServiceInformation = props => {
               </button> */}
             </div>
 
-            <div className='flex justify-between- items-center bg-[#ECF0F4] mt-3 px-3 py-3'>
+            {/* <div className='flex justify-between- items-center bg-[#ECF0F4] mt-3 px-3 py-3'>
               <h3 className='text-[15px] uppercase w-full  rounded  flex items-center space-x-3 '>
                 {' '}
                 <IconClock size='20' className='' /> <p>Lịch sử gói sử dụng</p>{' '}
               </h3>
-            </div>
+            </div> */}
 
             {/* ===== table history package ===== */}
-            <div className='mt-4 border border-[#E4E7EC] rounded-lg overflow-hidden bg-white'>
+            {/* <div className='mt-4 border border-[#E4E7EC] rounded-lg overflow-hidden bg-white'>
               <div className='grid grid-cols-12 bg-[#F9FAFB] text-[#667085] uppercase text-[12px] 3xl:text-sm font-semibold px-4 py-3'>
                 <div className='col-span-2'>Ngày giao dịch</div>
                 <div className='col-span-2'>Loại</div>
@@ -258,7 +258,7 @@ const ServiceInformation = props => {
               ) : (
                 <NoData className='py-10' type='table' titleText='Chưa có giao dịch' />
               )}
-            </div>
+            </div> */}
           </div>
         </div>
       </Container>
