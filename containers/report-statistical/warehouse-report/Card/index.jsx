@@ -312,23 +312,21 @@ const Card = props => {
             <TableSection
               useFixedLayout={false}
               scrollableColumns={[
-                { title: 'STT', width: 'flex-[0.6] min-w-[80px]', textAlign: 'center' },
+                { title: 'STT', width: 'flex-[0.2]', textAlign: 'center' },
                 { title: 'Ngày duyệt kho', width: 'flex-1 min-w-[140px]', textAlign: 'center' },
                 { title: 'Ngày chứng từ', width: 'flex-1 min-w-[140px]', textAlign: 'center' },
                 { title: 'Mã chứng từ', width: 'flex-1 min-w-[160px]', textAlign: 'left' },
                 { title: 'Diễn giải', width: 'flex-1 min-w-[160px]', textAlign: 'left' },
                 { title: 'Số lượng nhập', width: 'flex-1 min-w-[140px]', textAlign: 'center' },
                 { title: 'Số lượng xuất', width: 'flex-1 min-w-[140px]', textAlign: 'center' },
-                { title: 'Số lượng tồn lũy kế', width: 'flex-1 min-w-[160px] !text-[#003DA0]', textAlign: 'center' },
+                { title: 'Số lượng tồn lũy kế', width: 'flex-[1.2] min-w-[160px] !text-[#003DA0]', textAlign: 'center' },
               ]}
               data={displayedData}
               isFetching={isFetching}
               renderFixedRow={() => null}
               renderScrollableRow={(item, index) => (
                 <>
-                  <RowItemTable
-                    className={`flex flex-[0.6] min-w-[80px] justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal last:border-r-0 ${getSpecialRowBg(item)}`}
-                  >
+                  <RowItemTable className={`flex flex-[0.2] justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal last:border-r-0 ${getSpecialRowBg(item)}`}>
                     {item._rowType ? '' : index}
                   </RowItemTable>
                   <RowItemTable
@@ -365,7 +363,7 @@ const Card = props => {
                     {item._rowType ? '' : Number(item.out_qty || 0) === 0 ? '-' : formatNumber(Number(item.out_qty || 0))}
                   </RowItemTable>
                   <RowItemTable
-                    className={`flex flex-1 min-w-[160px] justify-center items-center py-2 px-3 border-r border-[#E0E0E1] font-normal last:border-r-0 !text-[#003DA0] ${getSpecialRowBg(item)}`}
+                    className={`flex flex-[1.2] min-w-[160px] justify-center items-center py-2 px-3 border-r border-[#E0E0E1] font-normal last:border-r-0 !text-[#003DA0] ${getSpecialRowBg(item)}`}
                   >
                     {Number(item.closing_qty || 0) === 0 ? '-' : formatNumber(Number(item.closing_qty || 0))}
                   </RowItemTable>
