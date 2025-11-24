@@ -916,7 +916,7 @@ const Popup_Products = React.memo(props => {
                     <div className='2xl:space-y-1'>
                       <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>{props.dataLang?.avatar || 'avatar'}</label>
                       <div className='flex justify-center'>
-                        <div className='relative rounded h-36 w-36 bg-slate-200'>
+                        <div className='relative rounded h-[170px] w-[170px] bg-slate-200'>
                           {thumb && (
                             <Image
                               width={120}
@@ -1315,7 +1315,7 @@ const Popup_Products = React.memo(props => {
           </button>
         </div>
       </div>
-      
+
       {openCategoryPopup && (
         <PopupCategory
           dataLang={props.dataLang}

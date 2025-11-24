@@ -92,19 +92,21 @@ const ForgotPassForm = ({ onSubmit: onSubmitProp }) => {
         <Input type='text' placeholder='Mã công ty' {...register('companyCode')} error={errors.companyCode} />
 
         {/* [Form Actions] */}
-        <button
-          type='submit'
-          disabled={isLoading}
-          className={`text-[#FFFFFF] font-normal text-lg py-3 w-full rounded-md bg-gradient-to-l from-[#0375f3] via-[#296dc1] to-[#0375f3] btn-animation hover:scale-105 ${
-            isLoading ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-        >
-          {isLoading ? 'Đang xử lý...' : 'Tiếp theo'}
-        </button>
+        <div className='flex flex-col gap-4'>
+          <button
+            type='submit'
+            disabled={isLoading}
+            className={`text-[#FFFFFF] font-normal text-lg py-3 w-full rounded-md bg-gradient-to-l from-[#0375f3] via-[#296dc1] to-[#0375f3] btn-animation hover:scale-105 ${
+              isLoading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            {isLoading ? 'Đang xử lý...' : 'Tiếp theo'}
+          </button>
 
-        <button type='button' onClick={goToLogin} className='w-full py-3 text-center rounded bg bg-white text-[#667085] border border-[#D0D5DD]'>
-          Quay lại
-        </button>
+          <button type='button' onClick={goToLogin} className='w-full py-3 text-center rounded-md bg bg-white text-[#667085] border border-[#D0D5DD]'>
+            Quay lại
+          </button>
+        </div>
       </form>
     </>
   );
