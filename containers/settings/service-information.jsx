@@ -180,16 +180,16 @@ const ServiceInformation = props => {
                 </button>
               )} */}
             </div>
-            <div className='grid grid-cols-6 py-3 mt-5 gap-5 border-b border-[#e7eaee]'>
+            <div className='grid grid-cols-5 py-3 mt-5 gap-5 border-b border-[#e7eaee]'>
               <div className='col-span-1 uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>Hình thức</div>
               <div className='col-start-2 uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>gói</div>
               <div className='uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>Trạng thái</div>
               <div className='uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>thành viên/team</div>
-              <div className='uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-right'>dung lượng (mb)</div>
+              {/* <div className='uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-right'>dung lượng (mb)</div> */}
               <div className='uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>hạn sử dụng</div>
             </div>
             <div className='divide-y divide-[#e7eaee]'>
-              <div className='grid grid-cols-6 gap-5 py-3'>
+              <div className='grid grid-cols-5 gap-5 py-3'>
                 <div className='capitalize font-[400] text-center'>{listPackage?.title}</div>
                 <div className='flex justify-center'>
                   <div
@@ -211,7 +211,7 @@ const ServiceInformation = props => {
                   {listPackage?.status ? listPackage?.status : '-'}
                 </div>
                 <div className=' font-[400] text-center'>{listPackage?.member?.length > 0 ? listPackage?.member : '-'}</div>
-                <div className=' font-[400] text-right'>{listPackage?.capacity?.toLocaleString()}</div>
+                {/* <div className=' font-[400] text-right'>{listPackage?.capacity?.toLocaleString()}</div> */}
                 <div className=' font-[400] text-center'>{auth?.expiration_date ? formatMoment(auth?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}</div>
               </div>
             </div>
@@ -226,6 +226,7 @@ const ServiceInformation = props => {
               </button> */}
             </div>
 
+            {/* ===== title history package ===== */}
             {/* <div className='flex justify-between- items-center bg-[#ECF0F4] mt-3 px-3 py-3'>
               <h3 className='text-[15px] uppercase w-full  rounded  flex items-center space-x-3 '>
                 {' '}
@@ -243,7 +244,7 @@ const ServiceInformation = props => {
                 <div className='col-span-4'>Nội dung giao dịch</div>
               </div>
 
-              {!hasHistoryData ? (
+              {hasHistoryData ? (
                 <div className='divide-y divide-[#EAECF0]'>
                   {historyTransactions.map(item => (
                     <div key={item.id} className='grid grid-cols-12 px-4 py-4 items-center 3xl:text-base text-sm text-[#1D2939] hover:bg-[#F9FAFB]/50 cursor-pointer'>
