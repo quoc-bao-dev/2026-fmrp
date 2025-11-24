@@ -68,12 +68,12 @@ const ServiceInformation = props => {
           <div className='col-span-7'>
             <h2 className='text-2xl text-[#52575E]'>Thông Tin Dịch Vụ FMRP</h2>
 
-            <div className='flex justify-between- items-center bg-[#ECF0F4] mt-3 p-3'>
+            <div className='flex justify-between- items-center bg-[#ECF0F4] mt-3 px-3 py-2'>
               <h3 className='text-[15px] uppercase w-full  rounded  flex items-center space-x-3 '>Gói đang sử dụng</h3>
-              <button className='ml-auto px-5 py-3 rounded-md border border-[#d0d5dd] text-gray-900! flex space-x-2 items-center bg-white'>
+              {/* <button className='ml-auto px-5 py-2 rounded-md border border-[#d0d5dd] text-gray-900! flex space-x-2 items-center bg-white'>
                 <IconClock size='20' className='' />
                 <span className='truncate'>Xem lịch sử gói sử dụng</span>
-              </button>
+              </button> */}
               {auth?.trial == '1' ? (
                 <button
                   onClick={() => {
@@ -95,7 +95,7 @@ const ServiceInformation = props => {
                       },
                     });
                   }}
-                  className='ml-3 px-5 py-3 rounded-md bg-[#003DA0] text-white flex space-x-2 items-center hover:opacity-90 transition'
+                  className='ml-3 px-5 py-2 rounded-md bg-[#003DA0] text-white flex space-x-2 items-center hover:opacity-90 transition'
                 >
                   <UpgradeIcon className='text-white' size={20} />
                   <span className='truncate'>Nâng cấp tài khoản</span>
@@ -106,7 +106,7 @@ const ServiceInformation = props => {
                     // TODO: Implement add user functionality
                     console.log('Add user clicked');
                   }}
-                  className='ml-3 px-5 py-3 rounded-md bg-[#003DA0] text-white flex space-x-2 items-center hover:opacity-90 transition'
+                  className='ml-3 px-5 py-2 rounded-md bg-[#003DA0] text-white flex space-x-2 items-center hover:opacity-90 transition'
                 >
                   <UserAdd size='20' className='text-white' />
                   <span className='truncate'>Thêm user</span>
@@ -157,6 +157,10 @@ const ServiceInformation = props => {
                 <IconRefresh />
                 <span>Gia hạn gói hiện tại</span>
               </button> */}
+            </div>
+
+            <div className='flex justify-between- items-center bg-[#ECF0F4] mt-3 px-3 py-3'>
+              <h3 className='text-[15px] uppercase w-full  rounded  flex items-center space-x-3 '>Lịch sử gói sử dụng</h3>
             </div>
 
             {/* ===== hidden ===== */}
