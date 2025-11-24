@@ -27,6 +27,7 @@ import { IoIosAlert } from "react-icons/io";
 import { MdArrowDropDown } from "react-icons/md";
 import { Tooltip } from "react-tippy";
 import { twMerge } from "tailwind-merge";
+import Loading from "@/components/UI/loading/loading";
 // import { PiApproximateEqualsBold } from "react-icons/pi";
 
 const deca = Lexend_Deca({
@@ -1299,7 +1300,7 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
     },
     [searchTerm]
   );
-console.log(products)
+
   return showCompleted ? (
     <PopupOrderCompleted onClose={onClose} />
   ) : (
@@ -1475,6 +1476,11 @@ console.log(products)
             </tr>
           </thead>
         </table>
+        {isLoading ? (
+          <div className="flex justify-center items-center h-full">
+            <Loading/>
+          </div>
+        ) : (
         <Customscrollbar className="h-[420px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
           <table className="min-w-full table-fixed border-separate border-spacing-0">
             <tbody>
@@ -1491,6 +1497,7 @@ console.log(products)
             </tbody>
           </table>
         </Customscrollbar>
+        )}
       </div>
     </div>
   );
