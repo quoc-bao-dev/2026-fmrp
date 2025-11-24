@@ -32,6 +32,8 @@ const Information = props => {
 
   const [data, sData] = useState({});
 
+  const [imageError, setImageError] = useState(false);
+
   const _ServerFetching = async () => {
     try {
       const { isSuccess, data } = await apiInformation.apiInfo();
@@ -51,6 +53,10 @@ const Information = props => {
   useEffect(() => {
     sOnFetching(true);
   }, []);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [data?.company_logo]);
 
   const _HandleImg = ({ target: { files } }) => {
     let [file] = files;
@@ -154,7 +160,7 @@ const Information = props => {
             <div className='bg-[#F3F4F6] p-4 rounded grid grid-cols-3 gap-5'>
               <div className='space-y-3'>
                 <div className='flex justify-center'>
-                  <div className=''>
+                  <div className='relative group'>
                     <input onChange={_HandleImg.bind(this)} ref={inputUpload} type='file' accept='image/png, image/jpeg, image/gif' hidden id='upload' />
                     <label htmlFor='upload' className='w-28 h-28 rounded overflow-hidden bg-[#000000]/20 flex flex-col justify-center items-center cursor-pointer'>
                       {onFetching ? (
@@ -165,21 +171,23 @@ const Information = props => {
                         </div>
                       ) : (
                         <React.Fragment>
-                          {data?.company_logo && (
-                            <div className='relative w-full h-full'>
+                          {data?.company_logo ? (
+                            <div className='relative w-full h-full '>
                               <Image
                                 alt='logo'
                                 width={120}
                                 height={120}
                                 onMouseEnter={_HoverImg.bind(this, true)}
                                 onMouseLeave={_HoverImg.bind(this, false)}
-                                src={typeof data?.company_logo === 'string' ? data?.company_logo : URL.createObjectURL(data?.company_logo)}
+                                onError={() => setImageError(true)}
+                                src={imageError ? '/icon/default/default.png' : typeof data?.company_logo === 'string' ? data?.company_logo : URL.createObjectURL(data?.company_logo)}
                                 quality={100}
-                                className='object-contain w-full h-full'
+                                className='object-cover w-full h-full'
                                 loading='lazy'
                                 crossOrigin='anonymous'
                                 blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
                               />
+
                               {hoverImg ? (
                                 <div
                                   onMouseEnter={_HoverImg.bind(this, true)}
@@ -191,8 +199,7 @@ const Information = props => {
                                 </div>
                               ) : null}
                             </div>
-                          )}
-                          {!data?.company_logo && (
+                          ) : (
                             <React.Fragment>
                               <IconCamera size='30' variant='Bold' className='text-white' />
                               <span className='text-xs text-white'>Upload logo</span>
@@ -201,6 +208,9 @@ const Information = props => {
                         </React.Fragment>
                       )}
                     </label>
+                    <div className='absolute -bottom-1 -right-3 z-50 group-hover:hidden p-1 rounded-full bg-white/80'>
+                      <IconCamera size='24' variant='Bold' className='text-gray-500' />
+                    </div>
                   </div>
                 </div>
                 <p className='text-[#52575E] font-light text-sm'>*Khi thay đổi Ảnh logo này sẽ được áp dụng cho toàn bộ logo trên Biểu mẫu in ấn của hệ thống</p>
