@@ -65,13 +65,12 @@ const Card = props => {
   const { data: warehouseData } = useGetWarehouse({
     filter: {
       branch_id: selectedBranches?.length > 0 ? selectedBranches : null,
-    }
+    },
   });
   const { data: dataProduct } = useGetItemsWithBranch({
     search: debouncedSearchTerm,
     branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
   });
-console.log(dataProduct)
   const {
     data: dataReportStock,
     isFetching,
@@ -302,7 +301,7 @@ console.log(dataProduct)
         }
         tableSection={
           !selectedProduct ? (
-            <div className='p-10 bg-gray-50 border border-[#E0E0E1] rounded-lg'>
+            <div className='p-10 bg-gray-50 border border-[#E0E0E1] rounded-lg h-full'>
               <div className='text-center flex flex-col items-center justify-center gap-2'>
                 <Image src='/data-not-found.png' alt='No Data' width={300} height={300} className='object-contain' />
                 <p className='text-lg font-medium text-gray-600 mb-2'>Vui lòng chọn mặt hàng</p>
@@ -319,10 +318,10 @@ console.log(dataProduct)
               ]}
               scrollableColumns={[
                 { title: 'Diễn giải', width: 'w-60', textAlign: 'center' },
-                { title: 'Đơn giá', width: 'w-48', textAlign: 'center' },
+                // { title: 'Đơn giá', width: 'w-48', textAlign: 'center' },
                 { title: 'Số lượng nhập', width: 'w-40 2xl:w-44', textAlign: 'center' },
                 { title: 'Số lượng xuất', width: 'w-40 2xl:w-44', textAlign: 'center' },
-                { title: 'Số lượng tồn lũy kế', width: 'w-40 2xl:w-44', textAlign: 'center' },
+                { title: 'Số lượng tồn lũy kế', width: 'w-40 2xl:w-44 !text-[#003DA0] ', textAlign: 'center' },
               ]}
               data={displayedData}
               isFetching={isFetching}
@@ -342,22 +341,22 @@ console.log(dataProduct)
                   </RowItemTable>
                 </>
               )}
-              renderScrollableRow={(item) => (
+              renderScrollableRow={item => (
                 <>
                   <RowItemTable className={`w-60 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
                     {item.document_type}
                   </RowItemTable>
-                  <RowItemTable className={`w-48 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
-                  {item._rowType === "opening" ? '' : formatMoneyOrDash(Number(item.price || 0))}
-                  </RowItemTable>
+                  {/* <RowItemTable className={`w-48 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
+                    {item._rowType === 'opening' ? '' : formatMoneyOrDash(Number(item.price || 0))}
+                  </RowItemTable> */}
                   <RowItemTable className={`w-40 2xl:w-44 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
-                  {item._rowType ? '' : Number(item.in_qty || 0) === 0 ? '-' : formatNumber(Number(item.in_qty || 0))}
+                    {item._rowType ? '' : Number(item.in_qty || 0) === 0 ? '-' : formatNumber(Number(item.in_qty || 0))}
                   </RowItemTable>
                   <RowItemTable className={`w-40 2xl:w-44 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
                     {item._rowType ? '' : Number(item.out_qty || 0) === 0 ? '-' : formatNumber(Number(item.out_qty || 0))}
                   </RowItemTable>
-                  <RowItemTable className={`w-40 2xl:w-44 flex justify-center items-center py-2 px-3  text-neutral-07 font-normal flex-shrink-0 ${getSpecialRowBg(item)}`}>
-                    {(Number(item.closing_qty || 0) === 0 ) ? '-' : formatNumber(Number(item.closing_qty || 0))}
+                  <RowItemTable className={`w-40 2xl:w-44 flex justify-center items-center py-2 px-3  text-neutral-07- font-normal flex-shrink-0 !text-[#003DA0] ${getSpecialRowBg(item)}`}>
+                    {Number(item.closing_qty || 0) === 0 ? '-' : formatNumber(Number(item.closing_qty || 0))}
                   </RowItemTable>
                 </>
               )}

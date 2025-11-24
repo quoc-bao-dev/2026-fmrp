@@ -1056,6 +1056,7 @@ const InventoryForm = props => {
                                   onValueChange={_HandleChangeChild.bind(this, e?.id, ce?.id, 'price')}
                                   className='w-full px-2 py-1 font-medium text-right border-b-2 border-gray-200 appearance-none focus:outline-none'
                                   isAllowed={isAllowedNumber}
+                                  placeholder='Nhập đơn giá'
                                 />
                               </div>
                               <h6 className='text-center p-1.5 border flex flex-col justify-center h-full'>{formatNumber(ce?.quantity)}</h6>
