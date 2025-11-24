@@ -2,12 +2,12 @@ import { IMAGES } from '@/constants/images';
 import { useEffect, useRef, useState } from 'react';
 
 const introStartPercent = -20;
-const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) => {
+const AnimatedProgressPath = ({ percentage = 0, displayPercentage: displayPercentageProp, width = '100%', height = 200 }) => {
   const svgRef = useRef(null);
   const pathRef = useRef(null);
   const [pathLength, setPathLength] = useState(0);
   const [currentProgress, setCurrentProgress] = useState(introStartPercent);
-  const [displayPercentage, setDisplayPercentage] = useState(percentage);
+  const [targetPercentage, setTargetPercentage] = useState(percentage);
 
   // Thời gian chạy animation
   const animationDuration = 4000;
@@ -26,10 +26,13 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) 
   const clampPercentage = value => Math.min(Math.max(value, 0), 100);
 
   useEffect(() => {
-    const clamped = clampPercentage(percentage);
+    const clampedPathPercent = clampPercentage(percentage);
+    const clampedDisplayPercent = clampPercentage(
+      displayPercentageProp !== undefined ? displayPercentageProp : clampedPathPercent
+    );
     setCurrentProgress(introStartPercent);
-    setDisplayPercentage(clamped);
-  }, [percentage]);
+    setTargetPercentage(clampedDisplayPercent);
+  }, [percentage, displayPercentageProp]);
 
   // Hàm convert từ fraction về progress
   const getProgressForFraction = targetFraction => {
@@ -54,9 +57,9 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) 
 
   useEffect(() => {
     const startProgress = currentProgress;
-    const allowNegativeProgress = displayPercentage < 0 || currentProgress < 0;
+    const allowNegativeProgress = targetPercentage < 0 || currentProgress < 0;
     const minProgress = allowNegativeProgress ? introStartPercent : 0;
-    const endProgress = Math.max(displayPercentage, minProgress);
+    const endProgress = Math.max(targetPercentage, minProgress);
 
     const startFraction = getFractionForProgress(startProgress);
     const endFraction = getFractionForProgress(endProgress);
@@ -86,7 +89,7 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) 
     } else {
       setCurrentProgress(Math.min(endProgress, 100));
     }
-  }, [displayPercentage]);
+  }, [targetPercentage]);
 
   // Tính toán vị trí của character trên path
   const getPointAtLength = length => {
@@ -125,7 +128,7 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) 
   };
 
   const adjustedFraction = getFractionForProgress(currentProgress);
-  const allowNegativeFraction = currentProgress < 0 || displayPercentage < 0;
+  const allowNegativeFraction = currentProgress < 0 || targetPercentage < 0;
   // Khi không cho phép âm, cho phép vẽ từ đúng đầu path (fraction = 0)
   const minimumFraction = allowNegativeFraction ? fractionAnchors[0].fraction : 0;
   const safeFraction = Math.max(adjustedFraction, minimumFraction);
@@ -145,7 +148,7 @@ const AnimatedProgressPath = ({ percentage = 0, width = '100%', height = 200 }) 
     x: baseCharacterPosition.x + introOffsetX,
     y: baseCharacterPosition.y,
   };
-  const visualProgress = Math.min(Math.max(currentProgress, 0), 100);
+  const visualProgress = Math.min(Math.max(targetPercentage, 0), 100);
 
   // Các điểm mốc hiển thị, bỏ qua mốc 0%
   const milestones = fractionAnchors.slice(1).filter(milestone => milestone.percent !== 0);

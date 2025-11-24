@@ -73,6 +73,23 @@ const ProgressPath = () => {
 
   const stepsData = infoStepUse?.data || [];
 
+  const clampPercentage = value => {
+    if (!Number.isFinite(value)) return 0;
+    return Math.min(Math.max(value, 0), 100);
+  };
+
+  const parsePercentage = value => {
+    if (value === null || value === undefined) return null;
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : null;
+    }
+    if (typeof value === 'string' && value.trim() !== '') {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+  };
+
   // Xác định bước active cao nhất (dựa vào step.active hoặc children.active)
   const getIsStepActive = step => {
     const hasActiveChildren =
@@ -92,6 +109,12 @@ const ProgressPath = () => {
   const milestonePercents = [25, 50, 75, 100];
   const snappedPercentage =
     activeStepIndex >= 0 ? milestonePercents[Math.min(activeStepIndex, milestonePercents.length - 1)] : 0;
+
+  const apiPercentageRaw =
+    parsePercentage(infoStepUse?.total_radio) ??
+    parsePercentage(infoStepUse?.percentage) ??
+    parsePercentage(infoStepUse?.percent);
+  const displayPercentage = apiPercentageRaw !== null ? clampPercentage(apiPercentageRaw) : clampPercentage(snappedPercentage);
 
   const WrapContainer = () => {
     return (
@@ -167,7 +190,7 @@ const ProgressPath = () => {
           </div>
 
           <div className='w-full flex-1 flex items-center justify-center -mt-[3%] 2xl:-mt-[4%] pointer-events-none'>
-            <AnimatedProgressPath percentage={snappedPercentage} height={pathHeight} />
+            <AnimatedProgressPath percentage={snappedPercentage} displayPercentage={displayPercentage} height={pathHeight} />
             {/* <AnimatedProgressPath percentage={25} height={pathHeight} /> */}
           </div>
 
