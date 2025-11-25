@@ -34,8 +34,8 @@ const SupportZalo = () => {
       hideTimeoutRef.current = setTimeout(() => {
         setTypingCycle(prev => prev + 1);
         setShowText(true);
-      }, 3000); // ẩn 2s rồi hiện lại
-    }, 6000); // wait một lúc sau khi gõ xong rồi chạy lại
+      }, 5000); // ẩn 2s rồi hiện lại
+    }, 9000); // wait một lúc sau khi gõ xong rồi chạy lại
 
     return () => {
       clearInterval(interval);
@@ -138,7 +138,7 @@ const SupportZalo = () => {
       {showText && (
         <AnimatedGeneraEachWord
           key={typingCycle}
-          text='Hỗ Trợ'
+          text='Hỗ Trợ Nhanh'
           className='!responsive-text-base font-medium text-new-blue !font-deca px-1'
           classNameWrapper='min-w-0'
           typingSpeed={300}
@@ -147,7 +147,16 @@ const SupportZalo = () => {
           loadingDotClassName3='bg-[#2563EB]'
         />
       )}
-      <ZaloIcon className='size-6 2xl:size-8' />
+
+      <div className='relative'>
+        <div className='absolute -top-8 -right-1 whitespace-nowrap rounded-lg bg-slate-900/90 px-2 py-1 text-[10px] tracking-ﬁwide text-white shadow-lg pointer-events-none'>
+          <span className='relative'>
+            Kéo để di chuyển
+            <span className='absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-4 border-x-transparent border-t-4 border-t-slate-900/90'></span>
+          </span>
+        </div>
+        <ZaloIcon className='size-6 2xl:size-8' />
+      </div>
     </Link>
   );
 };
