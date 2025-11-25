@@ -8,9 +8,9 @@ import { Lexend_Deca } from '@next/font/google';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { twMerge } from 'tailwind-merge';
 import PopupExportMaterialsTabCurrent from './PopupExportMaterialsTabCurrent';
 import PopupExportMaterialsTabReexport from './PopupExportMaterialsTabReexport';
+import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
 
 const deca = Lexend_Deca({
   subsets: ['latin'],
@@ -48,7 +48,7 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
   const [errorNVLData, setErrorNVLData] = useState({ items: [] });
   const [showAutoTooltip, setShowAutoTooltip] = useState(false);
   const [autoTooltipText, setAutoTooltipText] = useState('');
-  const [activeTab, setActiveTab] = useState('current');
+  const [activeTab, setActiveTab] = useState({ id: 'current', name: 'Nguyên liệu cần xuất' });
 
   // Preload hình ảnh exportMaterials.webp khi component mount
   useEffect(() => {
@@ -264,8 +264,8 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
 
   const tabList = useMemo(
     () => [
-      { id: 'current', label: 'Nguyên liệu cần xuất' },
-      { id: 'reexport', label: 'Nguyên liệu đã xuất' },
+      { id: 'current', name: 'Nguyên liệu cần xuất' },
+      { id: 'reexport', name: 'Nguyên liệu đã xuất' },
     ],
     []
   );
@@ -390,7 +390,7 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
   return showCompleted ? (
     <PopupOrderCompleted onClose={onClose} />
   ) : (
-    <div className={`p-6 flex flex-col gap-4 rounded-3xl w-[90vw] xl:w-[1085px] max-h-[90vh] bg-neutral-00 ${deca.className}`}>
+    <div className={`p-6 flex flex-col gap-4 rounded-3xl w-[90vw] 2xl:w-[80vw] max-h-[90vh] bg-neutral-00 ${deca.className}`}>
       <div className='flex gap-2 justify-between'>
         <div className='flex flex-col gap-1'>
           <h2 className='text-2xl font-bold capitalize'>Xuất kho sản xuất</h2>
@@ -417,19 +417,16 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
           </motion.div>
         </div>
       </div>
-      <div className='flex gap-2 bg-[#F5F7FB] p-1 rounded-full w-fit'>
-        {tabList.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={twMerge('px-4 py-2 rounded-full text-sm font-medium transition-all', activeTab === tab.id ? 'bg-white text-[#0F172A] shadow-sm' : 'text-[#64748B]')}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <TabSwitcherWithSlidingBackground
+        tabs={tabList}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        className='!p-1'
+        buttonClassName='!py-1.5 !px-3 !responsive-text-sm'
+        buttonActiveClassName='!top-1 !bottom-1'
+      />
 
-      {activeTab === 'current' && (
+      {activeTab?.id === 'current' && (
         <PopupExportMaterialsTabCurrent
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -453,7 +450,11 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
         />
       )}
 
-      {activeTab === 'reexport' && <PopupExportMaterialsTabReexport />}
+      {activeTab?.id === 'reexport' && (
+        <PopupExportMaterialsTabReexport
+          poId={data?.poi_id || id}
+        />
+      )}
     </div>
   );
 };
