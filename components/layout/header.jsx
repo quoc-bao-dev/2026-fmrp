@@ -1289,7 +1289,7 @@ const Header = () => {
               />
             </button>
           </Tooltip>
-          <Dropdown data={ListQuyTrinh} type='procedure' className='popover-quytrinh' position={'bottom'} classNameTrigger={'2xl:!p-0 !p-0'}>
+          {/* <Dropdown data={ListQuyTrinh} type='procedure' className='popover-quytrinh' position={'bottom'} classNameTrigger={'2xl:!p-0 !p-0'}>
             <div className='2xl:size-5 xl:size-4 size-3 shink-0'>
               <Image
                 alt=''
@@ -1303,7 +1303,7 @@ const Header = () => {
                 blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
               />
             </div>
-          </Dropdown>
+          </Dropdown> */}
 
           <DropdownThongBao data={[] || ListThongBao} className='popover-thongbao' position={'bottom right'}>
             <div className='2xl:size-5 xl:size-4 size-3 shink-0'>
