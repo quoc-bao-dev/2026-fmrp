@@ -707,7 +707,7 @@ const PopupExportMaterialsTabReexport = ({ poId }) => {
               <div className='w-20 h-20 rounded-full bg-[#F5F7FB] flex items-center justify-center'>
                 <CheckCircleIcon className='size-10 text-[#D0D5DD]' />
               </div>
-              <p className='text-sm font-medium text-[#667085] text-center max-w-xs'>Chọn thành phẩm ở bên trái để xem nguyên liệu</p>
+              <p className='text-sm font-medium text-[#667085] text-center max-w-xs'>Chọn thành phẩm ở bên trái để xem nguyên liệu cần xuất thêm</p>
             </div>
           ) : materialsForSelectedProducts.length === 0 ? (
             <div className='flex flex-col items-center justify-center h-full min-h-[400px] gap-4'>
