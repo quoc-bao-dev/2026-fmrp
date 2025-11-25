@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 const SupportZalo = () => {
   // ========== CẤU HÌNH ==========
   // Khoảng cách từ mép phải màn hình (px)
-  const RIGHT_OFFSET = 20;
+  const RIGHT_OFFSET = 24;
   // ===============================
 
   const [typingCycle, setTypingCycle] = useState(0);
