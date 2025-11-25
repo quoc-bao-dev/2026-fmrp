@@ -75,6 +75,16 @@ const mockData = [
   createMockTransaction('upgrade', 5600000, 'pending', 'Nâng cấp gói Start Up lên Pro', 3),
   createMockTransaction('add_user', 1200000, 'success', 'Mua thêm 5 user cho team kế toán', 7),
   createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
+  createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
+  createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
+  createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
+  // createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
+  // createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
+  // createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
+  // createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
+  // createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
+  // createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
+  // createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
 ];
 
 const initialPackage = {
@@ -180,16 +190,16 @@ const ServiceInformation = props => {
                 </button>
               )} */}
             </div>
-            <div className='grid grid-cols-5 py-3 mt-5 gap-5 border-b border-[#e7eaee]'>
+            <div className='grid grid-cols-6 py-3 mt-5 gap-5 border-b border-[#e7eaee]'>
               <div className='col-span-1 uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>Hình thức</div>
               <div className='col-start-2 uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>gói</div>
               <div className='uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>Trạng thái</div>
               <div className='uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>thành viên/team</div>
-              {/* <div className='uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-right'>dung lượng (mb)</div> */}
+              <div className='uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'> Thời lượng gói</div>
               <div className='uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>hạn sử dụng</div>
             </div>
             <div className='divide-y divide-[#e7eaee]'>
-              <div className='grid grid-cols-5 gap-5 py-3'>
+              <div className='grid grid-cols-6 gap-5 py-3'>
                 <div className='capitalize font-[400] text-center'>{listPackage?.title}</div>
                 <div className='flex justify-center'>
                   <div
@@ -211,32 +221,23 @@ const ServiceInformation = props => {
                   {listPackage?.status ? listPackage?.status : '-'}
                 </div>
                 <div className=' font-[400] text-center'>{listPackage?.member?.length > 0 ? listPackage?.member : '-'}</div>
-                {/* <div className=' font-[400] text-right'>{listPackage?.capacity?.toLocaleString()}</div> */}
+                <div className=' font-[400] text-center'>{auth?.month_package_service ? auth?.month_package_service : '-'} tháng</div>
                 <div className=' font-[400] text-center'>{auth?.expiration_date ? formatMoment(auth?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}</div>
               </div>
             </div>
-            <div className='flex space-x-4 mt-4'>
-              {/* <button className='px-5 py-3 rounded-md border border-[#d0d5dd] flex space-x-2'>
-                <IconMoney />
-                <span>Xem lịch sử thanh toán</span>
-              </button> */}
-              {/* <button className='px-5 py-3 rounded-md border border-[#d0d5dd] flex space-x-2'>
-                <IconRefresh />
-                <span>Gia hạn gói hiện tại</span>
-              </button> */}
-            </div>
+            <div className='flex space-x-4 mt-4'></div>
 
             {/* ===== title history package ===== */}
-            {/* <div className='flex justify-between- items-center bg-[#ECF0F4] mt-3 px-3 py-3'>
+            <div className='flex justify-between- items-center bg-[#ECF0F4] mt-3 px-3 py-3'>
               <h3 className='text-[15px] uppercase w-full  rounded  flex items-center space-x-3 '>
                 {' '}
                 <IconClock size='20' className='' /> <p>Lịch sử gói sử dụng</p>{' '}
               </h3>
-            </div> */}
+            </div>
 
             {/* ===== table history package ===== */}
-            {/* <div className='mt-4 border border-[#E4E7EC] rounded-lg overflow-hidden bg-white'>
-              <div className='grid grid-cols-12 bg-[#F9FAFB] text-[#667085] uppercase text-[12px] 3xl:text-sm font-semibold px-4 py-3'>
+            <div className='mt-4 border border-[#E4E7EC] rounded-lg overflow-hidden bg-white flex flex-col'>
+              <div className='grid grid-cols-12 bg-[#F9FAFB] text-[#667085] uppercase text-[12px] 3xl:text-sm font-semibold px-4 py-3 flex-shrink-0'>
                 <div className='col-span-2'>Ngày giao dịch</div>
                 <div className='col-span-2'>Loại</div>
                 <div className='col-span-2 text-right'>Số tiền</div>
@@ -245,21 +246,31 @@ const ServiceInformation = props => {
               </div>
 
               {hasHistoryData ? (
-                <div className='divide-y divide-[#EAECF0]'>
-                  {historyTransactions.map(item => (
-                    <div key={item.id} className='grid grid-cols-12 px-4 py-4 items-center 3xl:text-base text-sm text-[#1D2939] hover:bg-[#F9FAFB]/50 cursor-pointer'>
-                      <div className='col-span-2 font-medium'>{item.transactionDate ? formatMoment(item.transactionDate, FORMAT_MOMENT.DATE_TIME_SLASH_LONG) : '-'}</div>
-                      <div className='col-span-2'>{renderTransactionType(item.type)}</div>
-                      <div className='col-span-2 text-right font-semibold text-[#003DA0]'>{formatCurrency(item.amount)}</div>
-                      <div className='col-span-2 flex justify-center'>{renderTransactionStatus(item.status)}</div>
-                      <div className='col-span-4 text-[#475467]'>{item.description}</div>
-                    </div>
-                  ))}
-                </div>
+                <>
+                  <div className='divide-y divide-[#EAECF0] overflow-y-auto max-h-[280px] 2xl:max-h-[400px] flex-1'>
+                    {historyTransactions.map(item => (
+                      <div key={item.id} className='grid grid-cols-12 px-4 py-4 items-center 3xl:text-base text-sm text-[#1D2939] hover:bg-[#F9FAFB]/50 cursor-pointer'>
+                        <div className='col-span-2 font-medium'>{item.transactionDate ? formatMoment(item.transactionDate, FORMAT_MOMENT.DATE_TIME_SLASH_LONG) : '-'}</div>
+                        <div className='col-span-2'>{renderTransactionType(item.type)}</div>
+                        <div className='col-span-2 text-right font-semibold text-[#003DA0]'>{formatCurrency(item.amount)}</div>
+                        <div className='col-span-2 flex justify-center'>{renderTransactionStatus(item.status)}</div>
+                        <div className='col-span-4 text-[#475467]'>{item.description}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Dòng tổng số tiền */}
+                  <div className='grid grid-cols-12 px-4 py-4 items-center 3xl:text-base text-sm bg-[#F9FAFB] border-t-2 border-[#E4E7EC] flex-shrink-0'>
+                    <div className='col-span-2'></div>
+                    <div className='col-span-2 font-semibold text-[#1D2939]'>Tổng Cộng:</div>
+                    <div className='col-span-2 text-right font-bold text-[#003DA0] text-lg'>{formatCurrency(historyTransactions.reduce((total, item) => total + (item.amount || 0), 0))}</div>
+                    <div className='col-span-2'></div>
+                    <div className='col-span-4'></div>
+                  </div>
+                </>
               ) : (
                 <NoData className='py-10' type='table' titleText='Chưa có giao dịch' />
               )}
-            </div> */}
+            </div>
           </div>
         </div>
       </Container>
