@@ -2,6 +2,7 @@ import AnimatedGeneraEachWord from '@/components/animations/animation/AnimatedGe
 import { ZaloIcon } from '@/components/icons';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { Tooltip } from 'react-tippy';
 
 const SupportZalo = () => {
   // ========== CẤU HÌNH ==========
@@ -120,35 +121,37 @@ const SupportZalo = () => {
   }, [isDragging]);
 
   return (
-    <Link
-      href='https://zalo.me/fososoft'
-      target='_blank'
-      ref={bubbleRef}
-      onMouseDown={handleMouseDown}
-      onClick={handleClick}
-      style={{
-        position: 'fixed',
-        bottom: `${bottomPosition}px`,
-        right: `${rightPosition}px`,
-        cursor: 'grab',
-        transition: isDragging ? 'none' : 'right 0.3s ease-out',
-      }}
-      className='z-[9999] flex items-center gap-1 bg-white rounded-xl p-1 shadow-lg border border-new-blue/50 hover:cursor-grab active:cursor-grabbing'
-    >
-      {showText && (
-        <AnimatedGeneraEachWord
-          key={typingCycle}
-          text='Hỗ Trợ'
-          className='!responsive-text-base font-medium text-new-blue !font-deca px-1'
-          classNameWrapper='min-w-0'
-          typingSpeed={300}
-          loadingDotClassName1='bg-[#BFDBFE]'
-          loadingDotClassName2='bg-[#60A5FA]'
-          loadingDotClassName3='bg-[#2563EB]'
-        />
-      )}
-      <ZaloIcon className='size-6 2xl:size-8' />
-    </Link>
+    <Tooltip title='Kéo để di chuyển' position='left' arrow theme='light' className='!inline-block'>
+      <Link
+        href='https://zalo.me/fososoft'
+        target='_blank'
+        ref={bubbleRef}
+        onMouseDown={handleMouseDown}
+        onClick={handleClick}
+        style={{
+          position: 'fixed',
+          bottom: `${bottomPosition}px`,
+          right: `${rightPosition}px`,
+          cursor: 'grab',
+          transition: isDragging ? 'none' : 'right 0.3s ease-out',
+        }}
+        className='z-[9999] flex items-center gap-1 bg-white rounded-xl p-1 shadow-lg border border-new-blue/50 hover:cursor-grab active:cursor-grabbing'
+      >
+        {showText && (
+          <AnimatedGeneraEachWord
+            key={typingCycle}
+            text='Hỗ Trợ'
+            className='!responsive-text-base font-medium text-new-blue !font-deca px-1'
+            classNameWrapper='min-w-0'
+            typingSpeed={300}
+            loadingDotClassName1='bg-[#BFDBFE]'
+            loadingDotClassName2='bg-[#60A5FA]'
+            loadingDotClassName3='bg-[#2563EB]'
+          />
+        )}
+        <ZaloIcon className='size-6 2xl:size-8' />
+      </Link>
+    </Tooltip>
   );
 };
 
