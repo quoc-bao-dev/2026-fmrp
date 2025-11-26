@@ -331,8 +331,8 @@ const CheckQuality = props => {
   // Đổi trạng thái tất cả phiếu chuyển sang chưa duyệt
   const revertTransfersToPending = async transferList => {
     for (const transfer of transferList) {
-      //   const response = await revertTransferStatus(transfer?.id);
-      const response = await revertTransferStatus(160);
+      const response = await revertTransferStatus(transfer?.id);
+      //   const response = await revertTransferStatus(160);
       if (!response?.isSuccess) {
         setDeleteTarget(null);
         handleTransferFailureResponse(response);
