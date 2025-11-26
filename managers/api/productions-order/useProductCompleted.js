@@ -21,7 +21,7 @@ export const useHandlingProductCompleted = () => {
     mutationFn: async (data) => {
       const formData = new FormData();
       formData.append("po_id", data.po_id);
-
+      formData.append("warehouse_id", data.warehouse_id);
       if (data.items && Array.isArray(data.items)) {
         data.items.forEach((item, index) => {
           Object.entries(item).forEach(([key, value]) => {

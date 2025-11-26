@@ -4,6 +4,7 @@ import { WarningIcon } from "@/components/icons";
 import CheckIcon from "@/components/icons/common/CheckIcon";
 import CloseXIcon from "@/components/icons/common/CloseXIcon";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
+import SelectComponent from "@/components/UI/filterComponents/selectComponent";
 import { StateContext } from "@/context/_state/productions-orders/StateContext";
 import useSetingServer from "@/hooks/useConfigNumber";
 import useToast from "@/hooks/useToast";
@@ -29,6 +30,7 @@ import {
   useState,
 } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa";
+import { PiWarehouseLight } from "react-icons/pi";
 import { Tooltip } from "react-tippy";
 import { twMerge } from "tailwind-merge";
 
@@ -421,7 +423,10 @@ const PopupCompleteCommand = ({ onClose }) => {
   const { data: productCompleted, isLoading } = useProductCompleted(
     isStateProvider?.productionsOrders.idDetailProductionOrder
   );
+  const warehouses = productCompleted?.data?.warehouses;
+  console.log(productCompleted)
   const [products, setProducts] = useState([]);
+  const [selectedWarehouse, setSelectedWarehouse] = useState(null);
   const [showAutoTooltip, setShowAutoTooltip] = useState(false);
   const [autoTooltipText, setAutoTooltipText] = useState("");
   const { data: QRCode } = useQRCodProductCompleted(
@@ -444,6 +449,7 @@ const PopupCompleteCommand = ({ onClose }) => {
     message: "",
   });
   const hasShownTooltipRef = useRef(false);
+  const [isWarehouseMissing, setIsWarehouseMissing] = useState(false);
 
   // Preload hình ảnh commandCompleted.webp khi component mount
   useEffect(() => {
@@ -468,6 +474,11 @@ const PopupCompleteCommand = ({ onClose }) => {
       hasShownTooltipRef.current = false;
     }
   }, [productCompleted]);
+
+  useEffect(() => {
+    setSelectedWarehouse(null);
+    setIsWarehouseMissing(false);
+  }, [warehouses]);
 
   useEffect(() => {
     // Chỉ hiển thị tooltip một lần khi data mới được load, không phải mỗi lần products thay đổi
@@ -515,6 +526,9 @@ const PopupCompleteCommand = ({ onClose }) => {
           "error",
           responseData.message || "Số lượng NVL/BTP không đủ để xuất"
         );
+      } else if (responseData.isSuccess === false) {
+        setIsRenderErrorNVL(false);
+        showToast("error", responseData.message || "Có lỗi xảy ra khi hoàn thành công đoạn!");
       } else if (responseData.isSuccess === 1) {
         setIsRenderErrorNVL(false);
         setSelectAll(false);
@@ -533,6 +547,12 @@ const PopupCompleteCommand = ({ onClose }) => {
   const handleConfirm = useCallback(async () => {
     if (isLoadingSubmit) return;
     const selectedProducts = products.filter((product) => product.selected);
+
+    if (!selectedWarehouse) {
+      setIsWarehouseMissing(true);
+      showToast("error", "Vui lòng chọn kho hàng!");
+      return;
+    }
 
     // Điều kiện 1: Phải chọn ít nhất 1 sản phẩm
     if (selectedProducts.length === 0) {
@@ -557,6 +577,7 @@ const PopupCompleteCommand = ({ onClose }) => {
       }));
       await handleProductCompleted({
         po_id: isStateProvider?.productionsOrders.idDetailProductionOrder,
+        warehouse_id: selectedWarehouse?.value,
         items: formatData,
       });
     } catch (error) {
@@ -571,8 +592,10 @@ const PopupCompleteCommand = ({ onClose }) => {
     isStateProvider?.productionsOrders.idDetailProductionOrder,
     showToast,
     isLoadingSubmit,
+    selectedWarehouse,
+    setIsWarehouseMissing,
   ]);
-
+console.log(selectedWarehouse)
   const updateProductQuantity = useCallback(
     (index, value) => {
       if (value === 0) {
@@ -699,7 +722,38 @@ const PopupCompleteCommand = ({ onClose }) => {
   const formatNumber = (number) => {
     return formatNumberConfig(+number, dataSeting);
   };
-console.log(products)
+
+  const warehouseImportId = productCompleted?.data?.warehouse_import_id;
+
+  const warehouseOptions = useMemo(() => {
+    if (!warehouses) return [];
+    return warehouses.map((warehouse) => ({
+      value: warehouse.id,
+      label: warehouse.name,
+      ...warehouse,
+    }));
+  }, [warehouses]);
+
+  useEffect(() => {
+    if (!warehouseOptions.length) {
+      setSelectedWarehouse(null);
+      setIsWarehouseMissing(false);
+      return;
+    }
+
+    const matchedWarehouse = warehouseOptions.find(
+      (option) => `${option.value}` === `${warehouseImportId}`
+    );
+
+    setSelectedWarehouse(matchedWarehouse || null);
+    setIsWarehouseMissing(false);
+  }, [warehouseOptions, warehouseImportId]);
+
+  const handleWarehouseChange = useCallback((option) => {
+    setSelectedWarehouse(option);
+    setIsWarehouseMissing(false);
+  }, []);
+
   return (
     <>
       {isLoading ? (
@@ -719,7 +773,37 @@ console.log(products)
                 {QRCode?.data?.reference_no}
               </p>
             </div>
-            <div className="flex gap-8 items-center">
+            <div className="flex gap-2 items-center">
+                <SelectComponent
+                  options={warehouseOptions}
+                  value={selectedWarehouse}
+                  onChange={handleWarehouseChange}
+                  isClearable={true}
+                  icon={<PiWarehouseLight color='#9295A4' className='size-4' />}
+                  closeMenuOnSelect={true}
+                  hideSelectedOptions={false}
+                  placeholder='Chọn kho hàng'
+                  styles={{
+                    control: (base, state) => ({
+                      ...base,
+                      borderRadius: '8px',
+                      borderColor: isWarehouseMissing
+                        ? '#ef4444'
+                        : state.isFocused
+                        ? '#0F4F9E'
+                        : base.borderColor,
+                      boxShadow: 'none',
+                      '&:hover': {
+                        borderColor: isWarehouseMissing
+                          ? '#ef4444'
+                          : state.isFocused
+                          ? '#0F4F9E'
+                          : base.borderColor,
+                      },
+                    }),
+                  }}
+                  isSearchable={true}
+                />
               <Tooltip
                 title="Quét QR để hoàn thành công đoạn trên app FMRP"
                 position="left"
@@ -733,6 +817,7 @@ console.log(products)
                   className="rounded-[4px]"
                 />
               </Tooltip>
+              
               <button
                 onClick={handleConfirm}
                 disabled={isLoadingSubmit}
@@ -763,7 +848,7 @@ console.log(products)
             <div className="py-2 px-3 flex flex-col gap-2 bg-[#FFEEF0] border border-[#991B1B] rounded-lg">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1">
-                  <WarningIcon className="size-5" />
+                  <WarningIcon className="size-5 text-[#991B1B]" />
                   <h3 className="text-sm font-normal text-neutral-07">
                     <span className="font-semibold text-[#EE1E1E]">
                       {errorNVLData.items.length}
