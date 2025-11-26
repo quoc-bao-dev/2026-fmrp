@@ -112,6 +112,10 @@ const PopupKeepStock = ({
 
         if (value.type == "product" && value.idProductionOrder) {
             formData.append("ppi_id", value?.idProductionOrder?.ppi_id);
+            // Nếu chưa chọn radio level_bom thì mặc định luôn là 0
+            const autoLevel =
+                value.idProductionOrder?.selectedLevel?.id ?? 0;
+            formData.append("level", autoLevel);
         }
 
         value.arrayItem?.forEach((e, index) => {
@@ -228,6 +232,10 @@ const PopupKeepStock = ({
 
             if (findValue.type == "product" && findValue.idProductionOrder) {
                 formData.append("ppi_id", findValue.idProductionOrder?.ppi_id);
+                // Nếu chưa chọn radio level_bom thì mặc định luôn là 0
+                const autoLevel =
+                    findValue.idProductionOrder?.selectedLevel?.id ?? 0;
+                formData.append("level_id", autoLevel);
             }
 
             const { isSuccess, message, data } =
@@ -554,37 +562,167 @@ const PopupKeepStock = ({
                                                 options={
                                                     dataProductionOrderKeepStok?.data?.items_poi || []
                                                 }
-                                                formatOptionLabel={(option) => (
-                                                    <div className="flex items-center justify-between py-2">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-[50px] h-[60px]">
-                                                                <img
-                                                                    src={
-                                                                        option.images
-                                                                            ? option.images
-                                                                            : "/icon/noimagelogo.png"
-                                                                    }
-                                                                    alt="Product Image"
-                                                                    className="object-cover w-full h-full rounded"
-                                                                />
+                                                formatOptionLabel={(option, meta) => {
+                                                    const selectedOption = meta?.selectValue?.[0];
+                                                    const selectedLevelId =
+                                                        selectedOption?.ppi_id === option?.ppi_id
+                                                            ? selectedOption?.selectedLevel?.id
+                                                            : null;
+
+                                                    const hasMultiLevel =
+                                                        Array.isArray(option?.level_bom) &&
+                                                        option.level_bom.length > 1;
+
+                                                    // Hiển thị tên level trong select chỉ khi:
+                                                    // - Có hơn 1 level AND
+                                                    // - Đã chọn radio (selectedLevel)
+                                                    const displayLevelName =
+                                                        hasMultiLevel && option?.selectedLevel?.name
+                                                            ? option.selectedLevel.name
+                                                            : undefined;
+
+                                                    if (meta.context === "value") {
+                                                        return (
+                                                            <div className="flex items-center gap-2 py-1">
+                                                                <div className="size-[60px] shrink-0">
+                                                                    <img
+                                                                        src={
+                                                                            option.images
+                                                                                ? option.images
+                                                                                : "/icon/noimagelogo.png"
+                                                                        }
+                                                                        alt="Product Image"
+                                                                        className="object-cover w-full h-full rounded"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <h3 className="font-medium responsive-text-sm">
+                                                                        {option?.label}
+                                                                    </h3>
+                                                                    <h5 className="responsive-text-xs">
+                                                                        {option?.item_code} - {option?.item_variation}
+                                                                    </h5>
+                                                                    <h5 className="responsive-text-xs">
+                                                                        {option?.reference_no_detail}
+                                                                    </h5>
+                                                                    {displayLevelName && (
+                                                                        <span className="px-1.5 py-[1px] w-fit rounded bg-background-blue-2/10 text-blue-600 text-[9px] font-medium">
+                                                                            BOM {displayLevelName}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                            <div>
-                                                                <h3 className="font-medium 3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px]">
-                                                                    {option?.label}
-                                                                </h3>
-                                                                <h5 className="font-medium 3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px]">
-                                                                    {option?.item_code} - {option?.item_variation}
-                                                                </h5>
-                                                                <h5 className="font-medium 3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px]">
-                                                                    {option?.reference_no_detail}
-                                                                </h5>
+                                                        );
+                                                    }
+                                                    return (
+                                                        <div className="flex flex-col gap-1 items-center justify-between py-2">
+                                                            <div className="flex items-center gap-2 w-full z-[2]">
+                                                                <div className="size-[60px] shrink-0">
+                                                                    <img
+                                                                        src={
+                                                                            option.images
+                                                                                ? option.images
+                                                                                : "/icon/noimagelogo.png"
+                                                                        }
+                                                                        alt="Product Image"
+                                                                        className="object-cover w-full h-full rounded"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <h3 className="font-medium responsive-text-sm">
+                                                                        {option?.label}
+                                                                    </h3>
+                                                                    <h5 className="responsive-text-xs">
+                                                                        {option?.item_code} - {option?.item_variation}
+                                                                    </h5>
+                                                                    <h5 className="responsive-text-xs">
+                                                                        {option?.reference_no_detail}
+                                                                    </h5>
+                                                                </div>
                                                             </div>
+                                                            {option?.level_bom &&
+                                                                !(
+                                                                    option.level_bom.length === 1
+                                                                ) && (
+                                                                <div className="flex flex-col gap-2 mt-1 w-full pl-8 z-[1]">
+                                                                    {option.level_bom.map((level, levelIndex) => (
+                                                                        <label
+                                                                            key={`${option.ppi_id}_${level.id}`}
+                                                                            className="relative flex items-center gap-2 cursor-pointer"
+                                                                            onMouseDown={(event) => {
+                                                                                event.preventDefault();
+                                                                                event.stopPropagation();
+                                                                            }}
+                                                                            onClick={(event) => {
+                                                                                event.preventDefault();
+                                                                                event.stopPropagation();
+                                                                                field.onChange({
+                                                                                    ...option,
+                                                                                    selectedLevel: level,
+                                                                                });
+                                                                            }}
+                                                                        >
+                                                                            {levelIndex > 0 && (
+                                                                                <div className="absolute -left-4 -top-8 w-[2px] h-8 bg-gray-200 z-0" />
+                                                                            )}
+                                                                            <div className="absolute -left-4 -top-4 w-3 h-7 border-l-2 border-b-2 border-gray-200 rounded-bl-lg z-0" />
+                                                                            <button
+                                                                                type="button"
+                                                                                className={`w-4 h-4 rounded-full border transition-all duration-200 flex items-center justify-center relative z-10 ${
+                                                                                    selectedLevelId === level.id
+                                                                                        ? "border-blue-600"
+                                                                                        : "border-gray-300"
+                                                                                }`}
+                                                                                onMouseDown={(event) => {
+                                                                                    event.preventDefault();
+                                                                                    event.stopPropagation();
+                                                                                }}
+                                                                                onClick={(event) => {
+                                                                                    event.preventDefault();
+                                                                                    event.stopPropagation();
+                                                                                    field.onChange({
+                                                                                        ...option,
+                                                                                        selectedLevel: level,
+                                                                                    });
+                                                                                }}
+                                                                            >
+                                                                                {selectedLevelId === level.id && (
+                                                                                    <span className="w-2 h-2 rounded-full bg-blue-600" />
+                                                                                )}
+                                                                            </button>
+                                                                            <span
+                                                                                className={`px-1.5 py-1 rounded responsive-text-xs font-semibold relative z-10 transition-all duration-300 ${
+                                                                                    selectedLevelId === level.id
+                                                                                        ? "bg-blue-600 text-white shadow-sm ring-1 ring-blue-100"
+                                                                                        : "bg-background-blue-2/10 text-gray-600 hover:text-blue-600"
+                                                                                }`}
+                                                                            >
+                                                                                BOM {level.name}
+                                                                            </span>
+                                                                        </label>
+                                                                    ))}
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    </div>
-                                                )}
+                                                    );
+                                                }}
                                                 {...field}
                                                 onChange={(event) => {
-                                                    field.onChange(event);
+                                                    if (!event) {
+                                                        field.onChange(null);
+                                                        return;
+                                                    }
+
+                                                    // Nếu user chỉ click chọn option mà không bấm button level,
+                                                    // tự động gán level_bom đầu tiên (thường là Cấp 0)
+                                                    if (!event.selectedLevel && Array.isArray(event.level_bom) && event.level_bom.length > 0) {
+                                                        field.onChange({
+                                                            ...event,
+                                                            selectedLevel: event.level_bom[0],
+                                                        });
+                                                    } else {
+                                                        field.onChange(event);
+                                                    }
                                                 }}
                                                 styles={{
                                                     menu: (provided, state) => ({
