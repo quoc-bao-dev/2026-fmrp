@@ -1,4 +1,4 @@
-import { BtnAction } from '@/components/UI/BtnAction';
+import { TrashIcon } from '@/components/icons';
 import Breadcrumb from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import OnResetData from '@/components/UI/btnResetData/btnReset';
 import ContainerPagination from '@/components/UI/common/ContainerPagination/ContainerPagination';
@@ -11,7 +11,10 @@ import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecompon
 import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';
 import Loading from '@/components/UI/loading/loading';
+import LoadingButton from '@/components/UI/loading/loadingButton';
 import NoData from '@/components/UI/noData/nodata';
+import PopupConfim from '@/components/UI/popupConfim/popupConfim';
+import { CONFIRM_DELETION, TITLE_DELETE } from '@/constants/delete/deleteTable';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import { WARNING_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 import { useBranchList } from '@/hooks/common/useBranch';
@@ -30,6 +33,7 @@ import { useRouter } from 'next/router';
 import React, { Fragment, useState } from 'react';
 import 'react-phone-input-2/lib/style.css';
 import { useSelector } from 'react-redux';
+import { _ServerInstance as Axios } from '@/services/axios';
 import PopupDetailWarehouseTransfer from '../warehouse-transfer/components/pupup';
 import PopupCheckQuality from './components/popup';
 import PopupState from './components/popupState';
@@ -56,6 +60,8 @@ const CheckQuality = props => {
   const statusExprired = useStatusExprired();
 
   const [isState, sIsState] = useState(initilaState);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const dataSeting = useSetingServer();
 
@@ -97,6 +103,30 @@ const CheckQuality = props => {
     queryState({ keySearch: value });
     router.replace('/manufacture/check-quality');
   }, 500);
+
+  const handleDelete = async () => {
+    if (!deleteTarget || isDeleting) return;
+    setIsDeleting(true);
+
+    try {
+      const transferList = deleteTarget?.transfers || [];
+      const hasTransfer = transferList.length > 0;
+
+      if (hasTransfer) {
+        await revertTransfersToPending(transferList);
+        await deleteWarehouseTransfers(transferList);
+      }
+
+      await deleteCheckQualityVoucher(deleteTarget.id);
+      isShow('success', dataLang?.deleted_successfully || 'Xóa thành công');
+      refetch();
+      setDeleteTarget(null);
+    } catch (error) {
+      console.error('Delete QC error:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const stringMap = {
     0: 'Chưa Duyệt',
@@ -230,6 +260,121 @@ const CheckQuality = props => {
       </div>
     );
   };
+
+  const ActionButton = ({ onClick }) => {
+    return (
+      <button
+        type='button'
+        onClick={onClick}
+        disabled={isDeleting}
+        className={`group rounded-lg p-1 border border-transparent transition-all ease-in-out flex items-center justify-center hover:border-red-01 hover:bg-red-02 ${
+          isDeleting ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
+      >
+        <TrashIcon className='size-5 text-[#EE1E1E]' />
+      </button>
+    );
+  };
+
+  // Gọi API đổi trạng thái phiếu chuyển về "chưa duyệt"
+  const revertTransferStatus = transferId =>
+    new Promise((resolve, reject) => {
+      const formData = new FormData();
+      formData.append('warehouseman_id', '1');
+      formData.append('id', transferId);
+
+      Axios('POST', `/api_web/Api_transfer/confirmWarehouse?csrf_protection=true&is_delete_qc=true`, formData, (err, response) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(response?.data);
+      });
+    });
+
+  // Gọi API xóa phiếu chuyển kho
+  const removeWarehouseTransfer = transferId =>
+    new Promise((resolve, reject) => {
+      Axios('DELETE', `/api_web/Api_transfer/transfer/${transferId}?csrf_protection=true&is_delete_qc=true`, {}, (err, response) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(response?.data);
+      });
+    });
+
+  // Gọi API xóa phiếu kiểm tra chất lượng
+  const removeCheckQuality = qcId =>
+    new Promise((resolve, reject) => {
+      Axios('DELETE', `/api_web/Api_Qc/delete/${qcId}?csrf_protection=true`, {}, (err, response) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(response?.data);
+      });
+    });
+
+  // Chuẩn hóa lỗi trả về từ API chuyển kho để hiển thị
+  const handleTransferFailureResponse = response => {
+    const exportData = Array.isArray(response?.data_export) ? response.data_export : [];
+    const messageKey = response?.message || 'import_not_approval_warehouse';
+    const translatedMessage = dataLang?.[messageKey] || messageKey;
+    isShow('error', translatedMessage || 'Có lỗi xảy ra');
+    handleShowPopupState({
+      message: translatedMessage,
+      data_export: exportData,
+    });
+  };
+
+  // Đổi trạng thái tất cả phiếu chuyển sang chưa duyệt
+  const revertTransfersToPending = async transferList => {
+    for (const transfer of transferList) {
+      //   const response = await revertTransferStatus(transfer?.id);
+      const response = await revertTransferStatus(160);
+      if (!response?.isSuccess) {
+        setDeleteTarget(null);
+        handleTransferFailureResponse(response);
+        throw new Error(response?.message || 'REVERT_TRANSFER_FAILED');
+      }
+    }
+  };
+
+  // Xóa toàn bộ phiếu chuyển kho sau khi đã hủy duyệt
+  const deleteWarehouseTransfers = async transferList => {
+    for (const transfer of transferList) {
+      const response = await removeWarehouseTransfer(transfer?.id);
+      if (!response?.isSuccess) {
+        setDeleteTarget(null);
+        isShow('error', dataLang?.[response?.message] || response?.message || 'Không thể xóa phiếu chuyển kho');
+        throw new Error(response?.message || 'DELETE_TRANSFER_FAILED');
+      }
+    }
+  };
+
+  // Xóa phiếu kiểm tra chất lượng
+  const deleteCheckQualityVoucher = async qcId => {
+    const response = await removeCheckQuality(qcId);
+    if (!response?.isSuccess) {
+      isShow('error', dataLang?.[response?.message] || response?.message || 'Không thể xóa phiếu kiểm tra chất lượng');
+      throw new Error(response?.message || 'DELETE_QC_FAILED');
+    }
+  };
+
+  const handleOpenDeletePopup = ({ id, soPhieuCK, transfers }) => {
+    if (isDeleting) return;
+    setDeleteTarget({ id, soPhieuCK, transfers });
+  };
+  const popupSubtitle = isDeleting ? (
+    <span className='inline-flex items-center gap-2 text-[#003DA0]'>
+      <LoadingButton hiddenTitle className='w-4 h-4 text-[#003DA0]' />
+      <span>{dataLang?.processing || 'Đang xử lý...'}</span>
+    </span>
+  ) : (
+    CONFIRM_DELETION
+  );
+
   return (
     <React.Fragment>
       <LayOutTableDynamic
@@ -361,73 +506,72 @@ const CheckQuality = props => {
                   <Loading className='h-80' color='#0f4f9e' />
                 ) : data?.rResult?.length > 0 ? (
                   <div className='h-full divide-y divide-slate-200'>
-                    {data?.rResult?.map(e => (
-                      <RowTable gridCols={11} key={e.id.toString()}>
-                        <RowItemTable colSpan={1} textAlign={'center'}>
-                          {formatMoment(e?.date, FORMAT_MOMENT.DATE_SLASH_LONG)}
-                        </RowItemTable>
-                        <RowItemTable colSpan={1} textAlign={'center'}>
-                          <PopupCheckQuality
-                            name={e?.reference_no}
-                            dataLang={dataLang}
-                            className='3xl:text-base 2xl:text-[12.5px] xl:text-[11px] font-medium text-[9px] px-2 text-center text-[#0F4F9E] hover:text-[#5599EC] transition-all ease-linear cursor-pointer '
-                            id={e?.id}
-                          />
-                        </RowItemTable>
-                        <RowItemTable colSpan={1} textAlign={'center'}>
-                          {e?.reference_no_po}
-                        </RowItemTable>
-                        <RowItemTable colSpan={1} textAlign={'center'}>
-                          {e?.transfer_warehouse?.map(i => (
-                            <Fragment key={i?.id}>
-                              <PopupDetailWarehouseTransfer
-                                dataLang={dataLang}
-                                className='3xl:text-base 2xl:text-[12.5px] xl:text-[11px] font-medium text-[9px] px-2 text-[#0F4F9E] hover:text-[#5599EC] transition-all ease-linear cursor-pointer '
-                                name={i?.code}
-                                id={i?.id}
-                              />
-                            </Fragment>
-                          ))}
-                        </RowItemTable>
-                        <RowItemTable colSpan={1} textAlign={'center'}>
-                          {e?.total_quantity > 0 ? formatNumber(e?.total_quantity) : '-'}
-                        </RowItemTable>
-                        <RowItemTable colSpan={1} textAlign={'center'}>
-                          {e?.total_quantity_success > 0 ? formatNumber(e?.total_quantity_success) : '-'}
-                        </RowItemTable>
-                        <RowItemTable colSpan={1} textAlign={'center'} className={'!text-red-500'}>
-                          {e?.total_quantity_error > 0 ? formatNumber(e?.total_quantity_error) : '-'}
-                        </RowItemTable>
-                        <RowItemTable colSpan={1} className={'flex justify-center items-center'}>
-                          {/* 0: chưa duyệt
-                                                                    1: đã duyệt
-                                                                    2: hủy */}
-                          {/* <BtnStatusApprovedCustom
-                                                        type={e?.status}
-                                                        className={"!pointer-events-none"}
-                                                    /> */}
-                          <StatusTag status={e?.status} />
-                        </RowItemTable>
-                        <RowItemTable colSpan={1} textAlign={'left'}>
-                          {e?.note}
-                        </RowItemTable>
-                        <RowItemTable colSpan={1} className={'w-full flex flex-row justify-start items-center'}>
-                          {e?.branch_name}
-                          {/* <TagBranch className="w-fit">
-                                                        {e?.branch_name}
-                                                    </TagBranch> */}
-                        </RowItemTable>
-                        <RowItemTable colSpan={1} className={'flex justify-center items-center'}>
-                          <BtnAction onRefresh={refetch.bind(this)} onRefreshGroup={() => {}} dataLang={dataLang} id={e?.id} type='check_quality' onShowStatePopup={handleShowPopupState} />
-                        </RowItemTable>
-                      </RowTable>
-                    ))}
+                    {data?.rResult?.map(e => {
+                      const transferWarehouseCodes = e?.transfer_warehouse?.map(i => i?.code) || [];
+                      const soPhieuCK = transferWarehouseCodes.length ? transferWarehouseCodes.join(', ') : '';
+                      return (
+                        <RowTable gridCols={11} key={e.id.toString()}>
+                          <RowItemTable colSpan={1} textAlign={'center'}>
+                            {formatMoment(e?.date, FORMAT_MOMENT.DATE_SLASH_LONG)}
+                          </RowItemTable>
+                          <RowItemTable colSpan={1} textAlign={'center'}>
+                            <PopupCheckQuality
+                              name={e?.reference_no}
+                              dataLang={dataLang}
+                              className='3xl:text-base 2xl:text-[12.5px] xl:text-[11px] font-medium text-[9px] px-2 text-center text-[#0F4F9E] hover:text-[#5599EC] transition-all ease-linear cursor-pointer '
+                              id={e?.id}
+                            />
+                          </RowItemTable>
+                          <RowItemTable colSpan={1} textAlign={'center'}>
+                            {e?.reference_no_po}
+                          </RowItemTable>
+                          <RowItemTable colSpan={1} textAlign={'center'}>
+                            {e?.transfer_warehouse?.map(i => (
+                              <Fragment key={i?.id}>
+                                <PopupDetailWarehouseTransfer
+                                  dataLang={dataLang}
+                                  className='3xl:text-base 2xl:text-[12.5px] xl:text-[11px] font-medium text-[9px] px-2 text-[#0F4F9E] hover:text-[#5599EC] transition-all ease-linear cursor-pointer '
+                                  name={i?.code}
+                                  id={i?.id}
+                                />
+                              </Fragment>
+                            ))}
+                          </RowItemTable>
+                          <RowItemTable colSpan={1} textAlign={'center'}>
+                            {e?.total_quantity > 0 ? formatNumber(e?.total_quantity) : '-'}
+                          </RowItemTable>
+                          <RowItemTable colSpan={1} textAlign={'center'}>
+                            {e?.total_quantity_success > 0 ? formatNumber(e?.total_quantity_success) : '-'}
+                          </RowItemTable>
+                          <RowItemTable colSpan={1} textAlign={'center'} className={'!text-red-500'}>
+                            {e?.total_quantity_error > 0 ? formatNumber(e?.total_quantity_error) : '-'}
+                          </RowItemTable>
+                          <RowItemTable colSpan={1} className={'flex justify-center items-center'}>
+                            <StatusTag status={e?.status} />
+                          </RowItemTable>
+                          <RowItemTable colSpan={1} textAlign={'left'}>
+                            {e?.note}
+                          </RowItemTable>
+                          <RowItemTable colSpan={1} className={'w-full flex flex-row justify-start items-center'}>
+                            {e?.branch_name}
+                          </RowItemTable>
+                          <RowItemTable colSpan={1} className={'flex justify-center items-center'}>
+                            <ActionButton onClick={() => handleOpenDeletePopup({ id: e?.id, soPhieuCK, transfers: e?.transfer_warehouse || [] })} />
+                          </RowItemTable>
+                        </RowTable>
+                      );
+                    })}
                   </div>
                 ) : (
                   <NoData />
                 )}
               </div>
             </Customscrollbar>
+            {isDeleting && (
+              <div className='mt-3 flex justify-center'>
+                <Loading className='h-12' color='#0f4f9e' />
+              </div>
+            )}
           </div>
         }
         pagination={
@@ -443,6 +587,31 @@ const CheckQuality = props => {
         }
       />
       {isState.popupResponse && <PopupState dataLang={dataLang} response={isState.popupResponse} onClose={handleClosePopupState} />}
+      {deleteTarget && (
+        <PopupConfim
+          dataLang={dataLang}
+          type='warning'
+          nameModel='check_quality'
+          title={TITLE_DELETE}
+          subtitle={popupSubtitle}
+          isOpen={!!deleteTarget}
+          save={() => {
+            if (!isDeleting) {
+              handleDelete();
+            }
+          }}
+          cancel={() => {
+            if (!isDeleting) {
+              setDeleteTarget(null);
+            }
+          }}
+          onClose={() => {
+            if (!isDeleting) {
+              setDeleteTarget(null);
+            }
+          }}
+        />
+      )}
     </React.Fragment>
   );
 };
