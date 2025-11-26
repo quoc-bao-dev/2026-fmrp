@@ -175,7 +175,7 @@ const PopupGuide = ({ open, onClose, selectedItem, stepsData, allStepsData, onIt
       closeOnDocumentClick={true}
       lockScroll={true}
     >
-      <div className='flex gap-2 h-[70vh] max-w-6xl w-[80vw] mt-2 pt-3 border-t border-gray-200'>
+      <div className='flex gap-2 h-[585px] max-w-6xl w-[830px] mt-2 pt-3 border-t border-gray-200'>
         <Customscrollbar className='w-[260px] pr-2.5'>
           <div className='space-y-3'>
             {stepsData?.map((step, index) => {
