@@ -17,7 +17,17 @@ const PopupConfim = (props) => {
     const { checkBrowser: checkAuth, checkDelete } = useActionRole(auth, props?.nameModel)
 
     const showToat = useToast()
+    const tryForceConfirm = () => {
+        if (props?.forceConfirm) {
+            props?.save?.();
+            return true;
+        }
+        return false;
+    };
     const handleConfimDelete = () => {
+        if (tryForceConfirm()) {
+            return;
+        }
         switch (props?.nameModel) {
             case "client_contact":
             //Xóa biến liên hệ KH
@@ -70,6 +80,9 @@ const PopupConfim = (props) => {
         const handleKeyDown = (event) => {
             if (event.key === 'Enter' && props.isOpen) {
                 event.preventDefault();
+                if (tryForceConfirm()) {
+                    return;
+                }
                 
                 // Xác định nút xác nhận nào cần được kích hoạt
                 if (props.nameModel === "price_quote_status") {
@@ -144,6 +157,7 @@ const PopupConfim = (props) => {
             closeOnDocumentClick={false}
             onClose={props.onClose}
             className={`${props.className} popup-edit`}
+            overlayStyle={{ zIndex: 1100 }}
         >
             <div
                 className={`min-w-[400px] max-w-[400px] ${props.nameModel == "price_quote_status" && "min-w-[500px]"
@@ -184,6 +198,9 @@ const PopupConfim = (props) => {
                                 <Zoom className="w-1/2">
                                     <button
                                         onClick={() => {
+                                            if (tryForceConfirm()) {
+                                                return;
+                                            }
                                             if (role) {
                                                 return props.save()
                                             }
@@ -201,6 +218,9 @@ const PopupConfim = (props) => {
                                 <Zoom className="w-1/2">
                                     <button
                                         onClick={() => {
+                                            if (tryForceConfirm()) {
+                                                return;
+                                            }
                                             if (role) {
                                                 return props.handleNoconfim()
                                             }
@@ -230,6 +250,9 @@ const PopupConfim = (props) => {
                                 <Zoom className="w-1/2">
                                     <button
                                         onClick={() => {
+                                            if (tryForceConfirm()) {
+                                                return;
+                                            }
                                             if (role) {
                                                 return props.save()
                                             } else if (auth?.orders?.is_agree == 1) {
@@ -331,6 +354,9 @@ const PopupConfim = (props) => {
                                     <Zoom className="w-1/2">
                                         <button
                                             onClick={() => {
+                                            if (tryForceConfirm()) {
+                                                return;
+                                            }
                                                 if (role) {
                                                     props.save()
                                                 } else if (checkAuth) {

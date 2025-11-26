@@ -39,8 +39,8 @@ const PopupGlobal = ({ ...props }) => {
     <Popup
       modPopupal
       open={showPopup}
-      closeOnDocumentClick={statePopupGlobal.allowOutsideClick ?? true} // ❌ Ngăn click ra ngoài
-      closeOnEscape={statePopupGlobal.allowEscape ?? true} // ❌ Ngăn nhấn ESC để đóng
+      closeOnDocumentClick={statePopupGlobal.allowOutsideClick ?? false} // ❌ Ngăn click ra ngoài
+      closeOnEscape={statePopupGlobal.allowEscape ?? false} // ❌ Ngăn nhấn ESC để đóng
       onClose={handleClose}
       className={`${props.className} border-gradient`}
       overlayStyle={{

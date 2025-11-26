@@ -717,7 +717,7 @@ const ProductRow = memo(
               <div className="w-16 h-16 rounded flex items-center justify-center">
                 <Image
                   src={product.images || "/icon/default/default.png"}
-                  alt={product.name}
+                  alt={product.name || "default"}
                   width={64}
                   height={64}
                   className="object-cover rounded"
@@ -932,7 +932,7 @@ const PopupExportMaterialsTabCurrent = ({
                 <div className="flex items-center gap-2">
                   <Image
                     src={item.images || "/icon/default/default.png"}
-                    alt={item.item_name || item.name}
+                    alt={item.item_name || item.name || item.item_code}
                     width={36}
                     height={36}
                     className="object-cover rounded"

@@ -195,7 +195,7 @@ const SupportZalo = () => {
         cursor: 'grab',
         transition: 'none',
       }}
-      className={`z-[9999] relative bg-white rounded-xl p-1 shadow-lg border border-new-blue/50 hover:cursor-grab active:cursor-grabbing flex items-center gap-1 ${
+      className={`z-[999] relative bg-white rounded-xl p-1 shadow-lg border border-new-blue/50 hover:cursor-grab active:cursor-grabbing flex items-center gap-1 ${
         isOnLeft ? 'flex-row-reverse' : 'flex-row'
       }`}
     >
@@ -207,7 +207,7 @@ const SupportZalo = () => {
             text='Hỗ Trợ Nhanh'
             className='!responsive-text-base font-medium text-new-blue !font-deca px-1'
             classNameWrapper='min-w-0'
-            typingSpeed={300}
+            typingSpeed={150}
             loadingDotClassName1='bg-[#BFDBFE]'
             loadingDotClassName2='bg-[#60A5FA]'
             loadingDotClassName3='bg-[#2563EB]'

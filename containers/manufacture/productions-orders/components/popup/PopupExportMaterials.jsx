@@ -390,7 +390,7 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
   return showCompleted ? (
     <PopupOrderCompleted onClose={onClose} />
   ) : (
-    <div className={`p-6 flex flex-col gap-4 rounded-3xl w-[90vw] 2xl:w-[80vw] max-h-[90vh] bg-neutral-00 ${deca.className}`}>
+    <div className={`p-6 flex flex-col gap-4 rounded-3xl w-[90vw] xl:w-[1085px] max-h-[90vh] bg-neutral-00 ${deca.className}`}>
       <div className='flex gap-2 justify-between'>
         <div className='flex flex-col gap-1'>
           <h2 className='text-2xl font-bold capitalize'>Xuất kho sản xuất</h2>
