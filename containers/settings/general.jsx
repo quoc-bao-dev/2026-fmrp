@@ -66,6 +66,8 @@ const General = (props) => {
 
     const [numberDays, setNumberDays] = useState(+dataSetting?.number_day_warehouse ?? 0);
 
+    const [isBomSemiProduct, setIsBomSemiProduct] = useState(dataSetting?.is_bom_semi_product ?? "0");
+
     const _ServerFetching = async () => {
         try {
             const data = await apiDashboard.apiFeature();
@@ -112,6 +114,8 @@ const General = (props) => {
             } else if (dataProductSerial?.is_enable == "1") {
                 sDataProductSerial({ ...dataProductSerial, is_enable: "0" });
             }
+        } else if (code == "is_bom_semi_product") {
+            setIsBomSemiProduct((prev) => (prev == "0" ? "1" : "0"));
         }
     };
 
@@ -120,8 +124,9 @@ const General = (props) => {
         data.forEach((item, index) => {
             formData.append(`feature[${index}][code]`, item.code);
             formData.append(`feature[${index}][is_enable]`, item.is_enable);
-            formData.append(`settings[number_day_warehouse]`, numberDays);
         });
+        formData.append(`settings[number_day_warehouse]`, numberDays);
+        formData.append(`settings[is_bom_semi_product]`, isBomSemiProduct);
 
         try {
             const { isSuccess, message } = await apiGeneral.apiHanding(formData);
@@ -295,6 +300,39 @@ const General = (props) => {
                                                             kho, giảm lãng phí.
                                                         </p>
                                                     </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h2 className="text-sm uppercase w-full py-3 px-4 rounded bg-[#ECF0F4] font-medium">
+                                            Bán thành phẩm
+                                        </h2>
+                                        <div className="divide-y divide-[#ECF0F4]">
+                                            <div className="flex flex-row items-center justify-start gap-x-4 py-3 px-4">
+                                                <label
+                                                    htmlFor="is_bom_semi_product"
+                                                    className="relative inline-flex items-center cursor-pointer ml-1"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        className="sr-only peer"
+                                                        value={isBomSemiProduct}
+                                                        id="is_bom_semi_product"
+                                                        checked={
+                                                            isBomSemiProduct == "0" ? false : true
+                                                        }
+                                                        onChange={_ToggleStatus.bind(
+                                                            this,
+                                                            "is_bom_semi_product"
+                                                        )}
+                                                    />
+                                                    <div className="w-11 h-6 bg-gray-200 rounded-full dark:bg-[#D1D5DB] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all  peer-checked:bg-blue-600"></div>
+                                                </label>
+                                                <div className="flex flex-col gap-y-1">
+                                                    <p className="font-medium text-base text-typo-black-1">
+                                                        BOM bán thành phẩm có bán thành phẩm con
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
