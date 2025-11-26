@@ -195,6 +195,7 @@ const InputNumberCustom = memo(
           className
         )}
         onMouseDown={(e) => e.preventDefault()}
+        onClick={(e) => e.stopPropagation()}
       >
         <div
           onClick={(e) => handleButtonClick(e, "decrement")}
@@ -213,6 +214,7 @@ const InputNumberCustom = memo(
           onChange={handleInputChange}
           onBlur={handleBlur}
           onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
           className={twMerge(
             "w-20 text-center outline-none text-lg font-normal text-secondary-09 bg-transparent",
             isError && inputValue > 0 ? "text-red-500" : "",
