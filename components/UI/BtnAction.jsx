@@ -370,9 +370,14 @@ export const BtnAction = React.memo(props => {
     Axios('DELETE', url, {}, (err, response) => {
       if (!err) {
         if (response && response.data) {
-          let { isSuccess, message, ...res } = response.data;
+          const payload = response.data;
+          let { isSuccess, message, ...res } = payload;
           // này là do không đồng bộ cấu trúc api của be nên phải if thêp type
           const modelOther = ['category_errors', 'category_detail_errors'];
+
+          if (props.type === 'check_quality' && !isSuccess) {
+            props.onShowStatePopup && props.onShowStatePopup(payload);
+          }
 
           if (isSuccess || (modelOther.includes(props.type) && res?.result == 1)) {
             isShow('success', props.dataLang[message] || message);
