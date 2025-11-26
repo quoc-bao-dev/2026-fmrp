@@ -1,4 +1,5 @@
 import apiMaterialsPlanning from "@/Api/apiManufacture/manufacture/materialsPlanning/apiMaterialsPlanning";
+import { ButtonAddNew } from "@/components/common/button/AddNew";
 import PopupRequestUpdateVersion from "@/components/common/popup/PopupRequestUpdateVersion";
 import ButtonCancel from "@/components/UI/button/buttonCancel";
 import ButtonSubmit from "@/components/UI/button/buttonSubmit";
@@ -13,12 +14,15 @@ import Loading from "@/components/UI/loading/loading";
 import NoData from "@/components/UI/noData/nodata";
 import PopupCustom from "@/components/UI/popup";
 import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
+import Popup_dsncc from "@/containers/suppliers/supplier/components/popup/popup";
 import { useSupplierList } from "@/containers/suppliers/supplier/hooks/useSupplierList";
+import { useProvinceList } from "@/hooks/common/useAddress";
+import { useBranchList } from "@/hooks/common/useBranch";
 import useSetingServer from "@/hooks/useConfigNumber";
 import useToast from "@/hooks/useToast";
 import { formatMoment } from "@/utils/helpers/formatMoment";
 import formatNumberConfig from "@/utils/helpers/formatnumber";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash as IconDelete } from "iconsax-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -75,6 +79,11 @@ const PopupPurchaseBeta = ({
   const _ToggleModal = (e) => sOpen(e);
 
   const dataSeting = useSetingServer();
+  const queryClient = useQueryClient();
+
+  const [openSupplierPopup, sOpenSupplierPopup] = useState(false);
+  const { data: listProvince = [] } = useProvinceList({});
+  const { data: listBranch = [] } = useBranchList({});
 
   const [isState, sIsState] = useState(initialState);
 
@@ -82,13 +91,50 @@ const PopupPurchaseBeta = ({
 
   const form = useForm({ defaultValues: { ...initForm } });
 
-  const { data: listSuppiler } = useSupplierList({
+  const { data: listSuppiler, refetch: refetchSupplierList } = useSupplierList({
     "filter[branch_id]": form.watch("idBranch"),
   });
 
   const dataSupplier = form.watch("idBranch")
     ? listSuppiler?.rResult?.map((e) => ({ label: e.name, value: e.id }))
     : [];
+
+  const handleCloseSupplierPopup = () => sOpenSupplierPopup(false);
+
+  const handleSupplierCreated = async (newSupplier) => {
+    handleCloseSupplierPopup();
+    
+    // Lấy supplier ID từ response
+    const supplierId = newSupplier?.submitId || newSupplier?.data?.submitId || newSupplier?.id;
+    
+    if (supplierId) {
+      // Invalidate và refetch danh sách nhà cung cấp
+      await queryClient.invalidateQueries({ 
+        queryKey: ["api_supplier_list", { "filter[branch_id]": form.watch("idBranch") }] 
+      });
+      
+      // Đợi refetch xong và tìm nhà cung cấp vừa thêm
+      const refetchResult = await refetchSupplierList();
+      const updatedSupplierList = refetchResult?.data;
+      
+      if (updatedSupplierList?.rResult) {
+        // Tìm nhà cung cấp vừa thêm trong danh sách đã refetch
+        const foundSupplier = updatedSupplierList.rResult.find(
+          (s) => String(s.id) === String(supplierId)
+        );
+        
+        if (foundSupplier) {
+          // Tự động chọn nhà cung cấp vừa thêm
+          form.setValue(
+            "supplier",
+            { label: foundSupplier.name, value: foundSupplier.id },
+            { shouldDirty: true, shouldTouch: true }
+          );
+          return;
+        }
+      }
+    }
+  };
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -222,7 +268,8 @@ const PopupPurchaseBeta = ({
     });
   };
   return (
-    <PopupCustom
+    <>
+      <PopupCustom
       title={"Thêm mua hàng"}
       button={
         <div
@@ -367,11 +414,16 @@ const PopupPurchaseBeta = ({
             />
           </div>
           <div className="col-span-4">
-            <label className="text-[#344054] font-normal text-sm mb-1 ">
-              {dataLang?.purchase_order_table_supplier}{" "}
-              <span className="text-red-500">*</span>
-            </label>
-
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[#344054] font-normal text-sm">
+                {dataLang?.purchase_order_table_supplier}{" "}
+                <span className="text-red-500">*</span>
+              </label>
+              <ButtonAddNew
+                onClick={() => sOpenSupplierPopup(true)}
+                title={dataLang?.suppliers_supplier_add || "Thêm nhanh NCC"}
+              />
+            </div>
             <Controller
               name="supplier"
               rules={{
@@ -653,7 +705,19 @@ const PopupPurchaseBeta = ({
           </div>
         </div>
       </div>
-    </PopupCustom>
+      </PopupCustom>
+      <Popup_dsncc
+        dataLang={dataLang}
+        nameModel="suppliers"
+        listProvince={listProvince}
+        listBr={listBranch}
+        openExternal={openSupplierPopup}
+        onCloseExternal={handleCloseSupplierPopup}
+        onRefresh={handleSupplierCreated}
+        classNameBtnAdd="hidden"
+        // className="hidden"
+      />
+    </>
   );
 };
 

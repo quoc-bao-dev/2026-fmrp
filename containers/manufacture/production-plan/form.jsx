@@ -266,7 +266,7 @@ const ProductionPlanForm = (props) => {
             onSuccess: ({ isSuccess, message }) => {
                 if (isSuccess == 1) {
                     showToat("success", message);
-                    router.push(routerPproductionPlan.home);
+                    router.push("/manufacture/productions-orders");
                     return
                 }
                 showToat("error", message);

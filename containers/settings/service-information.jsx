@@ -3,9 +3,10 @@ import { Container } from '@/components/UI/common/layout';
 import NoData from '@/components/UI/noData/nodata';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import { useGetUpgradePackage } from '@/hooks/useAuth';
+import PopupBuyMoreUser from '@/components/UI/popup/PopupBuyMoreUser';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import { formatMoment } from '@/utils/helpers/formatMoment';
-import { Clock as IconClock } from 'iconsax-react';
+import { Clock as IconClock, UserAdd } from 'iconsax-react';
 import Head from 'next/head';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -108,6 +109,20 @@ const ServiceInformation = props => {
   const historyTransactions = mockData;
   const hasHistoryData = historyTransactions?.length > 0;
 
+  const handleOpenBuyMoreUser = () => {
+    dispatch({
+      type: 'statePopupGlobal',
+      payload: {
+        open: true,
+        children: (
+          <PopupBuyMoreUser
+            upgradePackageData={upgradePackageData}
+          />
+        ),
+      },
+    });
+  };
+
   useEffect(() => {
     setListPackage({
       title: auth?.trial == '1' ? 'Dùng thử' : 'Có phí',
@@ -145,62 +160,29 @@ const ServiceInformation = props => {
           <div className='col-span-7'>
             <h2 className='text-2xl text-[#52575E]'>Thông Tin Dịch Vụ FMRP</h2>
 
-            <div className='flex justify-between- items-center bg-[#ECF0F4] mt-3 px-3 py-3'>
-              <h3 className='text-[15px] uppercase w-full  rounded  flex items-center space-x-3 '>Gói đang sử dụng</h3>
-              {/* <button className='ml-auto px-5 py-2 rounded-md border border-[#d0d5dd] text-gray-900! flex space-x-2 items-center bg-white'>
-                <IconClock size='20' className='' />
-                <span className='truncate'>Xem lịch sử gói sử dụng</span>
-              </button> */}
-              {/* {auth?.trial == '1' ? (
+            <div className='flex items-center bg-[#ECF0F4] rounded-lg mt-3 pl-3 p-2'>
+              <h3 className='text-[15px] uppercase w-full rounded flex items-center space-x-3'>Gói đang sử dụng</h3>
+              {auth?.trial !== '1' && (
                 <button
-                  onClick={() => {
-                    dispatch({
-                      type: 'statePopupGlobal',
-                      payload: {
-                        open: true,
-                        children: (
-                          <PopupUpgradeProfessional
-                            upgradePackageData={upgradePackageData}
-                            onClose={() =>
-                              dispatch({
-                                type: 'statePopupUpgradeProfessional',
-                                payload: { open: false },
-                              })
-                            }
-                          />
-                        ),
-                      },
-                    });
-                  }}
-                  className='ml-3 px-5 py-2 rounded-md bg-[#003DA0] text-white flex space-x-2 items-center hover:opacity-90 transition'
+                  onClick={handleOpenBuyMoreUser}
+                  className='ml-auto px-2 py-1 rounded-md bg-white border border-[#0375F3] text-[#0375F3] hover:bg-[#EBF5FF] flex space-x-2 items-center hover:opacity-90 transition'
                 >
-                  <UpgradeIcon className='text-white' size={20} />
-                  <span className='truncate'>Nâng cấp tài khoản</span>
+                  <UserAdd size='20' className='text-[#0375F3]' />
+                  <span className='truncate'>Mua thêm user</span>
                 </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    // TODO: Implement add user functionality
-                    console.log('Add user clicked');
-                  }}
-                  className='ml-3 px-5 py-2 rounded-md bg-[#003DA0] text-white flex space-x-2 items-center hover:opacity-90 transition'
-                >
-                  <UserAdd size='20' className='text-white' />
-                  <span className='truncate'>Thêm user</span>
-                </button>
-              )} */}
+              )}
             </div>
-            <div className='grid grid-cols-6 py-3 mt-5 gap-5 border-b border-[#e7eaee]'>
-              <div className='col-span-1 uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>Hình thức</div>
-              <div className='col-start-2 uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>gói</div>
+            <div className='grid grid-cols-5 py-3 mt-5 gap-5 border-b border-[#e7eaee]'>
+              {/* <div className='col-span-1 uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>Hình thức</div> */}
+              <div className='col-start-1 uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>gói</div>
               <div className='uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>Trạng thái</div>
               <div className='uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>thành viên/team</div>
               <div className='uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'> Thời lượng gói</div>
               <div className='uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>hạn sử dụng</div>
             </div>
             <div className='divide-y divide-[#e7eaee]'>
-              <div className='grid grid-cols-6 gap-5 py-3'>
-                <div className='capitalize font-[400] text-center'>{listPackage?.title}</div>
+              <div className='grid grid-cols-5 gap-5 py-3'>
+                {/* <div className='capitalize font-[400] text-center'>{listPackage?.title}</div> */}
                 <div className='flex justify-center'>
                   <div
                     className={`font-[400] w-fit h-fit  px-3 py-0.5 border-2 

@@ -22,6 +22,7 @@
  * - Sử dụng className để thay đổi kích thước, màu sắc
  * - Icon được import thông qua @svgr/webpack, tự động chuyển thành React component
  */
+import AlertTriangleIcon from './source/alert-triangle.svg';
 import ApproximateEqualsIcon from './source/approximate-equals.svg';
 import ArrowBendUpRightIcon from './source/arrow-bend-up-right.svg';
 import ArrowCounterClockWiseIcon from './source/arrow-counter-clock-wise.svg';
@@ -89,6 +90,7 @@ import ZaloIcon from './source/zalo.svg';
 
 // Export tất cả các icon
 export {
+  AlertTriangleIcon,
   ApproximateEqualsIcon,
   ArrowBendUpRightIcon,
   ArrowCounterClockWiseIcon,

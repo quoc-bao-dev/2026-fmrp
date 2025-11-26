@@ -1,14 +1,13 @@
+import { AlertTriangleIcon } from "@/components/icons";
 import useActionRole from "@/hooks/useRole";
 import useToast from "@/hooks/useToast";
-import { Inter, Lexend_Deca } from "@next/font/google";
+import { Inter } from "@next/font/google";
 import Image from "next/image";
+import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import Popup from "reactjs-popup";
 import Zoom from "../zoomElement/zoomElement";
-const deca = Lexend_Deca({
-    subsets: ["latin"],
-    weight: ["300", "400", "500", "600", "700"],
-});
+
 const inter = Inter({ subsets: ["latin"] });
 
 const PopupConfim = (props) => {
@@ -18,7 +17,17 @@ const PopupConfim = (props) => {
     const { checkBrowser: checkAuth, checkDelete } = useActionRole(auth, props?.nameModel)
 
     const showToat = useToast()
+    const tryForceConfirm = () => {
+        if (props?.forceConfirm) {
+            props?.save?.();
+            return true;
+        }
+        return false;
+    };
     const handleConfimDelete = () => {
+        if (tryForceConfirm()) {
+            return;
+        }
         switch (props?.nameModel) {
             case "client_contact":
             //Xóa biến liên hệ KH
@@ -66,12 +75,89 @@ const PopupConfim = (props) => {
         }
     }
 
+    // Xử lý phím Enter để kích hoạt nút xác nhận
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (event.key === 'Enter' && props.isOpen) {
+                event.preventDefault();
+                if (tryForceConfirm()) {
+                    return;
+                }
+                
+                // Xác định nút xác nhận nào cần được kích hoạt
+                if (props.nameModel === "price_quote_status") {
+                    // Kích hoạt nút xác nhận đầu tiên (nút đỏ)
+                    if (role) {
+                        props.save();
+                    } else if (auth?.quotes?.is_agree == 1) {
+                        props.save();
+                    } else {
+                        showToat('error', 'Bạn không có quyền thay đổi trạng thái');
+                    }
+                } else if (props.nameModel === "sales_product_status") {
+                    // Kích hoạt nút xác nhận
+                    if (role) {
+                        props.save();
+                    } else if (auth?.orders?.is_agree == 1) {
+                        props.save();
+                    } else {
+                        showToat('error', 'Bạn không có quyền thay đổi trạng thái');
+                    }
+                } else if (['client_customers',
+                    'client_contact',
+                    'client_status',
+                    'client_group',
+                    'suppliers',
+                    'contacts_suppliers',
+                    'suppliers_groups',
+                    'material_category',
+                    'material_variation',
+                    'materials',
+                    'category_products',
+                    'price_quote',
+                    'sales_product',
+                    'product_variant',
+                    'personnel_staff',
+                    'personnel_staff_status',
+                    'department',
+                    'personnel_roles',
+                    'warehouse',
+                    'warehouse_location',
+                    'inventory',
+                    'change_item',
+                    'bom_require_stage'
+                ].includes(props.nameModel)) {
+                    // Kích hoạt handleConfimDelete
+                    handleConfimDelete();
+                } else {
+                    // Kích hoạt nút xác nhận mặc định
+                    if (role) {
+                        props.save();
+                    } else if (checkAuth) {
+                        props.save();
+                    } else {
+                        showToat('error', 'Bạn không có quyền thay đổi trạng thái');
+                    }
+                }
+            }
+        };
+
+        if (props.isOpen) {
+            window.addEventListener('keydown', handleKeyDown);
+        }
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [props.isOpen, props.nameModel, role, auth, checkAuth, checkDelete]);
+
     return (
         <Popup
             open={props.isOpen}
             closeOnDocumentClick={false}
             onClose={props.onClose}
             className={`${props.className} popup-edit`}
+            overlayStyle={{ zIndex: 1100 }}
         >
             <div
                 className={`min-w-[400px] max-w-[400px] ${props.nameModel == "price_quote_status" && "min-w-[500px]"
@@ -81,13 +167,7 @@ const PopupConfim = (props) => {
                 <div className={`${inter.className} bg-[#ffffff] p-4 shadow-xl rounded-xl flex flex-col gap-3`}>
                     <div className="relative inline-block">
                         {props.type == "warning" ? (
-                            <Image
-                                src="/popup/alert-triangle.png"
-                                alt="tedd"
-                                width={24}
-                                height={24}
-                                className="object-cover"
-                            />
+                            <AlertTriangleIcon className="text-yellow-500 size-6" />
                         ) : (
                             <Image
                                 alt="teddd"
@@ -118,6 +198,9 @@ const PopupConfim = (props) => {
                                 <Zoom className="w-1/2">
                                     <button
                                         onClick={() => {
+                                            if (tryForceConfirm()) {
+                                                return;
+                                            }
                                             if (role) {
                                                 return props.save()
                                             }
@@ -135,6 +218,9 @@ const PopupConfim = (props) => {
                                 <Zoom className="w-1/2">
                                     <button
                                         onClick={() => {
+                                            if (tryForceConfirm()) {
+                                                return;
+                                            }
                                             if (role) {
                                                 return props.handleNoconfim()
                                             }
@@ -164,6 +250,9 @@ const PopupConfim = (props) => {
                                 <Zoom className="w-1/2">
                                     <button
                                         onClick={() => {
+                                            if (tryForceConfirm()) {
+                                                return;
+                                            }
                                             if (role) {
                                                 return props.save()
                                             } else if (auth?.orders?.is_agree == 1) {
@@ -265,6 +354,9 @@ const PopupConfim = (props) => {
                                     <Zoom className="w-1/2">
                                         <button
                                             onClick={() => {
+                                            if (tryForceConfirm()) {
+                                                return;
+                                            }
                                                 if (role) {
                                                     props.save()
                                                 } else if (checkAuth) {
