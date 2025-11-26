@@ -665,7 +665,7 @@ const PopupExportMaterialsTabReexport = ({ poId }) => {
                           <CheckboxDefault checked={isSelected} className='!space-x-0' onChange={checked => handleSelectProduct(productId, checked)} />
                         </div>
                         <div className='w-12 h-12 rounded flex items-center justify-center flex-shrink-0'>
-                          <Image src={product.images || '/icon/default/default.png'} alt={product.item_name} width={48} height={48} className='object-cover rounded' />
+                          <Image src={product.images || '/icon/default/default.png'} alt={product.item_name || "default"} width={48} height={48} className='object-cover rounded' />
                         </div>
                         <div className='flex-1 min-w-0'>
                           <h4 className='text-sm font-semibold text-[#141522] truncate'>{product.item_name}</h4>
