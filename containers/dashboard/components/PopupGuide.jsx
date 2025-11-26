@@ -6,7 +6,7 @@ import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import PopupCustom from '@/components/UI/popup';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PiArrowRightBold } from 'react-icons/pi';
 
 /**
@@ -125,13 +125,30 @@ const PopupGuide = ({ open, onClose, selectedItem, stepsData, allStepsData, onIt
   useEffect(() => {
     if (selectedItem) {
       setCurrentItem(selectedItem);
-      // Tự động mở rộng step chứa selectedItem
-      const parentStep = allStepsData?.find(step => step.children?.some(child => child.id === selectedItem.id));
-      if (parentStep) {
-        setExpandedSteps(prev => new Set([...prev, parentStep.id]));
-      }
     }
-  }, [selectedItem, allStepsData]);
+  }, [selectedItem]);
+
+  const prevOpenRef = useRef(false);
+
+  useEffect(() => {
+    const isOpening = open && !prevOpenRef.current;
+    prevOpenRef.current = open;
+
+    if (!isOpening) return;
+
+    if (!selectedItem) {
+      setExpandedSteps(new Set());
+      return;
+    }
+
+    // Khi popup vừa mở, chỉ giữ group chứa selectedItem
+    const parentStep = allStepsData?.find(step => step.children?.some(child => child.id === selectedItem.id));
+    if (parentStep) {
+      setExpandedSteps(new Set([parentStep.id]));
+    } else {
+      setExpandedSteps(new Set());
+    }
+  }, [open, selectedItem, allStepsData]);
 
   if (!currentItem) return null;
 
@@ -175,7 +192,7 @@ const PopupGuide = ({ open, onClose, selectedItem, stepsData, allStepsData, onIt
       closeOnDocumentClick={true}
       lockScroll={true}
     >
-      <div className='flex gap-2 h-[585px] max-w-6xl w-[830px] mt-2 pt-3 border-t border-gray-200'>
+      <div className='flex gap-2 h-[550px] max-w-6xl w-[830px] mt-2 pt-3 border-t border-gray-200'>
         <Customscrollbar className='w-[260px] pr-2.5'>
           <div className='space-y-3'>
             {stepsData?.map((step, index) => {
@@ -243,39 +260,39 @@ const PopupGuide = ({ open, onClose, selectedItem, stepsData, allStepsData, onIt
 
         <div className='flex-1 flex flex-col overflow-hidden gap-2 min-w-0 bg-gray-50 p-3 pr-0 rounded-lg'>
           <h2 className='responsive-text-xl font-semibold text-[#0274F2] capitalize'>{currentItem?.name}</h2>
-          <Customscrollbar className='flex-1 min-h-0 w-full pr-2'>
+          <Customscrollbar className='flex-1 min-h-0 w-full pr-2 relative'>
             <div className='prose prose-sm max-w-none text-gray-700 leading-relaxed'>
               <CustomContent htmlContent={currentItem?.content} />
             </div>
+            {currentItem?.link_next && (
+              <div className='bg-gray-50 pt-3 flex justify-center sticky bottom-0'>
+                <ButtonAnimationNew
+                  title='Bắt đầu ngay'
+                  icon={<PiArrowRightBold className='3xl:size-5 size-4' />}
+                  reverse
+                  className='flex items-center justify-center gap-2 py-3 px-4 2xl:text-lg text-base text-white font-medium w-fit rounded-xl mt-auto z-50'
+                  style={{
+                    background: 'linear-gradient(180deg, #1FC583 5.11%, #1F9285 95.28%)',
+                  }}
+                  whileHover={{ scale: 1, opacity: 0.9 }}
+                  onClick={() => {
+                    if (!currentItem?.link_next) return;
+
+                    const link = currentItem.link_next;
+
+                    // Nếu là external link (http/https) thì điều hướng trong cùng tab
+                    if (link.startsWith('http://') || link.startsWith('https://')) {
+                      window.location.href = link;
+                    } else {
+                      // Internal link - sử dụng Next.js router
+                      router.push(link);
+                      onClose(); // Đóng popup sau khi điều hướng
+                    }
+                  }}
+                />
+              </div>
+            )}
           </Customscrollbar>
-          {currentItem?.link_next && (
-            <div className='mt-auto flex justify-center'>
-              <ButtonAnimationNew
-                title='Bắt đầu ngay'
-                icon={<PiArrowRightBold className='3xl:size-5 size-4' />}
-                reverse
-                className='flex items-center justify-center gap-2 py-3 px-4 2xl:text-lg text-base text-white font-medium w-fit rounded-xl mt-auto z-50'
-                style={{
-                  background: 'linear-gradient(180deg, #1FC583 5.11%, #1F9285 95.28%)',
-                }}
-                whileHover={{ scale: 1, opacity: 0.9 }}
-                onClick={() => {
-                  if (!currentItem?.link_next) return;
-
-                  const link = currentItem.link_next;
-
-                  // Nếu là external link (http/https) thì điều hướng trong cùng tab
-                  if (link.startsWith('http://') || link.startsWith('https://')) {
-                    window.location.href = link;
-                  } else {
-                    // Internal link - sử dụng Next.js router
-                    router.push(link);
-                    onClose(); // Đóng popup sau khi điều hướng
-                  }
-                }}
-              />
-            </div>
-          )}
         </div>
       </div>
     </PopupCustom>
