@@ -124,10 +124,10 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
       refetchMainTable();
 
       if (r?.data?.status_manufacture == '2') {
-        // Đóng popup khi đã hoàn thành công đoạn cuối (status_manufacture == '2')
+        // Hiển thị popup hoàn thành khi đã xong công đoạn cuối
         isToast('success', 'Lệnh sản xuất đã được hoàn thành');
-        queryState({ open: false });
-        setIsOrderCompleted(false);
+        setIsOrderCompleted(true);
+        queryState(prev => ({ ...prev, open: true }));
       } else {
         queryState({
           open: true,
@@ -302,6 +302,16 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
     }
   };
 
+  const getItemKey = (item, type) => {
+    if (type === 'product') {
+      const poi = item?.poi_id ?? 'poi';
+      const bom = item?.bom_id ?? 'bom';
+      const pois = item?.pois_id ?? 'pois';
+      return `${poi}-${bom}-${pois}`;
+    }
+    return item?._id ?? item?.id ?? item?.item_id ?? 'default';
+  };
+
   const handleRemove = (type, row) => {
     if (type === 'bom' && row?.type_bom === 'product_before') {
       isToast('error', 'Đây là thành phẩm công đoạn bước trước, không thể xóa');
@@ -311,7 +321,8 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
     const stateKey = type === 'product' ? 'dataTableProducts' : 'dataTableBom';
     const stateData = type === 'product' ? 'items' : 'boms';
 
-    const newData = isState[stateKey]?.data[stateData]?.filter(item => (item?.poi_id || item?._id) !== (row?.poi_id || row?._id));
+    const rowKey = getItemKey(row, type);
+    const newData = isState[stateKey]?.data[stateData]?.filter(item => getItemKey(item, type) !== rowKey);
 
     queryState({
       [stateKey]: {
@@ -384,18 +395,17 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
   };
 
   useEffect(() => {
-    if (isState.open) {
-      if (data?.po?.status_manufacture === '2') {
-        // Không mở popup khi status_manufacture == '2'
-        queryState({ open: false });
-        isToast('success', 'Lệnh SX đã được hoàn thành');
-      } else {
-        setIsOrderCompleted(false);
-        const s = getPriorityItem(data?.stage_semi_products || [], data?.stage_products || []);
-        if (s) {
-          handleSelectStep(s?.type, s?.object, 'auto');
-        }
-      }
+    if (!isState.open) return;
+
+    if (data?.po?.status_manufacture === '2') {
+      setIsOrderCompleted(true);
+      return;
+    }
+
+    setIsOrderCompleted(false);
+    const s = getPriorityItem(data?.stage_semi_products || [], data?.stage_products || []);
+    if (s) {
+      handleSelectStep(s?.type, s?.object, 'auto');
     }
   }, [isState.open, data]);
 
