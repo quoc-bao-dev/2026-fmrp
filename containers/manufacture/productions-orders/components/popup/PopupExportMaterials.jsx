@@ -417,14 +417,14 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
           </motion.div>
         </div>
       </div>
-      <TabSwitcherWithSlidingBackground
+      {/* <TabSwitcherWithSlidingBackground
         tabs={tabList}
         activeTab={activeTab}
         onChange={setActiveTab}
         className='!p-1'
         buttonClassName='!py-1.5 !px-3 !responsive-text-sm'
         buttonActiveClassName='!top-1 !bottom-1'
-      />
+      /> */}
 
       {activeTab?.id === 'current' && (
         <PopupExportMaterialsTabCurrent
