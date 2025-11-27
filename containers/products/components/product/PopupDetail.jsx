@@ -363,7 +363,18 @@ const Popup_Detail = React.memo((props) => {
                                 ) : (
                                     <>
                                         {dataBom?.length > 0 ? (
-                                            <div className="space-y-0.5 min-h-[384px]">
+                                            <div className="min-h-[384px]">
+                                                <div className="flex items-center justify-end space-x-3 -mt-2">
+                                                    <Popup_Bom
+                                                        dataLang={props.dataLang}
+                                                        id={props.id}
+                                                        name={list?.name}
+                                                        code={list?.code}
+                                                        type="edit"
+                                                        onRefresh={props.onRefresh}
+                                                        onRefreshBom={refetchBom}
+                                                    />
+                                                </div>
                                                 <div className="flex items-center justify-start pb-3 space-x-3 overflow-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
                                                     {dataBom?.map((e) => (
                                                         <button
@@ -465,17 +476,6 @@ const Popup_Detail = React.memo((props) => {
                                                         ))}
                                                     </div>
                                                 </Customscrollbar>
-                                                <div className="flex items-center justify-end space-x-3">
-                                                    <Popup_Bom
-                                                        dataLang={props.dataLang}
-                                                        id={props.id}
-                                                        name={list?.name}
-                                                        code={list?.code}
-                                                        type="edit"
-                                                        onRefresh={props.onRefresh}
-                                                        onRefreshBom={refetchBom}
-                                                    />
-                                                </div>
                                             </div>
                                         ) :
                                             <NoData />
