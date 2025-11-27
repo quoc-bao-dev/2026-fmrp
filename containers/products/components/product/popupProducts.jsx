@@ -1292,8 +1292,8 @@ const Popup_Products = React.memo(props => {
                                   ))}
                                 </div>
                               ) : (
-                                <div className='grid grid-cols-5 col-span-5'>
-                                  <div className='col-span-2 truncate'></div>
+                                <div className='grid items-center grid-cols-10 col-span-10 gap-x-3 gap-y-1'>
+                                  <div className='col-span-4 truncate'></div>
                                   <InPutMoneyFormat
                                     isAllowed={values => {
                                       const { floatValue } = values;
@@ -1306,9 +1306,9 @@ const Popup_Products = React.memo(props => {
                                     value={e?.price}
                                     onValueChange={_HandleChangeVariant.bind(this, e.id, 'price')}
                                     placeholder='Giá'
-                                    className={`col-span-2 focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal p-2 border outline-none`}
+                                    className={`col-span-4 focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal p-2 border outline-none`}
                                   />
-                                  <div className='flex justify-center col-span-1'>
+                                  <div className='flex justify-center col-span-2'>
                                     <button
                                       onClick={() =>
                                         handleQueryId({
@@ -1316,10 +1316,10 @@ const Popup_Products = React.memo(props => {
                                           status: true,
                                         })
                                       }
-                                      className='p-1.5 text-red-500 hover:scale-110 transition hover:text-red-600'
-                                    >
-                                      <IconDelete size='22' />
-                                    </button>
+                                      className='group hover:border-red-01 hover:bg-red-02 rounded-lg h-fit w-fit p-1 border border-transparent transition-all ease-in-out cursor-pointer'
+                                      >
+                                        <TrashIcon className='text-red-500 size-5' />
+                                      </button>
                                   </div>
                                 </div>
                               )}
