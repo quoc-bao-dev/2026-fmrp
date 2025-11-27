@@ -6,18 +6,16 @@ import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import Loading from "@/components/UI/loading/loading";
 import useSetingServer from "@/hooks/useConfigNumber";
 import useToast from "@/hooks/useToast";
-import {
-  default as formatNumber
-} from "@/utils/helpers/formatnumber";
+import { default as formatNumber } from "@/utils/helpers/formatnumber";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa";
 import { FiPlus } from "react-icons/fi";
 import { IoIosAlert } from "react-icons/io";
-import { MdArrowDropDown } from "react-icons/md";
 import { Tooltip } from "react-tippy";
 import { twMerge } from "tailwind-merge";
+import { CustomDropdownRadioGroup, convertWarehousesToDropdownData } from "./shared/WarehouseDropdown";
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
@@ -25,160 +23,8 @@ const formatDate = (dateString) => {
   return `${day}/${month}/${year}`;
 };
 
-const convertWarehousesToDropdownData = (list_warehouses) => {
-  const groups = {};
-  list_warehouses.forEach((w) => {
-    if (!groups[w.name_warehouse]) {
-      groups[w.name_warehouse] = [];
-    }
-    w.items.forEach((item) => {
-      groups[w.name_warehouse].push({
-        name_location: item.name_location,
-        lot: item.lot,
-        expiration_date: item.expiration_date,
-        total_quantity: item.total_quantity,
-        id_warehouse_custom: item.id_warehouse_custom,
-      });
-    });
-  });
-  return Object.entries(groups).map(([label, options]) => ({
-    label,
-    options,
-  }));
-};
-
 const createUniqueRowId = () =>
   `lot-row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-const CustomDropdownRadioGroup = ({
-  data,
-  value,
-  onChange,
-  placeholder = "Chọn kho hàng",
-  className = "",
-  disabled = false,
-}) => {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (ref.current && !ref.current.contains(event.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  let selectedOption, selectedLabelGroup;
-  data.forEach((group) => {
-    const found = group.options.find(
-      (option) => option.id_warehouse_custom === value
-    );
-    if (found) {
-      selectedOption = found;
-      selectedLabelGroup = group;
-    }
-  });
-
-  const displayText = selectedOption
-    ? `${selectedLabelGroup.label} - ${selectedOption.name_location}`
-    : placeholder;
-
-  return (
-    <div className={`relative ${className}`} ref={ref}>
-      <button
-        onClick={() => !disabled && setOpen((prev) => !prev)}
-        className={twMerge(
-          "flex justify-between items-center w-[300px] text-[#3A3E4C] font-medium border border-[#D0D5DD] px-3 py-2 text-sm bg-white rounded-lg",
-          disabled && "opacity-50 cursor-not-allowed pointer-events-none"
-        )}
-      >
-        <span className="truncate">
-          {value ? (
-            displayText
-          ) : (
-            <span className="text-[#3A3E4C]">{placeholder}</span>
-          )}
-        </span>
-        <MdArrowDropDown className="text-[#9295A4]" size={25} />
-      </button>
-
-      {open && !disabled && (
-        <div className="absolute top-full mt-1 left-0 min-w-max w-full rounded-xl bg-[#FFFFFF] shadow-sm border z-50 p-3">
-          {data && data.length > 0 ? (
-            <Customscrollbar className="max-h-80 ">
-              <div className="flex gap-y-2 flex-col">
-                {data.map((group, groupIndex) => (
-                  <div
-                    key={groupIndex}
-                    className="flex-shrink-0 w-full"
-                  >
-                    <p className="font-semibold text-[#003DA0] uppercase text-xs ">
-                      {group.label}
-                    </p>
-                    <div>
-                      {group.options.map((option) => {
-                        return (
-                          <div
-                            key={option.id_warehouse_custom}
-                            className="flex items-center gap-2 py-2 rounded cursor-pointer hover:bg-blue-50 transition-colors px-2"
-                            onClick={() => {
-                              onChange(option);
-                              setOpen(false);
-                            }}
-                          >
-                            <div
-                              className={twMerge(
-                                "w-4 h-4 rounded-full border-2  flex items-center justify-center flex-shrink-0",
-                                value === option.id_warehouse_custom
-                                  ? "border-[#0375F3]"
-                                  : "border-[#D0D5DD]"
-                              )}
-                            >
-                              {value === option.id_warehouse_custom && (
-                                <div className="w-2 h-2 rounded-full bg-[#0375F3]" />
-                              )}
-                            </div>
-                            <div className="flex flex-col gap-2 w-full">
-                              <span className="text-[#141522] text-xs font-normal">
-                                {option.name_location}
-                              </span>
-                              <div className="flex gap-2 justify-between">
-                                <div className="flex flex-col gap-1">
-                                  <span className="text-[#3276FA] text-xs font-normal">
-                                    LOT: {option.lot}
-                                  </span>
-                                  <span className="text-[#3276FA] text-xs font-normal">
-                                    Date: {formatDate(option.expiration_date)}
-                                  </span>
-                                </div>
-                                <span className="text-neutral-03 text-xs font-normal">
-                                  Tồn:{" "}
-                                  {formatNumber(Number(option.total_quantity))}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Customscrollbar>
-          ) : (
-            <div className="py-4 px-2 text-center text-sm text-[#667085]">
-              Không có dữ liệu
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
 const InputNumberCustom = memo(
   ({
     state = 0,
@@ -540,15 +386,20 @@ const SubProductRow = memo(
                         </div>
                       )}
                       <CustomDropdownRadioGroup
-                        data={convertWarehousesToDropdownData(
-                          listWarehouses || []
-                        )}
+                        data={convertWarehousesToDropdownData(listWarehouses || [])}
                         value={selectedWarehouse}
                         onChange={(option) => {
                           if (isSemiProduct) return;
                           handleWarehouseChange(option);
                         }}
                         disabled={isSemiProduct}
+                        dropdownHeight={250}
+                        offset={4}
+                        maxHeightClass="max-h-52"
+                        buttonClassName="flex justify-between items-center w-[300px] text-[#3A3E4C] font-medium border border-[#D0D5DD] px-3 py-2 text-sm bg-white rounded-lg"
+                        contentClassName="fixed rounded-xl bg-[#FFFFFF] shadow-lg border z-[9999] p-3"
+                        formatDate={formatDate}
+                        formatNumber={(value) => formatNumber(Number(value))}
                       />
                     </div>
                   </td>

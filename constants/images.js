@@ -4,6 +4,7 @@ export const IMAGES = {
   // c
   // d
   // e
+  emptyProductOrder: "/background/system/emptyProductOrder.png",
   // f
   rocketBoy: "/dashboard/rocket-boy.png",
   rocketBoyGif: "/dashboard/rocket-boy.gif",

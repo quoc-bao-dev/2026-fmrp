@@ -186,5 +186,17 @@ const apiProductionsOrders = {
         const response = await axiosCustom('POST', `/api_web/Api_Suggest_Exporting/handlingExportTotalPO`, data);
         return response.data;
     },
+
+    // Nguyên vật liệu xuất thêm
+    async apiListSuggestPo(data) {
+        const response = await axiosCustom('POST', `/api_web/suggest-exporting/list-sug-po`, data);
+        return response.data;
+    },
+    
+    // Lưu nguyên vật liệu xuất thêm
+    async apiSaveSuggestExporting(data) {
+        const response = await axiosCustom('POST', `/api_web/suggest-exporting/save`, data);
+        return response.data;
+    },
 }
 export default apiProductionsOrders

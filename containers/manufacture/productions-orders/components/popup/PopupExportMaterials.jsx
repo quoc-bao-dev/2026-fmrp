@@ -2,12 +2,12 @@ import CheckIcon from '@/components/icons/common/CheckIcon';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import useSetingServer from '@/hooks/useConfigNumber';
 import useToast from '@/hooks/useToast';
-import { useHandlingExportTotalPO, useListExportProductionOrder } from '@/managers/api/productions-order/useExportProduct';
+import { useHandlingExportTotalPO, useListExportProductionOrder, useSaveSuggestExporting } from '@/managers/api/productions-order/useExportProduct';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
 import { Lexend_Deca } from '@next/font/google';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PopupExportMaterialsTabCurrent from './PopupExportMaterialsTabCurrent';
 import PopupExportMaterialsTabReexport from './PopupExportMaterialsTabReexport';
 import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
@@ -43,12 +43,15 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
   const dataSeting = useSetingServer();
   const showToast = useToast();
   const { onSubmit, isLoading: isLoadingSubmit } = useHandlingExportTotalPO();
+  const { onSubmit: onSaveReexport, isLoading: isSavingReexport } = useSaveSuggestExporting();
   const [exportSuccess, setExportSuccess] = useState(0);
   const [isRenderErrorNVL, setIsRenderErrorNVL] = useState(false);
   const [errorNVLData, setErrorNVLData] = useState({ items: [] });
   const [showAutoTooltip, setShowAutoTooltip] = useState(false);
   const [autoTooltipText, setAutoTooltipText] = useState('');
   const [activeTab, setActiveTab] = useState({ id: 'current', name: 'Nguyên liệu cần xuất' });
+  const reexportTabRef = useRef(null);
+  const [reexportSelectedCount, setReexportSelectedCount] = useState(0);
 
   // Preload hình ảnh exportMaterials.webp khi component mount
   useEffect(() => {
@@ -262,6 +265,27 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
 
   const selectedCount = useMemo(() => products.filter(product => product.selected).length, [products]);
 
+  const handleConfirmReexport = useCallback(async () => {
+    if (!reexportTabRef.current || typeof reexportTabRef.current.buildSubmitPayload !== 'function') {
+      showToast('error', 'Không thể lấy dữ liệu xuất thêm');
+      return;
+    }
+    const payload = reexportTabRef.current.buildSubmitPayload();
+    console.log(payload)
+    if (!payload) return;
+    try {
+      const response = await onSaveReexport(payload);
+      if (response?.isSuccess === 1) {
+        showToast('success', response?.message || 'Xuất thêm nguyên liệu thành công');
+        reexportTabRef.current?.resetSelections?.();
+      } else {
+        showToast('error', response?.message || 'Xuất thêm nguyên liệu thất bại');
+      }
+    } catch (error) {
+      showToast('error', error?.message || 'Có lỗi xảy ra khi xuất thêm nguyên liệu');
+    }
+  }, [onSaveReexport, showToast]);
+
   const tabList = useMemo(
     () => [
       { id: 'current', name: 'Nguyên liệu cần xuất' },
@@ -390,22 +414,35 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
   return showCompleted ? (
     <PopupOrderCompleted onClose={onClose} />
   ) : (
-    <div className={`p-6 flex flex-col gap-4 rounded-3xl w-[90vw] xl:w-[1085px] max-h-[90vh] bg-neutral-00 ${deca.className}`}>
+    <div className={`p-6 flex flex-col gap-4 rounded-3xl w-[90vw] max-h-[90vh] bg-neutral-00 ${deca.className} ${activeTab?.id === 'current' ? 'xl:w-[1085px]' : '2xl:w-[1280px]'}`}>
       <div className='flex gap-2 justify-between'>
         <div className='flex flex-col gap-1'>
           <h2 className='text-2xl font-bold capitalize'>Xuất kho sản xuất</h2>
           <p className='text-base text-typo-blue-4'>{code}</p>
         </div>
-        <div className='flex gap-8 items-center'>
-          <button onClick={handleConfirm} disabled={isLoadingSubmit} className='flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-background-blue-2'>
-            {isLoadingSubmit ? (
-              'Đang xử lý...'
-            ) : (
-              <>
-                <CheckIcon className='size-4' /> Xác nhận {selectedCount > 0 && `(${selectedCount})`}
-              </>
-            )}
-          </button>
+        <div className='flex gap-3 items-center'>
+          {activeTab?.id === 'current' && (
+            <button onClick={handleConfirm} disabled={isLoadingSubmit} className='flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-background-blue-2'>
+              {isLoadingSubmit ? (
+                'Đang xử lý...'
+              ) : (
+                <>
+                  <CheckIcon className='size-4' /> Xác nhận {selectedCount > 0 && `(${selectedCount})`}
+                </>
+              )}
+            </button>
+          )}
+          {activeTab?.id === 'reexport' && (
+            <button
+              onClick={handleConfirmReexport}
+              disabled={isSavingReexport}
+              className={`flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white ${
+                isSavingReexport ? 'bg-green-400 cursor-not-allowed opacity-70' : 'bg-green-600 hover:bg-green-700'
+              }`}
+            >
+              <CheckIcon className='size-4' /> {isSavingReexport ? 'Đang xử lý...' : `Xuất thêm${reexportSelectedCount > 0 ? ` (${reexportSelectedCount})` : ''}`}
+            </button>
+          )}
           <motion.div
             whileHover={{ scale: 1.2, rotate: 90 }}
             whileTap={{ scale: 0.9, rotate: -90 }}
@@ -417,14 +454,14 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
           </motion.div>
         </div>
       </div>
-      {/* <TabSwitcherWithSlidingBackground
+      <TabSwitcherWithSlidingBackground
         tabs={tabList}
         activeTab={activeTab}
         onChange={setActiveTab}
-        className='!p-1'
+        className='!p-1 flex-shrink-0'
         buttonClassName='!py-1.5 !px-3 !responsive-text-sm'
         buttonActiveClassName='!top-1 !bottom-1'
-      /> */}
+      />
 
       {activeTab?.id === 'current' && (
         <PopupExportMaterialsTabCurrent
@@ -452,7 +489,9 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
 
       {activeTab?.id === 'reexport' && (
         <PopupExportMaterialsTabReexport
+          ref={reexportTabRef}
           poId={data?.poi_id || id}
+          onSelectionChange={setReexportSelectedCount}
         />
       )}
     </div>

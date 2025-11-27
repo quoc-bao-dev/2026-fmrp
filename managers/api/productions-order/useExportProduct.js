@@ -229,3 +229,38 @@ export const useHandlingExportTotalPO = () => {
     data: mutation.data,
   };
 };
+
+export const useSaveSuggestExporting = () => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async data => {
+      const response = await apiProductionsOrders.apiSaveSuggestExporting({data: data});
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["api_list_suggest_po"], exact: false });
+    },
+    onError: error => {
+      console.error("Lỗi khi lưu xuất thêm nguyên liệu:", error);
+      throw error;
+    },
+  });
+
+  const onSubmit = async data => {
+    try {
+      return await mutation.mutateAsync(data);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  return {
+    onSubmit,
+    isLoading: mutation.isPending,
+    isSuccess: mutation.isSuccess,
+    isError: mutation.isError,
+    error: mutation.error,
+    data: mutation.data,
+  };
+};
