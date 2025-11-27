@@ -76,6 +76,7 @@ const PopupKeepStock = ({
     const dataSeting = useSetingServer();
 
     const [isState, sIsState] = useState(initialState);
+    const [productionSelectKey, setProductionSelectKey] = useState(0);
 
     const form = useForm({ defaultValues: { ...initForm } });
 
@@ -235,7 +236,7 @@ const PopupKeepStock = ({
                 // Nếu chưa chọn radio level_bom thì mặc định luôn là 0
                 const autoLevel =
                     findValue.idProductionOrder?.selectedLevel?.id ?? 0;
-                formData.append("level_id", autoLevel);
+                formData.append("level", autoLevel);
             }
 
             const { isSuccess, message, data } =
@@ -550,6 +551,7 @@ const PopupKeepStock = ({
                                     return (
                                         <div className="my-4 relative">
                                             <SelectComponent
+                                                key={productionSelectKey}
                                                 className={`${fieldState.error
                                                     ? "border-red-500"
                                                     : "border-transparent"
@@ -660,6 +662,7 @@ const PopupKeepStock = ({
                                                                                     ...option,
                                                                                     selectedLevel: level,
                                                                                 });
+                                                                                setProductionSelectKey((prev) => prev + 1);
                                                                             }}
                                                                         >
                                                                             {levelIndex > 0 && (
@@ -710,6 +713,7 @@ const PopupKeepStock = ({
                                                 onChange={(event) => {
                                                     if (!event) {
                                                         field.onChange(null);
+                                                        setProductionSelectKey((prev) => prev + 1);
                                                         return;
                                                     }
 
@@ -723,6 +727,7 @@ const PopupKeepStock = ({
                                                     } else {
                                                         field.onChange(event);
                                                     }
+                                                    setProductionSelectKey((prev) => prev + 1);
                                                 }}
                                                 styles={{
                                                     menu: (provided, state) => ({

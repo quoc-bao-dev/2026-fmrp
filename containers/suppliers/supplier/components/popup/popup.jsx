@@ -3,7 +3,8 @@ import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import PopupCustom from '@/components/UI/popup';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
 import { CONFIRM_DELETION, TITLE_DELETE } from '@/constants/delete/deleteTable';
-import { useDistrictList } from '@/hooks/common/useAddress';
+import { useDistrictList, useProvinceList, useWardList } from '@/hooks/common/useAddress';
+import { useBranchList } from '@/hooks/common/useBranch';
 import useActionRole from '@/hooks/useRole';
 import useToast from '@/hooks/useToast';
 import { useToggle } from '@/hooks/useToggle';
@@ -16,7 +17,6 @@ import { useSupplierGroupSupplier } from '../../hooks/useSupplierGroupSupplier';
 import ButtonAdd from '../button/buttonAdd';
 import FormContact from '../form/formContact';
 import FormInfo from '../form/formInfo';
-import { useWardList } from '@/hooks/common/useAddress';
 import EditIcon from '@/components/icons/common/EditIcon';
 import { PlusIcon } from '@/components/icons';
 
@@ -69,6 +69,12 @@ const Popup_dsncc = props => {
   const isShow = useToast();
 
   useEffect(() => {
+    if (props.openExternal !== undefined) {
+      queryState({ open: props.openExternal });
+    }
+  }, [props.openExternal]);
+
+  useEffect(() => {
     if (isState.open) {
       queryState({
         dataBr: props?.listBr || [],
@@ -77,7 +83,7 @@ const Popup_dsncc = props => {
     } else {
       sIsState(initalState);
     }
-  }, [isState.open]);
+  }, [isState.open, props?.listBr, props?.listProvince]);
 
   useEffect(() => {
     if (!isState.open || props.id) return;
@@ -182,41 +188,42 @@ const Popup_dsncc = props => {
 
   //post db
   const _ServerSending = () => {
-    let data = new FormData();
-    data.append('name', isState.name ? isState.name : '');
-    data.append('code', isState.code ? isState.code : '');
-    data.append('tax_code', isState.tax_code ? isState.tax_code : '');
-    data.append('representative', isState.representative ? isState.representative : '');
-    data.append('phone_number', isState.phone_number ? isState.phone_number : '');
-    data.append('address', isState.address ? isState.address : '');
-    data.append('date_incorporation', isState.date_incorporation ? isState.date_incorporation : '');
-    data.append('note', isState.note ? isState.note : '');
-    data.append('email', isState.email ? isState.email : '');
-    data.append('debt_begin', isState.debt_begin ? isState.debt_begin : '');
-    data.append('city', isState.valueCt?.value ? isState.valueCt?.value : '');
-    data.append('district', isState.valueDitrict?.value ? isState.valueDitrict?.value : '');
-    data.append('ward', isState.valueWa?.value ? isState.valueWa?.value : '');
+    let formData = new FormData();
+    formData.append('name', isState.name ? isState.name : '');
+    formData.append('code', isState.code ? isState.code : '');
+    formData.append('tax_code', isState.tax_code ? isState.tax_code : '');
+    formData.append('representative', isState.representative ? isState.representative : '');
+    formData.append('phone_number', isState.phone_number ? isState.phone_number : '');
+    formData.append('address', isState.address ? isState.address : '');
+    formData.append('date_incorporation', isState.date_incorporation ? isState.date_incorporation : '');
+    formData.append('note', isState.note ? isState.note : '');
+    formData.append('email', isState.email ? isState.email : '');
+    formData.append('debt_begin', isState.debt_begin ? isState.debt_begin : '');
+    formData.append('city', isState.valueCt?.value ? isState.valueCt?.value : '');
+    formData.append('district', isState.valueDitrict?.value ? isState.valueDitrict?.value : '');
+    formData.append('ward', isState.valueWa?.value ? isState.valueWa?.value : '');
     isState.valueBr?.forEach((e, index) => {
-      data.append(`branch_id[${index}]`, e?.value ? e?.value : '');
+      formData.append(`branch_id[${index}]`, e?.value ? e?.value : '');
     });
     isState.valueGr?.forEach((e, index) => {
-      data.append(`supplier_group_id[${index}]`, e?.value ? e?.value : '');
+      formData.append(`supplier_group_id[${index}]`, e?.value ? e?.value : '');
     });
 
     isState.option?.forEach((e, index) => {
-      data.append(`contact[${index}][id]`, e?.idBe ? e?.idBe : '');
-      data.append(`contact[${index}][full_name]`, e?.full_name);
-      data.append(`contact[${index}][email]`, e?.email);
-      data.append(`contact[${index}][position]`, e?.position);
-      data.append(`contact[${index}][address]`, e?.address);
-      data.append(`contact[${index}][phone_number]`, e?.phone_number);
+      formData.append(`contact[${index}][id]`, e?.idBe ? e?.idBe : '');
+      formData.append(`contact[${index}][full_name]`, e?.full_name);
+      formData.append(`contact[${index}][email]`, e?.email);
+      formData.append(`contact[${index}][position]`, e?.position);
+      formData.append(`contact[${index}][address]`, e?.address);
+      formData.append(`contact[${index}][phone_number]`, e?.phone_number);
     });
 
-    handingSupplier.mutate(data, {
-      onSuccess: ({ isSuccess, message }) => {
+    handingSupplier.mutate(formData, {
+      onSuccess: (response) => {
+        const { isSuccess, message } = response;
         if (isSuccess) {
           isShow('success', props?.dataLang[message] || message);
-          props.onRefresh && props.onRefresh();
+          props.onRefresh && props.onRefresh(response);
           props.onRefreshGroup && props.onRefreshGroup();
           sIsState(initalState);
         } else {
@@ -300,14 +307,17 @@ const Popup_dsncc = props => {
             </div>
           ) : (
             // `${props.dataLang?.branch_popup_create_new}`
-            <p className='flex flex-row justify-center items-center gap-x-1 responsive-text-sm text-sm font-normal'>
+            <p className={`${props.classNameBtnAdd} flex flex-row justify-center items-center gap-x-1 responsive-text-sm text-sm font-normal`}>
               <PlusIcon /> {props.dataLang?.branch_popup_create_new}
             </p>
           )
         }
-        onClickOpen={() => queryState({ open: true })}
+        onClickOpen={props.openExternal === undefined ? () => queryState({ open: true }) : undefined}
         open={isState.open}
-        onClose={() => queryState({ open: false })}
+        onClose={() => {
+          queryState({ open: false });
+          props.onCloseExternal && props.onCloseExternal();
+        }}
         classNameBtn={props.className}
       >
         <div className='flex items-center space-x-4 my-3 border-[#E7EAEE] border-opacity-70 border-b-[1px]'>
@@ -346,7 +356,14 @@ const Popup_dsncc = props => {
               </div>
             )}
             <div className='mt-5 space-x-2 text-right'>
-              <button type='button' onClick={() => queryState({ open: false })} className='button text-[#344054] font-normal text-base py-2 px-4 rounded-[5.5px] border border-solid border-[#D0D5DD]'>
+              <button
+                type='button'
+                onClick={() => {
+                  queryState({ open: false });
+                  props.onCloseExternal && props.onCloseExternal();
+                }}
+                className='button text-[#344054] font-normal text-base py-2 px-4 rounded-[5.5px] border border-solid border-[#D0D5DD]'
+              >
                 {props.dataLang?.branch_popup_exit}
               </button>
               <button type='submit' className='button text-[#FFFFFF]  font-normal text-base py-2 px-4 rounded-[5.5px] bg-[#003DA0]'>

@@ -424,10 +424,10 @@ const Products = props => {
                   {/* <ColumnTable colSpan={1} textAlign={'center'}>
                                             {dataLang?.stock || "stock"}
                                         </ColumnTable> */}
-                  <ColumnTable colSpan={1} textAlign={'center'}>
+                  <ColumnTable colSpan={1} textAlign={'center'} className={"px-0"}>
                     {dataLang?.bom_finishedProduct}
                   </ColumnTable>
-                  <ColumnTable colSpan={1} textAlign={'center'}>
+                  <ColumnTable colSpan={1} textAlign={'center'} className={"px-0"}>
                     {dataLang?.settings_category_stages_title || 'settings_category_stages_title'}
                   </ColumnTable>
                   <ColumnTable colSpan={1} textAlign={'left'}>

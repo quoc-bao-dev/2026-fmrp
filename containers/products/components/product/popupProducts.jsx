@@ -2,8 +2,9 @@ import apiCategory from '@/Api/apiProducts/category/apiCategory';
 import apiProducts from '@/Api/apiProducts/products/apiProducts';
 import apiComons from '@/Api/apiComon/apiComon';
 import { ButtonAddNew } from '@/components/common/button/AddNew';
-import { PlusIcon } from '@/components/icons';
+import { PlusIcon, TrashIcon } from '@/components/icons';
 import EditIcon from '@/components/icons/common/EditIcon';
+import DropdownPrice from '@/components/common/orderManagement/DropdownPrice';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import InPutMoneyFormat from '@/components/UI/inputNumericFormat/inputMoneyFormat';
 import InPutNumericFormat from '@/components/UI/inputNumericFormat/inputNumericFormat';
@@ -533,6 +534,41 @@ const Popup_Products = React.memo(props => {
     sDataTotalVariant([...dataTotalVariant]);
   };
 
+  // áp dụng giá cho tất cả biến thể
+  const _HandleApplyPriceAll = value => {
+    if (!value || value.value === undefined || value.value === null || value.value === '') {
+      return;
+    }
+
+    const priceValue = Number(value.value);
+
+    if (isNaN(priceValue) || priceValue < 0) {
+      isShow('error', 'Giá không hợp lệ');
+      return;
+    }
+
+    const updatedVariants = dataTotalVariant.map(variant => {
+      // Nếu có variation_option_2 (biến thể phụ)
+      if (variant?.variation_option_2?.length > 0) {
+        return {
+          ...variant,
+          variation_option_2: variant.variation_option_2.map(subVariant => ({
+            ...subVariant,
+            price: priceValue,
+          })),
+        };
+      } else {
+        // Nếu không có biến thể phụ, áp dụng giá trực tiếp
+        return {
+          ...variant,
+          price: priceValue,
+        };
+      }
+    });
+
+    sDataTotalVariant(updatedVariants);
+  };
+
   // xóa biến thể
   const handleDeleteVariantItems = () => {
     if (isId && isIdChild) {
@@ -623,7 +659,7 @@ const Popup_Products = React.memo(props => {
       onClose={_ToggleModal.bind(this, false)}
       classNameBtn={props.className}
     >
-      <div className='py-4 w-[800px] 2xl:space-y-5 space-y-4'>
+      <div className='py-4 w-[820px] 2xl:space-y-5 space-y-4'>
         <div className='flex items-center space-x-4 border-[#E7EAEE] border-opacity-70 border-b-[1px]'>
           <button
             onClick={_HandleSelectTab.bind(this, 0)}
@@ -638,7 +674,7 @@ const Popup_Products = React.memo(props => {
             {props.dataLang?.category_material_list_variant || 'category_material_list_variant'}
           </button>
         </div>
-        <Customscrollbar className='max-h-[50vh]'>
+        <Customscrollbar className='max-h-[60vh]'>
           {onFetching ? (
             <Loading className='h-80' color='#0f4f9e' />
           ) : (
@@ -1165,17 +1201,19 @@ const Popup_Products = React.memo(props => {
                   {Object.keys(dataTotalVariant).length !== 0 && (
                     <div className='space-y-1'>
                       <h4 className='text-[#344054] font-medium'>{props.dataLang?.list_variant || 'list_variant'}</h4>
-                      <div className={`grid-cols-9 grid gap-5 py-1`}>
-                        <h4 className='text-[15px] text-center font-[300] text-slate-400 col-span-2'>{props.dataLang?.avatar || 'avatar'}</h4>
-                        <h4 className='text-[15px] font-[300] text-slate-400 col-span-2  text-left'>{dataVariantSending[0]?.name}</h4>
-                        <h4 className='text-[15px] font-[300] text-slate-400 col-span-2  text-left'>{dataVariantSending[1]?.name}</h4>
-                        <h4 className='text-[15px] text-center font-[300] text-slate-400 col-span-2'>{'Giá'}</h4>
-                        <h4 className='text-[15px] text-left font-[300] text-slate-400'>{props.dataLang?.branch_popup_properties || 'branch_popup_properties'}</h4>
+                      <div className='grid-cols-16 grid gap-3 py-1'>
+                        <h4 className='responsive-text-base text-center text-slate-400 col-span-2'>{props.dataLang?.avatar || 'avatar'}</h4>
+                        <h4 className='responsive-text-base text-left text-slate-400 col-span-4'>{dataVariantSending[0]?.name}</h4>
+                        <h4 className='responsive-text-base text-left text-slate-400 col-span-4'>{dataVariantSending[1]?.name}</h4>
+                        <h4 className='responsive-text-base text-center text-slate-400 col-span-4'>
+                          <DropdownPrice value={null} onChange={_HandleApplyPriceAll} isShow={isShow} />
+                        </h4>
+                        <h4 className='responsive-text-base text-center text-slate-400 col-span-2 whitespace-nowrap'>{props.dataLang?.branch_popup_properties || 'branch_popup_properties'}</h4>
                       </div>
-                      <Customscrollbar className='max-h-[250px]'>
+                      <Customscrollbar className='max-h-[300px]'>
                         <div className='space-y-0.5'>
                           {dataTotalVariant?.map((e, index) => (
-                            <div className={`grid-cols-9 grid gap-5 items-center bg-slate-50 hover:bg-slate-100 p-1`} key={e?.id ? e?.id.toString() : index + 1}>
+                            <div className="grid-cols-16 grid gap-3 items-center bg-slate-50 hover:bg-slate-100 py-2 px-1" key={e?.id ? e?.id.toString() : index + 1}>
                               <div className='flex flex-col items-center justify-center w-full h-full col-span-2'>
                                 {e?.id != null && <input onChange={_HandleChangeVariant.bind(this, e?.id, 'image')} type='file' id={`uploadImg+${e?.id}`} accept='image/png, image/jpeg' hidden />}
                                 <label htmlFor={`uploadImg+${e?.id}`} className={`${e?.id != null && 'cursor-pointer'} h-14 w-14 flex flex-col justify-center items-center bg-slate-200/50 rounded`}>
@@ -1190,12 +1228,12 @@ const Popup_Products = React.memo(props => {
                                   )}
                                 </label>
                               </div>
-                              <div className='col-span-2 text-left truncate '>{e.name}</div>
+                              <div className='col-span-4 text-left truncate '>{e.name}</div>
                               {e?.variation_option_2?.length > 0 ? (
-                                <div className='grid items-center grid-cols-5 col-span-5 gap-1'>
+                                <div className='grid items-center grid-cols-10 col-span-10 gap-x-3 gap-y-1'>
                                   {e?.variation_option_2?.map(ce => (
                                     <React.Fragment key={ce.id?.toString()}>
-                                      <div className='col-span-2 text-left truncate'>{ce.name}</div>
+                                      <div className='col-span-4 text-left truncate'>{ce.name}</div>
                                       <InPutMoneyFormat
                                         value={ce.price}
                                         onValueChange={_HandleChangePrice.bind(this, e.id, ce.id)}
@@ -1208,9 +1246,9 @@ const Popup_Products = React.memo(props => {
                                           return true;
                                         }}
                                         placeholder='Giá'
-                                        className={`col-span-2 focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal p-2 border outline-none`}
+                                        className={`col-span-4 focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal p-2 border outline-none`}
                                       />
-                                      <div className='flex justify-center'>
+                                      <div className='flex justify-center col-span-2'>
                                         {ce?.isDelete && (
                                           <button
                                             // onClick={_HandleDeleteVariant.bind(
@@ -1225,9 +1263,9 @@ const Popup_Products = React.memo(props => {
                                                 idChild: ce.id,
                                               })
                                             }
-                                            className='p-1.5 text-red-500 hover:scale-110 transition hover:text-red-600'
+                                            className='group hover:border-red-01 hover:bg-red-02 rounded-lg w-fit p-1 border border-transparent transition-all ease-in-out cursor-pointer'
                                           >
-                                            <IconDelete size='22' />
+                                            <TrashIcon className='text-red-500 size-5' />
                                           </button>
                                         )}
                                         {ce?.isDelete == undefined && (
@@ -1244,9 +1282,9 @@ const Popup_Products = React.memo(props => {
                                                 idChild: ce.id,
                                               })
                                             }
-                                            className='p-1.5 text-red-500 hover:scale-110 transition hover:text-red-600'
+                                            className='group hover:border-red-01 hover:bg-red-02 rounded-lg w-fit p-1 border border-transparent transition-all ease-in-out cursor-pointer'
                                           >
-                                            <IconDelete size='22' />
+                                            <TrashIcon className='text-red-500 size-5' />
                                           </button>
                                         )}
                                       </div>
@@ -1324,10 +1362,10 @@ const Popup_Products = React.memo(props => {
           onCloseExternal={() => {
             sOpenCategoryPopup(false);
           }}
-          onRefresh={async (categoryId) => {
+          onRefresh={async categoryId => {
             // Refresh danh sách danh mục sau khi thêm thành công
             await queryClient.invalidateQueries({ queryKey: ['api_category', branch] });
-            
+
             // Fetch lại trực tiếp từ API để đảm bảo có data mới nhất
             if (categoryId && branch?.length > 0) {
               try {
@@ -1335,7 +1373,7 @@ const Popup_Products = React.memo(props => {
                   'filter[branch_id][]': branch.map(e => e.value),
                 };
                 const { rResult } = await apiCategory.apiOptionCategory({ params });
-                
+
                 // Tìm category vừa thêm
                 const foundCategory = rResult?.find(cat => String(cat.id) === String(categoryId));
                 if (foundCategory) {
@@ -1353,10 +1391,10 @@ const Popup_Products = React.memo(props => {
             }
             sOpenCategoryPopup(false);
           }}
-          onRefreshSub={async (categoryId) => {
+          onRefreshSub={async categoryId => {
             // Refresh danh sách danh mục sau khi thêm thành công
             await queryClient.invalidateQueries({ queryKey: ['api_category', branch] });
-            
+
             // Fetch lại trực tiếp từ API để đảm bảo có data mới nhất
             if (categoryId && branch?.length > 0) {
               try {
@@ -1364,7 +1402,7 @@ const Popup_Products = React.memo(props => {
                   'filter[branch_id][]': branch.map(e => e.value),
                 };
                 const { rResult } = await apiCategory.apiOptionCategory({ params });
-                
+
                 // Tìm category vừa thêm
                 const foundCategory = rResult?.find(cat => String(cat.id) === String(categoryId));
                 if (foundCategory) {
@@ -1393,22 +1431,22 @@ const Popup_Products = React.memo(props => {
           onCloseExternal={() => {
             sOpenUnitPopup(false);
           }}
-          onRefresh={async (unitId) => {
+          onRefresh={async unitId => {
             // Refresh danh sách đơn vị sau khi thêm thành công
             // Invalidate query để trigger refetch
             await queryClient.invalidateQueries({ queryKey: ['api_unit_list'] });
-            
+
             // Fetch lại từ API và cập nhật Redux state
             try {
               const { rResult } = await apiComons.apiUnit({});
-              const unitList = rResult?.map((e) => ({ label: e.unit, value: e.id }));
-              
+              const unitList = rResult?.map(e => ({ label: e.unit, value: e.id }));
+
               // Cập nhật Redux state
               dispatch({
                 type: 'unit_finishedProduct/update',
                 payload: unitList,
               });
-              
+
               // Tìm và tự động chọn đơn vị vừa thêm
               if (unitId) {
                 const foundUnit = unitList?.find(u => String(u.value) === String(unitId));
