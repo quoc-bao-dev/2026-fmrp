@@ -230,6 +230,26 @@ const Form = ({ dataLang, dataWard, dataGroup, isState, queryState, dataDitrict,
             }}
             className="rounded-[5.5px] py-0.5 mb-2 bg-white border-none xl:text-base text-[14.5px] "
           />
+           <label className="text-[#344054] font-normal text-sm mb-1 ">
+            {dataLang?.client_popup_period}
+          </label>
+          <InPutNumericFormat
+            value={isState.debt_begin || 0}
+            onValueChange={(e) => queryState({ debt_begin: e.floatValue })}
+            isAllowed={(values) => {
+              const { floatValue } = values;
+              if (floatValue == 0) {
+                return true;
+              }
+              if (floatValue < 0) {
+                isShow('error', 'Vui lòng nhập lớn hơn 0');
+                return false
+              }
+              return true
+            }}
+            placeholder={dataLang?.suppliers_supplier_debt}
+            className="focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded-[5.5px] text-[#52575E] font-normal p-1.5 border outline-none mb-2"
+          />
           <label className="text-[#344054] font-normal text-sm mb-1 ">
             {dataLang?.client_popup_limit || 'client_popup_limit'}
           </label>
@@ -237,15 +257,15 @@ const Form = ({ dataLang, dataWard, dataGroup, isState, queryState, dataDitrict,
             value={isState.debt_limit || 0}
             onValueChange={(e) => queryState({ debt_limit: e.floatValue })}
             isAllowed={(values) => {
-              // const { floatValue } = values;
-              // if (floatValue == 0) {
-              //   return true;
-              // }
-              // if (floatValue < 0) {
-              //   isShow('error', 'Vui lòng nhập lớn hơn 0');
-              //   return false
-              // }
-              // return true
+              const { floatValue } = values;
+              if (floatValue == 0) {
+                return true;
+              }
+              if (floatValue < 0) {
+                isShow('error', 'Vui lòng nhập lớn hơn 0');
+                return false
+              }
+              return true
               isAllowedNumberThanWarning(values, dataLang);
             }}
             placeholder={dataLang?.client_popup_limit || 'client_popup_limit'}
@@ -260,15 +280,15 @@ const Form = ({ dataLang, dataWard, dataGroup, isState, queryState, dataDitrict,
               onValueChange={(e) => queryState({ debt_limit_day: e.floatValue })}
               isAllowed={(values) => {
                 isAllowedNumberThanWarning(values, dataLang);
-                // const { floatValue } = values;
-                // if (floatValue == 0) {
-                //   return true;
-                // }
-                // if (floatValue < 0) {
-                //   isShow('error', 'Vui lòng nhập lớn hơn 0');
-                //   return false
-                // }
-                // return true
+                const { floatValue } = values;
+                if (floatValue == 0) {
+                  return true;
+                }
+                if (floatValue < 0) {
+                  isShow('error', 'Vui lòng nhập lớn hơn 0');
+                  return false
+                }
+                return true
               }}
               placeholder={dataLang?.client_popup_days || 'client_popup_days'}
               className="focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded-[5.5px] text-[#52575E] font-normal p-1.5 border outline-none mb-2"
