@@ -2,6 +2,7 @@ import { Empty } from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
 import { CiSearch } from 'react-icons/ci'
 import CheckboxDefault from '../checkbox/CheckboxDefault'
+import { CloseXIcon } from '@/components/icons'
 
 const SelectSearch = ({ 
   options, 
@@ -41,6 +42,13 @@ const SelectSearch = ({
     const value = e.target.value
     setSearchText(value)
     setSearch && setSearch(value)
+  }
+
+  const handleClearSearch = e => {
+    e.stopPropagation()
+    setSearchText('')
+    setSearch && setSearch('')
+    setTimeout(() => inputRef.current?.focus(), 0)
   }
 
   const handleSelect = (option) => {
@@ -101,8 +109,19 @@ const SelectSearch = ({
           onFocus={() => setIsFocused(true)}
           onBlur={() => !isOpen && setIsFocused(false)}
         />
-        <div className={`absolute right-3 top-1/2 -translate-y-1/2 bg-[#1760B9] p-1 rounded-lg ${classNameBtn}`}>
-          <CiSearch className="text-white responsive-text-lg" />
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+          {searchText && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="text-[#94a3b8] hover:text-[#475569] text-sm font-semibold p-0.5 rounded-full border border-transparent hover:border-[#cbd5f5] transition-all bg-white"
+            >
+              <CloseXIcon className='size-3' />
+            </button>
+          )}
+          <div className={`bg-[#1760B9] p-1 rounded-lg ${classNameBtn}`}>
+            <CiSearch className="text-white responsive-text-lg" />
+          </div>
         </div>
       </div>
 

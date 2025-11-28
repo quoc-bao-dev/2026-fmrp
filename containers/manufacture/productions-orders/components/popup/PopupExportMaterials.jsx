@@ -556,15 +556,29 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
 
       const uniqueSelections = [];
       const duplicateLabels = new Set();
+      const zeroStockLabels = new Set();
       const seenKeys = new Set();
 
       selections.forEach(option => {
         const key = buildMaterialKey(option);
         if (!key) return;
+
+        const availableQty =
+          option?.e?.quantity_warehouse ??
+          option?.e?.qty_warehouse ??
+          option?.e?.quantity ??
+          0;
+
         if (combinedMaterialKeys.has(key)) {
           duplicateLabels.add(option?.e?.name || option?.label || 'Nguyên liệu');
           return;
         }
+
+        if (!availableQty || Number(availableQty) <= 0) {
+          zeroStockLabels.add(option?.e?.name || option?.label || 'Nguyên liệu');
+          return;
+        }
+
         if (seenKeys.has(key)) {
           return;
         }
@@ -574,6 +588,10 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
 
       if (duplicateLabels.size > 0) {
         showToast('error', `${Array.from(duplicateLabels).join(', ')} đã có trong danh sách nguyên liệu. Vui lòng kiểm tra lại.`);
+      }
+
+      if (zeroStockLabels.size > 0) {
+        showToast('error', `${Array.from(zeroStockLabels).join(', ')} không có tồn kho. Vui lòng nhập thêm.`);
       }
 
       setSelectedItems(uniqueSelections);
