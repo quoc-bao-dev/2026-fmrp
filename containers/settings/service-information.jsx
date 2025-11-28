@@ -288,10 +288,10 @@ const ServiceInformation = props => {
                 </div>
 
                 {isLoadingHistory ? (
-                  <Loading className='h-[280px] 2xl:h-[420px]' />
+                  <Loading className='h-[170px] 2xl:h-[420px]' />
                 ) : hasHistoryData ? (
                   <>
-                    <div className='divide-y divide-[#EAECF0] overflow-y-auto h-[280px] 2xl:h-[420px]  max-h-[280px] 2xl:max-h-[420px] flex-1'>
+                    <div className='divide-y divide-[#EAECF0] overflow-y-auto h-[170px] 2xl:h-[420px]  max-h-[170px] 2xl:max-h-[420px] flex-1'>
                       {historyTransactions.map(item => (
                         <div key={item.id} className='grid grid-cols-12 px-4 py-4 items-center 3xl:text-base text-sm text-[#1D2939] hover:bg-[#F9FAFB]/50 cursor-pointer'>
                           <div className='col-span-2 font-medium'>{item.transactionDate ? formatMoment(item.transactionDate, FORMAT_MOMENT.DATE_TIME_SLASH_LONG) : '-'}</div>
@@ -312,7 +312,7 @@ const ServiceInformation = props => {
                     </div>
                   </>
                 ) : (
-                  <div className='h-[280px] 2xl:h-[420px] flex items-center justify-center'>
+                  <div className='h-[170px] 2xl:h-[420px] flex items-center justify-center'>
                     <NoData type='table' titleText='Chưa có giao dịch' />
                   </div>
                 )}

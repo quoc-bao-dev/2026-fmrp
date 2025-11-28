@@ -652,15 +652,7 @@ const CheckQuality = props => {
       {isState.popupResponse && <PopupState dataLang={dataLang} response={isState.popupResponse} onClose={handleClosePopupState} />}
       {errorPopupProps && (
         <div className='fixed inset-0 z-[1100] flex items-center justify-center bg-[#25387A50] backdrop-blur-[2.5px]'>
-          <PopupErrorInformation
-            onClose={handleCloseErrorPopup}
-            qcId={errorPopupProps.id}
-            stage={errorPopupProps.stage}
-            errorCount={errorPopupProps.errorCount}
-            tags={errorPopupProps.tags}
-            images={errorPopupProps.images}
-            product={errorPopupProps.product}
-          />
+          <PopupErrorInformation onClose={handleCloseErrorPopup} qcId={errorPopupProps.id} />
         </div>
       )}
       {deleteTarget && (
