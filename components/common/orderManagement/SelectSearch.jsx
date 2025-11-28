@@ -3,7 +3,20 @@ import React, { useEffect, useRef, useState } from 'react'
 import { CiSearch } from 'react-icons/ci'
 import CheckboxDefault from '../checkbox/CheckboxDefault'
 
-const SelectSearch = ({ options, onChange, value = [], formatOptionLabel, placeholder, setSearch }) => {
+const SelectSearch = ({ 
+  options, 
+  onChange, 
+  value = [], 
+  formatOptionLabel, 
+  placeholder, 
+  setSearch, 
+  className, 
+  classNameBtn,
+  showCheckbox = true, // Prop mới: hiển thị checkbox hay không (mặc định true để backward compatible)
+  multiple = true, // Prop mới: cho phép chọn nhiều hay không (mặc định true)
+  showSelectedCount = true, // Prop mới: hiển thị số lượng đã chọn (mặc định true)
+  showActiveColor = true, // Prop mới: hiển thị màu active khi item được chọn (mặc định true để backward compatible)
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
   const [isFocused, setIsFocused] = useState(false)
@@ -31,6 +44,15 @@ const SelectSearch = ({ options, onChange, value = [], formatOptionLabel, placeh
   }
 
   const handleSelect = (option) => {
+    // Nếu là single select mode (multiple = false)
+    if (!multiple) {
+      onChange(option) // Trả về object đơn, không phải array
+      setIsOpen(false) // Đóng dropdown sau khi chọn
+      setSearchText('') // Reset search text
+      return
+    }
+
+    // Multi select mode (giữ nguyên logic cũ)
     if (!value) {
       onChange([option])
     } else {
@@ -61,7 +83,8 @@ const SelectSearch = ({ options, onChange, value = [], formatOptionLabel, placeh
       <div
         className={`flex flex-wrap items-center gap-1 min-h-[40px] px-3 py-1 bg-white cursor-pointer rounded-lg transition-all duration-300 ${
           isFocused ? 'border border-[#003DA0]' : 'border border-[#d9d9d9]'
-        }`}
+        }
+        ${className}`}
         onClick={() => {
           setIsOpen(true)
           setIsFocused(true)
@@ -78,21 +101,31 @@ const SelectSearch = ({ options, onChange, value = [], formatOptionLabel, placeh
           onFocus={() => setIsFocused(true)}
           onBlur={() => !isOpen && setIsFocused(false)}
         />
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 bg-[#1760B9] p-1 rounded-lg">
+        <div className={`absolute right-3 top-1/2 -translate-y-1/2 bg-[#1760B9] p-1 rounded-lg ${classNameBtn}`}>
           <CiSearch className="text-white responsive-text-lg" />
         </div>
       </div>
 
       {isOpen && (
         <div className="absolute left-0 right-0 top-full mt-1 bg-white border rounded-lg shadow-[0_20px_40px_-4px_#919EAB3D,0_0_2_0_#919EAB3D] z-50">
+          {/* Header với checkbox và số lượng đã chọn - chỉ hiển thị khi showCheckbox = true và multiple = true */}
+          {showCheckbox && multiple && (
           <div className="2xl:p-6 p-5 pl-4 flex items-center justify-between gap-4 border-b">
             <CheckboxDefault
               label={'Chọn mặt hàng'}
-              checked={options?.every(opt => value.some(item => item.value === opt.value))}
+                checked={options?.every(opt => {
+                  const currentValue = Array.isArray(value) ? value : (value ? [value] : [])
+                  return currentValue.some(item => item.value === opt.value)
+                })}
               onChange={handleSelectAll}
             />
-            <p className="responsive-text-sm font-normal text-blue-color">{value.length} đã chọn</p>
+              {showSelectedCount && (
+                <p className="responsive-text-sm font-normal text-blue-color">
+                  {Array.isArray(value) ? value.length : (value ? 1 : 0)} đã chọn
+                </p>
+              )}
           </div>
+          )}
 
           <div
             ref={menuRef}
@@ -108,16 +141,29 @@ const SelectSearch = ({ options, onChange, value = [], formatOptionLabel, placeh
                   <React.Fragment key={option.value}>
                     {index > 0 && <hr className="border-[#F3F3F4]" />}
                     <div
-                      className="flex items-center px-3 2xl:px-5 py-2 hover:bg-[#0000000A] rounded-lg cursor-pointer"
+                      className={`flex items-center px-3 2xl:px-5 py-2 hover:bg-[#0000000A] rounded-lg cursor-pointer ${
+                        showActiveColor && !showCheckbox && multiple && Array.isArray(value) && value.some((item) => item.value === option.value) 
+                          ? 'bg-blue-50' 
+                          : showActiveColor && !showCheckbox && !multiple && value && value.value === option.value
+                          ? 'bg-blue-50'
+                          : ''
+                      }`}
                       onClick={() => handleSelect(option)}
                     >
+                      {/* Checkbox - chỉ hiển thị khi showCheckbox = true */}
+                      {showCheckbox && (
                       <div className="mr-2">
                         <CheckboxDefault
-                          checked={value.some((item) => item.value === option.value)}
+                            checked={
+                              multiple && Array.isArray(value)
+                                ? value.some((item) => item.value === option.value)
+                                : !multiple && value && value.value === option.value
+                            }
                           onChange={() => handleSelect(option)}
                           onClick={e => e.stopPropagation()}
                         />
                       </div>
+                      )}
                       <div className="flex-grow">
                         {formatOptionLabel ? formatOptionLabel(option) : <div className="text-sm">{option.label}</div>}
                       </div>

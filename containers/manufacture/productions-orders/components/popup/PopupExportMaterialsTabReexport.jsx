@@ -1,3 +1,4 @@
+import apiProductionsOrders from '@/Api/apiManufacture/manufacture/productionsOrders/apiProductionsOrders';
 import CheckboxDefault from '@/components/common/checkbox/CheckboxDefault';
 import { ApproximateEqualsIcon, CheckCircleIcon, MagnifyingGlassIcon, PlusIcon, WarningIcon } from '@/components/icons';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
@@ -350,22 +351,32 @@ const SubProductRow = memo(({ id, isOpen, lot, date, warehouse, listWarehouses, 
 
 SubProductRow.displayName = 'SubProductRow';
 
-const formatDate = (dateString) => {
-  if (!dateString) return "";
-  const [year, month, day] = dateString.split("-");
-  return `${day}/${month}/${year}`;
-};
+const PopupExportMaterialsTabReexport = forwardRef(
+  (
+    {
+      poId,
+      onSelectionChange,
+      isRenderErrorNVL,
+      setIsRenderErrorNVL,
+      errorNVLData,
+      formatNumberWithSetting,
+      extraMaterials = [],
+      onExistingMaterialKeysChange,
+      onRemoveExtraMaterial,
+    },
+    ref
+  ) => {
+  const showToast = useToast();
 
-const PopupExportMaterialsTabReexport = forwardRef(({ poId, onSelectionChange, isRenderErrorNVL, setIsRenderErrorNVL, errorNVLData, formatNumberWithSetting }, ref) => {
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [materialsWarehouses, setMaterialsWarehouses] = useState({});
   const [selectedMaterialRows, setSelectedMaterialRows] = useState([]);
   const [hasInitializedProductSelection, setHasInitializedProductSelection] = useState(false);
   const [materialsSearchTerm, setMaterialsSearchTerm] = useState('');
+  const [externalMaterials, setExternalMaterials] = useState([]);
 
   const { data, isLoading } = useProductionOrderDetail({ id: poId, enabled: !!poId });
-  const showToast = useToast();
 
   // Helper functions
   const getProductId = useCallback(product => {
@@ -403,7 +414,7 @@ const PopupExportMaterialsTabReexport = forwardRef(({ poId, onSelectionChange, i
     }
   }, [flatProducts, getProductId, hasInitializedProductSelection]);
 
-const products = useMemo(() => {
+  const products = useMemo(() => {
     if (flatProducts.length === 0) return [];
     const selectedSet = new Set(selectedProducts);
     const selectedList = [];
@@ -441,14 +452,66 @@ const products = useMemo(() => {
   const { data: suggestData, isLoading: isLoadingMaterials } = useListSuggestPo(requestData);
 
   // Lấy materials trực tiếp từ API response với thứ tự gốc
+  useEffect(() => {
+    let isMounted = true;
+    const hydrateMaterials = async () => {
+      if (!extraMaterials?.length) {
+        setExternalMaterials([]);
+        return;
+      }
+
+      const enriched = await Promise.all(
+        extraMaterials.map(async material => {
+          if (material.type_origin === 'semi_products' || material.warehouses?.length) {
+            return material;
+          }
+          try {
+            const formData = new FormData();
+            formData.append('type_item', material.type_item ?? 'material');
+            formData.append('type_origin', material.type_origin ?? 'material');
+            formData.append('item_variation_option_value_id', material.item_variation_option_value_id ?? '');
+            formData.append('pp_id', material.pp_id ?? '');
+            formData.append('po_id', poId ?? '');
+            const res = await apiProductionsOrders.apiGetWarehousesBOM(formData);
+            const warehouses = res?.data?.warehouses || [];
+            return {
+              ...material,
+              warehouses,
+            };
+          } catch (error) {
+            return material;
+          }
+        })
+      );
+
+      if (isMounted) {
+        setExternalMaterials(enriched);
+      }
+    };
+
+    hydrateMaterials();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [extraMaterials, poId]);
+
   const allMaterials = useMemo(() => {
-    if (!suggestData) return [];
     const boms = suggestData?.data?.boms || suggestData?.boms || {};
-    return Object.values(boms).map((material, index) => ({
+    const apiMaterials = Object.values(boms || {}).map((material, index) => ({
       ...material,
       __originalIndex: index,
+      __isExtra: false,
     }));
-  }, [suggestData]);
+
+    const normalizedExtra = (externalMaterials || []).map((material, idx) => ({
+      ...material,
+      __originalIndex: apiMaterials.length + idx,
+      __isExtra: true,
+    }));
+
+    return [...apiMaterials, ...normalizedExtra];
+  }, [suggestData, externalMaterials]);
 
   const materialMap = useMemo(() => {
     const map = new Map();
@@ -457,6 +520,18 @@ const products = useMemo(() => {
     });
     return map;
   }, [allMaterials, getMaterialId]);
+
+  useEffect(() => {
+    if (typeof onExistingMaterialKeysChange !== 'function') return;
+    const keys = new Set();
+    allMaterials.forEach(material => {
+      const key = `${material.item_id ?? ''}-${material.item_variation_option_value_id ?? material.variant_id ?? ''}`;
+      if (key.trim()) {
+        keys.add(key);
+      }
+    });
+    onExistingMaterialKeysChange(keys);
+  }, [allMaterials, onExistingMaterialKeysChange]);
 
   const filteredMaterials = useMemo(() => {
     if (!materialsSearchTerm.trim()) return allMaterials;
@@ -468,30 +543,42 @@ const products = useMemo(() => {
   const materials = useMemo(() => {
     if (filteredMaterials.length === 0) return [];
 
-    const selectedList = filteredMaterials
-      .filter(material => selectedMaterialRows.includes(getMaterialId(material)))
-      .sort((a, b) => a.__originalIndex - b.__originalIndex);
+    const selectedList = filteredMaterials.filter(material => selectedMaterialRows.includes(getMaterialId(material))).sort((a, b) => a.__originalIndex - b.__originalIndex);
 
-    const unselectedList = filteredMaterials
-      .filter(material => !selectedMaterialRows.includes(getMaterialId(material)))
-      .sort((a, b) => a.__originalIndex - b.__originalIndex);
+    const unselectedList = filteredMaterials.filter(material => !selectedMaterialRows.includes(getMaterialId(material))).sort((a, b) => a.__originalIndex - b.__originalIndex);
 
     return [...selectedList, ...unselectedList];
   }, [filteredMaterials, selectedMaterialRows, getMaterialId]);
 
   // Handlers
-  const handleSelectProduct = useCallback((productId, checked) => {
-    setHasInitializedProductSelection(true);
-    setSelectedProducts(prev => (checked ? [...prev, productId] : prev.filter(id => id !== productId)));
-  }, []);
+  const handleSelectProduct = useCallback(
+    (productId, checked) => {
+      if (!checked) {
+        // Kiểm tra nếu đang cố bỏ chọn và chỉ còn 1 phần tử được chọn
+        const currentSelected = selectedProducts.filter(id => id !== productId);
+        if (currentSelected.length === 0) {
+          showToast('error', 'Phải chọn ít nhất một thành phẩm!');
+          return;
+        }
+      }
+      setHasInitializedProductSelection(true);
+      setSelectedProducts(prev => (checked ? [...prev, productId] : prev.filter(id => id !== productId)));
+    },
+    [selectedProducts, showToast]
+  );
 
   const handleSelectAll = useCallback(
     checked => {
+      if (!checked) {
+        // Không cho phép bỏ chọn tất cả
+        showToast('error', 'Phải chọn ít nhất một thành phẩm!');
+        return;
+      }
       setHasInitializedProductSelection(true);
       setSelectAll(checked);
       setSelectedProducts(checked ? products.map(p => getProductId(p)) : []);
     },
-    [products, getProductId]
+    [products, getProductId, showToast]
   );
 
   // Đồng bộ trạng thái checkbox "chọn tất cả" khi người dùng chọn từng sản phẩm
@@ -533,21 +620,60 @@ const products = useMemo(() => {
   const handleToggleMaterial = useCallback(
     (material, checked) => {
       const materialId = getMaterialId(material);
-      if (
-        checked &&
-        (!Array.isArray(material.warehouses) || material.warehouses.length === 0)
-      ) {
-        showToast(
-          'error',
-          `Sản phẩm "${material.item_name}" không có kho hàng. Vui lòng bổ sung kho hàng trước khi chọn!`
-        );
+      if (checked && (!Array.isArray(material.warehouses) || material.warehouses.length === 0)) {
+        showToast('error', `Sản phẩm "${material.item_name}" không có kho hàng. Vui lòng bổ sung kho hàng trước khi chọn!`);
         return;
       }
-      setSelectedMaterialRows(prev =>
-        checked ? [...prev, materialId] : prev.filter(id => id !== materialId)
-      );
+
+      if (checked) {
+        // Tự động thêm kho xuất khi chọn nguyên liệu
+        const currentState = materialsWarehouses[materialId] || { lotRows: [], isOpen: false };
+        const warehouses = Array.isArray(material.warehouses) ? material.warehouses : [];
+
+        // Chỉ tạo lot row mới nếu chưa có lot rows nào
+        if (currentState.lotRows.length === 0 && warehouses.length > 0) {
+          setMaterialsWarehouses(prev => ({
+            ...prev,
+            [materialId]: {
+              ...currentState,
+              lotRows: [createLotRow(warehouses)],
+              isOpen: true,
+            },
+          }));
+        } else if (currentState.lotRows.length === 0) {
+          // Nếu không có warehouses, vẫn tạo lot row rỗng để người dùng có thể thêm kho sau
+          setMaterialsWarehouses(prev => ({
+            ...prev,
+            [materialId]: {
+              ...currentState,
+              lotRows: [createLotRow([])],
+              isOpen: true,
+            },
+          }));
+        } else {
+          // Nếu đã có lot rows, chỉ đảm bảo isOpen = true
+          setMaterialsWarehouses(prev => ({
+            ...prev,
+            [materialId]: {
+              ...prev[materialId],
+              isOpen: true,
+            },
+          }));
+        }
+
+        // Thêm vào danh sách đã chọn
+        setSelectedMaterialRows(prev => (prev.includes(materialId) ? prev : [...prev, materialId]));
+      } else {
+        // Bỏ chọn nguyên liệu - xóa luôn các lot rows đã tạo
+        setSelectedMaterialRows(prev => prev.filter(id => id !== materialId));
+        setMaterialsWarehouses(prev => {
+          const newState = { ...prev };
+          delete newState[materialId];
+          return newState;
+        });
+      }
     },
-    [getMaterialId, showToast]
+    [getMaterialId, showToast, materialsWarehouses]
   );
 
   const handleToggleAllMaterials = useCallback(
@@ -593,18 +719,17 @@ const products = useMemo(() => {
     // Lấy boms gốc từ suggestData
     const originalBoms = suggestData?.data?.boms || suggestData?.boms || {};
     const bomsPayload = {};
+    const extraMaterialsPayload = [];
 
     for (const materialId of selectedMaterialRows) {
       const material = materialMap.get(materialId);
       if (!material) continue;
-
+console.log(material)
       // Tìm key gốc trong boms (ví dụ: "material__974")
       const originalKey = Object.keys(originalBoms).find(key => {
         const bom = originalBoms[key];
         return getMaterialId(bom) === materialId;
       });
-
-      if (!originalKey) continue;
 
       const warehouseState = materialsWarehouses[materialId];
       if (!warehouseState || !Array.isArray(warehouseState.lotRows) || warehouseState.lotRows.length === 0) {
@@ -642,23 +767,56 @@ const products = useMemo(() => {
         return null;
       }
 
-      // Giữ nguyên cấu trúc material gốc, chỉ thay warehouses
+      const baseBom =
+        originalKey && originalBoms[originalKey]
+          ? originalBoms[originalKey]
+          : {
+              type_origin: material.type_origin ?? 'material',
+              type_item: material.type_item ?? 'material',
+              item_id: material.item_id,
+              item_variation_option_value_id: material.item_variation_option_value_id,
+              item_code: material.item_code,
+              item_name: material.item_name,
+              product_variation: material.product_variation,
+              quantity_total_quota: material.quantity_total_quota ?? material.quantity_quota_primary ?? 0,
+              quantity_quota_primary: material.quantity_quota_primary ?? material.quantity_total_quota ?? 0,
+              quota_exchange: material.quota_exchange ?? 1,
+              images: material.images ?? '',
+              unit_name_primary: material.unit_name_primary ?? material.unit_name,
+              unit_name: material.unit_name ?? material.unit_name_primary,
+              ppi_id: material.pp_id ?? 0,
+              pp_id: material.pp_id ?? 0,
+            };
+
+      if (originalKey) {
       bomsPayload[originalKey] = {
-        ...originalBoms[originalKey],
+          ...baseBom,
         warehouses: preparedWarehouses,
       };
+      } else {
+        extraMaterialsPayload.push({
+          ...baseBom,
+          warehouses: preparedWarehouses,
+        });
+      }
     }
 
-    if (Object.keys(bomsPayload).length === 0) {
+    if (Object.keys(bomsPayload).length === 0 && extraMaterialsPayload.length === 0) {
       showToast('error', 'Không có dữ liệu hợp lệ để xuất thêm.');
       return null;
     }
 
-    return {
+    const payload = {
       po_id: Number(poId),
       poi_ids: poiIds.map(id => Number(id)),
       boms: bomsPayload,
     };
+
+    if (extraMaterialsPayload.length > 0) {
+      payload.materials = extraMaterialsPayload;
+    }
+
+    return payload;
   }, [poId, poiIds, selectedMaterialRows, materialMap, materialsWarehouses, suggestData, getMaterialId, showToast]);
 
   const resetSelections = useCallback(() => {
@@ -680,7 +838,7 @@ const products = useMemo(() => {
     }),
     [buildSubmitPayload, resetSelections]
   );
-
+  console.log(products);
   const dataSeting = useSetingServer();
   const formatNumber = useCallback(number => formatNumberConfig(+number, dataSeting), [dataSeting]);
 
@@ -699,7 +857,7 @@ const products = useMemo(() => {
             </div>
           ) : products.length === 0 ? (
             <div className='flex flex-col items-center justify-center h-full min-h-[300px] gap-3 p-4'>
-              <NoData type='report' titleText='Không có thành phẩm nào'/>
+              <NoData type='report' titleText='Không có thành phẩm nào' />
             </div>
           ) : (
             <Customscrollbar className='flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300'>
@@ -745,7 +903,7 @@ const products = useMemo(() => {
         <div className='flex-1 flex flex-col rounded-2xl bg-white overflow-hidden'>
           <div className='flex justify-between items-center gap-10 p-2 bg-gradient-to-br from-[#F9FAFB] to-[#F3F4F6]'>
             <h3 className='text-sm font-semibold text-[#141522] whitespace-nowrap'>Nguyên liệu của thành phẩm đã chọn ({materials.length})</h3>
-            <div className='bg-white flex gap-x-2 items-center w-full rounded-lg border border-[#D0D5DD] px-2 py-1.5 focus-within:border-transparent focus-within:ring-2 focus-within:ring-blue-500'>
+            <div className='bg-white flex gap-x-2 items-center w-1/2 rounded-lg border border-[#D0D5DD] px-2 py-1.5 focus-within:border-transparent focus-within:ring-2 focus-within:ring-blue-500'>
               <input
                 type='text'
                 placeholder='Tìm kiếm theo tên nguyên vật liệu'
@@ -753,7 +911,7 @@ const products = useMemo(() => {
                 value={materialsSearchTerm}
                 onChange={e => setMaterialsSearchTerm(e.target.value)}
               />
-              <button className='rounded-lg bg-[#1760B9] p-1'>
+              <button className='rounded-lg bg-[#0375F3] p-1'>
                 <MagnifyingGlassIcon className='size-3 text-white' />
               </button>
             </div>
@@ -765,54 +923,28 @@ const products = useMemo(() => {
                 <div className='flex items-center gap-1'>
                   <WarningIcon className='size-5' />
                   <h3 className='text-sm font-normal text-neutral-07'>
-                    Thiếu{' '}
-                    <span className='font-semibold text-[#EE1E1E]'>
-                      {errorNVLData.items.length}
-                    </span>{' '}
-                    nguyên vật liệu
+                    Thiếu <span className='font-semibold text-[#EE1E1E]'>{errorNVLData.items.length}</span> nguyên vật liệu
                   </h3>
                 </div>
-                <CloseXIcon
-                  className='size-5 cursor-pointer'
-                  onClick={() => setIsRenderErrorNVL(false)}
-                />
+                <CloseXIcon className='size-5 cursor-pointer' onClick={() => setIsRenderErrorNVL(false)} />
               </div>
               <div className='flex flex-col gap-1'>
                 {errorNVLData.items.map((item, index) => (
-                  <div
-                    key={index}
-                    className='px-3 py-1 flex items-center justify-between gap-1'
-                  >
+                  <div key={index} className='px-3 py-1 flex items-center justify-between gap-1'>
                     <div className='flex items-center gap-2'>
-                      <Image
-                        src={item.images || '/icon/default/default.png'}
-                        alt={item.item_name || item.name || item.item_code}
-                        width={36}
-                        height={36}
-                        className='object-cover rounded'
-                      />
+                      <Image src={item.images || '/icon/default/default.png'} alt={item.item_name || item.name || item.item_code} width={36} height={36} className='object-cover rounded' />
                       <div className='flex flex-col gap-1'>
-                        <h3 className='text-sm font-semibold text-neutral-07'>
-                          {item.item_name}
-                        </h3>
-                        <p className='text-xs font-normal text-neutral-03'>
-                          {item.product_variation}
-                        </p>
+                        <h3 className='text-sm font-semibold text-neutral-07'>{item.item_name}</h3>
+                        <p className='text-xs font-normal text-neutral-03'>{item.product_variation}</p>
                         <div className='flex items-center gap-3 text-neutral-03'>
-                          <p className='text-xs font-normal text-[#3276FA]'>
-                            LOT: {item.lot}
-                          </p>
-                          <p className='text-xs font-normal text-[#3276FA]'>
-                            Date: {formatDate(item.expiration_date)}
-                          </p>
+                          <p className='text-xs font-normal text-[#3276FA]'>LOT: {item.lot}</p>
+                          <p className='text-xs font-normal text-[#3276FA]'>Date: {moment(item.expiration_date).format('DD/MM/YYYY')}</p>
                         </div>
                       </div>
                     </div>
                     <p className='text-sm font-normal text-neutral-07'>
-                      <span className='text-lg font-medium text-[#EE1E1E]'>
-                        {formatNumberWithSetting ? formatNumberWithSetting(item.quantity_missing) : formatNumber(item.quantity_missing)}
-                      </span>
-                      /{item.unit_name_primary}
+                      <span className='text-lg font-medium text-[#EE1E1E]'>{formatNumberWithSetting ? formatNumberWithSetting(item.quantity_missing) : formatNumber(item.quantity_missing)}</span>/
+                      {item.unit_name_primary}
                     </p>
                   </div>
                 ))}
@@ -833,7 +965,7 @@ const products = useMemo(() => {
             </div>
           ) : materials.length === 0 ? (
             <div className='flex flex-col items-center justify-center h-full min-h-[400px] gap-4'>
-             <NoData type='report' titleText='Không có nguyên liệu nào cho thành phẩm đã chọn'/>
+              <NoData type='report' titleText='Không có nguyên liệu nào cho thành phẩm đã chọn' />
             </div>
           ) : (
             <div className='overflow-hidden flex-1'>
@@ -861,6 +993,7 @@ const products = useMemo(() => {
                       const materialWarehouseState = materialsWarehouses[materialId] || { lotRows: [], isOpen: false };
                       const hasWarehouses = Array.isArray(material.warehouses) && material.warehouses.length > 0;
                       const isSelected = selectedMaterialRows.includes(materialId);
+                      const isExtraMaterial = Boolean(material.__isExtra);
                       return (
                         <>
                           <tr
@@ -907,12 +1040,14 @@ const products = useMemo(() => {
                             </td>
                             <td className='py-4 px-4 text-center w-[200px] min-w-[200px] shrink-0'>
                               <div className='flex flex-col items-center gap-1'>
-                                <p className='text-base font-semibold text-[#1FC583]'>{formatNumber(quantitySuggestExporting)}</p>
+                                <p className='text-base font-semibold text-[#1FC583]'>
+                                  {formatNumber(quantitySuggestExporting)} <span className='text-[#141522] font-medium text-xs'>/</span>
+                                </p>
                                 <span className='text-xs font-normal text-[#667085]'>{material.unit_name_primary || material.unit_name}</span>
                               </div>
                             </td>
-                            <td className='py-4 px-4 text-center w-[100px] min-w-[100px] shrink-0'>
-                              <div className='flex justify-center'>
+                            <td className='py-4 px-4 text-center w-[100px] shrink-0'>
+                              <div className='flex justify-center gap-2'>
                                 <Tooltip title='Bổ sung kho xuất nguyên liệu' position='top' arrow={true}>
                                   <div
                                     onClick={e => {
@@ -924,6 +1059,21 @@ const products = useMemo(() => {
                                     <FiPlus className='text-[#003DA0] group-hover:text-[#1760B9] transition-colors' size={19} />
                                   </div>
                                 </Tooltip>
+                                {isExtraMaterial && (
+                                  <Tooltip title='Xoá nguyên liệu bổ sung' position='top' arrow={true}>
+                                    <div
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        if (typeof onRemoveExtraMaterial === 'function') {
+                                          onRemoveExtraMaterial(materialId);
+                                        }
+                                      }}
+                                      className='flex-shrink-0 min-h-[35px] min-w-[35px] cursor-pointer flex justify-center items-center flex-row rounded-full bg-[#FFEFEF] border border-transparent hover:border-[#F87171] hover:bg-[#FEE2E2] hover:scale-110 transition-all duration-200 ease-out'
+                                    >
+                                      <CloseXIcon className='size-4 text-[#DC2626]' />
+                                    </div>
+                                  </Tooltip>
+                                )}
                               </div>
                             </td>
                           </tr>

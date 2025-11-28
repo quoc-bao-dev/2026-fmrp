@@ -972,10 +972,6 @@ const SalesOrderForm = props => {
     };
   });
 
-  console.log({ dataItems });
-
-  console.log({ option });
-
   const selectItemsLabel = option => (
     <div className='flex p-2 hover:bg-gray-100 rounded-md cursor-pointer items-center justify-between font-deca'>
       <div className='flex gap-3 items-start w-[calc(100%-80px)]'>

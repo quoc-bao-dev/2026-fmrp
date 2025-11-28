@@ -198,5 +198,11 @@ const apiProductionsOrders = {
         const response = await axiosCustom('POST', `/api_web/suggest-exporting/save`, data);
         return response.data;
     },
+
+     // Lấy danh sách nguyên liệu bổ sung
+     async apiLookupMaterialsVariant(data) {
+        const response = await axiosCustom('GET', `/api_web/materials/lookup-variant`, data);
+        return response.data;
+    },
 }
 export default apiProductionsOrders

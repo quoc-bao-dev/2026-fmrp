@@ -147,7 +147,7 @@ const QuotaMaterials = () => {
             material_code: bomItem.item_code,
             variant_name: bomItem.item_variant_name,
             material_name: bomItem.item_name,
-            material_type: bomItem.type_item === 'material' ? 'Nguyên vật liệu' : 'BTP - thành phẩm',
+            material_type: bomItem.type_item === 'material' ? 'Nguyên vật liệu' : 'Bán thành phẩm',
             unit_name: bomItem.unit_name,
             quota_quantity: bomItem.quota,
             stage_name: bomItem.stage_name,
