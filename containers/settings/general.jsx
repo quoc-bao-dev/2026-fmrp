@@ -234,6 +234,42 @@ const General = (props) => {
                                         </div>
                                     </div>
                                     <div className="space-y-1">
+                                        <h2 className="text-sm uppercase w-full py-3 px-4 rounded bg-[#ECF0F4] font-medium">
+                                            Bán thành phẩm
+                                        </h2>
+                                        <div className="divide-y divide-[#ECF0F4]">
+                                            <div className="flex flex-row items-center justify-start gap-x-4 py-3 px-4">
+                                                <label
+                                                    htmlFor="is_bom_semi_product"
+                                                    className="relative inline-flex items-center cursor-pointer ml-1"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        className="sr-only peer"
+                                                        value={isBomSemiProduct}
+                                                        id="is_bom_semi_product"
+                                                        checked={
+                                                            isBomSemiProduct == "0" ? false : true
+                                                        }
+                                                        onChange={_ToggleStatus.bind(
+                                                            this,
+                                                            "is_bom_semi_product"
+                                                        )}
+                                                    />
+                                                    <div className="w-11 h-6 bg-gray-200 rounded-full dark:bg-[#D1D5DB] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all  peer-checked:bg-blue-600"></div>
+                                                </label>
+                                                <div className="flex flex-col gap-y-1">
+                                                    <p className="font-medium text-base text-typo-black-1">
+                                                        Quản lý cấu trúc BOM nhiều tầng cho Bán thành phẩm
+                                                    </p>
+                                                    <p className="font-normal text-sm text-typo-gray-2">
+                                                        Hỗ trợ BOM nhiều cấp, giúp Bán thành phẩm có thể chứa các Bán thành phẩm con.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
                                         <h1 className="text-sm uppercase w-full py-3 px-4 rounded bg-[#ECF0F4] font-medium">
                                             thành phẩm
                                         </h1>
@@ -300,39 +336,6 @@ const General = (props) => {
                                                             kho, giảm lãng phí.
                                                         </p>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <h2 className="text-sm uppercase w-full py-3 px-4 rounded bg-[#ECF0F4] font-medium">
-                                            Bán thành phẩm
-                                        </h2>
-                                        <div className="divide-y divide-[#ECF0F4]">
-                                            <div className="flex flex-row items-center justify-start gap-x-4 py-3 px-4">
-                                                <label
-                                                    htmlFor="is_bom_semi_product"
-                                                    className="relative inline-flex items-center cursor-pointer ml-1"
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        className="sr-only peer"
-                                                        value={isBomSemiProduct}
-                                                        id="is_bom_semi_product"
-                                                        checked={
-                                                            isBomSemiProduct == "0" ? false : true
-                                                        }
-                                                        onChange={_ToggleStatus.bind(
-                                                            this,
-                                                            "is_bom_semi_product"
-                                                        )}
-                                                    />
-                                                    <div className="w-11 h-6 bg-gray-200 rounded-full dark:bg-[#D1D5DB] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all  peer-checked:bg-blue-600"></div>
-                                                </label>
-                                                <div className="flex flex-col gap-y-1">
-                                                    <p className="font-medium text-base text-typo-black-1">
-                                                        BOM bán thành phẩm có bán thành phẩm con
-                                                    </p>
                                                 </div>
                                             </div>
                                         </div>

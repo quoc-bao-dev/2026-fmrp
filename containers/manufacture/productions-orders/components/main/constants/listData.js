@@ -1,4 +1,4 @@
-import { ExportMaterialsIcon, KanbanIcon, ListChecksIcon } from '@/components/icons'
+import { ExportMaterialsIcon, KanbanIcon, ListChecksIcon, RecallMaterialsIcon } from '@/components/icons'
 
 // export const listTab = [
 //   {
@@ -63,13 +63,20 @@ export const listDropdownCompleteStage = [
   },
   {
     id: 2,
+    label: 'Thu hồi nguyên liệu',
+    icon: <RecallMaterialsIcon className="size-full" />,
+    isPremium: true,
+    type: 'recall_materials',
+  },
+  {
+    id: 3,
     label: 'Hoàn thành tổng lệnh',
     icon: <ListChecksIcon className="size-full " />, // bạn thay bằng icon tương ứng
     isPremium: false,
     type: 'normal',
   },
   {
-    id: 3,
+    id: 4,
     label: 'Hoàn thành chi tiết công đoạn',
     icon: <KanbanIcon className="size-full" />,
     isPremium: true,
