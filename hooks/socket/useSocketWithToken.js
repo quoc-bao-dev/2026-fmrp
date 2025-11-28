@@ -87,6 +87,8 @@ export const useSocketWithToken = ({ auth, dataSetting }) => {
     };
 
     socket.on('upgrade_package', data => {
+      console.log('upgrade_package', data);
+
       if (data.data.status == 'success') {
         refetch();
       }
@@ -125,6 +127,7 @@ export const useSocketWithToken = ({ auth, dataSetting }) => {
 
     socket.on('upgrade_package_user_success', data => {
       console.log('buy_more_user_success', data);
+
       if (data.data.status == 'success') {
         refetchHistoryUpgradePackage();
         dispatch({
