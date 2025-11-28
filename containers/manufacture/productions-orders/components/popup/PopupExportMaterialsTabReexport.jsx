@@ -498,19 +498,35 @@ const PopupExportMaterialsTabReexport = forwardRef(
 
   const allMaterials = useMemo(() => {
     const boms = suggestData?.data?.boms || suggestData?.boms || {};
-    const apiMaterials = Object.values(boms || {}).map((material, index) => ({
+    const bomEntries = Object.values(boms || {});
+
+    const apiBomMaterials = bomEntries.map((material, index) => ({
       ...material,
       __originalIndex: index,
       __isExtra: false,
     }));
 
-    const normalizedExtra = (externalMaterials || []).map((material, idx) => ({
+    const builtinExtraMaterials = (suggestData?.data?.materials || suggestData?.materials || []).map((material, idx) => {
+      const variationId = material.item_variation_option_value_id ?? material.item_variation_id ?? material.variant_id ?? '';
+      return {
+        ...material,
+        item_variation_option_value_id: variationId,
+        unit_name: material.unit_name ?? material.unit_name_primary,
+        unit_name_primary: material.unit_name_primary ?? material.unit_name,
+        warehouses: Array.isArray(material.warehouses) ? material.warehouses : [],
+        __originalIndex: apiBomMaterials.length + idx,
+        __isExtra: true,
+      };
+    });
+
+    const offset = apiBomMaterials.length + builtinExtraMaterials.length;
+    const normalizedExternal = (externalMaterials || []).map((material, idx) => ({
       ...material,
-      __originalIndex: apiMaterials.length + idx,
+      __originalIndex: offset + idx,
       __isExtra: true,
     }));
 
-    return [...apiMaterials, ...normalizedExtra];
+    return [...apiBomMaterials, ...builtinExtraMaterials, ...normalizedExternal];
   }, [suggestData, externalMaterials]);
 
   const materialMap = useMemo(() => {
@@ -724,7 +740,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
     for (const materialId of selectedMaterialRows) {
       const material = materialMap.get(materialId);
       if (!material) continue;
-console.log(material)
+
       // Tìm key gốc trong boms (ví dụ: "material__974")
       const originalKey = Object.keys(originalBoms).find(key => {
         const bom = originalBoms[key];
@@ -986,6 +1002,7 @@ console.log(material)
                 <table className='min-w-full table-fixed border-separate border-spacing-0'>
                   <tbody>
                     {materials.map(material => {
+                      console.log(materials)
                       const materialId = getMaterialId(material);
                       const quantityTotal = Number(material.quantity_total_quota || 0);
                       const quantityQuotaPrimary = Number(material.quantity_quota_primary || 0);
