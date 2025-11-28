@@ -39,6 +39,9 @@ import PopupCheckQuality from './components/popup';
 import PopupState from './components/popupState';
 import { useCheckQualityList } from './hooks/useCheckQualityList';
 import Pagination from '/components/UI/pagination';
+import CameraFlashIcon from '@/components/icons/common/CameraFlashIcon';
+import { Tooltip } from 'react-tippy';
+import PopupErrorInformation from './components/PopupErrorInformation';
 
 const initilaState = {
   data: [],
@@ -62,6 +65,7 @@ const CheckQuality = props => {
   const [isState, sIsState] = useState(initilaState);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [errorPopupData, setErrorPopupData] = useState(null);
 
   const dataSeting = useSetingServer();
 
@@ -261,18 +265,34 @@ const CheckQuality = props => {
     );
   };
 
-  const ActionButton = ({ onClick }) => {
+  const ActionButton = ({ onClick, onViewErrors }) => {
     return (
-      <button
-        type='button'
-        onClick={onClick}
-        disabled={isDeleting}
-        className={`group rounded-lg p-1 border border-transparent transition-all ease-in-out flex items-center justify-center hover:border-red-01 hover:bg-red-02 ${
-          isDeleting ? 'opacity-50 cursor-not-allowed' : ''
-        }`}
-      >
-        <TrashIcon className='size-5 text-[#EE1E1E]' />
-      </button>
+      <div className='flex gap-2 items-center'>
+        <Tooltip title='Xem lỗi' arrow theme='dark' disabled={isDeleting}>
+          <button
+            type='button'
+            onClick={onViewErrors}
+            disabled={isDeleting}
+            className={`group rounded-lg p-1 border border-transparent transition-all ease-in-out flex items-center justify-center hover:border-[#C25705] hover:bg-[#FFECDD] ${
+              isDeleting ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            <CameraFlashIcon className='size-5' />
+          </button>
+        </Tooltip>
+        <Tooltip title='Xoá phiếu' arrow theme='dark' disabled={isDeleting}>
+          <button
+            type='button'
+            onClick={onClick}
+            disabled={isDeleting}
+            className={`group rounded-lg p-1 border border-transparent transition-all ease-in-out flex items-center justify-center hover:border-red-01 hover:bg-red-02 ${
+              isDeleting ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            <TrashIcon className='size-5 text-[#EE1E1E]' />
+          </button>
+        </Tooltip>
+      </div>
     );
   };
 
@@ -366,6 +386,48 @@ const CheckQuality = props => {
     if (isDeleting) return;
     setDeleteTarget({ id, soPhieuCK, transfers });
   };
+
+  const handleOpenErrorPopup = record => {
+    setErrorPopupData(record);
+  };
+
+  const handleCloseErrorPopup = () => {
+    setErrorPopupData(null);
+  };
+
+  const buildProductInfo = record => {
+    if (!record) return null;
+    const statusMap = {
+      0: 'Chưa thực hiện',
+      1: 'Đang thực hiện',
+      2: 'Tạm dừng',
+    };
+    const statusLabel = record.status_label || statusMap[record.status] || record.stage_name || null;
+    const resolvedImage = (Array.isArray(record.error_images) && record.error_images.length > 0 && record.error_images[0]) || record.product_image || record.image || null;
+
+    return {
+      name: record.product_name || record.item_name || record.name || 'Sản phẩm 1',
+      variant: record.product_variation || record.item_variation || '(none)',
+      status: statusLabel,
+      quantity: record.quantity ?? record.total_quantity ?? record.total_quantity_error ?? null,
+      unit: record.unit_name || record.unit || 'cái',
+      code: record.product_code || record.code || record.reference_no || '',
+      image: resolvedImage,
+    };
+  };
+
+  const placeholderImages = Array.from({ length: 10 }).map(() => '/icon/default/default.png');
+
+  const errorPopupProps = errorPopupData
+    ? {
+        id: errorPopupData?.id,
+        stage: errorPopupData?.stage_name || 'Vắt sổ',
+        errorCount: errorPopupData?.total_quantity_error ?? 0,
+        tags: Array.isArray(errorPopupData?.error_tags) && errorPopupData.error_tags.length > 0 ? errorPopupData.error_tags : ['sanphamloi', 'sanphamloi'],
+        images: Array.isArray(errorPopupData?.error_images) && errorPopupData.error_images.length > 0 ? errorPopupData.error_images : placeholderImages,
+        product: buildProductInfo(errorPopupData),
+      }
+    : null;
   const popupSubtitle = isDeleting ? (
     <span className='inline-flex items-center gap-2 text-[#003DA0]'>
       <LoadingButton hiddenTitle className='w-4 h-4 text-[#003DA0]' />
@@ -428,11 +490,6 @@ const CheckQuality = props => {
             <div className='w-full items-center flex justify-between gap-2'>
               <div className='flex gap-3 items-center w-full'>
                 <SearchComponent dataLang={dataLang} onChange={_HandleOnChangeKeySearch.bind(this)} colSpan={1} />
-                {/* <DateToDateComponent
-                                                // value={isState.valueDate}
-                                                // onChange={() => queryState({ valueDate: e })}
-                                                colSpan={2}
-                                            /> */}
                 <SelectComponent
                   options={[
                     {
@@ -556,7 +613,7 @@ const CheckQuality = props => {
                             {e?.branch_name}
                           </RowItemTable>
                           <RowItemTable colSpan={1} className={'flex justify-center items-center'}>
-                            <ActionButton onClick={() => handleOpenDeletePopup({ id: e?.id, soPhieuCK, transfers: e?.transfer_warehouse || [] })} />
+                            <ActionButton onViewErrors={() => handleOpenErrorPopup(e)} onClick={() => handleOpenDeletePopup({ id: e?.id, soPhieuCK, transfers: e?.transfer_warehouse || [] })} />
                           </RowItemTable>
                         </RowTable>
                       );
@@ -587,6 +644,19 @@ const CheckQuality = props => {
         }
       />
       {isState.popupResponse && <PopupState dataLang={dataLang} response={isState.popupResponse} onClose={handleClosePopupState} />}
+      {errorPopupProps && (
+        <div className='fixed inset-0 z-[1100] flex items-center justify-center bg-[#25387A50] backdrop-blur-[2.5px]'>
+          <PopupErrorInformation
+            onClose={handleCloseErrorPopup}
+            qcId={errorPopupProps.id}
+            stage={errorPopupProps.stage}
+            errorCount={errorPopupProps.errorCount}
+            tags={errorPopupProps.tags}
+            images={errorPopupProps.images}
+            product={errorPopupProps.product}
+          />
+        </div>
+      )}
       {deleteTarget && (
         <PopupConfim
           dataLang={dataLang}
