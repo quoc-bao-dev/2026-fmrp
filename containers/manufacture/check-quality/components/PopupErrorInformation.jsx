@@ -12,41 +12,11 @@ const deca = Lexend_Deca({
 
 const PopupErrorInformation = ({ onClose, stage = 'Vắt sổ', errorCount = 3, tags = ['sanphamloi'], images = [], product = {}, qcId }) => {
   const [activeImageIndex, setActiveImageIndex] = useState(null);
-  const hasImages = Array.isArray(images) && images.length > 0;
   const THUMBS_PER_ROW = 5;
   const MAX_ROWS = 1;
   const MAX_VISIBLE_THUMBS = THUMBS_PER_ROW * MAX_ROWS;
-  const hasOverflow = hasImages && images.length > MAX_VISIBLE_THUMBS;
-  const displayedThumbnails = hasImages ? (hasOverflow ? images.slice(0, MAX_VISIBLE_THUMBS - 1) : images.slice(0, MAX_VISIBLE_THUMBS)) : [];
-  const hiddenCount = hasOverflow ? images.length - (MAX_VISIBLE_THUMBS - 1) : 0;
-  const firstHiddenIndex = hasOverflow ? MAX_VISIBLE_THUMBS - 1 : null;
 
   // const { data, isLoading } = useCheckQualityDetail(isState.open, props?.id);
-
-  const handleOpenImage = index => {
-    if (!hasImages) return;
-    setActiveImageIndex(index);
-  };
-
-  const handleCloseImageModal = () => setActiveImageIndex(null);
-
-  const showPrevImage = e => {
-    e.stopPropagation();
-    setActiveImageIndex(prev => {
-      if (prev === null || !hasImages) return prev;
-      return prev > 0 ? prev - 1 : images.length - 1;
-    });
-  };
-
-  const showNextImage = e => {
-    e.stopPropagation();
-    setActiveImageIndex(prev => {
-      if (prev === null || !hasImages) return prev;
-      return (prev + 1) % images.length;
-    });
-  };
-
-  const currentImageSrc = hasImages && activeImageIndex !== null ? images[activeImageIndex] : null;
 
   const { data: qcDetail } = useCheckQualityDetail(Boolean(qcId), qcId);
 
@@ -63,18 +33,86 @@ const PopupErrorInformation = ({ onClose, stage = 'Vắt sổ', errorCount = 3, 
     return new Intl.NumberFormat('vi-VN').format(numeric);
   };
 
-  const productInfo = useMemo(() => {
-    const fallbackImage = (hasImages && images[0]) || product?.image || '/icon/noimagelogo.png';
+  const mappedData = useMemo(() => {
+    const qc = qcDetail?.data?.qc;
+    if (!qc) {
+      return {
+        product: {
+          name: product?.name || 'Áo sơ mi basic 01',
+          status: product?.status || 'Đang thực hiện',
+          quantity: product?.quantity !== undefined && product?.quantity !== null ? formatNumber(product.quantity) : null,
+          unit: product?.unit || 'cái',
+          variant: product?.variant || '(none)',
+          code: product?.code || 'TP-000001',
+          image: (Array.isArray(images) && images[0]) || product?.image || '/icon/noimagelogo.png',
+        },
+        stage,
+        errorCount,
+        tags,
+        images,
+      };
+    }
+
+    const firstItem = qc.items?.[0] || {};
+    const quantityValue = qc.total_quantity ?? null;
+    const resolvedImages = Array.isArray(qc.error?.file_error) ? qc.error.file_error : images;
+    const resolvedTags = Array.isArray(qc.error?.detail_errors) ? qc.error.detail_errors.map(err => err?.name).filter(Boolean) : tags;
+    const stageName = firstItem.stage_name || stage;
+
     return {
-      name: product?.name || 'Áo sơ mi basic 01',
-      status: product?.status || 'Đang thực hiện',
-      quantity: product?.quantity !== undefined && product?.quantity !== null ? formatNumber(product.quantity) : null,
-      unit: product?.unit || 'cái',
-      variant: product?.variant || '(none)',
-      code: product?.code || 'TP-000001',
-      image: fallbackImage,
+      product: {
+        name: firstItem.item_name || 'Chưa có tên sản phẩm',
+        status: qc.status === '1' ? 'Đang thực hiện' : qc.status === '0' ? 'Chưa thực hiện' : 'Tạm dừng',
+        quantity: quantityValue !== null ? formatNumber(quantityValue) : null,
+        unit: firstItem.unit_name || 'cái',
+        variant: firstItem.item_variation || '(none)',
+        code: firstItem.item_code || 'TP-000001',
+        image: resolvedImages?.[0] || '/icon/noimagelogo.png',
+      },
+      stage: stageName,
+      errorCount: qc.total_quantity_error ?? errorCount,
+      tags: resolvedTags.length ? resolvedTags : tags,
+      images: Array.isArray(resolvedImages) && resolvedImages.length ? resolvedImages : images,
     };
-  }, [product, hasImages, images]);
+  }, [qcDetail, product, tags, images, stage, errorCount]);
+
+  console.log({ mappedData });
+
+  const productInfo = mappedData.product;
+  const displayStage = mappedData.stage;
+  const displayErrorCount = mappedData.errorCount;
+  const displayTags = mappedData.tags;
+  const galleryImages = mappedData.images;
+
+  const hasImages = Array.isArray(galleryImages) && galleryImages.length > 0;
+  const hasOverflow = hasImages && galleryImages.length > MAX_VISIBLE_THUMBS;
+  const displayedThumbnails = hasImages ? (hasOverflow ? galleryImages.slice(0, MAX_VISIBLE_THUMBS - 1) : galleryImages.slice(0, MAX_VISIBLE_THUMBS)) : [];
+  const hiddenCount = hasOverflow ? galleryImages.length - (MAX_VISIBLE_THUMBS - 1) : 0;
+  const firstHiddenIndex = hasOverflow ? MAX_VISIBLE_THUMBS - 1 : null;
+  const currentImageSrc = hasImages && activeImageIndex !== null ? galleryImages[activeImageIndex] : null;
+
+  const handleOpenImage = index => {
+    if (!hasImages) return;
+    setActiveImageIndex(index);
+  };
+
+  const handleCloseImageModal = () => setActiveImageIndex(null);
+
+  const showPrevImage = e => {
+    e.stopPropagation();
+    setActiveImageIndex(prev => {
+      if (prev === null || !hasImages) return prev;
+      return prev > 0 ? prev - 1 : galleryImages.length - 1;
+    });
+  };
+
+  const showNextImage = e => {
+    e.stopPropagation();
+    setActiveImageIndex(prev => {
+      if (prev === null || !hasImages) return prev;
+      return (prev + 1) % galleryImages.length;
+    });
+  };
   return (
     <div className={`${deca.className} bg-white rounded-[24px] w-[546px] h-[310px]- p-6 relative`}>
       {/* Close Button */}
@@ -114,13 +152,13 @@ const PopupErrorInformation = ({ onClose, stage = 'Vắt sổ', errorCount = 3, 
 
       {/* Stage and Error Count Row */}
       <div className='flex items-center justify-between mt-[16px] h-[48px] border-b border-[#F3F3F4] px-3'>
-        <span className='text-[14px] font-semibold leading-[20px] text-[#3276FA]'>Công đoạn: {stage}</span>
-        <span className='text-[14px] font-semibold leading-[20px] text-[#EE1E1E]'>Số lượng lỗi: {errorCount} cái</span>
+        <span className='text-[14px] font-semibold leading-[20px] text-[#3276FA]'>Công đoạn: {displayStage}</span>
+        <span className='text-[14px] font-semibold leading-[20px] text-[#EE1E1E]'>Số lượng lỗi: {displayErrorCount} cái</span>
       </div>
 
       {/* Tags */}
       <div className='flex items-center gap-2 mb-5 flex-wrap mt-[24px] px-3'>
-        {tags.map((tag, index) => (
+        {displayTags.map((tag, index) => (
           <span key={index} className='px-3 py-1 bg-[#DBEBFF] text-black text-sm rounded-lg font-normal lowercase'>
             {tag}
           </span>
@@ -144,7 +182,7 @@ const PopupErrorInformation = ({ onClose, stage = 'Vắt sổ', errorCount = 3, 
         {hasOverflow && firstHiddenIndex !== null && (
           <div className='relative w-full aspect-[87/64] rounded-[4px] overflow-hidden' onClick={() => handleOpenImage(firstHiddenIndex)}>
             <button type='button' className='absolute inset-0 focus:outline-none focus:ring-2 focus:ring-[#3276FA]'>
-              <Image src={images[firstHiddenIndex]} alt={`Error image ${firstHiddenIndex + 1}`} width={87} height={64} className='w-full h-full object-cover pointer-events-none' />
+              <Image src={galleryImages[firstHiddenIndex]} alt={`Error image ${firstHiddenIndex + 1}`} width={87} height={64} className='w-full h-full object-cover pointer-events-none' />
             </button>
             <div className='absolute inset-0 bg-[#1F1F1F]/60 text-white flex items-center justify-center text-sm font-semibold'>+{hiddenCount}</div>
           </div>
@@ -162,7 +200,7 @@ const PopupErrorInformation = ({ onClose, stage = 'Vắt sổ', errorCount = 3, 
             >
               <CloseRoundedIcon size={32} color='#FFFFFF' />
             </button>
-            {images.length > 1 && (
+            {galleryImages.length > 1 && (
               <>
                 <button
                   type='button'
@@ -187,9 +225,9 @@ const PopupErrorInformation = ({ onClose, stage = 'Vắt sổ', errorCount = 3, 
                 <Image src={currentImageSrc} alt='Preview image' fill className='object-contain' sizes='(max-width: 1024px) 80vw, 50vw' />
               </div>
             </div>
-            {images.length > 0 && activeImageIndex !== null && (
+            {galleryImages.length > 0 && activeImageIndex !== null && (
               <div className='absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm font-medium px-3 py-1 rounded-full z-[1210]'>
-                {activeImageIndex + 1}/{images.length}
+                {activeImageIndex + 1}/{galleryImages.length}
               </div>
             )}
           </div>

@@ -266,7 +266,7 @@ const ServiceInformation = props => {
             <div className='flex space-x-4 mt-4'></div>
 
             {/* ===== title history package ===== */}
-            {isDevelop && (
+            {true && (
               <div className='flex justify-between- items-center bg-[#ECF0F4] mt-3 px-3 py-3'>
                 <h3 className='text-[15px] uppercase w-full  rounded  flex items-center space-x-3 '>
                   {' '}
@@ -275,9 +275,9 @@ const ServiceInformation = props => {
               </div>
             )}
 
-            <button onClick={handleOpenPopup}>Mở popup</button>
+            {/* <button onClick={handleOpenPopup}>Mở popup</button> */}
             {/* ===== table history package ===== */}
-            {isDevelop && (
+            {true && (
               <div className='mt-4 border border-[#E4E7EC] rounded-lg overflow-hidden bg-white flex flex-col'>
                 <div className='grid grid-cols-12 bg-[#F9FAFB] text-[#667085] uppercase text-[12px] 3xl:text-sm font-semibold px-4 py-3 flex-shrink-0'>
                   <div className='col-span-2'>Ngày giao dịch</div>
