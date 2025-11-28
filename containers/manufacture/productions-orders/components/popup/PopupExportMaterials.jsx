@@ -52,6 +52,8 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
   const [activeTab, setActiveTab] = useState({ id: 'current', name: 'Nguyên liệu cần xuất' });
   const reexportTabRef = useRef(null);
   const [reexportSelectedCount, setReexportSelectedCount] = useState(0);
+  const [isRenderErrorNVLReexport, setIsRenderErrorNVLReexport] = useState(false);
+  const [errorNVLDataReexport, setErrorNVLDataReexport] = useState({ items: [] });
 
   // Preload hình ảnh exportMaterials.webp khi component mount
   useEffect(() => {
@@ -275,10 +277,18 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
     if (!payload) return;
     try {
       const response = await onSaveReexport(payload);
-      if (response?.isSuccess === 1) {
+      if (response?.isSuccess === 1 || response?.isSuccess === true) {
         showToast('success', response?.message || 'Xuất thêm nguyên liệu thành công');
         reexportTabRef.current?.resetSelections?.();
+        // Reset error state
+        setIsRenderErrorNVLReexport(false);
+        setErrorNVLDataReexport({ items: [] });
       } else {
+        // Xử lý khi có lỗi
+        if (response?.data?.errors) {
+          setErrorNVLDataReexport({ items: response.data.errors });
+          setIsRenderErrorNVLReexport(true);
+        }
         showToast('error', response?.message || 'Xuất thêm nguyên liệu thất bại');
       }
     } catch (error) {
@@ -454,14 +464,14 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
           </motion.div>
         </div>
       </div>
-      <TabSwitcherWithSlidingBackground
+      {/* <TabSwitcherWithSlidingBackground
         tabs={tabList}
         activeTab={activeTab}
         onChange={setActiveTab}
         className='!p-1 flex-shrink-0'
         buttonClassName='!py-1.5 !px-3 !responsive-text-sm'
         buttonActiveClassName='!top-1 !bottom-1'
-      />
+      /> */}
 
       {activeTab?.id === 'current' && (
         <PopupExportMaterialsTabCurrent
@@ -492,6 +502,10 @@ const PopupExportMaterials = ({ code, onClose, id }) => {
           ref={reexportTabRef}
           poId={data?.poi_id || id}
           onSelectionChange={setReexportSelectedCount}
+          isRenderErrorNVL={isRenderErrorNVLReexport}
+          setIsRenderErrorNVL={setIsRenderErrorNVLReexport}
+          errorNVLData={errorNVLDataReexport}
+          formatNumberWithSetting={formatNumberWithSetting}
         />
       )}
     </div>
