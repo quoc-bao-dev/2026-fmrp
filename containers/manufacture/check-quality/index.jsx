@@ -265,21 +265,23 @@ const CheckQuality = props => {
     );
   };
 
-  const ActionButton = ({ onClick, onViewErrors }) => {
+  const ActionButton = ({ onClick, onViewErrors, hasError }) => {
     return (
       <div className='flex gap-2 items-center'>
-        <Tooltip title='Xem lỗi' arrow theme='dark' disabled={isDeleting}>
-          <button
-            type='button'
-            onClick={onViewErrors}
-            disabled={isDeleting}
-            className={`group rounded-lg p-1 border border-transparent transition-all ease-in-out flex items-center justify-center hover:border-[#C25705] hover:bg-[#FFECDD] ${
-              isDeleting ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-          >
-            <CameraFlashIcon className='size-5' />
-          </button>
-        </Tooltip>
+        {hasError && (
+          <Tooltip title='Xem lỗi' arrow theme='dark' disabled={isDeleting}>
+            <button
+              type='button'
+              onClick={onViewErrors}
+              disabled={isDeleting}
+              className={`group rounded-lg p-1 border border-transparent transition-all ease-in-out flex items-center justify-center hover:border-[#C25705] hover:bg-[#FFECDD] ${
+                isDeleting ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              <CameraFlashIcon className='size-5' />
+            </button>
+          </Tooltip>
+        )}
         <Tooltip title='Xoá phiếu' arrow theme='dark' disabled={isDeleting}>
           <button
             type='button'
@@ -613,7 +615,11 @@ const CheckQuality = props => {
                             {e?.branch_name}
                           </RowItemTable>
                           <RowItemTable colSpan={1} className={'flex justify-center items-center'}>
-                            <ActionButton onViewErrors={() => handleOpenErrorPopup(e)} onClick={() => handleOpenDeletePopup({ id: e?.id, soPhieuCK, transfers: e?.transfer_warehouse || [] })} />
+                            <ActionButton
+                              onViewErrors={() => handleOpenErrorPopup(e)}
+                              onClick={() => handleOpenDeletePopup({ id: e?.id, soPhieuCK, transfers: e?.transfer_warehouse || [] })}
+                              hasError={e?.has_error}
+                            />
                           </RowItemTable>
                         </RowTable>
                       );
