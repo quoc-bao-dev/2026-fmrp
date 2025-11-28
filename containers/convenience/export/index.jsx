@@ -58,8 +58,8 @@ const initsArr = {
 };
 
 const initsPageLimit = {
-  page: 1,
-  limit: 100,
+  page: Number(1),
+  limit: Number(100),
 };
 
 const Export = props => {
@@ -273,27 +273,47 @@ const Export = props => {
   };
 
   const _ServerSending = () => {
+    // Convert string sang number khi gửi lên API (loại bỏ dấu phẩy nếu có)
+    const parseToNumber = (val) => {
+      if (typeof val === 'number') return val;
+      if (typeof val === 'string') {
+        // Loại bỏ dấu phẩy (thousand separator) trước khi convert
+        const cleaned = val.replace(/,/g, '');
+        const num = Number(cleaned);
+        return isNaN(num) ? 0 : num;
+      }
+      const num = Number(val);
+      return isNaN(num) ? 0 : num;
+    };
+
+    const parsedPage = parseToNumber(pageLimit.page);
+    const parsedLimit = parseToNumber(pageLimit.limit);
+
+    const formattedPageLimit = {
+      page: parsedPage || 1,
+      limit: parsedLimit === -1 ? -1 : (parsedLimit || 100),
+    };
     if (tabPage == 1) {
       exportClient({
-        pageLimit,
+        pageLimit: formattedPageLimit,
         clients: arrEmty.clients || [],
         contacts: arrEmty.contacts || [],
         address: arrEmty.address || [],
       });
     } else if (tabPage == 2) {
       exportSuppliers({
-        pageLimit,
+        pageLimit: formattedPageLimit,
         suppliers: arrEmty.suppliers || [],
         contacts: arrEmty.contacts || [],
       });
     } else if (tabPage == 3) {
       exportMaterials({
-        pageLimit,
+        pageLimit: formattedPageLimit,
         materials: arrEmty.materials || [],
       });
     } else if (tabPage == 4) {
       exportProducts({
-        pageLimit,
+        pageLimit: formattedPageLimit,
         products: arrEmty.products || [],
       });
     }
