@@ -1,18 +1,35 @@
 import { EmptyExprired } from '@/components/UI/common/EmptyExprired';
 import { Container } from '@/components/UI/common/layout';
+import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
+import PopupBuyMoreUser from '@/components/UI/popup/PopupBuyMoreUser';
+import PopupSuccessfulBuyMoreUser from '@/components/UI/popup/PopupSuccessfulBuyMoreUser';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import { useGetUpgradePackage } from '@/hooks/useAuth';
-import PopupBuyMoreUser from '@/components/UI/popup/PopupBuyMoreUser';
 import useStatusExprired from '@/hooks/useStatusExprired';
+import { useHistoryUpgradePackage } from '@/managers/api/upgrade-package/useHistoryUpgradePackage';
 import { formatMoment } from '@/utils/helpers/formatMoment';
 import { Clock as IconClock, UserAdd } from 'iconsax-react';
 import Head from 'next/head';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ListBtn_Setting } from './information';
+import { useGetBuyMoreUserQR } from '@/managers/api/upgrade-package/useGetBuyMoreUserQR';
 
 const transactionTypeMap = {
+  1: {
+    label: 'Nâng cấp gói Pro',
+    className: 'text-[#F2994A] bg-[#F2994A]/10',
+  },
+  2: {
+    label: 'Mua thêm user',
+    className: 'text-[#12B76A] bg-[#12B76A]/10',
+  },
+  3: {
+    label: 'Gia hạn',
+    className: 'text-[#155EEF] bg-[#155EEF]/10',
+  },
+  // Fallback cho các type cũ (nếu có)
   extend: {
     label: 'Gia hạn',
     className: 'text-[#155EEF] bg-[#155EEF]/10',
@@ -32,24 +49,36 @@ const transactionStatusMap = {
     label: 'Hoàn tất',
     className: 'text-[#027A48] bg-[#ECFDF3]',
   },
+  create: {
+    label: 'Đang xử lý',
+    className: 'text-[#B54708] bg-[#FEF4E6]',
+  },
   pending: {
     label: 'Đang xử lý',
     className: 'text-[#B54708] bg-[#FEF4E6]',
   },
-  failed: {
+  fail: {
     label: 'Thất bại',
     className: 'text-[#B42318] bg-[#FEF3F2]',
   },
 };
 
-const renderBadge = (map, key) => {
-  const config = map[key] || { label: 'Khác', className: 'text-[#475467] bg-[#F2F4F7]' };
-  return <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${config.className}`}>{config.label}</span>;
+const renderBadge = (map, key, label) => {
+  const config = map[key] || { label: label || 'Khác', className: 'text-[#475467] bg-[#F2F4F7]' };
+  return <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${config.className}`}>{label || config.label}</span>;
 };
 
-const renderTransactionType = type => renderBadge(transactionTypeMap, type);
+const renderTransactionType = (type, typeName) => {
+  // Sử dụng typeName từ API nếu có, nếu không thì dùng label từ map
+  const label = typeName || transactionTypeMap[type]?.label || 'Khác';
+  return renderBadge(transactionTypeMap, type, label);
+};
 
-const renderTransactionStatus = status => renderBadge(transactionStatusMap, status);
+const renderTransactionStatus = (status, statusName) => {
+  // Sử dụng statusName từ API nếu có, nếu không thì dùng label từ map
+  const label = statusName || transactionStatusMap[status]?.label || 'Khác';
+  return renderBadge(transactionStatusMap, status, label);
+};
 
 const formatCurrency = amount => {
   if (typeof amount !== 'number') return amount;
@@ -59,32 +88,6 @@ const formatCurrency = amount => {
     maximumFractionDigits: 0,
   }).format(amount);
 };
-
-const createMockTransaction = (type, amount, status, description, daysAgo = 0) => ({
-  id: `${type}-${status}-${daysAgo}`,
-  transactionDate: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString(),
-  type,
-  amount,
-  status,
-  description,
-});
-
-const mockData = [
-  createMockTransaction('extend', 2300000, 'success', 'Gia hạn gói Pro thêm 12 tháng', 1),
-  createMockTransaction('upgrade', 5600000, 'pending', 'Nâng cấp gói Start Up lên Pro', 3),
-  createMockTransaction('add_user', 1200000, 'success', 'Mua thêm 5 user cho team kế toán', 7),
-  createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
-  createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
-  createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
-  createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
-  // createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
-  // createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
-  // createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
-  // createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
-  // createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
-  // createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
-  // createMockTransaction('extend', 2300000, 'failed', 'Gia hạn gói Pro không thành công', 9),
-];
 
 const initialPackage = {
   title: 'Dùng thử',
@@ -104,9 +107,32 @@ const ServiceInformation = props => {
   const auth = useSelector(state => state?.auth);
   const dispatch = useDispatch();
   const { data: upgradePackageData } = useGetUpgradePackage();
+  const { data: historyUpgradePackageData, isLoading: isLoadingHistory } = useHistoryUpgradePackage();
 
   const [listPackage, setListPackage] = useState(initialPackage);
-  const historyTransactions = mockData;
+
+  // Map dữ liệu từ API response ra format cho table
+  // Sử dụng mock data khi không có dữ liệu từ API (để test UI)
+  const historyTransactions = useMemo(() => {
+    // Sử dụng mock data nếu không có dữ liệu từ API (chỉ trong development)
+    const dataSource = historyUpgradePackageData;
+
+    if (!dataSource?.result || !dataSource?.data) {
+      return [];
+    }
+
+    return dataSource.data.map(item => ({
+      id: item.id,
+      transactionDate: item.date_create,
+      type: parseInt(item.type_upgrade_package) || item.type_upgrade_package, // 1 -> nâng cấp, 2 -> mua user, 3 -> gia hạn
+      typeName: item.type_upgrade_package_name,
+      amount: parseFloat(item.amount_paid) || 0,
+      status: item.status, // "success", "create", ...
+      statusName: item.name_status,
+      description: item.name_package_detail || item.name_package || '-',
+    }));
+  }, [historyUpgradePackageData]);
+
   const hasHistoryData = historyTransactions?.length > 0;
 
   const handleOpenBuyMoreUser = () => {
@@ -114,13 +140,43 @@ const ServiceInformation = props => {
       type: 'statePopupGlobal',
       payload: {
         open: true,
-        children: (
-          <PopupBuyMoreUser
-            upgradePackageData={upgradePackageData}
-          />
-        ),
+        children: <PopupBuyMoreUser upgradePackageData={upgradePackageData} />,
       },
     });
+  };
+
+  const handleOpenPopup = () => {
+    // Đóng popup hiện tại nếu có
+    dispatch({
+      type: 'statePopupGlobal',
+      payload: {
+        open: false,
+      },
+    });
+
+    // Mở popup mới sau 1 giây (tùy chọn)
+    setTimeout(() => {
+      dispatch({
+        type: 'statePopupGlobal',
+        payload: {
+          open: true,
+          children: (
+            <PopupSuccessfulBuyMoreUser
+              dataLang={dataLang}
+              data={{
+                content_success: {
+                  date: formatMoment(new Date(), FORMAT_MOMENT.DATE_TIME_SLASH_LONG),
+                  code_upgrade_package: 'ORD-123456', // Thay bằng code thực tế từ API
+                  number_of_users: 5, // Thay bằng số lượng user thực tế
+                  name_package: auth?.name_package_service || 'Professional',
+                  expiration_date: formatMoment(auth?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG),
+                },
+              }}
+            />
+          ),
+        },
+      });
+    }, 100);
   };
 
   useEffect(() => {
@@ -162,7 +218,7 @@ const ServiceInformation = props => {
 
             <div className='flex items-center bg-[#ECF0F4] rounded-lg mt-3 pl-3 p-2'>
               <h3 className='text-[15px] uppercase w-full rounded flex items-center space-x-3'>Gói đang sử dụng</h3>
-              {/* {auth?.trial !== '1' && (
+              {auth?.trial !== '1' && (
                 <button
                   onClick={handleOpenBuyMoreUser}
                   className='ml-auto px-2 py-1 rounded-md bg-white border border-[#0375F3] text-[#0375F3] hover:bg-[#EBF5FF] flex space-x-2 items-center hover:opacity-90 transition'
@@ -170,7 +226,7 @@ const ServiceInformation = props => {
                   <UserAdd size='20' className='text-[#0375F3]' />
                   <span className='truncate'>Mua thêm user</span>
                 </button>
-              )} */}
+              )}
             </div>
             <div className='grid grid-cols-5 py-3 mt-5 gap-5 border-b border-[#e7eaee]'>
               {/* <div className='col-span-1 uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>Hình thức</div> */}
@@ -219,6 +275,7 @@ const ServiceInformation = props => {
               </div>
             )}
 
+            <button onClick={handleOpenPopup}>Mở popup</button>
             {/* ===== table history package ===== */}
             {isDevelop && (
               <div className='mt-4 border border-[#E4E7EC] rounded-lg overflow-hidden bg-white flex flex-col'>
@@ -230,15 +287,17 @@ const ServiceInformation = props => {
                   <div className='col-span-4'>Nội dung giao dịch</div>
                 </div>
 
-                {hasHistoryData ? (
+                {isLoadingHistory ? (
+                  <Loading className='h-[280px] 2xl:h-[420px]' />
+                ) : hasHistoryData ? (
                   <>
-                    <div className='divide-y divide-[#EAECF0] overflow-y-auto max-h-[280px] 2xl:max-h-[400px] flex-1'>
+                    <div className='divide-y divide-[#EAECF0] overflow-y-auto h-[280px] 2xl:h-[420px]  max-h-[280px] 2xl:max-h-[420px] flex-1'>
                       {historyTransactions.map(item => (
                         <div key={item.id} className='grid grid-cols-12 px-4 py-4 items-center 3xl:text-base text-sm text-[#1D2939] hover:bg-[#F9FAFB]/50 cursor-pointer'>
                           <div className='col-span-2 font-medium'>{item.transactionDate ? formatMoment(item.transactionDate, FORMAT_MOMENT.DATE_TIME_SLASH_LONG) : '-'}</div>
-                          <div className='col-span-2'>{renderTransactionType(item.type)}</div>
+                          <div className='col-span-2'>{renderTransactionType(item.type, item.typeName)}</div>
                           <div className='col-span-2 text-right font-semibold text-[#003DA0]'>{formatCurrency(item.amount)}</div>
-                          <div className='col-span-2 flex justify-center'>{renderTransactionStatus(item.status)}</div>
+                          <div className='col-span-2 flex justify-center'>{renderTransactionStatus(item.status, item.statusName)}</div>
                           <div className='col-span-4 text-[#475467]'>{item.description}</div>
                         </div>
                       ))}
@@ -253,7 +312,9 @@ const ServiceInformation = props => {
                     </div>
                   </>
                 ) : (
-                  <NoData className='py-10' type='table' titleText='Chưa có giao dịch' />
+                  <div className='h-[280px] 2xl:h-[420px] flex items-center justify-center'>
+                    <NoData type='table' titleText='Chưa có giao dịch' />
+                  </div>
                 )}
               </div>
             )}
@@ -263,39 +324,5 @@ const ServiceInformation = props => {
     </>
   );
 };
-
-const PriceItem = React.memo(props => {
-  const [onHover, sOnHover] = useState(false);
-  const _OnHoverItem = e => sOnHover(e);
-
-  return (
-    <div
-      onMouseLeave={_OnHoverItem.bind(this, false)}
-      onMouseOver={_OnHoverItem.bind(this, true)}
-      className={`${onHover ? 'bg-[#48BDFF0F]/[0.06]' : 'bg-white'} py-4 rounded-lg transition duration-200`}
-    >
-      <div className='flex justify-center'>{props.title}</div>
-      <h5 className='mt-3 text-2xl text-[#0F4F9E] justify-center font-bold flex items-start'>
-        {props.price}
-        <span className='text-sm'>/tháng</span>
-      </h5>
-      <div className={`${onHover ? 'border-[#0F4F9E]' : 'border-[#9295a4]'} w-full h-1 border-t border-dashed mt-3`} />
-      <h6 className='mt-4 text-[#52575E] font-[400] text-center'>MUA TỐI THIỂU {props.minimum}</h6>
-      <div className={`${onHover ? 'border-[#0F4F9E]' : 'border-[#9295a4]'} w-full h-1 border-t border-dashed mt-4`} />
-      {props.content1}
-      <div className={`${onHover ? 'border-[#0F4F9E]' : 'border-[#9295a4]'} w-full h-1 border-t border-dashed mt-4`} />
-      <div className='mt-4 px-6'>
-        <h6 className='text-[#5599EC] uppercase text-lg'>tính năng phần mềm</h6>
-        {props.content2}
-      </div>
-      <div className={`${onHover ? 'border-[#0F4F9E]' : 'border-[#9295a4]'} w-full h-1 border-t border-dashed mt-5`} />
-      <div className='flex justify-center my-6'>
-        <button className={`${onHover ? 'border-transparent bg-[#003DA0] text-white' : 'border-[#D0D5DD] bg-white text-[#344054]'} transition duration-200 w-[80%] py-3 border rounded-md`}>
-          Mua ngay
-        </button>
-      </div>
-    </div>
-  );
-});
 
 export default ServiceInformation;

@@ -86,6 +86,7 @@ import { createStore } from 'redux';
  * @property {{open:boolean}} statePopupChangePassword Trạng thái popup đổi mật khẩu.
  * @property {{open:boolean}} statePopupUpgradeProfessional Popup nâng cấp gói dịch vụ.
  * @property {{open:boolean}} statePopupSuccessfulPayment Popup thanh toán thành công.
+ * @property {{open:boolean}} statePopupSuccessfulBuyMoreUser Popup mua thêm user thành công.
  * @property {{open:boolean}} statePopupRecommendation Popup gợi ý nâng cấp.
  * @property {{open:boolean}} statePopupUpdateVersion Popup cập nhật phiên bản.
  * @property {{open:boolean}} statePopupParent Popup dùng chung cho parent modal.
@@ -166,6 +167,9 @@ const adminState = {
     open: false,
   },
   statePopupSuccessfulPayment: {
+    open: false,
+  },
+  statePopupSuccessfulBuyMoreUser: {
     open: false,
   },
   statePopupRecommendation: {
@@ -273,6 +277,8 @@ function adminReducer(state = adminState, action) {
       return { ...state, statePopupUpgradeProfessional: action.payload };
     case 'statePopupSuccessfulPayment':
       return { ...state, statePopupSuccessfulPayment: action.payload };
+    case 'statePopupSuccessfulBuyMoreUser':
+      return { ...state, statePopupSuccessfulBuyMoreUser: action.payload };
     case 'statePopupRecommendation':
       return { ...state, statePopupRecommendation: action.payload };
     case 'statePopupUpdateVersion':
