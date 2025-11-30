@@ -10,21 +10,32 @@ const deca = Lexend_Deca({
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
 });
 
-const PopupErrorInformation = ({ onClose, stage = 'Vắt sổ', errorCount = 3, tags = ['sanphamloi'], images = [], product = {}, qcId }) => {
+const PopupErrorInformation = ({ onClose, qcId }) => {
   const [activeImageIndex, setActiveImageIndex] = useState(null);
+  const [failedImages, setFailedImages] = useState(new Set());
+  const DEFAULT_IMAGE = '/icon/noimagelogo.png';
   const THUMBS_PER_ROW = 5;
   const MAX_ROWS = 1;
   const MAX_VISIBLE_THUMBS = THUMBS_PER_ROW * MAX_ROWS;
 
-  // const { data, isLoading } = useCheckQualityDetail(isState.open, props?.id);
+  const handleImageError = imageSrc => {
+    setFailedImages(prev => new Set([...prev, imageSrc]));
+  };
+
+  const getImageSrc = originalSrc => {
+    if (!originalSrc || failedImages.has(originalSrc)) {
+      return DEFAULT_IMAGE;
+    }
+    return originalSrc;
+  };
 
   const { data: qcDetail } = useCheckQualityDetail(Boolean(qcId), qcId);
 
   useEffect(() => {
-    if (qcDetail) {
-      console.log('QC detail popup:', qcDetail);
-    }
-  }, [qcDetail]);
+    // Reset failed images when qcId changes
+    setFailedImages(new Set());
+    setActiveImageIndex(null);
+  }, [qcId]);
 
   const formatNumber = value => {
     if (value === null || value === undefined || value === '') return null;
@@ -34,30 +45,31 @@ const PopupErrorInformation = ({ onClose, stage = 'Vắt sổ', errorCount = 3, 
   };
 
   const mappedData = useMemo(() => {
-    const qc = qcDetail?.data?.qc;
+    const qc = qcDetail?.qc;
+
     if (!qc) {
       return {
         product: {
-          name: product?.name || 'Áo sơ mi basic 01',
-          status: product?.status || 'Đang thực hiện',
-          quantity: product?.quantity !== undefined && product?.quantity !== null ? formatNumber(product.quantity) : null,
-          unit: product?.unit || 'cái',
-          variant: product?.variant || '(none)',
-          code: product?.code || 'TP-000001',
-          image: (Array.isArray(images) && images[0]) || product?.image || '/icon/noimagelogo.png',
+          name: 'Chưa có tên sản phẩm',
+          status: null,
+          quantity: null,
+          unit: 'cái',
+          variant: '(none)',
+          code: '',
+          image: '/icon/noimagelogo.png',
         },
-        stage,
-        errorCount,
-        tags,
-        images,
+        stage: 'Chưa có công đoạn',
+        errorCount: 0,
+        tags: [],
+        images: [],
       };
     }
 
     const firstItem = qc.items?.[0] || {};
     const quantityValue = qc.total_quantity ?? null;
-    const resolvedImages = Array.isArray(qc.error?.file_error) ? qc.error.file_error : images;
-    const resolvedTags = Array.isArray(qc.error?.detail_errors) ? qc.error.detail_errors.map(err => err?.name).filter(Boolean) : tags;
-    const stageName = firstItem.stage_name || stage;
+    const resolvedImages = Array.isArray(qc.error?.file_error) ? qc.error.file_error : [];
+    const resolvedTags = Array.isArray(qc?.error?.items?.detail_errors) ? qc?.error?.items?.detail_errors.map(err => err?.name_detail_error).filter(Boolean) : [];
+    const stageName = firstItem.stage_name || 'Chưa có công đoạn';
 
     return {
       product: {
@@ -66,17 +78,15 @@ const PopupErrorInformation = ({ onClose, stage = 'Vắt sổ', errorCount = 3, 
         quantity: quantityValue !== null ? formatNumber(quantityValue) : null,
         unit: firstItem.unit_name || 'cái',
         variant: firstItem.item_variation || '(none)',
-        code: firstItem.item_code || 'TP-000001',
+        code: firstItem.item_code || '',
         image: resolvedImages?.[0] || '/icon/noimagelogo.png',
       },
       stage: stageName,
-      errorCount: qc.total_quantity_error ?? errorCount,
-      tags: resolvedTags.length ? resolvedTags : tags,
-      images: Array.isArray(resolvedImages) && resolvedImages.length ? resolvedImages : images,
+      errorCount: qc.total_quantity_error ?? 0,
+      tags: resolvedTags,
+      images: resolvedImages,
     };
-  }, [qcDetail, product, tags, images, stage, errorCount]);
-
-  console.log({ mappedData });
+  }, [qcDetail]);
 
   const productInfo = mappedData.product;
   const displayStage = mappedData.stage;
@@ -127,7 +137,7 @@ const PopupErrorInformation = ({ onClose, stage = 'Vắt sổ', errorCount = 3, 
       {/* Product information */}
       <div className='flex gap-3 rounded-2xl '>
         <div className='relative w-16 h-16 rounded-[4px] bg-[#E4E8F0] overflow-hidden flex items-center justify-center'>
-          {productInfo.image ? <Image src={productInfo.image} alt={productInfo.name} fill sizes='64px' className='object-cover' /> : <span className='text-xs text-[#9295A4]'>No image</span>}
+          <Image src={getImageSrc(productInfo.image)} alt={productInfo.name} fill sizes='64px' className='object-cover' onError={() => handleImageError(productInfo.image)} />
         </div>
         <div className='flex flex-col  gap-1 flex-1 min-w-0'>
           <div className='flex  flex-col items-start  gap-2'>
@@ -153,7 +163,9 @@ const PopupErrorInformation = ({ onClose, stage = 'Vắt sổ', errorCount = 3, 
       {/* Stage and Error Count Row */}
       <div className='flex items-center justify-between mt-[16px] h-[48px] border-b border-[#F3F3F4] px-3'>
         <span className='text-[14px] font-semibold leading-[20px] text-[#3276FA]'>Công đoạn: {displayStage}</span>
-        <span className='text-[14px] font-semibold leading-[20px] text-[#EE1E1E]'>Số lượng lỗi: {displayErrorCount} cái</span>
+        <span className='text-[14px] font-semibold leading-[20px] text-[#EE1E1E]'>
+          Số lượng lỗi: {displayErrorCount} {productInfo.unit}
+        </span>
       </div>
 
       {/* Tags */}
@@ -175,14 +187,21 @@ const PopupErrorInformation = ({ onClose, stage = 'Vắt sổ', errorCount = 3, 
                 onClick={() => handleOpenImage(index)}
                 className='w-full aspect-[87/64] rounded-[4px] overflow-hidden bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#3276FA]'
               >
-                <Image src={image} alt={`Error image ${index + 1}`} width={174} height={128} className='w-full h-full object-cover' />
+                <Image src={getImageSrc(image)} alt={`Error image ${index + 1}`} width={174} height={128} className='w-full h-full object-cover' onError={() => handleImageError(image)} />
               </button>
             ))
           : Array.from({ length: 5 }).map((_, index) => <div key={index} className='w-full aspect-[87/64] rounded-[4px] bg-gray-100' />)}
         {hasOverflow && firstHiddenIndex !== null && (
           <div className='relative w-full aspect-[87/64] rounded-[4px] overflow-hidden' onClick={() => handleOpenImage(firstHiddenIndex)}>
             <button type='button' className='absolute inset-0 focus:outline-none focus:ring-2 focus:ring-[#3276FA]'>
-              <Image src={galleryImages[firstHiddenIndex]} alt={`Error image ${firstHiddenIndex + 1}`} width={87} height={64} className='w-full h-full object-cover pointer-events-none' />
+              <Image
+                src={getImageSrc(galleryImages[firstHiddenIndex])}
+                alt={`Error image ${firstHiddenIndex + 1}`}
+                width={87}
+                height={64}
+                className='w-full h-full object-cover pointer-events-none'
+                onError={() => handleImageError(galleryImages[firstHiddenIndex])}
+              />
             </button>
             <div className='absolute inset-0 bg-[#1F1F1F]/60 text-white flex items-center justify-center text-sm font-semibold'>+{hiddenCount}</div>
           </div>
@@ -222,7 +241,14 @@ const PopupErrorInformation = ({ onClose, stage = 'Vắt sổ', errorCount = 3, 
             )}
             <div className='relative w-full h-full flex items-center justify-center px-6 py-8 '>
               <div className='relative w-full h-full'>
-                <Image src={currentImageSrc} alt='Preview image' fill className='object-contain' sizes='(max-width: 1024px) 80vw, 50vw' />
+                <Image
+                  src={getImageSrc(currentImageSrc)}
+                  alt='Preview image'
+                  fill
+                  className='object-contain'
+                  sizes='(max-width: 1024px) 80vw, 50vw'
+                  onError={() => handleImageError(currentImageSrc)}
+                />
               </div>
             </div>
             {galleryImages.length > 0 && activeImageIndex !== null && (
