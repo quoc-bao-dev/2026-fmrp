@@ -34,10 +34,13 @@ export const convertWarehousesToDropdownData = listWarehouses => {
 
         groups[warehouse.name_warehouse].push({
           name_location: item.name_location,
+          name_warehouse: warehouse.name_warehouse,
           lot: item.lot,
           expiration_date: item.expiration_date,
           total_quantity: Number.isNaN(resolvedTotal) ? 0 : resolvedTotal,
           id_warehouse_custom: item.id_warehouse_custom,
+          warehouse_id: item.warehouse_id || warehouse.warehouse_id || '',
+          location_id: item.location_id || warehouse.location_id || '',
         });
       });
     } else {
@@ -50,10 +53,13 @@ export const convertWarehousesToDropdownData = listWarehouses => {
 
       groups[warehouse.name_warehouse].push({
         name_location: warehouse.name_location,
+        name_warehouse: warehouse.name_warehouse,
         lot: warehouse.lot,
         expiration_date: warehouse.expiration_date,
         total_quantity: Number.isNaN(fallbackTotal) ? 0 : fallbackTotal,
         id_warehouse_custom: warehouse.id_warehouse_custom,
+        warehouse_id: warehouse.warehouse_id || '',
+        location_id: warehouse.location_id || '',
       });
     }
   });
