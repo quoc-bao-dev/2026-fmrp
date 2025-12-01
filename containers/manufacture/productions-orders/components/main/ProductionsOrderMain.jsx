@@ -58,6 +58,7 @@ import DetailProductionOrderList from '../ui/DetailProductionOrderList';
 import PlaningProductionOrder from '../ui/PlaningProductionOrder';
 import TabKeepStock from '../ui/tabKeepStock';
 import { listDropdownCompleteStage, listLsxStatus } from './constants/listData';
+import PopupRecallMaterials from '../popup/PopupRecallMaterials';
 
 const initialState = {
   isTab: 'item',
@@ -964,6 +965,27 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
   const handClickDropdownCompleteStage = type => {
     const currentPackage = dataSeting?.package;
 
+    if (type === 'recall_materials') {
+      dispatch({
+        type: 'statePopupGlobal',
+        payload: {
+          open: true,
+          children: (
+            <PopupRecallMaterials
+              onClose={() => {
+                dispatch({
+                  type: 'statePopupGlobal',
+                  payload: { open: false },
+                });
+                // Làm mới dữ liệu sau khi hoàn thành lệnh sản xuất
+                refreshData();
+              }}
+            />
+          ),
+        },
+      });
+    }
+      
     // xử lý button tổng toàn lệnh
     if (type === 'normal') {
       dispatch({
@@ -1026,6 +1048,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
               }}
               code={isStateProvider.productionsOrders.dataProductionOrderDetail.title}
               id={isStateProvider?.productionsOrders?.idDetailProductionOrder}
+              branchId={isStateProvider?.productionsOrders?.dataProductionOrderDetail?.productionOrder?.branch_id}
             />
           ),
         },

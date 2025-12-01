@@ -354,7 +354,9 @@ const Popup_Bom = React.memo(props => {
         })
         .filter(x => x?.label == '(NONE)');
       if (props.type == 'edit') {
-        dataSelectedVariant.push({ ...newValue[0] });
+        // [show-more] Tạo mảng mới thay vì mutate trực tiếp
+        const updatedVariants = [...dataSelectedVariant, { ...newValue[0] }];
+        sDataSelectedVariant(updatedVariants);
         _HandleAddNew(newValue[0]?.value);
       } else {
         const newData = {
@@ -362,10 +364,12 @@ const Popup_Bom = React.memo(props => {
           label: 'NONE',
         };
 
-        dataSelectedVariant.push({ ...newData });
+        // [show-more] Tạo mảng mới thay vì mutate trực tiếp
+        const updatedVariants = [...dataSelectedVariant, newData];
+        sDataSelectedVariant(updatedVariants);
 
         sTab(newData?.value);
-        if (dataSelectedVariant?.some(e => e?.child?.length == 0)) return;
+        if (updatedVariants?.some(e => e?.child?.length == 0)) return;
         _HandleAddNew(newData?.value);
       }
     }
@@ -384,12 +388,29 @@ const Popup_Bom = React.memo(props => {
     if (valueVariant.some(x => dataSelectedVariant.some(e => e?.value == x?.value))) {
       return isShow('error', 'Biến thể đã được chọn vui lòng bỏ chọn');
     }
+    // [show-more] Tạo mảng mới và cập nhật state để trigger tính toán lại tabs
+    const updatedVariants = [...dataSelectedVariant];
     if (newData.length > 0) {
-      dataSelectedVariant?.push(...newData);
+      updatedVariants.push(...newData);
     } else {
-      dataSelectedVariant?.push(...valueVariant);
+      updatedVariants.push(...valueVariant);
     }
+    sDataSelectedVariant(updatedVariants);
     sValueVariant([]);
+
+    // [show-more] Tính toán lại tabs sau khi DOM cập nhật
+    if (calculateVisibleTabsRef.current) {
+      setTimeout(() => {
+        if (calculateVisibleTabsRef.current) {
+          calculateVisibleTabsRef.current();
+        }
+      }, 0);
+      requestAnimationFrame(() => {
+        if (calculateVisibleTabsRef.current) {
+          calculateVisibleTabsRef.current();
+        }
+      });
+    }
   };
 
   // thêm dòng dữ liệu

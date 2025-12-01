@@ -39,6 +39,7 @@ const initalState = {
   date_incorporation: '',
   email: '',
   note: '',
+  debt_begin: '',
   debt_limit: '',
   debt_limit_day: '',
   valueBr: [],
@@ -115,6 +116,7 @@ const Popup_dskh = props => {
         date_incorporation: db?.date_incorporation,
         email: db?.email,
         note: db?.note,
+        debt_begin: db?.debt_begin,
         debt_limit: db?.debt_limit,
         debt_limit_day: db?.debt_limit_day,
         valueDitrict: Array.isArray(db?.district)
@@ -216,6 +218,7 @@ const Popup_dskh = props => {
     data.append('email', isState.email ? isState.email : '');
     data.append('debt_limit', isState.debt_limit ? isState.debt_limit : '');
     data.append('debt_limit_day', isState.debt_limit_day ? isState.debt_limit_day : '');
+    data.append('debt_begin', isState.debt_begin ? isState.debt_begin : '');
     data.append('city', isState.valueCt?.value ? isState.valueCt?.value : '');
     data.append('district', isState.valueDitrict?.value ? isState.valueDitrict?.value : '');
     data.append('ward', isState.valueWa?.value ? isState.valueWa?.value : '');
