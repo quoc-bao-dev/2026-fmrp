@@ -193,7 +193,7 @@ const SalesOrderForm = props => {
 
   const [totalDiscount, setTotalDiscount] = useState(0);
 
-  const [startDate, setStartDate] = useState(dayjs());
+  const [startDate, setStartDate] = useState(dayjs().toDate());
 
   const [deliveryDate, setDeliveryDate] = useState(null);
 
@@ -246,7 +246,7 @@ const SalesOrderForm = props => {
     router.query && setErrStaff(false);
     router.query && setErrDeliveryDate(false);
     router.query && setErrBranch(false);
-    router.query && setStartDate(dayjs());
+    router.query && setStartDate(dayjs().toDate());
     router.query && setDeliveryDate(null);
     router.query && setNote('');
   }, [id, router.query]);
@@ -500,7 +500,7 @@ const SalesOrderForm = props => {
       setStaff(null);
       setSelectedStaff(null);
       setCodeProduct('');
-      setStartDate(dayjs());
+      setStartDate(dayjs().toDate());
       setDeliveryDate(null);
       setNote('');
       setTotalTax('');
@@ -566,7 +566,7 @@ const SalesOrderForm = props => {
         setStaff(null);
         setSelectedStaff(null);
         setCodeProduct('');
-        setStartDate(dayjs());
+        setStartDate(dayjs().toDate());
         setDeliveryDate(null);
         setNote('');
         setTotalTax('');
@@ -893,7 +893,9 @@ const SalesOrderForm = props => {
   const handleSubmit = async () => {
     let formData = new FormData();
     formData.append('code', codeProduct);
-    formData.append('date', formatMoment(startDate, FORMAT_MOMENT.DATE_TIME_LONG));
+    // Đảm bảo startDate là Date object trước khi format
+    const dateToFormat = startDate instanceof Date ? startDate : dayjs(startDate).toDate();
+    formData.append('date', formatMoment(dateToFormat, FORMAT_MOMENT.DATE_TIME_LONG));
     formData.append('branch_id', selectedBranch ?? '');
     formData.append('client_id', selectedCustomer ?? '');
     formData.append('person_contact_id', selectedPersonalContact ?? contactPerson?.value ?? '');
@@ -919,7 +921,7 @@ const SalesOrderForm = props => {
           // Chỉ reset form khi tạo mới; lúc chỉnh sửa thì giữ lại nhân viên/khách hàng/chi nhánh
           if (!id) {
             setCodeProduct('');
-            setStartDate(dayjs());
+            setStartDate(dayjs().toDate());
             setDeliveryDate(dayjs());
             setContactPerson(null);
             setCustomer(null);
@@ -1264,15 +1266,13 @@ const SalesOrderForm = props => {
                     placeholder='Chọn ngày'
                     format='DD/MM/YYYY HH:mm'
                     showTime={{
-                      defaultValue: dayjs('00:00', 'HH:mm'),
                       format: 'HH:mm',
                     }}
                     suffixIcon={null}
                     value={dayjs(startDate)}
                     onChange={date => {
                       if (date) {
-                        const dateString = date.toDate().toString();
-                        setStartDate(dateString);
+                        setStartDate(date.toDate());
                       }
                     }}
                   />

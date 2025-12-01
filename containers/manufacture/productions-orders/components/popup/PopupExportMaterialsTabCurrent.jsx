@@ -1,364 +1,20 @@
 import apiProductionsOrders from '@/Api/apiManufacture/manufacture/productionsOrders/apiProductionsOrders';
 import CheckboxDefault from '@/components/common/checkbox/CheckboxDefault';
-import { ApproximateEqualsIcon, CheckCircleIcon, CheckIcon, MagnifyingGlassIcon, WarningIcon } from '@/components/icons';
-import CloseXIcon from '@/components/icons/common/CloseXIcon';
+import { ApproximateEqualsIcon, CheckIcon, MagnifyingGlassIcon } from '@/components/icons';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import Loading from '@/components/UI/loading/loading';
-import useSetingServer from '@/hooks/useConfigNumber';
-import useToast from '@/hooks/useToast';
 import { default as formatNumber } from '@/utils/helpers/formatnumber';
-import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FaMinus, FaPlus } from 'react-icons/fa';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { IoIosAlert } from 'react-icons/io';
 import { Tooltip } from 'react-tippy';
 import { twMerge } from 'tailwind-merge';
-import { CustomDropdownRadioGroup, convertWarehousesToDropdownData } from './shared/WarehouseDropdown';
-
-const formatDate = dateString => {
-  if (!dateString) return '';
-  const [year, month, day] = dateString.split('-');
-  return `${day}/${month}/${year}`;
-};
+import ErrorNVLBanner from './shared/ErrorNVLBanner';
+import ExportSuccessBanner from './shared/ExportSuccessBanner';
+import WarehouseLotRow from './shared/WarehouseLotRow';
 
 const createUniqueRowId = () => `lot-row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-const InputNumberCustom = memo(({ state = 0, setState, className, classNameButton, classNameInput, min = 0, max = Infinity, disabled = false, isError = false, allowDecimal = true }) => {
-  const [inputValue, setInputValue] = useState(state || 0);
-  const [formattedValue, setFormattedValue] = useState(formatNumber(state || 0));
-  const showToast = useToast();
-  const dataSeting = useSetingServer();
-
-  useEffect(() => {
-    setInputValue(state || 0);
-    setFormattedValue(formatNumber(state || 0));
-  }, [state]);
-
-  const handleInputChange = useCallback(
-    e => {
-      if (disabled) return;
-      const value = e.target.value;
-
-      if (value === '') {
-        setInputValue('');
-        setFormattedValue('');
-        return;
-      }
-
-      let numericValue;
-      if (allowDecimal) {
-        numericValue = value.replace(/[^\d.]/g, '');
-        const countDecimal = (numericValue.match(/\./g) || []).length;
-        if (countDecimal > 1) {
-          const lastIndex = numericValue.lastIndexOf('.');
-          numericValue = numericValue.substring(0, lastIndex) + numericValue.charAt(lastIndex) + numericValue.substring(lastIndex + 1).replace(/\./g, '');
-        }
-      } else {
-        numericValue = value.replace(/\D/g, '');
-      }
-
-      if (numericValue === '') {
-        setInputValue('');
-        setFormattedValue('');
-        return;
-      }
-
-      const numValue = allowDecimal ? parseFloat(numericValue) : parseInt(numericValue);
-
-      setInputValue(numValue);
-
-      if (numericValue.endsWith('.')) {
-        setFormattedValue(numericValue);
-      } else {
-        setFormattedValue(formatNumber(numValue));
-      }
-    },
-    [disabled, allowDecimal, max, showToast]
-  );
-
-  const parseToNumber = useCallback(
-    value => {
-      if (allowDecimal) {
-        const cleaned = value.toString().replace(/[^\d.]/g, '');
-        const parsed = parseFloat(cleaned);
-        return isNaN(parsed) ? min : parsed;
-      } else {
-        const cleaned = value.toString().replace(/\D/g, '');
-        const parsed = parseInt(cleaned);
-        return isNaN(parsed) ? min : parsed;
-      }
-    },
-    [min, allowDecimal]
-  );
-
-  const handleBlur = useCallback(() => {
-    if (inputValue === '') {
-      setState(min);
-      setInputValue(min);
-      setFormattedValue(formatNumber(min));
-      return;
-    }
-
-    const number = parseToNumber(inputValue);
-
-    if (number < min) {
-      setState(min);
-      setInputValue(min);
-      setFormattedValue(formatNumber(min));
-    } else {
-      setState(number);
-      setInputValue(number);
-      setFormattedValue(formatNumber(number));
-    }
-  }, [inputValue, min, max, setState, showToast, parseToNumber]);
-
-  const handleChange = useCallback(
-    type => {
-      if (disabled) return;
-      const current = parseToNumber(inputValue);
-      let result = current;
-      if (type === 'increment') {
-        result = current + 1;
-      }
-      if (type === 'decrement' && current > min) result = current - 1;
-      setState(result);
-      setInputValue(result);
-      setFormattedValue(formatNumber(result));
-    },
-    [disabled, inputValue, max, min, setState, showToast, parseToNumber]
-  );
-
-  const handleButtonClick = useCallback(
-    (e, type) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (window.getSelection) {
-        window.getSelection().removeAllRanges();
-      } else if (document.selection) {
-        document.selection.empty();
-      }
-
-      handleChange(type);
-    },
-    [handleChange]
-  );
-
-  return (
-    <div
-      className={twMerge('p-1 flex items-center border rounded-full shadow-sm border-[#D0D5DD] w-fit h-fit overflow-hidden bg-white', disabled ? 'opacity-50 cursor-not-allowed' : '', className)}
-      onMouseDown={e => e.preventDefault()}
-    >
-      <div
-        onClick={e => handleButtonClick(e, 'decrement')}
-        onMouseDown={e => e.preventDefault()}
-        className={twMerge('size-9 rounded-full cursor-pointer bg-primary-05 flex justify-center items-center flex-row', classNameButton)}
-      >
-        <FaMinus className='text-[#25387A] hover:text-green-1' size={11} />
-      </div>
-      <input
-        disabled={disabled}
-        type='text'
-        value={formattedValue}
-        onChange={handleInputChange}
-        onBlur={handleBlur}
-        onMouseDown={e => e.stopPropagation()}
-        className={twMerge('w-20 text-center outline-none text-lg font-normal text-[#1B1A18] bg-transparent', isError && inputValue > 0 ? 'text-red-500' : '', classNameInput)}
-      />
-      <div
-        onClick={e => handleButtonClick(e, 'increment')}
-        onMouseDown={e => e.preventDefault()}
-        className={twMerge('size-9 rounded-full cursor-pointer bg-primary-05 flex justify-center items-center flex-row', classNameButton)}
-      >
-        <FaPlus className='text-[#25387A] hover:text-green-1' size={10} />
-      </div>
-    </div>
-  );
-});
-
-InputNumberCustom.displayName = 'InputNumberCustom';
-
-const variantsContent = {
-  open: { height: 'auto', opacity: 1 },
-  closed: { height: 0, opacity: 0 },
-};
-
-const CollapseRowWrapper = ({ isOpen, children }) => {
-  return (
-    <AnimatePresence initial={false}>
-      {isOpen && (
-        <motion.div className='' initial='closed' animate='open' exit='closed' variants={variantsContent} transition={{ duration: 0.3 }}>
-          <div>{children}</div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-};
-
-const SubProductRow = memo(
-  ({ id, isOpen, lot, date, quantity, typeOrigin, setLotRows, updateProductQuantity, index, warehouse, lastIndex, listWarehouses, total_quantity, lotRows, onQuantityChange }) => {
-    const [selectedWarehouse, setSelectedWarehouse] = useState(warehouse ?? '');
-    const [inputValue, setInputValue] = useState(total_quantity || 0);
-    const showToast = useToast();
-
-    const isSemiProduct = typeOrigin === 'semi_products';
-
-    useEffect(() => {
-      if (total_quantity !== undefined) {
-        setInputValue(total_quantity);
-        setLotRows(prev =>
-          prev.map(row =>
-            row.id === id
-              ? {
-                  ...row,
-                  total_quantity: total_quantity,
-                  quantity_warehouse: total_quantity,
-                  quantity_enter: total_quantity,
-                }
-              : row
-          )
-        );
-      }
-    }, [total_quantity, id]);
-
-    const handleWarehouseChange = option => {
-      const isDuplicate = lotRows.some(row => row.id !== id && row.id_warehouse_custom === option.id_warehouse_custom);
-
-      if (isDuplicate) {
-        showToast('error', 'Kho hàng này đã được chọn!');
-        setSelectedWarehouse('');
-        setInputValue(0);
-        setLotRows(prev =>
-          prev.map(row =>
-            row.id === id
-              ? {
-                  ...row,
-                  id_warehouse_custom: '',
-                  lot: '',
-                  expiration_date: '',
-                  total_quantity: 0,
-                  quantity_warehouse: 0,
-                  quantity_enter: 0,
-                  name_location: '',
-                }
-              : row
-          )
-        );
-        return;
-      }
-
-      setSelectedWarehouse(option.id_warehouse_custom);
-      setInputValue(option.total_quantity);
-      setLotRows(prev =>
-        prev.map(row =>
-          row.id === id
-            ? {
-                ...row,
-                id_warehouse_custom: option.id_warehouse_custom,
-                lot: option.lot,
-                expiration_date: option.expiration_date,
-                total_quantity: option.total_quantity,
-                quantity_warehouse: option.total_quantity,
-                quantity_enter: option.total_quantity,
-                name_location: option.name_location,
-              }
-            : row
-        )
-      );
-    };
-
-    const handleQuantityChange = value => {
-      setInputValue(value);
-      setLotRows(prev => {
-        const newLotRows = prev.map(row =>
-          row.id === id
-            ? {
-                ...row,
-                quantity_enter: value,
-              }
-            : row
-        );
-        return newLotRows;
-      });
-      if (typeof onQuantityChange === 'function') {
-        onQuantityChange();
-      }
-    };
-
-    return (
-      <tr key={id}>
-        <td colSpan={12} className={twMerge('p-0 !bg-[#EBF5FF80]', index === 0 && 'border-t border-[#F3F3F4]', index === lastIndex && 'border-b border-[#F3F3F4]')}>
-          <CollapseRowWrapper isOpen={isOpen}>
-            <table className={twMerge('w-full border-separate border-spacing-0', isSemiProduct && 'opacity-50 !cursor-not-allowed')}>
-              <tbody>
-                <tr>
-                  <td className='py-2 px-3 text-center  w-[62px]'></td>
-                  <td className='py-2 px-3 text-center w-[62px]'></td>
-                  <td className='py-2 px-3 text-left '>
-                    <div className=' flex gap-x-4 justify-between items-center'>
-                      {selectedWarehouse ? (
-                        <div className='flex flex-row gap-x-2 text-[#3276FA] text-xs font-normal'>
-                          <p>LOT: {lot}</p>
-                          <p>Date: {formatDate(date)}</p>
-                        </div>
-                      ) : (
-                        <div className='text-xs font-normal text-[#991B1B] flex items-start gap-x-[2px]'>
-                          <IoIosAlert className='text-[#991B1B]' size={17} />
-                          <p>Vui lòng chọn kho hàng của NVL để tiến hành xuất kho!</p>
-                        </div>
-                      )}
-                      <CustomDropdownRadioGroup
-                        data={convertWarehousesToDropdownData(listWarehouses || [])}
-                        value={selectedWarehouse}
-                        onChange={option => {
-                          if (isSemiProduct) return;
-                          handleWarehouseChange(option);
-                        }}
-                        disabled={isSemiProduct}
-                        dropdownHeight={250}
-                        offset={4}
-                        maxHeightClass='max-h-52'
-                        buttonClassName='flex justify-between items-center w-[300px] text-[#3A3E4C] font-medium border border-[#D0D5DD] px-3 py-2 text-sm bg-white rounded-lg'
-                        contentClassName='fixed rounded-xl bg-[#FFFFFF] shadow-lg border z-[9999] p-3'
-                        formatDate={formatDate}
-                        formatNumber={value => formatNumber(Number(value))}
-                      />
-                    </div>
-                  </td>
-                  <td className='py-2 px-3 text-center w-[200px]'>
-                    <div className='flex justify-center'>
-                      <InputNumberCustom
-                        state={inputValue}
-                        setState={handleQuantityChange}
-                        className='bg-white'
-                        disabled={isSemiProduct}
-                        max={Number(total_quantity) || Infinity}
-                        allowDecimal={true}
-                      />
-                    </div>
-                  </td>
-                  <td className='py-2 px-3 text-center w-[100px]'>
-                    <button
-                      className={twMerge('text-gray-400 hover:text-red-600', typeOrigin === 'semi_products' && 'opacity-50 cursor-not-allowed hover:text-gray-400')}
-                      onClick={() => {
-                        if (typeOrigin === 'semi_products') return;
-                        setLotRows(prev => prev.filter(row => row.id !== id));
-                      }}
-                      disabled={typeOrigin === 'semi_products'}
-                    >
-                      <CloseXIcon className='size-5' />
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </CollapseRowWrapper>
-        </td>
-      </tr>
-    );
-  }
-);
 
 const ProductRow = memo(({ product, index, handleSelectProduct, classNameButton, po_id, isVisible = true }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -543,31 +199,15 @@ const ProductRow = memo(({ product, index, handleSelectProduct, classNameButton,
 
       {lotRows.length > 0 ? (
         lotRows.map((lot, lotIndex) => (
-          <SubProductRow
+          <WarehouseLotRow
             key={lot.id}
             id={lot.id}
             lot={lot.lot}
             date={lot.expiration_date}
-            quantity={lot.quantity_enter || lot.total_quantity || 0}
             warehouse={lot.id_warehouse_custom}
             isOpen={isOpen}
-            index={lotIndex}
             setLotRows={setLotRows}
             listWarehouses={lot.list_warehouses ?? product.list_warehouses}
-            updateProductQuantity={(i, value) =>
-              setLotRows(prev =>
-                prev.map((row, j) =>
-                  j === lotIndex
-                    ? {
-                        ...row,
-                        quantity_enter: value,
-                      }
-                    : row
-                )
-              )
-            }
-            lastIndex={lotRows.length - 1}
-            typeOrigin={product.type_origin}
             total_quantity={Number(lot.total_quantity)}
             lotRows={lotRows}
             onQuantityChange={() => {
@@ -575,6 +215,11 @@ const ProductRow = memo(({ product, index, handleSelectProduct, classNameButton,
                 handleSelectProduct(index, true);
               }
             }}
+            typeOrigin={product.type_origin}
+            variant='current'
+            formatNumber={formatNumber}
+            index={lotIndex}
+            lastIndex={lotRows.length - 1}
           />
         ))
       ) : (
@@ -630,53 +275,9 @@ const PopupExportMaterialsTabCurrent = ({
         </div>
       )}
 
-      {exportSuccess > 0 && (
-        <div className='py-2 px-3 flex gap-2 items-center justify-between bg-green-02 border border-green-00 rounded-lg'>
-          <div className='flex items-center gap-1'>
-            <CheckCircleIcon className='size-6 text-[#064E3B]' />
-            <p className='text-sm font-normal text-neutral-07'>
-              Xin chúc mừng, <span className='font-semibold'>{exportSuccess}</span> nguyên vật liệu đã được xuất kho thành công.
-            </p>
-          </div>
-          <button className='size-4 text-neutral-02' onClick={() => setExportSuccess(0)}>
-            <CloseXIcon className='size-full' />
-          </button>
-        </div>
-      )}
+      <ExportSuccessBanner exportSuccess={exportSuccess} onClose={() => setExportSuccess(0)} />
 
-      {isRenderErrorNVL && (
-        <div className='py-2 px-3 flex flex-col gap-2 bg-[#FFEEF0] border border-[#991B1B] rounded-lg'>
-          <div className='flex items-center justify-between gap-2'>
-            <div className='flex items-center gap-1'>
-              <WarningIcon className='size-5' />
-              <h3 className='text-sm font-normal text-neutral-07'>
-                Thiếu <span className='font-semibold text-[#EE1E1E]'>{errorNVLData.items.length}</span> nguyên vật liệu
-              </h3>
-            </div>
-            <CloseXIcon className='size-5 cursor-pointer' onClick={() => setIsRenderErrorNVL(false)} />
-          </div>
-          <div className='flex flex-col gap-1'>
-            {errorNVLData.items.map((item, index) => (
-              <div key={index} className='px-3 py-1 flex items-center justify-between gap-1'>
-                <div className='flex items-center gap-2'>
-                  <Image src={item.images || '/icon/default/default.png'} alt={item.item_name || item.name || item.item_code} width={36} height={36} className='object-cover rounded' />
-                  <div className='flex flex-col gap-1'>
-                    <h3 className='text-sm font-semibold text-neutral-07'>{item.item_name}</h3>
-                    <p className='text-xs font-normal text-neutral-03'>{item.product_variation}</p>
-                    <div className='flex items-center gap-3 text-neutral-03'>
-                      <p className='text-xs font-normal text-[#3276FA]'>LOT: {item.lot}</p>
-                      <p className='text-xs font-normal text-[#3276FA]'>Date: {formatDate(item.expiration_date)}</p>
-                    </div>
-                  </div>
-                </div>
-                <p className='text-sm font-normal text-neutral-07'>
-                  <span className='text-lg font-medium text-[#EE1E1E]'>{formatNumberWithSetting(item.quantity_missing)}</span>/{item.unit_name_primary}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <ErrorNVLBanner isVisible={isRenderErrorNVL} errorData={errorNVLData} onClose={() => setIsRenderErrorNVL(false)} formatNumberWithSetting={formatNumberWithSetting} />
 
       {!showCompleted ? (
         <div className='overflow-hidden'>

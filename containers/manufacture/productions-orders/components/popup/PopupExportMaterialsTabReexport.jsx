@@ -1,31 +1,22 @@
 import apiProductionsOrders from '@/Api/apiManufacture/manufacture/productionsOrders/apiProductionsOrders';
 import CheckboxDefault from '@/components/common/checkbox/CheckboxDefault';
-import { ApproximateEqualsIcon, CheckCircleIcon, MagnifyingGlassIcon, PlusIcon, WarningIcon } from '@/components/icons';
-import CloseXIcon from '@/components/icons/common/CloseXIcon';
+import { ApproximateEqualsIcon, CloseXIcon, MagnifyingGlassIcon, PlusIcon } from '@/components/icons';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
-import Loading from '@/components/UI/loading/loading';
+import NoData from '@/components/UI/noData/nodata';
+import { IMAGES } from '@/constants/images';
 import useSetingServer from '@/hooks/useConfigNumber';
 import useToast from '@/hooks/useToast';
 import { useProductionOrderDetail } from '@/managers/api/productions-order/useProductionOrderDetail';
 import { useListSuggestPo } from '@/managers/api/productions-order/useSuggestPo';
 import { default as formatNumberConfig } from '@/utils/helpers/formatnumber';
-import { AnimatePresence, motion } from 'framer-motion';
-import moment from 'moment';
 import Image from 'next/image';
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { FaMinus, FaPlus } from 'react-icons/fa';
 import { FiPlus } from 'react-icons/fi';
 import { IoIosAlert } from 'react-icons/io';
-import { twMerge } from 'tailwind-merge';
-import { CustomDropdownRadioGroup, convertWarehousesToDropdownData } from './shared/WarehouseDropdown';
 import { Tooltip } from 'react-tippy';
-import { IMAGES } from '@/constants/images';
-import NoData from '@/components/UI/noData/nodata';
-
-const COLLAPSE_VARIANTS = {
-  open: { height: 'auto', opacity: 1 },
-  closed: { height: 0, opacity: 0 },
-};
+import ErrorNVLBanner from './shared/ErrorNVLBanner';
+import ProductSelectionSidebar from './shared/ProductSelectionSidebar';
+import WarehouseLotRow from './shared/WarehouseLotRow';
 
 const EMPTY_LOT_ROW = {
   lot: '',
@@ -53,304 +44,6 @@ const normalizeString = value => {
     .toLowerCase();
 };
 
-const InputNumberCustom = memo(({ state = 0, setState, className, classNameButton, classNameInput, min = 0, max = Infinity, disabled = false, isError = false, allowDecimal = true }) => {
-  const dataSeting = useSetingServer();
-  const [inputValue, setInputValue] = useState(state || 0);
-  const [formattedValue, setFormattedValue] = useState(formatNumberConfig(state || 0, dataSeting));
-
-  useEffect(() => {
-    setInputValue(state || 0);
-    setFormattedValue(formatNumberConfig(state || 0, dataSeting));
-  }, [state, dataSeting]);
-
-  const parseNumericValue = useCallback(
-    value => {
-      const strValue = String(value ?? '');
-      if (allowDecimal) {
-        let cleaned = strValue.replace(/[^\d.]/g, '');
-        // Chỉ cho phép 1 dấu chấm
-        const parts = cleaned.split('.');
-        if (parts.length > 2) {
-          cleaned = parts[0] + '.' + parts.slice(1).join('');
-        }
-        const parsed = parseFloat(cleaned);
-        return isNaN(parsed) ? min : parsed;
-      } else {
-        const cleaned = strValue.replace(/\D/g, '');
-        const parsed = parseInt(cleaned);
-        return isNaN(parsed) ? min : parsed;
-      }
-    },
-    [min, allowDecimal]
-  );
-
-  const handleInputChange = useCallback(
-    e => {
-      if (disabled) return;
-      const value = e.target.value;
-
-      if (value === '') {
-        setInputValue('');
-        setFormattedValue('');
-        return;
-      }
-
-      const numericValue = allowDecimal ? value.replace(/[^\d.]/g, '') : value.replace(/\D/g, '');
-      if (numericValue === '') {
-        setInputValue('');
-        setFormattedValue('');
-        return;
-      }
-
-      const numValue = parseNumericValue(numericValue);
-      setInputValue(numValue);
-
-      if (numericValue.endsWith('.')) {
-        setFormattedValue(numericValue);
-      } else {
-        setFormattedValue(formatNumberConfig(numValue, dataSeting));
-      }
-    },
-    [disabled, allowDecimal, dataSeting, parseNumericValue]
-  );
-
-  const handleBlur = useCallback(() => {
-    const number = inputValue === '' ? min : parseNumericValue(inputValue);
-    const finalValue = number < min ? min : number;
-    setState(finalValue);
-    setInputValue(finalValue);
-    setFormattedValue(formatNumberConfig(finalValue, dataSeting));
-  }, [inputValue, min, setState, dataSeting, parseNumericValue]);
-
-  const handleIncrement = useCallback(() => {
-    if (disabled) return;
-    const current = parseNumericValue(inputValue);
-    const newValue = current + 1;
-    setState(newValue);
-    setInputValue(newValue);
-    setFormattedValue(formatNumberConfig(newValue, dataSeting));
-  }, [disabled, inputValue, setState, dataSeting, parseNumericValue]);
-
-  const handleDecrement = useCallback(() => {
-    if (disabled) return;
-    const current = parseNumericValue(inputValue);
-    if (current > min) {
-      const newValue = current - 1;
-      setState(newValue);
-      setInputValue(newValue);
-      setFormattedValue(formatNumberConfig(newValue, dataSeting));
-    }
-  }, [disabled, inputValue, min, setState, dataSeting, parseNumericValue]);
-
-  const handleButtonClick = useCallback(
-    (e, type) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (window.getSelection) {
-        window.getSelection().removeAllRanges();
-      } else if (document.selection) {
-        document.selection.empty();
-      }
-      type === 'increment' ? handleIncrement() : handleDecrement();
-    },
-    [handleIncrement, handleDecrement]
-  );
-
-  return (
-    <div
-      className={twMerge(
-        'p-1 flex items-center rounded-full border border-[#E5E7EB] w-fit h-fit overflow-hidden bg-white',
-        disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-[#D0D5DD] transition-all duration-200',
-        className
-      )}
-      onMouseDown={e => e.preventDefault()}
-    >
-      <div
-        onClick={e => handleButtonClick(e, 'decrement')}
-        onMouseDown={e => e.preventDefault()}
-        className={twMerge('size-[34px] rounded-full cursor-pointer bg-primary-05 flex justify-center items-center flex-row', classNameButton)}
-      >
-        <FaMinus className='text-[#25387A] hover:text-green-1' size={11} />
-      </div>
-      <input
-        disabled={disabled}
-        type='text'
-        value={formattedValue}
-        onChange={handleInputChange}
-        onBlur={handleBlur}
-        onMouseDown={e => e.stopPropagation()}
-        className={twMerge('w-20 text-center outline-none text-lg font-normal text-[#1B1A18] bg-transparent', isError && inputValue > 0 ? 'text-red-500' : '', classNameInput)}
-      />
-      <div
-        onClick={e => handleButtonClick(e, 'increment')}
-        onMouseDown={e => e.preventDefault()}
-        className={twMerge('size-[34px] rounded-full cursor-pointer bg-primary-05 flex justify-center items-center flex-row', classNameButton)}
-      >
-        <FaPlus className='text-[#25387A] hover:text-green-1' size={10} />
-      </div>
-    </div>
-  );
-});
-
-InputNumberCustom.displayName = 'InputNumberCustom';
-
-const CollapseRowWrapper = ({ isOpen, children }) => {
-  return (
-    <AnimatePresence initial={false}>
-      {isOpen && (
-        <motion.div className='' initial='closed' animate='open' exit='closed' variants={COLLAPSE_VARIANTS} transition={{ duration: 0.3 }}>
-          <div>{children}</div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-};
-
-const SubProductRow = memo(({ id, isOpen, lot, date, warehouse, listWarehouses, total_quantity, lotRows, setLotRows, onQuantityChange, formatNumber }) => {
-  const [selectedWarehouse, setSelectedWarehouse] = useState(warehouse ?? '');
-  const [inputValue, setInputValue] = useState(total_quantity || 0);
-  const showToast = useToast();
-  const prevTotalQuantityRef = useRef(total_quantity);
-
-  useEffect(() => {
-    if (total_quantity !== undefined && prevTotalQuantityRef.current !== total_quantity) {
-      prevTotalQuantityRef.current = total_quantity;
-      setInputValue(total_quantity);
-      setLotRows(prev => {
-        const currentRow = prev.find(row => row.id === id);
-        if (currentRow && currentRow.total_quantity !== total_quantity) {
-          return prev.map(row =>
-            row.id === id
-              ? {
-                  ...row,
-                  total_quantity: total_quantity,
-                  quantity_warehouse: total_quantity,
-                  quantity_enter: total_quantity,
-                }
-              : row
-          );
-        }
-        return prev;
-      });
-    }
-  }, [total_quantity, id, setLotRows]);
-
-  const updateLotRow = useCallback(
-    updates => {
-      setLotRows(prev =>
-        prev.map(row =>
-          row.id === id
-            ? {
-                ...row,
-                ...updates,
-              }
-            : row
-        )
-      );
-    },
-    [id, setLotRows]
-  );
-
-  const handleWarehouseChange = useCallback(
-    option => {
-      const isDuplicate = lotRows.some(row => row.id !== id && row.id_warehouse_custom === option.id_warehouse_custom);
-
-      if (isDuplicate) {
-        showToast('error', 'Kho hàng này đã được chọn!');
-        setSelectedWarehouse('');
-        setInputValue(0);
-        updateLotRow({
-          id_warehouse_custom: '',
-          lot: '',
-          expiration_date: '',
-          total_quantity: 0,
-          quantity_warehouse: 0,
-          quantity_enter: 0,
-          name_location: '',
-        });
-        return;
-      }
-
-      setSelectedWarehouse(option.id_warehouse_custom);
-      setInputValue(option.total_quantity);
-      updateLotRow({
-        id_warehouse_custom: option.id_warehouse_custom,
-        lot: option.lot,
-        expiration_date: option.expiration_date,
-        total_quantity: option.total_quantity,
-        quantity_warehouse: option.total_quantity,
-        quantity_enter: option.total_quantity,
-        name_location: option.name_location,
-      });
-    },
-    [lotRows, id, showToast, updateLotRow]
-  );
-
-  const handleQuantityChange = useCallback(
-    value => {
-      setInputValue(value);
-      updateLotRow({ quantity_enter: value });
-      if (typeof onQuantityChange === 'function') {
-        onQuantityChange();
-      }
-    },
-    [updateLotRow, onQuantityChange]
-  );
-
-  const handleDelete = useCallback(() => {
-    setLotRows(prev => prev.filter(row => row.id !== id));
-  }, [id, setLotRows]);
-
-  return (
-    <tr key={id}>
-      <td colSpan={5} className={twMerge('p-0 !bg-gradient-to-r from-[#EBF5FF] via-[#E8F4FF] to-[#EBF5FF]')}>
-        <CollapseRowWrapper isOpen={isOpen}>
-          <table className='w-full border-separate border-spacing-0'>
-            <tbody>
-              <tr>
-                <td className='py-2 px-4 text-left' colSpan={2}>
-                  <div className='flex gap-x-4 justify-between items-center'>
-                    {selectedWarehouse ? (
-                      <div className='flex flex-row gap-x-3 text-[#3276FA] text-xs font-medium'>
-                        <p className='px-2 py-1 rounded-lg bg-blue-50'>LOT: {lot}</p>
-                        <p className='px-2 py-1 rounded-lg bg-blue-50'>Date: {moment(date).format('DD/MM/YYYY')}</p>
-                      </div>
-                    ) : (
-                      <div className='text-xs font-normal text-[#991B1B] flex items-start gap-2'>
-                        {/* <IoIosAlert className='text-[#991B1B] flex-shrink-0 mt-0.5' size={17} />
-                          <p>Vui lòng chọn kho hàng của NVL để tiến hành xuất kho!</p> */}
-                      </div>
-                    )}
-                    <CustomDropdownRadioGroup
-                      data={convertWarehousesToDropdownData(listWarehouses || [])}
-                      value={selectedWarehouse}
-                      onChange={handleWarehouseChange}
-                      formatNumber={formatNumber}
-                      formatDate={date => (date ? moment(date).format('DD/MM/YYYY') : '')}
-                    />
-                  </div>
-                </td>
-                <td className='py-2 px-4 text-center w-[200px]'>
-                  <div className='flex justify-center'>
-                    <InputNumberCustom state={inputValue} setState={handleQuantityChange} className='bg-white' max={Number(total_quantity) || Infinity} allowDecimal={true} />
-                  </div>
-                </td>
-                <td className='py-2 px-4 text-center w-[100px] flex-shrink-0'>
-                  <button className='text-gray-400 hover:text-red-600 transition-colors duration-200 p-1 rounded-lg hover:bg-red-50' onClick={handleDelete}>
-                    <CloseXIcon className='size-5' />
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </CollapseRowWrapper>
-      </td>
-    </tr>
-  );
-});
-
-SubProductRow.displayName = 'SubProductRow';
-
 const PopupExportMaterialsTabReexport = forwardRef(
   (
     {
@@ -361,7 +54,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
       errorNVLData,
       formatNumberWithSetting,
       extraMaterials = [],
-      onExistingMaterialKeysChange,
+      onExistingMaterialItemIdsChange,
       onRemoveExtraMaterial,
     },
     ref
@@ -375,6 +68,8 @@ const PopupExportMaterialsTabReexport = forwardRef(
   const [hasInitializedProductSelection, setHasInitializedProductSelection] = useState(false);
   const [materialsSearchTerm, setMaterialsSearchTerm] = useState('');
   const [externalMaterials, setExternalMaterials] = useState([]);
+  const [builtinMaterialsWithWarehouses, setBuiltinMaterialsWithWarehouses] = useState([]);
+  const extraMaterialsCacheRef = useRef(new Map());
 
   const { data, isLoading } = useProductionOrderDetail({ id: poId, enabled: !!poId });
 
@@ -385,6 +80,13 @@ const PopupExportMaterialsTabReexport = forwardRef(
 
   const getMaterialId = useCallback(material => {
     return `${material.item_id}-${material.item_variation_option_value_id || ''}-${material.pp_id || ''}`;
+  }, []);
+
+  const getExtraMaterialKey = useCallback(material => {
+    if (!material) return '';
+    const itemId = material.item_id || '';
+    const variationId = material.item_variation_option_value_id ?? material.item_variation_id ?? material.variant_id ?? '';
+    return `${itemId}-${variationId}`;
   }, []);
 
   // Computed values
@@ -451,17 +153,18 @@ const PopupExportMaterialsTabReexport = forwardRef(
 
   const { data: suggestData, isLoading: isLoadingMaterials } = useListSuggestPo(requestData);
 
-  // Lấy materials trực tiếp từ API response với thứ tự gốc
+  // Lấy kho hàng cho data.materials từ API
   useEffect(() => {
     let isMounted = true;
-    const hydrateMaterials = async () => {
-      if (!extraMaterials?.length) {
-        setExternalMaterials([]);
+    const hydrateBuiltinMaterials = async () => {
+      const materials = suggestData?.data?.materials || suggestData?.materials || [];
+      if (!materials.length) {
+        setBuiltinMaterialsWithWarehouses([]);
         return;
       }
 
       const enriched = await Promise.all(
-        extraMaterials.map(async material => {
+        materials.map(async material => {
           if (material.type_origin === 'semi_products' || material.warehouses?.length) {
             return material;
           }
@@ -469,7 +172,8 @@ const PopupExportMaterialsTabReexport = forwardRef(
             const formData = new FormData();
             formData.append('type_item', material.type_item ?? 'material');
             formData.append('type_origin', material.type_origin ?? 'material');
-            formData.append('item_variation_option_value_id', material.item_variation_option_value_id ?? '');
+            const variationId = material.item_variation_option_value_id ?? material.item_variation_id ?? material.variant_id ?? '';
+            formData.append('item_variation_option_value_id', variationId);
             formData.append('pp_id', material.pp_id ?? '');
             formData.append('po_id', poId ?? '');
             const res = await apiProductionsOrders.apiGetWarehousesBOM(formData);
@@ -485,6 +189,74 @@ const PopupExportMaterialsTabReexport = forwardRef(
       );
 
       if (isMounted) {
+        setBuiltinMaterialsWithWarehouses(enriched);
+      }
+    };
+
+    hydrateBuiltinMaterials();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [suggestData, poId]);
+
+  // Lấy kho hàng cho extraMaterials từ SelectSearch
+  useEffect(() => {
+    let isMounted = true;
+    const hydrateMaterials = async () => {
+      if (!extraMaterials?.length) {
+        extraMaterialsCacheRef.current.clear();
+        setExternalMaterials([]);
+        return;
+      }
+
+      const allowedKeys = new Set(extraMaterials.map(getExtraMaterialKey));
+      extraMaterialsCacheRef.current.forEach((_, key) => {
+        if (!allowedKeys.has(key)) {
+          extraMaterialsCacheRef.current.delete(key);
+        }
+      });
+
+      const enriched = await Promise.all(
+        extraMaterials.map(async material => {
+          const cacheKey = getExtraMaterialKey(material);
+          const cachedMaterial = extraMaterialsCacheRef.current.get(cacheKey);
+          if (cachedMaterial && Array.isArray(cachedMaterial.warehouses) && cachedMaterial.warehouses.length > 0) {
+            return cachedMaterial;
+          }
+
+          if (material.type_origin === 'semi_products' || (material.warehouses?.length > 0)) {
+            const normalized = {
+              ...material,
+              warehouses: Array.isArray(material.warehouses) ? material.warehouses : [],
+            };
+            extraMaterialsCacheRef.current.set(cacheKey, normalized);
+            return normalized;
+          }
+
+          try {
+            const formData = new FormData();
+            formData.append('type_item', material.type_item ?? 'material');
+            formData.append('type_origin', material.type_origin ?? 'material');
+            formData.append('item_variation_option_value_id', material.item_variation_option_value_id ?? '');
+            formData.append('pp_id', material.pp_id ?? '');
+            formData.append('po_id', poId ?? '');
+            const res = await apiProductionsOrders.apiGetWarehousesBOM(formData);
+            const warehouses = res?.data?.warehouses || [];
+            const normalized = {
+              ...material,
+              warehouses,
+            };
+            extraMaterialsCacheRef.current.set(cacheKey, normalized);
+            return normalized;
+          } catch (error) {
+            extraMaterialsCacheRef.current.set(cacheKey, material);
+            return material;
+          }
+        })
+      );
+
+      if (isMounted) {
         setExternalMaterials(enriched);
       }
     };
@@ -494,7 +266,11 @@ const PopupExportMaterialsTabReexport = forwardRef(
     return () => {
       isMounted = false;
     };
-  }, [extraMaterials, poId]);
+  }, [extraMaterials, getExtraMaterialKey, poId]);
+
+  useEffect(() => {
+    extraMaterialsCacheRef.current.clear();
+  }, [poId]);
 
   const allMaterials = useMemo(() => {
     const boms = suggestData?.data?.boms || suggestData?.boms || {};
@@ -506,7 +282,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
       __isExtra: false,
     }));
 
-    const builtinExtraMaterials = (suggestData?.data?.materials || suggestData?.materials || []).map((material, idx) => {
+    const builtinExtraMaterials = (builtinMaterialsWithWarehouses.length > 0 ? builtinMaterialsWithWarehouses : (suggestData?.data?.materials || suggestData?.materials || [])).map((material, idx) => {
       const variationId = material.item_variation_option_value_id ?? material.item_variation_id ?? material.variant_id ?? '';
       return {
         ...material,
@@ -515,7 +291,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
         unit_name_primary: material.unit_name_primary ?? material.unit_name,
         warehouses: Array.isArray(material.warehouses) ? material.warehouses : [],
         __originalIndex: apiBomMaterials.length + idx,
-        __isExtra: true,
+        __isExtra: false,
       };
     });
 
@@ -527,7 +303,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
     }));
 
     return [...apiBomMaterials, ...builtinExtraMaterials, ...normalizedExternal];
-  }, [suggestData, externalMaterials]);
+  }, [suggestData, externalMaterials, builtinMaterialsWithWarehouses]);
 
   const materialMap = useMemo(() => {
     const map = new Map();
@@ -537,17 +313,33 @@ const PopupExportMaterialsTabReexport = forwardRef(
     return map;
   }, [allMaterials, getMaterialId]);
 
+  // Gửi item_id keys để kiểm tra duplicate trong SelectSearch
+  // Lấy từ materials trong boms và data.materials (materials đã có trong danh sách)
   useEffect(() => {
-    if (typeof onExistingMaterialKeysChange !== 'function') return;
-    const keys = new Set();
-    allMaterials.forEach(material => {
-      const key = `${material.item_id ?? ''}-${material.item_variation_option_value_id ?? material.variant_id ?? ''}`;
-      if (key.trim()) {
-        keys.add(key);
+    if (typeof onExistingMaterialItemIdsChange !== 'function') return;
+    const itemIdKeys = new Set();
+    
+    // Lấy từ boms (materials từ BOM gốc)
+    const boms = suggestData?.data?.boms || suggestData?.boms || {};
+    const bomEntries = Object.values(boms || {});
+    bomEntries.forEach(material => {
+      const itemId = String(material.item_id || '');
+      if (itemId) {
+        itemIdKeys.add(itemId);
       }
     });
-    onExistingMaterialKeysChange(keys);
-  }, [allMaterials, onExistingMaterialKeysChange]);
+    
+    // Lấy từ data.materials (materials bổ sung từ API)
+    const materials = suggestData?.data?.materials || suggestData?.materials || [];
+    materials.forEach(material => {
+      const itemId = String(material.item_id || '');
+      if (itemId) {
+        itemIdKeys.add(itemId);
+      }
+    });
+    
+    onExistingMaterialItemIdsChange(itemIdKeys);
+  }, [suggestData, onExistingMaterialItemIdsChange]);
 
   const filteredMaterials = useMemo(() => {
     if (!materialsSearchTerm.trim()) return allMaterials;
@@ -758,13 +550,18 @@ const PopupExportMaterialsTabReexport = forwardRef(
         .filter(row => row.id_warehouse_custom && Number(row.quantity_enter) > 0)
         .map(row => {
           // Tìm warehouse gốc để lấy đầy đủ thông tin
-          const originalWarehouse = (material.warehouses || []).find(w => w.id_warehouse_custom === row.id_warehouse_custom) || {};
+          // Tìm trong material.warehouses hoặc list_warehouses của row
+          const originalWarehouse =
+            (material.warehouses || []).find(w => w.id_warehouse_custom === row.id_warehouse_custom) ||
+            (row.list_warehouses || []).find(w => w.id_warehouse_custom === row.id_warehouse_custom) ||
+            {};
           return {
             ...originalWarehouse,
             type_items: originalWarehouse.type_items || material.type_item,
             item_variation_id: originalWarehouse.item_variation_id || material.item_variation_option_value_id,
-            warehouse_id: originalWarehouse.warehouse_id || '',
-            location_id: originalWarehouse.location_id || '',
+            // Ưu tiên lấy từ row, sau đó từ originalWarehouse
+            warehouse_id: row.warehouse_id || originalWarehouse.warehouse_id || '',
+            location_id: row.location_id || originalWarehouse.location_id || '',
             serial: originalWarehouse.serial ?? null,
             expiration_date: row.expiration_date || originalWarehouse.expiration_date || '',
             lot: row.lot || originalWarehouse.lot || '',
@@ -854,7 +651,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
     }),
     [buildSubmitPayload, resetSelections]
   );
-  console.log(products);
+
   const dataSeting = useSetingServer();
   const formatNumber = useCallback(number => formatNumberConfig(+number, dataSeting), [dataSeting]);
 
@@ -862,58 +659,15 @@ const PopupExportMaterialsTabReexport = forwardRef(
     <div className='flex-1 min-h-[60vh] max-h-[80vh] w-full flex flex-col gap-4 h-full'>
       <div className='flex-1 flex gap-4 overflow-hidden'>
         {/* Left Sidebar - Product List */}
-        <div className='w-[280px] flex flex-col rounded-2xl bg-white border border-[#E5E7EB] overflow-hidden'>
-          <div className='p-3 bg-gradient-to-br from-[#F9FAFB] to-[#F3F4F6]'>
-            <h2 className='text-sm font-semibold text-[#141522]'>Chọn thành phẩm để xuất kho</h2>
-          </div>
-
-          {isLoading ? (
-            <div className='flex justify-center items-center h-full min-h-[300px]'>
-              <Loading />
-            </div>
-          ) : products.length === 0 ? (
-            <div className='flex flex-col items-center justify-center h-full min-h-[300px] gap-3 p-4'>
-              <NoData type='report' titleText='Không có thành phẩm nào' />
-            </div>
-          ) : (
-            <Customscrollbar className='flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300'>
-              <div className='p-2'>
-                <div className='flex items-center gap-2 mb-2'>
-                  <CheckboxDefault checked={selectAll} onChange={handleSelectAll} label='Chọn tất cả' />
-                </div>
-                {products.map(product => {
-                  const productId = getProductId(product);
-                  const isSelected = selectedProducts.includes(productId);
-
-                  return (
-                    <div
-                      key={productId}
-                      className={`p-2 rounded-md mb-2 cursor-pointer transition-all duration-200 ${
-                        isSelected ? 'bg-gradient-to-br from-[#EBF5FF] to-[#D0E8FF] shadow-md shadow-blue-100/50' : 'bg-white hover:bg-[#F9FAFB] hover:shadow-sm'
-                      }`}
-                      onClick={() => handleSelectProduct(productId, !isSelected)}
-                    >
-                      <div className='flex items-center gap-2'>
-                        <div onClick={e => e.stopPropagation()}>
-                          <CheckboxDefault checked={isSelected} className='!space-x-0' onChange={checked => handleSelectProduct(productId, checked)} />
-                        </div>
-                        <div className='w-12 h-12 rounded flex items-center justify-center flex-shrink-0'>
-                          <Image src={product.images || '/icon/default/default.png'} alt={product.item_name || 'default'} width={48} height={48} className='object-cover rounded' />
-                        </div>
-                        <div className='flex-1 min-w-0'>
-                          <h4 className='text-sm font-semibold text-[#141522] truncate'>{product.item_name}</h4>
-                          {product.reference_no_detail && <p className='text-xs text-new-blue font-medium'>{product.reference_no_detail}</p>}
-                          <p className='text-xs text-[#667085] truncate'>{product.item_code}</p>
-                          {product.product_variation && <p className='text-[10px] font-normal text-[#667085] truncate mt-0.5'>{product.product_variation}</p>}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </Customscrollbar>
-          )}
-        </div>
+        <ProductSelectionSidebar
+          products={products}
+          selectedProducts={selectedProducts}
+          selectAll={selectAll}
+          onSelectAll={handleSelectAll}
+          onSelectProduct={handleSelectProduct}
+          getProductId={getProductId}
+          isLoading={isLoading}
+        />
 
         {/* Right Content - Materials Detail */}
         <div className='flex-1 flex flex-col rounded-2xl bg-white overflow-hidden'>
@@ -933,40 +687,13 @@ const PopupExportMaterialsTabReexport = forwardRef(
             </div>
           </div>
 
-          {isRenderErrorNVL && (
-            <div className='py-2 px-3 flex flex-col gap-2 bg-[#FFEEF0] border border-[#991B1B] rounded-lg m-2'>
-              <div className='flex items-center justify-between gap-2'>
-                <div className='flex items-center gap-1'>
-                  <WarningIcon className='size-5' />
-                  <h3 className='text-sm font-normal text-neutral-07'>
-                    Thiếu <span className='font-semibold text-[#EE1E1E]'>{errorNVLData.items.length}</span> nguyên vật liệu
-                  </h3>
-                </div>
-                <CloseXIcon className='size-5 cursor-pointer' onClick={() => setIsRenderErrorNVL(false)} />
-              </div>
-              <div className='flex flex-col gap-1'>
-                {errorNVLData.items.map((item, index) => (
-                  <div key={index} className='px-3 py-1 flex items-center justify-between gap-1'>
-                    <div className='flex items-center gap-2'>
-                      <Image src={item.images || '/icon/default/default.png'} alt={item.item_name || item.name || item.item_code} width={36} height={36} className='object-cover rounded' />
-                      <div className='flex flex-col gap-1'>
-                        <h3 className='text-sm font-semibold text-neutral-07'>{item.item_name}</h3>
-                        <p className='text-xs font-normal text-neutral-03'>{item.product_variation}</p>
-                        <div className='flex items-center gap-3 text-neutral-03'>
-                          <p className='text-xs font-normal text-[#3276FA]'>LOT: {item.lot}</p>
-                          <p className='text-xs font-normal text-[#3276FA]'>Date: {moment(item.expiration_date).format('DD/MM/YYYY')}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <p className='text-sm font-normal text-neutral-07'>
-                      <span className='text-lg font-medium text-[#EE1E1E]'>{formatNumberWithSetting ? formatNumberWithSetting(item.quantity_missing) : formatNumber(item.quantity_missing)}</span>/
-                      {item.unit_name_primary}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <ErrorNVLBanner
+            isVisible={isRenderErrorNVL}
+            errorData={errorNVLData}
+            onClose={() => setIsRenderErrorNVL(false)}
+            formatNumberWithSetting={formatNumberWithSetting || formatNumber}
+            className='m-2'
+          />
 
           {selectedProducts.length === 0 ? (
             <div className='flex flex-col items-center justify-center h-full min-h-[400px] gap-4'>
@@ -994,7 +721,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
                     <th className='font-normal pt-3 pb-1 pr-4 text-left text-[#667085]'>Nguyên vật liệu</th>
                     <th className='font-normal pt-3 pb-1 px-4 text-center text-[#667085] w-[200px]'>Số lượng cần xuất</th>
                     <th className='font-normal pt-3 pb-1 px-4 text-center text-[#667085] w-[200px]'>Số lượng đã xuất</th>
-                    <th className='font-normal pt-3 pb-1 px-4 text-center text-[#667085] w-[100px]'>Thao tác</th>
+                    <th className='font-normal pt-3 pb-1 px-4 text-center text-[#667085] w-[110px]'>Thao tác</th>
                   </tr>
                 </thead>
               </table>
@@ -1002,7 +729,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
                 <table className='min-w-full table-fixed border-separate border-spacing-0'>
                   <tbody>
                     {materials.map(material => {
-                      console.log(materials)
+                      // console.log(materials)
                       const materialId = getMaterialId(material);
                       const quantityTotal = Number(material.quantity_total_quota || 0);
                       const quantityQuotaPrimary = Number(material.quantity_quota_primary || 0);
@@ -1081,8 +808,30 @@ const PopupExportMaterialsTabReexport = forwardRef(
                                     <div
                                       onClick={e => {
                                         e.stopPropagation();
+                                        // Xóa khỏi danh sách extraMaterials (ở parent)
                                         if (typeof onRemoveExtraMaterial === 'function') {
-                                          onRemoveExtraMaterial(materialId);
+                                          // Chỉ truyền item_id để xóa (không phân biệt variant)
+                                          const itemId = String(material.item_id || '');
+                                          onRemoveExtraMaterial(itemId);
+                                        }
+
+                                        // Đồng thời xóa toàn bộ state local liên quan đến nguyên liệu này
+                                        const materialKey = getMaterialId(material);
+
+                                        // 1. Bỏ chọn nguyên liệu trong danh sách đã chọn
+                                        setSelectedMaterialRows(prev => prev.filter(id => id !== materialKey));
+
+                                        // 2. Xóa toàn bộ cấu hình kho (lotRows, isOpen, ...) đã nhập cho nguyên liệu này
+                                        setMaterialsWarehouses(prev => {
+                                          const next = { ...prev };
+                                          delete next[materialKey];
+                                          return next;
+                                        });
+
+                                        // 3. Xóa cache kho cho nguyên liệu này để lần thêm lại không dùng kho cũ
+                                        const extraKey = getExtraMaterialKey(material);
+                                        if (extraKey) {
+                                          extraMaterialsCacheRef.current.delete(extraKey);
                                         }
                                       }}
                                       className='flex-shrink-0 min-h-[35px] min-w-[35px] cursor-pointer flex justify-center items-center flex-row rounded-full bg-[#FFEFEF] border border-transparent hover:border-[#F87171] hover:bg-[#FEE2E2] hover:scale-110 transition-all duration-200 ease-out'
@@ -1097,7 +846,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
 
                           {materialWarehouseState.lotRows.length > 0 ? (
                             materialWarehouseState.lotRows.map(lot => (
-                              <SubProductRow
+                              <WarehouseLotRow
                                 key={lot.id}
                                 id={lot.id}
                                 lot={lot.lot}
@@ -1114,6 +863,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
                                 lotRows={materialWarehouseState.lotRows}
                                 onQuantityChange={() => {}}
                                 formatNumber={formatNumber}
+                                variant='reexport'
                               />
                             ))
                           ) : !hasWarehouses ? (
