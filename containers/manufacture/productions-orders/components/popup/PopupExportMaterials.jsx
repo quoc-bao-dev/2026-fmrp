@@ -482,11 +482,11 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
   }, [dataItems]);
 
   // Component formatOptionLabel giống form.jsx
-  const buildMaterialKey = useCallback(item => {
+  const buildVariantKey = useCallback(item => {
     if (!item) return '';
     const source = item.item || item.e || item;
     const itemId = source?.item_id ?? source?.id ?? item?.value ?? '';
-    const variationId = source?.item_variation_option_value_id ?? source?.variant_id ?? source?.id ?? '';
+    const variationId = source?.item_variation_option_value_id ?? source?.variant_id ?? source?.item_variation_id ?? '';
     return `${itemId}-${variationId}`;
   }, []);
 
@@ -504,13 +504,13 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
     // Lấy keys từ products (data.bom - có thể là array hoặc object)
     if (Array.isArray(products)) {
       products.forEach(product => {
-        const key = buildItemIdKey(product);
+        const key = buildVariantKey(product);
         if (key) keys.add(key);
       });
     } else if (products && typeof products === 'object') {
       // Nếu products là object (như data.boms), convert sang array
       Object.values(products).forEach(product => {
-        const key = buildItemIdKey(product);
+        const key = buildVariantKey(product);
         if (key) keys.add(key);
       });
     }
@@ -518,7 +518,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
     // Lấy keys từ data.boms (nếu có, là object)
     if (data?.boms && typeof data.boms === 'object') {
       Object.values(data.boms).forEach(material => {
-        const key = buildItemIdKey(material);
+        const key = buildVariantKey(material);
         if (key) keys.add(key);
       });
     }
@@ -526,23 +526,23 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
     // Lấy keys từ data.materials (materials đã có trong danh sách ban đầu)
     if (data?.materials && Array.isArray(data.materials)) {
       data.materials.forEach(material => {
-        const key = buildItemIdKey(material);
+        const key = buildVariantKey(material);
         if (key) keys.add(key);
       });
     }
     
     return keys;
-  }, [products, data?.boms, data?.materials, buildItemIdKey]);
+  }, [products, data?.boms, data?.materials, buildVariantKey]);
 
   // Tập item_id của các nguyên liệu bổ sung đang có trong extraMaterials (để chặn trùng trong cùng session)
   const extraMaterialItemIds = useMemo(() => {
     const keys = new Set();
     extraMaterials.forEach(mat => {
-      const key = buildItemIdKey(mat);
+      const key = buildVariantKey(mat);
       if (key) keys.add(key);
     });
     return keys;
-  }, [extraMaterials, buildItemIdKey]);
+  }, [extraMaterials, buildVariantKey]);
 
   // Kiểm tra duplicate với nguyên liệu từ:
   // - BOM ban đầu (bomMaterialKeys)
@@ -623,6 +623,8 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
       // Chuẩn hóa value từ SelectSearch về dạng mảng
       const nextSelected = Array.isArray(value) ? value : value ? [value] : [];
 
+      const currentSelectionKeys = new Set(selectedItems.map(item => buildVariantKey(item)).filter(Boolean));
+
       const validSelectedItems = [];
       const extraMaterialsToAdd = [];
 
@@ -630,10 +632,16 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
         const source = item.item || item.e || item || {};
         const itemName = source.name || item.label || source.item_name || 'nguyên liệu';
 
-        const itemIdKey = buildItemIdKey(item);
+        const itemIdKey = buildVariantKey(item);
         const quantityWarehouse = Number(source.quantity_warehouse ?? 0);
 
         if (!itemIdKey) return;
+
+        // Bỏ qua kiểm tra trùng cho các item đã được chọn trước đó
+        if (currentSelectionKeys.has(itemIdKey)) {
+          validSelectedItems.push(item);
+          return;
+        }
 
         // 1. Chặn nếu tồn kho bằng 0
         if (!quantityWarehouse || quantityWarehouse <= 0) {
@@ -664,7 +672,16 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
         setExtraMaterials(prev => [...prev, ...extraMaterialsToAdd]);
       }
     },
-    [buildItemIdKey, combinedMaterialKeys, extraMaterialItemIds, convertLookupMaterialToBom, showToast]
+    [buildVariantKey, combinedMaterialKeys, extraMaterialItemIds, convertLookupMaterialToBom, selectedItems, showToast]
+  );
+
+  const handleDuplicateMaterialSelect = useCallback(
+    option => {
+      const source = option?.item || option?.e || option || {};
+      const itemName = source.name || option?.label || source.item_name || 'nguyên liệu';
+      showToast('error', `"${itemName}" đã tồn tại trong danh sách nguyên liệu, vui lòng kiểm tra lại.`);
+    },
+    [showToast]
   );
 
   return (
@@ -735,6 +752,8 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
             multiple={true} // Vẫn cho phép chọn nhiều
             showSelectedCount={false} // Ẩn số lượng đã chọn
             showActiveColor={false} // Ẩn màu active khi item được chọn
+            onDuplicateSelect={handleDuplicateMaterialSelect}
+            preventDeselectOnClick
           />
         )}
       </div>
@@ -776,15 +795,12 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
           extraMaterials={extraMaterials}
           onExistingMaterialItemIdsChange={setExistingMaterialItemIds}
           onRemoveExtraMaterial={materialKey => {
-            // materialKey là item_id (string), cần so sánh với item_id của material
-            setExtraMaterials(prev => prev.filter(mat => {
-              const matItemId = buildItemIdKey(mat);
-              return matItemId !== materialKey;
-            }));
-            setSelectedItems(prev => prev.filter(item => {
-              const itemId = buildItemIdKey(item);
-              return itemId !== materialKey;
-            }));
+            setExtraMaterials(prev =>
+              prev.filter(mat => buildVariantKey(mat) !== materialKey)
+            );
+            setSelectedItems(prev =>
+              prev.filter(item => buildVariantKey(item) !== materialKey)
+            );
           }}
         />
       )}

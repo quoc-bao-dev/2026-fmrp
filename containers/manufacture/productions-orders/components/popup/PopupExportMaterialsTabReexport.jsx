@@ -313,7 +313,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
     return map;
   }, [allMaterials, getMaterialId]);
 
-  // Gửi item_id keys để kiểm tra duplicate trong SelectSearch
+  // Gửi keys item+variant để kiểm tra duplicate trong SelectSearch
   // Lấy từ materials trong boms và data.materials (materials đã có trong danh sách)
   useEffect(() => {
     if (typeof onExistingMaterialItemIdsChange !== 'function') return;
@@ -323,18 +323,18 @@ const PopupExportMaterialsTabReexport = forwardRef(
     const boms = suggestData?.data?.boms || suggestData?.boms || {};
     const bomEntries = Object.values(boms || {});
     bomEntries.forEach(material => {
-      const itemId = String(material.item_id || '');
-      if (itemId) {
-        itemIdKeys.add(itemId);
+      const key = getExtraMaterialKey(material) || String(material.item_id || '');
+      if (key) {
+        itemIdKeys.add(key);
       }
     });
     
     // Lấy từ data.materials (materials bổ sung từ API)
     const materials = suggestData?.data?.materials || suggestData?.materials || [];
     materials.forEach(material => {
-      const itemId = String(material.item_id || '');
-      if (itemId) {
-        itemIdKeys.add(itemId);
+      const key = getExtraMaterialKey(material) || String(material.item_id || '');
+      if (key) {
+        itemIdKeys.add(key);
       }
     });
     
@@ -411,6 +411,11 @@ const PopupExportMaterialsTabReexport = forwardRef(
       const materialId = getMaterialId(material);
       const currentState = materialsWarehouses[materialId] || { lotRows: [], isOpen: false };
       const warehouses = Array.isArray(material.warehouses) ? material.warehouses : [];
+
+      if (warehouses.length === 0) {
+        showToast('error', `Sản phẩm "${material.item_name}" không có kho hàng. Vui lòng bổ sung kho hàng trước khi chọn!`);
+        return;
+      }
 
       setMaterialsWarehouses(prev => ({
         ...prev,
@@ -729,7 +734,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
                 <table className='min-w-full table-fixed border-separate border-spacing-0'>
                   <tbody>
                     {materials.map(material => {
-                      // console.log(materials)
+                      console.log(materials)
                       const materialId = getMaterialId(material);
                       const quantityTotal = Number(material.quantity_total_quota || 0);
                       const quantityQuotaPrimary = Number(material.quantity_quota_primary || 0);
@@ -810,9 +815,8 @@ const PopupExportMaterialsTabReexport = forwardRef(
                                         e.stopPropagation();
                                         // Xóa khỏi danh sách extraMaterials (ở parent)
                                         if (typeof onRemoveExtraMaterial === 'function') {
-                                          // Chỉ truyền item_id để xóa (không phân biệt variant)
-                                          const itemId = String(material.item_id || '');
-                                          onRemoveExtraMaterial(itemId);
+                                          const extraKey = getExtraMaterialKey(material);
+                                          onRemoveExtraMaterial(extraKey);
                                         }
 
                                         // Đồng thời xóa toàn bộ state local liên quan đến nguyên liệu này
