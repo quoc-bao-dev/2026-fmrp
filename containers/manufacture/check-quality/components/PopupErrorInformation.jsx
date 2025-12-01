@@ -64,10 +64,9 @@ const PopupErrorInformation = ({ onClose, qcId }) => {
         images: [],
       };
     }
-
-    const firstItem = qc.items?.[0] || {};
+    const firstItem = qc.error.items || {};
     const quantityValue = qc.total_quantity ?? null;
-    const resolvedImages = Array.isArray(qc.error?.file_error) ? qc.error.file_error : [];
+    const resolvedImages = Array.isArray(qc.error?.file_error) ? qc.error.file_error.map(err => err?.full_path) : [];
     const resolvedTags = Array.isArray(qc?.error?.items?.detail_errors) ? qc?.error?.items?.detail_errors.map(err => err?.name_detail_error).filter(Boolean) : [];
     const stageName = firstItem.stage_name || 'Chưa có công đoạn';
 
@@ -79,7 +78,7 @@ const PopupErrorInformation = ({ onClose, qcId }) => {
         unit: firstItem.unit_name || 'cái',
         variant: firstItem.item_variation || '(none)',
         code: firstItem.item_code || '',
-        image: resolvedImages?.[0] || '/icon/noimagelogo.png',
+        image: firstItem?.images || '/icon/noimagelogo.png',
       },
       stage: stageName,
       errorCount: qc.total_quantity_error ?? 0,
@@ -190,7 +189,7 @@ const PopupErrorInformation = ({ onClose, qcId }) => {
                 <Image src={getImageSrc(image)} alt={`Error image ${index + 1}`} width={174} height={128} className='w-full h-full object-cover' onError={() => handleImageError(image)} />
               </button>
             ))
-          : Array.from({ length: 5 }).map((_, index) => <div key={index} className='w-full aspect-[87/64] rounded-[4px] bg-gray-100' />)}
+          : null}
         {hasOverflow && firstHiddenIndex !== null && (
           <div className='relative w-full aspect-[87/64] rounded-[4px] overflow-hidden' onClick={() => handleOpenImage(firstHiddenIndex)}>
             <button type='button' className='absolute inset-0 focus:outline-none focus:ring-2 focus:ring-[#3276FA]'>
