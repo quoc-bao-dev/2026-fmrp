@@ -83,12 +83,12 @@ const PopupBuyMoreUser = props => {
         userPlus: 0,
         month: 1,
         moneyNeedPaid: 0,
-        packageName: null,
-        notePrice: null,
       };
     }
 
     const { data, dataQR, package: packageInfo } = upgradeUserQRData;
+    // console.log({ data });
+
     const pricePerUser = Number(data?.price) || 0;
     const vatRate = Number(data?.vat) || prices.vatRate * 100;
     const userPlus = Number(data?.userPlus) || 0;
@@ -107,18 +107,17 @@ const PopupBuyMoreUser = props => {
       pricePerUser,
       vatRate,
       userPlus,
-      month: Number(data?.month) || Number(packageInfo?.month) || 1,
-      moneyNeedPaid: Number(data?.money_need_paid) || 0,
-      packageName: packageInfo?.fullname || null,
-      notePrice: packageInfo?.full_note_price || null,
+      month: Number(data?.month) || 1,
+      totalNeedPaid: Number(data?.money_need_paid) || 0,
+      totalNotVat: Number(data?.total_not_vat) || 0,
     };
   }, [upgradeUserQRData]);
 
-  useEffect(() => {
-    if (paymentInfo?.userPlus) {
-      setUserCount(paymentInfo.userPlus);
-    }
-  }, [paymentInfo?.userPlus]);
+  // useEffect(() => {
+  //   if (changeUpgradePackageUserData) {
+  //     console.log({ changeUpgradePackageUserData });
+  //   }
+  // }, [changeUpgradePackageUserData?.data?.number_of_users]);
 
   const [selectedPackages, setSelectedPackages] = useState(null);
 
@@ -255,17 +254,15 @@ const PopupBuyMoreUser = props => {
   };
 
   const paymentTotals = useMemo(() => {
-    const subtotal = (paymentInfo.pricePerUser || 0) * (userCount || 0);
-    const vatPercent = (paymentInfo.vatRate || 0) / 100;
-    const vatAmount = subtotal * vatPercent;
-    const total = subtotal + vatAmount;
+    const subtotal = paymentInfo.totalNotVat;
+    const total = paymentInfo.totalNeedPaid;
+    const vatPercent = paymentInfo.vatRate;
     return {
       subtotal,
-      vatAmount,
       total,
-      vatPercent: paymentInfo.vatRate || 0,
+      vatPercent,
     };
-  }, [paymentInfo.pricePerUser, paymentInfo.vatRate, userCount]);
+  }, [paymentInfo.totalNotPaid, paymentInfo.totalNeedPaid]);
 
   const dataSeting = useSetingServer();
 
@@ -467,16 +464,8 @@ const PopupBuyMoreUser = props => {
                       </div>
                       <div className='flex justify-between items-center'>
                         <p className='text-typo-gray-4 text-base font-normal'>Số tháng còn lại</p>
-                        <p className='text-typo-black-4 text-base font-medium'>6 tháng</p>
+                        <p className='text-typo-black-4 text-base font-medium'>{paymentInfo.month} tháng</p>
                       </div>
-                      {selectedPackages?.selectedServices?.map((service, index) => (
-                        <div key={`service2-${service.id}-${index}`} className='flex justify-between items-center'>
-                          <p className='text-typo-gray-4 text-base font-normal'>{service.name}</p>
-                          <p className='text-typo-black-4 text-base font-medium'>
-                            {formatMoney(service.price || 0)} <span className='underline'>đ</span>
-                          </p>
-                        </div>
-                      ))}
                       <hr className='border-[#919EAB33]' />
                       <div className='flex justify-between items-center'>
                         <p className='text-typo-gray-4 text-base font-normal'>Tổng thanh toán</p>
@@ -501,7 +490,7 @@ const PopupBuyMoreUser = props => {
               </AnimatePresence>
               <div className='flex items-center justify-between mt-auto'>
                 <p className='text-2xl font-bold text-typo-blue-4'>
-                  {formatMoney(paymentTotals.total || 0)} <span className='underline'>đ</span>/6 tháng/{userCount} user
+                  {formatMoney(paymentTotals.total || 0)} <span className='underline'>đ</span>/{paymentInfo.month} tháng/{userCount} user
                 </p>
               </div>
             </div>
