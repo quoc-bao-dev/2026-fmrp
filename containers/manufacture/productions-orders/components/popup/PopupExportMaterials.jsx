@@ -93,7 +93,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
         bomArray = Object.values(data.bom);
       }
     }
-    
+
     if (bomArray.length > 0) {
       const now = Date.now();
       const mappedProducts = bomArray.map((product, index) => {
@@ -500,7 +500,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
 
   const bomMaterialKeys = useMemo(() => {
     const keys = new Set();
-    
+
     // Lấy keys từ products (data.bom - có thể là array hoặc object)
     if (Array.isArray(products)) {
       products.forEach(product => {
@@ -514,7 +514,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
         if (key) keys.add(key);
       });
     }
-    
+
     // Lấy keys từ data.boms (nếu có, là object)
     if (data?.boms && typeof data.boms === 'object') {
       Object.values(data.boms).forEach(material => {
@@ -522,7 +522,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
         if (key) keys.add(key);
       });
     }
-    
+
     // Lấy keys từ data.materials (materials đã có trong danh sách ban đầu)
     if (data?.materials && Array.isArray(data.materials)) {
       data.materials.forEach(material => {
@@ -530,7 +530,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
         if (key) keys.add(key);
       });
     }
-    
+
     return keys;
   }, [products, data?.boms, data?.materials, buildVariantKey]);
 
@@ -593,7 +593,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
     const itemId = source.item_id ?? source.id ?? item?.value ?? '';
     const unitName = source.unit_name || source.unit || '';
     const warehouses = Array.isArray(source.warehouses) ? source.warehouses : [];
-    
+
     // Xử lý variant_id - API trả về variant_id, cần map sang item_variation_option_value_id
     const variantId = source.item_variation_option_value_id ?? source.variant_id ?? null;
 
@@ -746,22 +746,24 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
           buttonActiveClassName='!top-1 !bottom-1'
         />
         {activeTab?.id === 'reexport' && (
-          <SelectSearch
-            options={options}
-            onChange={handleSelectSearchChange}
-            value={selectedItems}
-            formatOptionLabel={selectItemsLabel}
-            placeholder='Chọn nguyên vật liệu bổ sung ngoài định mức'
-            setSearch={_HandleSeachApi}
-            className='!border-[#0375F3]'
-            classNameBtn='!bg-[#0375F3]'
-            showCheckbox={false} // Ẩn checkbox
-            multiple={true} // Vẫn cho phép chọn nhiều
-            showSelectedCount={false} // Ẩn số lượng đã chọn
-            showActiveColor={false} // Ẩn màu active khi item được chọn
-            onDuplicateSelect={handleDuplicateMaterialSelect}
-            preventDeselectOnClick
-          />
+          <div className='w-full max-w-[500px]'>
+            <SelectSearch
+              options={options}
+              onChange={handleSelectSearchChange}
+              value={selectedItems}
+              formatOptionLabel={selectItemsLabel}
+              placeholder='Chọn nguyên vật liệu bổ sung ngoài định mức'
+              setSearch={_HandleSeachApi}
+              className='!border-[#0375F3]'
+              classNameBtn='!bg-[#0375F3]'
+              showCheckbox={false} // Ẩn checkbox
+              multiple={true} // Vẫn cho phép chọn nhiều
+              showSelectedCount={false} // Ẩn số lượng đã chọn
+              showActiveColor={false} // Ẩn màu active khi item được chọn
+              onDuplicateSelect={handleDuplicateMaterialSelect}
+              preventDeselectOnClick
+            />
+          </div>
         )}
       </div>
 
@@ -802,12 +804,8 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
           extraMaterials={extraMaterials}
           onExistingMaterialItemIdsChange={setExistingMaterialItemIds}
           onRemoveExtraMaterial={materialKey => {
-            setExtraMaterials(prev =>
-              prev.filter(mat => buildVariantKey(mat) !== materialKey)
-            );
-            setSelectedItems(prev =>
-              prev.filter(item => buildVariantKey(item) !== materialKey)
-            );
+            setExtraMaterials(prev => prev.filter(mat => buildVariantKey(mat) !== materialKey));
+            setSelectedItems(prev => prev.filter(item => buildVariantKey(item) !== materialKey));
           }}
         />
       )}
