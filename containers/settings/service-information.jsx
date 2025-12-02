@@ -218,7 +218,7 @@ const ServiceInformation = props => {
 
             <div className='flex items-center bg-[#ECF0F4] rounded-lg mt-3 pl-3 p-2'>
               <h3 className='text-[15px] uppercase w-full rounded flex items-center space-x-3'>Gói đang sử dụng</h3>
-              {/* {auth?.trial !== '1' && (
+              {auth?.trial !== '1' && (
                 <button
                   onClick={handleOpenBuyMoreUser}
                   className='ml-auto px-2 py-1 rounded-md bg-white border border-[#0375F3] text-[#0375F3] hover:bg-[#EBF5FF] flex space-x-2 items-center hover:opacity-90 transition'
@@ -226,7 +226,7 @@ const ServiceInformation = props => {
                   <UserAdd size='20' className='text-[#0375F3]' />
                   <span className='truncate'>Mua thêm user</span>
                 </button>
-              )} */}
+              )}
             </div>
             <div className='grid grid-cols-5 py-3 mt-5 gap-5 border-b border-[#e7eaee]'>
               {/* <div className='col-span-1 uppercase text-[#667085] font-[400] 2xl:text-base text-[13px] text-center'>Hình thức</div> */}
