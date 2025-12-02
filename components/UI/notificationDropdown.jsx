@@ -23,6 +23,12 @@ const DropdownThongBao = props => {
         clearTimeout(loadDelayRef.current);
         loadDelayRef.current = null;
       }
+    } else {
+      requestAnimationFrame(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = 0;
+        }
+      });
     }
   }, [open]);
 
@@ -46,10 +52,10 @@ const DropdownThongBao = props => {
   const badgeCount = unreadCount;
 
   const triggerContent = (
-    <div className='relative inline-flex items-center justify-center w-4 h-[24px]'>
+    <div className='relative inline-flex items-center justify-center w-4 2xl:h-[33px] h-[24px]'>
       {props.children}
       {badgeCount > 0 && (
-        <span className='absolute -top-2 -right-2 min-w-4 h-4 px-1 rounded-full bg-[#E42424] text-white text-[10px] leading-4 text-center font-semibold shadow-[0_2px_6px_rgba(0,0,0,0.15)]'>
+        <span className='absolute -top-2 2xl:-top-1 -right-2 min-w-4 h-4 px-1 rounded-full bg-[#E42424] text-white text-[10px] leading-4 text-center font-semibold shadow-[0_2px_6px_rgba(0,0,0,0.15)]'>
           {badgeCount}
         </span>
       )}
