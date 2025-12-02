@@ -240,6 +240,7 @@ export const useSaveSuggestExporting = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["api_list_suggest_po"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["api_lookup_materials_variant"], exact: false });
     },
     onError: error => {
       console.error("Lỗi khi lưu xuất thêm nguyên liệu:", error);
