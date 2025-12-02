@@ -93,7 +93,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
         bomArray = Object.values(data.bom);
       }
     }
-    
+
     if (bomArray.length > 0) {
       const now = Date.now();
       const mappedProducts = bomArray.map((product, index) => {
@@ -482,11 +482,11 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
   }, [dataItems]);
 
   // Component formatOptionLabel giống form.jsx
-  const buildMaterialKey = useCallback(item => {
+  const buildVariantKey = useCallback(item => {
     if (!item) return '';
     const source = item.item || item.e || item;
     const itemId = source?.item_id ?? source?.id ?? item?.value ?? '';
-    const variationId = source?.item_variation_option_value_id ?? source?.variant_id ?? source?.id ?? '';
+    const variationId = source?.item_variation_option_value_id ?? source?.variant_id ?? source?.item_variation_id ?? '';
     return `${itemId}-${variationId}`;
   }, []);
 
@@ -500,49 +500,49 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
 
   const bomMaterialKeys = useMemo(() => {
     const keys = new Set();
-    
+
     // Lấy keys từ products (data.bom - có thể là array hoặc object)
     if (Array.isArray(products)) {
       products.forEach(product => {
-        const key = buildItemIdKey(product);
+        const key = buildVariantKey(product);
         if (key) keys.add(key);
       });
     } else if (products && typeof products === 'object') {
       // Nếu products là object (như data.boms), convert sang array
       Object.values(products).forEach(product => {
-        const key = buildItemIdKey(product);
+        const key = buildVariantKey(product);
         if (key) keys.add(key);
       });
     }
-    
+
     // Lấy keys từ data.boms (nếu có, là object)
     if (data?.boms && typeof data.boms === 'object') {
       Object.values(data.boms).forEach(material => {
-        const key = buildItemIdKey(material);
+        const key = buildVariantKey(material);
         if (key) keys.add(key);
       });
     }
-    
+
     // Lấy keys từ data.materials (materials đã có trong danh sách ban đầu)
     if (data?.materials && Array.isArray(data.materials)) {
       data.materials.forEach(material => {
-        const key = buildItemIdKey(material);
+        const key = buildVariantKey(material);
         if (key) keys.add(key);
       });
     }
-    
+
     return keys;
-  }, [products, data?.boms, data?.materials, buildItemIdKey]);
+  }, [products, data?.boms, data?.materials, buildVariantKey]);
 
   // Tập item_id của các nguyên liệu bổ sung đang có trong extraMaterials (để chặn trùng trong cùng session)
   const extraMaterialItemIds = useMemo(() => {
     const keys = new Set();
     extraMaterials.forEach(mat => {
-      const key = buildItemIdKey(mat);
+      const key = buildVariantKey(mat);
       if (key) keys.add(key);
     });
     return keys;
-  }, [extraMaterials, buildItemIdKey]);
+  }, [extraMaterials, buildVariantKey]);
 
   // Kiểm tra duplicate với nguyên liệu từ:
   // - BOM ban đầu (bomMaterialKeys)
@@ -593,7 +593,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
     const itemId = source.item_id ?? source.id ?? item?.value ?? '';
     const unitName = source.unit_name || source.unit || '';
     const warehouses = Array.isArray(source.warehouses) ? source.warehouses : [];
-    
+
     // Xử lý variant_id - API trả về variant_id, cần map sang item_variation_option_value_id
     const variantId = source.item_variation_option_value_id ?? source.variant_id ?? null;
 
@@ -623,6 +623,8 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
       // Chuẩn hóa value từ SelectSearch về dạng mảng
       const nextSelected = Array.isArray(value) ? value : value ? [value] : [];
 
+      const currentSelectionKeys = new Set(selectedItems.map(item => buildVariantKey(item)).filter(Boolean));
+
       const validSelectedItems = [];
       const extraMaterialsToAdd = [];
 
@@ -630,10 +632,16 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
         const source = item.item || item.e || item || {};
         const itemName = source.name || item.label || source.item_name || 'nguyên liệu';
 
-        const itemIdKey = buildItemIdKey(item);
+        const itemIdKey = buildVariantKey(item);
         const quantityWarehouse = Number(source.quantity_warehouse ?? 0);
 
         if (!itemIdKey) return;
+
+        // Bỏ qua kiểm tra trùng cho các item đã được chọn trước đó
+        if (currentSelectionKeys.has(itemIdKey)) {
+          validSelectedItems.push(item);
+          return;
+        }
 
         // 1. Chặn nếu tồn kho bằng 0
         if (!quantityWarehouse || quantityWarehouse <= 0) {
@@ -659,12 +667,28 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
       // Cập nhật selections (chỉ những item hợp lệ)
       setSelectedItems(validSelectedItems);
 
-      // Thêm nguyên liệu bổ sung cho tab reexport
+      // Thêm nguyên liệu bổ sung cho tab reexport (thêm lên đầu)
       if (extraMaterialsToAdd.length > 0) {
-        setExtraMaterials(prev => [...prev, ...extraMaterialsToAdd]);
+        setExtraMaterials(prev => [...extraMaterialsToAdd, ...prev]);
+        // Hiển thị toast thành công khi thêm nguyên liệu
+        if (extraMaterialsToAdd.length === 1) {
+          const addedMaterial = extraMaterialsToAdd[0];
+          showToast('success', `Đã thêm nguyên liệu "${addedMaterial.item_name}" thành công!`);
+        } else {
+          showToast('success', `Đã thêm ${extraMaterialsToAdd.length} nguyên liệu thành công!`);
+        }
       }
     },
-    [buildItemIdKey, combinedMaterialKeys, extraMaterialItemIds, convertLookupMaterialToBom, showToast]
+    [buildVariantKey, combinedMaterialKeys, extraMaterialItemIds, convertLookupMaterialToBom, selectedItems, showToast]
+  );
+
+  const handleDuplicateMaterialSelect = useCallback(
+    option => {
+      const source = option?.item || option?.e || option || {};
+      const itemName = source.name || option?.label || source.item_name || 'nguyên liệu';
+      showToast('error', `"${itemName}" đã tồn tại trong danh sách nguyên liệu, vui lòng kiểm tra lại.`);
+    },
+    [showToast]
   );
 
   return (
@@ -722,20 +746,24 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
           buttonActiveClassName='!top-1 !bottom-1'
         />
         {activeTab?.id === 'reexport' && (
-          <SelectSearch
-            options={options}
-            onChange={handleSelectSearchChange}
-            value={selectedItems}
-            formatOptionLabel={selectItemsLabel}
-            placeholder='Chọn nguyên vật liệu bổ sung ngoài định mức'
-            setSearch={_HandleSeachApi}
-            className='!border-[#0375F3]'
-            classNameBtn='!bg-[#0375F3]'
-            showCheckbox={false} // Ẩn checkbox
-            multiple={true} // Vẫn cho phép chọn nhiều
-            showSelectedCount={false} // Ẩn số lượng đã chọn
-            showActiveColor={false} // Ẩn màu active khi item được chọn
-          />
+          <div className='w-full max-w-[500px]'>
+            <SelectSearch
+              options={options}
+              onChange={handleSelectSearchChange}
+              value={selectedItems}
+              formatOptionLabel={selectItemsLabel}
+              placeholder='Chọn nguyên vật liệu bổ sung ngoài định mức'
+              setSearch={_HandleSeachApi}
+              className='!border-[#0375F3]'
+              classNameBtn='!bg-[#0375F3]'
+              showCheckbox={false} // Ẩn checkbox
+              multiple={true} // Vẫn cho phép chọn nhiều
+              showSelectedCount={false} // Ẩn số lượng đã chọn
+              showActiveColor={false} // Ẩn màu active khi item được chọn
+              onDuplicateSelect={handleDuplicateMaterialSelect}
+              preventDeselectOnClick
+            />
+          </div>
         )}
       </div>
 
@@ -776,15 +804,8 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
           extraMaterials={extraMaterials}
           onExistingMaterialItemIdsChange={setExistingMaterialItemIds}
           onRemoveExtraMaterial={materialKey => {
-            // materialKey là item_id (string), cần so sánh với item_id của material
-            setExtraMaterials(prev => prev.filter(mat => {
-              const matItemId = buildItemIdKey(mat);
-              return matItemId !== materialKey;
-            }));
-            setSelectedItems(prev => prev.filter(item => {
-              const itemId = buildItemIdKey(item);
-              return itemId !== materialKey;
-            }));
+            setExtraMaterials(prev => prev.filter(mat => buildVariantKey(mat) !== materialKey));
+            setSelectedItems(prev => prev.filter(item => buildVariantKey(item) !== materialKey));
           }}
         />
       )}
