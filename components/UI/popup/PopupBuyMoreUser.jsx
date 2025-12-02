@@ -87,7 +87,6 @@ const PopupBuyMoreUser = props => {
     }
 
     const { data, dataQR, package: packageInfo } = upgradeUserQRData;
-    // console.log({ data });
 
     const pricePerUser = Number(data?.price) || 0;
     const vatRate = Number(data?.vat) || prices.vatRate * 100;

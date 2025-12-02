@@ -1,3 +1,5 @@
+import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
+import { formatMoment } from '@/utils/helpers/formatMoment';
 import { Lexend_Deca } from '@next/font/google';
 import { Add as IconClose } from 'iconsax-react';
 import Image from 'next/image';
@@ -11,6 +13,7 @@ const deca = Lexend_Deca({
 const PopupSuccessfulBuyMoreUser = props => {
   const { dataLang, data } = props;
   const dispatch = useDispatch();
+
   const statePopupSuccessfulBuyMoreUser = useSelector(state => state.statePopupSuccessfulBuyMoreUser);
 
   const handleClose = () => {
@@ -35,7 +38,6 @@ const PopupSuccessfulBuyMoreUser = props => {
               type: 'statePopupGlobal',
               payload: { open: false },
             });
-            window.location.reload();
           }}
           className='cursor-pointer bg-white rounded-full p-1.5'
         >
@@ -49,18 +51,17 @@ const PopupSuccessfulBuyMoreUser = props => {
         <div className='flex gap-4 w-full'>
           <div className='p-3 py-2 2xl:py-3 rounded-xl border border-[#919EAB3D] w-full'>
             <h3 className='text-lg font-medium text-typo-gray-4'>Ngày mua hàng:</h3>
-            <p className='text-lg font-medium text-typo-black-4'>{data?.content_success?.date}</p>
+            <p className='text-lg font-medium text-typo-black-4'>{formatMoment(data?.date, FORMAT_MOMENT.DATE_TIME_SLASH_LONG)}</p>
           </div>
           <div className='p-3 py-2 2xl:py-3 rounded-xl border border-[#919EAB3D] w-full'>
             <h3 className='text-lg font-medium text-typo-gray-4'>Mã đơn hàng:</h3>
-            <p className='text-lg font-medium text-[#003DA0]'>{data?.content_success?.code_upgrade_package}</p>
+            <p className='text-lg font-medium text-[#003DA0]'>{data?.code_upgrade_package}</p>
           </div>
         </div>
         <p className='text-base 2xl:text-lg font-normal text-typo-gray-4'>
-          🎉 Cảm ơn bạn đã tin tưởng và mua thêm <span className='text-[#003DA0]'>{data?.content_success?.number_of_users ?? ''} user</span> cho gói{' '}
-          <span className='text-[#003DA0]'>{data?.content_success?.name_package}</span>
+          🎉 Cảm ơn bạn đã tin tưởng và mua thêm <span className='text-[#003DA0]'>{data?.number_of_users ?? ''} user</span> cho gói <span className='text-[#003DA0]'>{data?.name_package}</span>
           .
-          <br /> Gói của bạn sẽ có hiệu lực đến <span className='text-[#EE1E1E]'>{data?.content_success?.expiration_date}</span>
+          <br /> Gói của bạn sẽ có hiệu lực đến <span className='text-[#EE1E1E]'>{data?.expiration_date}</span>
           .
           <br />
           Bạn có thể tải về hóa đơn ngay tại đây hoặc kiểm tra email đã đăng ký tài khoản để xem chi tiết.
