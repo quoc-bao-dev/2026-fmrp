@@ -337,7 +337,11 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
   const tabList = useMemo(
     () => [
       { id: 'current', name: 'Nguyên liệu theo kế hoạch' },
-      { id: 'reexport', name: 'Nguyên liệu bổ sung' },
+      {
+        id: 'reexport',
+        name: 'Nguyên liệu bổ sung',
+        tag: { label: 'Mới', className: '!bg-[#0375F3]' },
+      },
     ],
     []
   );
@@ -741,7 +745,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
           tabs={tabList}
           activeTab={activeTab}
           onChange={setActiveTab}
-          className='!p-1 flex-shrink-0'
+          className='!p-1 flex-shrink-0 !overflow-visible'
           buttonClassName='!py-1.5 !px-3 !responsive-text-sm'
           buttonActiveClassName='!top-1 !bottom-1'
         />
