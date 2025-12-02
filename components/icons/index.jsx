@@ -30,6 +30,7 @@ import ArrowDownIcon from './source/arrow-down.svg';
 import ArrowRightIcon from './source/arrow-right.svg';
 import ArrowUpIcon from './source/arrow-up.svg';
 import BackIcon from './source/back.svg';
+import BellSimpleIcon from './source/bell-simple.svg';
 import CalendarIcon from './source/calendar.svg';
 import CaretDownIcon from './source/caret-down.svg';
 import CaretDropDownThinIcon from './source/caret-drop-down-thin.svg';
@@ -40,6 +41,7 @@ import CheckCircleOutlineIcon from './source/check-circle-outline.svg';
 import CheckIcon from './source/check.svg';
 import CheckThinIcon from './source/check-thin.svg';
 import CloseXIcon from './source/close-x.svg';
+import ClockIcon from './source/clock.svg';
 import CompleteKHIcon from './source/complete-k-h.svg';
 import DocumentTemplateIcon from './source/document-template-icon.svg';
 import DownloadIcon from './source/download-icon.svg';
@@ -99,6 +101,7 @@ export {
   ArrowRightIcon,
   ArrowUpIcon,
   BackIcon,
+  BellSimpleIcon,
   CalendarIcon,
   CaretDownIcon,
   CaretDropDownThinIcon,
@@ -110,6 +113,7 @@ export {
   CheckThinIcon,
   CloseXIcon,
   CompleteKHIcon,
+  ClockIcon,
   DocumentTemplateIcon,
   DownloadIcon,
   DropdownFilledIcon,
