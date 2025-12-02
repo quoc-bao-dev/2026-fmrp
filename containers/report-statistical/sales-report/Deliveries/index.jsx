@@ -212,12 +212,6 @@ const Deliveries = props => {
                     <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Địa chỉ giao</div>
                   </th>
                   <th className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
-                    <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Chi nhánh</div>
-                  </th>
-                  <th className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
-                    <div className='w-full h-full flex items-center px-2 py-2 border-b border-r border-[#E0E0E1]'>Nhân viên phụ trách</div>
-                  </th>
-                  <th className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
                     <div className='w-full h-full flex items-center justify-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Mã hàng</div>
                   </th>
                   <th className='min-w-48 h-2 p-0 font-semibold text-gray-700'>
@@ -245,7 +239,13 @@ const Deliveries = props => {
                     <div className='w-full h-full flex items-center justify-end px-3 py-2 border-b border-r border-[#E0E0E1]'>Thành tiền</div>
                   </th>
                   <th className='min-w-28 h-2 p-0 font-semibold text-gray-700'>
-                    <div className='w-full h-full flex items-center justify-end px-3 py-2 border-b border-[#E0E0E1]'>Tổng cộng</div>
+                    <div className='w-full h-full flex items-center justify-end px-3 py-2 border-r border-b border-[#E0E0E1]'>Tổng cộng</div>
+                  </th>
+                  <th className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
+                    <div className='w-full h-full flex items-center px-3 py-2 border-b border-r border-[#E0E0E1]'>Chi nhánh</div>
+                  </th>
+                  <th className='min-w-40 h-2 p-0 font-semibold text-gray-700'>
+                    <div className='w-full h-full flex items-center px-2 py-2 border-b border-[#E0E0E1]'>Nhân viên phụ trách</div>
                   </th>
                 </tr>
               </thead>
@@ -309,20 +309,6 @@ const Deliveries = props => {
                         </td>
                       )}
 
-                       {/* Chi nhánh - chỉ hiển thị ở item đầu tiên với rowspan */}
-                       {flattenedItem.isFirstItem && (
-                        <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle bg-white'>
-                          <div className='w-full h-full flex items-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.branch_name || '-'}</div>
-                        </td>
-                      )}
-
-                      {/* Nhân viên phụ trách - chỉ hiển thị ở item đầu tiên với rowspan */}
-                      {flattenedItem.isFirstItem && (
-                        <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle bg-white'>
-                          <div className='w-full h-full flex items-center px-2 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.employee_name || '-'}</div>
-                        </td>
-                      )}
-
                       {/* Mã hàng - hiển thị cho mỗi item */}
                       <td className='p-0 h-2'>
                         <div className='h-full flex items-center justify-center px-3 py-2 text-left text-gray-700 border-r border-b border-[#E0E0E1]'>{flattenedItem.item?.item_code || '-'}</div>
@@ -374,17 +360,27 @@ const Deliveries = props => {
 
                       {/* Thành tiền - hiển thị cho mỗi item */}
                       <td className='p-0 h-2'>
-                        <div className='h-full flex items-center justify-end px-3 py-2 text-left border-b border-r border-[#E0E0E1]'>
-                          {formatMoneyOrDash(Number(flattenedItem.item?.total_amount))}
-                        </div>
+                        <div className='h-full flex items-center justify-end px-3 py-2 text-left border-b border-r border-[#E0E0E1]'>{formatMoneyOrDash(Number(flattenedItem.item?.total_amount))}</div>
                       </td>
 
                       {/* Tổng cộng đơn - chỉ hiển thị ở item đầu tiên với rowspan */}
                       {flattenedItem.isFirstItem && (
                         <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-right text-new-blue font-semibold align-middle bg-white'>
-                          <div className='w-full h-full flex items-center justify-end px-3 py-2 border-b border-[#E0E0E1]'>
-                            {formatMoneyOrDash(Number(flattenedItem?.grand_total))}
-                          </div>
+                          <div className='w-full h-full flex items-center justify-end px-3 py-2 border-r border-b border-[#E0E0E1]'>{formatMoneyOrDash(Number(flattenedItem?.grand_total))}</div>
+                        </td>
+                      )}
+
+                      {/* Chi nhánh - chỉ hiển thị ở item đầu tiên với rowspan */}
+                      {flattenedItem.isFirstItem && (
+                        <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle'>
+                          <div className='w-full h-full flex items-center px-3 py-2 border-r border-b border-[#E0E0E1]'>{flattenedItem?.branch_name || '-'}</div>
+                        </td>
+                      )}
+
+                      {/* Nhân viên phụ trách - chỉ hiển thị ở item đầu tiên với rowspan */}
+                      {flattenedItem.isFirstItem && (
+                        <td rowSpan={flattenedItem.totalItems} className='p-0 h-2 text-center text-gray-700 align-middle'>
+                          <div className='w-full h-full flex items-center px-2 py-2 border-b border-[#E0E0E1]'>{flattenedItem?.employee_name || '-'}</div>
                         </td>
                       )}
                     </tr>
@@ -401,12 +397,6 @@ const Deliveries = props => {
                   </td>
                   <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700 sticky left-[240px] 2xl:left-[248px] bg-white z-50'>
                     <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1] uppercase'>Tổng cộng</div>
-                  </td>
-                  <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
-                    <div className='w-full h-full border-t border-[#E0E0E1]'></div>
-                  </td>
-                  <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
-                    <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                   </td>
                   <td className='w-40 p-0 h-2 text-center font-semibold text-gray-700'>
                     <div className='w-full h-full border-t border-[#E0E0E1]'></div>
@@ -444,6 +434,12 @@ const Deliveries = props => {
                     <div className='w-full h-full flex items-center justify-center px-3 py-2 border-t border-[#E0E0E1]'>
                       {formatMoneyOrDash(flattenedData.reduce((sum, item) => sum + (Number(item?.total_amount) || 0), 0))}
                     </div>
+                  </td>
+                  <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
+                    <div className='w-full h-full border-t border-[#E0E0E1]'></div>
+                  </td>
+                  <td className='w-32 p-0 h-2 text-center font-semibold text-gray-700'>
+                    <div className='w-full h-full border-t border-[#E0E0E1]'></div>
                   </td>
                 </tr>
               </tfoot>

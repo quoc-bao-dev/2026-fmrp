@@ -667,9 +667,16 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
       // Cập nhật selections (chỉ những item hợp lệ)
       setSelectedItems(validSelectedItems);
 
-      // Thêm nguyên liệu bổ sung cho tab reexport
+      // Thêm nguyên liệu bổ sung cho tab reexport (thêm lên đầu)
       if (extraMaterialsToAdd.length > 0) {
-        setExtraMaterials(prev => [...prev, ...extraMaterialsToAdd]);
+        setExtraMaterials(prev => [...extraMaterialsToAdd, ...prev]);
+        // Hiển thị toast thành công khi thêm nguyên liệu
+        if (extraMaterialsToAdd.length === 1) {
+          const addedMaterial = extraMaterialsToAdd[0];
+          showToast('success', `Đã thêm nguyên liệu "${addedMaterial.item_name}" thành công!`);
+        } else {
+          showToast('success', `Đã thêm ${extraMaterialsToAdd.length} nguyên liệu thành công!`);
+        }
       }
     },
     [buildVariantKey, combinedMaterialKeys, extraMaterialItemIds, convertLookupMaterialToBom, selectedItems, showToast]

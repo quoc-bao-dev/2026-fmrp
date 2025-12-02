@@ -70,6 +70,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
   const [externalMaterials, setExternalMaterials] = useState([]);
   const [builtinMaterialsWithWarehouses, setBuiltinMaterialsWithWarehouses] = useState([]);
   const extraMaterialsCacheRef = useRef(new Map());
+  const processedMaterialsRef = useRef(new Set()); // Theo dõi các nguyên liệu đã được xử lý tự động check
 
   const { data, isLoading } = useProductionOrderDetail({ id: poId, enabled: !!poId });
 
@@ -270,7 +271,60 @@ const PopupExportMaterialsTabReexport = forwardRef(
 
   useEffect(() => {
     extraMaterialsCacheRef.current.clear();
+    processedMaterialsRef.current.clear(); // Reset khi poId thay đổi
   }, [poId]);
+
+  // Tự động check nguyên liệu mới khi thêm từ SelectSearch
+  useEffect(() => {
+    if (!externalMaterials?.length) {
+      // Nếu không có externalMaterials, xóa tất cả processed materials
+      processedMaterialsRef.current.clear();
+      return;
+    }
+
+    // Lấy danh sách materialId hiện tại
+    const currentMaterialIds = new Set(externalMaterials.map(material => getMaterialId(material)));
+    
+    // Xóa các materialId không còn trong danh sách khỏi processedMaterialsRef
+    processedMaterialsRef.current.forEach(materialId => {
+      if (!currentMaterialIds.has(materialId)) {
+        processedMaterialsRef.current.delete(materialId);
+      }
+    });
+
+    // Xử lý các nguyên liệu mới
+    externalMaterials.forEach(material => {
+      const materialId = getMaterialId(material);
+      
+      // Bỏ qua nếu đã được xử lý trước đó
+      if (processedMaterialsRef.current.has(materialId)) return;
+
+      const warehouses = Array.isArray(material.warehouses) ? material.warehouses : [];
+      
+      // Đánh dấu đã xử lý
+      processedMaterialsRef.current.add(materialId);
+
+      // Tự động thêm vào danh sách đã chọn
+      setSelectedMaterialRows(prev => (prev.includes(materialId) ? prev : [...prev, materialId]));
+
+      // Tự động tạo lot row
+      setMaterialsWarehouses(prev => {
+        const currentState = prev[materialId] || { lotRows: [], isOpen: false };
+        // Chỉ tạo lot row mới nếu chưa có
+        if (currentState.lotRows.length === 0) {
+          return {
+            ...prev,
+            [materialId]: {
+              ...currentState,
+              lotRows: [createLotRow(warehouses)],
+              isOpen: true,
+            },
+          };
+        }
+        return prev;
+      });
+    });
+  }, [externalMaterials, getMaterialId]);
 
   const allMaterials = useMemo(() => {
     const boms = suggestData?.data?.boms || suggestData?.boms || {};
@@ -295,14 +349,17 @@ const PopupExportMaterialsTabReexport = forwardRef(
       };
     });
 
-    const offset = apiBomMaterials.length + builtinExtraMaterials.length;
+    // Đặt __originalIndex của normalizedExternal nhỏ hơn để các nguyên liệu mới thêm lên đầu khi sắp xếp
+    // Các nguyên liệu mới nhất (được thêm vào đầu extraMaterials, idx = 0) sẽ có __originalIndex nhỏ nhất
+    const externalLength = externalMaterials?.length || 0;
     const normalizedExternal = (externalMaterials || []).map((material, idx) => ({
       ...material,
-      __originalIndex: offset + idx,
+      __originalIndex: -externalLength + idx, // idx = 0 (mới nhất) -> -externalLength, idx tăng -> __originalIndex tăng
       __isExtra: true,
     }));
 
-    return [...apiBomMaterials, ...builtinExtraMaterials, ...normalizedExternal];
+    // Đặt các nguyên liệu từ SelectSearch (mới thêm) lên đầu danh sách
+    return [...normalizedExternal, ...apiBomMaterials, ...builtinExtraMaterials];
   }, [suggestData, externalMaterials, builtinMaterialsWithWarehouses]);
 
   const materialMap = useMemo(() => {

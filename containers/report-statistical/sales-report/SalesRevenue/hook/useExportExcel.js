@@ -66,8 +66,6 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_do
     'Khách hàng',
     'Ngày',
     'Phiếu bán hàng',
-    'Chi nhánh',
-    'Nhân viên',
     'Ngày giao hàng (dự kiến)',
     'Mã sản phẩm',
     'Tên sản phẩm',
@@ -84,8 +82,8 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_do
     '', // % thuế
     '', // Tiền thuế
     '', // Tổng cộng
-    '', // Đã thu
-    ''  // Còn lại
+    'Chi nhánh', // Cột 21 - khớp với wsData[21] = branch_name
+    'Nhân viên'  // Cột 22 - khớp với wsData[22] = employee_name
   ];
 
   // Header hàng 2 - các cột chi tiết (chỉ hiển thị cho Số lượng và Giá trị)
@@ -95,8 +93,6 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_do
     '', // Khách hàng - merge với hàng 1
     '', // Ngày - merge với hàng 1
     '', // Phiếu bán hàng - merge với hàng 1
-    '', // Chi nhánh - merge với hàng 1
-    '', // Nhân viên - merge với hàng 1
     '', // Ngày giao hàng (dự kiến) - merge với hàng 1
     '', // Mã sản phẩm - merge với hàng 1
     '', // Tên sản phẩm - merge với hàng 1
@@ -112,7 +108,9 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_do
     'Tiền thuế',
     'Tổng cộng',
     'Đã thu',
-    'Còn lại'
+    'Còn lại',
+    '', // Chi nhánh - merge với hàng 1
+    ''  // Nhân viên - merge với hàng 1
   ];
 
   const headerRow1Styled = headerRow1.map(title => ({
@@ -141,8 +139,6 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_do
     item.customer_name,
     item.date ? moment(item.date).format('DD/MM/YYYY') : '',
     item.reference_no,
-    item.branch_name,
-    item.employee_name,
     item.delivery_date ? moment(item.delivery_date).format('DD/MM/YYYY') : '',
     item.item_code,
     item.item_name,
@@ -158,7 +154,9 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_do
     item.tax_amount_item, // Tiền thuế - không chia 100
     item.isFirstItem ? item.grand_total : '',
     item.isFirstItem ? item.total_payment : '',
-    item.isFirstItem ? item.total_rest : ''
+    item.isFirstItem ? item.total_rest : '',
+    item.branch_name,  // Cột 21
+    item.employee_name // Cột 22
   ]);
 
   // Tính tổng cộng
@@ -183,8 +181,6 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_do
     '',
     '',
     '',
-    '',
-    '',
     totalQuantity,
     totalDelivery,
     totalNotDelivery,
@@ -195,7 +191,9 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_do
     totalTaxAmount,
     totalGrandTotal,
     totalPayment,
-    totalRest
+    totalRest,
+    '', // Chi nhánh - cột 21
+    ''  // Nhân viên - cột 22
   ];
 
   const wb = XLSX.utils.book_new();
@@ -240,29 +238,38 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_do
   // Merge cells cho header "Số lượng" và "Giá trị"
   ws['!merges'] = ws['!merges'] || [];
   
-  // Merge các cột từ STT đến Đơn vị (cột 0-10) thành 2 hàng
-  for (let c = 0; c <= 11; c++) {
+  // Merge các cột từ STT đến Đơn vị (cột 0-9) thành 2 hàng
+  for (let c = 0; c <= 9; c++) {
     ws['!merges'].push({ s: { r: 0, c: c }, e: { r: 1, c: c } });
   }
   
-  // Merge "Số lượng" (cột 11-13: Đơn hàng, Đã giao, Còn lại)
-  ws['!merges'].push({ s: { r: 0, c: 12 }, e: { r: 0, c: 14 } });
+  // Merge "Số lượng" (cột 10-12: Đơn hàng, Đã giao, Còn lại)
+  ws['!merges'].push({ s: { r: 0, c: 10 }, e: { r: 0, c: 12 } });
   
-  // Merge "Giá trị" (cột 14-21: Đơn giá, % chiết khấu, Tiền chiết khấu, % thuế, Tiền thuế, Tổng cộng, Đã thu, Còn lại)
-  ws['!merges'].push({ s: { r: 0, c: 15 }, e: { r: 0, c: 22 } });
+  // Merge "Giá trị" (cột 13-20: Đơn giá, % chiết khấu, Tiền chiết khấu, % thuế, Tiền thuế, Tổng cộng, Đã thu, Còn lại)
+  ws['!merges'].push({ s: { r: 0, c: 13 }, e: { r: 0, c: 20 } });
+  
+  // Merge Chi nhánh và Nhân viên (cột 21-22) thành 2 hàng
+  for (let c = 21; c <= 22; c++) {
+    ws['!merges'].push({ s: { r: 0, c: c }, e: { r: 1, c: c } });
+  }
   
   // Đảm bảo text "Giá trị" hiển thị ở ô đầu tiên của vùng merge
-  const valueCellRef = XLSX.utils.encode_cell({ r: 0, c: 15 });
+  const valueCellRef = XLSX.utils.encode_cell({ r: 0, c: 13 });
   if (ws[valueCellRef]) {
     ws[valueCellRef].v = 'Giá trị';
   }
 
-  // Merge cells cho các cột được gộp (STT, Mã khách hàng, Khách hàng, Ngày, Phiếu bán hàng, Nhân viên)
+  // Merge cells cho các cột được gộp (STT, Mã khách hàng, Khách hàng, Ngày, Phiếu bán hàng)
   groups.forEach(g => {
     if (g.end > g.start) {
       const startRow = g.start + 2; // +2 vì có 2 hàng header
       const endRow = g.end + 2;
-      [0, 1, 2, 3, 4, 5, 6].forEach(colIndex => { // STT, Mã khách hàng, Khách hàng, Ngày, Phiếu bán hàng, Chi nhánh, Nhân viên
+      [0, 1, 2, 3, 4].forEach(colIndex => { // STT, Mã khách hàng, Khách hàng, Ngày, Phiếu bán hàng
+        ws['!merges'].push({ s: { r: startRow, c: colIndex }, e: { r: endRow, c: colIndex } });
+      });
+      // Merge Chi nhánh và Nhân viên (cột 21-22)
+      [21, 22].forEach(colIndex => {
         ws['!merges'].push({ s: { r: startRow, c: colIndex }, e: { r: endRow, c: colIndex } });
       });
     }
@@ -273,16 +280,16 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_do
     if (g.end > g.start) {
       const startRow = g.start + 2; // +2 vì có 2 hàng header
       const endRow = g.end + 2;
-      [20, 21, 22].forEach(colIndex => { // Tổng cộng, Đã thu, Còn lại (đã +1 vì có thêm cột "Số lượng" và "Chi nhánh")
+      [18, 19, 20].forEach(colIndex => { // Tổng cộng, Đã thu, Còn lại
         ws['!merges'].push({ s: { r: startRow, c: colIndex }, e: { r: endRow, c: colIndex } });
       });
     }
   });
 
   // Format số cho các cột số
-  const numberCols = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]; // Các cột số lượng và tiền
-  const percentCols = [16, 18]; // Các cột phần trăm (% chiết khấu, % thuế) - format thành phần trăm
-  const moneyCols = [15, 17, 19]; // Các cột tiền (Đơn giá, Tiền chiết khấu, Tiền thuế) - format thành số tiền
+  const numberCols = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]; // Các cột số lượng và tiền
+  const percentCols = [14, 16]; // Các cột phần trăm (% chiết khấu, % thuế) - format thành phần trăm
+  const moneyCols = [13, 15, 17]; // Các cột tiền (Đơn giá, Tiền chiết khấu, Tiền thuế) - format thành số tiền
   
   for (let r = 2; r <= rows.length + 1; r++) { // +2 vì có 2 hàng header
     numberCols.forEach(c => {
@@ -337,13 +344,13 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_do
     else if (index === 2) width = 25; // Khách hàng
     else if (index === 3) width = 12; // Ngày
     else if (index === 4) width = 20; // Phiếu bán hàng
-    else if (index === 5) width = 20; // Chi nhánh
-    else if (index === 6) width = 20; // Nhân viên
-    else if (index === 7) width = 20; // Ngày giao hàng
-    else if (index === 8) width = 15; // Mã sản phẩm
-    else if (index === 9) width = 30; // Tên sản phẩm
-    else if (index === 10) width = 20; // Biến thể
-    else if (index === 11) width = 10; // Đơn vị
+    else if (index === 5) width = 20; // Ngày giao hàng
+    else if (index === 6) width = 15; // Mã sản phẩm
+    else if (index === 7) width = 30; // Tên sản phẩm
+    else if (index === 8) width = 20; // Biến thể
+    else if (index === 9) width = 10; // Đơn vị
+    else if (index === 21) width = 20; // Chi nhánh
+    else if (index === 22) width = 20; // Nhân viên
     else width = 15; // Các cột số
     return { wch: width };
   });

@@ -67,8 +67,6 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_gi
     'Số giao hàng',
     'Khách hàng',
     'Địa chỉ giao',
-    'Chi nhánh',
-    'Nhân viên phụ trách',
     'Mã hàng',
     'Tên hàng',
     'Biến thể',
@@ -78,7 +76,9 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_gi
     'Chiết khấu',
     'Thuế',
     'Thành tiền',
-    'Tổng cộng'
+    'Tổng cộng',
+    'Chi nhánh',
+    'Nhân viên phụ trách'
   ];
 
   const wsData = rows.map((item) => [
@@ -87,8 +87,6 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_gi
     item.reference_no || '',
     item.customer_name || '',
     item.address_delivery || '',
-    item.branch_name || '',
-    item.employee_name || '',
     item.item_code || '',
     item.item_name || '',
     item.variant_name || '',
@@ -98,7 +96,9 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_gi
     item.discount_percent_item ?? '',
     item.tax_rate_item ?? '',
     item.total_amount,
-    item.grand_total
+    item.grand_total,
+    item.branch_name || '',
+    item.employee_name || ''
   ]);
 
   // Tính tổng cộng
@@ -111,8 +111,6 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_gi
     '', // Số giao hàng
     'Tổng cộng', // Khách hàng (sticky ở footer UI)
     '', // Địa chỉ giao
-    '', // Chi nhánh
-    '', // Nhân viên phụ trách
     '', // Mã hàng
     '', // Tên hàng
     '', // Biến thể
@@ -123,6 +121,8 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_gi
     '', // Thuế
     '', // Thành tiền
     totalTotalAmount, // Tổng cộng
+    '', // Chi nhánh
+    ''  // Nhân viên phụ trách
   ];
 
   const wb = XLSX.utils.book_new();
@@ -141,21 +141,21 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_gi
     }
   }
 
-  // Merge cells cho các cột header cố định theo từng đơn: STT, Ngày giao hàng, Số giao hàng, Khách hàng, Địa chỉ giao, Chi nhánh, Nhân viên phụ trách, Tổng cộng đơn
+  // Merge cells cho các cột header cố định theo từng đơn: STT, Ngày giao hàng, Số giao hàng, Khách hàng, Địa chỉ giao, Tổng cộng đơn, Chi nhánh, Nhân viên phụ trách
   ws['!merges'] = ws['!merges'] || [];
   groups.forEach(g => {
     if (g.end > g.start) {
       const startRow = g.start + 1; // +1 vì có 1 hàng header
       const endRow = g.end + 1;
-      // Merge các cột: STT (0), Ngày giao hàng (1), Số giao hàng (2), Khách hàng (3), Địa chỉ giao (4), Chi nhánh (5), Nhân viên phụ trách (6), Tổng cộng đơn (16)
-      [0, 1, 2, 3, 4, 5, 6, 16].forEach(colIndex => {
+      // Merge các cột: STT (0), Ngày giao hàng (1), Số giao hàng (2), Khách hàng (3), Địa chỉ giao (4), Tổng cộng đơn (14), Chi nhánh (15), Nhân viên phụ trách (16)
+      [0, 1, 2, 3, 4, 14, 15, 16].forEach(colIndex => {
         ws['!merges'].push({ s: { r: startRow, c: colIndex }, e: { r: endRow, c: colIndex } });
       });
     }
   });
 
-  // Format số cho các cột số: STT (0), Số lượng (11), Giá (12), Chiết khấu (13), Thuế (14), Thành tiền (15), Tổng cộng đơn (16)
-  const numberCols = [0, 11, 12, 13, 14, 15, 16]; 
+  // Format số cho các cột số: STT (0), Số lượng (9), Giá (10), Chiết khấu (11), Thuế (12), Thành tiền (13), Tổng cộng đơn (14)
+  const numberCols = [0, 9, 10, 11, 12, 13, 14]; 
 
   for (let r = 1; r <= rows.length; r++) { // +1 vì có 1 hàng header
     numberCols.forEach(c => {
@@ -200,7 +200,7 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_gi
       
       // Căn giữa cho các cột đầu bảng (0..2) và cột số; còn lại trái + wrap
       const centerCols = new Set([0, 1, 2]);
-      const numericCols = new Set([11, 12, 13, 14, 15, 16]);
+      const numericCols = new Set([9, 10, 11, 12, 13, 14]);
       const alignment = (centerCols.has(C) || numericCols.has(C))
         ? { horizontal: 'center', vertical: 'middle' }
         : { horizontal: 'left', vertical: 'middle', wrapText: true };
@@ -229,18 +229,18 @@ export const exportWithMergeSalesRevenue = (rawData = [], filename = 'Bao_cao_gi
     else if (index === 2) width = 18; // Số giao hàng
     else if (index === 3) width = 25; // Khách hàng
     else if (index === 4) width = 30; // Địa chỉ giao
-    else if (index === 5) width = 20; // Chi nhánh
-    else if (index === 6) width = 20; // Nhân viên phụ trách
-    else if (index === 7) width = 15; // Mã hàng
-    else if (index === 8) width = 30; // Tên hàng
-    else if (index === 9) width = 20; // Biến thể
-    else if (index === 10) width = 10; // ĐVT
-    else if (index === 11) width = 12; // Số lượng
-    else if (index === 12) width = 15; // Giá
-    else if (index === 13) width = 12; // Chiết khấu
-    else if (index === 14) width = 10; // Thuế
-    else if (index === 15) width = 15; // Thành tiền
-    else if (index === 16) width = 18; // Tổng cộng đơn
+    else if (index === 5) width = 15; // Mã hàng
+    else if (index === 6) width = 30; // Tên hàng
+    else if (index === 7) width = 20; // Biến thể
+    else if (index === 8) width = 10; // ĐVT
+    else if (index === 9) width = 12; // Số lượng
+    else if (index === 10) width = 15; // Giá
+    else if (index === 11) width = 12; // Chiết khấu
+    else if (index === 12) width = 10; // Thuế
+    else if (index === 13) width = 15; // Thành tiền
+    else if (index === 14) width = 18; // Tổng cộng đơn
+    else if (index === 15) width = 20; // Chi nhánh
+    else if (index === 16) width = 20; // Nhân viên phụ trách
     return { wch: width };
   });
 
