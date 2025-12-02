@@ -388,7 +388,6 @@ const PopupRecallMaterials = ({ code, onClose }) => {
         <div className='flex gap-3 items-center'>
           <button
             onClick={handleConfirmRecall}
-            // disabled={selectedCount === 0}
             className={`flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-background-blue-2 hover:bg-background-blue-2/80`}
           >
             <CheckIcon className='size-4' /> Thu hồi{selectedCount > 0 ? ` (${selectedCount})` : ''}

@@ -1610,7 +1610,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                   // boxShadow: "0px 20px 24px -4px #10182814, 0px 4px 4px 0px #00000040"
                   boxShadow: '0px 5px 35px 0px #00000012',
                 }}
-                className='flex flex-col !p-0 border-[#D8DAE5] rounded-lg shrink-0 3xl:w-[120%] w-[110%]'
+                className='flex flex-col !p-0 border-[#D8DAE5] rounded-lg shrink-0 w-fit'
                 classNameContainer='!w-fit'
                 dropdownId='dropdownCompleteStage'
                 placement='bottom-right'
@@ -1625,7 +1625,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                     return (
                       <div
                         key={tab.id}
-                        className={`hover:bg-[#F3F4F6] border-b border-[#F7F8F9] border-t flex items-center gap-3 cursor-pointer px-4 py-3 custom-transition ${borderClass} select-none`}
+                        className={`hover:bg-[#F3F4F6] border-b border-[#F7F8F9] border-t flex items-center gap-3 cursor-pointer px-4 py-3 custom-transition whitespace-nowrap ${borderClass} select-none`}
                         onClick={() => handClickDropdownCompleteStage(tab.type)}
                       >
                         {/* nút 'hoàn thành chi tiết' có modal riêng khi là gói pro*/}
