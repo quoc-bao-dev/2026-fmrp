@@ -70,6 +70,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
   const [externalMaterials, setExternalMaterials] = useState([]);
   const [builtinMaterialsWithWarehouses, setBuiltinMaterialsWithWarehouses] = useState([]);
   const extraMaterialsCacheRef = useRef(new Map());
+  const processedMaterialsRef = useRef(new Set()); // Theo dõi các nguyên liệu đã được xử lý tự động check
 
   const { data, isLoading } = useProductionOrderDetail({ id: poId, enabled: !!poId });
 
@@ -270,7 +271,60 @@ const PopupExportMaterialsTabReexport = forwardRef(
 
   useEffect(() => {
     extraMaterialsCacheRef.current.clear();
+    processedMaterialsRef.current.clear(); // Reset khi poId thay đổi
   }, [poId]);
+
+  // Tự động check nguyên liệu mới khi thêm từ SelectSearch
+  useEffect(() => {
+    if (!externalMaterials?.length) {
+      // Nếu không có externalMaterials, xóa tất cả processed materials
+      processedMaterialsRef.current.clear();
+      return;
+    }
+
+    // Lấy danh sách materialId hiện tại
+    const currentMaterialIds = new Set(externalMaterials.map(material => getMaterialId(material)));
+    
+    // Xóa các materialId không còn trong danh sách khỏi processedMaterialsRef
+    processedMaterialsRef.current.forEach(materialId => {
+      if (!currentMaterialIds.has(materialId)) {
+        processedMaterialsRef.current.delete(materialId);
+      }
+    });
+
+    // Xử lý các nguyên liệu mới
+    externalMaterials.forEach(material => {
+      const materialId = getMaterialId(material);
+      
+      // Bỏ qua nếu đã được xử lý trước đó
+      if (processedMaterialsRef.current.has(materialId)) return;
+
+      const warehouses = Array.isArray(material.warehouses) ? material.warehouses : [];
+      
+      // Đánh dấu đã xử lý
+      processedMaterialsRef.current.add(materialId);
+
+      // Tự động thêm vào danh sách đã chọn
+      setSelectedMaterialRows(prev => (prev.includes(materialId) ? prev : [...prev, materialId]));
+
+      // Tự động tạo lot row
+      setMaterialsWarehouses(prev => {
+        const currentState = prev[materialId] || { lotRows: [], isOpen: false };
+        // Chỉ tạo lot row mới nếu chưa có
+        if (currentState.lotRows.length === 0) {
+          return {
+            ...prev,
+            [materialId]: {
+              ...currentState,
+              lotRows: [createLotRow(warehouses)],
+              isOpen: true,
+            },
+          };
+        }
+        return prev;
+      });
+    });
+  }, [externalMaterials, getMaterialId]);
 
   const allMaterials = useMemo(() => {
     const boms = suggestData?.data?.boms || suggestData?.boms || {};
@@ -295,14 +349,17 @@ const PopupExportMaterialsTabReexport = forwardRef(
       };
     });
 
-    const offset = apiBomMaterials.length + builtinExtraMaterials.length;
+    // Đặt __originalIndex của normalizedExternal nhỏ hơn để các nguyên liệu mới thêm lên đầu khi sắp xếp
+    // Các nguyên liệu mới nhất (được thêm vào đầu extraMaterials, idx = 0) sẽ có __originalIndex nhỏ nhất
+    const externalLength = externalMaterials?.length || 0;
     const normalizedExternal = (externalMaterials || []).map((material, idx) => ({
       ...material,
-      __originalIndex: offset + idx,
+      __originalIndex: -externalLength + idx, // idx = 0 (mới nhất) -> -externalLength, idx tăng -> __originalIndex tăng
       __isExtra: true,
     }));
 
-    return [...apiBomMaterials, ...builtinExtraMaterials, ...normalizedExternal];
+    // Đặt các nguyên liệu từ SelectSearch (mới thêm) lên đầu danh sách
+    return [...normalizedExternal, ...apiBomMaterials, ...builtinExtraMaterials];
   }, [suggestData, externalMaterials, builtinMaterialsWithWarehouses]);
 
   const materialMap = useMemo(() => {
@@ -313,7 +370,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
     return map;
   }, [allMaterials, getMaterialId]);
 
-  // Gửi item_id keys để kiểm tra duplicate trong SelectSearch
+  // Gửi keys item+variant để kiểm tra duplicate trong SelectSearch
   // Lấy từ materials trong boms và data.materials (materials đã có trong danh sách)
   useEffect(() => {
     if (typeof onExistingMaterialItemIdsChange !== 'function') return;
@@ -323,18 +380,18 @@ const PopupExportMaterialsTabReexport = forwardRef(
     const boms = suggestData?.data?.boms || suggestData?.boms || {};
     const bomEntries = Object.values(boms || {});
     bomEntries.forEach(material => {
-      const itemId = String(material.item_id || '');
-      if (itemId) {
-        itemIdKeys.add(itemId);
+      const key = getExtraMaterialKey(material) || String(material.item_id || '');
+      if (key) {
+        itemIdKeys.add(key);
       }
     });
     
     // Lấy từ data.materials (materials bổ sung từ API)
     const materials = suggestData?.data?.materials || suggestData?.materials || [];
     materials.forEach(material => {
-      const itemId = String(material.item_id || '');
-      if (itemId) {
-        itemIdKeys.add(itemId);
+      const key = getExtraMaterialKey(material) || String(material.item_id || '');
+      if (key) {
+        itemIdKeys.add(key);
       }
     });
     
@@ -411,6 +468,11 @@ const PopupExportMaterialsTabReexport = forwardRef(
       const materialId = getMaterialId(material);
       const currentState = materialsWarehouses[materialId] || { lotRows: [], isOpen: false };
       const warehouses = Array.isArray(material.warehouses) ? material.warehouses : [];
+
+      if (warehouses.length === 0) {
+        showToast('error', `Sản phẩm "${material.item_name}" không có kho hàng. Vui lòng bổ sung kho hàng trước khi chọn!`);
+        return;
+      }
 
       setMaterialsWarehouses(prev => ({
         ...prev,
@@ -729,7 +791,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
                 <table className='min-w-full table-fixed border-separate border-spacing-0'>
                   <tbody>
                     {materials.map(material => {
-                      // console.log(materials)
+                      console.log(materials)
                       const materialId = getMaterialId(material);
                       const quantityTotal = Number(material.quantity_total_quota || 0);
                       const quantityQuotaPrimary = Number(material.quantity_quota_primary || 0);
@@ -810,9 +872,8 @@ const PopupExportMaterialsTabReexport = forwardRef(
                                         e.stopPropagation();
                                         // Xóa khỏi danh sách extraMaterials (ở parent)
                                         if (typeof onRemoveExtraMaterial === 'function') {
-                                          // Chỉ truyền item_id để xóa (không phân biệt variant)
-                                          const itemId = String(material.item_id || '');
-                                          onRemoveExtraMaterial(itemId);
+                                          const extraKey = getExtraMaterialKey(material);
+                                          onRemoveExtraMaterial(extraKey);
                                         }
 
                                         // Đồng thời xóa toàn bộ state local liên quan đến nguyên liệu này
