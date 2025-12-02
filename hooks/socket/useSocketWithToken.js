@@ -95,68 +95,40 @@ export const useSocketWithToken = ({ auth, dataSetting }) => {
     });
 
     socket.on('upgrade_package_success', data => {
-      if (data.data.status == 'success') {
-        dispatch({
-          type: 'statePopupGlobal',
-          payload: {
-            open: false,
-          },
-        });
-        setTimeout(() => {
-          dispatch({
-            type: 'statePopupGlobal',
-            payload: {
-              open: true,
-              children: (
-                <PopupSuccessfulPayment
-                  data={data.data}
-                  onClose={() =>
-                    dispatch({
-                      type: 'statePopupSuccessfulPayment',
-                      payload: { open: false },
-                    })
-                  }
-                />
-              ),
-            },
-          });
-        }, 1000);
-        refetch();
-      }
+      refetchHistoryUpgradePackage();
+      refetch();
     });
 
     socket.on('upgrade_package_user_success', data => {
       console.log('buy_more_user_success', data);
 
-      if (data.data.status == 'success') {
-        refetchHistoryUpgradePackage();
+      refetchHistoryUpgradePackage();
+      dispatch({
+        type: 'statePopupGlobal',
+        payload: {
+          open: false,
+        },
+      });
+      setTimeout(() => {
         dispatch({
           type: 'statePopupGlobal',
           payload: {
-            open: false,
+            open: true,
+            children: (
+              <PopupSuccessfulBuyMoreUser
+                data={data.data}
+                onClose={() =>
+                  dispatch({
+                    type: 'statePopupSuccessfulBuyMoreUser',
+                    payload: { open: false },
+                  })
+                }
+              />
+            ),
           },
         });
-        setTimeout(() => {
-          dispatch({
-            type: 'statePopupGlobal',
-            payload: {
-              open: true,
-              children: (
-                <PopupSuccessfulBuyMoreUser
-                  data={data.data}
-                  onClose={() =>
-                    dispatch({
-                      type: 'statePopupSuccessfulBuyMoreUser',
-                      payload: { open: false },
-                    })
-                  }
-                />
-              ),
-            },
-          });
-        }, 1000);
-        refetch();
-      }
+      }, 1000);
+      refetch();
     });
     socket.on('upgrade_package_user', data => {
       console.log('upgrade_package_user', data);
