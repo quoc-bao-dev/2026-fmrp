@@ -15,8 +15,7 @@ import { IoCopyOutline } from 'react-icons/io5';
 import { useDispatch, useSelector } from 'react-redux';
 import { Tooltip } from 'react-tippy';
 import { Customscrollbar } from '../common/Customscrollbar';
-import { useChangeUpgradePackageUser } from '@/managers/api/upgrade-package/useChangeUpgradePackageUser';
-import { useGetBuyMoreUserQR } from '@/managers/api/upgrade-package/useGetBuyMoreUserQR';
+import apiChangeUpgradePackageUser from '@/Api/apiUpgradePackage/apiChangeUpgradePackageUser';
 
 const deca = Lexend_Deca({
   subsets: ['latin'],
@@ -44,26 +43,48 @@ const PopupBuyMoreUser = props => {
   const detailsRef = useRef(null);
   const detailsContentRef = useRef(null);
   const [isConfirmCloseOpen, setIsConfirmCloseOpen] = useState(false);
-  const [userCount, setUserCount] = useState(1);
 
   const { data: upgradeUserQRData, isLoading: isLoadingQR } = useGetUpgradeUserQR();
-  const { data: changeUpgradePackageUserData, isFetching: isFetchingChangeUpgrade } = useChangeUpgradePackageUser({
-    data: { number_of_users: userCount },
+
+  // Giá trị số user hiện tại luôn lấy từ API (key: data.number_of_users)
+  const currentNumberOfUsers = useMemo(() => {
+    const num = upgradeUserQRData?.data?.number_of_users;
+    if (num === undefined || num === null) return 1;
+    const parsed = Number(num);
+    return Number.isNaN(parsed) ? 1 : parsed;
+  }, [upgradeUserQRData?.data?.number_of_users]);
+
+  // Mutation đổi số lượng user (thay cho hook useChangeUpgradePackageUser dạng query)
+  const changeUpgradePackageUserMutation = useMutation({
+    mutationFn: async numberOfUsers => {
+      const formData = new FormData();
+      formData.append('number_of_users', numberOfUsers);
+      const res = await apiChangeUpgradePackageUser.changeUpgradePackageUser(formData);
+      return res;
+    },
+    onMutate: () => {
+      setIsQrUpdating(true);
+    },
+    onSuccess: response => {
+      if (response?.result) {
+        // Cập nhật lại query apiGetUpgradeUserQR bằng dữ liệu mới từ mutation
+        queryClient.setQueryData(['apiGetUpgradeUserQR', undefined], response);
+      } else {
+        isShow('error', response?.message || 'Không thể cập nhật thông tin mua thêm user');
+      }
+      setIsQrUpdating(false);
+    },
+    onError: () => {
+      isShow('error', 'Có lỗi xảy ra khi cập nhật thông tin mua thêm user');
+      setIsQrUpdating(false);
+    },
   });
 
-  useEffect(() => {
-    if (!changeUpgradePackageUserData) return;
-    queryClient.setQueryData(['apiGetUpgradeUserQR', undefined], changeUpgradePackageUserData);
-  }, [changeUpgradePackageUserData, queryClient]);
-
-  useEffect(() => {
-    if (isFetchingChangeUpgrade) {
-      setIsQrUpdating(true);
-    } else {
-      const timeout = setTimeout(() => setIsQrUpdating(false), 300);
-      return () => clearTimeout(timeout);
-    }
-  }, [isFetchingChangeUpgrade]);
+  // Hàm handleChange: được gọi khi người dùng bấm +/- thay đổi số lượng user
+  const handleChange = value => {
+    // Gọi mutation để lấy lại thông tin QR và giá theo số lượng mới
+    changeUpgradePackageUserMutation.mutate(value);
+  };
 
   // Map dữ liệu từ API response ra format cho giao diện
   const paymentInfo = useMemo(() => {
@@ -111,14 +132,6 @@ const PopupBuyMoreUser = props => {
       totalNotVat: Number(data?.total_not_vat) || 0,
     };
   }, [upgradeUserQRData]);
-
-  // useEffect(() => {
-  //   if (changeUpgradePackageUserData) {
-  //     console.log({ changeUpgradePackageUserData });
-  //   }
-  // }, [changeUpgradePackageUserData?.data?.number_of_users]);
-
-  const [selectedPackages, setSelectedPackages] = useState(null);
 
   const [tooltipTexts, setTooltipTexts] = useState({
     accountNumber: 'Sao chép',
@@ -197,14 +210,6 @@ const PopupBuyMoreUser = props => {
       setIsDetailsOpen(true);
     }
   }, [statePopupUpgradeProfessional.open]);
-
-  // Cập nhật selectedPackages khi có thay đổi về userCount
-  useEffect(() => {
-    setSelectedPackages(prev => ({
-      ...prev,
-      number_of_users: userCount,
-    }));
-  }, [userCount]);
 
   // Tạo mutation cho việc gọi API upgrade package
   const upgradePackageMutation = useMutation({
@@ -401,15 +406,7 @@ const PopupBuyMoreUser = props => {
                   <h3 className='text-xl font-semibold text-typo-black-4'>Chọn số lượng user</h3>
                   <div className='flex justify-between items-center'>
                     <span className='text-lg font-normal text-typo-gray-4'>Số user</span>
-                    <InputNumberCustom
-                      classNameButton='rounded-full bg-[#EBF5FF] hover:bg-[#C7DFFB] cursor-pointer'
-                      className='p-1'
-                      state={userCount}
-                      setState={value => {
-                        setUserCount(value);
-                      }}
-                      min={1}
-                    />
+                    <InputNumberCustom classNameButton='rounded-full bg-[#EBF5FF] hover:bg-[#C7DFFB] cursor-pointer' className='p-1' state={currentNumberOfUsers} setState={handleChange} min={1} />
                   </div>
                 </div>
               </div>
@@ -454,7 +451,7 @@ const PopupBuyMoreUser = props => {
                       <div className='flex justify-between items-end'>
                         <div className='flex flex-col gap-2'>
                           <div className='w-fit h-fit  px-3 py-0.5 border-2 rounded-lg border-green-400 bg-green-200 text-green-500'> Professional </div>
-                          <p className='text-typo-gray-4 text-base font-normal'>x {userCount} user</p>
+                          <p className='text-typo-gray-4 text-base font-normal'>x {currentNumberOfUsers} user</p>
                         </div>
 
                         <p className='text-typo-black-4 text-base font-medium'>
@@ -489,7 +486,7 @@ const PopupBuyMoreUser = props => {
               </AnimatePresence>
               <div className='flex items-center justify-between mt-auto'>
                 <p className='text-2xl font-bold text-typo-blue-4'>
-                  {formatMoney(paymentTotals.total || 0)} <span className='underline'>đ</span>/{paymentInfo.month} tháng/{userCount} user
+                  {formatMoney(paymentTotals.total || 0)} <span className='underline'>đ</span>/{paymentInfo.month} tháng/{currentNumberOfUsers} user
                 </p>
               </div>
             </div>
