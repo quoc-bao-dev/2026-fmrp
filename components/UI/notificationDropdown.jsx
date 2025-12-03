@@ -27,8 +27,23 @@ const DropdownThongBao = ({ notiRead, position, children }) => {
 
   const handleClickNotification = ce => {
     if (!ce?.id) return;
+
+    // Đánh dấu đã đọc nếu chưa đọc
     if (ce?.is_read == 0) {
       readSingleNoti({ notification_id: ce.id });
+    }
+
+    // Điều hướng sang link trong json_data (nếu có)
+    if (ce?.json_data) {
+      try {
+        const parsed = JSON.parse(ce.json_data || '{}');
+        const link = parsed?.link;
+        if (link) {
+          window.open(link, '_blank', 'noopener,noreferrer');
+        }
+      } catch (error) {
+        // bỏ qua nếu json_data không parse được
+      }
     }
   };
 
@@ -37,7 +52,7 @@ const DropdownThongBao = ({ notiRead, position, children }) => {
       toast('error', 'Không có thông báo nào để đọc');
       return;
     }
-    readAllNoti({is_web: 1});
+    readAllNoti({ is_web: 1 });
   };
 
   useEffect(() => {
@@ -140,7 +155,9 @@ const DropdownThongBao = ({ notiRead, position, children }) => {
                 {notifications.map((ce, index) => (
                   <div
                     key={index}
-                    className={`cursor-pointer py-2.5 px-4 flex gap-3 border-b  ${ce.is_read == 0 ? 'bg-[#E2F0FE] hover:bg-[#E2F0FE]/50 border-[#E8E8E8]' : 'bg-white hover:bg-gray-50 border-[#E8E8E8]/50'}`}
+                    className={`cursor-pointer py-2.5 px-4 flex gap-3 border-b  ${
+                      ce.is_read == 0 ? 'bg-[#E2F0FE] hover:bg-[#E2F0FE]/50 border-[#E8E8E8]' : 'bg-white hover:bg-gray-50 border-[#E8E8E8]/50'
+                    }`}
                     onClick={() => handleClickNotification(ce)}
                   >
                     <BellSimpleIcon className={`size-5 shrink-0 mt-0.5 ${ce.is_read == 0 ? 'text-[#0375F3]' : 'text-[#667085]'}`} />

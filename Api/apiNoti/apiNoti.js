@@ -1,8 +1,8 @@
 import { _ServerInstance as axiosCustom } from '@/services/axios';
 
 const apiNoti = {
-  async getCheckNotiRead() {
-    const response = await axiosCustom('GET', `/api_web/Api_Notifications/getCheckNotiRead`);
+  async getCheckNotiRead(params) {
+    const response = await axiosCustom('GET', `/api_web/Api_Notifications/getCheckNotiRead`, params);
     return response.data;
   },
 

@@ -3,13 +3,13 @@ import { optionsQuery } from '@/configs/optionsQuery';
 import useToast from '@/hooks/useToast';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-export const useGetCheckNotiRead = () => {
+export const useGetCheckNotiRead = ({ params }) => {
   const fetchGetCheckNotiRead = async () => {
-    const response = await apiNoti.getCheckNotiRead();
+    const response = await apiNoti.getCheckNotiRead({ params: params });
     return response;
   };
   return useQuery({
-    queryKey: ['api_get_check_noti_read'],
+    queryKey: ['api_get_check_noti_read', params],
     queryFn: fetchGetCheckNotiRead,
     ...optionsQuery,
   });
@@ -41,8 +41,8 @@ export const useReadSingleNoti = () => {
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const fetchReadSingleNoti = async (params) => {
-    const response = await apiNoti.apiReadSingleNoti({params});
+  const fetchReadSingleNoti = async params => {
+    const response = await apiNoti.apiReadSingleNoti({ params });
     return response;
   };
 
@@ -57,9 +57,7 @@ export const useReadSingleNoti = () => {
         if (!oldData?.pages) return oldData;
         const pages = oldData.pages.map(page => {
           if (!page?.notifications) return page;
-          const updatedNotifications = page.notifications.map(item =>
-            item.id === notificationId ? { ...item, is_read: 1 } : item
-          );
+          const updatedNotifications = page.notifications.map(item => (item.id === notificationId ? { ...item, is_read: 1 } : item));
           return { ...page, notifications: updatedNotifications };
         });
         return { ...oldData, pages };
@@ -79,8 +77,8 @@ export const useReadAllNoti = () => {
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const fetchReadAllNoti = async (params) => {
-    const response = await apiNoti.apiReadAllNoti({params});
+  const fetchReadAllNoti = async params => {
+    const response = await apiNoti.apiReadAllNoti({ params });
     return response;
   };
 

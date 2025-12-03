@@ -34,7 +34,7 @@ const Header = () => {
 
   const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
   const { data: upgradePackageData, isLoading, error } = useGetUpgradePackage();
-  const { data: checkNotiRead } = useGetCheckNotiRead();
+  const { data: checkNotiRead } = useGetCheckNotiRead({ params: { is_web: 1 } });
 
   const authState = useSelector(state => state.auth);
 
