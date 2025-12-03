@@ -16,8 +16,8 @@ const apiNoti = {
     return response.data;
   },
 
-  async apiReadAllNoti() {
-    const response = await axiosCustom('POST', `/api_web/Api_Notifications/isReadNoti`);
+  async apiReadAllNoti(params) {
+    const response = await axiosCustom('POST', `/api_web/Api_Notifications/isReadNoti`, params);
     return response.data;
   },
 };

@@ -37,7 +37,7 @@ const DropdownThongBao = ({ notiRead, position, children }) => {
       toast('error', 'Không có thông báo nào để đọc');
       return;
     }
-    readAllNoti();
+    readAllNoti({is_web: 1});
   };
 
   useEffect(() => {

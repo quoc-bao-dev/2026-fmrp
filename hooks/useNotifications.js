@@ -79,8 +79,8 @@ export const useReadAllNoti = () => {
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const fetchReadAllNoti = async () => {
-    const response = await apiNoti.apiReadAllNoti();
+  const fetchReadAllNoti = async (params) => {
+    const response = await apiNoti.apiReadAllNoti({params});
     return response;
   };
 
