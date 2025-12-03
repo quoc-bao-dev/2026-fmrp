@@ -1008,26 +1008,26 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
       });
     }
 
-    //xử lý button hoàn thành công đoạn  (đang điều kiện là gói user basic)
-    if (type === 'complete_stage' && currentPackage === '1') {
-      dispatch({
-        type: 'statePopupGlobal',
-        payload: {
-          open: true,
-          allowOutsideClick: false,
-          allowEscape: false,
-          children: (
-            <PopupRequestUpdateVersion>
-              <p className='text-start xlg:text-2xl text-xl leading-[32px] font-semibold text-[#141522]'>
-                Theo dõi chặt <span className='text-[#0375F3]'>từng bước – từ bán thành phẩm</span> đến thành phẩm cuối cùng
-              </p>
-            </PopupRequestUpdateVersion>
-          ),
-        },
-      });
+    //xử lý button hoàn thành công đoạn - cho phép tất cả gói sử dụng
+    // if (type === 'complete_stage' && currentPackage === '1') {
+    //   dispatch({
+    //     type: 'statePopupGlobal',
+    //     payload: {
+    //       open: true,
+    //       allowOutsideClick: false,
+    //       allowEscape: false,
+    //       children: (
+    //         <PopupRequestUpdateVersion>
+    //           <p className='text-start xlg:text-2xl text-xl leading-[32px] font-semibold text-[#141522]'>
+    //             Theo dõi chặt <span className='text-[#0375F3]'>từng bước – từ bán thành phẩm</span> đến thành phẩm cuối cùng
+    //           </p>
+    //         </PopupRequestUpdateVersion>
+    //       ),
+    //     },
+    //   });
 
-      return;
-    }
+    //   return;
+    // }
 
     //xử lý button hoàn thành công đoạn  (đang điều kiện là gói user basic)
     if (type === 'export_materials') {
@@ -1178,7 +1178,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
         <h2 className='text-title-section text-[#52575E] capitalize font-medium'>{dataLang?.productions_orders || 'productions_orders'}</h2>
 
         <div className='flex items-center gap-2 xl:max-w-[70%]'>
-          <ButtonAnimationNew
+          {/* <ButtonAnimationNew
             icon={
               <div className='size-4'>
                 <ArrowCounterClockWiseIcon className='size-full' />
@@ -1187,7 +1187,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
             title={dataLang?.refresh_data || 'Làm mới dữ liệu'}
             className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#0375F3] border border-[#0375F3] hover:bg-[#EBF5FF] hover:shadow-hover-button rounded-lg'
             onClick={refreshData}
-          />
+          /> */}
           <div className='relative flex items-center justify-end'>
             {/* Animated Search Input */}
             <AnimatePresence>
@@ -1628,23 +1628,27 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                         className={`hover:bg-[#F3F4F6] border-b border-[#F7F8F9] border-t flex items-center gap-3 cursor-pointer px-4 py-3 custom-transition whitespace-nowrap ${borderClass} select-none`}
                         onClick={() => handClickDropdownCompleteStage(tab.type)}
                       >
-                        {/* nút 'hoàn thành chi tiết' có modal riêng khi là gói pro*/}
-                        {tab.type === 'complete_stage' && dataSeting?.package !== '1' ? (
-                          <PopupConfimStage
-                            dataLang={dataLang}
-                            dataRight={isStateProvider?.productionsOrders}
-                            typePageMoblie={typePageMoblie}
-                            refetch={() => {
-                              refetchProductionOrderList();
-                              // refetch()
-                            }}
-                          />
+                        {/* nút 'hoàn thành chi tiết' - cho phép tất cả gói sử dụng, hiển thị badge pro cho gói pro */}
+                        {tab.type === 'complete_stage' ? (
+                          <div className='flex items-center gap-2 w-full' onClick={e => e.stopPropagation()}>
+                            <div className='flex-1'>
+                              <PopupConfimStage
+                                dataLang={dataLang}
+                                dataRight={isStateProvider?.productionsOrders}
+                                typePageMoblie={typePageMoblie}
+                                refetch={() => {
+                                  refetchProductionOrderList();
+                                  // refetch()
+                                }}
+                              />
+                            </div>
+                            {authState?.is_upgrade && <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs shrink-0'>pro</span>}
+                          </div>
                         ) : (
                           <div className='flex items-center gap-2'>
                             <span className='3xl:size-5 size-4 text-[#0375F3] shrink-0'>{tab.icon}</span>
                             <span className='3xl:text-base text-sm font-normal text-[#101828]'>
-                              {tab.label} {/* TODO: fix pro */}
-                              {authState?.is_upgrade && tab.type === 'complete_stage' && <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs'>pro</span>}
+                              {tab.label}
                             </span>
                           </div>
                         )}

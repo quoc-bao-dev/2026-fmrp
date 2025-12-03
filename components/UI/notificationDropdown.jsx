@@ -99,7 +99,7 @@ const DropdownThongBao = props => {
             }
           }}
         >
-          <div className='relative bg-white flex flex-col font-deca'>
+          <div className={`relative bg-white flex flex-col font-deca ${notifications?.length === 0 ? 'pb-4' : ''}`}>
             {notifications?.length === 0 ? (
               <NoData type='noti' classNameImage='h-[230px] object-contain' />
             ) : (

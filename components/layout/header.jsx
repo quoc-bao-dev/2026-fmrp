@@ -1169,7 +1169,7 @@ const Header = () => {
             </div>
           </Dropdown> */}
 
-          <DropdownThongBao data={ListThongBao} position={'bottom center'}>
+          <DropdownThongBao data={[] || ListThongBao} position={'bottom center'}>
             <div className='2xl:size-5 xl:size-4 size-3 shink-0'>
               <Image
                 alt=''

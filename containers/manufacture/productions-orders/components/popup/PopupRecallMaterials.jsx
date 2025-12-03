@@ -385,53 +385,50 @@ const PopupRecallMaterials = ({ code, onClose }) => {
           <h2 className='text-2xl font-bold capitalize'>Thu hồi nguyên liệu</h2>
           <p className='text-base text-typo-blue-4'>{code || 'LSX-27112571'}</p>
         </div>
-        <div className='flex gap-3 items-center'>
-          <button
-            onClick={handleConfirmRecall}
-            className={`flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-background-blue-2 hover:bg-background-blue-2/80`}
-          >
-            <CheckIcon className='size-4' /> Thu hồi{selectedCount > 0 ? ` (${selectedCount})` : ''}
-          </button>
-          <motion.div
-            whileHover={{ scale: 1.2, rotate: 90 }}
-            whileTap={{ scale: 0.9, rotate: -90 }}
-            transition={{ type: 'spring', stiffness: 300 }}
-            className='size-6 shrink-0 text-neutral-02 cursor-pointer'
-            onClick={onClose}
-          >
-            <CloseXIcon className='size-full' />
-          </motion.div>
+        <div className='flex items-center gap-4'>
+          <SelectComponent
+            options={MOCK_PRODUCTS.map(product => ({
+              label: product.item_name,
+              value: getProductId(product),
+            }))}
+            value={() => {}}
+            onChange={value => {
+              console.log(value);
+            }}
+            isClearable={true}
+            icon={<PiWarehouseLight color='#9295A4' className='size-4' />}
+            closeMenuOnSelect={true}
+            hideSelectedOptions={false}
+            placeholder='Chọn kho hàng'
+            classParent='w-[300px]'
+            // styles={{
+            //   control: (base, state) => ({
+            //     ...base,
+            //     borderRadius: '8px',
+            //     borderColor: isProductMissing ? '#ef4444' : state.isFocused ? '#0F4F9E' : base.borderColor,
+            //     boxShadow: 'none',
+            //     '&:hover': {
+            //       borderColor: isProductMissing ? '#ef4444' : state.isFocused ? '#0F4F9E' : base.borderColor,
+            //     },
+            //   }),
+            // }}
+            isSearchable={true}
+          />
+          <div className='flex gap-3 items-center'>
+            <button onClick={handleConfirmRecall} className={`flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-background-blue-2 hover:bg-background-blue-2/80`}>
+              <CheckIcon className='size-4' /> Thu hồi{selectedCount > 0 ? ` (${selectedCount})` : ''}
+            </button>
+            <motion.div
+              whileHover={{ scale: 1.2, rotate: 90 }}
+              whileTap={{ scale: 0.9, rotate: -90 }}
+              transition={{ type: 'spring', stiffness: 300 }}
+              className='size-6 shrink-0 text-neutral-02 cursor-pointer'
+              onClick={onClose}
+            >
+              <CloseXIcon className='size-full' />
+            </motion.div>
+          </div>
         </div>
-      </div>
-      <div className='flex items-center justify-end gap-4'>
-        <SelectComponent
-          options={MOCK_PRODUCTS.map(product => ({
-            label: product.item_name,
-            value: getProductId(product),
-          }))}
-          value={() => {}}
-          onChange={value => {
-            console.log(value);
-          }}
-          isClearable={true}
-          icon={<PiWarehouseLight color='#9295A4' className='size-4' />}
-          closeMenuOnSelect={true}
-          hideSelectedOptions={false}
-          placeholder='Chọn kho hàng'
-          classParent='w-1/3'
-          // styles={{
-          //   control: (base, state) => ({
-          //     ...base,
-          //     borderRadius: '8px',
-          //     borderColor: isProductMissing ? '#ef4444' : state.isFocused ? '#0F4F9E' : base.borderColor,
-          //     boxShadow: 'none',
-          //     '&:hover': {
-          //       borderColor: isProductMissing ? '#ef4444' : state.isFocused ? '#0F4F9E' : base.borderColor,
-          //     },
-          //   }),
-          // }}
-          isSearchable={true}
-        />
       </div>
 
       <div className='flex-1 min-h-[60vh] max-h-[80vh] w-full flex flex-col gap-4 h-full'>

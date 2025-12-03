@@ -1,19 +1,20 @@
+import PackageUpgradeButton from '@/components/common/button/PackageUpgradeButton';
+import SelectSearch from '@/components/common/orderManagement/SelectSearch';
+import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
 import CheckIcon from '@/components/icons/common/CheckIcon';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import useSetingServer from '@/hooks/useConfigNumber';
 import useToast from '@/hooks/useToast';
 import { useHandlingExportTotalPO, useListExportProductionOrder, useSaveSuggestExporting } from '@/managers/api/productions-order/useExportProduct';
+import { useLookupMaterialsVariant } from '@/managers/api/productions-order/useLookupMaterialsVariant';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
 import { Lexend_Deca } from '@next/font/google';
 import { motion } from 'framer-motion';
+import { debounce } from 'lodash';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PopupExportMaterialsTabCurrent from './PopupExportMaterialsTabCurrent';
 import PopupExportMaterialsTabReexport from './PopupExportMaterialsTabReexport';
-import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
-import SelectSearch from '@/components/common/orderManagement/SelectSearch';
-import { debounce } from 'lodash';
-import { useLookupMaterialsVariant } from '@/managers/api/productions-order/useLookupMaterialsVariant';
 
 const deca = Lexend_Deca({
   subsets: ['latin'],
@@ -40,6 +41,10 @@ export const PopupOrderCompleted = ({ onClose, className }) => {
 const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
   const showToast = useToast();
   const dataSeting = useSetingServer();
+  
+  // Kiểm tra có phải gói pro không
+  const isProPackage = dataSeting?.package !== '1';
+
   const [selectAll, setSelectAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showCompleted, setShowCompleted] = useState(false);
@@ -719,15 +724,19 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
             </button>
           )}
           {activeTab?.id === 'reexport' && (
-            <button
-              onClick={handleConfirmReexport}
-              disabled={isSavingReexport}
-              className={`flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white ${
-                isSavingReexport ? 'bg-background-blue-2 cursor-not-allowed opacity-70' : 'bg-background-blue-2 hover:bg-background-blue-2/80'
-              }`}
-            >
-              <CheckIcon className='size-4' /> {isSavingReexport ? 'Đang xử lý...' : `Xuất bổ sung${reexportSelectedCount > 0 ? ` (${reexportSelectedCount})` : ''}`}
-            </button>
+            isProPackage ? (
+              <button
+                onClick={handleConfirmReexport}
+                disabled={isSavingReexport}
+                className={`flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white ${
+                  isSavingReexport ? 'bg-background-blue-2 cursor-not-allowed opacity-70' : 'bg-background-blue-2 hover:bg-background-blue-2/80'
+                }`}
+              >
+                <CheckIcon className='size-4' /> {isSavingReexport ? 'Đang xử lý...' : `Xuất bổ sung${reexportSelectedCount > 0 ? ` (${reexportSelectedCount})` : ''}`}
+              </button>
+            ) : (
+              <PackageUpgradeButton />
+            )
           )}
           <motion.div
             whileHover={{ scale: 1.2, rotate: 90 }}

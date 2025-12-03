@@ -984,10 +984,16 @@ const PopupUpgradeProfessional = (props) => {
         onClose={() => setIsConfirmCloseOpen(false)}
         cancel={() => setIsConfirmCloseOpen(false)}
         save={() => {
-          dispatch({
-            type: "statePopupGlobal",
-            payload: { open: false },
-          });
+          // Gọi onClose callback nếu có (để quay lại popup trước đó)
+          if (props.onClose) {
+            props.onClose();
+          } else {
+            // Nếu không có onClose, đóng toàn bộ popup
+            dispatch({
+              type: "statePopupGlobal",
+              payload: { open: false },
+            });
+          }
           setIsConfirmCloseOpen(false);
         }}
         title="Bạn có chắc chắn muốn đóng?"
