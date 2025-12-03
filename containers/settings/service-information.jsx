@@ -15,6 +15,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ListBtn_Setting } from './information';
 import { useGetBuyMoreUserQR } from '@/managers/api/upgrade-package/useGetBuyMoreUserQR';
+import useSetingServer from '@/hooks/useConfigNumber';
 
 const transactionTypeMap = {
   1: {
@@ -106,6 +107,9 @@ const ServiceInformation = props => {
 
   const auth = useSelector(state => state?.auth);
   const dispatch = useDispatch();
+  const dataSeting = useSetingServer();
+  const isProPackage = dataSeting?.package !== '1';
+
   const { data: upgradePackageData } = useGetUpgradePackage();
   const { data: historyUpgradePackageData, isLoading: isLoadingHistory } = useHistoryUpgradePackage();
 
@@ -218,7 +222,7 @@ const ServiceInformation = props => {
 
             <div className='flex items-center bg-[#ECF0F4] rounded-lg mt-3 pl-3 p-2'>
               <h3 className='text-[15px] uppercase w-full rounded flex items-center space-x-3'>Gói đang sử dụng</h3>
-              {auth?.trial !== '1' && (
+              {(auth?.trial !== '1' && isProPackage) && (
                 <button
                   onClick={handleOpenBuyMoreUser}
                   className='ml-auto px-2 py-1 rounded-md bg-white border border-[#0375F3] text-[#0375F3] hover:bg-[#EBF5FF] flex space-x-2 items-center hover:opacity-90 transition'

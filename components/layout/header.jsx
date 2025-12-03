@@ -1109,7 +1109,7 @@ const Header = () => {
                       upgradePackageData={upgradePackageData}
                       onClose={() =>
                         dispatch({
-                          type: 'statePopupUpgradeProfessional',
+                          type: 'statePopupGlobal',
                           payload: { open: false },
                         })
                       }
@@ -1366,7 +1366,7 @@ const DropdownAvatar = React.memo(() => {
                       upgradePackageData={upgradePackageData}
                       onClose={() =>
                         dispatch({
-                          type: 'statePopupUpgradeProfessional',
+                          type: 'statePopupGlobal',
                           payload: { open: false },
                         })
                       }
