@@ -23,6 +23,7 @@ import DropdownThongBao from '../UI/notificationDropdown';
 import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
 import { ChatIcon, PasswordIcon, SignOutIcon, SparkleIcon, SparkleOutlineIcon, UserCircleIcon } from '../icons';
 import PopupQRCodeHeader from '../common/popup/PopupQRCodeHeader';
+import { useGetCheckNotiRead, useListNoti } from '@/hooks/useNotifications';
 
 const Header = () => {
   const router = useRouter();
@@ -33,6 +34,8 @@ const Header = () => {
 
   const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
   const { data: upgradePackageData, isLoading, error } = useGetUpgradePackage();
+  const { data: checkNotiRead } = useGetCheckNotiRead();
+
   const authState = useSelector(state => state.auth);
 
   const dataPstWH = useSelector(state => state.statusUser);
@@ -1147,7 +1150,8 @@ const Header = () => {
                 height={24}
                 quality={100}
                 className='object-contain transition size-6'
-                loading='lazy'
+                // loading='lazy'
+                priority
                 crossOrigin='anonymous'
                 blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
               />
@@ -1169,7 +1173,7 @@ const Header = () => {
             </div>
           </Dropdown> */}
 
-          <DropdownThongBao data={[] || ListThongBao} position={'bottom center'}>
+          <DropdownThongBao notiRead={checkNotiRead} position={'bottom center'}>
             <div className='2xl:size-5 xl:size-4 size-3 shink-0'>
               <Image
                 alt=''
@@ -1178,7 +1182,8 @@ const Header = () => {
                 height={18}
                 quality={100}
                 className='object-contain w-full h-full transition'
-                loading='lazy'
+                // loading='lazy'
+                priority
                 crossOrigin='anonymous'
                 blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
               />
@@ -1205,7 +1210,8 @@ const Header = () => {
                 height={18}
                 quality={100}
                 className='object-contain w-full h-full transition'
-                loading='lazy'
+                // loading='lazy'
+                priority
                 crossOrigin='anonymous'
                 blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
               />
@@ -1227,7 +1233,8 @@ const Header = () => {
                 height={20}
                 quality={100}
                 className='object-contain w-full h-full transition'
-                loading='lazy'
+                // loading='lazy'
+                priority
                 crossOrigin='anonymous'
                 blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
               />

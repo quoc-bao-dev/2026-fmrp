@@ -1,24 +1,47 @@
-import { useEffect, useRef, useState } from 'react';
+import { useListNoti, useReadAllNoti, useReadSingleNoti } from '@/hooks/useNotifications';
+import useToast from '@/hooks/useToast';
+import moment from 'moment';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Tooltip } from 'react-tippy';
 import Popup from 'reactjs-popup';
 import { BellSimpleIcon, ClockIcon } from '../icons';
 import { Customscrollbar } from './common/Customscrollbar';
+import Loading from './loading/loading';
 import NoData from './noData/nodata';
 
-const DropdownThongBao = props => {
+const DropdownThongBao = ({ notiRead, position, children }) => {
   const [open, sOpen] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const scrollRef = useRef(null);
   const loadDelayRef = useRef(null);
+  const toast = useToast();
 
-  const notifications = props?.data || [];
+  const listParams = useMemo(() => ({ limit: 10, is_web: 1 }), []);
+  const { data: notiPages, isLoading: isLoadingNoti, fetchNextPage, hasNextPage, isFetchingNextPage } = useListNoti({ params: listParams, open: open });
+  const { mutate: readSingleNoti } = useReadSingleNoti();
+  const { mutate: readAllNoti, isLoading: isReadingAll } = useReadAllNoti();
 
-  // Giả định 2 thông báo đầu là chưa đọc (như UI mẫu)
-  const unreadCount = Math.min(2, notifications.length);
+  const notifications = useMemo(() => {
+    if (!notiPages?.pages) return [];
+    return notiPages.pages.flatMap(page => page?.notifications || []);
+  }, [notiPages]);
+
+  const handleClickNotification = ce => {
+    if (!ce?.id) return;
+    if (ce?.is_read == 0) {
+      readSingleNoti({ notification_id: ce.id });
+    }
+  };
+
+  const handleReadAll = () => {
+    if (!notiRead?.check) {
+      toast('error', 'Không có thông báo nào để đọc');
+      return;
+    }
+    readAllNoti();
+  };
 
   useEffect(() => {
     if (!open) {
-      setIsLoadingMore(false);
       if (loadDelayRef.current) {
         clearTimeout(loadDelayRef.current);
         loadDelayRef.current = null;
@@ -33,12 +56,11 @@ const DropdownThongBao = props => {
   }, [open]);
 
   useEffect(() => {
-    setIsLoadingMore(false);
     if (loadDelayRef.current) {
       clearTimeout(loadDelayRef.current);
       loadDelayRef.current = null;
     }
-  }, [notifications?.length]);
+  }, [notifications.length]);
 
   useEffect(() => {
     return () => {
@@ -49,14 +71,12 @@ const DropdownThongBao = props => {
     };
   }, []);
 
-  const badgeCount = unreadCount;
-
   const triggerContent = (
     <div className='relative inline-flex items-center justify-center w-4 2xl:h-[33px] h-[24px]'>
-      {props.children}
-      {badgeCount > 0 && (
+      {children}
+      {notiRead?.check > 0 && (
         <span className='absolute -top-2 2xl:-top-1 -right-2 min-w-4 h-4 px-1 rounded-full bg-[#E42424] text-white text-[10px] leading-4 text-center font-semibold shadow-[0_2px_6px_rgba(0,0,0,0.15)]'>
-          {badgeCount}
+          {notiRead?.check}
         </span>
       )}
     </div>
@@ -76,13 +96,12 @@ const DropdownThongBao = props => {
         </button>
       }
       closeOnDocumentClick
-      arrow={props.position}
+      arrow={position}
       on={['click']}
       open={open}
       onOpen={() => sOpen(true)}
       onClose={() => sOpen(false)}
-      position={props.position}
-      className={`${props.className}`}
+      position={position}
       contentStyle={{ padding: 0, border: 'none', background: 'transparent' }}
     >
       <div className='-translate-x-5'>
@@ -91,33 +110,46 @@ const DropdownThongBao = props => {
           ref={scrollRef}
           onScroll={e => {
             const target = e.target;
-            if (!isLoadingMore && target.scrollHeight - target.scrollTop - target.clientHeight < 16) {
+            if (!isFetchingNextPage && hasNextPage && target.scrollHeight - target.scrollTop - target.clientHeight < 16) {
               if (loadDelayRef.current) clearTimeout(loadDelayRef.current);
               loadDelayRef.current = setTimeout(() => {
-                setIsLoadingMore(true);
+                fetchNextPage().finally(() => {
+                  loadDelayRef.current = null;
+                });
               }, 500);
             }
           }}
         >
-          <div className={`relative bg-white flex flex-col font-deca ${notifications?.length === 0 ? 'pb-4' : ''}`}>
-            {notifications?.length === 0 ? (
-              <NoData type='noti' classNameImage='h-[230px] object-contain' />
+          <div className={`relative bg-white flex flex-col font-deca ${notifications.length === 0 ? 'pb-4' : ''}`}>
+            {isLoadingNoti ? (
+              <Loading />
+            ) : notifications.length === 0 ? (
+              <NoData type='noti' classNameImage='h-[150px] object-contain' />
             ) : (
               <>
                 <div className='sticky top-0 bg-white z-10 px-3 py-2'>
-                  <button type='button' className='responsive-text-sm font-semibold text-[#0375F3]'>
-                    Đọc tất cả ({unreadCount})
+                  <button
+                    type='button'
+                    className='responsive-text-sm hover:underline cursor-pointer font-semibold text-[#0375F3] disabled:text-[#93C5FD]'
+                    onClick={handleReadAll}
+                    disabled={isReadingAll}
+                  >
+                    {isReadingAll ? 'Đang xử lý...' : `Đọc tất cả (${notiRead?.check})`}
                   </button>
                 </div>
-                {notifications?.map((ce, index) => (
-                  <div key={index} className={`py-2.5 px-4 flex gap-3 border-b border-[#E8E8E8] ${index < 2 ? 'bg-[#E2F0FE]' : 'bg-white'}`}>
-                    <BellSimpleIcon className={`size-5 shrink-0 mt-0.5 ${index < 2 ? 'text-[#0375F3]' : 'text-[#667085]'}`} />
+                {notifications.map((ce, index) => (
+                  <div
+                    key={index}
+                    className={`cursor-pointer py-2.5 px-4 flex gap-3 border-b  ${ce.is_read == 0 ? 'bg-[#E2F0FE] hover:bg-[#E2F0FE]/50 border-[#E8E8E8]' : 'bg-white hover:bg-gray-50 border-[#E8E8E8]/50'}`}
+                    onClick={() => handleClickNotification(ce)}
+                  >
+                    <BellSimpleIcon className={`size-5 shrink-0 mt-0.5 ${ce.is_read == 0 ? 'text-[#0375F3]' : 'text-[#667085]'}`} />
                     <div className='flex flex-col gap-1'>
-                      <h5 className={`responsive-text-base font-semibold ${index < 2 ? 'text-[#0375F3]' : 'text-[#4E4E4E]'}`}>{ce?.title}</h5>
-                      <div className={`responsive-text-base ${index < 2 ? 'text-[#141522]' : 'text-[#667085]'}`} dangerouslySetInnerHTML={{ __html: ce.description }} />
+                      <h5 className={`responsive-text-base font-semibold ${ce.is_read == 0 ? 'text-[#0375F3]' : 'text-[#4E4E4E]'}`}>{ce?.title}</h5>
+                      <div className={`responsive-text-base ${ce.is_read == 0 ? 'text-[#141522]' : 'text-[#667085]'}`} dangerouslySetInnerHTML={{ __html: ce.content }} />
                       <div className='flex items-center gap-1 responsive-text-xs text-[#9295A4]'>
                         <ClockIcon className='size-3 shrink-0' />
-                        <span>{ce.time}</span>
+                        <span>{moment(ce.date_created).isSame(moment(), 'day') ? `${moment(ce.date_created).format('HH:mm')} Hôm nay` : moment(ce.date_created).format('HH:mm DD/MM/YYYY')}</span>
                       </div>
                     </div>
                   </div>
@@ -125,10 +157,10 @@ const DropdownThongBao = props => {
               </>
             )}
 
-            {notifications.length > 0 && (
+            {!isLoadingNoti && hasNextPage && (
               <div className='flex items-center justify-center gap-2 text-[#0375F3] responsive-text-base mx-auto py-2 italic'>
-                {isLoadingMore && <span className='w-4 h-4 border-2 border-[#0375F3] border-t-transparent rounded-full animate-spin' aria-label='loading' />}
-                <span>{isLoadingMore ? 'Đang tải...' : 'Xem thêm'}</span>
+                {isFetchingNextPage && <span className='w-4 h-4 border-2 border-[#0375F3] border-t-transparent rounded-full animate-spin' aria-label='loading' />}
+                <span>{isFetchingNextPage ? 'Đang tải...' : 'Xem thêm'}</span>
               </div>
             )}
           </div>
