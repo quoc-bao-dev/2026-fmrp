@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Tooltip } from 'react-tippy';
 import Popup from 'reactjs-popup';
 import { twMerge } from 'tailwind-merge';
+import PopupRequestUpdateVersion from '../common/popup/PopupRequestUpdateVersion';
 import { DropdownIcon } from '../icons';
 
 const deca = Lexend_Deca({
@@ -216,14 +217,8 @@ export const Dropdown = props => {
                         {ce.items?.map((e, i) => {
                           return (
                             <div key={i}>
-                              {e?.role == '1' ? (
-                                <SecureLink
-                                  href={e.link ? e.link : '#'}
-                                  title={e.name}
-                                  item={e}
-                                  className='outline-none'
-                                  key={i}
-                                >
+                              {e?.role == '1' && e.name === 'Tổng hợp kế hoạch BTP & NVL' ? (
+                                <SecureLink href={e.link ? e.link : '#'} title={e.name} item={e} className='outline-none' key={i}>
                                   <li className='relative pl-4 text-[#637381] std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none group hover:text-[#0375F3] flex items-center'>
                                     <span className="before:content-['•'] before:absolute before:left-0 before:text-blue-600 before:opacity-0 group-hover:before:opacity-100">{e?.name}</span>
                                     {e?.isPro && (
@@ -232,6 +227,38 @@ export const Dropdown = props => {
                                     )}
                                   </li>
                                 </SecureLink>
+                              ) : e?.role == '1' ? (
+                                <Link
+                                  href={'#'}
+                                  title={e.name}
+                                  className='outline-none'
+                                  key={i}
+                                  onClick={() => {
+                                    const popupContent = (
+                                      <PopupRequestUpdateVersion>
+                                        <p className='text-start xlg:text-2xl text-xl leading-[32px] font-semibold text-[#141522]'>
+                                          Theo dõi đơn hàng theo nhà cung cấp để nguyên vật liệu luôn <span className='text-[#0375F3]'>đúng và đủ</span>.
+                                        </p>
+                                      </PopupRequestUpdateVersion>
+                                    );
+                                    
+                                    dispatch({
+                                      type: 'statePopupGlobal',
+                                      payload: {
+                                        open: true,
+                                        children: popupContent,
+                                      },
+                                    });
+                                  }}
+                                >
+                                  <li className='relative pl-4 text-[#637381] std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none group hover:text-[#0375F3] flex items-center'>
+                                    <span className="before:content-['•'] before:absolute before:left-0 before:text-blue-600 before:opacity-0 group-hover:before:opacity-100">{e?.name}</span>
+                                    {e?.isPro && (
+                                      // Render badge "pro" ngay cạnh tên item khi item có key isPro
+                                      <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full h-fit text-[10px] leading-[130%]'>pro</span>
+                                    )}
+                                  </li>
+                                </Link>
                               ) : is_admin && !e?.forceDisableForAdmin ? (
                                 <SecureLink href={e.link ? e.link : '#'} title={e.name} item={e} className='outline-none ' key={i}>
                                   <li className='relative pl-4 text-[#637381] std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none group hover:text-[#0375F3]'>
