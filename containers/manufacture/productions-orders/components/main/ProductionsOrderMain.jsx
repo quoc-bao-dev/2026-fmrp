@@ -980,6 +980,8 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                 // Làm mới dữ liệu sau khi hoàn thành lệnh sản xuất
                 refreshData();
               }}
+              code={isStateProvider.productionsOrders.dataProductionOrderDetail.title}
+              id={isStateProvider?.productionsOrders?.idDetailProductionOrder}
             />
           ),
         },
