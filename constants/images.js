@@ -1,5 +1,6 @@
 export const IMAGES = {
   // a
+  appstore: "/qrCode/appstore.svg",
   // b
   // c
   // d
@@ -9,6 +10,7 @@ export const IMAGES = {
   rocketBoy: "/dashboard/rocket-boy.png",
   rocketBoyGif: "/dashboard/rocket-boy.gif",
   // g
+  googleplay: "/qrCode/googleplay.svg",
   // h
   // i
   // j
@@ -20,6 +22,7 @@ export const IMAGES = {
   // o
   // p
   // q
+  qrDownloadApp: "/qrCode/qrDowloadApp.jpeg",
   // r
   // s
   summary_LSX: "/background/system/summaryLSX.webp",
