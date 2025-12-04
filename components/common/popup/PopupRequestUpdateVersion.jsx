@@ -15,16 +15,26 @@ const deca = Lexend_Deca({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
-const PopupRequestUpdateVersion = ({ children }) => {
+const PopupRequestUpdateVersion = ({ children, onClose }) => {
   const dispatch = useDispatch();
   const { data: upgradePackageData, isLoading, error } = useGetUpgradePackage();
+
   const handleUpdatePackage = () => {
-    dispatch({
-      type: "statePopupGlobal",
-      payload: {
-        open: false,
-      },
-    });
+    // Tạo callback để quay lại popup này khi đóng PopupUpgradeProfessional
+    const returnToThisPopup = () => {
+      dispatch({
+        type: "statePopupGlobal",
+        payload: {
+          open: true,
+          children: (
+            <PopupRequestUpdateVersion onClose={onClose}>
+              {children}
+            </PopupRequestUpdateVersion>
+          ),
+        },
+      });
+    };
+
     dispatch({
       type: "statePopupGlobal",
       payload: {
@@ -32,17 +42,24 @@ const PopupRequestUpdateVersion = ({ children }) => {
         children: (
           <PopupUpgradeProfessional
             upgradePackageData={upgradePackageData}
-            onClose={() =>
-              dispatch({
-                type: "statePopupUpgradeProfessional",
-                payload: { open: false },
-              })
-            }
+            onClose={returnToThisPopup}
           />
         ),
       },
     });
   }
+
+  const handleClose = () => {
+    dispatch({
+      type: "statePopupGlobal",
+      payload: {
+        open: false,
+      },
+    });
+    if (onClose) {
+      onClose();
+    }
+  };
 
   return (
     <div className="">
@@ -60,14 +77,7 @@ const PopupRequestUpdateVersion = ({ children }) => {
             </p>
           </div>
           <button
-            onClick={() => {
-              dispatch({
-                type: "statePopupGlobal",
-                payload: {
-                  open: false,
-                },
-              });
-            }}
+            onClick={handleClose}
             className="flex flex-col items-center justify-center transition rounded-full outline-none hover:opacity-80 hover:scale-105"
           >
             <IconClose className="rotate-45" color="#9295A4" size={34} />
