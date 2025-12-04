@@ -43,6 +43,7 @@ const WarehouseLotRow = memo(
     variant = 'current', // 'current' hoặc 'reexport'
     index, // Cho variant current
     lastIndex, // Cho variant current
+    unitName,
   }) => {
     const [selectedWarehouse, setSelectedWarehouse] = useState(warehouse ?? '');
     const [inputValue, setInputValue] = useState(total_quantity || 0);
@@ -214,7 +215,7 @@ const WarehouseLotRow = memo(
                     </div>
                   </td>
                   <td className={variant === 'current' ? 'py-2 px-3 text-center w-[200px]' : 'py-2 px-4 text-center w-[200px]'}>
-                    <div className='flex justify-center'>
+                    <div className='flex justify-center items-end'>
                       <InputNumberCustom
                         state={inputValue}
                         setState={handleQuantityChange}
@@ -222,8 +223,9 @@ const WarehouseLotRow = memo(
                         disabled={isSemiProduct}
                         max={Number(total_quantity) || Infinity}
                         allowDecimal={true}
-                        useConfigFormat={variant === 'reexport'}
+                        useConfigFormat={false}
                       />
+                        <span className='text-[#141522] text-left text-xs font-medium min-w-10 whitespace-nowrap'>/{unitName}</span>
                     </div>
                   </td>
                   <td className={variant === 'current' ? 'py-2 px-3 text-center w-[100px]' : 'py-2 px-4 text-center w-[100px] flex-shrink-0'}>

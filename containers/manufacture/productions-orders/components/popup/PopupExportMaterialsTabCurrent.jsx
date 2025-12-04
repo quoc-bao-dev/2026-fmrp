@@ -154,9 +154,9 @@ const ProductRow = memo(({ product, index, handleSelectProduct, classNameButton,
         </td>
         <td className='py-2 px-3 text-center w-[200px]'>
           <div className='flex gap-5 justify-center items-center'>
-            {product.unit_name !== product.unit_name_primary && (
-              <>
-                <div className='text-start'>
+            {/* {product.unit_name !== product.unit_name_primary && ( */}
+              {/* <> */}
+                <div className='text-start whitespace-nowrap'>
                   <p className='text-[#EE1E1E] font-medium text-lg'>
                     {formatNumber(Number(product.quantity_total_quota))} <span className='text-[#141522] font-medium text-xs'>/</span>
                   </p>
@@ -165,9 +165,9 @@ const ProductRow = memo(({ product, index, handleSelectProduct, classNameButton,
                 <span className='text-[#141522] text-base font-medium'>
                   <ApproximateEqualsIcon className='size-4' />
                 </span>
-              </>
-            )}
-            <div className='text-start'>
+              {/* </> */}
+            {/* )} */}
+            <div className='text-start whitespace-nowrap'>
               <p className='text-[#EE1E1E] font-medium text-lg'>
                 {formatNumber(Number(product.quantity_quota_primary))} <span className='text-[#141522] font-medium text-xs'>/</span>
               </p>
@@ -220,6 +220,7 @@ const ProductRow = memo(({ product, index, handleSelectProduct, classNameButton,
             formatNumber={formatNumber}
             index={lotIndex}
             lastIndex={lotRows.length - 1}
+            unitName={product.unit_name_primary || product.unit_name}
           />
         ))
       ) : (

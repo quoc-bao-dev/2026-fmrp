@@ -616,6 +616,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
       product_variation: source.variant_name ?? source.product_variation ?? '',
       unit_name: unitName,
       unit_name_primary: source.unit_name_primary ?? unitName,
+      unit_id_primary: source.unit_id_primary ?? 0,
       quantity_total_quota: source.quantity ?? source.qty ?? 0,
       quantity_quota_primary: source.quantity ?? source.qty ?? 0,
       quantity_suggest_exporting: 0,

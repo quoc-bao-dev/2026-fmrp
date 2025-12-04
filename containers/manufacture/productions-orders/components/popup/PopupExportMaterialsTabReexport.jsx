@@ -8,7 +8,6 @@ import useSetingServer from '@/hooks/useConfigNumber';
 import useToast from '@/hooks/useToast';
 import { useProductionOrderDetail } from '@/managers/api/productions-order/useProductionOrderDetail';
 import { useListSuggestPo } from '@/managers/api/productions-order/useSuggestPo';
-import { default as formatNumberConfig } from '@/utils/helpers/formatnumber';
 import Image from 'next/image';
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
@@ -17,6 +16,7 @@ import { Tooltip } from 'react-tippy';
 import ErrorNVLBanner from './shared/ErrorNVLBanner';
 import ProductSelectionSidebar from './shared/ProductSelectionSidebar';
 import WarehouseLotRow from './shared/WarehouseLotRow';
+import formatNumber from '@/utils/helpers/formatnumber';
 
 const EMPTY_LOT_ROW = {
   lot: '',
@@ -805,6 +805,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
             total_quantity: originalWarehouse.total_quantity ?? 0,
             quantity_warehouse: originalWarehouse.quantity_warehouse || '0',
             id_warehouse_custom: row.id_warehouse_custom,
+            unit_id_primary: row.unit_id_primary ?? 0,
             quantity_enter: Number(row.quantity_enter || 0),
           };
         });
@@ -829,6 +830,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
               quantity_quota_primary: material.quantity_quota_primary ?? material.quantity_total_quota ?? 0,
               quota_exchange: material.quota_exchange ?? 1,
               images: material.images ?? '',
+              unit_id_primary: material.unit_id_primary ?? 0,
               unit_name_primary: material.unit_name_primary ?? material.unit_name,
               unit_name: material.unit_name ?? material.unit_name_primary,
               ppi_id: material.pp_id ?? 0,
@@ -887,7 +889,6 @@ const PopupExportMaterialsTabReexport = forwardRef(
   );
 
   const dataSeting = useSetingServer();
-  const formatNumber = useCallback(number => formatNumberConfig(+number, dataSeting), [dataSeting]);
 
   return (
     <div className='flex-1 min-h-[60vh] max-h-[80vh] w-full flex flex-col gap-4 h-full'>
@@ -955,7 +956,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
                     <th className='font-normal pt-3 pb-1 pr-4 text-left text-[#667085]'>Nguyên vật liệu</th>
                     <th className='font-normal pt-3 pb-1 px-4 text-center text-[#667085] w-[200px]'>Số lượng cần xuất</th>
                     <th className='font-normal pt-3 pb-1 px-4 text-center text-[#667085] w-[200px]'>Số lượng đã xuất</th>
-                    <th className='font-normal pt-3 pb-1 px-4 text-center text-[#667085] w-[110px]'>Thao tác</th>
+                    <th className='font-normal pt-3 pb-1 px-4 text-center text-[#667085] w-[100px]'>Thao tác</th>
                   </tr>
                 </thead>
               </table>
@@ -995,10 +996,10 @@ const PopupExportMaterialsTabReexport = forwardRef(
                             </td>
                             <td className='py-4 px-4 text-center w-[200px]'>
                               <div className='flex gap-5 justify-center items-center'>
-                                {material.unit_name !== material.unit_name_primary && (
-                                  <>
-                                    <div className='text-start'>
-                                      <p className='text-[#EE1E1E] font-medium text-lg'>
+                                {/* {material.unit_name !== material.unit_name_primary && ( */}
+                                  {/* <> */}
+                                    <div className='text-start whitespace-nowrap'>
+                                      <p className='text-blue-color font-medium text-lg'>
                                         {formatNumber(quantityTotal)} <span className='text-[#141522] font-medium text-xs'>/</span>
                                       </p>
                                       <span className='text-[#141522] text-xs font-medium'>{material.unit_name}</span>
@@ -1006,10 +1007,10 @@ const PopupExportMaterialsTabReexport = forwardRef(
                                     <span className='text-[#141522] text-base font-medium'>
                                       <ApproximateEqualsIcon className='size-4' />
                                     </span>
-                                  </>
-                                )}
-                                <div className='text-start'>
-                                  <p className='text-[#EE1E1E] font-medium text-lg'>
+                                  {/* </> */}
+                                {/* )} */}
+                                <div className='text-start whitespace-nowrap'>
+                                  <p className='text-blue-color font-medium text-lg'>
                                     {formatNumber(quantityQuotaPrimary)} <span className='text-[#141522] font-medium text-xs'>/</span>
                                   </p>
                                   <span className='text-[#141522] text-xs font-medium'>{material.unit_name_primary}</span>
@@ -1078,9 +1079,9 @@ const PopupExportMaterialsTabReexport = forwardRef(
                           </tr>
 
                           {materialWarehouseState.lotRows.length > 0 ? (
-                            materialWarehouseState.lotRows.map(lot => (
+                            materialWarehouseState.lotRows.map((lot, index) => (
                               <WarehouseLotRow
-                                key={lot.id}
+                                key={lot.id || `lot-row-${index}`}
                                 id={lot.id}
                                 lot={lot.lot}
                                 date={lot.expiration_date}
@@ -1097,6 +1098,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
                                 onQuantityChange={() => {}}
                                 formatNumber={formatNumber}
                                 variant='reexport'
+                                unitName={material.unit_name_primary || material.unit_name}
                               />
                             ))
                           ) : !hasWarehouses ? (

@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PiWarehouseLight } from 'react-icons/pi';
 import InputNumberCustom from './shared/InputNumberCustom';
 import Loading from '@/components/UI/loading/loading';
+import useToast from '@/hooks/useToast';
 
 const normalizeString = value => {
   if (!value) return '';
@@ -119,6 +120,7 @@ const MOCK_MATERIALS = [
 const PopupRecallMaterials = ({ code, onClose, id }) => {
   const [materialsSearchTerm, setMaterialsSearchTerm] = useState('');
   const [selectedProductIds, setSelectedProductIds] = useState([]);
+  const showToast = useToast();
 
   const { data, isLoading } = useProductionOrderDetail({ id: id, enabled: !!id });
 
@@ -128,28 +130,72 @@ const PopupRecallMaterials = ({ code, onClose, id }) => {
     return data.listPOItems.flatMap(poItem => poItem.items_products || []);
   }, [data]);
 
+  // Mới vào popup: tự động chọn tất cả sản phẩm nếu chưa có gì được chọn
   useEffect(() => {
-    if (selectedProductIds.length === 0) return;
-    const validIds = new Set(products.map(product => product.poi_id));
-    setSelectedProductIds(prev => prev.filter(id => validIds.has(id)));
+    if (!products || products.length === 0) return;
+    setSelectedProductIds(prev => {
+      if (prev.length > 0) return prev;
+      return products.map(product => product.poi_id);
+    });
+  }, [products]);
+
+  // Sắp xếp lại danh sách sản phẩm: các sản phẩm đang được chọn sẽ nhảy lên trên
+  const displayProducts = useMemo(() => {
+    if (!products || products.length === 0) return [];
+    return [...products].sort((a, b) => {
+      const aSelected = selectedProductIds.includes(a.poi_id);
+      const bSelected = selectedProductIds.includes(b.poi_id);
+
+      if (aSelected === bSelected) return 0;
+      return aSelected ? -1 : 1;
+    });
   }, [products, selectedProductIds]);
 
-  const handleToggleProduct = useCallback(productId => {
+  // Khi danh sách products thay đổi, loại bỏ các ID sản phẩm không còn tồn tại khỏi selectedProductIds
+  useEffect(() => {
+    if (!products || products.length === 0) return;
+
     setSelectedProductIds(prev => {
-      if (prev.includes(productId)) {
-        return prev.filter(id => id !== productId);
+      const validIds = new Set(products.map(product => product.poi_id));
+      const next = prev.filter(id => validIds.has(id));
+
+      if (next.length === prev.length && next.every((id, index) => id === prev[index])) {
+        return prev;
       }
-      return [...prev, productId];
+
+      return next;
     });
-  }, []);
+  }, [products]);
+
+  const handleToggleProduct = useCallback(
+    productId => {
+      const isCurrentlySelected = selectedProductIds.includes(productId);
+
+      // Nếu đang là lệnh cuối cùng được chọn và user bỏ chọn nó -> chặn + toast
+      if (isCurrentlySelected && selectedProductIds.length === 1) {
+        showToast('error', 'Phải chọn ít nhất một thành phẩm!');
+        return;
+      }
+
+      if (isCurrentlySelected) {
+        setSelectedProductIds(selectedProductIds.filter(id => id !== productId));
+      } else {
+        setSelectedProductIds([...selectedProductIds, productId]);
+      }
+    },
+    [selectedProductIds, showToast]
+  );
 
   const handleToggleAllProducts = useCallback(() => {
-    if (selectedProductIds.length === products.length) {
-      setSelectedProductIds([]);
-    } else {
-      setSelectedProductIds(products.map(product => product.poi_id));
+    // Nếu đang chọn hết và user bấm bỏ chọn hết -> không cho về 0
+    if (products.length > 0 && selectedProductIds.length === products.length) {
+      showToast('error', 'Phải chọn ít nhất một thành phẩm!');
+      return;
     }
-  }, [products, selectedProductIds]);
+
+    // Ngược lại: set về chọn hết
+    setSelectedProductIds(products.map(product => product.poi_id));
+  }, [products, selectedProductIds.length, showToast]);
 
   // Hiển thị materials - tạm thời dùng MOCK_MATERIALS, sau sẽ thay bằng API
   const materials = useMemo(() => {
@@ -230,7 +276,7 @@ const PopupRecallMaterials = ({ code, onClose, id }) => {
 
             {isLoading ? (
               <Loading />
-            ) : products.length === 0 ? (
+            ) : displayProducts.length === 0 ? (
               <div className='flex flex-col items-center justify-center h-full min-h-[300px] gap-3 p-4'>
                 <NoData type='report' titleText='Không có sản phẩm nào' />
               </div>
@@ -240,7 +286,7 @@ const PopupRecallMaterials = ({ code, onClose, id }) => {
                   <div className='flex items-center gap-2 mb-2'>
                     <CheckboxDefault checked={products.length > 0 && selectedProductIds.length === products.length} onChange={handleToggleAllProducts} label='Chọn tất cả' />
                   </div>
-                  {products.map((product, index) => {
+                  {displayProducts.map((product, index) => {
                     const isSelected = selectedProductIds.includes(product.poi_id);
                     return (
                       <div
@@ -370,25 +416,29 @@ const PopupRecallMaterials = ({ code, onClose, id }) => {
                               </div>
                             </td>
                             <td className='py-4 px-2'>
-                              <div className='flex justify-center items-center'>
-                                <InputNumberCustom state={quantityTransfer} setState={() => {}} className='bg-white' max={Number(quotaPrimary) || Infinity} allowDecimal={true} />
+                              <div className='flex justify-center items-end'>
+                                <InputNumberCustom
+                                  state={quantityTransfer}
+                                  setState={() => {}}
+                                  className='bg-white'
+                                  max={Number(quotaPrimary) || Infinity}
+                                  allowDecimal={true}
+                                  useConfigFormat={false}
+                                />
+                                <span className='text-[#141522] text-xs font-medium min-w-10 whitespace-nowrap'>/{material.unit_name}</span>
                               </div>
                             </td>
                             <td className='py-4 px-4 text-center'>
                               <div className=' flex gap-4 items-center justify-center'>
-                                {material.unit_name !== material.unit_name_primary && (
-                                  <>
-                                    <div className='text-start'>
-                                      <p className='text-[#EE1E1E] font-medium text-base whitespace-nowrap'>
-                                        {formatNumber(totalQuota)} <span className='text-[#141522] font-medium text-xs'>/</span>
-                                      </p>
-                                      <span className='text-[#141522] text-xs font-medium'>{material.unit_name}</span>
-                                    </div>
-                                    <ApproximateEqualsIcon className='size-4 text-[#141522]' />
-                                  </>
-                                )}
                                 <div className='text-start'>
-                                  <p className='text-[#EE1E1E] font-medium text-base whitespace-nowrap'>
+                                  <p className='text-blue-color font-medium text-base whitespace-nowrap'>
+                                    {formatNumber(totalQuota)} <span className='text-[#141522] font-medium text-xs'>/</span>
+                                  </p>
+                                  <span className='text-[#141522] text-xs font-medium'>{material.unit_name}</span>
+                                </div>
+                                <ApproximateEqualsIcon className='size-4 text-[#141522]' />
+                                <div className='text-start'>
+                                  <p className='text-blue-color font-medium text-base whitespace-nowrap'>
                                     {formatNumber(quotaPrimary)} <span className='text-[#141522] font-medium text-xs'>/</span>
                                   </p>
                                   <span className='text-[#141522] text-xs font-medium'>{material.unit_name_primary || material.unit_name}</span>
