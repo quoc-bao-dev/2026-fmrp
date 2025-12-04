@@ -19,15 +19,18 @@ import FunnelIcon from '@/components/icons/common/FunnelIcon';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import { IMAGES } from '@/constants/images';
 import { useBranchList } from '@/hooks/common/useBranch';
+import useSetingServer from '@/hooks/useConfigNumber';
 import { useProductionOrdersList } from '@/managers/api/productions-order/useProductionOrdersList';
 import { formatMoment } from '@/utils/helpers/formatMoment';
 import formatNumber from '@/utils/helpers/formatnumber';
 import { FnlocalStorage } from '@/utils/helpers/localStorage';
 import { debounce } from 'lodash';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
+import PopupRequestUpdateVersion from '@/components/common/popup/PopupRequestUpdateVersion';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { FaPlus } from 'react-icons/fa6';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { listLsxStatus } from '../productions-orders/components/main/constants/listData';
 import { useProductionOrdersCombobox } from '../productions-orders/hooks/useProductionOrdersCombobox';
 import { useSummaryBtpNvl } from './hook';
@@ -101,6 +104,11 @@ const normalizeForFilename = value => {
 };
 
 const SummaryBtpNvl = () => {
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const dataSeting = useSetingServer();
+  const isProPackage = dataSeting?.package !== '1';
+
   const [activeTab, setActiveTab] = useState(tabs[0]);
   const [activeTabMaterialFinishedProduct, setActiveTabMaterialFinishedProduct] = useState(tabsMaterialFinishedProduct[0]);
   const [selectedOrders, setSelectedOrders] = useState([]);
@@ -131,6 +139,33 @@ const SummaryBtpNvl = () => {
     setSelectStatusFilter(defaultStatus);
     setItem('productionsOrdersStatusFilter', JSON.stringify(defaultStatus));
   }, []);
+
+  // Hiển thị popup sau 15 giây nếu không phải gói pro, nếu bấm đóng thì chuyển về trang chủ
+  useEffect(() => {
+    if (!isProPackage) {
+      const timer = setTimeout(() => {
+        dispatch({
+          type: 'statePopupGlobal',
+          payload: {
+            open: true,
+            children: (
+              <PopupRequestUpdateVersion
+                onClose={() => {
+                  router.push('/');
+                }}
+              >
+                <p className='text-start xlg:text-2xl text-xl leading-[32px] font-semibold text-[#141522]'>
+                  Theo dõi chặt <span className='text-[#0375F3]'>Tổng hợp nhu cầu nguyên vật liệu & BTP</span> rõ ràng hiệu quả nhất !
+                </p>
+              </PopupRequestUpdateVersion>
+            ),
+          },
+        });
+      }, 2000); // 2 giây = 2000 milliseconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [isProPackage, router, dispatch]);
 
   // Hàm toggle chọn trạng thái lọc lệnh sản xuất
   const toggleStatus = value => {

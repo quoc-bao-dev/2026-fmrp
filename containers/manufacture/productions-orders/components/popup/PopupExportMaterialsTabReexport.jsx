@@ -66,6 +66,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
   const [materialsWarehouses, setMaterialsWarehouses] = useState({});
   const [selectedMaterialRows, setSelectedMaterialRows] = useState([]);
   const [hasInitializedProductSelection, setHasInitializedProductSelection] = useState(false);
+  const [hasInitializedMaterialSelection, setHasInitializedMaterialSelection] = useState(false);
   const [materialsSearchTerm, setMaterialsSearchTerm] = useState('');
   const [externalMaterials, setExternalMaterials] = useState([]);
   const [builtinMaterialsWithWarehouses, setBuiltinMaterialsWithWarehouses] = useState([]);
@@ -105,6 +106,9 @@ const PopupExportMaterialsTabReexport = forwardRef(
     setSelectedProducts([]);
     setSelectAll(false);
     setHasInitializedProductSelection(false);
+    setHasInitializedMaterialSelection(false);
+    setSelectedMaterialRows([]);
+    setMaterialsWarehouses({});
   }, [poId]);
 
   // Auto-select all products once data is available
@@ -370,6 +374,74 @@ const PopupExportMaterialsTabReexport = forwardRef(
     return map;
   }, [allMaterials, getMaterialId]);
 
+  // Tự động chọn tất cả nguyên liệu có kho khi dữ liệu được load lần đầu
+  useEffect(() => {
+    // Chỉ chạy một lần khi dữ liệu được load lần đầu
+    if (hasInitializedMaterialSelection) return;
+    
+    // Đợi đến khi suggestData đã có và không còn loading
+    if (isLoadingMaterials || !suggestData) return;
+    
+    // Đợi đến khi allMaterials đã có dữ liệu
+    if (allMaterials.length === 0) return;
+    
+    // Kiểm tra xem có materials nào cần hydrate warehouses không
+    // Nếu suggestData có materials nhưng builtinMaterialsWithWarehouses chưa có, có thể đang hydrate
+    const suggestMaterials = suggestData?.data?.materials || suggestData?.materials || [];
+    const needsHydration = suggestMaterials.some(material => 
+      material.type_origin !== 'semi_products' && 
+      (!material.warehouses || material.warehouses.length === 0)
+    );
+    
+    // Nếu cần hydrate và builtinMaterialsWithWarehouses chưa được hydrate, đợi thêm
+    if (needsHydration && builtinMaterialsWithWarehouses.length === 0 && suggestMaterials.length > 0) {
+      return;
+    }
+    
+    // Lọc các nguyên liệu có kho (loại trừ externalMaterials vì chúng đã được xử lý riêng)
+    const materialsWithWarehouses = allMaterials.filter(material => {
+      // Bỏ qua các nguyên liệu từ externalMaterials (đã được xử lý tự động ở useEffect khác)
+      if (material.__isExtra) return false;
+      
+      const warehouses = Array.isArray(material.warehouses) ? material.warehouses : [];
+      return warehouses.length > 0;
+    });
+
+    // Nếu không có materials nào có kho, đánh dấu đã initialize và return
+    if (materialsWithWarehouses.length === 0) {
+      setHasInitializedMaterialSelection(true);
+      return;
+    }
+
+    // Tự động chọn tất cả nguyên liệu có kho
+    const materialIdsWithWarehouses = materialsWithWarehouses.map(material => getMaterialId(material));
+    setSelectedMaterialRows(prev => {
+      // Chỉ thêm những materialId chưa có trong danh sách
+      const newIds = materialIdsWithWarehouses.filter(id => !prev.includes(id));
+      return prev.length === 0 ? materialIdsWithWarehouses : [...prev, ...newIds];
+    });
+
+    // Tự động tạo lot rows cho các nguyên liệu được chọn
+    setMaterialsWarehouses(prev => {
+      const newState = { ...prev };
+      materialsWithWarehouses.forEach(material => {
+        const materialId = getMaterialId(material);
+        const warehouses = Array.isArray(material.warehouses) ? material.warehouses : [];
+        
+        // Chỉ tạo lot row nếu chưa có
+        if (!newState[materialId] || newState[materialId].lotRows.length === 0) {
+          newState[materialId] = {
+            lotRows: [createLotRow(warehouses)],
+            isOpen: true,
+          };
+        }
+      });
+      return newState;
+    });
+
+    setHasInitializedMaterialSelection(true);
+  }, [allMaterials, hasInitializedMaterialSelection, getMaterialId, suggestData, isLoadingMaterials, builtinMaterialsWithWarehouses]);
+
   // Gửi keys item+variant để kiểm tra duplicate trong SelectSearch
   // Lấy từ materials trong boms và data.materials (materials đã có trong danh sách)
   useEffect(() => {
@@ -546,11 +618,75 @@ const PopupExportMaterialsTabReexport = forwardRef(
     [getMaterialId, showToast, materialsWarehouses]
   );
 
+  // Lọc materials có kho
+  const materialsWithWarehouses = useMemo(() => {
+    return materials.filter(material => {
+      const warehouses = Array.isArray(material.warehouses) ? material.warehouses : [];
+      return warehouses.length > 0;
+    });
+  }, [materials]);
+
   const handleToggleAllMaterials = useCallback(
     checked => {
-      setSelectedMaterialRows(checked ? materials.map(material => getMaterialId(material)) : []);
+      if (checked) {
+        // Kiểm tra nếu không có nguyên liệu nào có kho
+        if (materialsWithWarehouses.length === 0) {
+          showToast('error', 'Không có nguyên liệu nào có kho hàng để chọn!');
+          return;
+        }
+        
+        // Chỉ chọn những nguyên liệu có kho
+        const materialIdsWithWarehouses = materialsWithWarehouses.map(material => getMaterialId(material));
+        setSelectedMaterialRows(materialIdsWithWarehouses);
+        
+        // Tự động mở và tạo lot rows cho tất cả nguyên liệu được chọn
+        setMaterialsWarehouses(prev => {
+          const newState = { ...prev };
+          materialsWithWarehouses.forEach(material => {
+            const materialId = getMaterialId(material);
+            const warehouses = Array.isArray(material.warehouses) ? material.warehouses : [];
+            const currentState = newState[materialId] || { lotRows: [], isOpen: false };
+            
+            // Tạo lot row nếu chưa có
+            if (currentState.lotRows.length === 0 && warehouses.length > 0) {
+              newState[materialId] = {
+                lotRows: [createLotRow(warehouses)],
+                isOpen: true,
+              };
+            } else if (currentState.lotRows.length === 0) {
+              // Nếu không có warehouses, vẫn tạo lot row rỗng
+              newState[materialId] = {
+                lotRows: [createLotRow([])],
+                isOpen: true,
+              };
+            } else {
+              // Nếu đã có lot rows, chỉ đảm bảo isOpen = true
+              newState[materialId] = {
+                ...currentState,
+                isOpen: true,
+              };
+            }
+          });
+          return newState;
+        });
+      } else {
+        // Bỏ chọn tất cả - đóng tất cả phần chọn kho
+        setSelectedMaterialRows([]);
+        setMaterialsWarehouses(prev => {
+          const newState = { ...prev };
+          Object.keys(newState).forEach(materialId => {
+            if (newState[materialId]) {
+              newState[materialId] = {
+                ...newState[materialId],
+                isOpen: false,
+              };
+            }
+          });
+          return newState;
+        });
+      }
     },
-    [materials, getMaterialId]
+    [materialsWithWarehouses, getMaterialId, showToast]
   );
 
   // Cleanup selected materials khi danh sách thay đổi
@@ -563,6 +699,42 @@ const PopupExportMaterialsTabReexport = forwardRef(
       return filtered;
     });
   }, [allMaterials, getMaterialId]);
+
+  // Đồng bộ trạng thái mở/đóng với trạng thái check/uncheck
+  useEffect(() => {
+    setMaterialsWarehouses(prev => {
+      const newState = { ...prev };
+      let hasChanges = false;
+
+      // Duyệt qua tất cả materials trong state
+      Object.keys(newState).forEach(materialId => {
+        const isSelected = selectedMaterialRows.includes(materialId);
+        const currentState = newState[materialId];
+
+        if (currentState) {
+          // Nếu được check nhưng đang đóng -> mở
+          if (isSelected && !currentState.isOpen) {
+            newState[materialId] = {
+              ...currentState,
+              isOpen: true,
+            };
+            hasChanges = true;
+          }
+          // Nếu không được check nhưng đang mở -> đóng
+          else if (!isSelected && currentState.isOpen) {
+            newState[materialId] = {
+              ...currentState,
+              isOpen: false,
+            };
+            hasChanges = true;
+          }
+        }
+      });
+
+      // Chỉ return state mới nếu có thay đổi
+      return hasChanges ? newState : prev;
+    });
+  }, [selectedMaterialRows]);
 
   // Helper để update materialsWarehouses
   const updateMaterialWarehouse = useCallback((materialId, updater) => {
@@ -732,7 +904,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
         />
 
         {/* Right Content - Materials Detail */}
-        <div className='flex-1 flex flex-col rounded-2xl bg-white overflow-hidden'>
+        <div className='flex-1 flex flex-col rounded-t-xl bg-white overflow-hidden'>
           <div className='flex justify-between items-center gap-10 p-2 bg-gradient-to-br from-[#F9FAFB] to-[#F3F4F6]'>
             <h3 className='text-sm font-semibold text-[#141522] whitespace-nowrap'>Nguyên liệu của thành phẩm đã chọn ({materials.length})</h3>
             <div className='bg-white flex gap-x-2 items-center w-1/2 rounded-lg border border-[#D0D5DD] px-2 py-1.5 focus-within:border-transparent focus-within:ring-2 focus-within:ring-blue-500'>
@@ -778,7 +950,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
                 <thead className='sticky top-0 z-10 responsive-text-base font-normal'>
                   <tr>
                     <th className='pt-3 pb-1 px-4 text-center text-[#667085] w-[62px]'>
-                      <CheckboxDefault checked={materials.length > 0 && selectedMaterialRows.length === materials.length} onChange={handleToggleAllMaterials} className='!space-x-0' />
+                      <CheckboxDefault checked={materialsWithWarehouses.length > 0 && selectedMaterialRows.length === materialsWithWarehouses.length && materialsWithWarehouses.every(material => selectedMaterialRows.includes(getMaterialId(material)))} onChange={handleToggleAllMaterials} className='!space-x-0' />
                     </th>
                     <th className='font-normal pt-3 pb-1 pr-4 text-left text-[#667085]'>Nguyên vật liệu</th>
                     <th className='font-normal pt-3 pb-1 px-4 text-center text-[#667085] w-[200px]'>Số lượng cần xuất</th>
@@ -791,7 +963,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
                 <table className='min-w-full table-fixed border-separate border-spacing-0'>
                   <tbody>
                     {materials.map(material => {
-                      console.log(materials)
+                      // console.log(materials)
                       const materialId = getMaterialId(material);
                       const quantityTotal = Number(material.quantity_total_quota || 0);
                       const quantityQuotaPrimary = Number(material.quantity_quota_primary || 0);
@@ -814,7 +986,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
                             </td>
                             <td className='py-4 pr-4 text-left'>
                               <div className='flex flex-col'>
-                                <h3 className='text-sm font-semibold text-[#141522] truncate'>{material.item_name}</h3>
+                                <h3 className='text-sm font-semibold text-[#141522]'>{material.item_name}</h3>
                                 <div className='flex flex-col gap-0.5'>
                                   <p className='text-[10px] font-normal text-[#667085]'>{material.product_variation}</p>
                                   <p className='text-xs font-normal text-typo-blue-2'>{material.item_code}</p>

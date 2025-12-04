@@ -1,3 +1,4 @@
+import PackageUpgradeButton from '@/components/common/button/PackageUpgradeButton';
 import InputCustom from '@/components/common/input/InputCustom';
 import { CalendarIcon, KanbanIcon, TrashIcon, WarningIcon } from '@/components/icons';
 import CheckIcon from '@/components/icons/common/CheckIcon';
@@ -36,6 +37,9 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
   const isToast = useToast();
   const tableRefTotal = useRef(null);
   const dataSeting = useSetingServer();
+  
+  // Kiểm tra có phải gói pro không
+  const isProPackage = dataSeting?.package !== '1';
 
   const [errorNVLData, setErrorNVLData] = useState({ items: [] });
   const [errorNVLDataBefore, setErrorNVLDataBefore] = useState({ items: [] });
@@ -537,13 +541,17 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                 <span className='text-typo-blue-4 responsive-text-base'>(Số lệnh sản xuất: {data?.po?.reference_no})</span>
               </div>
               <div className='mr-8'>
-                <ButtonSubmit
-                  loading={isLoadingSubmit}
-                  title='Xác nhận'
-                  onClick={handleSubmit}
-                  icon={<CheckIcon className='size-4' />}
-                  className={`py-2.5 2xl:py-3 px-3 2xl:px-4 text-white rounded-lg !responsive-text-base flex items-center gap-2 bg-typo-blue-4 hover:bg-typo-blue-5`}
-                />
+                {isProPackage ? (
+                  <ButtonSubmit
+                    loading={isLoadingSubmit}
+                    title='Xác nhận'
+                    onClick={handleSubmit}
+                    icon={<CheckIcon className='size-4' />}
+                    className={`py-2.5 2xl:py-3 px-3 2xl:px-4 text-white rounded-lg !responsive-text-base flex items-center gap-2 bg-typo-blue-4 hover:bg-typo-blue-5`}
+                  />
+                ) : (
+                  <PackageUpgradeButton />
+                )}
               </div>
             </div>
           }

@@ -144,7 +144,7 @@ const ProductRow = memo(({ product, index, handleSelectProduct, classNameButton,
               <Image src={product.images || '/icon/default/default.png'} alt={product.name || 'default'} width={64} height={64} className='object-cover rounded' />
             </div>
             <div className='flex flex-col gap-1 flex-1 min-w-0 overflow-hidden'>
-              <h3 className='text-sm font-semibold text-[#141522] truncate max-w-[500px]'>{product.item_name}</h3>
+              <h3 className='text-sm font-semibold text-[#141522]'>{product.item_name}</h3>
               <div className='flex flex-col gap-0.5'>
                 <p className='text-[10px] font-normal text-[#667085]'>{product.product_variation}</p>
                 <p className='text-xs font-normal text-typo-blue-2'>{product.item_code}</p>

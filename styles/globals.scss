@@ -278,10 +278,6 @@ body {
   position: relative !important;
   left: -20px;
 }
-.popover-thongbao-arrow {
-  position: relative !important;
-  left: -28px;
-}
 
 // .popover-productionPlan-arrow {
 //     position: relative !important;
@@ -368,6 +364,32 @@ body {
   }
   to {
     --angle: 360deg;
+  }
+}
+
+.border-gradient-button-foso-always {
+  --border-color: rgba(9, 9, 11, 0.2);
+  --border-width: 1px;
+  --border-width-hover: 2px;
+  position: relative;
+  border: none; /* Đảm bảo không có border mặc định */
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: conic-gradient(from var(--angle), #a3eed6, rgba(255, 255, 255, 0), #a3eed6);
+    pointer-events: none;
+    z-index: 1;
+    animation: borderMove 1.5s linear infinite;
+
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor; /* hoặc destination-out */
   }
 }
 
@@ -1445,4 +1467,55 @@ svg:focus {
   color: transparent;
   animation: aiShine 4s linear infinite;
   font-weight: 600;
+}
+
+@keyframes upgradeButtonShine {
+  0% {
+    opacity: 0.3;
+    transform: translateY(-100%) translateX(-50%);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateY(0%) translateX(-50%);
+  }
+  100% {
+    opacity: 0.3;
+    transform: translateY(100%) translateX(-50%);
+  }
+}
+
+@keyframes upgradeButtonShadow {
+  0% {
+    box-shadow: inset -2px -2px 5px rgba(255,255,255,0.5), inset 2px 2px 4px rgba(0,0,0,0.15);
+  }
+  50% {
+    box-shadow: inset -3px -3px 6px rgba(255,255,255,0.7), inset 3px 3px 6px rgba(0,0,0,0.35);
+  }
+  100% {
+    box-shadow: inset -2px -2px 5px rgba(255,255,255,0.5), inset 2px 2px 4px rgba(0,0,0,0.15);
+  }
+}
+
+.upgrade-button-animated {
+  position: relative;
+  overflow: hidden;
+  animation: upgradeButtonShadow 1.5s ease-in-out infinite;
+  
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 70%);
+    animation: upgradeButtonShine 1.5s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  > * {
+    position: relative;
+    z-index: 2;
+  }
 }
