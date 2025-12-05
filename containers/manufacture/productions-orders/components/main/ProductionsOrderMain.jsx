@@ -982,6 +982,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
               }}
               code={isStateProvider.productionsOrders.dataProductionOrderDetail.title}
               id={isStateProvider?.productionsOrders?.idDetailProductionOrder}
+              branchId={isStateProvider?.productionsOrders?.dataProductionOrderDetail?.productionOrder?.branch_id}
             />
           ),
         },

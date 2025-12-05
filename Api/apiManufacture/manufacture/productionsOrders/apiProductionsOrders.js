@@ -199,9 +199,27 @@ const apiProductionsOrders = {
         return response.data;
     },
 
-     // Lấy danh sách nguyên liệu bổ sung
+    // Lấy danh sách nguyên liệu bổ sung
      async apiLookupMaterialsVariant(data) {
         const response = await axiosCustom('GET', `/api_web/materials/lookup-variant`, data);
+        return response.data;
+    },
+
+    // Lấy danh sách nguyên liệu bổ sung
+    async apiLookupWarehouses(data) {
+        const response = await axiosCustom('POST', `/api_web/warehouses/lookup`, data);
+        return response.data;
+    },
+
+    // Lấy danh sách nguyên liệu thu hồi
+    async apiMaterialsRecall(data) {
+        const response = await axiosCustom('POST', `/api_web/purchase-internal/list-sug-pi`, data);
+        return response.data;
+    },
+
+    // Lưu thu hồi nguyên liệu
+    async apiSaveRecallMaterials(data) {
+        const response = await axiosCustom('POST', `/api_web/purchase-internal/save`, data);
         return response.data;
     },
 }

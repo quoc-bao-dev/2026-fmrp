@@ -45,6 +45,7 @@ const Header = () => {
   const [currentDropdownIndex, setCurrentDropdownIndex] = useState(0);
 
   const [isLastDropdown, setIsLastDropdown] = useState(false);
+  const [showQRHint, setShowQRHint] = useState(false);
 
   const ListDanhMuc = [
     {
@@ -1045,6 +1046,42 @@ const Header = () => {
     }
   }, [dataPstWH, isLastDropdown, dropdowns.length, currentDropdownIndex]);
 
+  useEffect(() => {
+    setShowQRHint(true);
+    const timer = setTimeout(() => setShowQRHint(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Ensure bounce class sticks even when tooltip renders in a portal
+  useEffect(() => {
+    if (!showQRHint) {
+      // Remove bounce class from all tooltips when hint is hidden
+      document.querySelectorAll('.tippy-tooltip.qr-tooltip-bounce').forEach(el => {
+        el.classList.remove('qr-tooltip-bounce');
+      });
+      return;
+    }
+    const addBounce = () => {
+      // Only add bounce to tooltips that contain the QR hint text
+      document.querySelectorAll('.tippy-tooltip').forEach(el => {
+        const content = el.textContent || '';
+        if (content.includes('Quét QR để đăng nhập app')) {
+          el.classList.add('qr-tooltip-bounce');
+        }
+      });
+    };
+    addBounce();
+    const observer = new MutationObserver(addBounce);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      observer.disconnect();
+      // Cleanup on unmount
+      document.querySelectorAll('.tippy-tooltip.qr-tooltip-bounce').forEach(el => {
+        el.classList.remove('qr-tooltip-bounce');
+      });
+    };
+  }, [showQRHint]);
+
   const currentDropdown = dropdowns[currentDropdownIndex];
 
   return (
@@ -1127,7 +1164,58 @@ const Header = () => {
           </button>
         )}
         <div className='flex items-center gap-3'>
-          <Tooltip title={'Quét QR để đăng nhập app'} arrow theme='dark'>
+          {showQRHint ? (
+            <Tooltip
+              title={'Quét QR để đăng nhập app'}
+              arrow
+              theme='dark'
+              trigger='manual'
+              open={showQRHint}
+              distance={20}
+              shown={tip => {
+                tip?.popper?.querySelector('.tippy-tooltip')?.classList?.add('qr-tooltip-bounce');
+              }}
+              hidden={tip => {
+                tip?.popper?.querySelector('.tippy-tooltip')?.classList?.remove('qr-tooltip-bounce');
+              }}
+              className='qr-tooltip-bounce'
+              html={
+                <div className='text-sm font-medium text-white '>
+                  Quét QR để đăng nhập app
+                </div>
+              }
+            >
+              <motion.button
+                type='button'
+                onClick={() =>
+                  dispatch({
+                    type: 'statePopupGlobal',
+                    payload: {
+                      open: true,
+                      children: <PopupQRCodeHeader />,
+                      allowOutsideClick: true,
+                      allowEscape: true,
+                    },
+                  })
+                }
+                className='2xl:size-6 xl:size-5 size-3 shink-0 cursor-pointer flex items-center justify-center rounded-full opacity-80'
+              >
+                <Image
+                  alt='qr-code'
+                  src='/icon/icon-qr.png'
+                  width={24}
+                  height={24}
+                  quality={100}
+                  className='object-contain transition size-6'
+                  // loading='lazy'
+                  priority
+                  crossOrigin='anonymous'
+                  blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+                />
+              </motion.button>
+            </Tooltip>
+          ) : (
+            <Tooltip title={'Quét QR để đăng nhập app'} arrow theme='dark' distance={20}>
             <button
               type='button'
               onClick={() =>
@@ -1157,6 +1245,7 @@ const Header = () => {
               />
             </button>
           </Tooltip>
+          )}
           {/* <Dropdown data={ListQuyTrinh} type='procedure' className='popover-quytrinh' position={'bottom'} classNameTrigger={'2xl:!p-0 !p-0'}>
             <div className='2xl:size-5 xl:size-4 size-3 shink-0'>
               <Image
@@ -1244,6 +1333,23 @@ const Header = () => {
 
         <DropdownAvatar />
       </div>
+
+      <style jsx global>{`
+        /* Bounce only the tooltip bubble so placement transform from Tippy stays intact */
+        .tippy-tooltip.qr-tooltip-bounce {
+          animation: qr-bounce 0.9s ease-in-out infinite;
+          animation-delay: 0.2s;
+        }
+        @keyframes qr-bounce {
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-8px);
+          }
+        }
+      `}</style>
     </header>
   );
 };

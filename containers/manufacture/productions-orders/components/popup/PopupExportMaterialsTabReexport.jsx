@@ -907,7 +907,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
         {/* Right Content - Materials Detail */}
         <div className='flex-1 flex flex-col rounded-t-xl bg-white overflow-hidden'>
           <div className='flex justify-between items-center gap-10 p-2 bg-gradient-to-br from-[#F9FAFB] to-[#F3F4F6]'>
-            <h3 className='text-sm font-semibold text-[#141522] whitespace-nowrap'>Nguyên liệu của thành phẩm đã chọn ({materials.length})</h3>
+            <h3 className='text-sm font-semibold text-[#141522] whitespace-nowrap'>Chọn nguyên liệu cần xuất bổ sung</h3>
             <div className='bg-white flex gap-x-2 items-center w-1/2 rounded-lg border border-[#D0D5DD] px-2 py-1.5 focus-within:border-transparent focus-within:ring-2 focus-within:ring-blue-500'>
               <input
                 type='text'

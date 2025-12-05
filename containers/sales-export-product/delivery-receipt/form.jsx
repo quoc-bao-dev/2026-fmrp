@@ -330,6 +330,12 @@ const DeliveryReceiptForm = (props) => {
   })
 
   const _ServerFetching_ProductOrder = async () => {
+    // Chỉ gọi API khi có cả idBranch và idClient
+    if (!idBranch || !idClient) {
+      sOnFetchingProductOrder(false)
+      return
+    }
+
     let data = new FormData()
 
     data.append('branch_id', idBranch !== null ? +idBranch?.value || +idBranch : null)
@@ -344,7 +350,9 @@ const DeliveryReceiptForm = (props) => {
       sDataProductOrder(results?.map((e) => ({ label: e.text, value: e.id })))
 
       sOnFetchingProductOrder(false)
-    } catch (error) {}
+    } catch (error) {
+      sOnFetchingProductOrder(false)
+    }
   }
 
   const _ServerFetching_Address = async () => {
@@ -1008,6 +1016,8 @@ const DeliveryReceiptForm = (props) => {
             MenuList={MenuList}
             formatOptionLabel={(option) => selectItemsLabel(option)}
             placeholder={'Chọn nhanh mặt hàng'}
+            noDataMessage={!idProductOrder ? 'Vui lòng chọn đơn hàng bán' : 'Không có dữ liệu'}
+            showCheckbox={!!idProductOrder}
           />
         </div>
       }
@@ -1390,6 +1400,7 @@ const DeliveryReceiptForm = (props) => {
             isError={errProductOrder}
             icon={<TbNotes />}
             errMess={dataLang?.delivery_receipt_err_select_product_order || 'delivery_receipt_err_select_product_order'}
+            noDataMessage={!idClient ? 'Vui lòng chọn khách hàng' : 'Không có dữ liệu'}
           />
 
           {/* Địa chỉ giao hàng */}
