@@ -1164,58 +1164,24 @@ const Header = () => {
           </button>
         )}
         <div className='flex items-center gap-3'>
-          {showQRHint ? (
-            <Tooltip
-              title={'Quét QR để đăng nhập app'}
-              arrow
-              theme='dark'
-              trigger='manual'
-              open={showQRHint}
-              distance={20}
-              shown={tip => {
+          <Tooltip
+            key={showQRHint ? 'qr-hint' : 'qr-normal'}
+            title={'Quét QR để đăng nhập app'}
+            arrow
+            theme='dark'
+            trigger={showQRHint ? 'manual' : 'mouseenter'}
+            open={showQRHint ? true : undefined}
+            distance={20}
+            shown={tip => {
+              if (showQRHint) {
                 tip?.popper?.querySelector('.tippy-tooltip')?.classList?.add('qr-tooltip-bounce');
-              }}
-              hidden={tip => {
-                tip?.popper?.querySelector('.tippy-tooltip')?.classList?.remove('qr-tooltip-bounce');
-              }}
-              className='qr-tooltip-bounce'
-              html={
-                <div className='text-sm font-medium text-white '>
-                  Quét QR để đăng nhập app
-                </div>
               }
-            >
-              <motion.button
-                type='button'
-                onClick={() =>
-                  dispatch({
-                    type: 'statePopupGlobal',
-                    payload: {
-                      open: true,
-                      children: <PopupQRCodeHeader />,
-                      allowOutsideClick: true,
-                      allowEscape: true,
-                    },
-                  })
-                }
-                className='2xl:size-6 xl:size-5 size-3 shink-0 cursor-pointer flex items-center justify-center rounded-full opacity-80'
-              >
-                <Image
-                  alt='qr-code'
-                  src='/icon/icon-qr.png'
-                  width={24}
-                  height={24}
-                  quality={100}
-                  className='object-contain transition size-6'
-                  // loading='lazy'
-                  priority
-                  crossOrigin='anonymous'
-                  blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
-                />
-              </motion.button>
-            </Tooltip>
-          ) : (
-            <Tooltip title={'Quét QR để đăng nhập app'} arrow theme='dark' distance={20}>
+            }}
+            hidden={tip => {
+              tip?.popper?.querySelector('.tippy-tooltip')?.classList?.remove('qr-tooltip-bounce');
+            }}
+            html={showQRHint ? <div className='text-sm font-medium text-white'>Quét QR để đăng nhập app</div> : undefined}
+          >
             <button
               type='button'
               onClick={() =>
@@ -1238,14 +1204,12 @@ const Header = () => {
                 height={24}
                 quality={100}
                 className='object-contain transition size-6'
-                // loading='lazy'
                 priority
                 crossOrigin='anonymous'
                 blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
               />
             </button>
           </Tooltip>
-          )}
           {/* <Dropdown data={ListQuyTrinh} type='procedure' className='popover-quytrinh' position={'bottom'} classNameTrigger={'2xl:!p-0 !p-0'}>
             <div className='2xl:size-5 xl:size-4 size-3 shink-0'>
               <Image

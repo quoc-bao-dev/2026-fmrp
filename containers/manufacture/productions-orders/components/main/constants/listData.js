@@ -61,13 +61,13 @@ export const listDropdownCompleteStage = [
     isPremium: true,
     type: 'export_materials',
   },
-  {
-    id: 2,
-    label: 'Thu hồi nguyên liệu',
-    icon: <RecallMaterialsIcon className="size-full" />,
-    isPremium: true,
-    type: 'recall_materials',
-  },
+  // {
+  //   id: 2,
+  //   label: 'Thu hồi nguyên liệu',
+  //   icon: <RecallMaterialsIcon className="size-full" />,
+  //   isPremium: true,
+  //   type: 'recall_materials',
+  // },
   {
     id: 3,
     label: 'Hoàn thành tổng lệnh',
