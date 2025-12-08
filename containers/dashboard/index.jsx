@@ -38,7 +38,7 @@ const Dashboard = props => {
           </div>
         </div>
 
-        {process.env.NODE_ENV === 'development' && (
+        {process.env.NODE_ENV === 'development-' && (
           <div className='fixed bottom-12 right-6 z-[999]'>
             <ToggleBotAI dataLang={dataLang} />
           </div>
