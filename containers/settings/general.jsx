@@ -47,6 +47,7 @@ const WarningDaysInput = ({ state, setState }) => {
 const General = (props) => {
     const dataLang = props.dataLang;
     const dataSetting = useSelector((state) => state.setings);
+    const isSettingReady = dataSetting && Object.keys(dataSetting || {}).length > 0;
     const isShow = useToast();
 
     const [onFetching, sOnFetching] = useState(false);
@@ -69,6 +70,13 @@ const General = (props) => {
     const [isBomSemiProduct, setIsBomSemiProduct] = useState(dataSetting?.is_bom_semi_product ?? "0");
 
     const [skipExport, setSkipExport] = useState(dataSetting?.skip_export ?? "0");
+
+    useEffect(() => {
+        if (!isSettingReady) return;
+        setNumberDays(+dataSetting?.number_day_warehouse ?? 0);
+        setIsBomSemiProduct(dataSetting?.is_bom_semi_product ?? "0");
+        setSkipExport(dataSetting?.skip_export ?? "0");
+    }, [isSettingReady, dataSetting?.number_day_warehouse, dataSetting?.is_bom_semi_product, dataSetting?.skip_export]);
 
     const _ServerFetching = async () => {
         try {
