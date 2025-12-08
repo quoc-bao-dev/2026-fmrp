@@ -76,7 +76,7 @@ const RocketCharacter = React.memo(({ message, stepRegister, totalSteps }) => {
       initial={{ left: `${(0.5 / totalSteps) * 100}%`, translateX: '-50%', opacity: 0, scale: 0.8 }}
       animate={{ left: `${((stepRegister + 0.5) / totalSteps) * 100}%`, translateX: '-50%', opacity: 1, scale: 1 }}
       transition={{
-        left: { type: 'spring', stiffness: 55, damping: 25, duration: 0.8 },
+        left: { duration: 1, ease: [0.2, 0, 0.2, 1] }, // easeIn - bắt đầu chậm, kết thúc nhanh
         opacity: { duration: 0.5, ease: 'easeOut' },
         scale: { type: 'spring', stiffness: 100, damping: 15, duration: 0.6 },
       }}
@@ -406,7 +406,7 @@ const Register = React.memo(props => {
                 <div className='grid grid-cols-3 gap-1'>
                   {steps.map(step => (
                     <div key={step.id} className='w-full h-1.5 rounded-full bg-[#F3F4F6] relative overflow-hidden'>
-                      <div className={`${isState.stepRegister >= step.id ? 'w-full' : 'w-0'} duration-300 bg-[#3276FA] transition-[width] h-full absolute`} />
+                      <div className={`${isState.stepRegister >= step.id ? 'w-full' : 'w-0'} duration-700 bg-[#3276FA] transition-[width] h-full absolute`} />
                     </div>
                   ))}
                 </div>
@@ -480,7 +480,7 @@ const Register = React.memo(props => {
                       />
                       {errors.fullName && <span className='text-xs text-red-500'>Vui lòng nhập tên công ty</span>}
                     </div>
-                    <div className='grid items-center grid-cols-2 space-y-1 gap-x-5 '>
+                    <div className='grid items-center- grid-cols-2  gap-y-2 gap-x-5 '>
                       <div className='space-y-1 '>
                         <label className='text-sm'>
                           Email của bạn
@@ -548,7 +548,7 @@ const Register = React.memo(props => {
                           name='city'
                           {...register('city')}
                           placeholder='Nhập tỉnh / Thành phố'
-                          className='w-full border placeholder:text-[13px] border-[#D0D5DD] p-2.5 outline-none focus:border-[#3276FA] rounded'
+                          className='w-full border placeholder:text-[13px] border-[#D0D5DD] p-2 outline-none focus:border-[#3276FA] rounded'
                         />
                       </div>
                       <div className='space-y-1'>
