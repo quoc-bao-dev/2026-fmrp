@@ -378,7 +378,7 @@ const Register = React.memo(props => {
         </div>
         <div className='h-full col-span-5 lg:col-span-3 bg-white '>
           <Customscrollbar scrollableNodePropsClassName={`  ${Object.keys(errors).length === 0 ? '[&>div]:h-full' : '[&>div]:my-3'}`} className='h-screen'>
-            <div className={`flex flex-col gap-1 items-center px-2 lg:px-0 h-full  ${Object.keys(errors).length === 0 ? 'justify-center ' : 'justify-start'}`}>
+            <div className={`flex flex-col gap-1 items-center px-2 lg:px-0 h-full justify-center`}>
               <div className='flex flex-col-reverse lg:flex-row items-center gap-2'>
                 <h1 className='text-[#11315B] font-semibold 2xl:text-xl text-[18.5px] text-center capitalize'>Bước Vào Kỷ Nguyên Số Hóa Sản Xuất Cùng</h1>
                 <div className='w-[80px] h-auto '>
@@ -611,44 +611,6 @@ const Register = React.memo(props => {
                       </div>
                       {errors.location && <span className='text-xs text-red-500'>Vui lòng chọn vị trí công việc</span>}
                     </div>
-                    {isState.isRegister && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -20 }} // Bắt đầu từ trên, mờ
-                        animate={{ opacity: 1, y: 0 }} // Hiện ra, trượt xuống
-                        exit={{ opacity: 0, y: -20 }} // Khi biến mất, trượt lên
-                        transition={{ duration: 0.2, ease: 'easeOut' }} // Hiệu ứng mượt
-                        className='flex flex-col items-center gap-x-5 gap-y-2'
-                      >
-                        <div className='w-full flex flex-row justify-center items-center bg-[#E2F0FE] text-[#1760B9] rounded text-sm px-2 py-3'>
-                          <span>Nhận mã xác thực qua Zalo :</span>
-                          <strong className='ml-1'>{formatPhone(phone) || 'điện thoại zalo của bạn'}</strong>
-                        </div>
-                        <div className='w-full'>
-                          <input
-                            type='number'
-                            placeholder='Nhập mã xác thực'
-                            name='otp'
-                            {...register('otp', {
-                              required: {
-                                value: isState.checkValidateOtp,
-                                message: 'Vui lòng nhập mã xác thực',
-                              },
-                              minLength: {
-                                value: isState.checkValidateOtp ? 6 : undefined,
-                                message: isState.checkValidateOtp && 'Mã xác thực tối thiểu 6 số',
-                              },
-                              maxLength: {
-                                value: isState.checkValidateOtp ? 6 : undefined,
-                                message: isState.checkValidateOtp && 'Mã xác thực tối đa 6 số',
-                              },
-                            })}
-                            className='w-full border border-[#D0D5DD] p-2.5 outline-none focus:border-[#3276FA] rounded placeholder:text-[13px] text-[13px]'
-                          />
-
-                          {errors.otp && <span className='text-xs text-red-500'>{errors.otp.message}</span>}
-                        </div>
-                      </motion.div>
-                    )}
                   </div>
                 )}
                 {isState.stepRegister === 2 && (
