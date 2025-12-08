@@ -86,8 +86,9 @@ export const transformDataForExcel = (dataServer, arrEmty, tabPage, dataLang) =>
     // Hàm tạo tên mới
     const buildName = (base, v, o) => {
       let newName = base;
-      if (v) newName += ` - ${v}`;
-      if (o) newName += ` - ${o}`;
+      // Chỉ thêm " - " khi v hoặc o có giá trị thực sự (không rỗng)
+      if (v && v.trim()) newName += ` - ${v}`;
+      if (o && o.trim()) newName += ` - ${o}`;
       return newName;
     };
 
@@ -165,8 +166,13 @@ export const transformDataForExcel = (dataServer, arrEmty, tabPage, dataLang) =>
     const combineValue = (() => {
       let str = item.code || '';
 
-      if (item.variation_value) str += ` - ${item.variation_value}`;
-      if (item.variation_option_value) str += ` - ${item.variation_option_value}`;
+      // Chỉ thêm " - " khi biến thể có giá trị thực sự (không rỗng)
+      if (item.variation_value && String(item.variation_value).trim()) {
+        str += ` - ${item.variation_value}`;
+      }
+      if (item.variation_option_value && String(item.variation_option_value).trim()) {
+        str += ` - ${item.variation_option_value}`;
+      }
 
       return str;
     })();
