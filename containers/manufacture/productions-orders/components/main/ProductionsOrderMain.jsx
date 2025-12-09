@@ -15,7 +15,19 @@ import LoadingComponent from '@/components/common/loading/loading/LoadingCompone
 import PopupRequestUpdateVersion from '@/components/common/popup/PopupRequestUpdateVersion';
 import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
-import { ArrowCounterClockWiseIcon, CalendarIcon, CaretDownIcon, CaretDropDownThinIcon, ChartDonutIcon, CheckThinIcon, MagnifyingGlassIcon, PlusIcon, PrinterIcon, StickerIcon, TrashIcon } from '@/components/icons';
+import {
+  ArrowCounterClockWiseIcon,
+  CalendarIcon,
+  CaretDownIcon,
+  CaretDropDownThinIcon,
+  ChartDonutIcon,
+  CheckThinIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  PrinterIcon,
+  StickerIcon,
+  TrashIcon,
+} from '@/components/icons';
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
 import { CONFIRM_DELETION, TITLE_DELETE_COMMAND, TITLE_DELETE_PRODUCTIONS_ORDER } from '@/constants/delete/deleteTable';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
@@ -988,7 +1000,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
         },
       });
     }
-      
+
     // xử lý button tổng toàn lệnh
     if (type === 'normal') {
       dispatch({
@@ -1650,9 +1662,8 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                         ) : (
                           <div className='flex items-center gap-2'>
                             <span className='3xl:size-5 size-4 text-[#0375F3] shrink-0'>{tab.icon}</span>
-                            <span className='3xl:text-base text-sm font-normal text-[#101828]'>
-                              {tab.label}
-                            </span>
+                            <span className='3xl:text-base text-sm font-normal text-[#101828]'>{tab.label}</span>
+                            {authState?.is_upgrade && tab.isPremium && <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs shrink-0'>pro</span>}
                           </div>
                         )}
                       </div>

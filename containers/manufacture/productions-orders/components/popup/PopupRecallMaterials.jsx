@@ -17,6 +17,8 @@ import { IoIosAlert } from 'react-icons/io';
 import { useDebounce } from 'use-debounce';
 import InputNumberCustom from './shared/InputNumberCustom';
 import { CustomDropdownRadioGroup, convertWarehousesToDropdownData } from './shared/WarehouseDropdown';
+import useSetingServer from '@/hooks/useConfigNumber';
+import PackageUpgradeButton from '@/components/common/button/PackageUpgradeButton';
 
 // Kiểm tra xem material có lot/date hợp lệ không (có ít nhất một lot với lot hoặc expiration_date không rỗng)
 const hasValidLotDate = lots => {
@@ -59,6 +61,8 @@ const normalizeString = value => {
 
 const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
   const showToast = useToast();
+  const dataSeting = useSetingServer();
+  const isProPackage = dataSeting?.package !== '1';
 
   const [materialsSearchTerm, setMaterialsSearchTerm] = useState('');
   const [warehouseSearchTerm, setWarehouseSearchTerm] = useState('');
@@ -158,9 +162,7 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
 
   const handleToggleAllMaterials = useCallback(() => {
     if (materials.length === 0) return;
-    const selectableIds = materials
-      .map(m => m.item_variation_id || m.item_id)
-      .filter(id => !fullyRecalledSet.has(id));
+    const selectableIds = materials.map(m => m.item_variation_id || m.item_id).filter(id => !fullyRecalledSet.has(id));
 
     if (selectableIds.length === 0) {
       showToast('error', 'Tất cả nguyên liệu đã thu hồi hết');
@@ -363,13 +365,17 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
             buttonClassName={`${warehouseError && !selectedWarehouseLocation?.warehouse_id ? 'border-red-500' : ''}`}
           />
           <div className='flex gap-3 items-center'>
-            <button
-              onClick={handleConfirmRecall}
-              disabled={isSavingRecall}
-              className={`flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-background-blue-2 hover:bg-background-blue-2/80 disabled:opacity-60 disabled:cursor-not-allowed`}
-            >
-              <CheckIcon className='size-4' /> {isSavingRecall ? 'Đang lưu...' : 'Thu hồi'}
-            </button>
+            {isProPackage ? (
+              <button
+                onClick={handleConfirmRecall}
+                disabled={isSavingRecall}
+                className={`flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-background-blue-2 hover:bg-background-blue-2/80 disabled:opacity-60 disabled:cursor-not-allowed`}
+              >
+                <CheckIcon className='size-4' /> {isSavingRecall ? 'Đang lưu...' : 'Thu hồi'}
+              </button>
+            ) : (
+              <PackageUpgradeButton />
+            )}
             <motion.div
               whileHover={{ scale: 1.2, rotate: 90 }}
               whileTap={{ scale: 0.9, rotate: -90 }}

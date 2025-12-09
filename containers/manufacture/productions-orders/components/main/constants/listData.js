@@ -58,7 +58,7 @@ export const listDropdownCompleteStage = [
     id: 1,
     label: 'Xuất kho nguyên liệu',
     icon: <ExportMaterialsIcon className="size-full" />,
-    isPremium: true,
+    isPremium: false,
     type: 'export_materials',
   },
   {
