@@ -6,6 +6,7 @@ import { twMerge } from 'tailwind-merge';
 import { MagnifyingGlassIcon } from '@/components/icons';
 import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
+import formatNumber from '@/utils/helpers/formatnumber';
 
 const defaultFormatDate = value => {
   if (!value) return '';
@@ -14,7 +15,7 @@ const defaultFormatDate = value => {
   return date.toLocaleDateString('vi-VN');
 };
 
-const defaultFormatNumber = value => value;
+const defaultFormatNumber = formatNumber;
 
 export const convertWarehousesToDropdownData = listWarehouses => {
   if (!Array.isArray(listWarehouses)) return [];
@@ -248,7 +249,7 @@ export const CustomDropdownRadioGroup = ({
                             <div className='flex flex-col gap-1'>
                               <span className='text-[#3276FA] text-xs font-normal'>LOT: {option.lot}</span>
                               <span className='text-[#3276FA] text-xs font-normal'>Date: {formatDate(option.expiration_date)}</span>
-                              <span className='text-neutral-03 text-xs font-normal'>SL còn lại : {formatNumber(Number(option.total_quantity))}</span>
+                              <span className='text-neutral-03 text-xs font-normal'>SL còn lại : {formatNumber(option.total_quantity)}</span>
                             </div>
                           </div>
                         ) : showOnlyWarehouseLocation ? (

@@ -35,7 +35,7 @@ const mapLotsToDropdown = (itemVariationId, lots) => {
     name_location: lotItem.lot || 'Lot trống',
     lot: lotItem.lot || '',
     expiration_date: lotItem.expiration_date || '',
-    total_quantity: formatNumber(lotItem.quantity_recall || 0),
+    total_quantity: Number(lotItem.quantity_recall || 0),
   }));
 
   if (items.length === 0) return [];
