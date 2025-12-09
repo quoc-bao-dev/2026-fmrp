@@ -87,8 +87,8 @@ export const transformDataForExcel = (dataServer, arrEmty, tabPage, dataLang) =>
     const buildName = (base, v, o) => {
       let newName = base;
       // Chỉ thêm " - " khi v hoặc o có giá trị thực sự (không rỗng)
-      if (v && v.trim()) newName += ` - ${v}`;
-      if (o && o.trim()) newName += ` - ${o}`;
+      if (v && v.trim()) newName += `-${v}`;
+      if (o && o.trim()) newName += `-${o}`;
       return newName;
     };
 
@@ -168,10 +168,10 @@ export const transformDataForExcel = (dataServer, arrEmty, tabPage, dataLang) =>
 
       // Chỉ thêm " - " khi biến thể có giá trị thực sự (không rỗng)
       if (item.variation_value && String(item.variation_value).trim()) {
-        str += ` - ${item.variation_value}`;
+        str += `-${item.variation_value}`;
       }
       if (item.variation_option_value && String(item.variation_option_value).trim()) {
-        str += ` - ${item.variation_option_value}`;
+        str += `-${item.variation_option_value}`;
       }
 
       return str;

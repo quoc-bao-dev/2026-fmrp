@@ -8,7 +8,7 @@ export const IMAGES = {
   emptyProductOrder: "/background/system/emptyProductOrder.png",
   // f
   rocketBoy: "/dashboard/rocket-boy.png",
-  rocketBoyGif: "/dashboard/rocket-boy.gif",
+  rocketBoyGif: "/dashboard/rocket-boy-1.gif",
   // g
   googleplay: "/qrCode/googleplay.svg",
   // h
