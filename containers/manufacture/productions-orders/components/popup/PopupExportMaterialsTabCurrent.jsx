@@ -3,9 +3,10 @@ import CheckboxDefault from '@/components/common/checkbox/CheckboxDefault';
 import { ApproximateEqualsIcon, CheckIcon, MagnifyingGlassIcon } from '@/components/icons';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import Loading from '@/components/UI/loading/loading';
+import NoData from '@/components/UI/noData/nodata';
 import { default as formatNumber } from '@/utils/helpers/formatnumber';
 import Image from 'next/image';
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { IoIosAlert } from 'react-icons/io';
 import { Tooltip } from 'react-tippy';
@@ -16,7 +17,7 @@ import WarehouseLotRow from './shared/WarehouseLotRow';
 
 const createUniqueRowId = () => `lot-row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-const ProductRow = memo(({ product, index, handleSelectProduct, classNameButton, po_id, isVisible = true }) => {
+const ProductRow = memo(({ product, index, handleSelectProduct, classNameButton, po_id, refreshKey, isVisible = true }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [lotRows, setLotRows] = useState([]);
 
@@ -26,19 +27,19 @@ const ProductRow = memo(({ product, index, handleSelectProduct, classNameButton,
     const populateLotRows = warehouses => {
       if (!isMounted) return;
       if (warehouses?.length) {
-      setLotRows(
+        setLotRows(
           warehouses.map(w => ({
-          ...w,
-          id: w.id || w.id_warehouse_custom || createUniqueRowId(),
-          quantity: w.total_quantity || 0,
+            ...w,
+            id: w.id || w.id_warehouse_custom || createUniqueRowId(),
+            quantity: w.total_quantity || 0,
             list_warehouses: warehouses,
-        }))
-      );
-      setIsOpen(true);
-    } else {
-      setLotRows([]);
-      setIsOpen(false);
-    }
+          }))
+        );
+        setIsOpen(true);
+      } else {
+        setLotRows([]);
+        setIsOpen(false);
+      }
     };
 
     const fetchWarehouses = async () => {
@@ -72,7 +73,7 @@ const ProductRow = memo(({ product, index, handleSelectProduct, classNameButton,
     return () => {
       isMounted = false;
     };
-  }, [product.item_id, product.item_variation_option_value_id, product.pp_id, product.type_item, product.type_origin, po_id]);
+  }, [product.item_id, product.item_variation_option_value_id, product.pp_id, product.type_item, product.type_origin, po_id, refreshKey]);
 
   useEffect(() => {
     if (!lotRows.length) return;
@@ -155,17 +156,17 @@ const ProductRow = memo(({ product, index, handleSelectProduct, classNameButton,
         <td className='py-2 px-3 text-center w-[200px]'>
           <div className='flex gap-5 justify-center items-center'>
             {/* {product.unit_name !== product.unit_name_primary && ( */}
-              {/* <> */}
-                <div className='text-start whitespace-nowrap'>
-                  <p className='text-[#EE1E1E] font-medium text-lg'>
-                    {formatNumber(Number(product.quantity_total_quota))} <span className='text-[#141522] font-medium text-xs'>/</span>
-                  </p>
-                  <span className='text-[#141522] text-xs font-medium'>{product.unit_name}</span>
-                </div>
-                <span className='text-[#141522] text-base font-medium'>
-                  <ApproximateEqualsIcon className='size-4' />
-                </span>
-              {/* </> */}
+            {/* <> */}
+            <div className='text-start whitespace-nowrap'>
+              <p className='text-[#EE1E1E] font-medium text-lg'>
+                {formatNumber(Number(product.quantity_total_quota))} <span className='text-[#141522] font-medium text-xs'>/</span>
+              </p>
+              <span className='text-[#141522] text-xs font-medium'>{product.unit_name}</span>
+            </div>
+            <span className='text-[#141522] text-base font-medium'>
+              <ApproximateEqualsIcon className='size-4' />
+            </span>
+            {/* </> */}
             {/* )} */}
             <div className='text-start whitespace-nowrap'>
               <p className='text-[#EE1E1E] font-medium text-lg'>
@@ -254,11 +255,14 @@ const PopupExportMaterialsTabCurrent = ({
   setAutoTooltipText,
   isLoading,
   products,
+  refreshWarehousesKey,
   isProductVisible,
   handleSelectProduct,
   poId,
   showCompleted,
 }) => {
+  const visibleProducts = useMemo(() => products.filter(isProductVisible), [products, isProductVisible]);
+
   return (
     <>
       {!showCompleted && (
@@ -287,47 +291,62 @@ const PopupExportMaterialsTabCurrent = ({
               <Loading />
             </div>
           ) : (
-            <Customscrollbar className='max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300'>
-              <table className='w-full border-separate border-spacing-0'>
-                <thead className='bg-white sticky top-0 z-10'>
-                  <tr>
-                    <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>
-                      <Tooltip
-                        title={autoTooltipText}
-                        position='top'
-                        arrow={true}
-                        trigger='manual'
-                        open={showAutoTooltip && !!autoTooltipText}
-                        onRequestClose={() => {
-                          setShowAutoTooltip(false);
-                          setAutoTooltipText('');
-                        }}
-                      >
-                        <Tooltip title={autoTooltipText === '' ? 'Chọn tất cả' : autoTooltipText} position='top' arrow={true}>
-                          <CheckboxDefault checked={selectAll} onChange={handleSelectAll} />
-                        </Tooltip>
-                      </Tooltip>
-                    </th>
-                    <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>STT</th>
-                    <th className='py-2 px-3 border-b border-gray-200 text-left text-sm font-normal text-[#9295A4] w-auto'>Nguyên vật liệu</th>
-                    <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[200px]'>Số lượng</th>
-                    <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[100px]'>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.map((product, index) => (
-                    <ProductRow
-                      key={`product-row-${product.item_id}-${product.item_variation_option_value_id}-${product.pp_id || index}`}
-                      product={product}
-                      index={index}
-                      handleSelectProduct={handleSelectProduct}
-                      po_id={poId}
-                      isVisible={isProductVisible(product)}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </Customscrollbar>
+            <>
+              {products.length === 0 ? (
+                <div className='flex flex-col items-center justify-center h-full min-h-[400px] gap-4'>
+                  <NoData type='report' titleText='Không có nguyên liệu nào cho thành phẩm đã chọn' />
+                </div>
+              ) : visibleProducts.length === 0 ? (
+                <div className='flex flex-col items-center justify-center h-full min-h-[400px] gap-4'>
+                  <NoData type='report' titleText='Không tìm thấy nguyên liệu phù hợp' />
+                </div>
+              ) : (
+                <>
+                  <Customscrollbar className='max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300'>
+                    <table className='w-full border-separate border-spacing-0'>
+                      <thead className='bg-white sticky top-0 z-10'>
+                        <tr>
+                          <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>
+                            <Tooltip
+                              title={autoTooltipText}
+                              position='top'
+                              arrow={true}
+                              trigger='manual'
+                              open={showAutoTooltip && !!autoTooltipText}
+                              onRequestClose={() => {
+                                setShowAutoTooltip(false);
+                                setAutoTooltipText('');
+                              }}
+                            >
+                              <Tooltip title={autoTooltipText === '' ? 'Chọn tất cả' : autoTooltipText} position='top' arrow={true}>
+                                <CheckboxDefault checked={selectAll} onChange={handleSelectAll} />
+                              </Tooltip>
+                            </Tooltip>
+                          </th>
+                          <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>STT</th>
+                          <th className='py-2 px-3 border-b border-gray-200 text-left text-sm font-normal text-[#9295A4] w-auto'>Nguyên vật liệu</th>
+                          <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[200px]'>Số lượng</th>
+                          <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[100px]'>Thao tác</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {visibleProducts.map((product, index) => (
+                          <ProductRow
+                            key={`product-row-${product.item_id}-${product.item_variation_option_value_id}-${product.pp_id || index}`}
+                            product={product}
+                            index={index}
+                            handleSelectProduct={handleSelectProduct}
+                            po_id={poId}
+                            refreshKey={refreshWarehousesKey}
+                            isVisible={isProductVisible(product)}
+                          />
+                        ))}
+                      </tbody>
+                    </table>
+                  </Customscrollbar>
+                </>
+              )}
+            </>
           )}
         </div>
       ) : (

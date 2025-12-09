@@ -13,9 +13,20 @@ import formatNumber from '@/utils/helpers/formatnumber';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { IoIosAlert } from 'react-icons/io';
 import { useDebounce } from 'use-debounce';
 import InputNumberCustom from './shared/InputNumberCustom';
 import { CustomDropdownRadioGroup, convertWarehousesToDropdownData } from './shared/WarehouseDropdown';
+
+// Kiểm tra xem material có lot/date hợp lệ không (có ít nhất một lot với lot hoặc expiration_date không rỗng)
+const hasValidLotDate = lots => {
+  if (!lots || typeof lots !== 'object') return false;
+  return Object.values(lots).some(lotItem => {
+    const hasLot = lotItem.lot && lotItem.lot.trim() !== '';
+    const hasExpirationDate = lotItem.expiration_date && lotItem.expiration_date.trim() !== '';
+    return hasLot || hasExpirationDate;
+  });
+};
 
 const mapLotsToDropdown = (itemVariationId, lots) => {
   if (!lots || typeof lots !== 'object') return [];
@@ -93,6 +104,19 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
     return list;
   }, [materialsSearchTerm, materialsRecall]);
 
+  // Map các material đã thu hồi hết
+  const fullyRecalledSet = useMemo(() => {
+    const set = new Set();
+    (materials || []).forEach(item => {
+      const exportedQty = Number(item.quantity_export_manufacture || 0);
+      const returnedQty = Number(item.quantity_returned || 0);
+      if (exportedQty > 0 && returnedQty >= exportedQty) {
+        set.add(item.item_variation_id || item.item_id);
+      }
+    });
+    return set;
+  }, [materials]);
+
   // Lấy products để làm phẳng mảng
   const products = useMemo(() => {
     if (!data?.listPOItems || !Array.isArray(data.listPOItems)) return [];
@@ -114,19 +138,41 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
     setSelectedMaterialIds(prev => prev.filter(id => validIds.has(id)));
   }, [materials]);
 
-  const handleToggleMaterial = useCallback(materialId => {
-    if (!materialId) return;
-    setSelectedMaterialIds(prev => (prev.includes(materialId) ? prev.filter(id => id !== materialId) : [...prev, materialId]));
-  }, []);
+  // Bỏ chọn các nguyên liệu đã thu hồi hết
+  useEffect(() => {
+    if (selectedMaterialIds.length === 0) return;
+    setSelectedMaterialIds(prev => prev.filter(id => !fullyRecalledSet.has(id)));
+  }, [fullyRecalledSet, selectedMaterialIds.length]);
+
+  const handleToggleMaterial = useCallback(
+    materialId => {
+      if (!materialId) return;
+      if (fullyRecalledSet.has(materialId)) {
+        showToast('error', 'Nguyên liệu này đã thu hồi hết');
+        return;
+      }
+      setSelectedMaterialIds(prev => (prev.includes(materialId) ? prev.filter(id => id !== materialId) : [...prev, materialId]));
+    },
+    [fullyRecalledSet, showToast]
+  );
 
   const handleToggleAllMaterials = useCallback(() => {
     if (materials.length === 0) return;
-    if (selectedMaterialIds.length === materials.length) {
+    const selectableIds = materials
+      .map(m => m.item_variation_id || m.item_id)
+      .filter(id => !fullyRecalledSet.has(id));
+
+    if (selectableIds.length === 0) {
+      showToast('error', 'Tất cả nguyên liệu đã thu hồi hết');
+      return;
+    }
+
+    if (selectedMaterialIds.length === selectableIds.length) {
       setSelectedMaterialIds([]);
     } else {
-      setSelectedMaterialIds(materials.map(m => m.item_variation_id || m.item_id));
+      setSelectedMaterialIds(selectableIds);
     }
-  }, [materials, selectedMaterialIds.length]);
+  }, [materials, selectedMaterialIds.length, fullyRecalledSet, showToast]);
 
   // Sắp xếp lại danh sách sản phẩm: các sản phẩm đang được chọn sẽ nhảy lên trên
   const displayProducts = useMemo(() => {
@@ -216,8 +262,12 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
     if (!materials || materials.length === 0) return [];
     const getId = item => item.item_variation_id || item.item_id;
     const originalIndexMap = new Map();
+    const fullyRecalledMap = new Map();
     materials.forEach((item, index) => {
       originalIndexMap.set(getId(item), index);
+      const exportedQty = Number(item.quantity_export_manufacture || 0);
+      const returnedQty = Number(item.quantity_returned || 0);
+      fullyRecalledMap.set(getId(item), exportedQty > 0 && returnedQty >= exportedQty);
     });
 
     return [...materials].sort((a, b) => {
@@ -225,13 +275,20 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
       const bId = getId(b);
       const aSelected = selectedMaterialIds.includes(aId);
       const bSelected = selectedMaterialIds.includes(bId);
+      const aFully = fullyRecalledMap.get(aId);
+      const bFully = fullyRecalledMap.get(bId);
 
-      if (aSelected === bSelected) {
-        return (originalIndexMap.get(aId) ?? 0) - (originalIndexMap.get(bId) ?? 0);
-      }
-      return aSelected ? -1 : 1;
+      // Ưu tiên: đang chọn -> không chọn; chưa thu hồi hết -> đã thu hồi hết; sau đó theo thứ tự gốc
+      if (aSelected !== bSelected) return aSelected ? -1 : 1;
+      if (aFully !== bFully) return aFully ? 1 : -1;
+      return (originalIndexMap.get(aId) ?? 0) - (originalIndexMap.get(bId) ?? 0);
     });
   }, [materials, selectedMaterialIds]);
+
+  // Kiểm tra xem có material nào có lot/date hợp lệ không
+  const hasAnyValidLotDate = useMemo(() => {
+    return materials.some(material => hasValidLotDate(material.lots));
+  }, [materials]);
 
   const itemsWithEnterInfo = useMemo(() => {
     if (!materialsRecall || typeof materialsRecall !== 'object') return {};
@@ -303,11 +360,7 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
             searchValue={warehouseSearchTerm}
             onSearchChange={setWarehouseSearchTerm}
             isLoading={isLoadingWarehouses}
-            buttonClassName={`${
-              warehouseError && !selectedWarehouseLocation?.warehouse_id
-                ? 'border-red-500'
-                : ''
-            }`}
+            buttonClassName={`${warehouseError && !selectedWarehouseLocation?.warehouse_id ? 'border-red-500' : ''}`}
           />
           <div className='flex gap-3 items-center'>
             <button
@@ -427,7 +480,7 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
                         <th className='font-normal pt-3 pb-1 pr-3 text-left text-[#667085] whitespace-nowrap'>Nguyên vật liệu</th>
                         <th className='font-normal pt-3 pb-1 px-3 text-center text-[#667085] whitespace-nowrap'>SL đã xuất</th>
                         <th className='font-normal pt-3 pb-1 px-3 text-center text-[#667085] whitespace-nowrap'>SL đã thu hồi</th>
-                        <th className='font-normal pt-3 pb-1 px-3 text-center text-[#667085] whitespace-nowrap'>Lot/date</th>
+                        {hasAnyValidLotDate && <th className='font-normal pt-3 pb-1 px-3 text-center text-[#667085] whitespace-nowrap'>Lot/date</th>}
                         <th className='font-normal pt-3 pb-1 px-3 text-center text-[#667085] whitespace-nowrap'>SL cần thu hồi</th>
                         <th className='font-normal pt-3 pb-1 px-2 text-center text-[#667085] whitespace-nowrap'>Quy đổi</th>
                       </tr>
@@ -440,21 +493,26 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
                         const selectedWarehouse = selectedWarehouses[materialId];
                         const recallQuantity = recallQuantities[materialId] || 0;
                         const selectedWarehouseQuantity = Number(selectedWarehouse?.total_quantity ?? 0);
+                        const materialHasLotDate = hasValidLotDate(material.lots);
+                        const requireSelectLot = materialHasLotDate && !selectedWarehouse?.id_warehouse_custom;
+                        const exportedQty = Number(material.quantity_export_manufacture || 0);
+                        const returnedQty = Number(material.quantity_returned || 0);
+                        const fullyRecalled = exportedQty > 0 && returnedQty >= exportedQty;
 
                         return (
                           <tr
                             key={`material-${index}`}
-                            className='border-b border-[#E5E7EB]/20 hover:bg-gradient-to-r hover:from-[#F9FAFB] hover:to-[#F3F4F6] transition-all duration-200 group cursor-pointer'
+                            className='responsive-text-base border-b border-[#E5E7EB]/20 hover:bg-gradient-to-r hover:from-[#F9FAFB] hover:to-[#F3F4F6] transition-all duration-200 group cursor-pointer'
                             onClick={() => handleToggleMaterial(materialId)}
                           >
-                            <td className='py-4 px-3 text-center text-sm font-semibold text-[#667085]'>
+                            <td className='py-4 px-3 text-center'>
                               <div onClick={e => e.stopPropagation()}>
                                 <CheckboxDefault checked={materialChecked} onChange={() => handleToggleMaterial(materialId)} className='!space-x-0' />
                               </div>
                             </td>
                             <td className='py-4 pr-3 text-left'>
                               <div className='flex flex-col'>
-                                <h3 className='text-sm font-semibold text-[#141522]'>{material?.item_name}</h3>
+                                <h3 className='font-semibold text-[#141522]'>{material?.item_name}</h3>
                                 <div className='flex flex-col gap-0.5'>
                                   <p className='text-[10px] font-normal text-[#667085]'>{material?.product_variation}</p>
                                   <p className='text-xs font-normal text-typo-blue-2'>{material?.item_code}</p>
@@ -464,85 +522,119 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
                             <td className='py-4 px-3 text-center'>
                               <div className='flex items-center justify-center'>
                                 <div className='flex flex-col items-start gap-1'>
-                                  <p className='text-[#141522] font-medium text-lg'>
+                                  <p className='text-[#141522] font-medium responsive-text-lg'>
                                     {formatNumber(Number(material.quantity_export_manufacture || 0))} <span className='text-[#141522] font-medium text-xs'>/</span>
                                   </p>
-                                  <span className='text-[#141522] text-xs font-medium'>{material.unit_manufacture_name}</span>
+                                  <span className='text-[#141522] responsive-text-xs font-medium'>{material.unit_manufacture_name}</span>
                                 </div>
                               </div>
                             </td>
                             <td className='py-4 px-3 text-center'>
                               <div className='flex items-center justify-center'>
                                 <div className='flex flex-col items-start gap-1'>
-                                  <p className='text-base font-semibold text-[#141522]'>
+                                  <p className='responsive-text-lg font-semibold text-[#141522]'>
                                     {formatNumber(Number(material.quantity_returned || 0))} <span className='text-[#141522] font-medium text-xs'>/</span>
                                   </p>
-                                  <span className='text-xs font-normal text-[#141522]'>{material.unit_manufacture_name}</span>
+                                  <span className='responsive-text-xs font-normal text-[#141522]'>{material.unit_manufacture_name}</span>
                                 </div>
                               </div>
                             </td>
-                            <td className='py-4 px-2'>
-                              <div className='flex justify-center items-end' onClick={e => e.stopPropagation()}>
-                                <CustomDropdownRadioGroup
-                                  className='w-[200px] 2xl:w-[250px]'
-                                  data={warehouseData}
-                                  value={selectedWarehouse?.id_warehouse_custom}
-                                  onChange={option => {
-                                    setSelectedWarehouses(prev => ({
-                                      ...prev,
-                                      [materialId]: option,
-                                    }));
-                                    // Gán mặc định SL cần thu hồi bằng tồn lot được chọn
-                                    setRecallQuantities(prev => ({
-                                      ...prev,
-                                      [materialId]: Number(option?.total_quantity ?? 0),
-                                    }));
-                                    // Tự động chọn material khi chọn lot
-                                    setSelectedMaterialIds(prev => (prev.includes(materialId) ? prev : [...prev, materialId]));
-                                  }}
-                                  placeholder='Chọn Lot/Date'
-                                  showOnlyLotDate={true}
-                                  minDropdownWidth={200}
-                                  allowClear={true}
-                                />
-                              </div>
-                            </td>
-                            <td className='py-4 px-2'>
-                              <div className='flex justify-center items-end' onClick={e => e.stopPropagation()}>
-                                <InputNumberCustom
-                                  state={recallQuantity}
-                                  setState={value => {
-                                    setRecallQuantities(prev => ({
-                                      ...prev,
-                                      [materialId]: value,
-                                    }));
-                                  }}
-                                  className='bg-white'
-                                  max={selectedWarehouseQuantity || 0}
-                                  allowDecimal={true}
-                                  useConfigFormat={false}
-                                  exceedMessage='Số lượng không được vượt quá số lượng tồn lot được chọn'
-                                />
-                                <span className='text-[#141522] text-xs font-medium min-w-10 whitespace-nowrap'>/{material.unit_manufacture_name}</span>
-                              </div>
-                            </td>
-                            <td className='py-4 px-2 text-center min-w-[150px]'>
-                              <div className='flex gap-2 items-center justify-center'>
-                                <div className='text-start'>
-                                  <p className='text-blue-color font-medium text-base whitespace-nowrap'>
-                                    {formatNumber(recallQuantity)} <span className='text-[#141522] font-medium text-xs'>/</span>
-                                  </p>
-                                  <span className='text-[#141522] text-xs font-medium'>{material.unit_manufacture_name}</span>
+                            {fullyRecalled ? (
+                              <td className='py-4 px-3 text-center' colSpan={hasAnyValidLotDate ? 3 : 2}>
+                                <div className='py-2 text-xs font-normal text-[#991B1B] flex items-center justify-center gap-x-[2px]'>
+                                  <IoIosAlert className='text-[#991B1B]' size={17} />
+                                  Không còn nguyên liệu để thu hồi
                                 </div>
-                                <ApproximateEqualsIcon className='size-4 text-[#141522]' />
-                                <div className='text-start'>
-                                  <p className='text-blue-color font-medium text-base whitespace-nowrap'>
-                                    {formatNumber(Number(recallQuantity / Number(material.exchange_manufacture ?? 0)))} <span className='text-[#141522] font-medium text-xs'>/</span>
-                                  </p>
-                                  <span className='text-[#141522] text-xs font-medium'>{material.unit_parent_name}</span>
-                                </div>
-                              </div>
-                            </td>
+                              </td>
+                            ) : (
+                              <>
+                                {hasAnyValidLotDate && (
+                                  <td className='py-4 px-2'>
+                                    {materialHasLotDate ? (
+                                      <div className='flex justify-center items-end' onClick={e => e.stopPropagation()}>
+                                        <CustomDropdownRadioGroup
+                                          className='w-[200px] 2xl:w-[250px]'
+                                          data={warehouseData}
+                                          value={selectedWarehouse?.id_warehouse_custom}
+                                          onChange={option => {
+                                            setSelectedWarehouses(prev => ({
+                                              ...prev,
+                                              [materialId]: option,
+                                            }));
+                                            // Gán mặc định SL cần thu hồi bằng tồn lot được chọn
+                                            setRecallQuantities(prev => ({
+                                              ...prev,
+                                              [materialId]: Number(option?.total_quantity ?? 0),
+                                            }));
+                                            // Tự động chọn material khi chọn lot
+                                            setSelectedMaterialIds(prev => (prev.includes(materialId) ? prev : [...prev, materialId]));
+                                          }}
+                                          placeholder='Chọn Lot/Date'
+                                          showOnlyLotDate={true}
+                                          minDropdownWidth={200}
+                                          allowClear={true}
+                                        />
+                                      </div>
+                                    ) : null}
+                                  </td>
+                                )}
+                                <td className='py-4 px-2'>
+                                  <div
+                                    className='flex justify-center items-end'
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      if (requireSelectLot) {
+                                        showToast('error', 'Vui lòng chọn Lot/Date trước khi nhập số lượng');
+                                      }
+                                    }}
+                                  >
+                                    <InputNumberCustom
+                                      state={recallQuantity}
+                                      setState={value => {
+                                        setRecallQuantities(prev => ({
+                                          ...prev,
+                                          [materialId]: value,
+                                        }));
+                                        // Nếu không yêu cầu Lot/Date, tự chọn material khi user nhập số lượng
+                                        if (!materialHasLotDate) {
+                                          setSelectedMaterialIds(prev => (prev.includes(materialId) ? prev : [...prev, materialId]));
+                                        }
+                                      }}
+                                      onBeforeChange={() => {
+                                        if (requireSelectLot) {
+                                          showToast('error', 'Vui lòng chọn Lot/Date trước khi nhập số lượng');
+                                          return true; // block change
+                                        }
+                                        return false;
+                                      }}
+                                      className='bg-white'
+                                      max={materialHasLotDate ? selectedWarehouseQuantity || 0 : Number(material.quantity_recall || 0)}
+                                      allowDecimal={true}
+                                      useConfigFormat={false}
+                                      exceedMessage={materialHasLotDate ? 'Số lượng không được vượt quá số lượng tồn lot được chọn' : 'Số lượng không được vượt quá số lượng cần thu hồi'}
+                                    />
+                                    <span className='text-[#141522] text-xs font-medium min-w-10 whitespace-nowrap'>/{material.unit_manufacture_name}</span>
+                                  </div>
+                                </td>
+                                <td className='py-4 px-2 text-center min-w-[150px]'>
+                                  <div className='flex gap-2 items-center justify-center'>
+                                    <div className='text-start'>
+                                      <p className='text-blue-color font-medium text-base whitespace-nowrap'>
+                                        {formatNumber(recallQuantity)} <span className='text-[#141522] font-medium text-xs'>/</span>
+                                      </p>
+                                      <span className='text-[#141522] text-xs font-medium'>{material.unit_manufacture_name}</span>
+                                    </div>
+                                    <ApproximateEqualsIcon className='size-4 text-[#141522]' />
+                                    <div className='text-start'>
+                                      <p className='text-blue-color font-medium text-base whitespace-nowrap'>
+                                        {formatNumber(Number(recallQuantity / Number(material.exchange_manufacture ?? 0)))} <span className='text-[#141522] font-medium text-xs'>/</span>
+                                      </p>
+                                      <span className='text-[#141522] text-xs font-medium'>{material.unit_parent_name}</span>
+                                    </div>
+                                  </div>
+                                </td>
+                              </>
+                            )}
                           </tr>
                         );
                       })}

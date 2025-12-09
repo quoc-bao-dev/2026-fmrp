@@ -20,6 +20,7 @@ const InputNumberCustom = memo(
     useConfigFormat = true, // Flag để dùng formatNumberConfig với setting hoặc formatNumber thông thường
     exceedMessage = 'Số lượng vượt quá giới hạn',
     underflowMessage = 'Số lượng không được âm',
+    onBeforeChange, // optional guard, return true to block change
   }) => {
     const dataSeting = useSetingServer();
     const showToast = useToast();
@@ -77,6 +78,7 @@ const InputNumberCustom = memo(
     const handleInputChange = useCallback(
       e => {
         if (disabled) return;
+        if (onBeforeChange?.()) return;
         const value = e.target.value;
 
         if (value === '') {
@@ -110,7 +112,7 @@ const InputNumberCustom = memo(
           setFormattedValue(formatNumber(clamped));
         }
       },
-      [disabled, allowDecimal, formatNumber, parseNumericValue, max, min, showToast, exceedMessage, underflowMessage]
+      [disabled, allowDecimal, formatNumber, parseNumericValue, max, min, showToast, exceedMessage, underflowMessage, onBeforeChange]
     );
 
     const handleBlur = useCallback(() => {
@@ -124,6 +126,7 @@ const InputNumberCustom = memo(
 
     const handleIncrement = useCallback(() => {
       if (disabled) return;
+      if (onBeforeChange?.()) return;
       const current = parseNumericValue(inputValue);
       if (current >= max) {
         showToast('error', exceedMessage);
@@ -133,10 +136,11 @@ const InputNumberCustom = memo(
       setState(newValue);
       setInputValue(newValue);
       setFormattedValue(formatNumber(newValue));
-    }, [disabled, inputValue, max, setState, formatNumber, parseNumericValue, showToast, exceedMessage]);
+    }, [disabled, inputValue, max, setState, formatNumber, parseNumericValue, showToast, exceedMessage, onBeforeChange]);
 
     const handleDecrement = useCallback(() => {
       if (disabled) return;
+      if (onBeforeChange?.()) return;
       const current = parseNumericValue(inputValue);
       const normalizedMin = Math.max(min, 0);
       if (current <= normalizedMin) {
@@ -147,7 +151,7 @@ const InputNumberCustom = memo(
       setState(newValue);
       setInputValue(newValue);
       setFormattedValue(formatNumber(newValue));
-    }, [disabled, inputValue, min, setState, formatNumber, parseNumericValue, showToast, underflowMessage]);
+    }, [disabled, inputValue, min, setState, formatNumber, parseNumericValue, showToast, underflowMessage, onBeforeChange]);
 
     const handleButtonClick = useCallback(
       (e, type) => {
