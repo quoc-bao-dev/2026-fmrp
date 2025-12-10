@@ -176,8 +176,8 @@ const WarehouseLotRow = memo(
                         <div className={twMerge('flex flex-row gap-x-2 text-[#3276FA] text-xs', variant === 'reexport' ? 'font-medium' : 'font-normal')}>
                           {variant === 'reexport' ? (
                             <>
-                              <p className='px-2 py-1 rounded-lg bg-blue-50'>LOT: {lot}</p>
-                              <p className='px-2 py-1 rounded-lg bg-blue-50'>Date: {formatDate(date, useMoment)}</p>
+                              <p className='px-2 py-1 rounded-lg bg-blue-50'>LOT: {lot || '-'}</p>
+                              <p className='px-2 py-1 rounded-lg bg-blue-50'>Date: {formatDate(date, useMoment) || '-'}</p>
                             </>
                           ) : (
                             <>
@@ -228,7 +228,7 @@ const WarehouseLotRow = memo(
                         <span className='text-[#141522] text-left text-xs font-medium min-w-10 whitespace-nowrap'>/{unitName}</span>
                     </div>
                   </td>
-                  <td className={variant === 'current' ? 'py-2 px-3 text-center w-[100px]' : 'py-2 px-4 text-center w-[100px] flex-shrink-0'}>
+                  <td className={variant === 'current' ? 'py-2 px-3 text-center w-[100px]' : 'py-2 px-4 text-center min-w-[100px] max-w-[100px] w-[100px] flex-shrink-0'}>
                     <button
                       className={twMerge(
                         variant === 'reexport' ? 'text-gray-400 hover:text-red-600 transition-colors duration-200 p-1 rounded-lg hover:bg-red-50' : 'text-gray-400 hover:text-red-600',

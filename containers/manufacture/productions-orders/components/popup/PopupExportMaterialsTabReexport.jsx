@@ -170,7 +170,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
 
       const enriched = await Promise.all(
         materials.map(async material => {
-          if (material.type_origin === 'semi_products' || material.warehouses?.length) {
+          if (material.warehouses?.length) {
             return material;
           }
           try {
@@ -181,6 +181,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
             formData.append('item_variation_option_value_id', variationId);
             formData.append('pp_id', material.pp_id ?? '');
             formData.append('po_id', poId ?? '');
+            formData.append('is_semi', 1);
             const res = await apiProductionsOrders.apiGetWarehousesBOM(formData);
             const warehouses = res?.data?.warehouses || [];
             return {
@@ -230,7 +231,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
             return cachedMaterial;
           }
 
-          if (material.type_origin === 'semi_products' || (material.warehouses?.length > 0)) {
+          if (material.warehouses?.length > 0) {
             const normalized = {
               ...material,
               warehouses: Array.isArray(material.warehouses) ? material.warehouses : [],
@@ -960,11 +961,11 @@ const PopupExportMaterialsTabReexport = forwardRef(
                   </tr>
                 </thead>
               </table>
-              <Customscrollbar className='max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300'>
+              <Customscrollbar className='max-h-[50vh] 2xl:max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300'>
                 <table className='min-w-full table-fixed border-separate border-spacing-0'>
                   <tbody>
                     {materials.map(material => {
-                      // console.log(materials)
+                      console.log(materials)
                       const materialId = getMaterialId(material);
                       const quantityTotal = Number(material.quantity_total_quota || 0);
                       const quantityQuotaPrimary = Number(material.quantity_quota_primary || 0);

@@ -38,6 +38,7 @@ export const convertWarehousesToDropdownData = listWarehouses => {
           name_warehouse: warehouse.name_warehouse,
           lot: item.lot,
           expiration_date: item.expiration_date,
+          serial: item.serial,
           total_quantity: Number.isNaN(resolvedTotal) ? 0 : resolvedTotal,
           id_warehouse_custom: item.id_warehouse_custom,
           warehouse_id: item.warehouse_id || warehouse.warehouse_id || '',
@@ -54,6 +55,7 @@ export const convertWarehousesToDropdownData = listWarehouses => {
         name_warehouse: warehouse.name_warehouse,
         lot: warehouse.lot,
         expiration_date: warehouse.expiration_date,
+        serial: warehouse.serial,
         total_quantity: Number.isNaN(fallbackTotal) ? 0 : fallbackTotal,
         id_warehouse_custom: warehouse.id_warehouse_custom,
         warehouse_id: warehouse.warehouse_id || '',
@@ -176,7 +178,7 @@ export const CustomDropdownRadioGroup = ({
 
   const displayText = selectedOption
     ? showOnlyLotDate
-      ? `LOT: ${selectedOption.option.lot} | Date: ${formatDate(selectedOption.option.expiration_date)} | Tồn: ${formatNumber(Number(selectedOption.option.total_quantity))}`
+      ? `LOT: ${selectedOption.option.lot} | Date: ${formatDate(selectedOption.option.expiration_date)}${selectedOption.option.serial ? ` | Serial: ${selectedOption.option.serial}` : ''} | Tồn: ${formatNumber(Number(selectedOption.option.total_quantity))}`
       : showOnlyWarehouseLocation
       ? `${selectedOption.group.label} - ${selectedOption.option.name_location}`
       : `${selectedOption.group.label} - ${selectedOption.option.name_location}`
@@ -249,6 +251,8 @@ export const CustomDropdownRadioGroup = ({
                             <div className='flex flex-col gap-1'>
                               <span className='text-[#3276FA] text-xs font-normal'>LOT: {option.lot}</span>
                               <span className='text-[#3276FA] text-xs font-normal'>Date: {formatDate(option.expiration_date)}</span>
+                              {option.serial && <span className='text-[#3276FA] text-xs font-normal'>Serial: {option.serial}</span>}
+                              {/* <span className='text-[#3276FA] text-xs font-normal'>Serial: {option.serial}</span> */}
                               <span className='text-neutral-03 text-xs font-normal'>SL còn lại : {formatNumber(option.total_quantity)}</span>
                             </div>
                           </div>
@@ -261,8 +265,8 @@ export const CustomDropdownRadioGroup = ({
                             <span className='text-[#141522] text-xs font-normal'>{option.name_location}</span>
                             <div className='flex gap-2 justify-between'>
                               <div className='flex flex-col gap-1'>
-                                <span className='text-[#3276FA] text-xs font-normal'>LOT: {option.lot}</span>
-                                <span className='text-[#3276FA] text-xs font-normal'>Date: {formatDate(option.expiration_date)}</span>
+                                <span className='text-[#3276FA] text-xs font-normal'>LOT: {option.lot || '-'}</span>
+                                <span className='text-[#3276FA] text-xs font-normal'>Date: {formatDate(option.expiration_date) || '-'}</span>
                               </div>
                               <span className='text-neutral-03 text-xs font-normal'>Tồn: {formatNumber(Number(option.total_quantity))}</span>
                             </div>
