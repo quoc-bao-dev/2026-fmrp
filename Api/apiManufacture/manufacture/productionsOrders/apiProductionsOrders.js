@@ -22,6 +22,40 @@ import { _ServerInstance as axiosCustom } from "@/services/axios";
  * @property {Object} [data] - Response data payload
  */
 
+/**
+ * @typedef {Object} ProductionOrderManagerStaff
+ * @property {string|number} staffid - Staff ID
+ * @property {string} full_name - Staff full name
+ * @property {string} [profile_image] - URL to staff profile image
+ */
+
+/**
+ * @typedef {Object} ProductionOrderManagerRecord
+ * @property {string|number} id - Record ID
+ * @property {string|number} po_id - Production order ID
+ * @property {string|number} staff_id - Staff ID
+ * @property {string|number} is_manager - Manager flag ("1" or "0")
+ * @property {string|number} is_btp_nvl - BTP & NVL flag ("1" or "0")
+ * @property {string|number} is_manufacture - Manufacture flag ("1" or "0")
+ * @property {ProductionOrderManagerStaff} staff - Staff info
+ */
+
+/**
+ * @typedef {Object} ProductionOrderManagersResponse
+ * @property {boolean|number} isSuccess - Indicates if the request was successful
+ * @property {string} [message] - Response message
+ * @property {string} [branch_name] - Branch name (can be empty string)
+ * @property {Object} [data] - Response data payload
+ * @property {ProductionOrderManagerRecord[]} [data.production_order_managers] - List of managers
+ */
+
+/**
+ * @typedef {Object} ProductionOrderManagerDetailResponse
+ * @property {boolean|number} isSuccess - Indicates if the request was successful
+ * @property {string} [message] - Response message
+ * @property {Object} [data] - Response data payload
+ */
+
 const apiProductionsOrders = {
     async apiProductionOrders(page, limit, param) {
         // Danh sách LSX tổng
@@ -275,7 +309,42 @@ const apiProductionsOrders = {
      * }
      */
     async apiSaveProductionOrderManagers(payload) {
-        const response = await axiosCustom('POST', `/api_web/production-order-managers/save?csrf_protection=true`, payload);
+        const response = await axiosCustom('POST', `/api_web/production-order-managers/save?csrf_protection=true`, { data: payload });
+        return response.data;
+    },
+
+    /**
+     * Get Production Order Managers API
+     * @description Get list of responsible persons (managers) for a production order
+     * @param {number|string} po_id - Production order ID
+     * @returns {Promise<ProductionOrderManagersResponse>} Promise that resolves to API response
+     * @throws {Error} When API call fails
+     * @example
+     * const result = await apiProductionsOrders.apiGetProductionOrderManagers(50);
+     * if (result?.isSuccess) {
+     *   console.log('Managers list:', result.data);
+     * }
+     */
+    async apiGetProductionOrderManagers(po_id) {
+        const response = await axiosCustom('GET', `/api_web/production-order-managers/index/${po_id}/0?csrf_protection=true`);
+        return response.data;
+    },
+
+    /**
+     * Get Production Order Manager Detail API
+     * @description Get manager detail for a specific production order line
+     * @param {number|string} po_id - Production order ID
+     * @param {number|string} poi_id - Production order item/detail ID
+     * @returns {Promise<ProductionOrderManagerDetailResponse>} Promise that resolves to API response
+     * @throws {Error} When API call fails
+     * @example
+     * const result = await apiProductionsOrders.apiGetProductionOrderManagerDetail(62, 89);
+     * if (result?.isSuccess) {
+     *   console.log('Managers detail:', result.data);
+     * }
+     */
+    async apiGetProductionOrderManagerDetail(po_id, poi_id) {
+        const response = await axiosCustom('GET', `/api_web/production-order-managers/get-detail/${po_id}/${poi_id}?csrf_protection=true`);
         return response.data;
     },
 }

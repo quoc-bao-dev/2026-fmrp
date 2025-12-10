@@ -9,20 +9,12 @@ const deca = Lexend_Deca({
   weight: ['400', '500', '600', '700'],
 });
 
-const MOCK_PEOPLE = [
-  { id: '1', name: 'Thành' },
-  { id: '2', name: 'Quang' },
-  { id: '3', name: 'Hùng' },
-  { id: '4', name: 'Thảo' },
-  { id: '5', name: 'Minh' },
-  { id: '6', name: 'Lan' },
-];
-
-const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], data = [], children }) => {
+const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], data = [], className, children }) => {
   const [search, setSearch] = useState('');
   const [localSelected, setLocalSelected] = useState(selected);
   const dropdownRef = useRef(null);
   const triggerRef = useRef(null);
+  const lastSelectedIdRef = useRef(null);
   const [style, setStyle] = useState({});
   const [errorMap, setErrorMap] = useState({});
 
@@ -70,7 +62,7 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    const peopleList = data && data.length > 0 ? data : MOCK_PEOPLE;
+    const peopleList = Array.isArray(data) ? data : [];
     const base = peopleList.filter(p => !selectedIds.has(p.id)); // ẩn các user đã có trong bảng
     if (!term) return base;
     return base.filter(p => p.name.toLowerCase().includes(term));
@@ -79,12 +71,22 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
   const isSelected = id => localSelected?.some(item => item.id === id);
 
   const toggleLocal = person => {
+    lastSelectedIdRef.current = person.id;
     setLocalSelected(prev => {
       const exists = prev.find(item => item.id === person.id);
       if (exists) return prev.filter(item => item.id !== person.id);
       return [...prev, person];
     });
   };
+
+  useEffect(() => {
+    if (!open) return;
+    if (!lastSelectedIdRef.current) return;
+    const el = document.querySelector(`[data-rpcb-item="${lastSelectedIdRef.current}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [localSelected, open]);
 
   const triggerElement =
     children &&
@@ -100,31 +102,17 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
       },
     });
 
+ 
+
   return (
     <>
       {triggerElement}
       {open &&
         createPortal(
-          <div className='fixed inset-0 z-[1400] pointer-events-none'>
-            <style jsx global>{`
-              .rpcb-scroll::-webkit-scrollbar {
-                width: 8px;
-              }
-              .rpcb-scroll::-webkit-scrollbar-track {
-                background: transparent;
-              }
-              .rpcb-scroll::-webkit-scrollbar-thumb {
-                background: #b4bcc3;
-                border-radius: 10px;
-              }
-              .rpcb-scroll::-webkit-scrollbar-thumb:hover {
-                background: #94a3b8;
-              }
-            `}</style>
+          <div className='fixed inset-0 z-[1400] pointer-events-none' data-rpcb-root>
             <div
               ref={dropdownRef}
-              className={`${deca.className} w-[38
-      9px] max-h-[414px] bg-white rounded-[16px] shadow-xl flex flex-col overflow-hidden pointer-events-auto`}
+              className={`${deca.className} w-[389px] max-h-[414px] bg-white rounded-[16px] shadow-xl flex flex-col overflow-hidden pointer-events-auto ${className}`}
               style={style}
             >
               {/* Search */}
@@ -157,7 +145,7 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
 
               <div className='pt-2'></div>
               {/* List */}
-              <div className='flex-1 overflow-y-auto rpcb-scroll px-4 pt-4 pb-2 max-h-[300px]'>
+              <div className='flex-1 overflow-y-auto px-4 pt-4 pb-2 max-h-[300px]'>
                 <div className='space-y-2'>
                   {filtered
                     .slice()
@@ -172,6 +160,7 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
                       return (
                         <div key={person.id}>
                           <button
+                            data-rpcb-item={person.id}
                             onClick={() => toggleLocal(person)}
                             className={`w-full flex items-center gap-3 px-3 py-3 rounded-[12px] text-left transition-colors  border-[#E7EAEE] ${
                               active ? 'bg-[#EBF5FF]' : 'bg-white hover:bg-[#F6F8FB]'

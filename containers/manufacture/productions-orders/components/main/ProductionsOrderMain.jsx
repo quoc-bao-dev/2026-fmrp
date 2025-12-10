@@ -26,7 +26,7 @@ import {
   PrinterIcon,
   StickerIcon,
   TrashIcon,
-  UserPlusIcon
+  UserPlusIcon,
 } from '@/components/icons';
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
 import { CONFIRM_DELETION, TITLE_DELETE_COMMAND, TITLE_DELETE_PRODUCTIONS_ORDER } from '@/constants/delete/deleteTable';
@@ -72,6 +72,8 @@ import DetailProductionOrderList from '../ui/DetailProductionOrderList';
 import PlaningProductionOrder from '../ui/PlaningProductionOrder';
 import TabKeepStock from '../ui/tabKeepStock';
 import { listDropdownCompleteStage, listLsxStatus } from './constants/listData';
+import { useProductionOrderManagers } from '@/managers/api/productions-order/useProductionOrderManagers';
+import AvatarStack from '../popup/AvatarStack';
 
 const initialState = {
   isTab: 'item',
@@ -256,6 +258,43 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
   const flagProductionOrders = useMemo(() => (dataProductionOrders ? dataProductionOrders?.pages?.flatMap(page => page?.productionOrders) : []), [dataProductionOrders]);
 
   const poiId = router.query.poi_id;
+
+  const { data: listProductionOrderManagers, refetch: refetchProductionOrderManagers } = useProductionOrderManagers({
+    po_id: isStateProvider?.productionsOrders?.idDetailProductionOrder,
+  });
+
+  const managerAvatars = useMemo(() => {
+    const records = listProductionOrderManagers?.data?.production_order_managers || [];
+
+    return records.map(item => ({
+      id: item?.staff?.staffid || item?.staff_id,
+      name: item?.staff?.full_name || 'Không tên',
+      avatarUrl: item?.staff?.profile_image || '',
+    }));
+  }, [listProductionOrderManagers]);
+
+  const managerInitialData = useMemo(() => {
+    const records = listProductionOrderManagers?.data?.production_order_managers || [];
+
+    return records.map(item => {
+      const role =
+        item?.is_manager == 1 || item?.is_manager === '1'
+          ? 'manager'
+          : item?.is_btp_nvl == 1 || item?.is_btp_nvl === '1'
+          ? 'btp_nvl'
+          : item?.is_manufacture == 1 || item?.is_manufacture === '1'
+          ? 'manufacture'
+          : '';
+
+      return {
+        recordId: item?.id,
+        id: item?.staff?.staffid || item?.staff_id,
+        name: item?.staff?.full_name || 'Không tên',
+        avatarUrl: item?.staff?.profile_image || '',
+        role,
+      };
+    });
+  }, [listProductionOrderManagers]);
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -1620,29 +1659,27 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
         <div className='relative z-50 flex-1 min-w-0 size-full space-y-4 border-none border-[#D0D5DD] border overflow-y-hidden'>
           {!isLoadingProductionOrderDetail && dataProductionOrderDetail?.listPOItems?.length > 0 && isStateProvider?.productionsOrders?.isTabList?.type == 'products' && (
             <div ref={groupButtonRef} className='flex items-center justify-end gap-2 p-0.5 mb-2'>
-              {/* TODO: thêm avatar stack ở đây */}
-              {/* <div className='flex items-center gap-2'>
-                <AvatarStack
-                  people={[
-                    { name: 'Thành', id: '1' },
-                    { name: 'Thành', id: '2' },
-                    { name: 'Thành', id: '3' },
-                    { name: 'Thành', id: '4' },
-                  ]} 
-                />
-              </div> */}
-              <ButtonAnimationNew
-                icon={
-                  <div className='size-4'>
-                    <UserPlusIcon className='size-full text-[#11315B]' />
-                  </div>
-                }
-                title='Thêm người phụ trách'
-                className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] bg-white border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
+              <div
                 onClick={() => {
                   dispatch({ type: 'statePopupListResponsiblePerson', payload: { open: true } });
                 }}
-              />
+                className='cursor-pointer'
+              >
+                {managerAvatars?.length > 0 ? (
+                  <AvatarStack people={managerAvatars} className='mr-2' />
+                ) : (
+                  <ButtonAnimationNew
+                    icon={
+                      <div className='size-4'>
+                        <UserPlusIcon className='size-full text-[#11315B]' />
+                      </div>
+                    }
+                    title='Thêm người phụ trách'
+                    className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] bg-white border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
+                  />
+                )}
+              </div>
+
               <FilterDropdown
                 trigger={triggerCompleteStage}
                 style={{
@@ -1840,7 +1877,12 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
         }}
         cancel={() => handleQueryId({ status: false })}
       />
-      <PopupListResponsiblePerson brandId ={dataProductionOrderDetail?.productionOrder?.branch_id}/>
+       <PopupListResponsiblePerson
+         brandId={dataProductionOrderDetail?.productionOrder?.branch_id}
+         initialManagers={managerInitialData}
+         onRefreshDetail={refetchProductionOrderDetail}
+         onRefreshManagers={refetchProductionOrderManagers}
+       />
     </React.Fragment>
   );
 };
