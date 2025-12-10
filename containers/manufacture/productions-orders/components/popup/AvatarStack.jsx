@@ -26,7 +26,7 @@ const AvatarStack = ({ people = [] }) => {
               <div className='absolute left-1/2 -translate-x-1/2 mt-2 top-full z-50'>
                 <div className='relative'>
                   <div className='absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-b-8 border-b-[#0375F3]' />
-                  <div className='px-3 py-2 bg-[#0375F3] text-white rounded-[12px] text-sm font-semibold shadow-lg whitespace-nowrap'>{person.name}</div>
+                  <div className='px-3 py-2 bg-[#0375F3] text-white rounded-[12px] text-sm font-semibold shadow-lg whitespace-nowrap truncate'>{person.name}</div>
                 </div>
               </div>
             )}
@@ -40,7 +40,7 @@ const AvatarStack = ({ people = [] }) => {
         </div>
       )}
 
-      {visible.length === 1 && <p className='px-2'> {visible[0].name}</p>}
+      {visible.length === 1 && <p className='px-2  max-w-[100px] truncate'> {visible[0].name}</p>}
     </div>
   );
 };

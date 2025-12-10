@@ -3,13 +3,16 @@ import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew';
 import { UserPlusIcon } from '@/components/icons';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
+import useToast from '@/hooks/useToast';
 import { Lexend_Deca } from '@next/font/google';
 import { motion } from 'framer-motion';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import ResponsibleAvatar from './ResponsibleAvatar';
 import ResponsiblePersonComboBox from './ResponsiblePersonComboBox';
+import { StateContext } from '@/context/_state/productions-orders/StateContext';
+import { useSaveProductionOrderManagers } from '@/managers/api/productions-order/useSaveProductionOrderManagers';
 
 const deca = Lexend_Deca({
   subsets: ['latin'],
@@ -18,6 +21,8 @@ const deca = Lexend_Deca({
 
 const PopupListResponsiblePerson = (props) => {
   const dispatch = useDispatch();
+  const { isStateProvider } = useContext(StateContext);
+  const showToast = useToast();
 
   const statePopupListResponsiblePerson = useSelector(state => state.statePopupListResponsiblePerson);
   const [openCombo, setOpenCombo] = useState(false);
@@ -29,9 +34,22 @@ const PopupListResponsiblePerson = (props) => {
   const [roleAnchorEl, setRoleAnchorEl] = useState(null);
 
   // Lấy branch_id từ production order
-
   const { data: staffs } = useSearchStaffs({ branch_ids: [props.brandId] });
 
+  // Hook để save production order managers
+  const { saveProductionOrderManagers, isLoading: isSaving } = useSaveProductionOrderManagers({
+    onSuccess: (response) => {
+      // Đóng popup sau khi save thành công
+      handleClose();
+      // Trigger refetch detail (if provided)
+      props?.onRefreshDetail?.();
+      // Trigger refetch managers list (avatar/table) nếu có
+      props?.onRefreshManagers?.();
+    },
+    onError: (error) => {
+      console.error('Failed to save managers:', error);
+    }
+  });
 
   const listStaffs = useMemo(() => {
     return (
@@ -43,7 +61,11 @@ const PopupListResponsiblePerson = (props) => {
     );
   }, [staffs]);
 
-  const roleOptions = ['Quản lý', 'Phụ trách BTP & NVL', 'Phụ trách sản xuất'];
+  const roleOptions = [
+    { label: 'Quản lý', value: 'manager' },
+    { label: 'Phụ trách BTP & NVL', value: 'btp_nvl' },
+    { label: 'Phụ trách sản xuất', value: 'manufacture' }
+  ];
 
   const handleClose = () => {
     dispatch({ type: 'statePopupListResponsiblePerson', payload: { open: false } });
@@ -73,6 +95,71 @@ const PopupListResponsiblePerson = (props) => {
     setOpenRoleId(null);
     setAnchorRoleRect(null);
     setRoleAnchorEl(null);
+  };
+
+  // Prefill / reset theo lệnh sản xuất hiện tại
+  useEffect(() => {
+    const list = props?.initialManagers || [];
+
+    // Set selected people
+    const prefillPeople = list.map(item => ({
+      recordId: item.recordId,
+      id: item.id,
+      name: item.name,
+      avatarUrl: item.avatarUrl || '',
+    }));
+    setSelectedPeople(prefillPeople);
+
+    // Set role mapping
+    const prefillRoles = list.reduce((acc, cur) => {
+      acc[cur.id] = cur.role || '';
+      return acc;
+    }, {});
+    setRoleByPerson(prefillRoles);
+  }, [props?.initialManagers, statePopupListResponsiblePerson?.open]);
+
+  const handleSave = () => {
+    if (!selectedPeople.length) {
+      showToast('error', 'Vui lòng chọn người phụ trách');
+      return;
+    }
+
+    // Kiểm tra xem tất cả người đã chọn quyền chưa
+    const peopleWithoutRole = selectedPeople.filter(person => !roleByPerson[person.id]);
+    
+    if (peopleWithoutRole.length > 0) {
+      showToast('error', 'Vui lòng chọn quyền cho tất cả người phụ trách');
+      return;
+    }
+
+    // Lấy po_id từ production order detail
+    const po_id = isStateProvider?.productionsOrders?.idDetailProductionOrder || 50;
+    
+    // Transform dữ liệu từ selectedPeople và roleByPerson
+    const items = selectedPeople.map(person => {
+      const roleValue = roleByPerson[person.id] || '';
+      
+      // Map role value thành các flags
+      const is_manager = roleValue === 'manager' ? 1 : 0;
+      const is_btp_nvl = roleValue === 'btp_nvl' ? 1 : 0;
+      const is_manufacture = roleValue === 'manufacture' ? 1 : 0;
+      
+      return {
+        id: person.recordId ?? 0,
+        staff_id: person.id,
+        is_manager,
+        is_btp_nvl,
+        is_manufacture
+      };
+    });
+
+    const payload = {
+      po_id,
+      items
+    };
+
+    // Gọi mutation để save
+    saveProductionOrderManagers(payload);
   };
 
   useEffect(() => {
@@ -190,7 +277,7 @@ const PopupListResponsiblePerson = (props) => {
                           }`}
                           style={{ borderRadius: '8px' }}
                         >
-                          {roleByPerson[person.id] || 'Chọn vai trò'}
+                          {roleOptions.find(opt => opt.value === roleByPerson[person.id])?.label || 'Chọn vai trò'}
                           <svg
                             width='9'
                             height='5'
@@ -216,7 +303,15 @@ const PopupListResponsiblePerson = (props) => {
           {/* Add Button */}
           <div className='px-2 py-3 mt-6 flex items-center justify-center gap-4 h-[68px]'>
             <div className='flex items-center justify-center'>
-              <button className='flex items-center gap-4 bg-[#0375F3] text-white px-7 py-3 rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors'>
+              <button 
+                onClick={handleSave}
+                disabled={isSaving}
+                className={`flex items-center gap-4 bg-[#0375F3] text-white px-7 py-3 rounded-[8px] font-medium transition-colors ${
+                  isSaving 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : 'hover:bg-[#0375F3]/90 cursor-pointer'
+                }`}
+              >
                 <svg width='13' height='10' viewBox='0 0 13 10' fill='none' xmlns='http://www.w3.org/2000/svg'>
                   <path
                     d='M12.2529 0.0625C12.4355 0.0626004 12.6102 0.135563 12.7393 0.264648C12.8683 0.393745 12.9413 0.568426 12.9414 0.750977C12.9414 0.928867 12.8709 1.09845 12.748 1.22656L12.7383 1.2373L4.73828 9.2373C4.67442 9.30137 4.59819 9.35203 4.51465 9.38672C4.43114 9.42136 4.34138 9.43945 4.25098 9.43945C4.1606 9.43941 4.07077 9.42138 3.9873 9.38672C3.90397 9.35206 3.82839 9.30121 3.76465 9.2373L0.264648 5.7373C0.200721 5.67338 0.149849 5.59719 0.115234 5.51367C0.0806189 5.4301 0.0625 5.34045 0.0625 5.25C0.0625068 5.15956 0.0806255 5.06988 0.115234 4.98633C0.149848 4.90285 0.200743 4.8266 0.264648 4.7627C0.328484 4.69895 0.403969 4.64783 0.487305 4.61328C0.570774 4.57871 0.660632 4.56157 0.750977 4.56152C0.841304 4.56152 0.931179 4.57876 1.01465 4.61328C1.09814 4.64786 1.17436 4.69882 1.23828 4.7627L4.25195 7.77637L4.2959 7.73242L11.7656 0.264648C11.8948 0.135473 12.0702 0.0625 12.2529 0.0625Z'
@@ -246,14 +341,14 @@ const PopupListResponsiblePerson = (props) => {
               }}
             >
               {roleOptions.map(option => {
-                const active = roleByPerson[openRoleId] === option;
+                const active = roleByPerson[openRoleId] === option.value;
                 return (
                   <button
-                    key={option}
-                    onClick={() => handleSelectRole(openRoleId, option)}
+                    key={option.value}
+                    onClick={() => handleSelectRole(openRoleId, option.value)}
                     className={`w-full flex items-center justify-between px-4 py-3 text-base transition-colors ${active ? 'bg-[#EBF5FF] text-[#1F3A63]' : 'text-[#101828] hover:bg-[#F4F6FA]'}`}
                   >
-                    <span>{option}</span>
+                    <span>{option.label}</span>
                     {active && (
                       <svg width='16' height='12' viewBox='0 0 16 12' fill='none' xmlns='http://www.w3.org/2000/svg'>
                         <path d='M5.99973 9.1998L1.79973 4.9998L0.399727 6.3998L5.99973 11.9998L15.9997 1.9998L14.5997 0.599804L5.99973 9.1998Z' fill='#3276FA' />
@@ -262,6 +357,23 @@ const PopupListResponsiblePerson = (props) => {
                   </button>
                 );
               })}
+              <button
+                onClick={() => {
+                  // Xoá khỏi bảng & đưa lại vào combo
+                  setSelectedPeople(prev => prev.filter(p => p.id !== openRoleId));
+                  setRoleByPerson(prev => {
+                    const clone = { ...prev };
+                    delete clone[openRoleId];
+                    return clone;
+                  });
+                  setOpenRoleId(null);
+                  setAnchorRoleRect(null);
+                  setRoleAnchorEl(null);
+                }}
+                className='w-full flex items-center justify-between px-4 py-3 text-base text-[#C02A26] hover:bg-[#FDEEEE] transition-colors'
+              >
+                <span>Xoá</span>
+              </button>
             </div>
           </div>,
           document.body

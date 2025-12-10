@@ -9,12 +9,14 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { StateContext } from '@/context/_state/productions-orders/StateContext';
 import { CaretDownIcon, NoteIcon, UserPlusIcon } from '@/components/icons';
 import AvatarStack from '../popup/AvatarStack';
+import ResponsiblePersonComboBox from '../popup/ResponsiblePersonComboBox';
 
 const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRight, dataLang, handleToggleSheetDetail }) => {
   const dataSeting = useSetingServer();
   const formatNumber = useCallback(num => formatNumberConfig(+num, dataSeting), [dataSeting]);
   const { isStateProvider } = useContext(StateContext);
   const [visibleProducts, setVisibleProducts] = useState({});
+  const [openManagerComboId, setOpenManagerComboId] = useState(null);
 
   const handleShowMoreProducts = useCallback((itemId, total) => {
     setVisibleProducts(prev => ({ ...prev, [itemId]: total }));
@@ -37,6 +39,13 @@ const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRi
         3: { color: 'bg-[#F54A45]/20 text-[#C02A26]', title: dataLang?.productions_orders_overdue || 'overdue' },
       };
       const color = colorMap[product?.status_item];
+
+      const managerAvatars =
+        product?.staff_manager_details?.map(mgr => ({
+          id: mgr?.staff?.staffid || mgr?.staff_id,
+          name: mgr?.staff?.full_name || 'Không tên',
+          avatarUrl: mgr?.staff?.profile_image || '',
+        })) || [];
 
       return (
         <div
@@ -74,27 +83,37 @@ const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRi
           </h4>
 
           <h4 className='col-span-2 text-start text-[#141522] font-semibold xl:text-sm text-xs px-1'>{product?.unit_name ?? ''}</h4>
-
           <h4 className='col-span-2 text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1'>{product.quantity > 0 ? formatNumber(product.quantity) : '-'}</h4>
-          <h4 className='col-span-2 text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1'>{product.quantity > 0 ? formatNumber(product.quantity_stage_end) : '-'}</h4>
-          <h4 className='col-span-3 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1 items-center'>
-            {/* <AvatarStack
-              people={[
-                { name: 'Thành', id: '1' },
-                { name: 'Thành', id: '2' },
-                { name: 'Thành', id: '3' },
-                { name: 'Thành', id: '4' },
-              ]}
-            /> */}
-
-            <button
-              className='cursor-pointer flex items-center justify-start w-[112px] px-3 h-10 rounded-lg border border-[#003DA0] hover:bg-[#EBF5FF] transition-colors'
-              onClick={() => {
-                // TODO: Xử lý khi click button
+          <h4 className='col-span-2 text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1'>{product.quantity_stage_end > 0 ? formatNumber(product.quantity_stage_end) : '-'}</h4>
+          <h4 className='col-span-3 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1 flex justify-center items-center'>
+            <div
+              onClick={e => {
+                setOpenManagerComboId(product.poi_id);
+                e.stopPropagation();
               }}
             >
-              <UserPlusIcon className='size-5 text-[#11315B]' />
-            </button>
+              <ResponsiblePersonComboBox
+              className='!max-h-[300px]'
+                open={openManagerComboId === product.poi_id}
+                onClose={() => setOpenManagerComboId(null)}
+                data={managerAvatars}
+                selected={managerAvatars}
+                onConfirm={selected => {
+                  console.log('Selected managers in product row:', selected);
+                  setOpenManagerComboId(null);
+                }}
+              >
+                <div>
+                  {managerAvatars.length > 0 ? (
+                    <AvatarStack people={managerAvatars} />
+                  ) : (
+                    <button className='cursor-pointer flex items-center justify-start w-[112px] px-3 h-10 rounded-lg border border-[#003DA0] hover:bg-[#EBF5FF] transition-colors'>
+                      <UserPlusIcon className='size-5 text-[#11315B]' />
+                    </button>
+                  )}
+                </div>
+              </ResponsiblePersonComboBox>
+            </div>
           </h4>
 
           <h4 className='col-span-2 flex items-center justify-start px-1'>
@@ -107,7 +126,7 @@ const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRi
         </div>
       );
     },
-    [formatNumber, handleToggleSheetDetail, isStateProvider?.productionsOrders.dataModal.id, dataLang]
+    [formatNumber, handleToggleSheetDetail, isStateProvider?.productionsOrders.dataModal.id, dataLang, openManagerComboId, setOpenManagerComboId]
   );
 
   if (isLoadingRight) return <Loading className='h-80' color='#0f4f9e' />;
