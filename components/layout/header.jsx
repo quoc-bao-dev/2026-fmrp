@@ -2,6 +2,7 @@ import apiDashboard from '@/Api/apiDashboard/apiDashboard';
 import { WARNING_STATUS_ROLE_ADMIN } from '@/constants/warningStatus/warningStatus';
 import { useGetUpgradePackage } from '@/hooks/useAuth';
 import useSetingServer from '@/hooks/useConfigNumber';
+import { useGetCheckNotiRead } from '@/hooks/useNotifications';
 import useToast from '@/hooks/useToast';
 import { getColorByParam } from '@/utils/helpers/radomcolor';
 import { CookieCore } from '@/utils/lib/cookie';
@@ -17,13 +18,12 @@ import { Tooltip } from 'react-tippy';
 import 'react-tippy/dist/tippy.css';
 import Popup from 'reactjs-popup';
 import PopupFeelsCustomer from '../common/popup/PopupFeelsCustomer';
+import PopupQRCodeHeader from '../common/popup/PopupQRCodeHeader';
+import { ChatIcon, PasswordIcon, SignOutIcon, SparkleIcon, SparkleOutlineIcon, UserCircleIcon } from '../icons';
 import AvatarText from '../UI/common/user/AvatarText';
 import { Dropdown } from '../UI/dropdown';
 import DropdownThongBao from '../UI/notificationDropdown';
 import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
-import { ChatIcon, PasswordIcon, SignOutIcon, SparkleIcon, SparkleOutlineIcon, UserCircleIcon } from '../icons';
-import PopupQRCodeHeader from '../common/popup/PopupQRCodeHeader';
-import { useGetCheckNotiRead, useListNoti } from '@/hooks/useNotifications';
 
 const Header = () => {
   const router = useRouter();

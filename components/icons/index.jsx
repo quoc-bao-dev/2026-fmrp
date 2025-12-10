@@ -1,22 +1,22 @@
 /**
  * HƯỚNG DẪN SỬ DỤNG:
- * 
+ *
  * 1. Tạo svg icon với tên là name.svg
- * 
- * 2. Vào sửa svg: 
+ *
+ * 2. Vào sửa svg:
  *   - Xóa width, height để có thể set w h bằng tailwind
  *   - Sửa fill = "currentColor" để có thể thay đổi màu bằng tailwind
- * 
+ *
  * 3. Vào file index.jsx:
  *   - Import icon:
  *     import SearchIcon from './search.svg';
  *   - Export icon:
  *     export { SearchIcon };
- * 
+ *
  * 4. Sử dụng trong component:
  *    <SearchIcon className="w-5 h-5 text-blue-500" />
  *    <PlusIcon className="w-6 h-6" />
- * 
+ *
  * LƯU Ý:
  * - Vào component/source/icons để xem icon đã có hay chưa rồi mới thêm mới
  * - Sử dụng className để thay đổi kích thước, màu sắc
@@ -87,6 +87,7 @@ import TemplateChecklistIcon from './source/template-checklist-icon.svg';
 import TrashIcon from './source/trash.svg';
 import UpgradeIcon from './source/upgrade-icon.svg';
 import UserCircleIcon from './source/user-circle-icon.svg';
+import UserPlusIcon from './source/user-plus-icon.svg';
 import WarningAlertIcon from './source/warning-alert-icon.svg';
 import WarningIcon from './source/warning-icon.svg';
 import ZaloIcon from './source/zalo.svg';
@@ -158,6 +159,7 @@ export {
   TrashIcon,
   UpgradeIcon,
   UserCircleIcon,
+  UserPlusIcon,
   WarningAlertIcon,
   WarningIcon,
   ZaloIcon,
