@@ -595,7 +595,7 @@ const PopupCompleteCommand = ({ onClose }) => {
     selectedWarehouse,
     setIsWarehouseMissing,
   ]);
-console.log(selectedWarehouse)
+
   const updateProductQuantity = useCallback(
     (index, value) => {
       if (value === 0) {
