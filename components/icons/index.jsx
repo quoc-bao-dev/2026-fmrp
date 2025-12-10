@@ -54,6 +54,7 @@ import ErrorIconMessengerIcon from './source/error-icon-messenger.svg';
 import ErrorQCIcon from './source/error-q-c.svg';
 import ExcelIcon from './source/excel.svg';
 import ExportMaterialsIcon from './source/export-materials-icon-1.svg';
+import EndProductionOrderIcon from './source/end-product.svg';
 import RecallMaterialsIcon from './source/export-materials-icon-2.svg';
 import FileIcon from './source/file-icon.svg';
 import FunnelIcon from './source/funnel.svg';
@@ -125,6 +126,7 @@ export {
   ErrorQCIcon,
   ExcelIcon,
   ExportMaterialsIcon,
+  EndProductionOrderIcon,
   RecallMaterialsIcon,
   FileIcon,
   FunnelIcon,
