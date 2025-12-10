@@ -201,7 +201,7 @@ const apiProductionsOrders = {
 
     // Lấy danh sách nguyên liệu bổ sung
      async apiLookupMaterialsVariant(data) {
-        const response = await axiosCustom('GET', `/api_web/materials/lookup-variant`, data);
+        const response = await axiosCustom('GET', `/api_web/product-materials/lookup-variant`, data);
         return response.data;
     },
 

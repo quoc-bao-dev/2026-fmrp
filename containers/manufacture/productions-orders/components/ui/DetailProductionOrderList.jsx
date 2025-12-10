@@ -37,13 +37,13 @@ const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRi
             <div
                 key={`product-${index}`}
                 onClick={() => handleToggleSheetDetail(product)}
-                className={`col-span-16 grid grid-cols-16 gap-2 items-center group hover:bg-gray-100 cursor-pointer transition-all duration-150 ease-in-out 3xl:py-4 py-2 ${totalLength - 1 === index ? "border-transparent" : "border-b"}`}
+                className={`col-span-16 grid grid-cols-20 gap-2 items-center group hover:bg-gray-100 cursor-pointer transition-all duration-150 ease-in-out 3xl:py-4 py-2 ${totalLength - 1 === index ? "border-transparent" : "border-b"}`}
             >
                 <h4 className="col-span-1 flex items-center justify-center text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1">
                     {(index + 1) ?? "-"}
                 </h4>
 
-                <h4 className="col-span-5 text-[#344054] font-normal flex items-center py-2 px-1">
+                <h4 className="col-span-6 text-[#344054] font-normal flex items-center py-2 px-1">
 
                     <div className='flex items-start gap-2'>
                         <div className="2xl:size-16 size-14 shrink-0">
@@ -83,8 +83,12 @@ const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRi
 
                 </h4>
 
-                <h4 className="col-span-1 text-start text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1">
+                <h4 className="col-span-2 text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1">
                     {product.quantity > 0 ? formatNumber(product.quantity) : "-"}
+                </h4>
+
+                <h4 className="col-span-2 text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1">
+                    {product.quantity > 0 ? formatNumber(product.quantity_stage_end) : "-"}
                 </h4>
 
                 <h4 className="col-span-3 flex items-center justify-start px-1">
@@ -148,28 +152,29 @@ const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRi
                                         className="col-span-12 grid grid-cols-16 mt-2"
                                     >
                                         {/* header */}
-                                        <div className="col-span-16 grid grid-cols-16 gap-2 py-4 border-b">
+                                        <div className="col-span-16 grid grid-cols-20 gap-2 py-4 border-b">
                                             <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-1 px-1'>
                                                 STT
                                             </h4>
 
-                                            <h4 className="xl:text-sm text-xs text-start text-[#9295A4] font-semibold col-span-5 px-1">
+                                            <h4 className="xl:text-sm text-xs text-start text-[#9295A4] font-semibold col-span-6 px-1">
                                                 {dataLang?.Q_materials_finish_product || "Q_materials_finish_product"}
                                             </h4>
 
                                             <h4 className="xl:text-sm text-xs text-start text-[#9295A4] font-semibold col-span-2 px-1">
                                                 {dataLang?.Q_materials_unit || "Q_materials_unit"}
-
                                             </h4>
 
-                                            <h4 className="xl:text-sm text-xs text-start text-[#9295A4] font-semibold col-span-1 px-1">
-                                                {dataLang?.Q_materials_quantity || "Q_materials_quantity"}
+                                            <h4 className="xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-2 px-1">
+                                                SL cần
+                                            </h4>
 
+                                            <h4 className="xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-2 px-1">
+                                                SL đã nhập
                                             </h4>
 
                                             <h4 className="xl:text-sm text-xs text-start text-[#9295A4] font-semibold col-span-3 px-1">
                                                 {dataLang?.Q_materials_status || "Q_materials_status"}
-
                                             </h4>
 
                                             <h4 className="xl:text-sm text-xs text-center text-[#9295A4] font-semibold block col-span-4 px-1">

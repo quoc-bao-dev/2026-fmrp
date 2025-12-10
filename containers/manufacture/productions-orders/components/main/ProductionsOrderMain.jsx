@@ -12,7 +12,6 @@ import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
 import LimitListDropdown from '@/components/common/dropdown/LimitListDropdown';
 import RadioDropdown from '@/components/common/dropdown/RadioDropdown';
 import LoadingComponent from '@/components/common/loading/loading/LoadingComponent';
-import PopupRequestUpdateVersion from '@/components/common/popup/PopupRequestUpdateVersion';
 import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
 import {
@@ -65,12 +64,12 @@ import ModalDetail from '../modal/modalDetail';
 import PopupCompleteCommand from '../popup/PopupCompleteCommand';
 import PopupConfimStage from '../popup/PopupConfimStage';
 import PopupPrintTemProduct from '../popup/PopupPrintTemProduct';
+import PopupRecallMaterials from '../popup/PopupRecallMaterials';
 import SheetProductionsOrderDetail from '../sheet/SheetProductionsOrderDetail';
 import DetailProductionOrderList from '../ui/DetailProductionOrderList';
 import PlaningProductionOrder from '../ui/PlaningProductionOrder';
 import TabKeepStock from '../ui/tabKeepStock';
 import { listDropdownCompleteStage, listLsxStatus } from './constants/listData';
-import PopupRecallMaterials from '../popup/PopupRecallMaterials';
 
 const initialState = {
   isTab: 'item',
@@ -143,27 +142,6 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     }
   };
 
-  const listLsxTab = [
-    {
-      id: '2323',
-      name: 'Thông tin',
-      count: null,
-      type: 'products',
-    },
-    {
-      id: '43434',
-      name: 'Kế hoạch BTP & NVL',
-      count: 0,
-      type: 'semiProduct',
-    },
-    {
-      id: '3',
-      name: 'Giữ kho & Mua hàng',
-      count: 0,
-      type: 'keepStock',
-    },
-  ];
-
   const router = useRouter();
   const { ref: refInviewListLsx, inView: inViewListLsx } = useInView();
   const dataSeting = useSetingServer();
@@ -235,6 +213,51 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     id: isStateProvider?.productionsOrders?.idDetailProductionOrder,
     enabled: !!isStateProvider?.productionsOrders?.idDetailProductionOrder,
   });
+
+  const keepStockPurchaseCount = useMemo(() => {
+    const keepCount = dataProductionOrderDetail?.keepWarehouses?.length || 0;
+    const purchaseCount = dataProductionOrderDetail?.purchase_order?.length || 0;
+    return keepCount + purchaseCount;
+  }, [dataProductionOrderDetail?.keepWarehouses, dataProductionOrderDetail?.purchase_order]);
+
+  const listLsxTab = [
+    {
+      id: '2323',
+      name: 'Thông tin',
+      count: null,
+      type: 'products',
+    },
+    {
+      id: '43434',
+      name: 'Kế hoạch BTP & NVL',
+      count: 0,
+      type: 'semiProduct',
+    },
+    {
+      id: '3',
+      name: 'Giữ kho & Mua hàng',
+      count: keepStockPurchaseCount,
+      type: 'keepStock',
+    },
+  ];
+
+  const listPrintTask = useMemo(
+    () => [
+      {
+        id: 'print_label',
+        label: 'In tem thành phẩm',
+        icon: <StickerIcon className='size-4 text-[#11315B] group-hover:text-[#0375F3]' />,
+        action: () => handOpentPrintTemProduct(isStateProvider?.productionsOrders.idDetailProductionOrder),
+      },
+      {
+        id: 'print_order',
+        label: 'In lệnh sản xuất',
+        icon: <PrinterIcon className='size-4 text-[#11315B] group-hover:text-[#0375F3]' />,
+        action: () => handPrintManufacture(isStateProvider?.productionsOrders.idDetailProductionOrder),
+      },
+    ],
+    [isStateProvider?.productionsOrders.idDetailProductionOrder]
+  );
 
   const handleFilter = (type, value) => {
     if (isStateProvider?.productionsOrders?.[type] === value) return; // không update nếu không thay đổi
@@ -905,13 +928,19 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
         <span className='xl:size-4 size-3.5 shrink-0'>
           <CheckThinIcon className={`size-full`} />
         </span>
-
         <span>Thao tác sản xuất</span>
       </span>
 
       <span className='xl:size-4 size-3.5 shrink-0'>
         <CaretDropDownThinIcon className={`size-full`} />
       </span>
+    </div>
+  );
+
+  const triggerPrintTask = (
+    <div className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 border border-[#D0D5DD] hover:border-[#3276FA] bg-white hover:bg-[#EBF5FF] cursor-pointer hover:shadow-hover-button rounded-lg custom-transition'>
+      <span className='responsive-text-base font-medium text-[#3A3E4C]'>Tác vụ in</span>
+      <CaretDownIcon className='text-[#9295A4] size-4' />
     </div>
   );
 
@@ -1193,16 +1222,6 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
         <h2 className='text-title-section text-[#52575E] capitalize font-medium'>{dataLang?.productions_orders || 'productions_orders'}</h2>
 
         <div className='flex items-center gap-2 xl:max-w-[70%]'>
-          {/* <ButtonAnimationNew
-            icon={
-              <div className='size-4'>
-                <ArrowCounterClockWiseIcon className='size-full' />
-              </div>
-            }
-            title={dataLang?.refresh_data || 'Làm mới dữ liệu'}
-            className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#0375F3] border border-[#0375F3] hover:bg-[#EBF5FF] hover:shadow-hover-button rounded-lg'
-            onClick={refreshData}
-          /> */}
           <div className='relative flex items-center justify-end'>
             {/* Animated Search Input */}
             <AnimatePresence>
@@ -1485,12 +1504,10 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
             <h3
               className={`${
                 isStateProvider?.productionsOrders?.isTabList?.id === tab.id ? 'text-[#0375F3] scale-[1.02]' : 'text-[#9295A4] scale-[1]'
-              } font-medium group-hover:text-[#0375F3] transition-all duration-100 ease-linear origin-left`}
+              } font-medium group-hover:text-[#0375F3] transition-all duration-100 ease-linear origin-left flex items-center gap-1`}
             >
               <span>{tab.name}</span>
-              {tab.count > 0 && (
-                <span className='absolute top-0 right-0 translate-x-1/2 h-[16px] w-[16px] text-[11px] bg-[#9295A4] text-white rounded-full flex items-center justify-center'>{tab.count}</span>
-              )}
+              {tab.count > 0 && <span className='aspect-1 h-5 p-1 text-[11px] bg-[#F97A4C] text-white rounded-full flex items-center justify-center'>{tab.count}</span>}
             </h3>
           )}
         />
@@ -1660,7 +1677,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                             {authState?.is_upgrade && <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs shrink-0'>pro</span>}
                           </div>
                         ) : (
-                          <div className='flex items-center gap-2'>
+                          <div className='flex items-center gap-2 cursor-pointer'>
                             <span className='3xl:size-5 size-4 text-[#0375F3] shrink-0'>{tab.icon}</span>
                             <span className='3xl:text-base text-sm font-normal text-[#101828]'>{tab.label}</span>
                             {authState?.is_upgrade && tab.isPremium && <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs shrink-0'>pro</span>}
@@ -1670,31 +1687,44 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                     );
                   })}
               </FilterDropdown>
+              <FilterDropdown
+                trigger={triggerPrintTask}
+                style={{
+                  boxShadow: '0px 5px 35px 0px #00000012',
+                }}
+                className='flex flex-col !p-0 border-[#D8DAE5] rounded-lg shrink-0 w-fit'
+                classNameContainer='!w-fit'
+                dropdownId='dropdownPrintTask'
+                placement='bottom-left'
+              >
+                {listPrintTask?.map((tab, index) => {
+                  const isFirst = index === 0;
+                  const isLast = index === listPrintTask.length - 1;
 
+                  const borderClass = isLast ? 'border-transparent rounded-b-lg border-t-transparent' : isFirst ? 'rounded-t-lg border-t-transparent' : 'border-t-transparent';
+
+                  return (
+                    <div
+                      key={tab.id}
+                      className={`group hover:bg-[#F3F4F6] border-b border-[#F7F8F9] border-t flex items-center gap-3 cursor-pointer px-4 py-3 custom-transition whitespace-nowrap ${borderClass} select-none`}
+                      onClick={() => tab.action()}
+                    >
+                      {tab.icon}
+                      <span className='responsive-text-base text-[#101828] group-hover:text-[#0375F3]'>{tab.label}</span>
+                    </div>
+                  );
+                })}
+              </FilterDropdown>
               <ButtonAnimationNew
                 icon={
                   <div className='size-4'>
-                    <PrinterIcon className='size-full' />
+                    <ArrowCounterClockWiseIcon className='size-full' />
                   </div>
                 }
-                title='In lệnh sản xuất'
-                className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
-                onClick={() => handPrintManufacture(isStateProvider?.productionsOrders.idDetailProductionOrder)}
-                isLoading={loadingButton}
-                disabled={loadingButton}
+                title={dataLang?.refresh_data || 'Làm mới dữ liệu'}
+                className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#0375F3] border border-[#0375F3] hover:bg-[#EBF5FF] hover:shadow-hover-button rounded-lg'
+                onClick={refreshData}
               />
-
-              <ButtonAnimationNew
-                icon={
-                  <div className='size-4'>
-                    <StickerIcon className='size-full' />
-                  </div>
-                }
-                onClick={() => handOpentPrintTemProduct(isStateProvider?.productionsOrders.idDetailProductionOrder)}
-                title='In tem thành phẩm'
-                className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
-              />
-
               <ButtonAnimationNew
                 icon={
                   <div className='3xl:size-5 size-4'>
