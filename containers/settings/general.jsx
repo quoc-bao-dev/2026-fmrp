@@ -47,6 +47,7 @@ const WarningDaysInput = ({ state, setState }) => {
 const General = (props) => {
     const dataLang = props.dataLang;
     const dataSetting = useSelector((state) => state.setings);
+    const isSettingReady = dataSetting && Object.keys(dataSetting || {}).length > 0;
     const isShow = useToast();
 
     const [onFetching, sOnFetching] = useState(false);
@@ -67,6 +68,15 @@ const General = (props) => {
     const [numberDays, setNumberDays] = useState(+dataSetting?.number_day_warehouse ?? 0);
 
     const [isBomSemiProduct, setIsBomSemiProduct] = useState(dataSetting?.is_bom_semi_product ?? "0");
+
+    const [skipExport, setSkipExport] = useState(dataSetting?.skip_export ?? "0");
+
+    useEffect(() => {
+        if (!isSettingReady) return;
+        setNumberDays(+dataSetting?.number_day_warehouse ?? 0);
+        setIsBomSemiProduct(dataSetting?.is_bom_semi_product ?? "0");
+        setSkipExport(dataSetting?.skip_export ?? "0");
+    }, [isSettingReady, dataSetting?.number_day_warehouse, dataSetting?.is_bom_semi_product, dataSetting?.skip_export]);
 
     const _ServerFetching = async () => {
         try {
@@ -116,6 +126,8 @@ const General = (props) => {
             }
         } else if (code == "is_bom_semi_product") {
             setIsBomSemiProduct((prev) => (prev == "0" ? "1" : "0"));
+        } else if (code == "skip_export") {
+            setSkipExport((prev) => (prev == "0" ? "1" : "0"));
         }
     };
 
@@ -127,6 +139,7 @@ const General = (props) => {
         });
         formData.append(`settings[number_day_warehouse]`, numberDays);
         formData.append(`settings[is_bom_semi_product]`, isBomSemiProduct);
+        formData.append(`settings[skip_export]`, skipExport);
 
         try {
             const { isSuccess, message } = await apiGeneral.apiHanding(formData);
@@ -181,11 +194,11 @@ const General = (props) => {
                     </div>
 
                     <ContainerBody className="col-span-7 h-[100%] flex flex-col justify-between overflow-hidden">
-                        <div className=" h-[96%] overflow-hidden">
+                        <div className="h-[96%] overflow-hidden flex flex-col">
                             <h2 className=" xlg:text-[28px] leading-10 font-medium text-2xl text-[#52575E] capitalize mb-8">
                                 Thiết Lập Chung
                             </h2>
-                            <Customscrollbar className="max-h-[600px] min:h-[500px] h-[90%] max:h-[800px]">
+                            <Customscrollbar className="flex-1 min-h-0">
                                 <div className="space-y-4">
                                     <div className="space-y-1 gap-y-4 pb-4">
                                         <h1 className="text-sm uppercase w-full py-3 px-4 rounded bg-[#ECF0F4] font-medium">
@@ -336,6 +349,42 @@ const General = (props) => {
                                                             kho, giảm lãng phí.
                                                         </p>
                                                     </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h2 className="text-sm uppercase w-full py-3 px-4 rounded bg-[#ECF0F4] font-medium">
+                                            Lệnh sản xuất
+                                        </h2>
+                                        <div className="divide-y divide-[#ECF0F4]">
+                                            <div className="flex flex-row items-center justify-start gap-x-4 py-3 px-4">
+                                                <label
+                                                    htmlFor="skip_export"
+                                                    className="relative inline-flex items-center cursor-pointer ml-1"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        className="sr-only peer"
+                                                        value={skipExport}
+                                                        id="skip_export"
+                                                        checked={
+                                                            skipExport == "0" ? false : true
+                                                        }
+                                                        onChange={_ToggleStatus.bind(
+                                                            this,
+                                                            "skip_export"
+                                                        )}
+                                                    />
+                                                    <div className="w-11 h-6 bg-gray-200 rounded-full dark:bg-[#D1D5DB] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all  peer-checked:bg-blue-600"></div>
+                                                </label>
+                                                <div className="flex flex-col gap-y-1">
+                                                    <p className="font-medium text-base text-typo-black-1">
+                                                        Xuất kho nguyên phụ liệu đủ trước khi nhập thành phẩm
+                                                    </p>
+                                                    <p className="font-normal text-sm text-typo-gray-2">
+                                                        Yêu cầu hoàn tất phiếu xuất NVL/BTP trước khi cho phép nhập thành phẩm. Giúp kiểm soát tồn kho đúng thời điểm và hạn chế sai lệch.                                                    
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>

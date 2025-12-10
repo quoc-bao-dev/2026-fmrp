@@ -44,6 +44,7 @@ const SelectWithRadio = ({
   dataLang,
   icon,
   sSearch,
+  noDataMessage = 'Không có dữ liệu', // Prop mới: thông báo khi không có dữ liệu
 }) => {
   const router = useRouter()
 
@@ -98,7 +99,7 @@ const SelectWithRadio = ({
             filterOption={
               sSearch ? false : (input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
             }
-            notFoundContent={<Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có dữ liệu" />}
+            notFoundContent={<Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={noDataMessage} />}
             popupRender={(menu) => (
               <>
                 <div className="flex items-center justify-between gap-2">

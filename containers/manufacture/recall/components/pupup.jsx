@@ -29,8 +29,12 @@ const PopupDetail = (props) => {
     const formatNumber = (number) => {
         return formatNumberConfig(+number, dataSeting);
     };
-    const { data, isFetching } = useRecallDetail(open, props?.id)
+    const { data, isFetching } = useRecallDetail(open, props?.id);
 
+    // Kiểm tra xem có ít nhất một dòng có đơn vị sản xuất không (loại bỏ chuỗi rỗng)
+    const hasManufactureQty = data?.items?.some(
+        (item) => item?.unit_name_manufacture && item?.unit_name_manufacture?.toString().trim() !== ""
+    );
     return (
         <>
             <PopupCustom
@@ -130,16 +134,21 @@ const PopupDetail = (props) => {
                                     </div>
                                 </div>
                                 <div className=" w-[100%]">
-                                    <HeaderTablePopup gridCols={11}>
-                                        <ColumnTablePopup colSpan={3}>
+                                    <HeaderTablePopup gridCols={hasManufactureQty ? 11 : 10}>
+                                        <ColumnTablePopup colSpan={3} textAlign="left">
                                             {props.dataLang?.import_detail_items || "import_detail_items"}
                                         </ColumnTablePopup>
                                         <ColumnTablePopup colSpan={2}>
                                             {props.dataLang?.productsWarehouse_warehouseLocaImport || "productsWarehouse_warehouseLocaImport"}
                                         </ColumnTablePopup>
-                                        <ColumnTablePopup>{"ĐVT"}</ColumnTablePopup>
+                                        {!hasManufactureQty && <ColumnTablePopup>{"ĐVT"}</ColumnTablePopup>}
+                                        {hasManufactureQty && (
+                                            <ColumnTablePopup colSpan={2}>
+                                                SL sản xuất
+                                            </ColumnTablePopup>
+                                        )}
                                         <ColumnTablePopup colSpan={2}>
-                                            {props.dataLang?.recall_revenueQty || "recall_revenueQty"}
+                                            SL kho
                                         </ColumnTablePopup>
                                         <ColumnTablePopup colSpan={2}>
                                             {props.dataLang?.import_from_note || "import_from_note"}
@@ -153,7 +162,7 @@ const PopupDetail = (props) => {
                                                 <div className="divide-y divide-slate-200 min:h-[170px]  max:h-[170px]">
                                                     {data?.items?.map((e) => (
                                                         <div
-                                                            className="grid items-center grid-cols-11 hover:bg-slate-50"
+                                                            className={`grid items-center ${hasManufactureQty ? 'grid-cols-11' : 'grid-cols-10'} hover:bg-slate-50`}
                                                             key={e.id?.toString()}
                                                         >
                                                             <h6 className="text-[13px]  px-2 py-2 col-span-3 text-left ">
@@ -213,19 +222,27 @@ const PopupDetail = (props) => {
                                                                     </div>
                                                                 </div>
                                                             </h6>
-                                                            <h6 className="text-[13px]   px-2 py-2 col-span-2 text-center break-words">
+                                                            <h6 className="text-[13px] px-2 py-2 col-span-2 text-center break-words">
                                                                 <h6 className="font-medium">
                                                                     {e?.warehouse?.location_name}
                                                                 </h6>
                                                             </h6>
-                                                            <h6 className="text-[13px]   py-2 col-span-1 font-medium text-center break-words">
-                                                                {e?.item?.unit_name || e?.item?.unit}
-                                                                {/* {e?.item?.unit} */}
+                                                            {!hasManufactureQty && (
+                                                                <h6 className="text-[13px] py-2 col-span-1 font-medium text-center break-words">
+                                                                    {e?.item?.unit_name || e?.item?.unit || "-"}
+                                                                </h6>
+                                                            )}
+                                                            {hasManufactureQty && (
+                                                                <h6 className="text-[13px] py-2 col-span-2 font-medium text-center">
+                                                                    {e?.unit_name_manufacture
+                                                                        ? `${formatNumber(e?.quantity_manufacture)}${e?.unit_name_manufacture ? `/${e?.unit_name_manufacture}` : ""}`
+                                                                        : "-"}
+                                                                </h6>
+                                                            )}
+                                                            <h6 className="text-[13px] py-2 font-medium text-center col-span-2">
+                                                                {formatNumber(e?.quantity)} {e?.unit_name_parent ? `/${e?.unit_name_parent}` : ''}
                                                             </h6>
-                                                            <h6 className="text-[13px]   py-2 col-span-2 font-medium text-center mr-1">
-                                                                {formatNumber(e?.quantity)}
-                                                            </h6>
-                                                            <h6 className="text-[13px]   py-2 col-span-2 font-medium text-left ml-3.5">
+                                                            <h6 className="text-[13px] py-2 col-span-2 font-medium text-left ml-3.5">
                                                                 {e?.note != undefined ? (
                                                                     <ExpandableContent content={e?.note} />
                                                                 ) : (
@@ -274,12 +291,13 @@ const PopupDetail = (props) => {
                                         </div>
                                         <div className="font-medium mr-2.5">
                                             <h3 className="text-right text-blue-600 text-[13px]">
-                                                {formatNumber(
+                                                {/* {formatNumber(
                                                     data?.items?.reduce(
                                                         (total, item) => total + Number(item.quantity),
                                                         0
                                                     )
-                                                )}
+                                                )} */}
+                                                {Number(data?.total_quantity_manufacture)!==0 ? formatNumber(data?.total_quantity_manufacture) : formatNumber(data?.total_quantity)}
                                             </h3>
                                         </div>
                                     </div>

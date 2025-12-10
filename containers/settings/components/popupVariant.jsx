@@ -8,8 +8,6 @@ const PopupVariant = (props) => {
 
     const isShow = useToast();
 
-    const _ToggleModal = (e) => sOpen(e);
-
     const [onSending, sOnSending] = useState(false);
 
     const [name, sName] = useState("");
@@ -20,15 +18,35 @@ const PopupVariant = (props) => {
 
     const [listOptErr, sListOptErr] = useState();
 
-    useEffect(() => {
-        sOption(props.option ? props.option : []);
-        sName(props.name ? props.name : "");
-        sRequired(false);
-    }, [open]);
-
     const [optionName, sOptionName] = useState("");
 
     const id = props.id;
+
+    // Function reset tất cả state về giá trị mặc định
+    const _ResetForm = () => {
+        sName("");
+        sOption([]);
+        sOptionName("");
+        sRequired(false);
+        sListOptErr(undefined);
+        sOnSending(false);
+    };
+
+    // Toggle modal với reset khi đóng
+    const _ToggleModal = (isOpen) => {
+        if (!isOpen) {
+            _ResetForm();
+        }
+        sOpen(isOpen);
+    };
+
+    // Load data khi mở popup (chỉ khi edit)
+    useEffect(() => {
+        if (open && props.id) {
+            sOption(props.option ? props.option : []);
+            sName(props.name ? props.name : "");
+        }
+    }, [open, props.id, props.option, props.name]);
 
     const _HandleChangeInput = (type, value) => {
         if (type == "name") {
@@ -54,17 +72,16 @@ const PopupVariant = (props) => {
             })
             if (isSuccess) {
                 isShow("success", props.dataLang[message] || message);
-                sName("");
-                sOption([]);
                 props.onRefresh && props.onRefresh();
                 sOpen(false);
-                sListOptErr();
-                sOnSending(false);
+                _ResetForm();
             } else {
                 isShow("error", props.dataLang[message] || message);
                 sListOptErr(same_option);
+                sOnSending(false);
             }
         } catch (error) {
+            sOnSending(false);
         }
     };
 

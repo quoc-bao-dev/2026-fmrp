@@ -41,7 +41,7 @@ export const PopupOrderCompleted = ({ onClose, className }) => {
 const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
   const showToast = useToast();
   const dataSeting = useSetingServer();
-  
+
   // Kiểm tra có phải gói pro không
   const isProPackage = dataSeting?.package !== '1';
 
@@ -63,8 +63,9 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
   const [searchLookupTerm, setSearchLookupTerm] = useState('');
   const [extraMaterials, setExtraMaterials] = useState([]);
   const [existingMaterialItemIds, setExistingMaterialItemIds] = useState(new Set());
+  const [refreshWarehousesKey, setRefreshWarehousesKey] = useState(0);
 
-  const { data, isLoading } = useListExportProductionOrder(id);
+  const { data, isLoading, refetch } = useListExportProductionOrder(id);
   const { onSubmit, isLoading: isLoadingSubmit } = useHandlingExportTotalPO();
   const { onSubmit: onSaveReexport, isLoading: isSavingReexport } = useSaveSuggestExporting();
 
@@ -449,6 +450,11 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
         setSelectedItems([]);
         setExtraMaterials([]);
         setSearchLookupTerm('');
+        // Lấy lại tồn kho mới sau khi xuất thành công
+        if (typeof refetch === 'function') {
+          await refetch();
+          setRefreshWarehousesKey(Date.now());
+        }
       } else {
         // Xử lý khi có lỗi
         if (response?.data?.errors) {
@@ -616,6 +622,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
       product_variation: source.variant_name ?? source.product_variation ?? '',
       unit_name: unitName,
       unit_name_primary: source.unit_name_primary ?? unitName,
+      unit_id_primary: source.unit_id_primary ?? 0,
       quantity_total_quota: source.quantity ?? source.qty ?? 0,
       quantity_quota_primary: source.quantity ?? source.qty ?? 0,
       quantity_suggest_exporting: 0,
@@ -723,8 +730,8 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
               )}
             </button>
           )}
-          {activeTab?.id === 'reexport' && (
-            isProPackage ? (
+          {activeTab?.id === 'reexport' &&
+            (isProPackage ? (
               <button
                 onClick={handleConfirmReexport}
                 disabled={isSavingReexport}
@@ -736,8 +743,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
               </button>
             ) : (
               <PackageUpgradeButton />
-            )
-          )}
+            ))}
           <motion.div
             whileHover={{ scale: 1.2, rotate: 90 }}
             whileTap={{ scale: 0.9, rotate: -90 }}
@@ -786,6 +792,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
           setSearchTerm={setSearchTerm}
           exportSuccess={exportSuccess}
           setExportSuccess={setExportSuccess}
+          refreshWarehousesKey={refreshWarehousesKey}
           isRenderErrorNVL={isRenderErrorNVL}
           setIsRenderErrorNVL={setIsRenderErrorNVL}
           errorNVLData={errorNVLData}
