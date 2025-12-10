@@ -12,7 +12,6 @@ import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
 import LimitListDropdown from '@/components/common/dropdown/LimitListDropdown';
 import RadioDropdown from '@/components/common/dropdown/RadioDropdown';
 import LoadingComponent from '@/components/common/loading/loading/LoadingComponent';
-import PopupRequestUpdateVersion from '@/components/common/popup/PopupRequestUpdateVersion';
 import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
 import {
@@ -27,6 +26,7 @@ import {
   PrinterIcon,
   StickerIcon,
   TrashIcon,
+  UserPlusIcon
 } from '@/components/icons';
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
 import { CONFIRM_DELETION, TITLE_DELETE_COMMAND, TITLE_DELETE_PRODUCTIONS_ORDER } from '@/constants/delete/deleteTable';
@@ -34,6 +34,7 @@ import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import PopupKeepStock from '@/containers/manufacture/materials-planning/components/popup/popupKeepStock';
 import PopupPurchaseBeta from '@/containers/manufacture/materials-planning/components/popup/popupPurchaseBeta';
 import PopupExportMaterials from '@/containers/manufacture/productions-orders/components/popup/PopupExportMaterials';
+import PopupListResponsiblePerson from '@/containers/manufacture/productions-orders/components/popup/PopupListResponsiblePerson';
 import { StateContext } from '@/context/_state/productions-orders/StateContext';
 import { useSheet } from '@/context/ui/SheetContext';
 import { useBranchList } from '@/hooks/common/useBranch';
@@ -65,12 +66,12 @@ import ModalDetail from '../modal/modalDetail';
 import PopupCompleteCommand from '../popup/PopupCompleteCommand';
 import PopupConfimStage from '../popup/PopupConfimStage';
 import PopupPrintTemProduct from '../popup/PopupPrintTemProduct';
+import PopupRecallMaterials from '../popup/PopupRecallMaterials';
 import SheetProductionsOrderDetail from '../sheet/SheetProductionsOrderDetail';
 import DetailProductionOrderList from '../ui/DetailProductionOrderList';
 import PlaningProductionOrder from '../ui/PlaningProductionOrder';
 import TabKeepStock from '../ui/tabKeepStock';
 import { listDropdownCompleteStage, listLsxStatus } from './constants/listData';
-import PopupRecallMaterials from '../popup/PopupRecallMaterials';
 
 const initialState = {
   isTab: 'item',
@@ -1616,9 +1617,32 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
           </div>
         </div>
 
-        <div className='flex-1 min-w-0 size-full space-y-4 border-none border-[#D0D5DD] border overflow-y-hidden'>
+        <div className='relative z-50 flex-1 min-w-0 size-full space-y-4 border-none border-[#D0D5DD] border overflow-y-hidden'>
           {!isLoadingProductionOrderDetail && dataProductionOrderDetail?.listPOItems?.length > 0 && isStateProvider?.productionsOrders?.isTabList?.type == 'products' && (
             <div ref={groupButtonRef} className='flex items-center justify-end gap-2 p-0.5 mb-2'>
+              {/* TODO: thêm avatar stack ở đây */}
+              {/* <div className='flex items-center gap-2'>
+                <AvatarStack
+                  people={[
+                    { name: 'Thành', id: '1' },
+                    { name: 'Thành', id: '2' },
+                    { name: 'Thành', id: '3' },
+                    { name: 'Thành', id: '4' },
+                  ]} 
+                />
+              </div> */}
+              <ButtonAnimationNew
+                icon={
+                  <div className='size-4'>
+                    <UserPlusIcon className='size-full text-[#11315B]' />
+                  </div>
+                }
+                title='Thêm người phụ trách'
+                className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] bg-white border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
+                onClick={() => {
+                  dispatch({ type: 'statePopupListResponsiblePerson', payload: { open: true } });
+                }}
+              />
               <FilterDropdown
                 trigger={triggerCompleteStage}
                 style={{
@@ -1777,7 +1801,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
           )}
 
           <Customscrollbar
-            className='h-full pr-2'
+            className='h-full pr-2 relative -z-10 pt-0'
             style={{
               height: calcAvailableHeight('submain'),
               maxHeight: calcAvailableHeight('submain'),
@@ -1816,6 +1840,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
         }}
         cancel={() => handleQueryId({ status: false })}
       />
+      <PopupListResponsiblePerson brandId ={dataProductionOrderDetail?.productionOrder?.branch_id}/>
     </React.Fragment>
   );
 };

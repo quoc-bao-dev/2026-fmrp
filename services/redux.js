@@ -178,6 +178,9 @@ const adminState = {
   statePopupUpdateVersion: {
     open: false,
   },
+  statePopupListResponsiblePerson: {
+    open: false,
+  },
   statePopupParent: {
     open: false,
   },
@@ -283,6 +286,8 @@ function adminReducer(state = adminState, action) {
       return { ...state, statePopupRecommendation: action.payload };
     case 'statePopupUpdateVersion':
       return { ...state, statePopupUpdateVersion: action.payload };
+    case 'statePopupListResponsiblePerson':
+      return { ...state, statePopupListResponsiblePerson: action.payload };
     case 'statePopupParent':
       return { ...state, statePopupParent: action.payload };
     case 'statePopupGlobal':
