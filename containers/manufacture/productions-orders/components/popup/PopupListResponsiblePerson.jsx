@@ -5,11 +5,12 @@ import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import { Lexend_Deca } from '@next/font/google';
 import { motion } from 'framer-motion';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import ResponsibleAvatar from './ResponsibleAvatar';
 import ResponsiblePersonComboBox from './ResponsiblePersonComboBox';
+import { StateContext } from '@/context/_state/productions-orders/StateContext';
 
 const deca = Lexend_Deca({
   subsets: ['latin'],
@@ -18,6 +19,7 @@ const deca = Lexend_Deca({
 
 const PopupListResponsiblePerson = (props) => {
   const dispatch = useDispatch();
+  const { isStateProvider } = useContext(StateContext);
 
   const statePopupListResponsiblePerson = useSelector(state => state.statePopupListResponsiblePerson);
   const [openCombo, setOpenCombo] = useState(false);
@@ -29,7 +31,6 @@ const PopupListResponsiblePerson = (props) => {
   const [roleAnchorEl, setRoleAnchorEl] = useState(null);
 
   // Lấy branch_id từ production order
-
   const { data: staffs } = useSearchStaffs({ branch_ids: [props.brandId] });
 
 
@@ -73,6 +74,36 @@ const PopupListResponsiblePerson = (props) => {
     setOpenRoleId(null);
     setAnchorRoleRect(null);
     setRoleAnchorEl(null);
+  };
+
+  const handleSave = () => {
+    // Lấy po_id từ production order detail
+    const po_id = isStateProvider?.productionsOrders?.idDetailProductionOrder || 50;
+    
+    // Transform dữ liệu từ selectedPeople và roleByPerson
+    const items = selectedPeople.map(person => {
+      const role = roleByPerson[person.id] || '';
+      
+      // Map role thành các flags
+      const is_manager = role === 'Quản lý' ? 1 : 0;
+      const is_btp_nvl = role === 'Phụ trách BTP & NVL' ? 1 : 0;
+      const is_manufacture = role === 'Phụ trách sản xuất' ? 1 : 0;
+      
+      return {
+        id: 0,
+        staff_id: person.id,
+        is_manager,
+        is_btp_nvl,
+        is_manufacture
+      };
+    });
+
+    const data = {
+      po_id,
+      items
+    };
+
+    console.log('Data to save:', data);
   };
 
   useEffect(() => {
@@ -216,7 +247,10 @@ const PopupListResponsiblePerson = (props) => {
           {/* Add Button */}
           <div className='px-2 py-3 mt-6 flex items-center justify-center gap-4 h-[68px]'>
             <div className='flex items-center justify-center'>
-              <button className='flex items-center gap-4 bg-[#0375F3] text-white px-7 py-3 rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors'>
+              <button 
+                onClick={handleSave}
+                className='flex items-center gap-4 bg-[#0375F3] text-white px-7 py-3 rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors'
+              >
                 <svg width='13' height='10' viewBox='0 0 13 10' fill='none' xmlns='http://www.w3.org/2000/svg'>
                   <path
                     d='M12.2529 0.0625C12.4355 0.0626004 12.6102 0.135563 12.7393 0.264648C12.8683 0.393745 12.9413 0.568426 12.9414 0.750977C12.9414 0.928867 12.8709 1.09845 12.748 1.22656L12.7383 1.2373L4.73828 9.2373C4.67442 9.30137 4.59819 9.35203 4.51465 9.38672C4.43114 9.42136 4.34138 9.43945 4.25098 9.43945C4.1606 9.43941 4.07077 9.42138 3.9873 9.38672C3.90397 9.35206 3.82839 9.30121 3.76465 9.2373L0.264648 5.7373C0.200721 5.67338 0.149849 5.59719 0.115234 5.51367C0.0806189 5.4301 0.0625 5.34045 0.0625 5.25C0.0625068 5.15956 0.0806255 5.06988 0.115234 4.98633C0.149848 4.90285 0.200743 4.8266 0.264648 4.7627C0.328484 4.69895 0.403969 4.64783 0.487305 4.61328C0.570774 4.57871 0.660632 4.56157 0.750977 4.56152C0.841304 4.56152 0.931179 4.57876 1.01465 4.61328C1.09814 4.64786 1.17436 4.69882 1.23828 4.7627L4.25195 7.77637L4.2959 7.73242L11.7656 0.264648C11.8948 0.135473 12.0702 0.0625 12.2529 0.0625Z'
