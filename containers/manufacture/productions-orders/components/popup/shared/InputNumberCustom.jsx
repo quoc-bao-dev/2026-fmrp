@@ -1,4 +1,5 @@
 import useSetingServer from '@/hooks/useConfigNumber';
+import useToast from '@/hooks/useToast';
 import { default as formatNumberConfig } from '@/utils/helpers/formatnumber';
 import { memo, useCallback, useEffect, useState } from 'react';
 import { FaMinus, FaPlus } from 'react-icons/fa';
@@ -17,17 +18,16 @@ const InputNumberCustom = memo(
     isError = false,
     allowDecimal = true,
     useConfigFormat = true, // Flag để dùng formatNumberConfig với setting hoặc formatNumber thông thường
+    exceedMessage = 'Số lượng vượt quá giới hạn',
+    underflowMessage = 'Số lượng không được âm',
+    onBeforeChange, // optional guard, return true to block change
   }) => {
     const dataSeting = useSetingServer();
+    const showToast = useToast();
     const [inputValue, setInputValue] = useState(state || 0);
     const [formattedValue, setFormattedValue] = useState(
       useConfigFormat ? formatNumberConfig(state || 0, dataSeting) : formatNumberConfig(state || 0)
     );
-
-    useEffect(() => {
-      setInputValue(state || 0);
-      setFormattedValue(useConfigFormat ? formatNumberConfig(state || 0, dataSeting) : formatNumberConfig(state || 0));
-    }, [state, dataSeting, useConfigFormat]);
 
     const formatNumber = useCallback(
       number => {
@@ -39,6 +39,7 @@ const InputNumberCustom = memo(
     const parseNumericValue = useCallback(
       value => {
         const strValue = String(value ?? '');
+        const normalizedMin = Math.max(min, 0);
         if (allowDecimal) {
           let cleaned = strValue.replace(/[^\d.]/g, '');
           // Chỉ cho phép 1 dấu chấm
@@ -47,19 +48,37 @@ const InputNumberCustom = memo(
             cleaned = parts[0] + '.' + parts.slice(1).join('');
           }
           const parsed = parseFloat(cleaned);
-          return isNaN(parsed) ? min : parsed;
+          return isNaN(parsed) ? normalizedMin : parsed;
         } else {
           const cleaned = strValue.replace(/\D/g, '');
           const parsed = parseInt(cleaned);
-          return isNaN(parsed) ? min : parsed;
+          return isNaN(parsed) ? normalizedMin : parsed;
         }
       },
       [min, allowDecimal]
     );
 
+    const clampValue = useCallback(
+      value => {
+        const numeric = parseNumericValue(value);
+        const normalizedMin = Math.max(min, 0);
+        if (numeric > max) return max;
+        if (numeric < normalizedMin) return normalizedMin;
+        return numeric;
+      },
+      [max, min, parseNumericValue]
+    );
+
+    useEffect(() => {
+      const clamped = clampValue(state || 0);
+      setInputValue(clamped);
+      setFormattedValue(useConfigFormat ? formatNumberConfig(clamped || 0, dataSeting) : formatNumberConfig(clamped || 0));
+    }, [state, dataSeting, useConfigFormat, clampValue]);
+
     const handleInputChange = useCallback(
       e => {
         if (disabled) return;
+        if (onBeforeChange?.()) return;
         const value = e.target.value;
 
         if (value === '') {
@@ -76,44 +95,63 @@ const InputNumberCustom = memo(
         }
 
         const numValue = parseNumericValue(numericValue);
-        setInputValue(numValue);
+        const normalizedMin = Math.max(min, 0);
+        let clamped = numValue;
+        if (numValue > max) {
+          clamped = max;
+          showToast('error', exceedMessage);
+        } else if (numValue < normalizedMin) {
+          clamped = normalizedMin;
+          showToast('error', underflowMessage);
+        }
+        setInputValue(clamped);
 
         if (numericValue.endsWith('.')) {
           setFormattedValue(numericValue);
         } else {
-          setFormattedValue(formatNumber(numValue));
+          setFormattedValue(formatNumber(clamped));
         }
       },
-      [disabled, allowDecimal, formatNumber, parseNumericValue]
+      [disabled, allowDecimal, formatNumber, parseNumericValue, max, min, showToast, exceedMessage, underflowMessage, onBeforeChange]
     );
 
     const handleBlur = useCallback(() => {
-      const number = inputValue === '' ? min : parseNumericValue(inputValue);
-      const finalValue = number < min ? min : number;
+      const normalizedMin = Math.max(min, 0);
+      const number = inputValue === '' ? normalizedMin : parseNumericValue(inputValue);
+      const finalValue = number < normalizedMin ? normalizedMin : number > max ? max : number;
       setState(finalValue);
       setInputValue(finalValue);
       setFormattedValue(formatNumber(finalValue));
-    }, [inputValue, min, setState, formatNumber, parseNumericValue]);
+    }, [inputValue, min, max, setState, formatNumber, parseNumericValue]);
 
     const handleIncrement = useCallback(() => {
       if (disabled) return;
+      if (onBeforeChange?.()) return;
       const current = parseNumericValue(inputValue);
-      const newValue = current + 1;
+      if (current >= max) {
+        showToast('error', exceedMessage);
+        return;
+      }
+      const newValue = Math.min(current + 1, max);
       setState(newValue);
       setInputValue(newValue);
       setFormattedValue(formatNumber(newValue));
-    }, [disabled, inputValue, setState, formatNumber, parseNumericValue]);
+    }, [disabled, inputValue, max, setState, formatNumber, parseNumericValue, showToast, exceedMessage, onBeforeChange]);
 
     const handleDecrement = useCallback(() => {
       if (disabled) return;
+      if (onBeforeChange?.()) return;
       const current = parseNumericValue(inputValue);
-      if (current > min) {
-        const newValue = current - 1;
-        setState(newValue);
-        setInputValue(newValue);
-        setFormattedValue(formatNumber(newValue));
+      const normalizedMin = Math.max(min, 0);
+      if (current <= normalizedMin) {
+        showToast('error', underflowMessage);
+        return;
       }
-    }, [disabled, inputValue, min, setState, formatNumber, parseNumericValue]);
+      const newValue = current - 1;
+      setState(newValue);
+      setInputValue(newValue);
+      setFormattedValue(formatNumber(newValue));
+    }, [disabled, inputValue, min, setState, formatNumber, parseNumericValue, showToast, underflowMessage, onBeforeChange]);
 
     const handleButtonClick = useCallback(
       (e, type) => {

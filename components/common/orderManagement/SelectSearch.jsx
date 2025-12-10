@@ -19,6 +19,7 @@ const SelectSearch = ({
   showActiveColor = true, // Prop mới: hiển thị màu active khi item được chọn (mặc định true để backward compatible)
   onDuplicateSelect,
   preventDeselectOnClick = false,
+  noDataMessage = 'Không có dữ liệu', // Prop mới: thông báo khi không có dữ liệu
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
@@ -199,7 +200,7 @@ const SelectSearch = ({
                   </React.Fragment>
                 ))
               ) : (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có dữ liệu" />
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={noDataMessage} />
               )}
             </div>
           </div>

@@ -6586,14 +6586,14 @@ const FilePDF = ({
                                             margin: styleMarginChild,
                                         },
                                         {
-                                            text: (item?.item?.unit_name || item?.item?.unit) ?? "",
+                                            text: (item?.unit_name_manufacture || item?.item?.unit_name || item?.item?.unit) ?? "",
                                             fontSize: 10,
                                             alignment: "center",
                                             margin: styleMarginChild,
                                         },
 
                                         {
-                                            text: item?.quantity ? `${formatNumber(+item?.quantity)}` : "",
+                                            text: item?.quantity_manufacture ? `${formatNumber(+item?.quantity_manufacture)}` : "",
                                             alignment: "center",
                                             fontSize: 10,
                                             margin: styleMarginChild,
@@ -6656,16 +6656,17 @@ const FilePDF = ({
                                 },
                                 "",
                                 {
-                                    text: `${formatMoney(
-                                        data?.items?.reduce(
-                                            (total, item) =>
-                                                // (total += Number(
-                                                //     item.quantity * item.price
-                                                // )),
-                                                (total += item.quantity),
-                                            0
-                                        )
-                                    )}`,
+                                    // text: `${formatMoney(
+                                    //     data?.items?.reduce(
+                                    //         (total, item) =>
+                                    //             // (total += Number(
+                                    //             //     item.quantity * item.price
+                                    //             // )),
+                                    //             (total += item.quantity),
+                                    //         0
+                                    //     )
+                                    // )}`,
+                                    text: `${Number(data?.total_quantity_manufacture)!==0 ? formatNumber(data?.total_quantity_manufacture) : formatNumber(data?.total_quantity)}`,
                                     bold: true,
                                     alignment: "right",
                                     colSpan: 5,
