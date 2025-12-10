@@ -251,8 +251,8 @@ export const CustomDropdownRadioGroup = ({
                             <div className='flex flex-col gap-1'>
                               <span className='text-[#3276FA] text-xs font-normal'>LOT: {option.lot}</span>
                               <span className='text-[#3276FA] text-xs font-normal'>Date: {formatDate(option.expiration_date)}</span>
-                              {/* {option.serial && <span className='text-[#3276FA] text-xs font-normal'>Serial: {option.serial}</span>} */}
-                              <span className='text-[#3276FA] text-xs font-normal'>Serial: {option.serial}</span>
+                              {option.serial && <span className='text-[#3276FA] text-xs font-normal'>Serial: {option.serial}</span>}
+                              {/* <span className='text-[#3276FA] text-xs font-normal'>Serial: {option.serial}</span> */}
                               <span className='text-neutral-03 text-xs font-normal'>SL còn lại : {formatNumber(option.total_quantity)}</span>
                             </div>
                           </div>
