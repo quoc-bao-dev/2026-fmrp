@@ -119,17 +119,13 @@ const PopupListResponsiblePerson = (props) => {
   }, [props?.initialManagers, statePopupListResponsiblePerson?.open]);
 
   const handleSave = () => {
-    if (!selectedPeople.length) {
-      showToast('error', 'Vui lòng chọn người phụ trách');
-      return;
-    }
-
-    // Kiểm tra xem tất cả người đã chọn quyền chưa
-    const peopleWithoutRole = selectedPeople.filter(person => !roleByPerson[person.id]);
-    
-    if (peopleWithoutRole.length > 0) {
-      showToast('error', 'Vui lòng chọn quyền cho tất cả người phụ trách');
-      return;
+    // Chỉ kiểm tra quyền nếu có người được chọn
+    if (selectedPeople.length > 0) {
+      const peopleWithoutRole = selectedPeople.filter(person => !roleByPerson[person.id]);
+      if (peopleWithoutRole.length > 0) {
+        showToast('error', 'Vui lòng chọn quyền cho tất cả người phụ trách');
+        return;
+      }
     }
 
     // Lấy po_id từ production order detail
