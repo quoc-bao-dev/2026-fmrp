@@ -1,11 +1,9 @@
 import apiWarehouseTransfer from '@/Api/apiManufacture/warehouse/warehouseTransfer/apiWarehouseTransfer';
 import OrderFormTabs from '@/components/common/orderManagement/OrderFormTabs';
 import LayoutForm from '@/components/layout/LayoutForm';
-import Breadcrumb from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import ButtonBack from '@/components/UI/button/buttonBack';
 import ButtonSubmit from '@/components/UI/button/buttonSubmit';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
-import { EmptyExprired } from '@/components/UI/common/EmptyExprired';
 import { Container } from '@/components/UI/common/layout';
 import InPutNumericFormat from '@/components/UI/inputNumericFormat/inputNumericFormat';
 import Loading from '@/components/UI/loading/loading';
@@ -23,13 +21,11 @@ import { useToggle } from '@/hooks/useToggle';
 import { routerOrder } from '@/routers/buyImportGoods';
 import { routerWarehouseTransfer } from '@/routers/manufacture';
 import { formatMoment } from '@/utils/helpers/formatMoment';
-import formatMoney from '@/utils/helpers/formatMoney';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
 import { SelectCore } from '@/utils/lib/Select';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Add, Trash as IconDelete, Minus } from 'iconsax-react';
 import moment from 'moment/moment';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
@@ -39,6 +35,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { useWarehouseTransferExport } from './hooks/useWarehouseTransferExport';
 import { useWarehouseTransferItems } from './hooks/useWarehouseTransferItems';
 import { useWarehouseTransferTo } from './hooks/useWarehouseTransferTo';
+import SelectSearch from '@/components/common/orderManagement/SelectSearch';
+import { TagColorProduct } from '@/components/common/tag/TagStatusNew';
 /// Hậu viết API
 const WarehouseTransferForm = props => {
   const router = useRouter();
@@ -633,25 +631,27 @@ const WarehouseTransferForm = props => {
           <>
             <div className='flex items-center justify-between'>
               <h2 className='responsive-text-xl font-medium text-brand-color w-full'>Thông tin mặt hàng</h2>
-              {/* <SelectSearch
-                options={[...options]}
+              <SelectSearch
+                options={dataItems}
                 placeholder={dataLang?.N_search_product || 'Tìm kiếm mặt hàng'}
-                value={itemAll}
-                onChange={value => {
-                  _HandleChangeInput('itemAll', value);
-                }}
-                setSearch={_HandleSeachApi}
-                MenuList={props => (
-                  <MenuList
-                    dataItems={itemAll}
-                    handleSelectAll={_HandleSelectAll.bind(this)}
-                    handleDeleteAll={() => {
-                      setSortedArr([]);
-                      sItemAll([]);
-                    }}
-                    {...props}
-                  />
-                )}
+                value={null}
+                // onChange={value => {
+                //   _HandleChangeInput('itemAll', value);
+                // }}
+                onChange={_HandleAddParent.bind(this)}
+
+                // setSearch={_HandleSeachApi}
+                // MenuList={props => (
+                //   <MenuList
+                //     dataItems={itemAll}
+                //     handleSelectAll={_HandleSelectAll.bind(this)}
+                //     handleDeleteAll={() => {
+                //       setSortedArr([]);
+                //       sItemAll([]);
+                //     }}
+                //     {...props}
+                //   />
+                // )}
                 formatOptionLabel={option => (
                   <div className='flex items-start p-1 cursor-pointer font-deca'>
                     <div className='flex items-center gap-2'>
@@ -666,16 +666,16 @@ const WarehouseTransferForm = props => {
                         <div className='flex flex-wrap items-center gap-2 text-neutral-03'>
                           ĐVT: {option.e?.unit_name} - {dataLang[option.e?.text_type]} - {dataLang?.purchase_survive || 'purchase_survive'}:{' '}
                           {option.e?.qty_warehouse ? formatNumber(option.e?.qty_warehouse) : '0'}
-                          {optionType == '1' && <span className='flex items-center gap-1'>- Số lượng: {formatNumber(option.e?.quantity_left)}</span>}
+                          {/* {optionType == '1' && <span className='flex items-center gap-1'>- Số lượng: {formatNumber(option.e?.quantity_left)}</span>} */}
                         </div>
-                        {option.e?.text_type && (
+                        {/* {option.e?.text_type && (
                           <TagColorProduct dataLang={dataLang} dataKey={getTypeDataKey(option.e?.text_type)} name={option.e?.text_type} className='!px-1' textSize='text-[11px]' />
-                        )}
+                        )} */}
                       </div>
                     </div>
                   </div>
                 )}
-              /> */}
+              />
             </div>
             {/* {sortedArr.length === 0 ? (
               <EmptyData />
