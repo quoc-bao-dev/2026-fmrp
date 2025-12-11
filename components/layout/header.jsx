@@ -2,6 +2,7 @@ import apiDashboard from '@/Api/apiDashboard/apiDashboard';
 import { WARNING_STATUS_ROLE_ADMIN } from '@/constants/warningStatus/warningStatus';
 import { useGetUpgradePackage } from '@/hooks/useAuth';
 import useSetingServer from '@/hooks/useConfigNumber';
+import { useGetCheckNotiRead } from '@/hooks/useNotifications';
 import useToast from '@/hooks/useToast';
 import { getColorByParam } from '@/utils/helpers/radomcolor';
 import { CookieCore } from '@/utils/lib/cookie';
@@ -17,11 +18,12 @@ import { Tooltip } from 'react-tippy';
 import 'react-tippy/dist/tippy.css';
 import Popup from 'reactjs-popup';
 import PopupFeelsCustomer from '../common/popup/PopupFeelsCustomer';
-import AvatarText from '../UI/common/user/AvatarText';
-import { Dropdown, DropdownThongBao } from '../UI/dropdown';
-import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
-import { ChatIcon, PasswordIcon, SignOutIcon, SparkleIcon, SparkleOutlineIcon, UserCircleIcon } from '../icons';
 import PopupQRCodeHeader from '../common/popup/PopupQRCodeHeader';
+import { ChatIcon, PasswordIcon, SignOutIcon, SparkleIcon, SparkleOutlineIcon, UserCircleIcon } from '../icons';
+import AvatarText from '../UI/common/user/AvatarText';
+import { Dropdown } from '../UI/dropdown';
+import DropdownThongBao from '../UI/notificationDropdown';
+import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
 
 const Header = () => {
   const router = useRouter();
@@ -32,6 +34,8 @@ const Header = () => {
 
   const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
   const { data: upgradePackageData, isLoading, error } = useGetUpgradePackage();
+  const { data: checkNotiRead } = useGetCheckNotiRead({ params: { is_web: 1 } });
+
   const authState = useSelector(state => state.auth);
 
   const dataPstWH = useSelector(state => state.statusUser);
@@ -41,6 +45,7 @@ const Header = () => {
   const [currentDropdownIndex, setCurrentDropdownIndex] = useState(0);
 
   const [isLastDropdown, setIsLastDropdown] = useState(false);
+  const [showQRHint, setShowQRHint] = useState(false);
 
   const ListDanhMuc = [
     {
@@ -827,209 +832,72 @@ const Header = () => {
     },
   ];
 
-  const ListThongBao = {
-    main: {
-      title: 'Thông báo',
-      type: 'thongbao',
+  const ListThongBao = [
+    {
+      title: 'Chào mừng đến với FMRP!',
+      description: 'Cùng bắt đầu bước đầu tiên của tiến trình nhé',
+      img: '/user-placeholder.jpg',
+      class: 'rounded-full',
+      link: '#',
+      time: '08:00 Hôm nay',
     },
-    tab: [
-      {
-        id: 0,
-        title: 'Danh mục',
-        sub: [
-          {
-            title: 'Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-          {
-            title: 'Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-          {
-            title: 'Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-          {
-            title: 'Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-
-          {
-            title: 'Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-          {
-            title: 'Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-          {
-            title: 'Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-          {
-            title: 'Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-          {
-            title: 'Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-          {
-            title: 'Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-        ],
-        link: '#',
-        more: 'Xem tất cả thông báo',
-        total: 10,
-        type: '',
-      },
-      {
-        id: 1,
-        title: 'Bán & Xuất hàng',
-        sub: [
-          {
-            title: 'Kho Hà Nội vừa được xuất kho 1,000 mặt hàng',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-          {
-            title: 'Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-        ],
-        link: '#',
-        more: 'Xem tất cả thông báo',
-        total: 12,
-        type: '',
-      },
-      {
-        id: 2,
-        title: 'Mua & Nhập hàng',
-        sub: [],
-        link: '#',
-        more: 'Xem tất cả thông báo',
-        total: 11,
-        type: '',
-      },
-      {
-        id: 3,
-        title: 'Kho & Sản xuất',
-        sub: [],
-        link: '#',
-        more: 'Xem tất cả thông báo',
-        total: 13,
-        type: '',
-      },
-      {
-        id: 4,
-        title: 'Báo cáo & Thống kê',
-        sub: [],
-        link: '#',
-        more: 'Xem tất cả thông báo',
-        total: 14,
-        type: '',
-      },
-      {
-        id: 5,
-        title: 'Tiện ích',
-        sub: [],
-        link: '#',
-        more: 'Xem tất cả thông báo',
-        total: 15,
-        type: '',
-      },
-      {
-        id: 6,
-        title: 'Khác',
-        sub: [],
-        link: '#',
-        more: 'Xem tất cả thông báo',
-        total: 16,
-        type: '',
-      },
-      {
-        id: 7,
-        title: 'Đọc tất cả',
-        sub: [
-          {
-            title: 'Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-          {
-            title: 'Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-          {
-            title: 'Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-          {
-            title: 'Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-          {
-            title: 'Admin số lệnh sản xuất LSX thuộc đơn SO vừa được nhân viên Mạnh Trần tạo',
-            img: '/user-placeholder.jpg',
-            class: 'rounded-full',
-            link: '#',
-            time: '01/08/2023',
-          },
-        ],
-        link: '#',
-        more: 'Xem tất cả thông báo',
-        total: 17,
-        type: 'all',
-      },
-    ],
-  };
+    {
+      title: 'Đã đạt được 30% tiến trình!',
+      description: 'Bạn đã đạt được <span style="color:#0375F3;font-weight:600;">30%</span> tiến trình. Tiếp tục bước tiếp theo nhé!',
+      img: '/user-placeholder.jpg',
+      class: 'rounded-full',
+      link: '#',
+      time: '08:00 Hôm nay',
+    },
+    {
+      title: 'Tiếp tục để đạt 75%',
+      description: 'Bạn đã đi được một nửa chặng đường, hãy tiếp tục để đạt 75% tiến trình nhé!',
+      img: '/user-placeholder.jpg',
+      class: 'rounded-full',
+      link: '#',
+      time: '08:30 19/03/2025',
+    },
+    {
+      title: 'Tiến trình gần hoàn tất',
+      description: 'Tiến trình đã gần hoàn tất, hãy hoàn thiện bước cuối để hoàn tất quy trình!',
+      img: '/user-placeholder.jpg',
+      class: 'rounded-full',
+      link: '#',
+      time: '08:30 19/03/2025',
+    },
+    {
+      title: 'Chào mừng đến với FMRP!',
+      description: 'Cùng bắt đầu bước đầu tiên của tiến trình nhé',
+      img: '/user-placeholder.jpg',
+      class: 'rounded-full',
+      link: '#',
+      time: '08:00 Hôm nay',
+    },
+    {
+      title: 'Đã đạt được 30% tiến trình!',
+      description: 'Bạn đã đạt được <span style="color:#1FC583;font-weight:600;">30%</span> tiến trình. Tiếp tục bước tiếp theo nhé!',
+      img: '/user-placeholder.jpg',
+      class: 'rounded-full',
+      link: '#',
+      time: '08:00 Hôm nay',
+    },
+    {
+      title: 'Tiếp tục để đạt 75%',
+      description: 'Bạn đã đi được một nửa chặng đường, hãy tiếp tục để đạt 75% tiến trình nhé!',
+      img: '/user-placeholder.jpg',
+      class: 'rounded-full',
+      link: '#',
+      time: '08:30 19/03/2025',
+    },
+    {
+      title: 'Tiến trình gần hoàn tất',
+      description: 'Tiến trình đã gần hoàn tất, hãy hoàn thiện bước cuối để hoàn tất quy trình!',
+      img: '/user-placeholder.jpg',
+      class: 'rounded-full',
+      link: '#',
+      time: '08:30 19/03/2025',
+    },
+  ];
 
   const ListKeToan = [
     {
@@ -1178,6 +1046,42 @@ const Header = () => {
     }
   }, [dataPstWH, isLastDropdown, dropdowns.length, currentDropdownIndex]);
 
+  useEffect(() => {
+    setShowQRHint(true);
+    const timer = setTimeout(() => setShowQRHint(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Ensure bounce class sticks even when tooltip renders in a portal
+  useEffect(() => {
+    if (!showQRHint) {
+      // Remove bounce class from all tooltips when hint is hidden
+      document.querySelectorAll('.tippy-tooltip.qr-tooltip-bounce').forEach(el => {
+        el.classList.remove('qr-tooltip-bounce');
+      });
+      return;
+    }
+    const addBounce = () => {
+      // Only add bounce to tooltips that contain the QR hint text
+      document.querySelectorAll('.tippy-tooltip').forEach(el => {
+        const content = el.textContent || '';
+        if (content.includes('Quét QR để đăng nhập app')) {
+          el.classList.add('qr-tooltip-bounce');
+        }
+      });
+    };
+    addBounce();
+    const observer = new MutationObserver(addBounce);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      observer.disconnect();
+      // Cleanup on unmount
+      document.querySelectorAll('.tippy-tooltip.qr-tooltip-bounce').forEach(el => {
+        el.classList.remove('qr-tooltip-bounce');
+      });
+    };
+  }, [showQRHint]);
+
   const currentDropdown = dropdowns[currentDropdownIndex];
 
   return (
@@ -1245,7 +1149,7 @@ const Header = () => {
                       upgradePackageData={upgradePackageData}
                       onClose={() =>
                         dispatch({
-                          type: 'statePopupUpgradeProfessional',
+                          type: 'statePopupGlobal',
                           payload: { open: false },
                         })
                       }
@@ -1260,7 +1164,24 @@ const Header = () => {
           </button>
         )}
         <div className='flex items-center gap-3'>
-          <Tooltip title={'Quét QR để đăng nhập app'} arrow theme='dark'>
+          <Tooltip
+            key={showQRHint ? 'qr-hint' : 'qr-normal'}
+            title={'Quét QR để đăng nhập app'}
+            arrow
+            theme='dark'
+            trigger={showQRHint ? 'manual' : 'mouseenter'}
+            open={showQRHint ? true : undefined}
+            distance={20}
+            shown={tip => {
+              if (showQRHint) {
+                tip?.popper?.querySelector('.tippy-tooltip')?.classList?.add('qr-tooltip-bounce');
+              }
+            }}
+            hidden={tip => {
+              tip?.popper?.querySelector('.tippy-tooltip')?.classList?.remove('qr-tooltip-bounce');
+            }}
+            html={showQRHint ? <div className='text-sm font-medium text-white'>Quét QR để đăng nhập app</div> : undefined}
+          >
             <button
               type='button'
               onClick={() =>
@@ -1283,7 +1204,7 @@ const Header = () => {
                 height={24}
                 quality={100}
                 className='object-contain transition size-6'
-                loading='lazy'
+                priority
                 crossOrigin='anonymous'
                 blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
               />
@@ -1305,7 +1226,7 @@ const Header = () => {
             </div>
           </Dropdown> */}
 
-          <DropdownThongBao data={[] || ListThongBao} className='popover-thongbao' position={'bottom right'}>
+          <DropdownThongBao notiRead={checkNotiRead} position={'bottom center'}>
             <div className='2xl:size-5 xl:size-4 size-3 shink-0'>
               <Image
                 alt=''
@@ -1314,7 +1235,8 @@ const Header = () => {
                 height={18}
                 quality={100}
                 className='object-contain w-full h-full transition'
-                loading='lazy'
+                // loading='lazy'
+                priority
                 crossOrigin='anonymous'
                 blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
               />
@@ -1341,7 +1263,8 @@ const Header = () => {
                 height={18}
                 quality={100}
                 className='object-contain w-full h-full transition'
-                loading='lazy'
+                // loading='lazy'
+                priority
                 crossOrigin='anonymous'
                 blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
               />
@@ -1363,7 +1286,8 @@ const Header = () => {
                 height={20}
                 quality={100}
                 className='object-contain w-full h-full transition'
-                loading='lazy'
+                // loading='lazy'
+                priority
                 crossOrigin='anonymous'
                 blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
               />
@@ -1373,6 +1297,23 @@ const Header = () => {
 
         <DropdownAvatar />
       </div>
+
+      <style jsx global>{`
+        /* Bounce only the tooltip bubble so placement transform from Tippy stays intact */
+        .tippy-tooltip.qr-tooltip-bounce {
+          animation: qr-bounce 0.9s ease-in-out infinite;
+          animation-delay: 0.2s;
+        }
+        @keyframes qr-bounce {
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-8px);
+          }
+        }
+      `}</style>
     </header>
   );
 };
@@ -1502,7 +1443,7 @@ const DropdownAvatar = React.memo(() => {
                       upgradePackageData={upgradePackageData}
                       onClose={() =>
                         dispatch({
-                          type: 'statePopupUpgradeProfessional',
+                          type: 'statePopupGlobal',
                           payload: { open: false },
                         })
                       }

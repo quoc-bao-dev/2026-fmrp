@@ -17,6 +17,9 @@ const SelectSearch = ({
   multiple = true, // Prop mới: cho phép chọn nhiều hay không (mặc định true)
   showSelectedCount = true, // Prop mới: hiển thị số lượng đã chọn (mặc định true)
   showActiveColor = true, // Prop mới: hiển thị màu active khi item được chọn (mặc định true để backward compatible)
+  onDuplicateSelect,
+  preventDeselectOnClick = false,
+  noDataMessage = 'Không có dữ liệu', // Prop mới: thông báo khi không có dữ liệu
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
@@ -63,14 +66,21 @@ const SelectSearch = ({
     // Multi select mode (giữ nguyên logic cũ)
     if (!value) {
       onChange([option])
-    } else {
-      const isSelected = value.some((item) => item.value === option.value)
-      if (isSelected) {
-        onChange(value.filter((item) => item.value !== option.value))
-      } else {
-        onChange([...value, option])
-      }
+      return
     }
+
+    const isSelected = value.some((item) => item.value === option.value)
+
+    if (isSelected) {
+      if (preventDeselectOnClick) {
+        onDuplicateSelect && onDuplicateSelect(option)
+        return
+      }
+      onChange(value.filter((item) => item.value !== option.value))
+      return
+    }
+
+    onChange([...value, option])
   }
 
   const handleSelectAll = () => {
@@ -190,7 +200,7 @@ const SelectSearch = ({
                   </React.Fragment>
                 ))
               ) : (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có dữ liệu" />
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={noDataMessage} />
               )}
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { ExportMaterialsIcon, KanbanIcon, ListChecksIcon, RecallMaterialsIcon } from '@/components/icons'
+import { EndProductionOrderIcon, ExportMaterialsIcon, KanbanIcon, ListChecksIcon, RecallMaterialsIcon } from '@/components/icons'
 
 // export const listTab = [
 //   {
@@ -51,6 +51,11 @@ export const listLsxStatus = [
     value: '2',
     color: 'bg-[#35BD4B]/20 text-[#1A7526]',
   },
+  // {
+  //   label: 'Lệnh đã đóng',
+  //   value: '3',
+  //   color: 'bg-[#EF8F99]/20 text-[#8F3745]',
+  // },
 ]
 
 export const listDropdownCompleteStage = [
@@ -58,7 +63,7 @@ export const listDropdownCompleteStage = [
     id: 1,
     label: 'Xuất kho nguyên liệu',
     icon: <ExportMaterialsIcon className="size-full" />,
-    isPremium: true,
+    isPremium: false,
     type: 'export_materials',
   },
   {
@@ -82,4 +87,12 @@ export const listDropdownCompleteStage = [
     isPremium: true,
     type: 'complete_stage',
   },
+  // {
+  //   id: 5,
+  //   label: 'Đóng lệnh',
+  //   icon: <EndProductionOrderIcon className="size-full" />,
+  //   color: 'text-[#EE1E1E]',
+  //   isPremium: false,
+  //   type: 'end_production_order',
+  // },
 ]

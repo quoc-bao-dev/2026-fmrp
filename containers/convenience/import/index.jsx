@@ -21,7 +21,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { TiTick } from "react-icons/ti";
 import { useSelector } from "react-redux";
 import Select from "react-select";
-import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
 import ParentControls from "./components/button/buttonAddParent";
 import DeleteButton from "./components/button/buttonDeleteSlect";
@@ -38,14 +37,6 @@ import SampleImport from "./components/sample";
 import Stepper from "./components/stepper";
 import TabClient from "./components/tabImport";
 import { _ServerInstance as Axios } from "/services/axios";
-
-const Toast = Swal.mixin({
-    toast: true,
-    position: "top-end",
-    showConfirmButton: false,
-    timer: 2000,
-    timerProgressBar: true,
-});
 
 const Import = (props) => {
     const dataLang = props.dataLang;
@@ -473,10 +464,7 @@ const Import = (props) => {
     };
 
     const showToastError = (title) => {
-        Toast.fire({
-            title,
-            icon: "error",
-        });
+        isShow("error", title);
     };
 
     const _HandleChangeChild = (childId, type, value) => {
@@ -730,10 +718,7 @@ const Import = (props) => {
         sOnFetching(true);
         setTimeout(() => {
             hiRef.current.classList.remove("animate-spin");
-            Toast.fire({
-                icon: "success",
-                title: `Load dữ liệu thành công`,
-            });
+            isShow("success", "Load dữ liệu thành công");
         }, 2000);
         setTimeout(() => {
             sOnLoadingDataBack(false);
@@ -837,17 +822,16 @@ const Import = (props) => {
                 end_row == "" && sErrEndRow(true);
                 //bắt buộc phải thêm cột
                 if (requiredColumn) {
-                    Toast.fire({
-                        icon: "error",
-                        title: `${dataLang?.import_ERR_add_column || "import_ERR_add_column"
-                            }`,
-                    });
+                    isShow(
+                        "error",
+                        `${dataLang?.import_ERR_add_column || "import_ERR_add_column"}`
+                    );
                 }
                 //KH - bắt buộc phải có cột tên khách hàng, NCC PHẢI CÓ TÊN NCC, nvl PHẢI CÓ TÊN nvl
                 else if (!ObError?.name) {
-                    Toast.fire({
-                        icon: "error",
-                        title: `${(tabPage == 1 &&
+                    isShow(
+                        "error",
+                        `${(tabPage == 1 &&
                             !ObError?.name &&
                             dataLang?.import_ERR_add_nameData) ||
                             (tabPage == 2 &&
@@ -858,25 +842,22 @@ const Import = (props) => {
                                 dataLang?.import_ERR_add_nameMterial) ||
                             (tabPage == 4 &&
                                 !ObError?.name &&
-                                dataLang?.import_ERR_add_nameProduct)
-                            }`,
-                    });
+                                dataLang?.import_ERR_add_nameProduct)}`
+                    );
                 }
                 //bắt buộc phải có cột chi nhánh
                 else if (valueCheck == "add" && !ObError?.branch_id) {
-                    Toast.fire({
-                        icon: "error",
-                        title: `${dataLang?.import_ERR_add_branchData || "import_ERR_add_branchData"
-                            }`,
-                    });
+                    isShow(
+                        "error",
+                        `${dataLang?.import_ERR_add_branchData || "import_ERR_add_branchData"}`
+                    );
                 }
                 //nếu cập nhật thì phải có cột mã kh
                 else if (valueCheck == "edit" && tabPage == 1 && !ObError?.code) {
-                    Toast.fire({
-                        icon: "error",
-                        title: `${dataLang?.import_ERR_add_CodeData || "import_ERR_add_CodeData"
-                            }`,
-                    });
+                    isShow(
+                        "error",
+                        `${dataLang?.import_ERR_add_CodeData || "import_ERR_add_CodeData"}`
+                    );
                 }
                 //Hàng bắt đầu hàng kết thúc
                 else if (
@@ -885,27 +866,22 @@ const Import = (props) => {
                     end_row == 0 ||
                     end_row == null
                 ) {
-                    Toast.fire({
-                        icon: "error",
-                        title: `${"Hàng phải lớn hơn 0"}`,
-                    });
+                    isShow("error", "Hàng phải lớn hơn 0");
                 } else if (errEnd) {
-                    Toast.fire({
-                        icon: "error",
-                        title: `${dataLang?.import_ERR_greater_end || "import_ERR_greater_end"
-                            }`,
-                    });
+                    isShow(
+                        "error",
+                        `${dataLang?.import_ERR_greater_end || "import_ERR_greater_end"}`
+                    );
                 } else if (errStart) {
-                    Toast.fire({
-                        icon: "error",
-                        title: `${dataLang?.import_ERR_greater_end || "import_ERR_greater_end"
-                            }`,
-                    });
+                    isShow(
+                        "error",
+                        `${dataLang?.import_ERR_greater_end || "import_ERR_greater_end"}`
+                    );
                 } else {
-                    Toast.fire({
-                        icon: "error",
-                        title: `${dataLang?.required_field_null || "required_field_null"}`,
-                    });
+                    isShow(
+                        "error",
+                        `${dataLang?.required_field_null || "required_field_null"}`
+                    );
                 }
             } else {
                 sErrFileImport(false);
@@ -914,10 +890,10 @@ const Import = (props) => {
         } else {
             if (fileImport == null) {
                 fileImport == null && sErrFileImport(true);
-                Toast.fire({
-                    icon: "error",
-                    title: `${dataLang?.required_field_null || "required_field_null"}`,
-                });
+                isShow(
+                    "error",
+                    `${dataLang?.required_field_null || "required_field_null"}`
+                );
             } else {
                 sErrFileImport(false);
                 sOnSending(true);
@@ -1223,10 +1199,7 @@ const Import = (props) => {
                         var { message, type, errors, count } = response.data;
                         tabPage == 5 && sDataFailStages(errors);
                         tabPage == 6 && sDataFailBom(errors);
-                        Toast.fire({
-                            icon: `${type}`,
-                            title: `${message}`,
-                        });
+                        isShow(type === "success" ? "success" : "error", message);
                     }
                     tabPage == 5 && sTotalSuccessStages(count);
                     tabPage == 6 && sTotalSuccessBom(count);
@@ -1265,22 +1238,22 @@ const Import = (props) => {
                             sDataSuccess(success);
                             if (success) {
                                 if (success == 0) {
-                                    Toast.fire({
-                                        icon: "success",
-                                        title: `${dataLang[lang_message?.success]}`,
-                                    });
+                                    isShow(
+                                        "success",
+                                        `${dataLang[lang_message?.success]}`
+                                    );
                                 } else {
-                                    Toast.fire({
-                                        icon: "success",
-                                        title: `${dataLang[lang_message?.success]}`,
-                                    });
+                                    isShow(
+                                        "success",
+                                        `${dataLang[lang_message?.success]}`
+                                    );
                                 }
                             }
                             if (fail > 0) {
-                                Toast.fire({
-                                    icon: "error",
-                                    title: `${dataLang[lang_message?.fail]}`,
-                                });
+                                isShow(
+                                    "error",
+                                    `${dataLang[lang_message?.fail]}`
+                                );
                             }
                         }
                         sOnSending(false);
@@ -1325,10 +1298,10 @@ const Import = (props) => {
             (err, response) => {
                 if (!err) {
                     var { isSuccess, message, alert_type } = response.data;
-                    Toast.fire({
-                        icon: `${alert_type}`,
-                        title: `${dataLang[message]}`,
-                    });
+                    isShow(
+                        alert_type === "success" ? "success" : "error",
+                        `${dataLang[message]}`
+                    );
                 }
                 sOnLoadingDataBack(true);
                 sOnSending(false);

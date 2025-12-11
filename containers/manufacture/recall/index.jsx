@@ -334,7 +334,7 @@ const Recall = (props) => {
                         <h2 className="text-title-section text-[#52575E] capitalize font-medium">
                             {dataLang?.recall_title || "recall_title"}
                         </h2>
-                        <ButtonAddNew
+                        {/* <ButtonAddNew
                             onClick={() => {
                                 if (role) {
                                     router.push(routerRecall.form);
@@ -345,7 +345,7 @@ const Recall = (props) => {
                                 }
                             }}
                             dataLang={dataLang}
-                        />
+                        /> */}
                     </>
                 }
 

@@ -1,22 +1,22 @@
 /**
  * HƯỚNG DẪN SỬ DỤNG:
- * 
+ *
  * 1. Tạo svg icon với tên là name.svg
- * 
- * 2. Vào sửa svg: 
+ *
+ * 2. Vào sửa svg:
  *   - Xóa width, height để có thể set w h bằng tailwind
  *   - Sửa fill = "currentColor" để có thể thay đổi màu bằng tailwind
- * 
+ *
  * 3. Vào file index.jsx:
  *   - Import icon:
  *     import SearchIcon from './search.svg';
  *   - Export icon:
  *     export { SearchIcon };
- * 
+ *
  * 4. Sử dụng trong component:
  *    <SearchIcon className="w-5 h-5 text-blue-500" />
  *    <PlusIcon className="w-6 h-6" />
- * 
+ *
  * LƯU Ý:
  * - Vào component/source/icons để xem icon đã có hay chưa rồi mới thêm mới
  * - Sử dụng className để thay đổi kích thước, màu sắc
@@ -30,6 +30,7 @@ import ArrowDownIcon from './source/arrow-down.svg';
 import ArrowRightIcon from './source/arrow-right.svg';
 import ArrowUpIcon from './source/arrow-up.svg';
 import BackIcon from './source/back.svg';
+import BellSimpleIcon from './source/bell-simple.svg';
 import CalendarIcon from './source/calendar.svg';
 import CaretDownIcon from './source/caret-down.svg';
 import CaretDropDownThinIcon from './source/caret-drop-down-thin.svg';
@@ -40,6 +41,7 @@ import CheckCircleOutlineIcon from './source/check-circle-outline.svg';
 import CheckIcon from './source/check.svg';
 import CheckThinIcon from './source/check-thin.svg';
 import CloseXIcon from './source/close-x.svg';
+import ClockIcon from './source/clock.svg';
 import CompleteKHIcon from './source/complete-k-h.svg';
 import DocumentTemplateIcon from './source/document-template-icon.svg';
 import DownloadIcon from './source/download-icon.svg';
@@ -52,6 +54,7 @@ import ErrorIconMessengerIcon from './source/error-icon-messenger.svg';
 import ErrorQCIcon from './source/error-q-c.svg';
 import ExcelIcon from './source/excel.svg';
 import ExportMaterialsIcon from './source/export-materials-icon-1.svg';
+import EndProductionOrderIcon from './source/end-product.svg';
 import RecallMaterialsIcon from './source/export-materials-icon-2.svg';
 import FileIcon from './source/file-icon.svg';
 import FunnelIcon from './source/funnel.svg';
@@ -85,6 +88,7 @@ import TemplateChecklistIcon from './source/template-checklist-icon.svg';
 import TrashIcon from './source/trash.svg';
 import UpgradeIcon from './source/upgrade-icon.svg';
 import UserCircleIcon from './source/user-circle-icon.svg';
+import UserPlusIcon from './source/user-plus-icon.svg';
 import WarningAlertIcon from './source/warning-alert-icon.svg';
 import WarningIcon from './source/warning-icon.svg';
 import ZaloIcon from './source/zalo.svg';
@@ -99,6 +103,7 @@ export {
   ArrowRightIcon,
   ArrowUpIcon,
   BackIcon,
+  BellSimpleIcon,
   CalendarIcon,
   CaretDownIcon,
   CaretDropDownThinIcon,
@@ -110,6 +115,7 @@ export {
   CheckThinIcon,
   CloseXIcon,
   CompleteKHIcon,
+  ClockIcon,
   DocumentTemplateIcon,
   DownloadIcon,
   DropdownFilledIcon,
@@ -121,6 +127,7 @@ export {
   ErrorQCIcon,
   ExcelIcon,
   ExportMaterialsIcon,
+  EndProductionOrderIcon,
   RecallMaterialsIcon,
   FileIcon,
   FunnelIcon,
@@ -154,6 +161,7 @@ export {
   TrashIcon,
   UpgradeIcon,
   UserCircleIcon,
+  UserPlusIcon,
   WarningAlertIcon,
   WarningIcon,
   ZaloIcon,

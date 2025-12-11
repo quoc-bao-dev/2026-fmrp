@@ -424,7 +424,7 @@ const PopupCompleteCommand = ({ onClose }) => {
     isStateProvider?.productionsOrders.idDetailProductionOrder
   );
   const warehouses = productCompleted?.data?.warehouses;
-  console.log(productCompleted)
+  // console.log(productCompleted)
   const [products, setProducts] = useState([]);
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
   const [showAutoTooltip, setShowAutoTooltip] = useState(false);
@@ -595,7 +595,7 @@ const PopupCompleteCommand = ({ onClose }) => {
     selectedWarehouse,
     setIsWarehouseMissing,
   ]);
-console.log(selectedWarehouse)
+
   const updateProductQuantity = useCallback(
     (index, value) => {
       if (value === 0) {
