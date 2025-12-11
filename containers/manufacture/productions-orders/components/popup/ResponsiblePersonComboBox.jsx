@@ -27,23 +27,34 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
   const dropdownRef = useRef(null);
   const triggerRef = useRef(null);
   const lastSelectedIdRef = useRef(null);
+  const prevOpenRef = useRef(open);
   const prevSelectedRef = useRef(selected);
   const [style, setStyle] = useState({});
   const [errorMap, setErrorMap] = useState({});
 
-  // Only update localSelected when selected actually changes (by content, not reference)
+  // Reset localSelected về selected mới nhất khi mở popup hoặc khi selected thay đổi
   useEffect(() => {
-    if (!open) {
-      // Reset when closed
-      prevSelectedRef.current = selected;
-      return;
-    }
-    
-    // Compare by content, not reference - only update if content actually changed
-    if (!areArraysEqual(prevSelectedRef.current, selected)) {
+    if (open && !prevOpenRef.current) {
+      // Popup vừa mở - reset localSelected về selected mới nhất
       setLocalSelected(selected);
+      setSearch(''); // Reset search khi mở
+      prevSelectedRef.current = selected;
+    } else if (open) {
+      // Popup đang mở - check nếu selected thay đổi thì update localSelected
+      if (!areArraysEqual(prevSelectedRef.current, selected)) {
+        setLocalSelected(selected);
+        prevSelectedRef.current = selected;
+      }
+    } else {
+      // Popup đóng - update prevSelectedRef để track selected mới nhất
       prevSelectedRef.current = selected;
     }
+    prevOpenRef.current = open;
+  }, [open, selected]);
+
+  // Handle click outside to close
+  useEffect(() => {
+    if (!open) return;
     
     const handler = e => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target) && triggerRef.current && !triggerRef.current.contains(e.target)) {
@@ -52,7 +63,7 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [open, onClose, selected]);
+  }, [open, onClose]);
 
   useEffect(() => {
     if (!open || !triggerRef.current) return;
