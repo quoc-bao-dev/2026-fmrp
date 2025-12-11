@@ -9,18 +9,42 @@ const deca = Lexend_Deca({
   weight: ['400', '500', '600', '700'],
 });
 
-const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], data = [], className, children }) => {
+// Helper function to compare arrays by IDs
+const areArraysEqual = (arr1, arr2) => {
+  if (arr1.length !== arr2.length) return false;
+  const ids1 = new Set(arr1.map(item => item?.id));
+  const ids2 = new Set(arr2.map(item => item?.id));
+  if (ids1.size !== ids2.size) return false;
+  for (const id of ids1) {
+    if (!ids2.has(id)) return false;
+  }
+  return true;
+};
+
+const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], data = [], className, children, hideSelected = true }) => {
   const [search, setSearch] = useState('');
   const [localSelected, setLocalSelected] = useState(selected);
   const dropdownRef = useRef(null);
   const triggerRef = useRef(null);
   const lastSelectedIdRef = useRef(null);
+  const prevSelectedRef = useRef(selected);
   const [style, setStyle] = useState({});
   const [errorMap, setErrorMap] = useState({});
 
+  // Only update localSelected when selected actually changes (by content, not reference)
   useEffect(() => {
-    if (!open) return;
-    setLocalSelected(selected);
+    if (!open) {
+      // Reset when closed
+      prevSelectedRef.current = selected;
+      return;
+    }
+    
+    // Compare by content, not reference - only update if content actually changed
+    if (!areArraysEqual(prevSelectedRef.current, selected)) {
+      setLocalSelected(selected);
+      prevSelectedRef.current = selected;
+    }
+    
     const handler = e => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target) && triggerRef.current && !triggerRef.current.contains(e.target)) {
         onClose?.();
@@ -63,10 +87,14 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     const peopleList = Array.isArray(data) ? data : [];
-    const base = peopleList.filter(p => !selectedIds.has(p.id)); // ẩn các user đã có trong bảng
+    // Nếu hideSelected = true (mặc định): ẩn các user đã chọn
+    // Nếu hideSelected = false: hiển thị tất cả, kể cả đã chọn
+    const base = hideSelected 
+      ? peopleList.filter(p => !selectedIds.has(p.id))
+      : peopleList;
     if (!term) return base;
     return base.filter(p => p.name.toLowerCase().includes(term));
-  }, [search, selectedIds, data]);
+  }, [search, selectedIds, data, hideSelected]);
 
   const isSelected = id => localSelected?.some(item => item.id === id);
 
@@ -173,7 +201,13 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
                         </div>
                       );
                     })}
-                  {filtered.length === 0 && <div className='text-center text-sm text-[#9295A4] py-4'>Không tìm thấy người phù hợp</div>}
+                  {filtered.length === 0 && (
+                    <div className='text-center text-sm text-[#9295A4] py-4'>
+                      {hideSelected && selectedIds.size > 0 && Array.isArray(data) && data.length === selectedIds.size
+                        ? 'Tất cả người phụ trách đã được chọn'
+                        : 'Không tìm thấy người phù hợp'}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

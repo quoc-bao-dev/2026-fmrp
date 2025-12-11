@@ -27,8 +27,8 @@ export const useProductionOrderManagerDetail = ({ po_id, poi_id, enabled = true,
     queryKey: ["apiGetProductionOrderManagerDetail", po_id, poi_id],
     queryFn: async () => {
       const res = await apiProductionsOrders.apiGetProductionOrderManagerDetail(po_id, poi_id);
-      if (res?.isSuccess && onSuccess) onSuccess(res);
-      if (!res?.isSuccess && onError) onError(new Error(res?.message || "Failed to get manager detail"));
+      if (res?.isSuccess === 1 && onSuccess) onSuccess(res);
+      if (res?.isSuccess !== 1 && onError) onError(new Error(res?.message || "Failed to get manager detail"));
       return res;
     },
     enabled: !!po_id && !!poi_id && enabled,

@@ -3,13 +3,185 @@ import NoData from '@/components/UI/noData/nodata';
 import useSetingServer from '@/hooks/useConfigNumber';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
 import Image from 'next/image';
-import React, { memo, useContext, useState, useCallback } from 'react';
+import React, { memo, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import ProgressStageBar from '@/components/common/progress/ProgressStageBar';
 import { AnimatePresence, motion } from 'framer-motion';
 import { StateContext } from '@/context/_state/productions-orders/StateContext';
 import { CaretDownIcon, NoteIcon, UserPlusIcon } from '@/components/icons';
 import AvatarStack from '../popup/AvatarStack';
 import ResponsiblePersonComboBox from '../popup/ResponsiblePersonComboBox';
+import { useProductionOrderManagerDetail } from '@/managers/api/productions-order/useProductionOrderManagerDetail';
+import { useSearchStaffs } from '@/hooks/common/useStaffs';
+import { useSaveProductionOrderManagerDetail } from '@/managers/api/productions-order/useSaveProductionOrderManagerDetail';
+
+// Sub-component for ProductRow to use hooks
+const ProductRow = memo(({ product, index, item, totalLength, formatNumber, handleToggleSheetDetail, isStateProvider, dataLang, openManagerComboId, setOpenManagerComboId, branchId }) => {
+  const po_id = item.po_id;
+  const poi_id = product.poi_id;
+
+  // Gọi hook để lấy manager detail
+  const { data: managerDetailData } = useProductionOrderManagerDetail({
+    po_id,
+    poi_id,
+    enabled: !!po_id && !!poi_id,
+    onSuccess: res => {
+      console.log(`Manager detail for po_id: ${po_id}, poi_id: ${poi_id}:`, res);
+    },
+    onError: error => {
+      console.error(`Error fetching manager detail for po_id: ${po_id}, poi_id: ${poi_id}:`, error);
+    },
+  });
+
+  // Gọi hook để lấy danh sách staffs
+  const { data: staffs } = useSearchStaffs({
+    branch_ids: branchId ? [branchId] : [],
+    enabled: !!branchId,
+    po_id: po_id,
+  });
+
+  // Map dữ liệu từ API response
+  const listStaffs = useMemo(() => {
+    return (
+      staffs?.data?.staffs?.map(e => ({
+        id: e.staffid,
+        name: e.full_name,
+        avatarUrl: e.profile_image,
+      })) || []
+    );
+  }, [staffs]);
+
+  // Map dữ liệu từ API response - dùng để hiển thị selected
+  const managerAvatars = useMemo(() => {
+    const details = managerDetailData?.data?.production_order_manager_details || [];
+    return details.map(mgr => ({
+      id: mgr?.staff?.staffid || mgr?.staff_id,
+      name: mgr?.staff?.full_name || 'Không tên',
+      avatarUrl: mgr?.staff?.profile_image || '',
+    }));
+  }, [managerDetailData]);
+
+  // Hook để save production order manager detail
+  const { saveProductionOrderManagerDetail, isLoading: isSaving } = useSaveProductionOrderManagerDetail({
+    onSuccess: (response) => {
+      console.log('Save manager detail success:', response);
+      // Có thể thêm logic refresh data ở đây nếu cần
+    },
+    onError: (error) => {
+      console.error('Save manager detail error:', error);
+    },
+  });
+
+  // Hàm handle submit để lưu danh sách người phụ trách
+  const handleSubmit = useCallback(
+    (selected) => {
+      // Format payload theo yêu cầu
+      const payload = {
+        po_id: po_id,
+        poi_id: poi_id,
+        items: selected.map(person => ({
+          staff_id: person.id,
+          is_manufacture: 1, // 1: Phụ trách sản xuất
+        })),
+      };
+
+      // Log payload để kiểm tra
+
+      // Gọi API để lưu
+      saveProductionOrderManagerDetail(payload);
+    },
+    [po_id, poi_id, saveProductionOrderManagerDetail]
+  );
+
+  const colorMap = {
+    0: { color: 'bg-[#FF811A]/15 text-[#C25705]', title: dataLang?.productions_orders_produced || 'produced' },
+    1: { color: 'bg-[#3ECeF7]/20 text-[#076A94]', title: dataLang?.productions_orders_in_progress || 'in progress' },
+    2: { color: 'bg-[#35BD4B]/20 text-[#1A7526]', title: dataLang?.productions_orders_completed || 'completed' },
+    3: { color: 'bg-[#F54A45]/20 text-[#C02A26]', title: dataLang?.productions_orders_overdue || 'overdue' },
+  };
+  const color = colorMap[product?.status_item];
+
+  return (
+    <div
+      key={`product-${index}`}
+      onClick={() => handleToggleSheetDetail(product)}
+      className={`col-span-16 grid grid-cols-19 gap-2 items-center group hover:bg-gray-100 cursor-pointer transition-all duration-150 ease-in-out 3xl:py-4 py-2 ${
+        totalLength - 1 === index ? 'border-transparent' : 'border-b'
+      }`}
+    >
+      <h4 className='col-span-1 flex items-center justify-center text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1'>{index + 1 ?? '-'}</h4>
+
+      <h4 className='col-span-4 text-[#344054] font-normal flex items-center py-2 px-1'>
+        <div className='flex items-start gap-2'>
+          <div className='2xl:size-16 size-14 shrink-0'>
+            <Image alt={product?.name ?? 'img'} width={200} height={200} src={product?.images ?? '/icon/default/default.png'} className='size-full object-cover rounded-md' />
+          </div>
+
+          <div className='flex flex-col 3xl:gap-1 gap-0.5'>
+            <p
+              className={`font-semibold 3xl:text-base xl:text-sm text-xs ${
+                isStateProvider?.productionsOrders.dataModal.id === product.id ? 'text-[#0F4F9E]' : 'text-[#141522] group-hover:text-[#0F4F9E]'
+              }`}
+            >
+              {product.item_name}
+            </p>
+            <div className='space-y-0.5'>
+              <p className='text-[#667085] font-normal xl:text-[10px] text-[8px]'>{product.product_variation}</p>
+
+              <p className='text-[#3276FA] font-normal 3xl:text-sm xl:text-xs text-[10px]'>{product.item_code}</p>
+
+              <p className='text-[#3276FA] font-normal 3xl:text-sm xl:text-xs text-[10px]'>{product.reference_no_detail}</p>
+            </div>
+          </div>
+        </div>
+      </h4>
+
+      <h4 className='col-span-2 text-start text-[#141522] font-semibold xl:text-sm text-xs px-1'>{product?.unit_name ?? ''}</h4>
+      <h4 className='col-span-2 text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1'>{product.quantity > 0 ? formatNumber(product.quantity) : '-'}</h4>
+      <h4 className='col-span-2 text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1'>{product.quantity_stage_end > 0 ? formatNumber(product.quantity_stage_end) : '-'}</h4>
+      <h4 className='col-span-3 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1 flex justify-center items-center'>
+        <div
+          onClick={e => {
+            setOpenManagerComboId(product.poi_id);
+            e.stopPropagation();
+          }}
+        >
+          <ResponsiblePersonComboBox
+            className='!max-h-[300px]'
+            open={openManagerComboId === product.poi_id}
+            onClose={() => setOpenManagerComboId(null)}
+            data={listStaffs}
+            selected={managerAvatars}
+            hideSelected={false}
+            onConfirm={selected => {
+              handleSubmit(selected);
+              setOpenManagerComboId(null);
+            }}
+          >
+            <div>
+              {managerAvatars.length > 0 ? (
+                <AvatarStack people={managerAvatars} />
+              ) : (
+                <button className='cursor-pointer flex items-center justify-start w-[112px] px-3 h-10 rounded-lg border border-[#003DA0] hover:bg-[#EBF5FF] transition-colors'>
+                  <UserPlusIcon className='size-5 text-[#11315B]' />
+                </button>
+              )}
+            </div>
+          </ResponsiblePersonComboBox>
+        </div>
+      </h4>
+
+      <h4 className='col-span-2 flex items-center justify-start px-1'>
+        <p className={`${color?.color} 3xl:text-sm text-xs px-2 py-1 rounded font-normal w-fit h-fit`}>{color?.title}</p>
+      </h4>
+
+      <h4 className='col-span-3 flex items-center justify-center xl:text-sm text-xs px-1'>
+        <ProgressStageBar total={product?.count_stage} done={product?.count_stage_active} quantity={product?.quantity_stage} name_active={product?.stage_name_active ?? ''} />
+      </h4>
+    </div>
+  );
+});
+
+ProductRow.displayName = 'ProductRow';
 
 const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRight, dataLang, handleToggleSheetDetail }) => {
   const dataSeting = useSetingServer();
@@ -17,6 +189,9 @@ const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRi
   const { isStateProvider } = useContext(StateContext);
   const [visibleProducts, setVisibleProducts] = useState({});
   const [openManagerComboId, setOpenManagerComboId] = useState(null);
+
+  // Lấy branch_id từ production order
+  const branchId = isStateProvider?.productionsOrders?.dataProductionOrderDetail?.productionOrder?.branch_id;
 
   const handleShowMoreProducts = useCallback((itemId, total) => {
     setVisibleProducts(prev => ({ ...prev, [itemId]: total }));
@@ -32,101 +207,23 @@ const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRi
 
   const renderProductRow = useCallback(
     (product, index, item, totalLength) => {
-      const colorMap = {
-        0: { color: 'bg-[#FF811A]/15 text-[#C25705]', title: dataLang?.productions_orders_produced || 'produced' },
-        1: { color: 'bg-[#3ECeF7]/20 text-[#076A94]', title: dataLang?.productions_orders_in_progress || 'in progress' },
-        2: { color: 'bg-[#35BD4B]/20 text-[#1A7526]', title: dataLang?.productions_orders_completed || 'completed' },
-        3: { color: 'bg-[#F54A45]/20 text-[#C02A26]', title: dataLang?.productions_orders_overdue || 'overdue' },
-      };
-      const color = colorMap[product?.status_item];
-
-      const managerAvatars =
-        product?.staff_manager_details?.map(mgr => ({
-          id: mgr?.staff?.staffid || mgr?.staff_id,
-          name: mgr?.staff?.full_name || 'Không tên',
-          avatarUrl: mgr?.staff?.profile_image || '',
-        })) || [];
-
       return (
-        <div
-          key={`product-${index}`}
-          onClick={() => handleToggleSheetDetail(product)}
-          className={`col-span-16 grid grid-cols-19 gap-2 items-center group hover:bg-gray-100 cursor-pointer transition-all duration-150 ease-in-out 3xl:py-4 py-2 ${
-            totalLength - 1 === index ? 'border-transparent' : 'border-b'
-          }`}
-        >
-          <h4 className='col-span-1 flex items-center justify-center text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1'>{index + 1 ?? '-'}</h4>
-
-          <h4 className='col-span-4 text-[#344054] font-normal flex items-center py-2 px-1'>
-            <div className='flex items-start gap-2'>
-              <div className='2xl:size-16 size-14 shrink-0'>
-                <Image alt={product?.name ?? 'img'} width={200} height={200} src={product?.images ?? '/icon/default/default.png'} className='size-full object-cover rounded-md' />
-              </div>
-
-              <div className='flex flex-col 3xl:gap-1 gap-0.5'>
-                <p
-                  className={`font-semibold 3xl:text-base xl:text-sm text-xs ${
-                    isStateProvider?.productionsOrders.dataModal.id === product.id ? 'text-[#0F4F9E]' : 'text-[#141522] group-hover:text-[#0F4F9E]'
-                  }`}
-                >
-                  {product.item_name}
-                </p>
-                <div className='space-y-0.5'>
-                  <p className='text-[#667085] font-normal xl:text-[10px] text-[8px]'>{product.product_variation}</p>
-
-                  <p className='text-[#3276FA] font-normal 3xl:text-sm xl:text-xs text-[10px]'>{product.item_code}</p>
-
-                  <p className='text-[#3276FA] font-normal 3xl:text-sm xl:text-xs text-[10px]'>{product.reference_no_detail}</p>
-                </div>
-              </div>
-            </div>
-          </h4>
-
-          <h4 className='col-span-2 text-start text-[#141522] font-semibold xl:text-sm text-xs px-1'>{product?.unit_name ?? ''}</h4>
-          <h4 className='col-span-2 text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1'>{product.quantity > 0 ? formatNumber(product.quantity) : '-'}</h4>
-          <h4 className='col-span-2 text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1'>{product.quantity_stage_end > 0 ? formatNumber(product.quantity_stage_end) : '-'}</h4>
-          <h4 className='col-span-3 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1 flex justify-center items-center'>
-            <div
-              onClick={e => {
-                setOpenManagerComboId(product.poi_id);
-                e.stopPropagation();
-              }}
-            >
-              <ResponsiblePersonComboBox
-              className='!max-h-[300px]'
-                open={openManagerComboId === product.poi_id}
-                onClose={() => setOpenManagerComboId(null)}
-                data={managerAvatars}
-                selected={managerAvatars}
-                onConfirm={selected => {
-                  console.log('Selected managers in product row:', selected);
-                  setOpenManagerComboId(null);
-                }}
-              >
-                <div>
-                  {managerAvatars.length > 0 ? (
-                    <AvatarStack people={managerAvatars} />
-                  ) : (
-                    <button className='cursor-pointer flex items-center justify-start w-[112px] px-3 h-10 rounded-lg border border-[#003DA0] hover:bg-[#EBF5FF] transition-colors'>
-                      <UserPlusIcon className='size-5 text-[#11315B]' />
-                    </button>
-                  )}
-                </div>
-              </ResponsiblePersonComboBox>
-            </div>
-          </h4>
-
-          <h4 className='col-span-2 flex items-center justify-start px-1'>
-            <p className={`${color?.color} 3xl:text-sm text-xs px-2 py-1 rounded font-normal w-fit h-fit`}>{color?.title}</p>
-          </h4>
-
-          <h4 className='col-span-3 flex items-center justify-center xl:text-sm text-xs px-1'>
-            <ProgressStageBar total={product?.count_stage} done={product?.count_stage_active} quantity={product?.quantity_stage} name_active={product?.stage_name_active ?? ''} />
-          </h4>
-        </div>
+        <ProductRow
+          product={product}
+          index={index}
+          item={item}
+          totalLength={totalLength}
+          formatNumber={formatNumber}
+          handleToggleSheetDetail={handleToggleSheetDetail}
+          isStateProvider={isStateProvider}
+          dataLang={dataLang}
+          openManagerComboId={openManagerComboId}
+          setOpenManagerComboId={setOpenManagerComboId}
+          branchId={branchId}
+        />
       );
     },
-    [formatNumber, handleToggleSheetDetail, isStateProvider?.productionsOrders.dataModal.id, dataLang, openManagerComboId, setOpenManagerComboId]
+    [formatNumber, handleToggleSheetDetail, isStateProvider, dataLang, openManagerComboId, setOpenManagerComboId]
   );
 
   if (isLoadingRight) return <Loading className='h-80' color='#0f4f9e' />;

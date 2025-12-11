@@ -56,6 +56,26 @@ import { _ServerInstance as axiosCustom } from "@/services/axios";
  * @property {Object} [data] - Response data payload
  */
 
+/**
+ * @typedef {Object} ProductionOrderManagerDetailItem
+ * @property {number} staff_id - Staff ID
+ * @property {number} is_manufacture - Manufacture responsible flag (1: Phụ trách sản xuất, 0: không)
+ */
+
+/**
+ * @typedef {Object} SaveProductionOrderManagerDetailPayload
+ * @property {number} po_id - Production order ID (id lệnh sản xuất tổng)
+ * @property {number} poi_id - Production order item/detail ID (id dòng sản phẩm)
+ * @property {ProductionOrderManagerDetailItem[]} items - Array of manager detail items
+ */
+
+/**
+ * @typedef {Object} SaveProductionOrderManagerDetailResponse
+ * @property {boolean|number} isSuccess - Indicates if the request was successful
+ * @property {string} [message] - Response message
+ * @property {Object} [data] - Response data payload
+ */
+
 const apiProductionsOrders = {
     async apiProductionOrders(page, limit, param) {
         // Danh sách LSX tổng
@@ -345,6 +365,37 @@ const apiProductionsOrders = {
      */
     async apiGetProductionOrderManagerDetail(po_id, poi_id) {
         const response = await axiosCustom('GET', `/api_web/production-order-managers/get-detail/${po_id}/${poi_id}?csrf_protection=true`);
+        return response.data;
+    },
+
+    /**
+     * Save Production Order Manager Detail API
+     * @description Save manager detail for a specific production order line (dòng sản phẩm)
+     * @param {SaveProductionOrderManagerDetailPayload} payload - Request payload
+     * @returns {Promise<SaveProductionOrderManagerDetailResponse>} Promise that resolves to API response
+     * @throws {Error} When API call fails
+     * @example
+     * // Save production order manager detail
+     * const result = await apiProductionsOrders.apiSaveProductionOrderManagerDetail({
+     *   po_id: 62,
+     *   poi_id: 89,
+     *   items: [
+     *     {
+     *       staff_id: 3,
+     *       is_manufacture: 1 // 1: Phụ trách sản xuất
+     *     }
+     *   ]
+     * });
+     *
+     * // Handle response
+     * if (result.isSuccess || result.isSuccess === 1) {
+     *   console.log("Manager detail saved successfully:", result.message);
+     * } else {
+     *   console.error("Failed to save manager detail:", result.message);
+     * }
+     */
+    async apiSaveProductionOrderManagerDetail(payload) {
+        const response = await axiosCustom('POST', `/api_web/production-order-managers/save-detail?csrf_protection=true`, { data: payload });
         return response.data;
     },
 }
