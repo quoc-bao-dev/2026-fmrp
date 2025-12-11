@@ -88,6 +88,9 @@ const apiSatff = {
             queryParams.branch_ids = params.branch_ids;
         }
         
+        if (params?.po_id) {
+            queryParams.po_id = params.po_id;
+        }
         const response = await axiosCustom('GET', `/api_web/Api_staff/searchStaffs?csrf_protection=true`, { params: queryParams });
         return response.data
     },
