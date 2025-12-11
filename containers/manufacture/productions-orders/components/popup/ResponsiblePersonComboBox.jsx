@@ -27,23 +27,35 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
   const dropdownRef = useRef(null);
   const triggerRef = useRef(null);
   const lastSelectedIdRef = useRef(null);
+  const prevOpenRef = useRef(open);
   const prevSelectedRef = useRef(selected);
-  const [style, setStyle] = useState({});
+  const [style, setStyle] = useState(null);
+  const [isReady, setIsReady] = useState(false);
   const [errorMap, setErrorMap] = useState({});
 
-  // Only update localSelected when selected actually changes (by content, not reference)
+  // Reset localSelected về selected mới nhất khi mở popup hoặc khi selected thay đổi
   useEffect(() => {
-    if (!open) {
-      // Reset when closed
-      prevSelectedRef.current = selected;
-      return;
-    }
-    
-    // Compare by content, not reference - only update if content actually changed
-    if (!areArraysEqual(prevSelectedRef.current, selected)) {
+    if (open && !prevOpenRef.current) {
+      // Popup vừa mở - reset localSelected về selected mới nhất
       setLocalSelected(selected);
+      setSearch(''); // Reset search khi mở
+      prevSelectedRef.current = selected;
+    } else if (open) {
+      // Popup đang mở - check nếu selected thay đổi thì update localSelected
+      if (!areArraysEqual(prevSelectedRef.current, selected)) {
+        setLocalSelected(selected);
+        prevSelectedRef.current = selected;
+      }
+    } else {
+      // Popup đóng - update prevSelectedRef để track selected mới nhất
       prevSelectedRef.current = selected;
     }
+    prevOpenRef.current = open;
+  }, [open, selected]);
+
+  // Handle click outside to close
+  useEffect(() => {
+    if (!open) return;
     
     const handler = e => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target) && triggerRef.current && !triggerRef.current.contains(e.target)) {
@@ -52,13 +64,58 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [open, onClose, selected]);
+  }, [open, onClose]);
 
   useEffect(() => {
-    if (!open || !triggerRef.current) return;
+    if (!open) {
+      setIsReady(false);
+      setStyle(null);
+      return;
+    }
+
+    const calculatePosition = () => {
+      if (!triggerRef.current) {
+        setIsReady(false);
+        return false;
+      }
+
+      const rect = triggerRef.current.getBoundingClientRect();
+      
+      // Kiểm tra xem rect có giá trị hợp lệ không
+      if (rect.width === 0 && rect.height === 0) {
+        setIsReady(false);
+        return false;
+      }
+
+      const calculatedStyle = {
+        position: 'absolute',
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX,
+        minWidth: Math.max(360, rect.width || 0),
+        zIndex: 1500,
+      };
+
+      setStyle(calculatedStyle);
+      setIsReady(true);
+      return true;
+    };
+
+    // Sử dụng requestAnimationFrame để đảm bảo DOM đã render xong
+    let rafId = requestAnimationFrame(() => {
+      if (!calculatePosition()) {
+        // Nếu chưa tính được, thử lại sau một frame nữa
+        rafId = requestAnimationFrame(() => {
+          calculatePosition();
+        });
+      }
+    });
 
     const updatePosition = () => {
+      if (!triggerRef.current) return;
       const rect = triggerRef.current.getBoundingClientRect();
+      
+      if (rect.width === 0 && rect.height === 0) return;
+
       setStyle({
         position: 'absolute',
         top: rect.bottom + window.scrollY + 8,
@@ -68,8 +125,6 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
       });
     };
 
-    updatePosition();
-
     const handleScroll = () => updatePosition();
     const handleResize = () => updatePosition();
 
@@ -77,6 +132,7 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
     window.addEventListener('resize', handleResize);
 
     return () => {
+      cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', handleScroll, true);
       window.removeEventListener('resize', handleResize);
     };
@@ -135,7 +191,7 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
   return (
     <>
       {triggerElement}
-      {open &&
+      {open && isReady && style &&
         createPortal(
           <div className='fixed inset-0 z-[1400] pointer-events-none' data-rpcb-root>
             <div
