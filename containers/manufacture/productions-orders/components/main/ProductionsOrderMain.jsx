@@ -26,9 +26,11 @@ import {
   PrinterIcon,
   StickerIcon,
   TrashIcon,
+  UnionIcon,
   UserPlusIcon,
 } from '@/components/icons';
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
+import UnionStepIcon from '@/components/icons/common/UnionStepIcon';
 import { CONFIRM_DELETION, TITLE_DELETE_COMMAND, TITLE_DELETE_PRODUCTIONS_ORDER } from '@/constants/delete/deleteTable';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import PopupKeepStock from '@/containers/manufacture/materials-planning/components/popup/popupKeepStock';
@@ -217,12 +219,23 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     id: isStateProvider?.productionsOrders?.idDetailProductionOrder,
     enabled: !!isStateProvider?.productionsOrders?.idDetailProductionOrder,
   });
-
   const keepStockPurchaseCount = useMemo(() => {
     const keepCount = dataProductionOrderDetail?.keepWarehouses?.length || 0;
     const purchaseCount = dataProductionOrderDetail?.purchase_order?.length || 0;
     return keepCount + purchaseCount;
   }, [dataProductionOrderDetail?.keepWarehouses, dataProductionOrderDetail?.purchase_order]);
+
+  // Lấy process steps từ dataProductionOrderDetail
+  const processSteps = useMemo(() => {
+    const processData = dataProductionOrderDetail?.process?.[0] || [];
+    // Map với key để dễ tìm
+    const stepsMap = {
+      materials_plan: processData.find(p => p?.key === 'materials_plan'),
+      export_production: processData.find(p => p?.key === 'export_production'),
+      import_finished_goods: processData.find(p => p?.key === 'import_finished_goods'),
+    };
+    return stepsMap;
+  }, [dataProductionOrderDetail?.process]);
 
   const listLsxTab = [
     {
@@ -964,17 +977,12 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
 
   // trigger button hoàn thành công đoạn
   const triggerCompleteStage = (
-    <div className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center xl:gap-4 gap-2 xl:text-sm text-xs font-medium text-white border border-[#0375F3] bg-[#0375F3] hover:bg-[#0375F3] cursor-pointer hover:shadow-hover-button rounded-lg custom-transition'>
+    <div className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center xl:gap-4 gap-2 font-medium text-white border border-[#0375F3] bg-[#0375F3] hover:bg-[#0375F3] cursor-pointer hover:shadow-hover-button rounded-lg custom-transition'>
       <span className='flex items-center gap-1 xl:gap-2'>
-        <span className='xl:size-4 size-3.5 shrink-0'>
-          <CheckThinIcon className={`size-full`} />
-        </span>
-        <span>Thao tác sản xuất</span>
+        <CheckThinIcon className='xl:size-4 size-3.5 shrink-0' />
+        <span className='responsive-text-base'>Tác vụ</span>
       </span>
-
-      <span className='xl:size-4 size-3.5 shrink-0'>
-        <CaretDropDownThinIcon className={`size-full`} />
-      </span>
+      <CaretDropDownThinIcon className='xl:size-4 size-3.5 shrink-0' />
     </div>
   );
 
@@ -1522,7 +1530,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
       </div>
 
       <div ref={filterRef} className='flex items-center w-full gap-4 3xl:gap-6'>
-        <div className='w-[20%] 2xl:w-[15%] shrink-0'>
+        <div className='w-[15%] shrink-0'>
           <FilterDropdown
             trigger={triggerFilterStatus}
             style={{
@@ -1555,7 +1563,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
       </div>
 
       <div className='flex items-start w-full gap-4 overflow-y-hidden 3xl:gap-6'>
-        <div className='w-[20%] 2xl:w-[15%] size-full space-y-4 border-none border-[#D0D5DD] border'>
+        <div className='w-[15%] size-full space-y-4 border-none border-[#D0D5DD] border'>
           <Customscrollbar
             className='h-full'
             style={{
@@ -1676,132 +1684,162 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
 
         <div className='relative z-50 flex-1 min-w-0 size-full space-y-4 border-none border-[#D0D5DD] border overflow-y-hidden'>
           {!isLoadingProductionOrderDetail && dataProductionOrderDetail?.listPOItems?.length > 0 && isStateProvider?.productionsOrders?.isTabList?.type == 'products' && (
-            <div ref={groupButtonRef} className='flex items-center justify-end gap-2 p-0.5 mb-2'>
-              <div
-                onClick={() => {
-                  dispatch({ type: 'statePopupListResponsiblePerson', payload: { open: true } });
-                }}
-                className='cursor-pointer'
-              >
-                {managerAvatars?.length > 0 ? (
-                  <AvatarStack people={managerAvatars} className='mr-2' />
-                ) : (
-                  <ButtonAnimationNew
-                    icon={
-                      <div className='size-4'>
-                        <UserPlusIcon className='size-full text-[#11315B]' />
-                      </div>
-                    }
-                    title='Thêm người phụ trách'
-                    className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] bg-white border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
-                  />
-                )}
+            <div className='flex items-center justify-between'>
+              <div className='flex items-center gap-0'>
+                {/* Kế hoạch NVL */}
+                <div className='relative z-[3] flex items-center justify-center min-w-[140px]'>
+                  <UnionStepIcon active={processSteps?.materials_plan?.is_active || false} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
+                  <span className={`absolute inset-0 flex items-center justify-center font-medium text-sm whitespace-nowrap px-4 ${
+                    processSteps?.materials_plan?.is_active ? 'text-white' : 'text-[#9295A4]'
+                  }`}>
+                    {processSteps?.materials_plan?.name || 'Kế hoạch NVL'}
+                  </span>
+                </div>
+                
+                {/* Xuất kho sản xuất */}
+                <div className='relative z-[2] flex items-center justify-center min-w-[160px] -ml-[23px]'>
+                  <UnionStepIcon active={processSteps?.export_production?.is_active || false} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
+                  <span className={`absolute inset-0 flex items-center justify-center font-medium text-sm whitespace-nowrap px-4 ml-3 ${
+                    processSteps?.export_production?.is_active ? 'text-white' : 'text-[#9295A4]'
+                  }`}>
+                    {processSteps?.export_production?.name || 'Xuất kho sản xuất'}
+                  </span>
+                </div>
+                
+                {/* Nhập kho TP */}
+                <div className='relative z-[1] flex items-center justify-center min-w-[120px] -ml-[23px]'>
+                  <UnionStepIcon active={processSteps?.import_finished_goods?.is_active || false} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
+                  <span className={`absolute inset-0 flex items-center justify-center font-medium text-sm whitespace-nowrap px-4 ${
+                    processSteps?.import_finished_goods?.is_active ? 'text-white' : 'text-[#9295A4]'
+                  }`}>
+                    {processSteps?.import_finished_goods?.name || 'Nhập kho TP'}
+                  </span>
+                </div>
               </div>
+              
+              <div ref={groupButtonRef} className='flex items-center justify-end gap-2 p-0.5 mb-2'>
+                <div
+                  onClick={() => {
+                    dispatch({ type: 'statePopupListResponsiblePerson', payload: { open: true } });
+                  }}
+                  className='cursor-pointer'
+                >
+                  {managerAvatars?.length > 0 ? (
+                    <AvatarStack people={managerAvatars} className='mr-2' />
+                  ) : (
+                    <ButtonAnimationNew
+                      icon={
+                        <div className='size-4'>
+                          <UserPlusIcon className='size-full text-[#11315B]' />
+                        </div>
+                      }
+                      title='Thêm người phụ trách'
+                      className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] bg-white border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
+                    />
+                  )}
+                </div>
 
-              <FilterDropdown
-                trigger={triggerCompleteStage}
-                style={{
-                  // boxShadow: "0px 20px 24px -4px #10182814, 0px 4px 4px 0px #00000040"
-                  boxShadow: '0px 5px 35px 0px #00000012',
-                }}
-                className='flex flex-col !p-0 border-[#D8DAE5] rounded-lg shrink-0 w-fit'
-                classNameContainer='!w-fit'
-                dropdownId='dropdownCompleteStage'
-                placement='bottom-right'
-              >
-                {listDropdownCompleteStage &&
-                  listDropdownCompleteStage?.map((tab, index) => {
+                <FilterDropdown
+                  trigger={triggerCompleteStage}
+                  style={{
+                    // boxShadow: "0px 20px 24px -4px #10182814, 0px 4px 4px 0px #00000040"
+                    boxShadow: '0px 5px 35px 0px #00000012',
+                  }}
+                  className='flex flex-col !p-0 border-[#D8DAE5] rounded-lg shrink-0 w-fit'
+                  classNameContainer='!w-fit'
+                  dropdownId='dropdownCompleteStage'
+                  placement='bottom-right'
+                >
+                  {listDropdownCompleteStage &&
+                    listDropdownCompleteStage?.map((tab, index) => {
+                      const isFirst = index === 0;
+                      const isLast = index === listDropdownCompleteStage.length - 1;
+
+                      const borderClass = isLast ? 'border-transparent rounded-b-lg border-t-transparent' : isFirst ? 'rounded-t-lg border-t-transparent' : 'border-t-transparent';
+
+                      return (
+                        <div
+                          key={tab.id}
+                          className={`hover:bg-[#F3F4F6] border-b border-[#F7F8F9] border-t flex items-center gap-3 cursor-pointer px-4 py-3 custom-transition whitespace-nowrap ${borderClass} select-none`}
+                          onClick={() => handClickDropdownCompleteStage(tab.type)}
+                        >
+                          {/* nút 'hoàn thành chi tiết' - cho phép tất cả gói sử dụng, hiển thị badge pro cho gói pro */}
+                          {tab.type === 'complete_stage' ? (
+                            <div className='flex items-center gap-2 w-full' onClick={e => e.stopPropagation()}>
+                              <div className='flex-1'>
+                                <PopupConfimStage
+                                  dataLang={dataLang}
+                                  dataRight={isStateProvider?.productionsOrders}
+                                  typePageMoblie={typePageMoblie}
+                                  refetch={() => {
+                                    refetchProductionOrderList();
+                                    // refetch()
+                                  }}
+                                />
+                              </div>
+                              {authState?.is_upgrade && <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs shrink-0'>pro</span>}
+                            </div>
+                          ) : (
+                            <div className='flex items-center gap-2 cursor-pointer'>
+                              <span className='3xl:size-5 size-4 text-[#0375F3] shrink-0'>{tab.icon}</span>
+                              <span className={`3xl:text-base text-sm font-normal text-[#101828] ${tab.color}`}>{tab.label}</span>
+                              {authState?.is_upgrade && tab.isPremium && <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs shrink-0'>pro</span>}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </FilterDropdown>
+                <FilterDropdown
+                  trigger={triggerPrintTask}
+                  style={{
+                    boxShadow: '0px 5px 35px 0px #00000012',
+                  }}
+                  className='flex flex-col !p-0 border-[#D8DAE5] rounded-lg shrink-0 w-fit'
+                  classNameContainer='!w-fit'
+                  dropdownId='dropdownPrintTask'
+                  placement='bottom-left'
+                >
+                  {listPrintTask?.map((tab, index) => {
                     const isFirst = index === 0;
-                    const isLast = index === listDropdownCompleteStage.length - 1;
+                    const isLast = index === listPrintTask.length - 1;
 
                     const borderClass = isLast ? 'border-transparent rounded-b-lg border-t-transparent' : isFirst ? 'rounded-t-lg border-t-transparent' : 'border-t-transparent';
 
                     return (
                       <div
                         key={tab.id}
-                        className={`hover:bg-[#F3F4F6] border-b border-[#F7F8F9] border-t flex items-center gap-3 cursor-pointer px-4 py-3 custom-transition whitespace-nowrap ${borderClass} select-none`}
-                        onClick={() => handClickDropdownCompleteStage(tab.type)}
+                        className={`group hover:bg-[#F3F4F6] border-b border-[#F7F8F9] border-t flex items-center gap-3 cursor-pointer px-4 py-3 custom-transition whitespace-nowrap ${borderClass} select-none`}
+                        onClick={() => tab.action()}
                       >
-                        {/* nút 'hoàn thành chi tiết' - cho phép tất cả gói sử dụng, hiển thị badge pro cho gói pro */}
-                        {tab.type === 'complete_stage' ? (
-                          <div className='flex items-center gap-2 w-full' onClick={e => e.stopPropagation()}>
-                            <div className='flex-1'>
-                              <PopupConfimStage
-                                dataLang={dataLang}
-                                dataRight={isStateProvider?.productionsOrders}
-                                typePageMoblie={typePageMoblie}
-                                refetch={() => {
-                                  refetchProductionOrderList();
-                                  // refetch()
-                                }}
-                              />
-                            </div>
-                            {authState?.is_upgrade && <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs shrink-0'>pro</span>}
-                          </div>
-                        ) : (
-                          <div className='flex items-center gap-2 cursor-pointer'>
-                            <span className='3xl:size-5 size-4 text-[#0375F3] shrink-0'>{tab.icon}</span>
-                            <span className={`3xl:text-base text-sm font-normal text-[#101828] ${tab.color}`}>{tab.label}</span>
-                            {authState?.is_upgrade && tab.isPremium && <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs shrink-0'>pro</span>}
-                          </div>
-                        )}
+                        {tab.icon}
+                        <span className='responsive-text-base text-[#101828] group-hover:text-[#0375F3]'>{tab.label}</span>
                       </div>
                     );
                   })}
-              </FilterDropdown>
-              <FilterDropdown
-                trigger={triggerPrintTask}
-                style={{
-                  boxShadow: '0px 5px 35px 0px #00000012',
-                }}
-                className='flex flex-col !p-0 border-[#D8DAE5] rounded-lg shrink-0 w-fit'
-                classNameContainer='!w-fit'
-                dropdownId='dropdownPrintTask'
-                placement='bottom-left'
-              >
-                {listPrintTask?.map((tab, index) => {
-                  const isFirst = index === 0;
-                  const isLast = index === listPrintTask.length - 1;
-
-                  const borderClass = isLast ? 'border-transparent rounded-b-lg border-t-transparent' : isFirst ? 'rounded-t-lg border-t-transparent' : 'border-t-transparent';
-
-                  return (
-                    <div
-                      key={tab.id}
-                      className={`group hover:bg-[#F3F4F6] border-b border-[#F7F8F9] border-t flex items-center gap-3 cursor-pointer px-4 py-3 custom-transition whitespace-nowrap ${borderClass} select-none`}
-                      onClick={() => tab.action()}
-                    >
-                      {tab.icon}
-                      <span className='responsive-text-base text-[#101828] group-hover:text-[#0375F3]'>{tab.label}</span>
+                </FilterDropdown>
+                <ButtonAnimationNew
+                  icon={<ArrowCounterClockWiseIcon className='size-4' />}
+                  title='Tải lại'
+                  className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#0BAA2E] border border-[#0BAA2E] hover:bg-[#ebfff2] hover:shadow-hover-button rounded-lg'
+                  onClick={refreshData}
+                />
+                <ButtonAnimationNew
+                  icon={
+                    <div className='3xl:size-5 size-4'>
+                      <TrashIcon className='size-full' />
                     </div>
-                  );
-                })}
-              </FilterDropdown>
-              <ButtonAnimationNew
-                icon={
-                  <div className='size-4'>
-                    <ArrowCounterClockWiseIcon className='size-full' />
-                  </div>
-                }
-                title={dataLang?.refresh_data || 'Làm mới dữ liệu'}
-                className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#0375F3] border border-[#0375F3] hover:bg-[#EBF5FF] hover:shadow-hover-button rounded-lg'
-                onClick={refreshData}
-              />
-              <ButtonAnimationNew
-                icon={
-                  <div className='3xl:size-5 size-4'>
-                    <TrashIcon className='size-full' />
-                  </div>
-                }
-                onClick={() => {
-                  handleQueryId({
-                    status: true,
-                    id: isStateProvider?.productionsOrders.idDetailProductionOrder,
-                  });
-                }}
-                title='Xoá'
-                className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#EE1E1E] border border-[#EE1E1E] hover:bg-[#FFEEF0] hover:shadow-hover-button rounded-lg'
-              />
+                  }
+                  onClick={() => {
+                    handleQueryId({
+                      status: true,
+                      id: isStateProvider?.productionsOrders.idDetailProductionOrder,
+                    });
+                  }}
+                  title='Xoá'
+                  className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#EE1E1E] border border-[#EE1E1E] hover:bg-[#FFEEF0] hover:shadow-hover-button rounded-lg'
+                />
+              </div>
             </div>
           )}
 
@@ -1908,12 +1946,12 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
         }}
         cancel={() => handleQueryId({ status: false })}
       />
-       <PopupListResponsiblePerson
-         brandId={dataProductionOrderDetail?.productionOrder?.branch_id}
-         initialManagers={managerInitialData}
-         onRefreshDetail={refetchProductionOrderDetail}
-         onRefreshManagers={refetchProductionOrderManagers}
-       />
+      <PopupListResponsiblePerson
+        brandId={dataProductionOrderDetail?.productionOrder?.branch_id}
+        initialManagers={managerInitialData}
+        onRefreshDetail={refetchProductionOrderDetail}
+        onRefreshManagers={refetchProductionOrderManagers}
+      />
     </React.Fragment>
   );
 };
