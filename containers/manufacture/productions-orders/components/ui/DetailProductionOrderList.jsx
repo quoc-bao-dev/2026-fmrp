@@ -65,7 +65,7 @@ const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRi
 
               <div className='flex flex-col 3xl:gap-1 gap-0.5'>
                 <p
-                  className={`font-semibold 3xl:text-base xl:text-sm text-xs ${
+                  className={`font-semibold responsive-text-base ${
                     isStateProvider?.productionsOrders.dataModal.id === product.id ? 'text-[#0F4F9E]' : 'text-[#141522] group-hover:text-[#0F4F9E]'
                   }`}
                 >
