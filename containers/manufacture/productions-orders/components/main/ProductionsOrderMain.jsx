@@ -1669,30 +1669,30 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                 {/* Kế hoạch NVL */}
                 <div className='relative z-[3] flex items-center justify-center min-w-[140px]'>
                   <UnionStepIcon active={processSteps?.materials_plan?.is_active || false} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
-                  <span className={`absolute inset-0 flex items-center justify-center font-medium text-sm whitespace-nowrap px-4 ${
+                  <span className={`absolute inset-0 flex items-center justify-center font-medium text-xs whitespace-nowrap px-4 ${
                     processSteps?.materials_plan?.is_active ? 'text-white' : 'text-[#9295A4]'
                   }`}>
-                    {processSteps?.materials_plan?.name || 'Kế hoạch NVL'}
+                    1. Kế hoạch NVL
                   </span>
                 </div>
                 
                 {/* Xuất kho sản xuất */}
                 <div className='relative z-[2] flex items-center justify-center min-w-[160px] -ml-[23px]'>
                   <UnionStepIcon active={processSteps?.export_production?.is_active || false} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
-                  <span className={`absolute inset-0 flex items-center justify-center font-medium text-sm whitespace-nowrap px-4 ml-3 ${
+                  <span className={`absolute inset-0 flex items-center justify-center font-medium text-xs whitespace-nowrap px-4 ml-3 ${
                     processSteps?.export_production?.is_active ? 'text-white' : 'text-[#9295A4]'
                   }`}>
-                    {processSteps?.export_production?.name || 'Xuất kho sản xuất'}
+                    2. Xuất kho sản xuất
                   </span>
                 </div>
                 
                 {/* Nhập kho TP */}
                 <div className='relative z-[1] flex items-center justify-center min-w-[120px] -ml-[23px]'>
                   <UnionStepIcon active={processSteps?.import_finished_goods?.is_active || false} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
-                  <span className={`absolute inset-0 flex items-center justify-center font-medium text-sm whitespace-nowrap px-4 ${
+                  <span className={`absolute inset-0 flex items-center justify-center font-medium text-xs whitespace-nowrap px-4 ${
                     processSteps?.import_finished_goods?.is_active ? 'text-white' : 'text-[#9295A4]'
                   }`}>
-                    {processSteps?.import_finished_goods?.name || 'Nhập kho TP'}
+                    3. Nhập kho TP
                   </span>
                 </div>
               </div>
