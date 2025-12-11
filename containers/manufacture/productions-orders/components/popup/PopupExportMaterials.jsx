@@ -74,6 +74,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
     ? {
         branch_ids: branchIds,
         search: searchLookupTerm?.trim() || '',
+        type_products: 'semi_products',
       }
     : null;
 

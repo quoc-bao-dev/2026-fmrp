@@ -26,17 +26,19 @@ const hasValidLotDate = lots => {
   return Object.values(lots).some(lotItem => {
     const hasLot = lotItem.lot && lotItem.lot.trim() !== '';
     const hasExpirationDate = lotItem.expiration_date && lotItem.expiration_date.trim() !== '';
-    return hasLot || hasExpirationDate;
+    const hasSerial = lotItem.serial && lotItem.serial.trim() !== '';
+    return hasLot || hasExpirationDate || hasSerial;
   });
 };
 
 const mapLotsToDropdown = (itemVariationId, lots) => {
   if (!lots || typeof lots !== 'object') return [];
   const items = Object.values(lots || {}).map(lotItem => ({
-    id_warehouse_custom: `${itemVariationId}-${lotItem.lot || 'no-lot'}-${lotItem.expiration_date || 'no-exp'}`,
-    name_location: lotItem.lot || 'Lot trống',
+    id_warehouse_custom: `${itemVariationId}-${lotItem.lot || 'no-lot'}-${lotItem.expiration_date || 'no-exp'}-${lotItem.serial || 'no-serial'}`,
+    name_location: lotItem.serial ? `${lotItem.serial}` : lotItem.lot || 'Lot trống',
     lot: lotItem.lot || '',
     expiration_date: lotItem.expiration_date || '',
+    serial: lotItem.serial || '',
     total_quantity: Number(lotItem.quantity_recall || 0),
   }));
 
@@ -308,6 +310,7 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
         quantity_enter: Number.isNaN(quantityEnter) ? 0 : quantityEnter,
         lot_enter: selectedWarehouse?.lot || '',
         expiration_date_enter: selectedWarehouse?.expiration_date || '',
+        serial_enter: selectedWarehouse?.serial || '',
       };
     });
 
@@ -486,7 +489,7 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
                         <th className='font-normal pt-3 pb-1 pr-3 text-left text-[#667085] whitespace-nowrap'>Nguyên vật liệu</th>
                         <th className='font-normal pt-3 pb-1 px-3 text-center text-[#667085] whitespace-nowrap'>SL đã xuất</th>
                         <th className='font-normal pt-3 pb-1 px-3 text-center text-[#667085] whitespace-nowrap'>SL đã thu hồi</th>
-                        {hasAnyValidLotDate && <th className='font-normal pt-3 pb-1 px-3 text-center text-[#667085] whitespace-nowrap'>Lot/date</th>}
+                        {hasAnyValidLotDate && <th className='font-normal pt-3 pb-1 px-3 text-center text-[#667085] whitespace-nowrap'>Lot/date - Serial</th>}
                         <th className='font-normal pt-3 pb-1 px-3 text-center text-[#667085] whitespace-nowrap'>SL cần thu hồi</th>
                         <th className='font-normal pt-3 pb-1 px-2 text-center text-[#667085] whitespace-nowrap'>Quy đổi</th>
                       </tr>
@@ -575,7 +578,7 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
                                             // Tự động chọn material khi chọn lot
                                             setSelectedMaterialIds(prev => (prev.includes(materialId) ? prev : [...prev, materialId]));
                                           }}
-                                          placeholder='Chọn Lot/Date'
+                                          placeholder='Chọn Lot/Date - Serial'
                                           showOnlyLotDate={true}
                                           minDropdownWidth={200}
                                           allowClear={true}
