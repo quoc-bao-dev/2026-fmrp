@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import apiProductionsOrders from "@/Api/apiManufacture/manufacture/productionsOrders/apiProductionsOrders";
 import useToast from "@/hooks/useToast";
 
@@ -36,16 +36,34 @@ import useToast from "@/hooks/useToast";
  */
 export const useSaveProductionOrderManagerDetail = (options = {}) => {
   const showToast = useToast();
+  const queryClient = useQueryClient();
 
   const saveProductionOrderManagerDetailMutation = useMutation({
     mutationFn: async (payload) => {
       const res = await apiProductionsOrders.apiSaveProductionOrderManagerDetail(payload);
       return res;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       if (data?.isSuccess || data?.isSuccess === 1) {
         showToast("success", data?.message || "Lưu danh sách người phụ trách chi tiết thành công");
-        if (options.onSuccess) options.onSuccess(data);
+        
+        // Invalidate queries để refresh dữ liệu
+        const { po_id, poi_id } = variables || {};
+        if (po_id) {
+          // Invalidate query cho manager detail (dòng sản phẩm cụ thể)
+          if (poi_id) {
+            queryClient.invalidateQueries({
+              queryKey: ["apiGetProductionOrderManagerDetail", po_id, poi_id],
+            });
+          }
+          
+          // Invalidate query cho managers của toàn bộ production order
+          queryClient.invalidateQueries({
+            queryKey: ["apiGetProductionOrderManagers", po_id],
+          });
+        }
+        
+        if (options.onSuccess) options.onSuccess(data, variables);
       } else {
         showToast("error", data?.message || "Lưu danh sách người phụ trách chi tiết thất bại");
       }

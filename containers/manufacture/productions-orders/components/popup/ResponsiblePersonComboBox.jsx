@@ -1,6 +1,6 @@
 import { CheckThinIcon, MagnifyingGlassIcon } from '@/components/icons';
 import { Lexend_Deca } from '@next/font/google';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import ResponsibleAvatar from './ResponsibleAvatar';
 
@@ -26,24 +26,81 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
   const [localSelected, setLocalSelected] = useState(selected);
   const dropdownRef = useRef(null);
   const triggerRef = useRef(null);
+  const listRef = useRef(null);
   const lastSelectedIdRef = useRef(null);
+  const prevOpenRef = useRef(open);
   const prevSelectedRef = useRef(selected);
-  const [style, setStyle] = useState({});
+  const [style, setStyle] = useState(null);
+  const [dropdownHeights, setDropdownHeights] = useState({ container: 414, list: 300 });
+  const [isReady, setIsReady] = useState(false);
   const [errorMap, setErrorMap] = useState({});
 
-  // Only update localSelected when selected actually changes (by content, not reference)
+  // Reset localSelected về selected mới nhất khi mở popup hoặc khi selected thay đổi
   useEffect(() => {
-    if (!open) {
-      // Reset when closed
-      prevSelectedRef.current = selected;
-      return;
-    }
-    
-    // Compare by content, not reference - only update if content actually changed
-    if (!areArraysEqual(prevSelectedRef.current, selected)) {
+    if (open && !prevOpenRef.current) {
+      // Popup vừa mở - reset localSelected về selected mới nhất
       setLocalSelected(selected);
+      setSearch(''); // Reset search khi mở
+      prevSelectedRef.current = selected;
+    } else if (open) {
+      // Popup đang mở - check nếu selected thay đổi thì update localSelected
+      if (!areArraysEqual(prevSelectedRef.current, selected)) {
+        setLocalSelected(selected);
+        prevSelectedRef.current = selected;
+      }
+    } else {
+      // Popup đóng - update prevSelectedRef để track selected mới nhất
       prevSelectedRef.current = selected;
     }
+    prevOpenRef.current = open;
+  }, [open, selected]);
+
+  // Tính toán chiều cao tối đa để dropdown không tràn màn hình
+  useLayoutEffect(() => {
+    if (!open || !style) return;
+
+    const computeHeights = () => {
+      if (!triggerRef.current || !dropdownRef.current) return;
+
+      const GAP = 8; // khoảng cách giữa trigger và dropdown
+      const SAFE_MARGIN = 16; // chừa mép dưới một khoảng nhỏ
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+
+      // Không có kích thước hợp lệ -> bỏ qua
+      if (triggerRect.width === 0 && triggerRect.height === 0) return;
+
+      const availableBelow = window.innerHeight - triggerRect.bottom - GAP - SAFE_MARGIN;
+      if (availableBelow <= 0) return;
+
+      // Giới hạn container tối đa 414 nhưng không vượt quá khoảng trống
+      const containerMax = Math.min(414, availableBelow);
+
+      let listMax = 300;
+      if (listRef.current) {
+        const dropdownTop = dropdownRef.current.getBoundingClientRect().top;
+        const listTop = listRef.current.getBoundingClientRect().top;
+        const nonListHeight = listTop - dropdownTop; // chiều cao phần header + padding
+        listMax = Math.max(120, containerMax - nonListHeight - SAFE_MARGIN);
+      }
+
+      setDropdownHeights({
+        container: containerMax,
+        list: listMax,
+      });
+    };
+
+    computeHeights();
+    window.addEventListener('resize', computeHeights);
+    window.addEventListener('scroll', computeHeights, true);
+    return () => {
+      window.removeEventListener('resize', computeHeights);
+      window.removeEventListener('scroll', computeHeights, true);
+    };
+  }, [open, style]);
+
+  // Handle click outside to close
+  useEffect(() => {
+    if (!open) return;
     
     const handler = e => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target) && triggerRef.current && !triggerRef.current.contains(e.target)) {
@@ -52,13 +109,58 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [open, onClose, selected]);
+  }, [open, onClose]);
 
   useEffect(() => {
-    if (!open || !triggerRef.current) return;
+    if (!open) {
+      setIsReady(false);
+      setStyle(null);
+      return;
+    }
+
+    const calculatePosition = () => {
+      if (!triggerRef.current) {
+        setIsReady(false);
+        return false;
+      }
+
+      const rect = triggerRef.current.getBoundingClientRect();
+      
+      // Kiểm tra xem rect có giá trị hợp lệ không
+      if (rect.width === 0 && rect.height === 0) {
+        setIsReady(false);
+        return false;
+      }
+
+      const calculatedStyle = {
+        position: 'absolute',
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX,
+        minWidth: Math.max(360, rect.width || 0),
+        zIndex: 1500,
+      };
+
+      setStyle(calculatedStyle);
+      setIsReady(true);
+      return true;
+    };
+
+    // Sử dụng requestAnimationFrame để đảm bảo DOM đã render xong
+    let rafId = requestAnimationFrame(() => {
+      if (!calculatePosition()) {
+        // Nếu chưa tính được, thử lại sau một frame nữa
+        rafId = requestAnimationFrame(() => {
+          calculatePosition();
+        });
+      }
+    });
 
     const updatePosition = () => {
+      if (!triggerRef.current) return;
       const rect = triggerRef.current.getBoundingClientRect();
+      
+      if (rect.width === 0 && rect.height === 0) return;
+
       setStyle({
         position: 'absolute',
         top: rect.bottom + window.scrollY + 8,
@@ -68,8 +170,6 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
       });
     };
 
-    updatePosition();
-
     const handleScroll = () => updatePosition();
     const handleResize = () => updatePosition();
 
@@ -77,6 +177,7 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
     window.addEventListener('resize', handleResize);
 
     return () => {
+      cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', handleScroll, true);
       window.removeEventListener('resize', handleResize);
     };
@@ -135,13 +236,13 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
   return (
     <>
       {triggerElement}
-      {open &&
+      {open && isReady && style &&
         createPortal(
           <div className='fixed inset-0 z-[1400] pointer-events-none' data-rpcb-root>
             <div
               ref={dropdownRef}
-              className={`${deca.className} w-[389px] max-h-[414px] bg-white rounded-[16px] shadow-xl flex flex-col overflow-hidden pointer-events-auto ${className}`}
-              style={style}
+                className={`${deca.className} w-[389px] max-h-[414px] bg-white rounded-[16px] shadow-xl flex flex-col overflow-hidden pointer-events-auto ${className}`}
+                style={{ ...style, maxHeight: dropdownHeights.container }}
             >
               {/* Search */}
               <div className='px-4 pt-4'>
@@ -173,7 +274,11 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
 
               <div className='pt-2'></div>
               {/* List */}
-              <div className='flex-1 overflow-y-auto px-4 pt-4 pb-2 max-h-[300px]'>
+              <div
+                ref={listRef}
+                className='flex-1 overflow-y-auto px-4 pt-4 pb-2 max-h-[300px]'
+                style={{ maxHeight: dropdownHeights.list }}
+              >
                 <div className='space-y-2'>
                   {filtered
                     .slice()

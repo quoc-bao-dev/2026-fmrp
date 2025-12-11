@@ -20,7 +20,7 @@ const ProductRow = memo(({ product, index, item, totalLength, formatNumber, hand
   const poi_id = product.poi_id;
 
   // Gọi hook để lấy manager detail
-  const { data: managerDetailData } = useProductionOrderManagerDetail({
+  const { data: managerDetailData, refetch: refetchManagerDetail } = useProductionOrderManagerDetail({
     po_id,
     poi_id,
     enabled: !!po_id && !!poi_id,
@@ -60,11 +60,22 @@ const ProductRow = memo(({ product, index, item, totalLength, formatNumber, hand
     }));
   }, [managerDetailData]);
 
+  // Filter managerAvatars để chỉ lấy những người có trong listStaffs
+  // Đảm bảo combo box có thể active đúng các item đã chọn
+  const selectedManagers = useMemo(() => {
+    if (!listStaffs || listStaffs.length === 0) return [];
+    const staffIds = new Set(listStaffs.map(staff => staff.id));
+    return managerAvatars.filter(manager => staffIds.has(manager.id));
+  }, [managerAvatars, listStaffs]);
+
   // Hook để save production order manager detail
   const { saveProductionOrderManagerDetail, isLoading: isSaving } = useSaveProductionOrderManagerDetail({
     onSuccess: (response) => {
       console.log('Save manager detail success:', response);
-      // Có thể thêm logic refresh data ở đây nếu cần
+      // Refresh lại dữ liệu manager detail
+      refetchManagerDetail();
+      // Đóng combo box
+      setOpenManagerComboId(null);
     },
     onError: (error) => {
       console.error('Save manager detail error:', error);
@@ -83,8 +94,6 @@ const ProductRow = memo(({ product, index, item, totalLength, formatNumber, hand
           is_manufacture: 1, // 1: Phụ trách sản xuất
         })),
       };
-
-      // Log payload để kiểm tra
 
       // Gọi API để lưu
       saveProductionOrderManagerDetail(payload);
@@ -150,11 +159,10 @@ const ProductRow = memo(({ product, index, item, totalLength, formatNumber, hand
             open={openManagerComboId === product.poi_id}
             onClose={() => setOpenManagerComboId(null)}
             data={listStaffs}
-            selected={managerAvatars}
+            selected={selectedManagers}
             hideSelected={false}
             onConfirm={selected => {
               handleSubmit(selected);
-              setOpenManagerComboId(null);
             }}
           >
             <div>
