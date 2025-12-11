@@ -28,10 +28,12 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
   const triggerRef = useRef(null);
   const listRef = useRef(null);
   const lastSelectedIdRef = useRef(null);
+  const lastActionRef = useRef(null); // select | deselect
   const prevOpenRef = useRef(open);
   const prevSelectedRef = useRef(selected);
   const [style, setStyle] = useState(null);
   const [dropdownHeights, setDropdownHeights] = useState({ container: 414, list: 300 });
+  const [placement, setPlacement] = useState('below'); // below | above
   const [isReady, setIsReady] = useState(false);
   const [errorMap, setErrorMap] = useState({});
 
@@ -69,11 +71,14 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
       // Không có kích thước hợp lệ -> bỏ qua
       if (triggerRect.width === 0 && triggerRect.height === 0) return;
 
-      const availableBelow = window.innerHeight - triggerRect.bottom - GAP - SAFE_MARGIN;
-      if (availableBelow <= 0) return;
+      const availableSpace =
+        placement === 'below'
+          ? window.innerHeight - triggerRect.bottom - GAP - SAFE_MARGIN
+          : triggerRect.top - GAP - SAFE_MARGIN;
+      if (availableSpace <= 0) return;
 
       // Giới hạn container tối đa 414 nhưng không vượt quá khoảng trống
-      const containerMax = Math.min(414, availableBelow);
+      const containerMax = Math.min(414, availableSpace);
 
       let listMax = 300;
       if (listRef.current) {
@@ -96,7 +101,25 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
       window.removeEventListener('resize', computeHeights);
       window.removeEventListener('scroll', computeHeights, true);
     };
-  }, [open, style]);
+  }, [open, style, placement]);
+
+  // Đảm bảo vị trí top khi render lên trên dùng đúng chiều cao thực tế của dropdown
+  useLayoutEffect(() => {
+    if (!open || !style || !triggerRef.current) return;
+
+    const GAP = 8;
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const measuredHeight = dropdownRef.current?.getBoundingClientRect().height || dropdownHeights.container || 0;
+    const nextTop =
+      placement === 'below'
+        ? triggerRect.bottom + window.scrollY + GAP
+        : triggerRect.top + window.scrollY - GAP - measuredHeight;
+
+    setStyle(prev => {
+      if (!prev || prev.top === nextTop) return prev;
+      return { ...prev, top: nextTop };
+    });
+  }, [open, placement, dropdownHeights.container, dropdownHeights.list, style]);
 
   // Handle click outside to close
   useEffect(() => {
@@ -132,15 +155,25 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
         return false;
       }
 
+      const GAP = 8;
+      const estimatedHeight = dropdownHeights.container || 414;
+      const belowSpace = window.innerHeight - rect.bottom - GAP;
+      const aboveSpace = rect.top - GAP;
+      const nextPlacement = belowSpace >= 180 || belowSpace >= aboveSpace ? 'below' : 'above';
+
       const calculatedStyle = {
         position: 'absolute',
-        top: rect.bottom + window.scrollY + 8,
+        top:
+          nextPlacement === 'below'
+            ? rect.bottom + window.scrollY + GAP
+            : rect.top + window.scrollY - GAP - estimatedHeight,
         left: rect.left + window.scrollX,
         minWidth: Math.max(360, rect.width || 0),
         zIndex: 1500,
       };
 
       setStyle(calculatedStyle);
+      setPlacement(nextPlacement);
       setIsReady(true);
       return true;
     };
@@ -161,9 +194,19 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
       
       if (rect.width === 0 && rect.height === 0) return;
 
+      const GAP = 8;
+      const estimatedHeight = dropdownHeights.container || 414;
+      const belowSpace = window.innerHeight - rect.bottom - GAP;
+      const aboveSpace = rect.top - GAP;
+      const nextPlacement = belowSpace >= 180 || belowSpace >= aboveSpace ? 'below' : 'above';
+
+      setPlacement(nextPlacement);
       setStyle({
         position: 'absolute',
-        top: rect.bottom + window.scrollY + 8,
+        top:
+          nextPlacement === 'below'
+            ? rect.bottom + window.scrollY + GAP
+            : rect.top + window.scrollY - GAP - estimatedHeight,
         left: rect.left + window.scrollX,
         minWidth: Math.max(360, rect.width || 0),
         zIndex: 1500,
@@ -181,7 +224,7 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
       window.removeEventListener('scroll', handleScroll, true);
       window.removeEventListener('resize', handleResize);
     };
-  }, [open]);
+  }, [open, dropdownHeights.container]);
 
   const selectedIds = useMemo(() => new Set(selected?.map(p => p.id) || []), [selected]);
 
@@ -200,21 +243,28 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
   const isSelected = id => localSelected?.some(item => item.id === id);
 
   const toggleLocal = person => {
-    lastSelectedIdRef.current = person.id;
     setLocalSelected(prev => {
       const exists = prev.find(item => item.id === person.id);
-      if (exists) return prev.filter(item => item.id !== person.id);
+      if (exists) {
+        lastActionRef.current = 'deselect';
+        lastSelectedIdRef.current = null;
+        return prev.filter(item => item.id !== person.id);
+      }
+      lastActionRef.current = 'select';
+      lastSelectedIdRef.current = person.id;
       return [...prev, person];
     });
   };
 
   useEffect(() => {
     if (!open) return;
+    if (lastActionRef.current !== 'select') return;
     if (!lastSelectedIdRef.current) return;
     const el = document.querySelector(`[data-rpcb-item="${lastSelectedIdRef.current}"]`);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
+    lastActionRef.current = null;
   }, [localSelected, open]);
 
   const triggerElement =
