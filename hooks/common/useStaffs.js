@@ -56,12 +56,12 @@ export const useStaffOptions = (params = {}) => {
  * })) || [];
  */
 export const useSearchStaffs = (options = {}) => {
-  const { branch_ids, enabled = true, onSuccess, onError } = options;
+  const { branch_ids, po_id, enabled = true, onSuccess, onError } = options;
 
   return useQuery({
-    queryKey: ['api_search_staffs', { branch_ids }],
+    queryKey: ['api_search_staffs', { branch_ids, po_id }],
     queryFn: async () => {
-      const params = branch_ids ? { branch_ids } : undefined;
+      const params = branch_ids ? { branch_ids, po_id } : undefined;
       const res = await apiStaff.apiSearchStaffs(params);
       
       if (res?.isSuccess === 1 && onSuccess) {
