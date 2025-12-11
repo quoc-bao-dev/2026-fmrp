@@ -9,7 +9,7 @@ export default function ReusableSheet(props) {
         <AnimatePresence>
             {isOpen && sheetData && (
                 <motion.div
-                    className={`fixed z-50 bg-white shadow-lg ${sheetData.className || 'w-[400px]'}`}
+                    className={`fixed z-[100] bg-white shadow-lg ${sheetData.className || 'w-[400px]'}`}
                     style={{
                         top: '72px',
                         bottom: '0px',

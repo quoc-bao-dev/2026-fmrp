@@ -31,6 +31,7 @@ import {
 } from '@/components/icons';
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
 import UnionStepIcon from '@/components/icons/common/UnionStepIcon';
+import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComponent';
 import { CONFIRM_DELETION, TITLE_DELETE_COMMAND, TITLE_DELETE_PRODUCTIONS_ORDER } from '@/constants/delete/deleteTable';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import PopupKeepStock from '@/containers/manufacture/materials-planning/components/popup/popupKeepStock';
@@ -58,7 +59,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { debounce } from 'lodash';
 import { useRouter } from 'next/router';
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
-import DatePicker from 'react-datepicker';
 import { useInView } from 'react-intersection-observer';
 import { useDispatch, useSelector } from 'react-redux';
 import { v4 as uddid } from 'uuid';
@@ -1313,52 +1313,32 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
             </motion.div>
           </div>
 
-          <div className='relative'>
-            <div className='3xl:size-5 size-4 absolute top-1/2 -translate-y-1/2 left-2 z-[2] pointer-events-none'>
-              <CalendarIcon className='size-full text-[#9295A4]' />
-            </div>
-
-            <DatePicker
-              // id="start"
-              portalId='menu-time'
-              calendarClassName='rasta-stripes'
-              clearButtonClassName=''
-              selected={isStateProvider?.productionsOrders.date.dateStart}
-              startDate={isStateProvider?.productionsOrders.date.dateStart}
-              endDate={isStateProvider?.productionsOrders.date.dateEnd}
-              selectsRange
-              onChange={date => {
-                const [start, end] = date;
-                queryStateProvider({
-                  productionsOrders: {
-                    ...isStateProvider?.productionsOrders,
-                    date: {
-                      dateStart: start,
-                      dateEnd: end,
-                    },
+          <DateToDateComponent
+            placeholder={dataLang?.productions_orders_select_day || 'dd/mm/yyyy → dd/mm/yyyy'}
+            value={{
+              startDate: isStateProvider?.productionsOrders.date.dateStart || null,
+              endDate: isStateProvider?.productionsOrders.date.dateEnd || null,
+            }}
+            onChange={value => {
+              queryStateProvider({
+                productionsOrders: {
+                  ...isStateProvider?.productionsOrders,
+                  date: {
+                    dateStart: value?.startDate || null,
+                    dateEnd: value?.endDate || null,
                   },
-                });
-              }}
-              isClearable
-              dateFormat='dd/MM/yyyy'
-              placeholderText={'dd/mm/yyyy - dd/mm/yyyy' || `${dataLang?.productions_orders_select_day}`}
-              className='pl-8 pr-2 3xl:h-10 h-9 text-base-default w-[290px] outline-none cursor-pointer focus:outline-none border-[#D0D5DD] focus:border-[#3276FA] focus:bg-[#EBF5FF] placeholder:text-[#3A3E4C] border rounded-md'
-              // onKeyDown={(e) => e.preventDefault()} // 👈 chặn gõ bàn phím
-            />
-
-            {!isStateProvider?.productionsOrders.date.dateStart && (
-              <span className='absolute top-1/2 -translate-y-1/2 right-2 3xl:size-4 size-3.5 shrink-0 text-[#9295A4] pointer-events-none'>
-                <CaretDownIcon className={`w-full h-full custom-transition`} />
-              </span>
-            )}
-          </div>
+                },
+              });
+            }}
+            className='text-base-default w-[290px] z-[51]'
+          />
 
           <FilterDropdown
             trigger={triggerFilterAll}
             style={{
               boxShadow: '0px 20px 24px -4px #10182814, 0px 4px 4px 0px #00000040',
             }}
-            className='flex flex-col gap-4 border-[#D8DAE5] rounded-lg 3xl:!min-w-[1820px] 2xl:min-w-[1500px] xxl:min-w-[1400px] xl:min-w-[1250px] lg:min-w-[1000px]'
+            className='z-[999] flex flex-col gap-4 border-[#D8DAE5] rounded-lg 3xl:!min-w-[1820px] 2xl:min-w-[1500px] xxl:min-w-[1400px] xl:min-w-[1250px] lg:min-w-[1000px]'
             dropdownId='dropdownFilterMain'
           >
             <div className='3xl:text-xl text-lg text-[#344054] font-medium'>{dataLang?.productions_orders_filter || 'productions_orders_filter'}</div>
