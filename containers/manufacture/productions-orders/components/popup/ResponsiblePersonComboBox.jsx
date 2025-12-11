@@ -1,6 +1,6 @@
 import { CheckThinIcon, MagnifyingGlassIcon } from '@/components/icons';
 import { Lexend_Deca } from '@next/font/google';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import ResponsibleAvatar from './ResponsibleAvatar';
 
@@ -26,10 +26,12 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
   const [localSelected, setLocalSelected] = useState(selected);
   const dropdownRef = useRef(null);
   const triggerRef = useRef(null);
+  const listRef = useRef(null);
   const lastSelectedIdRef = useRef(null);
   const prevOpenRef = useRef(open);
   const prevSelectedRef = useRef(selected);
   const [style, setStyle] = useState(null);
+  const [dropdownHeights, setDropdownHeights] = useState({ container: 414, list: 300 });
   const [isReady, setIsReady] = useState(false);
   const [errorMap, setErrorMap] = useState({});
 
@@ -52,6 +54,49 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
     }
     prevOpenRef.current = open;
   }, [open, selected]);
+
+  // Tính toán chiều cao tối đa để dropdown không tràn màn hình
+  useLayoutEffect(() => {
+    if (!open || !style) return;
+
+    const computeHeights = () => {
+      if (!triggerRef.current || !dropdownRef.current) return;
+
+      const GAP = 8; // khoảng cách giữa trigger và dropdown
+      const SAFE_MARGIN = 16; // chừa mép dưới một khoảng nhỏ
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+
+      // Không có kích thước hợp lệ -> bỏ qua
+      if (triggerRect.width === 0 && triggerRect.height === 0) return;
+
+      const availableBelow = window.innerHeight - triggerRect.bottom - GAP - SAFE_MARGIN;
+      if (availableBelow <= 0) return;
+
+      // Giới hạn container tối đa 414 nhưng không vượt quá khoảng trống
+      const containerMax = Math.min(414, availableBelow);
+
+      let listMax = 300;
+      if (listRef.current) {
+        const dropdownTop = dropdownRef.current.getBoundingClientRect().top;
+        const listTop = listRef.current.getBoundingClientRect().top;
+        const nonListHeight = listTop - dropdownTop; // chiều cao phần header + padding
+        listMax = Math.max(120, containerMax - nonListHeight - SAFE_MARGIN);
+      }
+
+      setDropdownHeights({
+        container: containerMax,
+        list: listMax,
+      });
+    };
+
+    computeHeights();
+    window.addEventListener('resize', computeHeights);
+    window.addEventListener('scroll', computeHeights, true);
+    return () => {
+      window.removeEventListener('resize', computeHeights);
+      window.removeEventListener('scroll', computeHeights, true);
+    };
+  }, [open, style]);
 
   // Handle click outside to close
   useEffect(() => {
@@ -196,8 +241,8 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
           <div className='fixed inset-0 z-[1400] pointer-events-none' data-rpcb-root>
             <div
               ref={dropdownRef}
-              className={`${deca.className} w-[389px] max-h-[414px] bg-white rounded-[16px] shadow-xl flex flex-col overflow-hidden pointer-events-auto ${className}`}
-              style={style}
+                className={`${deca.className} w-[389px] max-h-[414px] bg-white rounded-[16px] shadow-xl flex flex-col overflow-hidden pointer-events-auto ${className}`}
+                style={{ ...style, maxHeight: dropdownHeights.container }}
             >
               {/* Search */}
               <div className='px-4 pt-4'>
@@ -229,7 +274,11 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
 
               <div className='pt-2'></div>
               {/* List */}
-              <div className='flex-1 overflow-y-auto px-4 pt-4 pb-2 max-h-[300px]'>
+              <div
+                ref={listRef}
+                className='flex-1 overflow-y-auto px-4 pt-4 pb-2 max-h-[300px]'
+                style={{ maxHeight: dropdownHeights.list }}
+              >
                 <div className='space-y-2'>
                   {filtered
                     .slice()
