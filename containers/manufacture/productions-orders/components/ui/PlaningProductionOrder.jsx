@@ -260,6 +260,17 @@ const PlaningProductionOrder = memo(({ dataLang, searchMaterials = '' }) => {
     });
   }, [dataListBom?.data?.productsBom, normalizedSearch]);
 
+  const sortZeroLast = list => {
+    return (list || []).slice().sort((a, b) => {
+      const aZero = (+a?.total_quota || 0) === 0 ? 1 : 0;
+      const bZero = (+b?.total_quota || 0) === 0 ? 1 : 0;
+      return aZero - bZero;
+    });
+  };
+
+  const materialsSorted = useMemo(() => sortZeroLast(filteredMaterials), [filteredMaterials]);
+  const productsSorted = useMemo(() => sortZeroLast(filteredProducts), [filteredProducts]);
+
   return (
     <div className='flex flex-row w-full h-full items-start justify-between'>
       {/* bảng nguyên liêu */}
@@ -267,7 +278,7 @@ const PlaningProductionOrder = memo(({ dataLang, searchMaterials = '' }) => {
         {isLoadingDataListBom ? (
           <Loading className='h-80' color='#0f4f9e' />
         ) : (
-          <TablePlaning Title='kế hoạch nguyên vật liệu' dataLang={dataLang} data={filteredMaterials} typeTable='materials' />
+          <TablePlaning Title='kế hoạch nguyên vật liệu' dataLang={dataLang} data={materialsSorted} typeTable='materials' />
         )}
       </div>
 
@@ -276,7 +287,7 @@ const PlaningProductionOrder = memo(({ dataLang, searchMaterials = '' }) => {
         {isLoadingDataListBom ? (
           <Loading className='h-80' color='#0f4f9e' />
         ) : (
-          <TablePlaning Title='kế hoạch bán thành phẩm' dataLang={dataLang} data={filteredProducts} typeTable='products' />
+          <TablePlaning Title='kế hoạch bán thành phẩm' dataLang={dataLang} data={productsSorted} typeTable='products' />
         )}
       </div>
     </div>
