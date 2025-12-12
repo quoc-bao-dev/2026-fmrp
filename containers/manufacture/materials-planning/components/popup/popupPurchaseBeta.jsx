@@ -291,60 +291,60 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
       >
         <div className='mt-4'>
           <div className='flex items-center space-x-4 my-2 border-[#E7EAEE] border-opacity-70 border-b-[1px]'></div>
-          <div className='flex justify-between pb-4'>
-            <div className='flex items-center justify-between mb-1'>
-              <label className='text-[#344054] font-normal text-sm'>
-                {dataLang?.purchase_order_table_supplier} <span className='text-red-500'>*</span>
-              </label>
-              <ButtonAddNew onClick={() => sOpenSupplierPopup(true)} title={dataLang?.suppliers_supplier_add || 'Thêm nhanh NCC'} />
-            </div>
-            <Controller
-              name='supplier'
-              rules={{
-                required: {
-                  value: true,
-                  message: dataLang?.purchase_order_errSupplier || 'purchase_order_errSupplier',
-                },
-              }}
-              control={form.control}
-              render={({ field, fieldState }) => {
-                return (
-                  <div className=' relative'>
-                    <SelectComponent
-                      className={`${
-                        fieldState.error ? 'border-red-500' : 'border-transparent'
-                      }  placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
-                      isClearable={true}
-                      placeholder={dataLang?.purchase_order_supplier ?? 'purchase_order_supplier'}
-                      options={dataSupplier}
-                      {...field}
-                      onChange={event => {
-                        field.onChange(event);
-                      }}
-                      styles={{
-                        menu: (provided, state) => ({
-                          ...provided,
-                          width: '100%',
-                          zIndex: 999,
-                        }),
-                        menuPortal: base => ({
-                          ...base,
-                          zIndex: 9999999,
-                          position: 'absolute',
-                        }),
-                      }}
-                      value={field.value}
-                      maxMenuHeight={150}
-                    />
-                    {fieldState.error && <span className='text-[12px]  text-red-500'>{fieldState.error.message} </span>}
-                  </div>
-                );
-              }}
-            />
-            <div className='flex justify-end mb-4'>
-              <div className='w-[320px]'>
-                <SearchActionInput value={searchTerm} onChange={setSearchTerm} placeholder='Tìm kiếm theo tên, mã sản phẩm' />
+          <div className='flex justify-between items-end pb-4'>
+            <div className=''>
+              <div className='flex items-center justify-between   mb-2'>
+                <label className='text-[#344054] font-normal text-sm'>
+                  {dataLang?.purchase_order_table_supplier} <span className='text-red-500'>*</span>
+                </label>
+                <ButtonAddNew onClick={() => sOpenSupplierPopup(true)} title={dataLang?.suppliers_supplier_add || 'Thêm nhanh NCC'} />
               </div>
+              <Controller
+                name='supplier'
+                rules={{
+                  required: {
+                    value: true,
+                    message: dataLang?.purchase_order_errSupplier || 'purchase_order_errSupplier',
+                  },
+                }}
+                control={form.control}
+                render={({ field, fieldState }) => {
+                  return (
+                    <div className=' relative'>
+                      <SelectComponent
+                        className={`${
+                          fieldState.error ? 'border-red-500' : 'border-transparent'
+                        }  placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
+                        isClearable={true}
+                        placeholder={dataLang?.purchase_order_supplier ?? 'purchase_order_supplier'}
+                        options={dataSupplier}
+                        {...field}
+                        onChange={event => {
+                          field.onChange(event);
+                        }}
+                        styles={{
+                          menu: (provided, state) => ({
+                            ...provided,
+                            width: '100%',
+                            zIndex: 999,
+                          }),
+                          menuPortal: base => ({
+                            ...base,
+                            zIndex: 9999999,
+                            position: 'absolute',
+                          }),
+                        }}
+                        value={field.value}
+                        maxMenuHeight={150}
+                      />
+                      {fieldState.error && <span className='text-[12px]  text-red-500'>{fieldState.error.message} </span>}
+                    </div>
+                  );
+                }}
+              />
+            </div>
+            <div className='w-[320px]'>
+              <SearchActionInput value={searchTerm} onChange={setSearchTerm} placeholder='Tìm kiếm theo tên, mã sản phẩm' />
             </div>
           </div>
 

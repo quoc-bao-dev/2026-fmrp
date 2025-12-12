@@ -792,9 +792,6 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                     <tr>
                       {isQuickSelectMode && (
                         <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>
-<<<<<<< Updated upstream
-                          <Tooltip title='Chế độ chọn nhanh: chọn tất cả' trigger='manual' open={showQuickSelectHint} position='bottom' theme='dark' distance={12} animation='perspective'>
-=======
                           <Tooltip
                             title='Bấm vào để chọn tất cả'
                             trigger='manual'
@@ -804,7 +801,6 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                             distance={12}
                             animation='perspective'
                           >
->>>>>>> Stashed changes
                             <div className='flex justify-center'>
                               <CheckboxDefault checked={selectedItemsForQuickSelect.length > 0 && selectedItemsForQuickSelect.length === findValue.arrayItem?.length} onChange={handleSelectAllItems} />
                             </div>
