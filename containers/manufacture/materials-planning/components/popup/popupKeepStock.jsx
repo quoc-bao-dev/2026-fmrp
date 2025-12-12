@@ -1001,7 +1001,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                                 <CheckboxDefault
                                   checked={isSelected}
                                   onChange={event => {
-                                    event.stopPropagation();
+                                    event?.stopPropagation?.();
                                     handleToggleItemSelection(e.id);
                                   }}
                                 />
