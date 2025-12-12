@@ -160,7 +160,7 @@ const SelectSearch = ({
               onChange={handleSelectAll}
             />
               {showSelectedCount && (
-                <p className="responsive-text-sm font-normal text-blue-color">
+                <p className="responsive-text-sm font-normal text-blue-fmrp">
                   {Array.isArray(value) ? value.length : (value ? 1 : 0)} đã chọn
                 </p>
               )}

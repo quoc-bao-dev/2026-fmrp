@@ -265,7 +265,7 @@ const PieChartNew = () => {
                     transition={{ duration: 0.8 }}
                     className="flex-1 border border-border-gray-2 rounded-lg p-2 flex flex-col gap-1"
                 >
-                    <h3 className="text-2xl font-semibold text-typo-blue-4">
+                    <h3 className="text-2xl font-semibold text-blue-fmrp">
                         {inProduction?.toLocaleString()}
                     </h3>
                     <p className="text-sm font-normal text-typo-black-1">Đang sản xuất</p>

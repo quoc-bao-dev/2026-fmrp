@@ -255,7 +255,7 @@ const InputCustom = ({
         onClick={() => handleButtonClick('decrement')}
         onMouseDown={(e) => e.preventDefault()}
         className={twMerge(
-          'size-9 rounded-full flex-shrink-0 cursor-pointer bg-primary-05 hover:bg-typo-blue-4/50 flex justify-center items-center flex-row',
+          'size-9 rounded-full flex-shrink-0 cursor-pointer bg-primary-05 hover:bg-blue-fmrp/50 flex justify-center items-center flex-row',
           classNameButton
         )}
       >
@@ -278,7 +278,7 @@ const InputCustom = ({
         onClick={() => handleButtonClick('increment')}
         onMouseDown={(e) => e.preventDefault()}
         className={twMerge(
-          'size-9 rounded-full flex-shrink-0 cursor-pointer bg-primary-05 hover:bg-typo-blue-4/50 flex justify-center items-center flex-row',
+          'size-9 rounded-full flex-shrink-0 cursor-pointer bg-primary-05 hover:bg-blue-fmrp/50 flex justify-center items-center flex-row',
           classNameButton
         )}
       >

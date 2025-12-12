@@ -47,10 +47,9 @@ module.exports = {
         'brand-color': '#003DA0',
         'new-blue': '#003DA0',
         'black-color': '#141522',
-        'blue-color': '#0375F3',
         'secondary-color-text': '#637381',
         'secondary-color-text-disabled': '#919EAB',
-        'light-blue-color': '#0375F3',
+        'blue-fmrp': '#0375F3', // nói màu xanh fmrp thì lấy màu này
         primary: {
           '01': '#0F4F9E',
           '05': '#C7DFFB',
@@ -96,7 +95,6 @@ module.exports = {
             1: '#11315B',
             2: '#3276FA',
             3: '#4752E6',
-            4: '#0375F3',
             5: '#25387A',
           },
           gray: {
@@ -147,7 +145,6 @@ module.exports = {
           },
           blue: {
             1: '#5B65F5',
-            2: '#0375F3',
             3: '#EBF5FF',
             4: '#0F4F9E',
           },

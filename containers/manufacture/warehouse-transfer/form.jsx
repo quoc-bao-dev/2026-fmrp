@@ -5,12 +5,13 @@ import { DocumentDate, DocumentNumber } from '@/components/common/orderManagemen
 import OrderFormTabs from '@/components/common/orderManagement/OrderFormTabs';
 import SelectSearch from '@/components/common/orderManagement/SelectSearch';
 import SelectWithRadio from '@/components/common/orderManagement/SelectWithRadio';
-import { TagColorProduct } from '@/components/common/tag/TagStatusNew';
+import { EditIcon } from '@/components/icons';
 import LayoutForm from '@/components/layout/LayoutForm';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
-import EmptyData from '@/components/UI/emptyData';
+import { TagColorProduct } from '@/components/UI/common/Tag/TagStatus';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';
 import Loading from '@/components/UI/loading/loading';
+import NoData from '@/components/UI/noData/nodata';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
 import { optionsQuery } from '@/configs/optionsQuery';
 import { CONFIRMATION_OF_CHANGES, TITLE_DELETE_ITEMS } from '@/constants/delete/deleteItems';
@@ -28,6 +29,7 @@ import formatNumberConfig from '@/utils/helpers/formatnumber';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Add } from 'iconsax-react';
 import moment from 'moment/moment';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { PiMapPinLight } from 'react-icons/pi';
@@ -36,7 +38,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { useWarehouseTransferExport } from './hooks/useWarehouseTransferExport';
 import { useWarehouseTransferItems } from './hooks/useWarehouseTransferItems';
 import { useWarehouseTransferTo } from './hooks/useWarehouseTransferTo';
-import { EditIcon } from '@/components/icons';
 
 /// Hậu viết API
 const WarehouseTransferForm = props => {
@@ -81,6 +82,15 @@ const WarehouseTransferForm = props => {
   const { data: dataReceivingLocation = [] } = useLocationByWarehouseTo(idReceiveWarehouse);
   // danh sách kho
   const { data: dataWarehouse = [] } = useWarehouseTransferExport(idBranch, idExportWarehouse);
+
+  const getTypeDataKey = textType => {
+    const typeMap = {
+      products: 0,
+      material: 1,
+      semi_products: 2,
+    };
+    return typeMap[textType] ?? 0;
+  };
 
   // set state lại initital khi render
   useEffect(() => {
@@ -445,20 +455,6 @@ const WarehouseTransferForm = props => {
     sListData([...newData]);
   };
 
-  // xóa tất cả dòng con
-  const _HandleDeleteAllChild = parentId => {
-    const newData = listData
-      .map(e => {
-        if (e.id === parentId) {
-          const newChild = e.child?.filter(ce => ce?.location !== null || ce?.receivingLocation !== null);
-          return { ...e, child: newChild };
-        }
-        return e;
-      })
-      .filter(e => e.child?.length > 0);
-    sListData([...newData]);
-  };
-
   // change dòng con
   const _HandleChangeChild = (parentId, childId, type, value) => {
     // Tạo một bản sao của listData để thay đổi
@@ -532,51 +528,6 @@ const WarehouseTransferForm = props => {
     }, 1000);
   };
 
-  // change value
-  const _HandleChangeValue = (parentId, value) => {
-    sOnLoadingChild(true);
-    const checkData = listData?.some(e => e?.item?.value === value?.value);
-    if (!checkData) {
-      const newData = listData?.map(e => {
-        if (e?.id === parentId) {
-          return {
-            ...e,
-            item: value,
-            child: [
-              {
-                idChildBackEnd: null,
-                id: uuidv4(),
-                disabledDate:
-                  (value?.e?.text_type === 'material' && dataMaterialExpiry?.is_enable === '1' && false) ||
-                  (value?.e?.text_type === 'material' && dataMaterialExpiry?.is_enable === '0' && true) ||
-                  (value?.e?.text_type === 'products' && dataProductExpiry?.is_enable === '1' && false) ||
-                  (value?.e?.text_type === 'products' && dataProductExpiry?.is_enable === '0' && true),
-                unit: value?.e?.unit_name,
-                receivingLocation: null,
-                location: null,
-                dataWarehouse: value?.e?.warehouse.map(e => ({
-                  label: e?.location_name,
-                  value: e?.id,
-                  warehouse_name: e?.warehouse_name,
-                  qty: e?.quantity,
-                })),
-                note: '',
-              },
-            ],
-          };
-        } else {
-          return e;
-        }
-      });
-      setTimeout(() => {
-        sOnLoadingChild(false);
-      }, 500);
-      sListData([...newData]);
-    } else {
-      isShow('error', dataLang?.returns_err_ItemSelect || 'returns_err_ItemSelect');
-    }
-  };
-
   const breadcrumbItems = [
     { label: `${dataLang?.Warehouse_title || 'Warehouse_title'}` },
     {
@@ -599,8 +550,8 @@ const WarehouseTransferForm = props => {
         onSave={_HandleSubmit.bind(this)}
         onExit={() => router.push(routerWarehouseTransfer.home)}
         leftContent={
-          <>
-            <div className='flex items-center justify-between'>
+          <div className='flex flex-col h-full min-h-0'>
+            <div className='flex items-center justify-between flex-shrink-0 mb-4'>
               <h2 className='responsive-text-xl font-medium text-brand-color w-full'>Thông tin mặt hàng</h2>
               <SelectSearch
                 options={dataItems}
@@ -618,7 +569,7 @@ const WarehouseTransferForm = props => {
                       <div className='flex flex-col gap-1 3xl:text-[10px] text-[9px] font-normal overflow-hidden w-full'>
                         <h3 className='font-semibold responsive-text-sm truncate text-black'>{option.e?.name}</h3>
 
-                        <h5 className='text-blue-color truncate'>
+                        <h5 className='text-blue-fmrp truncate'>
                           {option.e?.code}: {option?.e?.product_variation}
                         </h5>
 
@@ -626,197 +577,169 @@ const WarehouseTransferForm = props => {
                           ĐVT: {option.e?.unit_name} - {dataLang[option.e?.text_type]} - {dataLang?.purchase_survive || 'purchase_survive'}:{' '}
                           {option.e?.qty_warehouse ? formatNumber(option.e?.qty_warehouse) : '0'}
                         </div>
-                        {option.e?.text_type && <TagColorProduct dataLang={dataLang} dataKey={option.e?.text_type} name={option.e?.text_type} className='!px-1' textSize='text-[11px]' />}
+                        {option.e?.text_type && (
+                          <TagColorProduct dataLang={dataLang} dataKey={getTypeDataKey(option.e?.text_type)} name={option.e?.text_type} className='!px-1' textSize='text-[11px]' />
+                        )}
                       </div>
                     </div>
                   </div>
                 )}
               />
             </div>
-            <div className='h-full space-y-3 overflow-hidden'>
-              <Customscrollbar className='overflow-auto'>
-                <div className='grid grid-cols-20 gap-2 items-center responsive-text-base text-neutral-02 font-semibold sticky top-0 py-2 z-10 border-b border-b-[#F3F3F4]'>
-                  <h4 className='col-span-5'>{dataLang?.import_from_items || 'import_from_items'}</h4>
-                  <h4 className='col-span-3 text-center'>{dataLang?.warehouseTransfer_rransferPosition || 'warehouseTransfer_rransferPosition'}</h4>
-                  <h4 className='col-span-3 text-center'>{dataLang?.warehouseTransfer_receivingLocation || 'warehouseTransfer_receivingLocation'}</h4>
-                  <h4 className='col-span-2 text-center'>{'ĐVT'}</h4>
-                  <h4 className='col-span-3 text-center'>{dataLang?.recall_revenueQty || 'recall_revenueQty'}</h4>
-                  <h4 className='col-span-3 text-center'>{dataLang?.production_warehouse_note || 'production_warehouse_note'}</h4>
-                  <h4 className='col-span-1 text-center'></h4>
-                </div>
-                <div className='h-[100%] w-full relative'>
-                  {isFetching ? (
-                    <Loading className='w-full h-10' color='#0f4f9e' />
-                  ) : listData?.length === 0 ? (
-                    <EmptyData />
-                  ) : (
-                    <>
-                      {listData?.map(e => (
-                        <div key={e?.id?.toString()} className='grid items-start grid-cols-20 gap-2 my-1'>
-                          <div className='h-full col-span-5 p-2 border rounded-md'>
-                            <div className='relative mt-5'>
-                              <SelectComponent
-                                options={dataItems}
-                                value={e?.item}
-                                onChange={_HandleChangeValue.bind(this, e?.id)}
-                                placeholder={dataLang?.returns_nodata || 'returns_nodata'}
-                                className='w-full'
-                                noOptionsMessage={() => dataLang?.returns_nodata || 'returns_nodata'}
-                                menuPortalTarget={document.body}
-                                formatOptionLabel={option => (
-                                  <div className='flex items-center justify-between py-2'>
-                                    <div className='flex items-center gap-2'>
-                                      <div className='w-[40px] h-h-[60px]'>
-                                        {option.e?.images != null ? (
-                                          <img src={option.e?.images} alt='Product Image' className='max-w-[30px] h-[40px] text-[8px] object-cover rounded' />
-                                        ) : (
-                                          <div className=' w-[30px] h-[40px] object-cover  flex items-center justify-center rounded'>
-                                            <img src='/icon/noimagelogo.png' alt='Product Image' className='w-[30px] h-[30px] object-cover rounded' />
-                                          </div>
-                                        )}
-                                      </div>
-                                      <div>
-                                        <h3 className='font-medium 3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px]'>{option.e?.name}</h3>
-                                        <div className='flex gap-2'>
-                                          <h5 className='text-gray-400 font-normal 3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px]'>{option.e?.code}</h5>
-                                          <h5 className='font-medium 3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px]'>{option.e?.product_variation}</h5>
-                                        </div>
-                                        <h5 className='text-gray-400 font-medium text-xs 3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px]'>{dataLang[option.e?.text_type]}</h5>
-                                        <div className='flex items-center gap-2 italic'>
-                                          {dataProductSerial.is_enable === '1' && <div className='text-[11px] text-[#667085] font-[500]'>Serial: {option.e?.serial ? option.e?.serial : '-'}</div>}
-                                          {dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' ? (
-                                            <>
-                                              <div className='text-[11px] text-[#667085] font-[500]'>Lot: {option.e?.lot ? option.e?.lot : '-'}</div>
-                                              <div className='text-[11px] text-[#667085] font-[500]'>
-                                                Date: {option.e?.expiration_date ? formatMoment(option.e?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}
-                                              </div>
-                                            </>
-                                          ) : (
-                                            ''
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              />
-                              <button
-                                onClick={_HandleAddChild.bind(this, e?.id, e?.item)}
-                                className='absolute z-20 flex flex-col items-center justify-center w-10 h-10 transition ease-in-out rounded bg-slate-100 -top-5 right-5 hover:rotate-45 hover:bg-slate-200 hover:scale-105 hover:text-red-500'
-                              >
-                                <Add className='' />
-                              </button>
-                            </div>
-                            {e?.child?.filter(e => e?.location == null && e?.receivingLocation == null)?.length >= 2 && (
-                              <button
-                                onClick={_HandleDeleteAllChild.bind(this, e?.id, e?.item)}
-                                className='w-full rounded mt-1.5 px-5 py-1 overflow-hidden group bg-rose-500 relative hover:bg-gradient-to-r hover:from-rose-500 hover:to-rose-400 text-white hover:ring-2 hover:ring-offset-2 hover:ring-rose-400 transition-all ease-out duration-300'
-                              >
-                                <span className='absolute right-0 w-full h-full -mt-8 transition-all duration-1000 transform translate-x-12 bg-white opacity-10 rotate-12 group-hover:-translate-x-40 ease'></span>
-                                <span className='relative text-xs'>Xóa {e?.child?.filter(e => e?.location == null && e?.receivingLocation == null)?.length} hàng chưa chọn vị trí</span>
-                              </button>
-                            )}
-                          </div>
-                          <div className='col-span-15'>
-                            <div className='grid grid-cols-15 gap-2'>
-                              {load ? (
-                                <Loading className='h-full col-span-15' color='#0f4f9e' />
+            <div className='flex flex-col flex-1 min-h-0 overflow-hidden'>
+              <div className='grid grid-cols-20 gap-2 items-center responsive-text-base text-neutral-02 font-semibold py-2 z-10 border-b border-b-[#F3F3F4] flex-shrink-0'>
+                <h4 className='col-span-5'>{dataLang?.import_from_items || 'import_from_items'}</h4>
+                <h4 className='col-span-3 text-center'>{dataLang?.warehouseTransfer_rransferPosition || 'warehouseTransfer_rransferPosition'}</h4>
+                <h4 className='col-span-3 text-center'>{dataLang?.warehouseTransfer_receivingLocation || 'warehouseTransfer_receivingLocation'}</h4>
+                <h4 className='col-span-2 text-center'>{'ĐVT'}</h4>
+                <h4 className='col-span-3 text-center'>{dataLang?.recall_revenueQty || 'recall_revenueQty'}</h4>
+                <h4 className='col-span-3 text-center'>{dataLang?.production_warehouse_note || 'production_warehouse_note'}</h4>
+                <h4 className='col-span-1 text-center'></h4>
+              </div>
+              <Customscrollbar className='flex-1 min-h-0 h-0'>
+                {isFetching ? (
+                  <Loading className='w-full h-10' color='#0f4f9e' />
+                ) : listData?.length === 0 ? (
+                  <NoData type='report' titleText='Chưa có mặt hàng. Bắt đầu thêm mặt hàng tại khung tìm kiếm ngay!' className='h-[50vh]' />
+                ) : (
+                  listData?.map(e => (
+                    <div key={e?.id?.toString()} className='grid items-start grid-cols-20 gap-2 py-2 border-b border-b-[#F3F3F4]'>
+                      <div className='h-full col-span-5'>
+                        <div className='flex items-center justify-between gap-2'>
+                          <div className='flex items-center gap-2'>
+                            <div className='size-16 flex-shrink-0 rounded-md overflow-hidden'>
+                              {e?.item?.e?.images != null ? (
+                                <Image src={e?.item?.e?.images} alt='Product Image' className='size-full object-cover' width={64} height={64} />
                               ) : (
-                                e?.child?.map((ce, index) => (
-                                  <div key={ce?.id?.toString()} className='col-span-15 grid grid-cols-15 gap-2'>
-                                    <div className='col-span-3 flex flex-col justify-center h-fit'>
-                                      <SelectComponent
-                                        options={ce?.dataWarehouse}
-                                        value={ce?.location}
-                                        onChange={value => _HandleChangeChild(e?.id, ce?.id, 'location', value)}
-                                        placeholder={onLoadingChild ? '' : dataLang?.warehouseTransfer_rransferPosition || 'warehouseTransfer_rransferPosition'}
-                                        isClearable={true}
-                                        className='w-full'
-                                        classParent={`${errWarehouse && ce?.location == null ? 'border-red-500 border' : ''}`}
-                                        noOptionsMessage={() => dataLang?.returns_nodata || 'returns_nodata'}
-                                        menuPortalTarget={document.body}
-                                        formatOptionLabel={option => (
-                                          <div className=''>
-                                            <div className='flex gap-1'>
-                                              <h2 className='3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px] font-semibold'>{option?.label}</h2>
-                                            </div>
-                                            <div className='flex gap-1'>
-                                              {option?.qty && (
-                                                <h2 className='3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px] font-medium'>{dataLang?.returns_survive || 'returns_survive'}:</h2>
-                                              )}
-                                              <h2 className='3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px] uppercase font-semibold'>{option?.qty && formatNumber(option?.qty)}</h2>
-                                            </div>
-                                          </div>
-                                        )}
-                                      />
-                                    </div>
-                                    <div className='col-span-3 flex flex-col justify-center h-fit'>
-                                      <SelectComponent
-                                        options={dataReceivingLocation}
-                                        value={ce?.receivingLocation}
-                                        onChange={value => _HandleChangeChild(e?.id, ce?.id, 'receivingLocation', value)}
-                                        placeholder={onLoadingChild ? '' : dataLang?.warehouseTransfer_receivingLocation || 'warehouseTransfer_receivingLocation'}
-                                        className='w-full'
-                                        classParent={`${errReceivingLocation && ce?.receivingLocation == null ? 'border-red-500 border' : ''}`}
-                                        noOptionsMessage={() => dataLang?.returns_nodata || 'returns_nodata'}
-                                        menuPortalTarget={document.body}
-                                        formatOptionLabel={option => (
-                                          <div className=''>
-                                            <div className='flex gap-1'></div>
-                                            <div className='flex gap-1'>
-                                              <h2 className='3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px] font-semibold'>{option?.label}</h2>
-                                            </div>
-                                          </div>
-                                        )}
-                                      />
-                                    </div>
-                                    <div className='col-span-2 flex items-center justify-center h-full'>{ce?.unit}</div>
-                                    <div
-                                      className='col-span-3 flex items-center justify-center h-full gap-1'
-                                      onClick={() => {
-                                        if (!ce?.location || !ce?.unit) {
-                                          isShow('error', 'Vui lòng chọn vị trí trước');
-                                        }
-                                      }}
-                                    >
-                                      <InputCustom
-                                        state={ce?.exportQuantity || 0}
-                                        setState={val => _HandleChangeChild(e?.id, ce?.id, 'exportQuantity', val)}
-                                        min={0}
-                                        step={1}
-                                        allowDecimal={false}
-                                        disabled={false}
-                                        className='p-1 w-full'
-                                        classNameInput={`w-full text-center ${errQty && (!ce?.exportQuantity || ce?.exportQuantity == 0) ? 'border-red-500' : 'border-gray-200'}`}
-                                        classNameButton='size-7'
-                                      />
-                                    </div>
-                                    <div className='col-span-3 flex gap-1 items-center justify-center h-full'>
-                                      <EditIcon className='size-4' />
-                                      <input
-                                        value={ce?.note}
-                                        onChange={_HandleChangeChild.bind(this, e?.id, ce?.id, 'note')}
-                                        placeholder='Ghi chú ...'
-                                        type='text'
-                                        className='placeholder:text-slate-300 w-full bg-white rounded-[5.5px] text-[#52575E] font-normal px-1.5 outline-none'
-                                      />
-                                    </div>
-                                    <div className='flex items-center justify-center h-full'>
-                                      <ButtonDelete onDelete={_HandleDeleteChild.bind(this, e?.id, ce?.id)} />
-                                    </div>
-                                  </div>
-                                ))
+                                <Image src='/icon/noimagelogo.png' alt='Product Image' className='size-full object-cover' width={64} height={64} />
                               )}
                             </div>
+                            <div className='flex flex-col'>
+                              <h3 className='font-medium responsive-text-sm'>{e?.item?.e?.name}</h3>
+                              <div className='flex gap-2'>
+                                <h5 className='text-gray-400 font-normal responsive-text-sm'>{e?.item?.e?.code}</h5>
+                                <h5 className='font-medium responsive-text-sm'>{e?.item?.e?.product_variation}</h5>
+                              </div>
+                              <h5 className='text-gray-400 font-medium text-xs responsive-text-sm'>{dataLang[e?.item?.e?.text_type]}</h5>
+                              <div className='flex items-center gap-2 italic'>
+                                {dataProductSerial.is_enable === '1' && <div className='text-[11px] text-[#667085] font-[500]'>Serial: {e?.item?.e?.serial ? e?.item?.e?.serial : '-'}</div>}
+                                {dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' ? (
+                                  <>
+                                    <div className='text-[11px] text-[#667085] font-[500]'>Lot: {e?.item?.e?.lot ? e?.item?.e?.lot : '-'}</div>
+                                    <div className='text-[11px] text-[#667085] font-[500]'>
+                                      Date: {e?.item?.e?.expiration_date ? formatMoment(e?.item?.e?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}
+                                    </div>
+                                  </>
+                                ) : (
+                                  ''
+                                )}
+                              </div>
+                            </div>
                           </div>
+                          <button
+                            onClick={_HandleAddChild.bind(this, e?.id, e?.item)}
+                            className='p-1 transition ease-in-out rounded bg-primary-05 hover:rotate-45 hover:bg-slate-200 hover:scale-105 hover:text-red-500'
+                          >
+                            <Add className='size-4' />
+                          </button>
                         </div>
-                      ))}
-                    </>
-                  )}
-                </div>
+                      </div>
+                      <div className='col-span-15'>
+                        <div className='grid grid-cols-15 gap-2'>
+                          {load ? (
+                            <Loading className='h-full col-span-15' color='#0f4f9e' />
+                          ) : (
+                            e?.child?.map((ce, index) => (
+                              <div key={ce?.id?.toString()} className='col-span-15 grid grid-cols-15 gap-2'>
+                                <div className='col-span-3 flex flex-col justify-center h-fit'>
+                                  <SelectComponent
+                                    options={ce?.dataWarehouse}
+                                    value={ce?.location}
+                                    onChange={value => _HandleChangeChild(e?.id, ce?.id, 'location', value)}
+                                    placeholder={onLoadingChild ? '' : dataLang?.warehouseTransfer_rransferPosition || 'warehouseTransfer_rransferPosition'}
+                                    isClearable={true}
+                                    className='w-full'
+                                    classParent={`${errWarehouse && ce?.location == null ? 'border-red-500 border' : ''}`}
+                                    noOptionsMessage={() => dataLang?.returns_nodata || 'returns_nodata'}
+                                    menuPortalTarget={document.body}
+                                    formatOptionLabel={option => (
+                                      <div className=''>
+                                        <div className='flex gap-1'>
+                                          <h2 className='3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px] font-semibold'>{option?.label}</h2>
+                                        </div>
+                                        <div className='flex gap-1'>
+                                          {option?.qty && <h2 className='3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px] font-medium'>{dataLang?.returns_survive || 'returns_survive'}:</h2>}
+                                          <h2 className='3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px] uppercase font-semibold'>{option?.qty && formatNumber(option?.qty)}</h2>
+                                        </div>
+                                      </div>
+                                    )}
+                                  />
+                                </div>
+                                <div className='col-span-3 flex flex-col justify-center h-fit'>
+                                  <SelectComponent
+                                    options={dataReceivingLocation}
+                                    value={ce?.receivingLocation}
+                                    onChange={value => _HandleChangeChild(e?.id, ce?.id, 'receivingLocation', value)}
+                                    placeholder={onLoadingChild ? '' : dataLang?.warehouseTransfer_receivingLocation || 'warehouseTransfer_receivingLocation'}
+                                    className='w-full'
+                                    classParent={`${errReceivingLocation && ce?.receivingLocation == null ? 'border-red-500 border' : ''}`}
+                                    noOptionsMessage={() => dataLang?.returns_nodata || 'returns_nodata'}
+                                    menuPortalTarget={document.body}
+                                    formatOptionLabel={option => (
+                                      <div className=''>
+                                        <div className='flex gap-1'></div>
+                                        <div className='flex gap-1'>
+                                          <h2 className='3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px] font-semibold'>{option?.label}</h2>
+                                        </div>
+                                      </div>
+                                    )}
+                                  />
+                                </div>
+                                <div className='col-span-2 flex items-center justify-center h-full'>{ce?.unit}</div>
+                                <div
+                                  className='col-span-3 flex items-center justify-center h-full gap-1'
+                                  onClick={() => {
+                                    if (!ce?.location || !ce?.unit) {
+                                      isShow('error', 'Vui lòng chọn vị trí trước');
+                                    }
+                                  }}
+                                >
+                                  <InputCustom
+                                    state={ce?.exportQuantity || 0}
+                                    setState={val => _HandleChangeChild(e?.id, ce?.id, 'exportQuantity', val)}
+                                    min={0}
+                                    step={1}
+                                    allowDecimal={false}
+                                    disabled={false}
+                                    className='p-1 w-full'
+                                    classNameInput={`w-full text-center ${errQty && (!ce?.exportQuantity || ce?.exportQuantity == 0) ? 'border-red-500' : 'border-gray-200'}`}
+                                    classNameButton='size-7'
+                                  />
+                                </div>
+                                <div className='col-span-3 flex gap-1 items-center justify-center h-full'>
+                                  <EditIcon className='size-4' />
+                                  <input
+                                    value={ce?.note}
+                                    onChange={_HandleChangeChild.bind(this, e?.id, ce?.id, 'note')}
+                                    placeholder='Ghi chú ...'
+                                    type='text'
+                                    className='placeholder:text-slate-300 w-full bg-white rounded-[5.5px] text-[#52575E] font-normal outline-none'
+                                  />
+                                </div>
+                                <div className='flex items-center justify-center h-full'>
+                                  <ButtonDelete onDelete={_HandleDeleteChild.bind(this, e?.id, ce?.id)} />
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </Customscrollbar>
             </div>
-          </>
+          </div>
         }
         info={
           <OrderFormTabs

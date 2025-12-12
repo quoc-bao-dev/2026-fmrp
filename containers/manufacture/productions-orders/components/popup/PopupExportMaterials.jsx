@@ -713,7 +713,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
       <div className='flex gap-2 justify-between'>
         <div className='flex flex-col gap-1'>
           <h2 className='text-2xl font-bold capitalize'>Xuất kho sản xuất</h2>
-          <p className='text-base text-typo-blue-4'>{code}</p>
+          <p className='text-base text-blue-fmrp'>{code}</p>
         </div>
         <div className='flex gap-3 items-center'>
           {activeTab?.id === 'current' && (

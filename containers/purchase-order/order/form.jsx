@@ -1070,7 +1070,7 @@ const OrderForm = props => {
                       <div className='flex flex-col gap-1 3xl:text-[10px] text-[9px] font-normal overflow-hidden w-full'>
                         <h3 className='font-semibold responsive-text-sm truncate text-black'>{option.e?.name}</h3>
 
-                        <h5 className='text-blue-color truncate'>
+                        <h5 className='text-blue-fmrp truncate'>
                           {option.e?.code}: {option?.e?.product_variation}
                         </h5>
 

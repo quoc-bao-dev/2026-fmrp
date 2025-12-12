@@ -144,8 +144,8 @@ const PopupImportExcel = React.memo(props => {
   return (
     <>
       <button onClick={_CheckWareHouse} className='!py-3 3xl:py-3 3xl:px-4 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded border border-background-blue-2 transition'>
-        <ExcelIcon className='3xl:size-5 size-4 text-typo-blue-4' />
-        <span className='text-typo-blue-4 responsive-text-sm font-medium whitespace-nowrap'>Kiểm kê bằng excel</span>
+        <ExcelIcon className='3xl:size-5 size-4 text-blue-fmrp' />
+        <span className='text-blue-fmrp responsive-text-sm font-medium whitespace-nowrap'>Kiểm kê bằng excel</span>
       </button>
       <PopupCustom title={'Nhập excel để kiểm kê mặt hàng'} open={open} onClose={_HandleClose}>
         <div className='py-4 w-[600px] 2xl:space-y-5 space-y-4'>
@@ -164,7 +164,7 @@ const PopupImportExcel = React.memo(props => {
             </div>
             <button
               onClick={_HandleDownloadTemplate}
-              className='xl:text-sm text-xs xl:px-5 px-3 xl:py-2.5 py-1.5 bg-white border border-background-blue-2 text-typo-blue-4 rounded hover:bg-primary-07 transition flex items-center space-x-2'
+              className='xl:text-sm text-xs xl:px-5 px-3 xl:py-2.5 py-1.5 bg-white border border-background-blue-2 text-blue-fmrp rounded hover:bg-primary-07 transition flex items-center space-x-2'
             >
               <DocumentDownload className='size-4' />
               <span>Tải file mẫu</span>

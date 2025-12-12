@@ -465,7 +465,7 @@ const ProductsWarehouse = (props) => {
                                         {dataLang?.import_code_vouchers || "import_code_vouchers"}
                                     </ColumnTable>
                                     <ColumnTable colSpan={1} textAlign={"left"}>
-                                        {dataLang?.production_warehouse_LSX || "production_warehouse_LSX"}
+                                        Số lệnh sản xuất
                                     </ColumnTable>
                                     <ColumnTable colSpan={1} textAlign={"left"}>
                                         {dataLang?.productsWarehouse_warehouseImport || "productsWarehouse_warehouseImport"}
@@ -504,13 +504,18 @@ const ProductsWarehouse = (props) => {
                                                 <RowItemTable colSpan={1} textAlign={"left"}>
                                                     <PopupDetail
                                                         dataLang={dataLang}
-                                                        className="3xl:text-base 2xl:text-[12.5px] xl:text-[11px] font-medium text-[9px] px-2 col-span-1 text-center text-[#0F4F9E] hover:text-[#5599EC] transition-all ease-linear cursor-pointer "
+                                                        className="3xl:text-base 2xl:text-[12.5px] xl:text-[11px] font-medium text-[9px] px-2 col-span-1 text-center text-[#0375F3] hover:text-[#5599EC] transition-all ease-linear cursor-pointer "
                                                         name={e?.code}
                                                         id={e?.id}
                                                     />
                                                 </RowItemTable>
                                                 <RowItemTable colSpan={1} textAlign={"left"}>
-                                                    {e?.reference_no_detail}
+                                                    <div className="flex flex-col gap-1">
+                                                        {e?.production_order_reference_no}
+                                                        <span className="responsive-text-xxs text-[#0375F3]">
+                                                            {e?.reference_no_detail}
+                                                        </span>
+                                                    </div>
                                                 </RowItemTable>
                                                 <RowItemTable colSpan={1} textAlign={"left"}>
                                                     <LinkWarehouse

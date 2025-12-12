@@ -643,7 +643,7 @@ const PopupCompleteCommand = ({ onClose }) => {
           <div className='flex gap-2 justify-between'>
             <div className='flex flex-col gap-1'>
               <h2 className='text-2xl font-bold capitalize'>Hoàn thành tổng lệnh</h2>
-              <p className='text-base text-typo-blue-4'>{QRCode?.data?.reference_no}</p>
+              <p className='text-base text-blue-fmrp'>{QRCode?.data?.reference_no}</p>
             </div>
             <div className='flex gap-2 items-center'>
               <SelectComponent

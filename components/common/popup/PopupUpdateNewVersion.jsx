@@ -150,10 +150,10 @@ const PopupUpdateNewVersion = ({ version, setHasNewVersion }) => {
                 {/* button */}
                 <button
                     className={twMerge(
-                        "rounded-lg text-white bg-background-blue-4 py-[10px] px-[18px] w-fit border border-transparent transition-all duration-200 text-base font-normal",
+                        "rounded-lg text-white bg-blue-fmrp py-[10px] px-[18px] w-fit border border-transparent transition-all duration-200 text-base font-normal",
                         isUpdate
                             ? "cursor-not-allowed disabled:hover:opacity-100 disabled:bg-gray-500/20 disabled:text-white disabled:border-transparent disabled:cursor-not-allowed disabled:pointer-events-auto"
-                            : "hover:bg-white hover:text-background-blue-4 hover:border-background-blue-4 "
+                            : "hover:bg-white hover:text-blue-fmrp hover:border-blue-fmrp "
                     )}
                     onClick={() => {
                         handleUpdateNewVersion();
