@@ -161,7 +161,7 @@ const TabFilterProduction = React.memo((props) => {
             props?.total > 0 &&
             "py-1 px-2 rounded-full text-white text-xs font-semibold transition-colors duration-200"
           } 
-        ${isActive ? "bg-background-blue-2 " : "bg-neutral-02 group-hover:bg-background-blue-2"}
+        ${isActive ? "bg-blue-fmrp " : "bg-neutral-02 group-hover:bg-blue-fmrp"}
           
           `}
         >

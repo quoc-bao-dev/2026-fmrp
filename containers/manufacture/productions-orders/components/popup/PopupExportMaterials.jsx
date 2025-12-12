@@ -720,7 +720,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
             <button
               onClick={handleConfirm}
               disabled={isLoadingSubmit}
-              className='flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-background-blue-2 hover:bg-background-blue-2/80'
+              className='flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-blue-fmrp hover:bg-blue-fmrp/80'
             >
               {isLoadingSubmit ? (
                 'Đang xử lý...'
@@ -737,7 +737,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
                 onClick={handleConfirmReexport}
                 disabled={isSavingReexport}
                 className={`flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white ${
-                  isSavingReexport ? 'bg-background-blue-2 cursor-not-allowed opacity-70' : 'bg-background-blue-2 hover:bg-background-blue-2/80'
+                  isSavingReexport ? 'bg-blue-fmrp cursor-not-allowed opacity-70' : 'bg-blue-fmrp hover:bg-blue-fmrp/80'
                 }`}
               >
                 <CheckIcon className='size-4' /> {isSavingReexport ? 'Đang xử lý...' : `Xuất bổ sung${reexportSelectedCount > 0 ? ` (${reexportSelectedCount})` : ''}`}

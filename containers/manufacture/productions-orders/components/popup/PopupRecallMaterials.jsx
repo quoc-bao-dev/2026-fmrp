@@ -372,7 +372,7 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
               <button
                 onClick={handleConfirmRecall}
                 disabled={isSavingRecall}
-                className={`flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-background-blue-2 hover:bg-background-blue-2/80 disabled:opacity-60 disabled:cursor-not-allowed`}
+                className={`flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-blue-fmrp hover:bg-blue-fmrp/80 disabled:opacity-60 disabled:cursor-not-allowed`}
               >
                 <CheckIcon className='size-4' /> {isSavingRecall ? 'Đang lưu...' : 'Thu hồi'}
               </button>

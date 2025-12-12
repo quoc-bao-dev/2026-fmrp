@@ -217,7 +217,7 @@ const PopupPrintTemInventory = ({ id, onClose }) => {
             }
             title="In tem"
             className={twMerge(
-              "3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-white font-medium text-sm  rounded-lg bg-background-blue-2 border ",
+              "3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-white font-medium text-sm  rounded-lg bg-blue-fmrp border ",
               selectItems.length <= 0 || loadingButton
                 ? "border-transparent"
                 : "hover:bg-[#F7F8F9] hover:shadow-hover-button hover:border-[#25387A] hover:text-[#25387A] "

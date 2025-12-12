@@ -672,7 +672,7 @@ const PopupCompleteCommand = ({ onClose }) => {
                 <Image src={QRCode?.data?.qr || '/qrCode/QR.png'} alt='complete-command' width={50} height={50} className='rounded-[4px]' />
               </Tooltip>
 
-              <button onClick={handleConfirm} disabled={isLoadingSubmit} className='flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-background-blue-2'>
+              <button onClick={handleConfirm} disabled={isLoadingSubmit} className='flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-blue-fmrp'>
                 {isLoadingSubmit ? <span className='animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white'></span> : <CheckIcon className='size-4' />}
                 {isLoadingSubmit ? 'Đang xử lý...' : `Xác nhận${selectedCount > 0 ? ` (${selectedCount})` : ''}`}
               </button>

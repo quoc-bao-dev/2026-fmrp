@@ -540,7 +540,7 @@ const WarehouseTransfer = props => {
                           <RowItemTable colSpan={1} textAlign={'left'}>
                             <PopupDetailWarehouseTransfer
                               dataLang={dataLang}
-                              className='responsive-text-sm font-medium text-[#0F4F9E] hover:text-[#5599EC] transition-all ease-linear cursor-pointer '
+                              className='responsive-text-sm font-medium text-blue-fmrp hover:text-[#5599EC] transition-all ease-linear cursor-pointer '
                               name={e?.code}
                               id={e?.id}
                             />
