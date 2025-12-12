@@ -658,7 +658,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                   const selectedLevelId = field.value?.ppi_id === option?.ppi_id ? field.value?.selectedLevel?.id : null;
                   const hasMultiLevel = Array.isArray(option?.level_bom) && option.level_bom.length > 1;
                   const displayLevelName = option?.selectedLevel?.name || (selectedLevelId && option?.level_bom?.find(lv => lv.id === selectedLevelId)?.name);
-
+                  
                   // Khi đã chọn: hiển thị gọn kèm level đã chọn
                   if (context === 'value') {
                     return (
@@ -673,7 +673,9 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                               {option?.item_code} - {option?.item_variation}
                             </span>
                             <h5 className='responsive-text-xs'>{option?.reference_no_detail}</h5>
-                            {displayLevelName && <span className='px-1 py-[1px] rounded bg-blue-fmrp/10 text-blue-600 text-[9px] font-semibold'>{`BOM ${displayLevelName}`}</span>}
+                            {hasMultiLevel && displayLevelName && (
+                              <span className='px-1 py-[1px] rounded bg-blue-fmrp/10 text-blue-600 text-[9px] font-semibold'>{`BOM ${displayLevelName}`}</span>
+                            )}
                           </div>
                         </div>
                       </div>
