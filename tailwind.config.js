@@ -356,7 +356,6 @@ module.exports = {
             lineHeight: '32px',
           },
         },
-        
       });
     },
   ],
