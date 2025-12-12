@@ -11,6 +11,8 @@ import Zoom from '@/components/UI/zoomElement/zoomElement';
 import CheckboxDefault from '@/components/common/checkbox/CheckboxDefault';
 import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
 import SearchInput from '@/components/common/input/SearchInput';
+import { Tooltip } from 'react-tippy';
+import 'react-tippy/dist/tippy.css';
 import { optionsQuery } from '@/configs/optionsQuery';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import useFeature from '@/hooks/useConfigFeature';
@@ -25,6 +27,7 @@ import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { twMerge } from 'tailwind-merge';
 import { v4 as uuidv4 } from 'uuid';
+import SearchActionInput from '@/components/common/input/SearchActionInput';
 
 const initialState = {
   type: [
@@ -52,6 +55,7 @@ const initForm = {
 const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValue, fetchDataTable, hasPermission = true, ...rest }) => {
   const [open, sOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showQuickSelectHint, setShowQuickSelectHint] = useState(false);
 
   const isShow = useToast();
 
@@ -266,10 +270,8 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
         // Lấy dữ liệu mới nhất từ form thay vì findValue (có thể chưa cập nhật)
         const currentItems = form.getValues('arrayItem') || [];
         const currentItem = currentItems.find(e => e.id === item.id) || item;
-        
-        const quantityNeed = parseFloat(
-          currentItem?.quantityNeedAi?.replace(/,/g, '') || currentItem?.quantityNeed?.replace(/,/g, '') || 0
-        ); // Chuyển đổi quantityNeed thành số
+
+        const quantityNeed = parseFloat(currentItem?.quantityNeedAi?.replace(/,/g, '') || currentItem?.quantityNeed?.replace(/,/g, '') || 0); // Chuyển đổi quantityNeed thành số
         let quantityKeepp = parseFloat(currentItem.quantityKeepp.replace(/,/g, ''));
         let remainingQuantity = quantityNeed - quantityKeepp;
         const newData = currentItems.map(e => {
@@ -325,7 +327,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
     // Lấy dữ liệu mới nhất từ form để tránh race condition
     const currentItems = form.getValues('arrayItem') || [];
     if (!Array.isArray(currentItems) || currentItems.length === 0) return;
-    
+
     const newData = currentItems.map(e => {
       if (!e) return e;
       const location = e.warehouseLocation?.map(i => {
@@ -352,21 +354,21 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
 
   const handleIncrease = e => {
     if (!e?.id) return;
-    
+
     // Lấy dữ liệu mới nhất từ form để tránh race condition với các async operations
     const currentItems = form.getValues('arrayItem') || [];
     if (!Array.isArray(currentItems) || currentItems.length === 0) return;
-    
+
     // Tìm item trong currentItems để đảm bảo có dữ liệu mới nhất
     const currentItem = currentItems.find(item => item && item.id === e.id);
     if (!currentItem) return;
-    
+
     const insertIndex = currentItems.findIndex(item => item && item.id === e.id);
     if (insertIndex === -1) return;
-    
+
     const siblingIndex = currentItems.filter(item => item && item.idParent === currentItem.id).length + 1;
     const childIdPrefix = `${currentItem.id}__child__${String(siblingIndex).padStart(3, '0')}`;
-    
+
     // Tạo item mới với dữ liệu từ currentItem (đảm bảo có warehouse, location nếu đã được set)
     const newItemId = `${childIdPrefix}__${uuidv4()}`;
     const newItem = {
@@ -379,20 +381,16 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
       child: true,
       childOrder: siblingIndex,
     };
-    
+
     // Tạo array mới với item được insert
-    const newData = [
-      ...currentItems.slice(0, insertIndex + 1),
-      newItem,
-      ...currentItems.slice(insertIndex + 1),
-    ];
-    
+    const newData = [...currentItems.slice(0, insertIndex + 1), newItem, ...currentItems.slice(insertIndex + 1)];
+
     // Sử dụng setTimeout để đảm bảo React Hook Form đã xử lý xong các operations trước đó
     // và tránh conflict với các async operations đang chạy
     setTimeout(() => {
-      form.setValue('arrayItem', newData, { 
-        shouldValidate: false, 
-        shouldDirty: false 
+      form.setValue('arrayItem', newData, {
+        shouldValidate: false,
+        shouldDirty: false,
       });
     }, 0);
   };
@@ -402,35 +400,40 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
     setIsQuickSelectMode(true);
     setSelectedItemsForQuickSelect([]);
     setSelectedWarehouseForQuickSelect(null);
+    setShowQuickSelectHint(true);
   };
 
   const handleCancelQuickSelectMode = () => {
     setIsQuickSelectMode(false);
     setSelectedItemsForQuickSelect([]);
     setSelectedWarehouseForQuickSelect(null);
+    setShowQuickSelectHint(false);
   };
+
+  useEffect(() => {
+    if (showQuickSelectHint) {
+      const timer = setTimeout(() => setShowQuickSelectHint(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showQuickSelectHint]);
 
   const handleToggleItemSelection = itemId => {
     // Lấy dữ liệu mới nhất từ form
     const currentItems = form.getValues('arrayItem') || [];
-    
+
     setSelectedItemsForQuickSelect(prev => {
       const isCurrentlySelected = prev.includes(itemId);
-      
+
       // Tìm item hiện tại
       const currentItem = currentItems.find(item => item && item.id === itemId);
-      
+
       if (isCurrentlySelected) {
         // Bỏ chọn: xóa item và tất cả các child items
-        const childIds = currentItems
-          .filter(item => item && item.idParent === itemId)
-          .map(item => item.id);
+        const childIds = currentItems.filter(item => item && item.idParent === itemId).map(item => item.id);
         return prev.filter(id => id !== itemId && !childIds.includes(id));
       } else {
         // Chọn: thêm item và tất cả các child items
-        const childIds = currentItems
-          .filter(item => item && item.idParent === itemId)
-          .map(item => item.id);
+        const childIds = currentItems.filter(item => item && item.idParent === itemId).map(item => item.id);
         return [...prev, itemId, ...childIds];
       }
     });
@@ -521,10 +524,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
     // Hiển thị thông báo chi tiết
     if (successItems.length > 0 && failedItems.length > 0) {
       // Có cả thành công và thất bại
-      isShow(
-        'warning',
-        `Đã chọn kho "${warehouse.label}" cho ${successItems.length} mặt hàng thành công. ${failedItems.length} mặt hàng không có kho này trong danh sách.`
-      );
+      isShow('warning', `Đã chọn kho "${warehouse.label}" cho ${successItems.length} mặt hàng thành công. ${failedItems.length} mặt hàng không có kho này trong danh sách.`);
     } else if (successItems.length > 0) {
       // Tất cả đều thành công
       isShow('success', `Đã chọn kho "${warehouse.label}" cho ${successItems.length} mặt hàng thành công.`);
@@ -579,50 +579,49 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
           />
 
           <div className='flex items-center gap-3'>
-            <SearchInput
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder='Tìm kiếm theo tên, mã sản phẩm'
-              className='w-[360px]'
-            />
-             {!isQuickSelectMode ? (
-            <button
-              onClick={handleToggleQuickSelectMode}
-              className='px-4 py-2 bg-blue-fmrp text-white rounded-lg hover:bg-blue-fmrp/80 transition-all duration-300 text-sm font-medium flex items-center gap-2'
-            >
-              <Edit2 size='18' variant='Bold' />
-              Chọn kho nhanh
-            </button>
-          ) : (
-            <div className=''>
-              <div className='flex items-center gap-3'>
-                <WarehouseSelectDropdown
-                  options={getAvailableWarehouses()}
-                  value={selectedWarehouseForQuickSelect}
-                  onChange={warehouse => {
-                    if (warehouse) {
-                      handleQuickSelectWarehouse(warehouse);
-                    }
-                  }}
-                  placeholder= { selectedItemsForQuickSelect.length === 0 ? 'Vui lòng chọn mặt hàng' : 'Vui lòng chọn kho'}
-                  disabled={selectedItemsForQuickSelect.length === 0}
-                  formatOptionLabel={option => (
-                    <div className='flex flex-col justify-start gap-1'>
-                      <h2 className='responsive-text-sm'>{option?.label}</h2>
-                      <h2 className='responsive-text-sm'>{`(${dataLang?.materials_planning_exist || 'materials_planning_exist'}: ${option?.value})`}</h2>
-                    </div>
-                  )}
-                  allowClear={false}
-                />
-                <button onClick={handleCancelQuickSelectMode} className='px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300 text-sm font-medium'>
-                  Hủy
-                </button>
-              </div>
-              {selectedItemsForQuickSelect.length === 0 && <span className='text-sm text-orange-500 font-medium'>Vui lòng chọn ít nhất 1 mặt hàng</span>}
+            <div className='flex items-center gap-3 w-[360px]'>
+              <SearchActionInput value={searchTerm} onChange={setSearchTerm} placeholder='Tìm kiếm theo tên, mã sản phẩm' />
             </div>
-          )}
+            {!isQuickSelectMode ? (
+              <button
+                onClick={handleToggleQuickSelectMode}
+                className='px-4 py-2 bg-blue-fmrp text-white rounded-lg hover:bg-blue-fmrp/80 transition-all duration-300 text-sm font-medium flex items-center gap-2'
+              >
+                <Edit2 size='18' variant='Bold' />
+                Chọn kho nhanh
+              </button>
+            ) : (
+              <div className='relative'>
+                <div className='flex items-center gap-3'>
+                  {selectedItemsForQuickSelect?.length > 0 && (
+                    <WarehouseSelectDropdown
+                      options={getAvailableWarehouses()}
+                      value={selectedWarehouseForQuickSelect}
+                      onChange={warehouse => {
+                        if (warehouse) {
+                          handleQuickSelectWarehouse(warehouse);
+                        }
+                      }}
+                      placeholder={selectedItemsForQuickSelect.length === 0 ? 'Vui lòng chọn mặt hàng' : 'Vui lòng chọn kho'}
+                      disabled={selectedItemsForQuickSelect.length === 0}
+                      formatOptionLabel={option => (
+                        <div className='flex flex-col justify-start gap-1'>
+                          <h2 className='responsive-text-sm'>{option?.label}</h2>
+                          <h2 className='responsive-text-sm'>{`(${dataLang?.materials_planning_exist || 'materials_planning_exist'}: ${option?.value})`}</h2>
+                        </div>
+                      )}
+                      allowClear={false}
+                    />
+                  )}
+                  {selectedItemsForQuickSelect.length === 0 && <span className='absolute- top-[105%] left-2 text-sm text-orange-500 font-medium'>Vui lòng chọn ít nhất 1 mặt hàng</span>}
+
+                  <button onClick={handleCancelQuickSelectMode} className='px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300 text-sm font-medium'>
+                    Hủy
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-         
         </div>
 
         {/* ==== Select Production Order (chỉ hiển thị khi chọn tab product) ==== */}
@@ -657,57 +656,51 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
 
                 const renderOption = option => {
                   const selectedLevelId = field.value?.ppi_id === option?.ppi_id ? field.value?.selectedLevel?.id : null;
-                        const hasMultiLevel = Array.isArray(option?.level_bom) && option.level_bom.length > 1;
-                  const displayLevelName =
-                    option?.selectedLevel?.name ||
-                    (selectedLevelId && option?.level_bom?.find(lv => lv.id === selectedLevelId)?.name);
+                  const hasMultiLevel = Array.isArray(option?.level_bom) && option.level_bom.length > 1;
+                  const displayLevelName = option?.selectedLevel?.name || (selectedLevelId && option?.level_bom?.find(lv => lv.id === selectedLevelId)?.name);
 
-                          return (
+                  return (
                     <div className='flex flex-col gap-2 py-1'>
                       <div className='flex items-center gap-2 w-full'>
-                              <div className='size-[60px] shrink-0'>
-                                <img src={option.images ? option.images : '/icon/noimagelogo.png'} alt='Product Image' className='object-cover w-full h-full rounded' />
-                              </div>
-                              <div className='flex flex-col gap-1'>
-                                <h3 className='font-medium responsive-text-sm'>{option?.label}</h3>
-                                <h5 className='responsive-text-xs'>
-                                  {option?.item_code} - {option?.item_variation}
-                                </h5>
-                                <h5 className='responsive-text-xs'>{option?.reference_no_detail}</h5>
-                          {displayLevelName && (
-                            <span className='px-1.5 py-[1px] w-fit rounded bg-blue-fmrp/10 text-blue-600 text-[9px] font-medium'>
-                              BOM {displayLevelName}
-                            </span>
-                          )}
-                              </div>
-                            </div>
+                        <div className='size-[60px] shrink-0'>
+                          <img src={option.images ? option.images : '/icon/noimagelogo.png'} alt='Product Image' className='object-cover w-full h-full rounded' />
+                        </div>
+                        <div className='flex flex-col gap-1'>
+                          <h3 className='font-medium responsive-text-sm'>{option?.label}</h3>
+                          <h5 className='responsive-text-xs'>
+                            {option?.item_code} - {option?.item_variation}
+                          </h5>
+                          <h5 className='responsive-text-xs'>{option?.reference_no_detail}</h5>
+                          {displayLevelName && <span className='px-1.5 py-[1px] w-fit rounded bg-blue-fmrp/10 text-blue-600 text-[9px] font-medium'>BOM {displayLevelName}</span>}
+                        </div>
+                      </div>
                       {hasMultiLevel && (
                         <div className='flex flex-wrap gap-2 pl-[72px]'>
                           {option.level_bom.map(level => {
                             const isActive = selectedLevelId === level.id;
-                        return (
-                                    <button
+                            return (
+                              <button
                                 key={`${option.ppi_id}_${level.id}`}
-                                      type='button'
+                                type='button'
                                 className={`px-2 py-1 rounded text-[11px] font-semibold border transition-all ${
                                   isActive ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-fmrp/10 text-gray-600 border-gray-200 hover:text-blue-600'
-                                      }`}
-                                      onClick={event => {
-                                        event.stopPropagation();
+                                }`}
+                                onClick={event => {
+                                  event.stopPropagation();
                                   handleSelect({
-                                          ...option,
-                                          selectedLevel: level,
-                                        });
-                                      }}
-                                    >
-                                      BOM {level.name}
+                                    ...option,
+                                    selectedLevel: level,
+                                  });
+                                }}
+                              >
+                                BOM {level.name}
                               </button>
                             );
                           })}
-                              </div>
-                            )}
-                          </div>
-                        );
+                        </div>
+                      )}
+                    </div>
+                  );
                 };
 
                 return (
@@ -715,11 +708,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                     <WarehouseSelectDropdown
                       key={productionSelectKey}
                       className='w-[600px]'
-                      buttonClassName={twMerge(
-                        'placeholder:text-slate-300 bg-[#ffffff] border border-[#E5E7EB] w-full',
-                        fieldState.error ? 'border-red-500' : 'border-[#E5E7EB]'
-                      )}
-
+                      buttonClassName={twMerge('placeholder:text-slate-300 bg-[#ffffff] border border-[#E5E7EB] w-full', fieldState.error ? 'border-red-500' : 'border-[#E5E7EB]')}
                       dropdownClassName='w-[600px]'
                       allowClear={true}
                       placeholder={dataLang?.materials_planning_pease_select_product_placehoder ?? 'materials_planning_pease_select_product_placehoder'}
@@ -750,9 +739,24 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                   <thead className='bg-white sticky top-0 z-[9999] shadow-sm'>
                     <tr>
                       {isQuickSelectMode && (
-                      <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>
-                          <CheckboxDefault checked={selectedItemsForQuickSelect.length > 0 && selectedItemsForQuickSelect.length === findValue.arrayItem?.length} onChange={handleSelectAllItems} />
-                      </th>
+                        <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>
+                          <Tooltip
+                            title='Chế độ chọn nhanh: chọn tất cả'
+                            trigger='manual'
+                            open={showQuickSelectHint}
+                            position='bottom'
+                            theme='dark'
+                            distance={12}
+                            animation='perspective'
+                          >
+                            <div className='flex justify-center'>
+                              <CheckboxDefault
+                                checked={selectedItemsForQuickSelect.length > 0 && selectedItemsForQuickSelect.length === findValue.arrayItem?.length}
+                                onChange={handleSelectAllItems}
+                              />
+                            </div>
+                          </Tooltip>
+                        </th>
                       )}
                       <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>STT</th>
                       <th className='py-2 px-3 border-b border-gray-200 text-left text-sm font-normal text-[#9295A4] w-auto'>{dataLang?.price_quote_item || 'price_quote_item'}</th>
@@ -802,10 +806,10 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                           </tr>
                         );
                       }
-                      
+
                       // Helper function để lấy groupId (parent id) của item
                       // Nếu là parent thì groupId = id, nếu là child thì groupId = idParent
-                      const getGroupId = (item) => {
+                      const getGroupId = item => {
                         if (!item) return null;
                         // Nếu là child, groupId là idParent
                         if (item.child && item.idParent) {
@@ -814,7 +818,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                         // Nếu là parent, groupId là chính id của nó
                         return item.id;
                       };
-                      
+
                       // Map vị trí ban đầu của parent trong mảng để giữ thứ tự groups
                       const parentPositionMap = new Map();
                       currentItems.forEach((item, idx) => {
@@ -873,7 +877,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                       const sortedItems = [...filteredItems].sort((a, b) => {
                         const aGroupId = getGroupId(a);
                         const bGroupId = getGroupId(b);
-                        
+
                         // Bước 0: Nếu là quick select mode, ưu tiên group có thành phần đang active (được chọn)
                         if (isQuickSelectMode) {
                           const aGroupSelected = isGroupSelected(a);
@@ -919,291 +923,324 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                         // Bước 5: Nếu cả hai đều là parent (không nên xảy ra trong cùng group), giữ nguyên thứ tự
                         return 0;
                       });
-                      
+
                       // Render danh sách đã sắp xếp
                       return sortedItems.map((e, index) => {
-                      // Tìm index thực tế từ id để đảm bảo Controller path luôn đúng, kể cả khi array thay đổi
-                      // Sử dụng form.getValues() để lấy dữ liệu mới nhất thay vì findValue
-                      const currentItems = form.getValues('arrayItem') || [];
-                      const actualIndex = currentItems.findIndex(item => item && item.id === e.id);
-                      // Nếu không tìm thấy trong currentItems, fallback về index từ map
-                      const finalIndex = actualIndex !== -1 ? actualIndex : index;
-                      
-                      const isSelected = e?.id && selectedItemsForQuickSelect.includes(e.id);
-                      
-                      return (
-                      <tr 
-                        key={e?.id?.toString()} 
-                        className={`relative border-b border-[#E5E7EB]/20 ${
-                          isQuickSelectMode 
-                            ? `cursor-pointer ${isSelected ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'}` 
-                            : 'hover:bg-gray-50'
-                        }`}
-                        onClick={() => {
-                          if (isQuickSelectMode && e?.id) {
-                            handleToggleItemSelection(e.id);
-                          }
-                        }}
-                      >
-                        {isQuickSelectMode && (
-                          <td className='py-2 px-3 relative'>
-                            {/* Gạch xanh bên trái */}
-                            <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg ${
-                              isSelected ? 'bg-[#0375F3]' : 'bg-gray-300'
-                            }`} />
-                        </td>
-                        )}
-                        <td className='py-2 px-3 text-center text-sm font-semibold'>{index + 1}</td>
-                        <td className='py-2 px-3 text-left'>
-                          <div className='flex gap-2 min-w-0 '>
-                            {!e?.child && (
-                              <button
-                                className={twMerge(
-                                  'font-bold flex items-center justify-center p-0.5 rounded-full shrink-0 self-center transition-all',
-                                  (() => {
-                                    const currentItems = form.getValues('arrayItem') || [];
-                                    const currentItem = currentItems.find(x => x && x.id === e?.id);
-                                    const hasWarehouse = currentItem?.valueWarehouse;
-                                    return hasWarehouse
-                                      ? 'text-blue-600 hover:bg-blue-300 hover:text-blue-500 bg-blue-200 cursor-pointer'
-                                      : 'text-gray-400 bg-gray-200 cursor-not-allowed opacity-50';
-                                  })()
-                                )}
-                                onClick={ev => {
-                                  ev.stopPropagation();
-                                  if (e?.id) {
-                                    const currentItems = form.getValues('arrayItem') || [];
-                                    const currentItem = currentItems.find(x => x && x.id === e?.id);
-                                    if (currentItem?.valueWarehouse) {
-                                  handleIncrease(e);
-                                    }
-                                  }
-                                }}
-                                disabled={(() => {
-                                  const currentItems = form.getValues('arrayItem') || [];
-                                  const currentItem = currentItems.find(x => x && x.id === e?.id);
-                                  return !currentItem?.valueWarehouse;
-                                })()}
-                              >
-                                <Add size='20' />
-                              </button>
-                            )}
-                            {e?.child && <IconDown className='rotate-45 shrink-0' />}
-                            <div className='w-16 h-16 rounded flex items-center justify-center flex-shrink-0'>
-                              <Image src={e?.item?.image || '/icon/default/default.png'} alt={e?.item?.name || 'default'} width={64} height={64} className='object-cover rounded' />
-                            </div>
-                            <div className='flex flex-col gap-1 flex-1 min-w-0 overflow-hidden'>
-                              <h3 className='text-sm font-semibold text-[#141522]'>{e?.item?.name}</h3>
-                              <div className='flex flex-col gap-0.5'>
-                                <p className='text-[10px] font-normal text-[#667085]'>{e?.item?.variation}</p>
-                                <p className='text-xs font-normal text-typo-blue-2'>{e?.item?.item_code}</p>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className='py-2 px-3 text-center'>
-                          <span className='text-sm font-medium text-[#141522]'>{e?.quantityNeed == 0 ? '-' : <span>{ `${e?.quantityNeed} / `} <span className='text-[11px]'>{e?.unit || ''}</span> </span>}</span>
-                        </td>
-                        <td className='py-2 px-3 text-center'>
-                          <span className='text-sm font-medium text-[#141522]'>{e?.quantityNeedAi == 0 ? '-' : <span>{ `${e?.quantityNeedAi} / `} <span className='text-[11px]'>{e?.unit || ''}</span> </span>}</span>
-                        </td>
-                        <td className='py-2 px-3 text-center'>
-                          <span className='text-sm font-medium text-[#141522]'>{e?.quantityKeepp == 0 ? '-' : <span>{ `${e?.quantityKeepp} / `} <span className='text-[11px]'>{e?.unit || ''}</span> </span>}</span>
-                        </td>
-                        <td className='py-2 px-3 text-center'>
-                          <span className='text-sm font-medium text-[#141522]'>{e?.quantityInventory == 0 ? '-' : <span>{ `${e?.quantityInventory} / `} <span className='text-[11px]'>{e?.unit || ''}</span> </span>}</span>
-                        </td>
-                        <td className='py-2 px-3 text-center'>
-                          <Controller
-                            key={`warehouse-${e.id}-${finalIndex}`}
-                            name={`arrayItem.${finalIndex}.valueWarehouse`}
-                            control={form.control}
-                            rules={{
-                              required: {
-                                value: (() => {
-                                  const currentItems = form.getValues('arrayItem') || [];
-                                  return currentItems.find(x => x && x.id == e?.id)?.valueWarehouse ? false : true;
-                                })(),
-                                message: dataLang?.materials_planning_pease_select_warehouse || 'materials_planning_pease_select_warehouse',
-                              },
+                        // Tìm index thực tế từ id để đảm bảo Controller path luôn đúng, kể cả khi array thay đổi
+                        // Sử dụng form.getValues() để lấy dữ liệu mới nhất thay vì findValue
+                        const currentItems = form.getValues('arrayItem') || [];
+                        const actualIndex = currentItems.findIndex(item => item && item.id === e.id);
+                        // Nếu không tìm thấy trong currentItems, fallback về index từ map
+                        const finalIndex = actualIndex !== -1 ? actualIndex : index;
+
+                        const isSelected = e?.id && selectedItemsForQuickSelect.includes(e.id);
+
+                        return (
+                          <tr
+                            key={e?.id?.toString()}
+                            className={`relative border-b border-[#E5E7EB]/20 ${
+                              isQuickSelectMode ? `cursor-pointer ${isSelected ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'}` : 'hover:bg-gray-50'
+                            }`}
+                            onClick={() => {
+                              if (isQuickSelectMode && e?.id) {
+                                handleToggleItemSelection(e.id);
+                              }
                             }}
-                            render={({ field, fieldState }) => {
-                              const currentItems = form.getValues('arrayItem') || [];
-                              const currentItem = currentItems.find(x => x && x.id == e?.id);
-                              const arrWareHouse = currentItem?.warehouse || [];
-                              const currentValue = currentItem?.valueWarehouse;
-                              
-                              return (
-                                <div onClick={ev => ev.stopPropagation()}>
-                                  <WarehouseSelectDropdown
-                                    className='w-[220px]'
-                                    dropdownClassName='!w-[300px]'
-                                    options={arrWareHouse}
-                                    value={currentValue}
-                                    disabled={isQuickSelectMode}
-                                    onChange={warehouse => {
-                                      if (warehouse) {
-                                        fetchListLocationWarehouse(e, warehouse?.id);
-                                        field.onChange(warehouse);
-                                      } else {
-                                        // Xóa kho và vị trí
-                                        field.onChange(null);
+                          >
+                            {isQuickSelectMode && (
+                              <td className='py-2 px-3 text-center'>
+                                <CheckboxDefault
+                                  checked={isSelected}
+                                  onChange={event => {
+                                    event.stopPropagation();
+                                    handleToggleItemSelection(e.id);
+                                  }}
+                                />
+                              </td>
+                            )}
+                            <td className='py-2 px-3 text-center text-sm font-semibold'>{index + 1}</td>
+                            <td className='py-2 px-3 text-left'>
+                              <div className='flex gap-2 min-w-0 '>
+                                {!e?.child && (
+                                  <button
+                                    className={twMerge(
+                                      'font-bold flex items-center justify-center p-0.5 rounded-full shrink-0 self-center transition-all',
+                                      (() => {
                                         const currentItems = form.getValues('arrayItem') || [];
-                                        const currentItemIndex = currentItems.findIndex(x => x && x.id === e?.id);
-                                        if (currentItemIndex !== -1) {
-                                          form.setValue(`arrayItem.${currentItemIndex}.valueLocation`, null, { shouldValidate: false });
-                                          form.setValue(`arrayItem.${currentItemIndex}.warehouseLocation`, [], { shouldValidate: false });
+                                        const currentItem = currentItems.find(x => x && x.id === e?.id);
+                                        const hasWarehouse = currentItem?.valueWarehouse;
+                                        return hasWarehouse
+                                          ? 'text-blue-600 hover:bg-blue-300 hover:text-blue-500 bg-blue-200 cursor-pointer'
+                                          : 'text-gray-400 bg-gray-200 cursor-not-allowed opacity-50';
+                                      })()
+                                    )}
+                                    onClick={ev => {
+                                      ev.stopPropagation();
+                                      if (e?.id) {
+                                        const currentItems = form.getValues('arrayItem') || [];
+                                        const currentItem = currentItems.find(x => x && x.id === e?.id);
+                                        if (currentItem?.valueWarehouse) {
+                                          handleIncrease(e);
                                         }
                                       }
                                     }}
-                                    placeholder={dataLang?.salesOrder_select_warehouse || 'salesOrder_select_warehouse'}
-                                    allowClear={true}
-                                    formatOptionLabel={option => (
-                                      <div className='flex flex-col justify-start items-start gap-1'>
-                                        <h2 className='responsive-text-sm'>{option?.label}</h2>
-                                        <h2 className='responsive-text-sm'>{`(${dataLang?.materials_planning_exist || 'materials_planning_exist'}: ${option?.value})`}</h2>
-                                      </div>
-                                    )}
-                                    buttonClassName={fieldState.error ? '!border-red-500' : ''}
-                                  />
-                                  {fieldState.error && <span className='text-[12px] text-red-500'>{fieldState.error.message}</span>}
+                                    disabled={(() => {
+                                      const currentItems = form.getValues('arrayItem') || [];
+                                      const currentItem = currentItems.find(x => x && x.id === e?.id);
+                                      return !currentItem?.valueWarehouse;
+                                    })()}
+                                  >
+                                    <Add size='20' />
+                                  </button>
+                                )}
+                                {e?.child && <IconDown className='rotate-45 shrink-0' />}
+                                <div className='w-16 h-16 rounded flex items-center justify-center flex-shrink-0'>
+                                  <Image src={e?.item?.image || '/icon/default/default.png'} alt={e?.item?.name || 'default'} width={64} height={64} className='object-cover rounded' />
                                 </div>
-                              );
-                            }}
-                          />
-                        </td>
-                        <td className='py-2 px-3'>
-                          <div className='flex flex-col gap-2'>
-                            <Controller
-                              key={`location-${e.id}-${finalIndex}`}
-                              name={`arrayItem.${finalIndex}.valueLocation`}
-                              control={form.control}
-                              render={({ field, fieldState }) => {
-                                const currentItems = form.getValues('arrayItem') || [];
-                                const arrWareHouse = currentItems.find(x => x && x.id == e?.id);
-                                return arrWareHouse?.warehouseLocation?.map((x, Iindex) => {
+                                <div className='flex flex-col gap-1 flex-1 min-w-0 overflow-hidden'>
+                                  <h3 className='text-sm font-semibold text-[#141522]'>{e?.item?.name}</h3>
+                                  <div className='flex flex-col gap-0.5'>
+                                    <p className='text-[10px] font-normal text-[#667085]'>{e?.item?.variation}</p>
+                                    <p className='text-xs font-normal text-typo-blue-2'>{e?.item?.item_code}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className='py-2 px-3 text-center'>
+                              <span className='text-sm font-medium text-[#141522]'>
+                                {e?.quantityNeed == 0 ? (
+                                  '-'
+                                ) : (
+                                  <span>
+                                    {`${e?.quantityNeed} / `} <span className='text-[11px] text-[#667085]'>{e?.unit || ''}</span>{' '}
+                                  </span>
+                                )}
+                              </span>
+                            </td>
+                            <td className='py-2 px-3 text-center'>
+                              <span className='text-sm font-medium text-[#141522]'>
+                                {e?.quantityNeedAi == 0 ? (
+                                  '-'
+                                ) : (
+                                  <span>
+                                    {`${e?.quantityNeedAi} / `} <span className='text-[11px] text-[#667085]'>{e?.unit || ''}</span>{' '}
+                                  </span>
+                                )}
+                              </span>
+                            </td>
+                            <td className='py-2 px-3 text-center'>
+                              <span className='text-sm font-medium text-[#141522]'>
+                                {e?.quantityKeepp == 0 ? (
+                                  '-'
+                                ) : (
+                                  <span>
+                                    {`${e?.quantityKeepp} / `} <span className='text-[11px] text-[#667085]'>{e?.unit || ''}</span>{' '}
+                                  </span>
+                                )}
+                              </span>
+                            </td>
+                            <td className='py-2 px-3 text-center'>
+                              <span className='text-sm font-medium text-[#141522]'>
+                                {e?.quantityInventory == 0 ? (
+                                  '-'
+                                ) : (
+                                  <span>
+                                    {`${e?.quantityInventory} / `} <span className='text-[11px] text-[#667085]'>{e?.unit || ''}</span>{' '}
+                                  </span>
+                                )}
+                              </span>
+                            </td>
+                            <td className='py-2 px-3 text-center'>
+                              <Controller
+                                key={`warehouse-${e.id}-${finalIndex}`}
+                                name={`arrayItem.${finalIndex}.valueWarehouse`}
+                                control={form.control}
+                                rules={{
+                                  required: {
+                                    value: (() => {
+                                      const currentItems = form.getValues('arrayItem') || [];
+                                      return currentItems.find(x => x && x.id == e?.id)?.valueWarehouse ? false : true;
+                                    })(),
+                                    message: dataLang?.materials_planning_pease_select_warehouse || 'materials_planning_pease_select_warehouse',
+                                  },
+                                }}
+                                render={({ field, fieldState }) => {
+                                  const currentItems = form.getValues('arrayItem') || [];
+                                  const currentItem = currentItems.find(x => x && x.id == e?.id);
+                                  const arrWareHouse = currentItem?.warehouse || [];
+                                  const currentValue = currentItem?.valueWarehouse;
+
                                   return (
-                                    <Controller
-                                      key={`location-value-${e.id}-${finalIndex}-${Iindex}-${x.idFe}`}
-                                      name={`arrayItem.${finalIndex}.valueLocation.${Iindex}.newValue`}
-                                      control={form.control}
-                                      rules={{
-                                        required: {
-                                          value: x.show,
-                                          message: dataLang?.materials_planning_enter_quantity || 'materials_planning_enter_quantity',
-                                        },
-                                        validate: {
-                                          fn: value => {
-                                            try {
-                                              let mss = '';
-                                              if (x.show && x.newValue == null && value.newValue == null) {
-                                                mss = dataLang?.materials_planning_enter_quantity || 'materials_planning_enter_quantity';
-                                              }
-                                              if (x.show && x.newValue == 0 && value.newValue == 0) {
-                                                mss = dataLang?.materials_planning_must_be_greater || 'materials_planning_must_be_greater';
-                                              }
-                                              return mss || true;
-                                            } catch (error) {
-                                              throw error;
+                                    <div onClick={ev => ev.stopPropagation()}>
+                                      <WarehouseSelectDropdown
+                                        className='w-[220px]'
+                                        dropdownClassName='!w-[300px]'
+                                        options={arrWareHouse}
+                                        value={currentValue}
+                                        disabled={isQuickSelectMode}
+                                        onChange={warehouse => {
+                                          if (warehouse) {
+                                            fetchListLocationWarehouse(e, warehouse?.id);
+                                            field.onChange(warehouse);
+                                          } else {
+                                            // Xóa kho và vị trí
+                                            field.onChange(null);
+                                            const currentItems = form.getValues('arrayItem') || [];
+                                            const currentItemIndex = currentItems.findIndex(x => x && x.id === e?.id);
+                                            if (currentItemIndex !== -1) {
+                                              form.setValue(`arrayItem.${currentItemIndex}.valueLocation`, null, { shouldValidate: false });
+                                              form.setValue(`arrayItem.${currentItemIndex}.warehouseLocation`, [], { shouldValidate: false });
                                             }
-                                          },
-                                        },
-                                      }}
-                                      render={({ field, fieldState }) => {
-                                        return (
-                                          <div className='w-full z-[99]' onClick={ev => ev.stopPropagation()}>
-                                            <Zoom>
-                                              <div
-                                                onClick={() => handleShow(e.id, x.idFe)}
-                                                className={`border-gray-400 w-full text-[10px] font-medium bg-white hover:bg-gray-100 transition-all ease-in-out border rounded-2xl py-1 px-2 flex items-center gap-1 cursor-pointer`}
-                                              >
-                                                <div>
-                                                  {x.show ? (
-                                                    <TickCircle className='bg-blue-600 rounded-full' color='white' size={15} />
-                                                  ) : (
-                                                    <div className='w-4 h-4 bg-transparent border border-gray-300 rounded-full' />
-                                                  )}
-                                                </div>
-                                                <div className='flex flex-col items-start'>
-                                                  <h3 className=''>
-                                                    {x.label} - <span className='pl-1 text-blue-500'>{x.value}</span>
-                                                  </h3>
-                                                  <div className='flex flex-wrap items-center font-oblique'>
-                                                    {dataProductSerial.is_enable === '1' && (
-                                                      <div className='flex gap-0.5'>
-                                                        <h6 className='text-[8px]'>Serial:</h6>
-                                                        <h6 className='text-[9px] px-1 w-[full] text-left'>{x.serial == null || x.serial == '' ? '-' : x?.serial}</h6>
-                                                      </div>
-                                                    )}
-                                                    {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1') && (
-                                                      <>
-                                                        <div className='flex gap-0.5'>
-                                                          <h6 className='text-[8px]'>Lot:</h6>
-                                                          <h6 className='text-[9px] px-1 w-[full] text-left'>{x.lot == null || x.lot == '' ? '-' : x?.lot}</h6>
-                                                        </div>
-                                                        <div className='flex gap-0.5'>
-                                                          <h6 className='text-[8px]'>Date:</h6>
-                                                          <h6 className='text-[9px] px-1 w-[full] text-center'>
-                                                            {x?.expiration_date ? formatMoment(x?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}
-                                                          </h6>
-                                                        </div>
-                                                      </>
-                                                    )}
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </Zoom>
-                                            {x.show && (
-                                              <InPutNumericFormat
-                                                className={`py-1 px-2 my-1 ${fieldState.error ? 'border-red-500' : 'border-gray-400'} border outline-none rounded-3xl w-full`}
-                                                {...field}
-                                                onValueChange={event => {
-                                                  field.onChange({
-                                                    ...x,
-                                                    newValue: event.value == '' ? null : event.value,
-                                                  });
-                                                }}
-                                                value={field.value?.newValue || x?.newValue}
-                                                isAllowed={values => {
-                                                  const { floatValue } = values;
-                                                  if (floatValue == 0) {
-                                                    return true;
-                                                  }
-                                                  if (floatValue < 0) {
-                                                    isShow('error', dataLang?.materials_planning_please_enter_greater || 'materials_planning_please_enter_greater');
-                                                    return false;
-                                                  }
-                                                  return true;
-                                                }}
-                                              />
-                                            )}
-                                            {x.show && fieldState.error && <span className='text-[12px] text-red-500'>{fieldState.error.message}</span>}
+                                          }
+                                        }}
+                                        placeholder={dataLang?.salesOrder_select_warehouse || 'salesOrder_select_warehouse'}
+                                        allowClear={true}
+                                        formatOptionLabel={option => (
+                                          <div className='flex flex-col justify-start items-start gap-1'>
+                                            <h2 className='responsive-text-sm'>{option?.label}</h2>
+                                            <h2 className='responsive-text-sm'>{`(${dataLang?.materials_planning_exist || 'materials_planning_exist'}: ${option?.value})`}</h2>
                                           </div>
-                                        );
-                                      }}
-                                    />
+                                        )}
+                                        buttonClassName={fieldState.error ? '!border-red-500' : ''}
+                                      />
+                                      {fieldState.error && <span className='text-[12px] text-red-500'>{fieldState.error.message}</span>}
+                                    </div>
                                   );
-                                });
-                              }}
-                            />
-                          </div>
-                        </td>
-                        <td className='py-2 px-3 text-center'>
-                          <button
-                            onClick={ev => {
-                              ev.stopPropagation();
-                              removeItem(e.id);
-                            }}
-                            type='button'
-                            title='Xóa'
-                            className='transition w-[40px] h-10 rounded-[5.5px] hover:text-red-600 text-red-500 flex flex-col justify-center items-center'
-                          >
-                            <IconDelete />
-                          </button>
-                        </td>
-                      </tr>
-                      );
-                    });
+                                }}
+                              />
+                            </td>
+                            <td className='py-2 px-3'>
+                              <div className='flex flex-col gap-2'>
+                                <Controller
+                                  key={`location-${e.id}-${finalIndex}`}
+                                  name={`arrayItem.${finalIndex}.valueLocation`}
+                                  control={form.control}
+                                  render={({ field, fieldState }) => {
+                                    const currentItems = form.getValues('arrayItem') || [];
+                                    const arrWareHouse = currentItems.find(x => x && x.id == e?.id);
+                                    return arrWareHouse?.warehouseLocation?.map((x, Iindex) => {
+                                      return (
+                                        <Controller
+                                          key={`location-value-${e.id}-${finalIndex}-${Iindex}-${x.idFe}`}
+                                          name={`arrayItem.${finalIndex}.valueLocation.${Iindex}.newValue`}
+                                          control={form.control}
+                                          rules={{
+                                            required: {
+                                              value: x.show,
+                                              message: dataLang?.materials_planning_enter_quantity || 'materials_planning_enter_quantity',
+                                            },
+                                            validate: {
+                                              fn: value => {
+                                                try {
+                                                  let mss = '';
+                                                  if (x.show && x.newValue == null && value.newValue == null) {
+                                                    mss = dataLang?.materials_planning_enter_quantity || 'materials_planning_enter_quantity';
+                                                  }
+                                                  if (x.show && x.newValue == 0 && value.newValue == 0) {
+                                                    mss = dataLang?.materials_planning_must_be_greater || 'materials_planning_must_be_greater';
+                                                  }
+                                                  return mss || true;
+                                                } catch (error) {
+                                                  throw error;
+                                                }
+                                              },
+                                            },
+                                          }}
+                                          render={({ field, fieldState }) => {
+                                            return (
+                                              <div className='w-full z-[99]' onClick={ev => ev.stopPropagation()}>
+                                                <Zoom>
+                                                  <div
+                                                    onClick={() => handleShow(e.id, x.idFe)}
+                                                    className={`border-gray-400 w-full text-[10px] font-medium bg-white hover:bg-gray-100 transition-all ease-in-out border rounded-2xl py-1 px-2 flex items-center gap-1 cursor-pointer`}
+                                                  >
+                                                    <div>
+                                                      {x.show ? (
+                                                        <TickCircle className='bg-blue-600 rounded-full' color='white' size={15} />
+                                                      ) : (
+                                                        <div className='w-4 h-4 bg-transparent border border-gray-300 rounded-full' />
+                                                      )}
+                                                    </div>
+                                                    <div className='flex flex-col items-start'>
+                                                      <h3 className=''>
+                                                        {x.label} - <span className='pl-1 text-blue-500'>{x.value}</span>
+                                                      </h3>
+                                                      <div className='flex flex-wrap items-center font-oblique'>
+                                                        {dataProductSerial.is_enable === '1' && (
+                                                          <div className='flex gap-0.5'>
+                                                            <h6 className='text-[8px]'>Serial:</h6>
+                                                            <h6 className='text-[9px] px-1 w-[full] text-left'>{x.serial == null || x.serial == '' ? '-' : x?.serial}</h6>
+                                                          </div>
+                                                        )}
+                                                        {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1') && (
+                                                          <>
+                                                            <div className='flex gap-0.5'>
+                                                              <h6 className='text-[8px]'>Lot:</h6>
+                                                              <h6 className='text-[9px] px-1 w-[full] text-left'>{x.lot == null || x.lot == '' ? '-' : x?.lot}</h6>
+                                                            </div>
+                                                            <div className='flex gap-0.5'>
+                                                              <h6 className='text-[8px]'>Date:</h6>
+                                                              <h6 className='text-[9px] px-1 w-[full] text-center'>
+                                                                {x?.expiration_date ? formatMoment(x?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}
+                                                              </h6>
+                                                            </div>
+                                                          </>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </Zoom>
+                                                {x.show && (
+                                                  <InPutNumericFormat
+                                                    className={`py-1 px-2 my-1 ${fieldState.error ? 'border-red-500' : 'border-gray-400'} border outline-none rounded-3xl w-full`}
+                                                    {...field}
+                                                    onValueChange={event => {
+                                                      field.onChange({
+                                                        ...x,
+                                                        newValue: event.value == '' ? null : event.value,
+                                                      });
+                                                    }}
+                                                    value={field.value?.newValue || x?.newValue}
+                                                    isAllowed={values => {
+                                                      const { floatValue } = values;
+                                                      if (floatValue == 0) {
+                                                        return true;
+                                                      }
+                                                      if (floatValue < 0) {
+                                                        isShow('error', dataLang?.materials_planning_please_enter_greater || 'materials_planning_please_enter_greater');
+                                                        return false;
+                                                      }
+                                                      return true;
+                                                    }}
+                                                  />
+                                                )}
+                                                {x.show && fieldState.error && <span className='text-[12px] text-red-500'>{fieldState.error.message}</span>}
+                                              </div>
+                                            );
+                                          }}
+                                        />
+                                      );
+                                    });
+                                  }}
+                                />
+                              </div>
+                            </td>
+                            <td className='py-2 px-3 text-center'>
+                              <button
+                                onClick={ev => {
+                                  ev.stopPropagation();
+                                  removeItem(e.id);
+                                }}
+                                type='button'
+                                title='Xóa'
+                                className='transition w-[40px] h-10 rounded-[5.5px] hover:text-red-600 text-red-500 flex flex-col justify-center items-center'
+                              >
+                                <IconDelete />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      });
                     })()}
                   </tbody>
                 </table>
