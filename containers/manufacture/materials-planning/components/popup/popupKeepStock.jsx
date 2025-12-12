@@ -654,38 +654,61 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                   setProductionSelectKey(prev => prev + 1);
                 };
 
-                const renderOption = option => {
+                const renderOption = (option, { context } = {}) => {
                   const selectedLevelId = field.value?.ppi_id === option?.ppi_id ? field.value?.selectedLevel?.id : null;
                   const hasMultiLevel = Array.isArray(option?.level_bom) && option.level_bom.length > 1;
                   const displayLevelName = option?.selectedLevel?.name || (selectedLevelId && option?.level_bom?.find(lv => lv.id === selectedLevelId)?.name);
 
+                  // Khi đã chọn: hiển thị gọn kèm level đã chọn
+                  if (context === 'value') {
+                    return (
+                      <div className='flex items-center gap-2 py-1'>
+                        <div className='size-[40px] shrink-0'>
+                          <img src={option.images ? option.images : '/icon/noimagelogo.png'} alt='Product Image' className='object-cover w-full h-full rounded' />
+                        </div>
+                        <div className='flex flex-col items-start gap-1 min-w-0'>
+                          <h3 className='font-medium responsive-text-sm truncate'>{option?.label}</h3>
+                          <div className='flex flex-col items-start gap-2 text-left'>
+                            <span className='responsive-text-xs text-[#667085]'>
+                              {option?.item_code} - {option?.item_variation}
+                            </span>
+                            <h5 className='responsive-text-xs'>{option?.reference_no_detail}</h5>
+                            {displayLevelName && <span className='px-1 py-[1px] rounded bg-blue-fmrp/10 text-blue-600 text-[9px] font-semibold'>{`BOM ${displayLevelName}`}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
                   return (
                     <div className='flex flex-col gap-2 py-1'>
                       <div className='flex items-center gap-2 w-full'>
-                        <div className='size-[60px] shrink-0'>
+                        <div className='size-[60px] shrink-0 z-[2]'>
                           <img src={option.images ? option.images : '/icon/noimagelogo.png'} alt='Product Image' className='object-cover w-full h-full rounded' />
                         </div>
-                        <div className='flex flex-col gap-1'>
+                        <div className='flex flex-col gap-1 text-left'>
                           <h3 className='font-medium responsive-text-sm'>{option?.label}</h3>
                           <h5 className='responsive-text-xs'>
                             {option?.item_code} - {option?.item_variation}
                           </h5>
                           <h5 className='responsive-text-xs'>{option?.reference_no_detail}</h5>
-                          {displayLevelName && <span className='px-1.5 py-[1px] w-fit rounded bg-blue-fmrp/10 text-blue-600 text-[9px] font-medium'>BOM {displayLevelName}</span>}
+                          {/* {displayLevelName && <span className='px-1.5 py-[1px] w-fit rounded bg-blue-fmrp/10 text-blue-600 text-[9px] font-medium'>BOM {displayLevelName}</span>} */}
                         </div>
                       </div>
                       {hasMultiLevel && (
-                        <div className='flex flex-wrap gap-2 pl-[72px]'>
-                          {option.level_bom.map(level => {
+                        <div className='flex flex-col gap-2 pl-12 relative z-1'>
+                          {option.level_bom.map((level, levelIndex) => {
                             const isActive = selectedLevelId === level.id;
                             return (
-                              <button
+                              <label
                                 key={`${option.ppi_id}_${level.id}`}
-                                type='button'
-                                className={`px-2 py-1 rounded text-[11px] font-semibold border transition-all ${
-                                  isActive ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-fmrp/10 text-gray-600 border-gray-200 hover:text-blue-600'
-                                }`}
+                                className='relative flex items-center gap-2 cursor-pointer'
+                                onMouseDown={event => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                }}
                                 onClick={event => {
+                                  event.preventDefault();
                                   event.stopPropagation();
                                   handleSelect({
                                     ...option,
@@ -693,8 +716,36 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                                   });
                                 }}
                               >
-                                BOM {level.name}
-                              </button>
+                                {levelIndex > 0 && <div className='absolute -left-4 -top-8 w-[1px] h-8 bg-gray-200 z-0' />}
+                                <div className='absolute -left-4 -top-4 w-3 h-7 border-l-2 border-b-2 border-gray-200 rounded-bl-lg z-0' />
+                                <button
+                                  type='button'
+                                  className={`w-4 h-4 rounded-full border transition-all duration-200 flex items-center justify-center relative z-10 ${
+                                    isActive ? 'border-blue-600' : 'border-gray-300'
+                                  }`}
+                                  onMouseDown={event => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                  }}
+                                  onClick={event => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    handleSelect({
+                                      ...option,
+                                      selectedLevel: level,
+                                    });
+                                  }}
+                                >
+                                  {isActive && <span className='w-2 h-2 rounded-full bg-blue-600' />}
+                                </button>
+                                <span
+                                  className={`px-1.5 py-1 rounded responsive-text-xs font-semibold relative z-10 transition-all duration-300 ${
+                                    isActive ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-100' : 'bg-blue-fmrp/10 text-gray-600 hover:text-blue-600'
+                                  }`}
+                                >
+                                  BOM {level.name}
+                                </span>
+                              </label>
                             );
                           })}
                         </div>
@@ -717,6 +768,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                       onChange={handleSelect}
                       formatOptionLabel={renderOption}
                       isSearchable={true}
+                      hiddenDropdown={true}
                     />
                     {fieldState.error && <span className='text-[12px] text-red-500'>{fieldState.error.message} </span>}
                   </div>
@@ -740,20 +792,9 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                     <tr>
                       {isQuickSelectMode && (
                         <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>
-                          <Tooltip
-                            title='Chế độ chọn nhanh: chọn tất cả'
-                            trigger='manual'
-                            open={showQuickSelectHint}
-                            position='bottom'
-                            theme='dark'
-                            distance={12}
-                            animation='perspective'
-                          >
+                          <Tooltip title='Chế độ chọn nhanh: chọn tất cả' trigger='manual' open={showQuickSelectHint} position='bottom' theme='dark' distance={12} animation='perspective'>
                             <div className='flex justify-center'>
-                              <CheckboxDefault
-                                checked={selectedItemsForQuickSelect.length > 0 && selectedItemsForQuickSelect.length === findValue.arrayItem?.length}
-                                onChange={handleSelectAllItems}
-                              />
+                              <CheckboxDefault checked={selectedItemsForQuickSelect.length > 0 && selectedItemsForQuickSelect.length === findValue.arrayItem?.length} onChange={handleSelectAllItems} />
                             </div>
                           </Tooltip>
                         </th>

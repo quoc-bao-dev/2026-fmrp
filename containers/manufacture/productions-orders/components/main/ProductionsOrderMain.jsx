@@ -1855,7 +1855,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
 
           {isStateProvider?.productionsOrders?.isTabList?.type == 'semiProduct' && dataProductionOrderDetail?.listPOItems?.length > 0 && !isLoadingProductionOrderDetail && (
             <div ref={groupButtonRef} className='flex items-center justify-between gap-10 p-0.5 mb-2'>
-              <div className='flex gap-x-2 items-center w-1/2 rounded-lg border border-[#D0D5DD] px-4 py-2 focus-within:border-transparent focus-within:ring-2 focus-within:ring-blue-500'>
+              <div className='flex gap-x-2 items-center w-1/3 rounded-lg border border-[#D0D5DD] px-4 py-2 focus-within:border-transparent focus-within:ring-2 focus-within:ring-blue-500'>
                 <input
                   type='text'
                   placeholder='Tìm kiếm theo tên và mã nguyên vật liệu'
