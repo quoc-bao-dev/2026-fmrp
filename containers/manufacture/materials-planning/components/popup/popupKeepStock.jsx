@@ -414,7 +414,7 @@ const PopupKeepStock = ({
             button={
                 <div
                     // className="bg-blue-100 rounded-lg outline-none focus:outline-none"
-                    className="responsive-text-sm 3xl:px-4 py-2.5 px-3 bg-background-blue-2/80 hover:bg-background-blue-2 text-white rounded-lg flex items-center gap-x-2 transition-all duration-300"
+                    className="responsive-text-sm 3xl:px-4 py-2.5 px-3 bg-blue-fmrp/80 hover:bg-blue-fmrp text-white rounded-lg flex items-center gap-x-2 transition-all duration-300"
                     onClick={() => {
                         if (+dataTable?.countAll == 0) {
                             return isShow(
@@ -608,7 +608,7 @@ const PopupKeepStock = ({
                                                                         {option?.reference_no_detail}
                                                                     </h5>
                                                                     {displayLevelName && (
-                                                                        <span className="px-1.5 py-[1px] w-fit rounded bg-background-blue-2/10 text-blue-600 text-[9px] font-medium">
+                                                                        <span className="px-1.5 py-[1px] w-fit rounded bg-blue-fmrp/10 text-blue-600 text-[9px] font-medium">
                                                                             BOM {displayLevelName}
                                                                         </span>
                                                                     )}
@@ -697,7 +697,7 @@ const PopupKeepStock = ({
                                                                                 className={`px-1.5 py-1 rounded responsive-text-xs font-semibold relative z-10 transition-all duration-300 ${
                                                                                     selectedLevelId === level.id
                                                                                         ? "bg-blue-600 text-white shadow-sm ring-1 ring-blue-100"
-                                                                                        : "bg-background-blue-2/10 text-gray-600 hover:text-blue-600"
+                                                                                        : "bg-blue-fmrp/10 text-gray-600 hover:text-blue-600"
                                                                                 }`}
                                                                             >
                                                                                 BOM {level.name}
