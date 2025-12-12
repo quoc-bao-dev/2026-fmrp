@@ -310,11 +310,11 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
                 control={form.control}
                 render={({ field, fieldState }) => {
                   return (
-                    <div className=' relative'>
+                    <div className=' relative w-[400px]'>
                       <SelectComponent
                         className={`${
                           fieldState.error ? 'border-red-500' : 'border-transparent'
-                        }  placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
+                        } w-full placeholder:text-slate-300 bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
                         isClearable={true}
                         placeholder={dataLang?.purchase_order_supplier ?? 'purchase_order_supplier'}
                         options={dataSupplier}
