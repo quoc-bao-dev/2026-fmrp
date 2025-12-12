@@ -917,6 +917,16 @@ const PopupExportMaterialsTabReexport = forwardRef(
                 value={materialsSearchTerm}
                 onChange={e => setMaterialsSearchTerm(e.target.value)}
               />
+              {materialsSearchTerm && (
+                  <button
+                    type='button'
+                    onClick={() => setMaterialsSearchTerm('')}
+                    className='rounded-full bg-gray-100 hover:bg-gray-200 text-[#3A3E4C] p-1 transition'
+                    aria-label='Xóa tìm kiếm'
+                  >
+                    <CloseXIcon className='size-3' />
+                  </button>
+              )}
               <button className='rounded-lg bg-[#0375F3] p-1'>
                 <MagnifyingGlassIcon className='size-3 text-white' />
               </button>
@@ -1000,7 +1010,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
                                 {/* {material.unit_name !== material.unit_name_primary && ( */}
                                   {/* <> */}
                                     <div className='text-start whitespace-nowrap'>
-                                      <p className='text-blue-color font-medium text-lg'>
+                                      <p className='text-blue-fmrp font-medium text-lg'>
                                         {formatNumber(quantityTotal)} <span className='text-[#141522] font-medium text-xs'>/</span>
                                       </p>
                                       <span className='text-[#141522] text-xs font-medium'>{material.unit_name}</span>
@@ -1011,7 +1021,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
                                   {/* </> */}
                                 {/* )} */}
                                 <div className='text-start whitespace-nowrap'>
-                                  <p className='text-blue-color font-medium text-lg'>
+                                  <p className='text-blue-fmrp font-medium text-lg'>
                                     {formatNumber(quantityQuotaPrimary)} <span className='text-[#141522] font-medium text-xs'>/</span>
                                   </p>
                                   <span className='text-[#141522] text-xs font-medium'>{material.unit_name_primary}</span>

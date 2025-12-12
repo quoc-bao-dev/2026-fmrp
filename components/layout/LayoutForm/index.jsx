@@ -33,7 +33,7 @@ const LayoutForm = ({
           <h2 className="text-lg xl:text-2xl 2xl:text-[28px]/[40px] text-gray-800 font-medium">{heading}</h2>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-4 2xl:gap-6 h-fit">
+        <div className="flex flex-col lg:flex-row gap-4 2xl:gap-6 h-fit flex-1 min-h-0">
           <LeftContent>{leftContent}</LeftContent>
           <RightContent>
             {info && (

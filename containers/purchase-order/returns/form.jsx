@@ -790,7 +790,7 @@ const PurchaseReturnsForm = (props) => {
           <h3 className={`font-semibold responsive-text-sm ${isOnTable ? 'text-brand-color' : 'text-black'}`}>
             {option.e?.name || option.e?.item_name}
           </h3>
-          <h5 className={`${isOnTable ? 'text-neutral-03' : 'text-blue-color'} truncate`}>
+          <h5 className={`${isOnTable ? 'text-neutral-03' : 'text-blue-fmrp'} truncate`}>
             {option.e?.code}: {option.e?.product_variation}
           </h5>
           <h5 className="flex flex-wrap items-center text-neutral-03">
@@ -1022,7 +1022,7 @@ const PurchaseReturnsForm = (props) => {
                                             ce?.amount === null ||
                                             ce?.amount === 0
                                           }
-                                          className="2xl:scale-100 xl:scale-90 scale-75 hover:bg-typo-blue-4/50 font-bold flex items-center justify-center p-0.5 bg-primary-05 rounded-full"
+                                          className="2xl:scale-100 xl:scale-90 scale-75 hover:bg-blue-fmrp/50 font-bold flex items-center justify-center p-0.5 bg-primary-05 rounded-full"
                                           onClick={_HandleChangeChild.bind(this, e?.id, ce?.id, 'decrease')}
                                         >
                                           <Minus className="scale-50 2xl:scale-100 xl:scale-100" size="16" />
@@ -1047,7 +1047,7 @@ const PurchaseReturnsForm = (props) => {
                                           allowNegative={false}
                                         />
                                         <button
-                                          className="2xl:scale-100 xl:scale-90 scale-75 hover:bg-typo-blue-4/50 font-bold flex items-center justify-center p-0.5  bg-primary-05 rounded-full"
+                                          className="2xl:scale-100 xl:scale-90 scale-75 hover:bg-blue-fmrp/50 font-bold flex items-center justify-center p-0.5  bg-primary-05 rounded-full"
                                           onClick={_HandleChangeChild.bind(this, e?.id, ce?.id, 'increase')}
                                         >
                                           <Add className="scale-50 2xl:scale-100 xl:scale-100" size="16" />

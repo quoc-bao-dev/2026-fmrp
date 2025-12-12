@@ -855,7 +855,7 @@ const PopupUpgradeProfessional = (props) => {
             <div className="pr-2 2xl:pr-2.5 flex flex-col gap-2 2xl:gap-6 bg-[#F9FAFC]">
               <hr className="border-[#919EAB3D]" />
               <div className="flex items-center justify-between">
-                <p className="text-2xl font-bold text-typo-blue-4">
+                <p className="text-2xl font-bold text-blue-fmrp">
                   {formatMoney(priceCalculation.total)}{" "}
                   <span className="underline">đ</span>/
                   {selectedPackages?.selectedPackage &&

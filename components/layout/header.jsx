@@ -1138,7 +1138,7 @@ const Header = () => {
       <div className='flex items-center gap-2 xl:gap-4 2xl:gap-6'>
         {authState?.is_upgrade && (
           <button
-            className='py-1 px-2 rounded-full bg-typo-blue-4 flex items-center gap-2'
+            className='py-1 px-2 rounded-full bg-blue-fmrp flex items-center gap-2'
             onClick={() => {
               dispatch({
                 type: 'statePopupGlobal',

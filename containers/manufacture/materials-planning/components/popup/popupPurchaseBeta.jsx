@@ -308,7 +308,7 @@ const PopupPurchaseBeta = ({
         >
           <div
             // className="flex items-center gap-2 px-3 py-2 "
-            className=" responsive-text-sm 3xl:px-4 py-2.5 px-3 bg-background-blue-2/80 hover:bg-background-blue-2 text-white rounded-lg flex items-center gap-x-2 transition-all duration-300"
+            className=" responsive-text-sm 3xl:px-4 py-2.5 px-3 bg-blue-fmrp/80 hover:bg-blue-fmrp text-white rounded-lg flex items-center gap-x-2 transition-all duration-300"
           >
             {icon} {title}
             {/* <h3 className="text-xs font-medium text-blue-600 3xl:text-base">

@@ -91,7 +91,7 @@ const PopupQRCodeHeader = () => {
           )}
         </div>
         <div className='flex flex-col gap-1 items-center justify-center'>
-          <p className='text-sm text-blue-color font-medium'>Tải ứng dụng FMRP</p>
+          <p className='text-sm text-blue-fmrp font-medium'>Tải ứng dụng FMRP</p>
           <div className='flex gap-2 items-center justify-center'>
             <Image src={IMAGES.qrDownloadApp} alt='qr-download-app' width={200} height={200} className='size-28 aspect-1 object-cover' />
             <div className='flex flex-col gap-2'>

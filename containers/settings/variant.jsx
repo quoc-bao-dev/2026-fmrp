@@ -75,7 +75,7 @@ const Variant = (props) => {
                                     <PopupVariant
                                         onRefresh={refetch.bind(this)}
                                         dataLang={dataLang}
-                                        className="responsive-text-sm xl:px-5 px-3 xl:py-2.5 py-1.5 bg-background-blue-2 text-white rounded-lg btn-animation hover:scale-105"
+                                        className="responsive-text-sm xl:px-5 px-3 xl:py-2.5 py-1.5 bg-blue-fmrp text-white rounded-lg btn-animation hover:scale-105"
                                     />
                                 </div>
                             </div>

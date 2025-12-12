@@ -1175,7 +1175,7 @@ const DeliveryReceiptForm = (props) => {
                                             ce?.quantity === null ||
                                             ce?.quantity === 0
                                           }
-                                          className="2xl:scale-100 xl:scale-90 scale-75 font-bold flex items-center justify-center p-0.5 bg-primary-05 hover:bg-typo-blue-4/50 rounded-full"
+                                          className="2xl:scale-100 xl:scale-90 scale-75 font-bold flex items-center justify-center p-0.5 bg-primary-05 hover:bg-blue-fmrp/50 rounded-full"
                                           onClick={_HandleChangeChild.bind(this, e?.id, ce?.id, 'decrease')}
                                         >
                                           <Minus size="16" className="scale-75 2xl:scale-100 xl:scale-90" />
@@ -1211,7 +1211,7 @@ const DeliveryReceiptForm = (props) => {
                                           }}
                                         />
                                         <button
-                                          className="2xl:scale-100 xl:scale-90 scale-75 font-bold flex items-center justify-center p-0.5 bg-primary-05 hover:bg-typo-blue-4/50 rounded-full"
+                                          className="2xl:scale-100 xl:scale-90 scale-75 font-bold flex items-center justify-center p-0.5 bg-primary-05 hover:bg-blue-fmrp/50 rounded-full"
                                           onClick={_HandleChangeChild.bind(this, e?.id, ce?.id, 'increase')}
                                         >
                                           <Add size="16" className="scale-75 2xl:scale-100 xl:scale-90" />

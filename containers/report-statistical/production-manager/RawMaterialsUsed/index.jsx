@@ -218,10 +218,10 @@ const RawMaterialsUsed = () => {
               <OnResetData sOnFetching={() => {}} onClick={refetchRawMaterialsUsed} className='!py-3' />
               <button
                 onClick={handleExportExcel}
-                className='!py-3 3xl:py-3 3xl:px-4 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded-lg border border-background-blue-2 transition'
+                className='!py-3 3xl:py-3 3xl:px-4 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded-lg border border-blue-fmrp transition'
               >
-                <ExcelIcon className='3xl:size-5 size-4 text-typo-blue-4' />
-                <span className='text-typo-blue-4 responsive-text-sm font-medium whitespace-nowrap'>{dataLang?.client_list_exportexcel}</span>
+                <ExcelIcon className='3xl:size-5 size-4 text-blue-fmrp' />
+                <span className='text-blue-fmrp responsive-text-sm font-medium whitespace-nowrap'>{dataLang?.client_list_exportexcel}</span>
               </button>
             </div>
           </div>

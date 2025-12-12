@@ -42,13 +42,14 @@ export const WarehouseSelectDropdown = ({
   offset = 8,
   maxHeightClass = 'max-h-80',
   buttonClassName = '',
-  contentClassName = 'fixed rounded-xl bg-white border border-[#E5E7EB] z-[9999] p-3 shadow-lg',
+  contentClassName = 'fixed rounded-lg bg-white border border-[#E5E7EB] z-[9999] p-3 shadow-lg',
   formatNumber: formatNumberFn = formatNumber,
   minDropdownWidth = 300,
   allowClear = false,
   formatOptionLabel = null,
   isSearchable = true,
   dropdownClassName = '',
+  hiddenDropdown = false,
 }) => {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0, width: 0, showAbove: false });
@@ -120,7 +121,8 @@ export const WarehouseSelectDropdown = ({
   const displayText = useMemo(() => {
     if (!value) return placeholder;
     if (formatOptionLabel) {
-      return formatOptionLabel(value);
+      // Cho phép custom hiển thị value đã chọn
+      return formatOptionLabel(value, { context: 'value' });
     }
     // Format mặc định: label (tồn: value)
     return `${value.label} (Tồn: ${formatNumberFn(Number(value.value || 0))})`;
@@ -183,16 +185,18 @@ export const WarehouseSelectDropdown = ({
                     setOpen(false);
                   }}
                 >
-                  <div
-                    className={twMerge(
-                      'w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0',
-                      isSelected ? 'border-[#0375F3]' : 'border-[#D0D5DD]'
-                    )}
-                  >
-                    {isSelected && <div className='w-2 h-2 rounded-full bg-[#0375F3]' />}
-                  </div>
+                  {!hiddenDropdown && (
+                    <div
+                      className={twMerge(
+                        'w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0',
+                        isSelected ? 'border-[#0375F3]' : 'border-[#D0D5DD]'
+                      )}
+                    >
+                      {isSelected && <div className='w-2 h-2 rounded-full bg-[#0375F3]' />}
+                    </div>
+                  )}
                   {formatOptionLabel ? (
-                    <div className='flex-1'>{formatOptionLabel(option)}</div>
+                    <div className='flex-1'>{formatOptionLabel(option, { context: 'menu' })}</div>
                   ) : (
                     <div className='flex flex-col gap-1 w-full'>
                       <span className='text-[#141522] text-xs font-normal'>{option.label}</span>
@@ -228,7 +232,7 @@ export const WarehouseSelectDropdown = ({
             });
           }}
           className={twMerge(
-            'flex justify-between items-center w-full text-[#3A3E4C] font-medium px-3 py-2 text-sm bg-white rounded-xl border border-[#E5E7EB] hover:border-[#D0D5DD] transition-all duration-200',
+            'flex justify-between items-center w-full text-[#3A3E4C] font-medium px-3 py-2 text-sm bg-white rounded-xl border border-[#D0D5DD] hover:border-[#D0D5DD] transition-all duration-200',
             disabled && 'opacity-50 cursor-not-allowed pointer-events-none',
             buttonClassName
           )}

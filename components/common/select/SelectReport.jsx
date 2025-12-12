@@ -9,10 +9,10 @@ const CustomRadio = ({ checked }) => {
     <div className="relative flex items-center justify-center">
       <div
         className={`w-4 h-4 rounded-full border ${
-          checked ? 'border-blue-color' : 'border-border-gray-1'
+          checked ? 'border-blue-fmrp' : 'border-border-gray-1'
         } flex items-center justify-center`}
       >
-        {checked && <div className="w-2 h-2 rounded-full bg-blue-color" />}
+        {checked && <div className="w-2 h-2 rounded-full bg-blue-fmrp" />}
       </div>
     </div>
   )

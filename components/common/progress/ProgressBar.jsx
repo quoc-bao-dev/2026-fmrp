@@ -38,7 +38,7 @@ const ProgressBar = ({
         <div
           className={twMerge(
             `h-full rounded-full transition-all duration-500 min-w-0 `,
-            isFull ? "bg-linear-bg-progress-full" : "bg-background-blue-2"
+            isFull ? "bg-linear-bg-progress-full" : "bg-blue-fmrp"
           )}
           style={{
             width: `${percent}%`,

@@ -620,21 +620,21 @@ const Popup_Detail = React.memo(props => {
                             </div>
                           </div>
                         </div>
-                        <HeaderTablePopup gridCols={13}>
+                        <HeaderTablePopup gridCols={20}>
                           <ColumnTablePopup colSpan={3}>{props.dataLang?.warehouses_detail_type || 'warehouses_detail_type'}</ColumnTablePopup>
-                          <ColumnTablePopup colSpan={2} className='!text-left'>
+                          <ColumnTablePopup colSpan={7} className='!text-left'>
                             {props.dataLang?.name || 'name'}
                           </ColumnTablePopup>
                           <ColumnTablePopup colSpan={2}>{props.dataLang?.unit}</ColumnTablePopup>
                           <ColumnTablePopup colSpan={2}>{props.dataLang?.norm_finishedProduct || 'norm_finishedProduct'}</ColumnTablePopup>
                           <ColumnTablePopup colSpan={2}>% {props.dataLang?.loss_finishedProduct || 'loss_finishedProduct'}</ColumnTablePopup>
-                          <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_usage_finishedProduct}</ColumnTablePopup>
+                          <ColumnTablePopup colSpan={4}>{props.dataLang?.stage_usage_finishedProduct}</ColumnTablePopup>
                         </HeaderTablePopup>
 
                         <Customscrollbar className='min-h-[250px] max-h-[450px]'>
                           <div className='divide-y divide-slate-200'>
                             {selectedListBom?.items?.map((e, index) => (
-                              <div key={e?.id ? e?.id.toString() : ''} className={`grid grid-cols-13 px-2 py-2.5 hover:bg-slate-50 items-center`}>
+                              <div key={e?.id ? e?.id.toString() : ''} className={`grid grid-cols-20 px-2 py-2.5 hover:bg-slate-50 items-center`}>
                                 {/* <h6 className="px-2 xl:text-[15px] text-xs col-span-2">
                                                                     {e?.str_type_item}
                                                                 </h6> */}
@@ -668,16 +668,17 @@ const Popup_Detail = React.memo(props => {
                                     name={e?.str_type_item}
                                   />
                                 </div>
-                                <h6 className='col-span-2 px-2 text-xs 2xl:text-base xl:text-sm'>
-                                  <div className='grid grid-cols-1'>
-                                    <h5>{e?.item_name}</h5>
-                                    <h5 className='text-xs italic'>{e?.variation_name}</h5>
+                                <h6 className='col-span-7 text-xs 2xl:text-base xl:text-sm'>
+                                  <div className='grid grid-cols-1 gap-0.5'>
+                                    <h5 className='responsive-text-base font-medium'>{e?.item_name}</h5>
+                                    <h5 className='responsive-text-sm italic'>{e?.variation_name}</h5>
+                                    <h5 className='responsive-text-sm italic text-blue-fmrp'>{e?.item_code}</h5>
                                   </div>
                                 </h6>
                                 <h6 className='col-span-2 px-2 text-xs text-center 2xl:text-base xl:text-sm'>{e?.unit_name}</h6>
                                 <h6 className='col-span-2 px-2 text-xs text-center 2xl:text-base xl:text-sm'>{formatNumber(e?.quota)}</h6>
                                 <h6 className='col-span-2 px-2 text-xs text-center 2xl:text-base xl:text-sm'>{formatNumber(e?.loss)}%</h6>
-                                <h6 className='col-span-2 px-2 text-xs text-center 2xl:text-base xl:text-sm'>{e?.stage_name}</h6>
+                                <h6 className='col-span-4 px-2 text-xs text-center 2xl:text-base xl:text-sm'>{e?.stage_name}</h6>
                               </div>
                             ))}
                           </div>
