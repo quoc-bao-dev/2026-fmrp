@@ -42,7 +42,7 @@ export const WarehouseSelectDropdown = ({
   offset = 8,
   maxHeightClass = 'max-h-80',
   buttonClassName = '',
-  contentClassName = 'fixed rounded-xl bg-white border border-[#E5E7EB] z-[9999] p-3 shadow-lg',
+  contentClassName = 'fixed rounded-lg bg-white border border-[#E5E7EB] z-[9999] p-3 shadow-lg',
   formatNumber: formatNumberFn = formatNumber,
   minDropdownWidth = 300,
   allowClear = false,
@@ -228,7 +228,7 @@ export const WarehouseSelectDropdown = ({
             });
           }}
           className={twMerge(
-            'flex justify-between items-center w-full text-[#3A3E4C] font-medium px-3 py-2 text-sm bg-white rounded-xl border border-[#E5E7EB] hover:border-[#D0D5DD] transition-all duration-200',
+            'flex justify-between items-center w-full text-[#3A3E4C] font-medium px-3 py-2 text-sm bg-white rounded-xl border border-[#D0D5DD] hover:border-[#D0D5DD] transition-all duration-200',
             disabled && 'opacity-50 cursor-not-allowed pointer-events-none',
             buttonClassName
           )}

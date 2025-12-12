@@ -197,7 +197,7 @@ export const CustomDropdownRadioGroup = ({
       }}
     >
       {isSearchable && (
-        <div className='mb-3 pb-3 border-b border-[#E5E7EB]'>
+        <div className='mb-3 pb-3 border-b border-[#D0D5DD]'>
           <div className='bg-white flex gap-x-2 items-center rounded-lg border border-[#D0D5DD] px-2 py-1.5 focus-within:border-transparent focus-within:ring-2 focus-within:ring-blue-500'>
             <input
               ref={searchInputRef}
