@@ -24,7 +24,7 @@ const PopupDetail = (props) => {
 
     const dataSeting = useSetingServer();
 
-    const { dataMaterialExpiry } = useFeature();
+    const { dataMaterialExpiry, dataProductSerial } = useFeature();
 
     const formatNumber = (number) => {
         return formatNumberConfig(+number, dataSeting);
@@ -194,7 +194,15 @@ const PopupDetail = (props) => {
                                                                         <h6 className="text-[13px] text-left font-medium capitalize">
                                                                             {e?.item?.product_variation}
                                                                         </h6>
-                                                                        <div className="flex flex-wrap items-center font-oblique">
+                                                                        <div className="flex flex-wrap items-center font-oblique text-typo-blue-2">
+                                                                            {e?.item?.serial !== null && dataProductSerial.is_enable === '1' ? (
+                                                                                <div className='flex gap-0.5'>
+                                                                                    <h6 className='text-[12px]'>Serial:</h6>
+                                                                                    <h6 className='text-[12px]  px-2   w-[full] text-left '>{e?.item?.serial == null || e?.item?.serial == '' ? '-' : e?.item?.serial}</h6>
+                                                                                </div>
+                                                                                ) : (
+                                                                                ''
+                                                                            )}
                                                                             {dataMaterialExpiry.is_enable === "1" ? (
                                                                                 <>
                                                                                     <div className="flex gap-0.5">
