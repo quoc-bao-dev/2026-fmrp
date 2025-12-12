@@ -271,7 +271,7 @@ const Products = props => {
                   setOpen={sOpenDetail}
                   isOpen={openDetail}
                   nameModel={'products'}
-                  className='responsive-text-sm 3xl:py-3 3xl:px-4 py-2 px-3 text-sm font-normal rounded-md bg-background-blue-2 text-white btn-animation hover:scale-105'
+                  className='responsive-text-sm 3xl:py-3 3xl:px-4 py-2 px-3 text-sm font-normal rounded-md bg-blue-fmrp text-white btn-animation hover:scale-105'
                 />
               ) : (
                 <button
@@ -279,7 +279,7 @@ const Products = props => {
                   onClick={() => {
                     isShow('error', WARNING_STATUS_ROLE);
                   }}
-                  className='responsive-text-sm 3xl:py-3 3xl:px-4 py-2 px-3 text-sm font-normal rounded-md bg-background-blue-2 text-white btn-animation hover:scale-105'
+                  className='responsive-text-sm 3xl:py-3 3xl:px-4 py-2 px-3 text-sm font-normal rounded-md bg-blue-fmrp text-white btn-animation hover:scale-105'
                 >
                   {dataLang?.branch_popup_create_new}
                 </button>

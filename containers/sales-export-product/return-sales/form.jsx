@@ -581,7 +581,7 @@ const ReturnSalesForm = (props) => {
           <div className="font-normal 3xl:text-[10px] text-[9px] text-neutral-03 overflow-hidden">
             <h3 className="font-semibold responsive-text-sm truncate text-black">{option.e?.name}</h3>
             <div className="flex gap-2">
-              <h5 className="text-typo-blue-4 truncate">
+              <h5 className="text-blue-fmrp truncate">
                 {option.e?.code} : {option.e?.product_variation}
               </h5>
             </div>
@@ -947,7 +947,7 @@ const ReturnSalesForm = (props) => {
                                         ce?.quantity === null ||
                                         ce?.quantity === 0
                                       }
-                                      className="2xl:scale-100 xl:scale-90 scale-75 font-bold flex items-center justify-center p-0.5 bg-primary-05 hover:bg-typo-blue-4/50 rounded-full"
+                                      className="2xl:scale-100 xl:scale-90 scale-75 font-bold flex items-center justify-center p-0.5 bg-primary-05 hover:bg-blue-fmrp/50 rounded-full"
                                       onClick={_HandleChangeChild.bind(this, e?.id, ce?.id, 'decrease')}
                                     >
                                       <Minus size="16" className="scale-75 2xl:scale-100 xl:scale-90" />
@@ -972,7 +972,7 @@ const ReturnSalesForm = (props) => {
                                       }}
                                     />
                                     <button
-                                      className="2xl:scale-100 xl:scale-90 scale-75 font-bold flex items-center justify-center p-0.5  bg-primary-05 hover:bg-typo-blue-4/50 rounded-full"
+                                      className="2xl:scale-100 xl:scale-90 scale-75 font-bold flex items-center justify-center p-0.5  bg-primary-05 hover:bg-blue-fmrp/50 rounded-full"
                                       onClick={_HandleChangeChild.bind(this, e?.id, ce?.id, 'increase')}
                                     >
                                       <Add size="16" className="scale-75 2xl:scale-100 xl:scale-90" />

@@ -109,7 +109,7 @@ const LayoutOrderManagement = ({
                   <h4 className="w-full text-black font-semibold">
                     {dataLang?.sales_product_total_into_money || 'sales_product_total_into_money'}
                   </h4>
-                  <span className="text-blue-color font-semibold">
+                  <span className="text-blue-fmrp font-semibold">
                     {isTotalMoney?.totalAmount != null ? formatMoney(isTotalMoney.totalAmount) : '-'}
                   </span>
                 </div>
@@ -133,7 +133,7 @@ const LayoutOrderManagement = ({
               onClick={onSave}
               dataLang={dataLang}
               loading={onSending}
-              className="sale-order-btn-submit 3xl:p-5 2xl:p-4 xl:pt-[10px] xl:pb-[10px] h-full bg-light-blue-color text-white 2xl:text-base xl:text-sm font-medium rounded-lg"
+              className="sale-order-btn-submit 3xl:p-5 2xl:p-4 xl:pt-[10px] xl:pb-[10px] h-full bg-blue-fmrp text-white 2xl:text-base xl:text-sm font-medium rounded-lg"
             >
               Lưu
             </Button>

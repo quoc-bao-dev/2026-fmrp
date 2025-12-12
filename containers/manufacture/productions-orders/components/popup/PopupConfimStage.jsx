@@ -538,7 +538,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
             <div className='flex items-center justify-between w-full'>
               <div className='flex flex-col gap-1'>
                 <h2 className='responsive-text-2xl font-bold text-neutral-07'>Hoàn thành chi tiết công đoạn</h2>
-                <span className='text-typo-blue-4 responsive-text-base'>(Số lệnh sản xuất: {data?.po?.reference_no})</span>
+                <span className='text-blue-fmrp responsive-text-base'>(Số lệnh sản xuất: {data?.po?.reference_no})</span>
               </div>
               <div className='mr-8'>
                 {isProPackage ? (
@@ -547,7 +547,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                     title='Xác nhận'
                     onClick={handleSubmit}
                     icon={<CheckIcon className='size-4' />}
-                    className={`py-2.5 2xl:py-3 px-3 2xl:px-4 text-white rounded-lg !responsive-text-base flex items-center gap-2 bg-typo-blue-4 hover:bg-typo-blue-5`}
+                    className={`py-2.5 2xl:py-3 px-3 2xl:px-4 text-white rounded-lg !responsive-text-base flex items-center gap-2 bg-blue-fmrp hover:bg-typo-blue-5`}
                   />
                 ) : (
                   <PackageUpgradeButton />
@@ -601,10 +601,10 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                                 activeStep.type == 'BTP' && activeStep?.item?.stage_id == e?.stage_id
                                   ? 'bg-gradient-to-r from-[#0375F336] to-[#C4C4C400] border-l-4 border-[#0375F3]'
                                   : 'hover:bg-gray-100'
-                              } ${e?.active == '1' ? 'text-typo-blue-4' : 'text-gray-500'} responsive-text-base list-none flex items-center gap-2 transition-all duration-200 ease-linear select-none`}
+                              } ${e?.active == '1' ? 'text-blue-fmrp' : 'text-gray-500'} responsive-text-base list-none flex items-center gap-2 transition-all duration-200 ease-linear select-none`}
                             >
                               <div className='min-w-[16px] flex items-center justify-center'>
-                                {e?.active == '1' ? <FaCheckCircle size='16' className='text-typo-blue-4' /> : <div className='w-1 h-1 bg-gray-500 rounded-full'></div>}
+                                {e?.active == '1' ? <FaCheckCircle size='16' className='text-blue-fmrp' /> : <div className='w-1 h-1 bg-gray-500 rounded-full'></div>}
                               </div>
                               <p>{e?.name_stage}</p>
                             </li>
@@ -630,10 +630,10 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                                 activeStep.type == 'TP' && activeStep?.item?.stage_id == e?.stage_id
                                   ? 'bg-gradient-to-r from-[#0375F336] to-[#C4C4C400] border-l-4 border-[#0375F3]'
                                   : 'hover:bg-gray-100 '
-                              } ${e?.active == '1' ? 'text-typo-blue-4' : 'text-gray-500'} responsive-text-base list-none flex items-center gap-2 transition-all duration-150 ease-linear select-none`}
+                              } ${e?.active == '1' ? 'text-blue-fmrp' : 'text-gray-500'} responsive-text-base list-none flex items-center gap-2 transition-all duration-150 ease-linear select-none`}
                             >
                               <div className='min-w-[16px] flex items-center justify-center'>
-                                {e?.active == '1' ? <FaCheckCircle size='16' className='text-typo-blue-4' /> : <div className='w-1 h-1 bg-gray-500 rounded-full'></div>}
+                                {e?.active == '1' ? <FaCheckCircle size='16' className='text-blue-fmrp' /> : <div className='w-1 h-1 bg-gray-500 rounded-full'></div>}
                               </div>
                               <p>{e?.name_stage}</p>
                             </li>

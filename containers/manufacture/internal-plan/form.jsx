@@ -337,7 +337,7 @@ const InternalPlanForm = (props) => {
           <h3 className={`font-semibold responsive-text-sm truncate ${isOnTable ? 'text-brand-color' : 'text-black'}`}>
             {option.e?.item_name}
           </h3>
-          <h3 className={`flex ${isOnTable ? 'text-neutral-03' : 'text-blue-color'}`}>
+          <h3 className={`flex ${isOnTable ? 'text-neutral-03' : 'text-blue-fmrp'}`}>
             {option.e?.code} - {option.e?.product_variation}
           </h3>
           <h5 className="text-neutral-03">

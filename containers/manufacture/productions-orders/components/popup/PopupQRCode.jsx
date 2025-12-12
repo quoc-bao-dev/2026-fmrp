@@ -67,7 +67,7 @@ const PopupQRCode = () => {
           </>
         )}
       </div>
-      <p className="w-full text-center font-normal text-base text-typo-blue-4 uppercase">
+      <p className="w-full text-center font-normal text-base text-blue-fmrp uppercase">
         {isStateProvider?.productionsOrders?.dataProductionOrderDetail?.title ||
           ""}
       </p>

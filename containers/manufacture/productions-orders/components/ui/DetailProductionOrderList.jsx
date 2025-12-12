@@ -24,12 +24,6 @@ const ProductRow = memo(({ product, index, item, totalLength, formatNumber, hand
     po_id,
     poi_id,
     enabled: !!po_id && !!poi_id,
-    onSuccess: res => {
-      console.log(`Manager detail for po_id: ${po_id}, poi_id: ${poi_id}:`, res);
-    },
-    onError: error => {
-      console.error(`Error fetching manager detail for po_id: ${po_id}, poi_id: ${poi_id}:`, error);
-    },
   });
 
   // Gọi hook để lấy danh sách staffs
@@ -112,7 +106,7 @@ const ProductRow = memo(({ product, index, item, totalLength, formatNumber, hand
   return (
     <div
       key={`product-${index}`}
-      onClick={() => handleToggleSheetDetail(product)}
+      onClick={() => handleToggleSheetDetail(product, managerAvatars)}
       className={`col-span-16 grid grid-cols-23 gap-2 items-center group hover:bg-gray-100 cursor-pointer transition-all duration-150 ease-in-out 3xl:py-4 py-2 ${
         totalLength - 1 === index ? 'border-transparent' : 'border-b'
       }`}

@@ -774,7 +774,7 @@ const PurchaseImportForm = props => {
         <div className='flex flex-col gap-1 3xl:text-[10px] text-[9px] font-normal overflow-hidden w-full'>
           <div className={`font-semibold responsive-text-sm truncate ${isOnTable ? 'text-brand-color xl:w-fit max-w-[75px]' : 'text-black'}`}>{option.e?.name}</div>
 
-          <div className={`${isOnTable ? 'text-neutral-03' : 'text-blue-color'} flex flex-wrap`}>
+          <div className={`${isOnTable ? 'text-neutral-03' : 'text-blue-fmrp'} flex flex-wrap`}>
             {option.e?.code}: {option?.e?.product_variation}
           </div>
 
@@ -1025,7 +1025,7 @@ const PurchaseImportForm = props => {
                                       }`}
                                     >
                                       <button
-                                        className='2xl:scale-100 xl:scale-90 scale-75 hover:bg-typo-blue-4/50 font-bold flex items-center justify-center p-0.5 bg-primary-05 rounded-full'
+                                        className='2xl:scale-100 xl:scale-90 scale-75 hover:bg-blue-fmrp/50 font-bold flex items-center justify-center p-0.5 bg-primary-05 rounded-full'
                                         onClick={_HandleChangeChild.bind(this, e?.id, ce?.id, 'decrease')}
                                       >
                                         <Minus className='scale-50 2xl:scale-100 xl:scale-100' size='16' />
@@ -1038,7 +1038,7 @@ const PurchaseImportForm = props => {
                                         allowNegative={false}
                                       />
                                       <button
-                                        className='2xl:scale-100 xl:scale-90 scale-75 hover:bg-typo-blue-4/50 font-bold flex items-center justify-center p-0.5  bg-primary-05 rounded-full'
+                                        className='2xl:scale-100 xl:scale-90 scale-75 hover:bg-blue-fmrp/50 font-bold flex items-center justify-center p-0.5  bg-primary-05 rounded-full'
                                         onClick={_HandleChangeChild.bind(this, e?.id, ce?.id, 'increase')}
                                       >
                                         <Add className='scale-50 2xl:scale-100 xl:scale-100' size='16' />

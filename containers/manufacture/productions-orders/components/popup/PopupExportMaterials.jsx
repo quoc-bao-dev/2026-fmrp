@@ -474,7 +474,18 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
   const isProductVisible = useCallback(
     product => {
       if (!searchTerm.trim()) return true;
-      return product.item_name.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // Hàm chuyển tiếng Việt có dấu thành không dấu
+      function removeVietnameseTones(str) {
+        str = str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        str = str.replace(/đ/g, 'd').replace(/Đ/g, 'D');
+        str = str.replace(/ +/g, ' ').trim();
+        return str;
+      }
+
+      const search = removeVietnameseTones(searchTerm.toLowerCase());
+      const name = removeVietnameseTones(product.item_name?.toLowerCase() || "");
+      return name.includes(search);
     },
     [searchTerm]
   );
@@ -713,14 +724,14 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
       <div className='flex gap-2 justify-between'>
         <div className='flex flex-col gap-1'>
           <h2 className='text-2xl font-bold capitalize'>Xuất kho sản xuất</h2>
-          <p className='text-base text-typo-blue-4'>{code}</p>
+          <p className='text-base text-blue-fmrp'>{code}</p>
         </div>
         <div className='flex gap-3 items-center'>
           {activeTab?.id === 'current' && (
             <button
               onClick={handleConfirm}
               disabled={isLoadingSubmit}
-              className='flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-background-blue-2 hover:bg-background-blue-2/80'
+              className='flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-blue-fmrp hover:bg-blue-fmrp/80'
             >
               {isLoadingSubmit ? (
                 'Đang xử lý...'
@@ -737,7 +748,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
                 onClick={handleConfirmReexport}
                 disabled={isSavingReexport}
                 className={`flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white ${
-                  isSavingReexport ? 'bg-background-blue-2 cursor-not-allowed opacity-70' : 'bg-background-blue-2 hover:bg-background-blue-2/80'
+                  isSavingReexport ? 'bg-blue-fmrp cursor-not-allowed opacity-70' : 'bg-blue-fmrp hover:bg-blue-fmrp/80'
                 }`}
               >
                 <CheckIcon className='size-4' /> {isSavingReexport ? 'Đang xử lý...' : `Xuất bổ sung${reexportSelectedCount > 0 ? ` (${reexportSelectedCount})` : ''}`}
