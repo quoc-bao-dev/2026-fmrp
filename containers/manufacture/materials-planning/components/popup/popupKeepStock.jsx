@@ -545,7 +545,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
       button={
         <div
           // className="bg-blue-100 rounded-lg outline-none focus:outline-none"
-          className='responsive-text-sm 3xl:px-4 py-2.5 px-3 bg-background-blue-2/80 hover:bg-background-blue-2 text-white rounded-lg flex items-center gap-x-2 transition-all duration-300'
+          className='responsive-text-sm 3xl:px-4 py-2.5 px-3 bg-blue-fmrp/80 hover:bg-blue-fmrp text-white rounded-lg flex items-center gap-x-2 transition-all duration-300'
           onClick={() => {
             if (!hasPermission) {
               return isShow('error', dataLang?.no_permission || 'Bạn không có quyền thực hiện thao tác này');
@@ -588,7 +588,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
              {!isQuickSelectMode ? (
             <button
               onClick={handleToggleQuickSelectMode}
-              className='px-4 py-2 bg-background-blue-2 text-white rounded-lg hover:bg-background-blue-2/80 transition-all duration-300 text-sm font-medium flex items-center gap-2'
+              className='px-4 py-2 bg-blue-fmrp text-white rounded-lg hover:bg-blue-fmrp/80 transition-all duration-300 text-sm font-medium flex items-center gap-2'
             >
               <Edit2 size='18' variant='Bold' />
               Chọn kho nhanh
@@ -675,7 +675,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                                 </h5>
                                 <h5 className='responsive-text-xs'>{option?.reference_no_detail}</h5>
                           {displayLevelName && (
-                            <span className='px-1.5 py-[1px] w-fit rounded bg-background-blue-2/10 text-blue-600 text-[9px] font-medium'>
+                            <span className='px-1.5 py-[1px] w-fit rounded bg-blue-fmrp/10 text-blue-600 text-[9px] font-medium'>
                               BOM {displayLevelName}
                             </span>
                           )}
@@ -690,7 +690,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                                 key={`${option.ppi_id}_${level.id}`}
                                       type='button'
                                 className={`px-2 py-1 rounded text-[11px] font-semibold border transition-all ${
-                                  isActive ? 'bg-blue-600 text-white border-blue-600' : 'bg-background-blue-2/10 text-gray-600 border-gray-200 hover:text-blue-600'
+                                  isActive ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-fmrp/10 text-gray-600 border-gray-200 hover:text-blue-600'
                                       }`}
                                       onClick={event => {
                                         event.stopPropagation();
