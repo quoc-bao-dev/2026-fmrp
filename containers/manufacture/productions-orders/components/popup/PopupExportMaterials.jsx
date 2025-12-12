@@ -474,7 +474,18 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
   const isProductVisible = useCallback(
     product => {
       if (!searchTerm.trim()) return true;
-      return product.item_name.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // Hàm chuyển tiếng Việt có dấu thành không dấu
+      function removeVietnameseTones(str) {
+        str = str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        str = str.replace(/đ/g, 'd').replace(/Đ/g, 'D');
+        str = str.replace(/ +/g, ' ').trim();
+        return str;
+      }
+
+      const search = removeVietnameseTones(searchTerm.toLowerCase());
+      const name = removeVietnameseTones(product.item_name?.toLowerCase() || "");
+      return name.includes(search);
     },
     [searchTerm]
   );

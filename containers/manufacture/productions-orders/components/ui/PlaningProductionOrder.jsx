@@ -9,7 +9,7 @@ import useSetingServer from '@/hooks/useConfigNumber';
 import { useListBomProductPlan } from '@/managers/api/productions-order/useListBomProductPlan';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
 import Image from 'next/image';
-import { memo, useContext, useState } from 'react';
+import { memo, useContext, useMemo, useState } from 'react';
 
 const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
   const [limit, setLimit] = useState(5);
@@ -223,12 +223,42 @@ const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
   );
 };
 
-const PlaningProductionOrder = memo(({ dataLang }) => {
+const PlaningProductionOrder = memo(({ dataLang, searchMaterials = '' }) => {
   const { isStateProvider, queryStateProvider } = useContext(StateContext);
   //truyền id của kế hoạch sản xuất
   const { data: dataListBom, isLoading: isLoadingDataListBom } = useListBomProductPlan({
     id: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.pp_id,
   });
+
+  const normalizeText = value => {
+    if (!value) return '';
+    return value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  };
+
+  const normalizedSearch = normalizeText(searchMaterials.trim());
+
+  const filteredMaterials = useMemo(() => {
+    if (!normalizedSearch) return dataListBom?.data?.materialsBom;
+
+    return (dataListBom?.data?.materialsBom || []).filter(item => {
+      const name = normalizeText(item?.item_name);
+      const code = normalizeText(item?.item_code);
+      return name.includes(normalizedSearch) || code.includes(normalizedSearch);
+    });
+  }, [dataListBom?.data?.materialsBom, normalizedSearch]);
+
+  const filteredProducts = useMemo(() => {
+    if (!normalizedSearch) return dataListBom?.data?.productsBom;
+
+    return (dataListBom?.data?.productsBom || []).filter(item => {
+      const name = normalizeText(item?.item_name);
+      const code = normalizeText(item?.item_code);
+      return name.includes(normalizedSearch) || code.includes(normalizedSearch);
+    });
+  }, [dataListBom?.data?.productsBom, normalizedSearch]);
 
   return (
     <div className='flex flex-row w-full h-full items-start justify-between'>
@@ -237,7 +267,7 @@ const PlaningProductionOrder = memo(({ dataLang }) => {
         {isLoadingDataListBom ? (
           <Loading className='h-80' color='#0f4f9e' />
         ) : (
-          <TablePlaning Title='kế hoạch nguyên vật liệu' dataLang={dataLang} data={dataListBom?.data?.materialsBom} typeTable='materials' />
+          <TablePlaning Title='kế hoạch nguyên vật liệu' dataLang={dataLang} data={filteredMaterials} typeTable='materials' />
         )}
       </div>
 
@@ -246,7 +276,7 @@ const PlaningProductionOrder = memo(({ dataLang }) => {
         {isLoadingDataListBom ? (
           <Loading className='h-80' color='#0f4f9e' />
         ) : (
-          <TablePlaning Title='kế hoạch bán thành phẩm' dataLang={dataLang} data={dataListBom?.data?.productsBom} typeTable='products' />
+          <TablePlaning Title='kế hoạch bán thành phẩm' dataLang={dataLang} data={filteredProducts} typeTable='products' />
         )}
       </div>
     </div>

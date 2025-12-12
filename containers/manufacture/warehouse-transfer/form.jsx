@@ -614,19 +614,20 @@ const WarehouseTransferForm = props => {
                                 <Image src='/icon/noimagelogo.png' alt='Product Image' className='size-full object-cover' width={64} height={64} />
                               )}
                             </div>
-                            <div className='flex flex-col'>
-                              <h3 className='font-medium responsive-text-sm'>{e?.item?.e?.name}</h3>
-                              <div className='flex gap-2'>
-                                <h5 className='text-gray-400 font-normal responsive-text-sm'>{e?.item?.e?.code}</h5>
-                                <h5 className='font-medium responsive-text-sm'>{e?.item?.e?.product_variation}</h5>
-                              </div>
-                              <h5 className='text-gray-400 font-medium text-xs responsive-text-sm'>{dataLang[e?.item?.e?.text_type]}</h5>
-                              <div className='flex items-center gap-2 italic'>
-                                {dataProductSerial.is_enable === '1' && <div className='text-[11px] text-[#667085] font-[500]'>Serial: {e?.item?.e?.serial ? e?.item?.e?.serial : '-'}</div>}
+                            <div className='flex flex-col gap-1'>
+                              <h3 className='text-neutral-07 font-medium responsive-text-sm'>{e?.item?.e?.name}</h3>
+                              <h5 className='text-neutral-03 font-normal responsive-text-xs'>
+                                {e?.item?.e?.code}: {e?.item?.e?.product_variation}
+                              </h5>
+                              {e?.item?.e?.text_type && (
+                                <TagColorProduct dataLang={dataLang} dataKey={getTypeDataKey(e?.item?.e?.text_type)} name={e?.item?.e?.text_type} className='!px-1' textSize='text-[11px]' />
+                              )}
+                              <div className='flex flex-col italic'>
+                                {dataProductSerial.is_enable === '1' && <div className='responsive-text-xs text-[#667085] font-[500]'>Serial: {e?.item?.e?.serial ? e?.item?.e?.serial : '-'}</div>}
                                 {dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' ? (
                                   <>
-                                    <div className='text-[11px] text-[#667085] font-[500]'>Lot: {e?.item?.e?.lot ? e?.item?.e?.lot : '-'}</div>
-                                    <div className='text-[11px] text-[#667085] font-[500]'>
+                                    <div className='responsive-text-xs text-[#667085] font-[500]'>Lot: {e?.item?.e?.lot ? e?.item?.e?.lot : '-'}</div>
+                                    <div className='responsive-text-xs text-[#667085] font-[500]'>
                                       Date: {e?.item?.e?.expiration_date ? formatMoment(e?.item?.e?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}
                                     </div>
                                   </>

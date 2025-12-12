@@ -1,6 +1,6 @@
 import apiProductionsOrders from '@/Api/apiManufacture/manufacture/productionsOrders/apiProductionsOrders';
 import CheckboxDefault from '@/components/common/checkbox/CheckboxDefault';
-import { ApproximateEqualsIcon, CheckIcon, MagnifyingGlassIcon } from '@/components/icons';
+import { ApproximateEqualsIcon, CheckIcon, CloseXIcon, MagnifyingGlassIcon } from '@/components/icons';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
@@ -17,7 +17,7 @@ import WarehouseLotRow from './shared/WarehouseLotRow';
 
 const createUniqueRowId = () => `lot-row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-const ProductRow = memo(({ product, index, handleSelectProduct, classNameButton, po_id, refreshKey, isVisible = true }) => {
+const ProductRow = memo(({ product, index, displayIndex, handleSelectProduct, classNameButton, po_id, refreshKey, isVisible = true }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [lotRows, setLotRows] = useState([]);
 
@@ -138,7 +138,7 @@ const ProductRow = memo(({ product, index, handleSelectProduct, classNameButton,
             <CheckboxDefault checked={product.selected} onChange={checked => handleSelectProduct(index, checked)} disabled={product.type_origin === 'semi_products'} />
           </div>
         </td>
-        <td className='py-2 px-3 text-center text-sm font-semibold w-[62px]'>{index + 1}</td>
+        <td className='py-2 px-3 text-center text-sm font-semibold w-[62px]'>{(displayIndex ?? index) + 1}</td>
         <td className='py-2 px-3 text-left w-auto'>
           <div className='flex gap-2 min-w-0'>
             <div className='w-16 h-16 rounded flex items-center justify-center flex-shrink-0'>
@@ -261,7 +261,23 @@ const PopupExportMaterialsTabCurrent = ({
   poId,
   showCompleted,
 }) => {
-  const visibleProducts = useMemo(() => products.filter(isProductVisible), [products, isProductVisible]);
+  const visibleProducts = useMemo(() => {
+    // Giữ lại index gốc trong mảng products để thao tác chọn đúng phần tử
+    const filteredWithIndex = products.reduce((acc, product, index) => {
+      if (!isProductVisible(product)) return acc;
+      acc.push({ product, index });
+      return acc;
+    }, []);
+
+    // Ưu tiên sản phẩm có kho (warehouses) lên trên
+    filteredWithIndex.sort((a, b) => {
+      const hasWarehouseA = (a.product.warehouses?.length ?? 0) > 0;
+      const hasWarehouseB = (b.product.warehouses?.length ?? 0) > 0;
+      return Number(hasWarehouseB) - Number(hasWarehouseA);
+    });
+
+    return filteredWithIndex;
+  }, [products, isProductVisible]);
 
   return (
     <>
@@ -274,6 +290,16 @@ const PopupExportMaterialsTabCurrent = ({
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
+          {searchTerm && (
+            <button
+              type='button'
+              onClick={() => setSearchTerm('')}
+              className='rounded-full bg-gray-100 hover:bg-gray-200 text-[#3A3E4C] p-1 transition'
+              aria-label='Xóa tìm kiếm'
+              >
+                <CloseXIcon className='size-3' />
+              </button>
+          )}
           <button className='rounded-lg bg-[#1760B9] p-1'>
             <MagnifyingGlassIcon className='size-4 text-white' />
           </button>
@@ -330,15 +356,16 @@ const PopupExportMaterialsTabCurrent = ({
                         </tr>
                       </thead>
                       <tbody>
-                        {visibleProducts.map((product, index) => (
+                        {visibleProducts.map(({ product, index: originalIndex }, displayIndex) => (
                           <ProductRow
-                            key={`product-row-${product.item_id}-${product.item_variation_option_value_id}-${product.pp_id || index}`}
+                            key={`product-row-${product.item_id}-${product.item_variation_option_value_id}-${product.pp_id || originalIndex}`}
                             product={product}
-                            index={index}
+                            index={originalIndex}
+                            displayIndex={displayIndex}
                             handleSelectProduct={handleSelectProduct}
                             po_id={poId}
                             refreshKey={refreshWarehousesKey}
-                            isVisible={isProductVisible(product)}
+                            isVisible
                           />
                         ))}
                       </tbody>

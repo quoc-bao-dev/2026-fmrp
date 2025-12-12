@@ -1,6 +1,7 @@
 import apiProducts from '@/Api/apiProducts/products/apiProducts';
-import { EditIcon } from '@/components/icons';
+import { CaretDropDownThinIcon, EditIcon, TrashIcon } from '@/components/icons';
 import OnResetData from '@/components/UI/btnResetData/btnReset';
+import { ButtonDelete } from '@/components/UI/button/buttonDelete';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { ColumnTablePopup, HeaderTablePopup } from '@/components/UI/common/TablePopup';
 import InPutNumericFormat from '@/components/UI/inputNumericFormat/inputNumericFormat';
@@ -12,13 +13,12 @@ import { WARNING_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 import useActionRole from '@/hooks/useRole';
 import useToast from '@/hooks/useToast';
 import { useQuery } from '@tanstack/react-query';
-import { AttachCircle, Add as IconAdd, Trash as IconDelete } from 'iconsax-react';
-import { CaretDropDownThinIcon } from '@/components/icons';
+import { AttachCircle, Add as IconAdd } from 'iconsax-react';
 import { debounce } from 'lodash';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import Select from 'react-select';
-import { createPortal } from 'react-dom';
 import { v4 } from 'uuid';
 
 const Popup_Bom = React.memo(props => {
@@ -172,6 +172,7 @@ const Popup_Bom = React.memo(props => {
           name: {
             label: ce?.item_name,
             value: ce?.item_id,
+            code: ce?.item_code,
             product_variation: ce?.variation_name,
           },
           unit: {
@@ -228,6 +229,7 @@ const Popup_Bom = React.memo(props => {
         : rResult.map(e => ({
             label: e?.product_variation,
             value: e?.id,
+            code: e?.code,
             child: [],
           }));
 
@@ -284,6 +286,7 @@ const Popup_Bom = React.memo(props => {
         name: {
           label: ce?.item_name,
           value: ce?.item_id,
+          code: ce?.code,
           product_variation: ce?.variation_name,
         },
         unit: ce?.unit_name
@@ -478,10 +481,10 @@ const Popup_Bom = React.memo(props => {
         requestData.is_semi_products = 1;
       }
       const { data } = await apiProducts.apiSearchItemsVariants({ data: requestData });
-
       const getdata = data?.items?.map(item => ({
         label: item?.name,
         value: item?.id,
+        code: item?.code,
         product_variation: item?.product_variation,
       }));
 
@@ -557,6 +560,7 @@ const Popup_Bom = React.memo(props => {
                         ? data?.items.map(e => ({
                             label: e.name,
                             value: e.id,
+                            code: e?.code,
                             product_variation: e?.product_variation,
                           }))
                         : [],
@@ -887,9 +891,9 @@ const Popup_Bom = React.memo(props => {
                       data?.items.map(item => ({
                         label: item?.name,
                         value: item?.id,
+                        code: item?.code,
                         product_variation: item?.product_variation,
                       })) || [];
-
                     if (!_.isEqual(newDataName, ce.dataName)) {
                       ce.dataName = newDataName;
                       hasChange = true; // Đánh dấu dữ liệu đã thay đổi
@@ -1030,7 +1034,7 @@ const Popup_Bom = React.memo(props => {
       onClose={_ToggleModal.bind(this, false)}
       classNameBtn={props.className}
     >
-      <div className='py-4 w-[1100px]    space-y-2'>
+      <div className='py-4 w-[1130px] space-y-2'>
         <>
           <div className='flex items-end justify-between pb-2'>
             <div className='w-2/3'>
@@ -1112,7 +1116,7 @@ const Popup_Bom = React.memo(props => {
                           <span>{tabItem?.label?.includes('NONE') ? 'Mặc định' : tabItem?.label}</span>
                         </button>
                         <button type='button' onClick={() => sDeleteBomId(id)} className='text-red-500 ml-1'>
-                          <IconDelete />
+                          <TrashIcon className='size-5 text-red-01' />
                         </button>
                       </div>
                     );
@@ -1140,7 +1144,7 @@ const Popup_Bom = React.memo(props => {
                             }}
                             className='text-red-500'
                           >
-                            <IconDelete />
+                            <TrashIcon className='size-5 text-red-01' />
                           </button>
                         )}
                       </div>
@@ -1173,7 +1177,7 @@ const Popup_Bom = React.memo(props => {
                                       }}
                                       className='text-red-500 ml-2 opacity-0 group-hover:opacity-100 transition-opacity'
                                     >
-                                      <IconDelete />
+                                      <TrashIcon className='size-5 text-red-01' />
                                     </button>
                                   </div>
                                 ))}
@@ -1204,7 +1208,7 @@ const Popup_Bom = React.memo(props => {
                           <span>{e?.label?.includes('NONE') ? 'Mặc định' : e?.label}</span>
                         </button>
                         <button type='button' className='text-red-500 ml-1'>
-                          <IconDelete />
+                          <TrashIcon className='size-5 text-red-01' />
                         </button>
                       </div>
                     ))}
@@ -1216,7 +1220,7 @@ const Popup_Bom = React.memo(props => {
                       </button>
                       {/* Icon xóa đo ẩn để tính toán width chính xác khi tab active nằm trong overflow */}
                       <button type='button' className='text-red-500'>
-                        <IconDelete />
+                        <TrashIcon className='size-5 text-red-01' />
                       </button>
                     </div>
                   </div>
@@ -1225,8 +1229,8 @@ const Popup_Bom = React.memo(props => {
             </div>
           )}
           <div className='space-y-1 -pt-5'>
-            <HeaderTablePopup gridCols={14}>
-              <ColumnTablePopup colSpan={5}>{props.dataLang?.bom_name_finishedProduct}</ColumnTablePopup>
+            <HeaderTablePopup gridCols={20} className='gap-2'>
+              <ColumnTablePopup colSpan={9}>{props.dataLang?.bom_name_finishedProduct}</ColumnTablePopup>
               <ColumnTablePopup colSpan={2}>{props.dataLang?.unit}</ColumnTablePopup>
               <ColumnTablePopup colSpan={2} textAlign={'left'}>
                 {props.dataLang?.norm_finishedProduct || 'norm_finishedProduct'}
@@ -1234,7 +1238,7 @@ const Popup_Bom = React.memo(props => {
               <ColumnTablePopup colSpan={2} textAlign={'left'}>
                 %{props.dataLang?.loss_finishedProduct || 'loss_finishedProduct'}
               </ColumnTablePopup>
-              <ColumnTablePopup colSpan={2} textAlign={'left'}>
+              <ColumnTablePopup colSpan={4} textAlign={'left'}>
                 {props.dataLang?.stage_usage_finishedProduct || 'stage_usage_finishedProduct'}
               </ColumnTablePopup>
               <ColumnTablePopup>{props.dataLang?.branch_popup_properties || 'branch_popup_properties'}</ColumnTablePopup>
@@ -1246,7 +1250,7 @@ const Popup_Bom = React.memo(props => {
                 ) : (
                   <>
                     {selectedList?.child?.map((e, index) => (
-                      <div key={e.id} className='grid items-center w-full px-2 py-1 grid-cols-14 hover:bg-slate-100'>
+                      <div key={e.id} className='grid gap-2 items-center w-full px-2 py-1 grid-cols-20 hover:bg-slate-100'>
                         <div className='col-span-3'>
                           <Select
                             options={dataTypeCd}
@@ -1259,6 +1263,9 @@ const Popup_Bom = React.memo(props => {
                             classNamePrefix='Select'
                             className={`${errValue && e.type == null ? 'border-red-500' : 'border-transparent'} 
                                                         [&>div>div_div]:!whitespace-nowrap placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border text-[13px] `}
+                            components={{
+                              IndicatorSeparator: () => null,
+                            }}
                             theme={theme => ({
                               ...theme,
                               colors: {
@@ -1278,14 +1285,10 @@ const Popup_Bom = React.memo(props => {
                                 zIndex: 9999,
                                 position: 'absolute',
                               }),
-                              menu: (provided, state) => ({
-                                ...provided,
-                                width: '150%',
-                              }),
                             }}
                           />
                         </div>
-                        <div className='col-span-2'>
+                        <div className='col-span-6'>
                           <Select
                             options={e.dataName}
                             value={e.name}
@@ -1294,17 +1297,15 @@ const Popup_Bom = React.memo(props => {
                               _HandleSeachApi(x, selectedList?.value, e?.type, e.id, e.name);
                             }}
                             formatOptionLabel={option => (
-                              <div className=''>
-                                <div className='flex gap-1'>
-                                  <h2 className='3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px] font-normal'>{'Tên'}:</h2>
-                                  <h2 className='3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px] font-normal'>{option?.label}</h2>
-                                </div>
-                                <div className='flex gap-1'>
-                                  <h2 className='3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px] font-normal'>{'Biến thể'}:</h2>
-                                  <h2 className='3xl:text-[12px] 2xl:text-[10px] xl:text-[9.5px] text-[9px] font-normal'>{option?.product_variation}</h2>
-                                </div>
+                              <div className='flex flex-col'>
+                                <h2 className='responsive-text-sm font-medium'>{option?.label}</h2>
+                                <h2 className='responsive-text-xs'>{option?.product_variation}</h2>
+                                <h2 className='responsive-text-xs text-blue-fmrp'>{option?.code}</h2>
                               </div>
                             )}
+                            components={{
+                              IndicatorSeparator: () => null,
+                            }}
                             placeholder={props.dataLang?.name || 'name'}
                             noOptionsMessage={() => `${props.dataLang?.no_data_found}`}
                             menuPortalTarget={document.body}
@@ -1332,10 +1333,10 @@ const Popup_Bom = React.memo(props => {
                                 zIndex: 9999,
                                 position: 'absolute',
                               }),
-                              menu: (provided, state) => ({
-                                ...provided,
-                                width: '180%',
-                              }),
+                              // menu: (provided, state) => ({
+                              //   ...provided,
+                              //   width: '180%',
+                              // }),
                             }}
                           />
                         </div>
@@ -1361,6 +1362,9 @@ const Popup_Bom = React.memo(props => {
                                 primary: '#0F4F9E',
                               },
                             })}
+                            components={{
+                              IndicatorSeparator: () => null,
+                            }}
                             styles={{
                               placeholder: base => ({
                                 ...base,
@@ -1371,14 +1375,14 @@ const Popup_Bom = React.memo(props => {
                                 zIndex: 9999,
                                 position: 'absolute',
                               }),
-                              menu: (provided, state) => ({
-                                ...provided,
-                                width: '150%',
-                              }),
+                              // menu: (provided, state) => ({
+                              //   ...provided,
+                              //   width: '150%',
+                              // }),
                             }}
                           />
                         </div>
-                        <div className='col-span-2 px-1'>
+                        <div className='col-span-2'>
                           <InPutNumericFormat
                             value={e?.norm}
                             onValueChange={_HandleChangeItemBOM.bind(this, selectedList?.value, e.id, 'norm')}
@@ -1386,7 +1390,7 @@ const Popup_Bom = React.memo(props => {
                             className={`focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal p-2 border outline-none`}
                           />
                         </div>
-                        <div className='col-span-2 px-1'>
+                        <div className='col-span-2'>
                           <InPutNumericFormat
                             isAllowed={values => {
                               const { floatValue } = values;
@@ -1402,7 +1406,7 @@ const Popup_Bom = React.memo(props => {
                             className={`focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal p-2 border outline-none`}
                           />
                         </div>
-                        <div className='col-span-2 px-1'>
+                        <div className='col-span-4'>
                           <Select
                             options={dataCd}
                             value={e.stage}
@@ -1423,6 +1427,9 @@ const Popup_Bom = React.memo(props => {
                                 primary: '#0F4F9E',
                               },
                             })}
+                            components={{
+                              IndicatorSeparator: () => null,
+                            }}
                             styles={{
                               placeholder: base => ({
                                 ...base,
@@ -1433,17 +1440,20 @@ const Popup_Bom = React.memo(props => {
                                 zIndex: 9999,
                                 position: 'absolute',
                               }),
-                              menu: (provided, state) => ({
-                                ...provided,
-                                width: '150%',
-                              }),
+                              // menu: (provided, state) => ({
+                              //   ...provided,
+                              //   width: '150%',
+                              // }),
                             }}
                           />
                         </div>
-                        <div className='col-span-1 px-1 text-center'>
-                          <button onClick={_HandleDeleteItemBOM.bind(this, selectedList?.value, e.id)} type='button' className='text-red-500'>
-                            <IconDelete />
-                          </button>
+                        <div className='col-span-1 text-center'>
+                          <div className='flex justify-center'>
+                            <ButtonDelete onClick={_HandleDeleteItemBOM.bind(this, selectedList?.value, e.id)} />
+                          </div>
+                          {/* <button onClick={_HandleDeleteItemBOM.bind(this, selectedList?.value, e.id)} type='button' className='text-red-500'>
+                            <TrashIcon className='size-5' />
+                          </button> */}
                         </div>
                       </div>
                     ))}
@@ -1467,7 +1477,7 @@ const Popup_Bom = React.memo(props => {
             <button type='button' onClick={_ToggleModal.bind(this, false)} className='button text-[#344054]  font-normal text-base py-2 px-4 rounded-[5.5px] border border-solid border-[#D0D5DD]'>
               {props.dataLang?.branch_popup_exit}
             </button>
-            <button type='submit' onClick={_HandleSubmit.bind(this)} className='button text-[#FFFFFF] font-normal text-base py-2 px-4 rounded-[5.5px] bg-[#003DA0]'>
+            <button type='submit' onClick={_HandleSubmit.bind(this)} className='button text-[#FFFFFF] font-normal text-base py-2 px-4 rounded-[5.5px] bg-blue-fmrp'>
               {props.dataLang?.branch_popup_save}
             </button>
           </div>
