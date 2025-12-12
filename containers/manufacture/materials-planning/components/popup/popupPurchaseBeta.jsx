@@ -1,37 +1,35 @@
-import apiMaterialsPlanning from "@/Api/apiManufacture/manufacture/materialsPlanning/apiMaterialsPlanning";
-import { ButtonAddNew } from "@/components/common/button/AddNew";
-import PopupRequestUpdateVersion from "@/components/common/popup/PopupRequestUpdateVersion";
-import ButtonCancel from "@/components/UI/button/buttonCancel";
-import ButtonSubmit from "@/components/UI/button/buttonSubmit";
-import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
-import {
-  ColumnTablePopup,
-  HeaderTablePopup,
-} from "@/components/UI/common/TablePopup";
-import SelectComponent from "@/components/UI/filterComponents/selectComponent";
-import InPutNumericFormat from "@/components/UI/inputNumericFormat/inputNumericFormat";
-import Loading from "@/components/UI/loading/loading";
-import NoData from "@/components/UI/noData/nodata";
-import PopupCustom from "@/components/UI/popup";
-import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
-import Popup_dsncc from "@/containers/suppliers/supplier/components/popup/popup";
-import { useSupplierList } from "@/containers/suppliers/supplier/hooks/useSupplierList";
-import { useProvinceList } from "@/hooks/common/useAddress";
-import { useBranchList } from "@/hooks/common/useBranch";
-import useSetingServer from "@/hooks/useConfigNumber";
-import useToast from "@/hooks/useToast";
-import { formatMoment } from "@/utils/helpers/formatMoment";
-import formatNumberConfig from "@/utils/helpers/formatnumber";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Trash as IconDelete } from "iconsax-react";
-import Image from "next/image";
-import { useEffect, useState } from "react";
-import DatePicker from "react-datepicker";
-import { Controller, useFieldArray, useForm } from "react-hook-form";
-import { BsCalendarEvent } from "react-icons/bs";
-import { MdClear } from "react-icons/md";
-import { useDispatch } from "react-redux";
-import { v4 as uuidv4 } from "uuid";
+import apiMaterialsPlanning from '@/Api/apiManufacture/manufacture/materialsPlanning/apiMaterialsPlanning';
+import { ButtonAddNew } from '@/components/common/button/AddNew';
+import PopupRequestUpdateVersion from '@/components/common/popup/PopupRequestUpdateVersion';
+import ButtonCancel from '@/components/UI/button/buttonCancel';
+import ButtonSubmit from '@/components/UI/button/buttonSubmit';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import { ColumnTablePopup, HeaderTablePopup } from '@/components/UI/common/TablePopup';
+import SearchActionInput from '@/components/common/input/SearchActionInput';
+import SelectComponent from '@/components/UI/filterComponents/selectComponent';
+import InPutNumericFormat from '@/components/UI/inputNumericFormat/inputNumericFormat';
+import Loading from '@/components/UI/loading/loading';
+import NoData from '@/components/UI/noData/nodata';
+import PopupCustom from '@/components/UI/popup';
+import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
+import Popup_dsncc from '@/containers/suppliers/supplier/components/popup/popup';
+import { useSupplierList } from '@/containers/suppliers/supplier/hooks/useSupplierList';
+import { useProvinceList } from '@/hooks/common/useAddress';
+import { useBranchList } from '@/hooks/common/useBranch';
+import useSetingServer from '@/hooks/useConfigNumber';
+import useToast from '@/hooks/useToast';
+import { formatMoment } from '@/utils/helpers/formatMoment';
+import formatNumberConfig from '@/utils/helpers/formatnumber';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Trash as IconDelete } from 'iconsax-react';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import DatePicker from 'react-datepicker';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { BsCalendarEvent } from 'react-icons/bs';
+import { MdClear } from 'react-icons/md';
+import { useDispatch } from 'react-redux';
+import { v4 as uuidv4 } from 'uuid';
 
 const initialState = {
   onFetching: false,
@@ -43,8 +41,8 @@ const initialState = {
     // },
     {
       id: uuidv4(),
-      label: "materials_planning_materials",
-      value: "material",
+      label: 'materials_planning_materials',
+      value: 'material',
     },
   ],
   arrayItem: [],
@@ -52,32 +50,22 @@ const initialState = {
 
 const initForm = {
   date: new Date(),
-  note: "",
-  type: "material",
-  purchaseName: "Yêu cầu mua hàng (PR)",
+  note: '',
+  type: 'material',
+  purchaseName: 'Yêu cầu mua hàng (PR)',
   arrayItem: [],
   idBranch: null,
   supplier: null,
 };
 
-const PopupPurchaseBeta = ({
-  dataLang,
-  icon,
-  title,
-  dataTable,
-  className,
-  queryValue,
-  fetchDataTable,
-  hasPermission = true,
-  ...rest
-}) => {
+const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryValue, fetchDataTable, hasPermission = true, ...rest }) => {
   const isShow = useToast();
 
   const dispatch = useDispatch();
 
   const [open, sOpen] = useState(false);
 
-  const _ToggleModal = (e) => sOpen(e);
+  const _ToggleModal = e => sOpen(e);
 
   const dataSeting = useSetingServer();
   const queryClient = useQueryClient();
@@ -87,50 +75,43 @@ const PopupPurchaseBeta = ({
   const { data: listBranch = [] } = useBranchList({});
 
   const [isState, sIsState] = useState(initialState);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const queryState = (key) => sIsState((prev) => ({ ...prev, ...key }));
+  const queryState = key => sIsState(prev => ({ ...prev, ...key }));
 
   const form = useForm({ defaultValues: { ...initForm } });
 
   const { data: listSuppiler, refetch: refetchSupplierList } = useSupplierList({
-    "filter[branch_id]": form.watch("idBranch"),
+    'filter[branch_id]': form.watch('idBranch'),
   });
 
-  const dataSupplier = form.watch("idBranch")
-    ? listSuppiler?.rResult?.map((e) => ({ label: e.name, value: e.id }))
-    : [];
+  const dataSupplier = form.watch('idBranch') ? listSuppiler?.rResult?.map(e => ({ label: e.name, value: e.id })) : [];
 
   const handleCloseSupplierPopup = () => sOpenSupplierPopup(false);
 
-  const handleSupplierCreated = async (newSupplier) => {
+  const handleSupplierCreated = async newSupplier => {
     handleCloseSupplierPopup();
-    
+
     // Lấy supplier ID từ response
     const supplierId = newSupplier?.submitId || newSupplier?.data?.submitId || newSupplier?.id;
-    
+
     if (supplierId) {
       // Invalidate và refetch danh sách nhà cung cấp
-      await queryClient.invalidateQueries({ 
-        queryKey: ["api_supplier_list", { "filter[branch_id]": form.watch("idBranch") }] 
+      await queryClient.invalidateQueries({
+        queryKey: ['api_supplier_list', { 'filter[branch_id]': form.watch('idBranch') }],
       });
-      
+
       // Đợi refetch xong và tìm nhà cung cấp vừa thêm
       const refetchResult = await refetchSupplierList();
       const updatedSupplierList = refetchResult?.data;
-      
+
       if (updatedSupplierList?.rResult) {
         // Tìm nhà cung cấp vừa thêm trong danh sách đã refetch
-        const foundSupplier = updatedSupplierList.rResult.find(
-          (s) => String(s.id) === String(supplierId)
-        );
-        
+        const foundSupplier = updatedSupplierList.rResult.find(s => String(s.id) === String(supplierId));
+
         if (foundSupplier) {
           // Tự động chọn nhà cung cấp vừa thêm
-          form.setValue(
-            "supplier",
-            { label: foundSupplier.name, value: foundSupplier.id },
-            { shouldDirty: true, shouldTouch: true }
-          );
+          form.setValue('supplier', { label: foundSupplier.name, value: foundSupplier.id }, { shouldDirty: true, shouldTouch: true });
           return;
         }
       }
@@ -139,41 +120,38 @@ const PopupPurchaseBeta = ({
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "arrayItem",
+    name: 'arrayItem',
   });
 
   /// lắng nghe thay đổi
   const findValue = form.watch();
 
-  const formatNumber = (number) => {
+  const formatNumber = number => {
     return formatNumberConfig(+number, dataSeting);
   };
 
-  const removeItem = (e) => {
+  const removeItem = e => {
     // const updatedData = findValue.arrayItem.filter((item) => item.id !== e?.id);
     // console.log("updatedData", updatedData);
     // form.setValue("arrayItem", updatedData, { shouldDirty: true, shouldTouch: true }); // Cập nhật lại state
     // form.clearErrors("arrayItem");
     remove(e);
-    form.clearErrors("arrayItem");
+    form.clearErrors('arrayItem');
   };
 
   const fetchListItem = async () => {
     try {
       queryState({ onFetching: true });
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 500));
       let formData = new FormData();
       // type: 1 nvl, 2 BTP
       // type_object: 2 YCMH
-      formData.append("type_object", 2);
-      formData.append("type", findValue.type == "material" ? 1 : 2);
-      formData.append("pPlan_id", dataTable.listDataRight.idCommand);
-      const { isSuccess, message, data } =
-        await apiMaterialsPlanning.apiKeepItemsWarehouses(formData);
+      formData.append('type_object', 2);
+      formData.append('type', findValue.type == 'material' ? 1 : 2);
+      formData.append('pPlan_id', dataTable.listDataRight.idCommand);
+      const { isSuccess, message, data } = await apiMaterialsPlanning.apiKeepItemsWarehouses(formData);
 
-
-      const newData = data?.items?.map((e) => {
-
+      const newData = data?.items?.map(e => {
         return {
           id: uuidv4(),
           idParent: e?.id,
@@ -193,15 +171,14 @@ const PopupPurchaseBeta = ({
           quantityNeedAI: e?.quantity_need_ai,
           // sl đã mua
           quantityPurchased: formatNumber(e?.quantity_purchase),
-          quantity: e?.quantity_need_ai && +e?.quantity_need_ai > 0 ? formatNumber(e?.quantity_need_ai) : "",
+          quantity: e?.quantity_need_ai && +e?.quantity_need_ai > 0 ? formatNumber(e?.quantity_need_ai) : '',
 
           itemVariationOptionValueId: e?.item_variation_option_value_id,
         };
       });
 
-
-      form.setValue("arrayItem", newData);
-      form.setValue("idBranch", data?.branch_id);
+      form.setValue('arrayItem', newData);
+      form.setValue('idBranch', data?.branch_id);
       queryState({ onFetching: false });
     } catch (error) {
       throw new error();
@@ -210,515 +187,336 @@ const PopupPurchaseBeta = ({
 
   useEffect(() => {
     if (open) {
-      form.clearErrors("arrayItem");
-      form.setValue("arrayItem", []);
+      form.clearErrors('arrayItem');
+      form.setValue('arrayItem', []);
       fetchListItem();
     }
   }, [findValue.type, open]);
 
   const hangdingMutation = useMutation({
-    mutationFn: async (data) => {
+    mutationFn: async data => {
       return await apiMaterialsPlanning.apiHandlingOrderProductionPlan(data);
     },
   });
 
-  const onSubmit = async (value) => {
-
-
+  const onSubmit = async value => {
     if (value.arrayItem.length == 0) {
-      return shhowToat("error", dataLang?.materials_planning_no_items_purchase || "materials_planning_no_items_purchase");
+      return shhowToat('error', dataLang?.materials_planning_no_items_purchase || 'materials_planning_no_items_purchase');
     }
 
     let formData = new FormData();
-    formData.append("note", value.note ?? "");
-    formData.append("name", value.purchaseName ?? "");
-    formData.append("type", value.type == "material" ? 1 : 2);
-    formData.append("plan_id", dataTable?.listDataRight?.idCommand);
+    formData.append('note', value.note ?? '');
+    formData.append('name', value.purchaseName ?? '');
+    formData.append('type', value.type == 'material' ? 1 : 2);
+    formData.append('plan_id', dataTable?.listDataRight?.idCommand);
 
-
-
-    formData.append("date", formatMoment(value.date, FORMAT_MOMENT.DATE_TIME_SLASH_LONG));
-    formData.append("suppliers_id", value?.supplier?.value ?? "");
-    formData.append("branch_id", value?.idBranch ?? "");
+    formData.append('date', formatMoment(value.date, FORMAT_MOMENT.DATE_TIME_SLASH_LONG));
+    formData.append('suppliers_id', value?.supplier?.value ?? '');
+    formData.append('branch_id', value?.idBranch ?? '');
     value.arrayItem?.forEach((e, index) => {
       formData.append(`items[${index}][id]`, e?.idParent);
       formData.append(`items[${index}][quantity]`, typeof e?.quantity == 'number' ? e?.quantity : parseFloat(e?.quantity?.replace(/,/g, '')));
       formData.append(`items[${index}][item_id]`, e?.item?.item_id);
       formData.append(`items[${index}][item_variation_option_value_id]`, e?.itemVariationOptionValueId);
-      formData.append(
-        `items[${index}][quantity_rest]`,
-        typeof e?.quantityNeedAI === "number"
-          ? e?.quantityNeedAI
-          : parseFloat(e?.quantityNeedAI?.replace(/,/g, ""))
-      );
-      formData.append(`items[${index}][quantity_purchase]`, typeof e?.quantityPurchased == 'number' ? e?.quantityPurchased : parseFloat(e?.quantityPurchased?.replace(/,/g, '')))
+      formData.append(`items[${index}][quantity_rest]`, typeof e?.quantityNeedAI === 'number' ? e?.quantityNeedAI : parseFloat(e?.quantityNeedAI?.replace(/,/g, '')));
+      formData.append(`items[${index}][quantity_purchase]`, typeof e?.quantityPurchased == 'number' ? e?.quantityPurchased : parseFloat(e?.quantityPurchased?.replace(/,/g, '')));
     });
 
     hangdingMutation.mutate(formData, {
       onSuccess: ({ isSuccess, message }) => {
         if (isSuccess) {
-          isShow("success", message);
+          isShow('success', message);
           queryValue({ page: 1 });
-          fetchDataTable(1, "submit");
+          fetchDataTable(1, 'submit');
           _ToggleModal(false);
           form.reset();
           return;
         }
-        isShow("error", message);
+        isShow('error', message);
       },
     });
   };
   return (
     <>
       <PopupCustom
-      title={"Thêm mua hàng"}
-      button={
-        <div
-          className="bg-blue-100 rounded-lg outline-none focus:outline-none"
-          onClick={() => {
-            if (!hasPermission) {
-              return isShow("error", dataLang?.no_permission || "Bạn không có quyền thực hiện thao tác này");
-            }
-            if (dataSeting?.package == "1") {
-              dispatch({
-                type: "statePopupGlobal",
-                payload: {
-                  open: true,
-                  children: (
-                    <PopupRequestUpdateVersion>
-                      <p className="text-start xlg:text-2xl text-xl leading-[32px] font-semibold text-[#141522]">
-                        Theo dõi đơn hàng theo nhà cung cấp để nguyên vật liệu
-                        luôn <span className="text-[#0375F3]">đúng và đủ</span>.
-                      </p>
-                    </PopupRequestUpdateVersion>
-                  ),
-                },
-              });
-              return;
-            }
-            if (+dataTable?.countAll == 0) {
-              return isShow(
-                "error",
-                dataLang?.materials_planning_please_add ||
-                "materials_planning_please_add"
-              );
-            }
-            _ToggleModal(true);
-          }}
-        >
+        title={
+          <div className='flex flex-col gap-1'>
+            <h2 className='text-2xl font-bold capitalize'>{title || dataLang?.materials_planning_raw_materials || 'materials_planning_raw_materials'}</h2>
+            <p className='text-base text-blue-fmrp'>{dataTable?.listDataRight?.title || dataTable?.listDataRight?.referenceNoPo || ''}</p>
+          </div>
+        }
+        button={
           <div
-            // className="flex items-center gap-2 px-3 py-2 "
-            className=" responsive-text-sm 3xl:px-4 py-2.5 px-3 bg-blue-fmrp/80 hover:bg-blue-fmrp text-white rounded-lg flex items-center gap-x-2 transition-all duration-300"
+            className='bg-blue-100 rounded-lg outline-none focus:outline-none'
+            onClick={() => {
+              if (!hasPermission) {
+                return isShow('error', dataLang?.no_permission || 'Bạn không có quyền thực hiện thao tác này');
+              }
+              if (dataSeting?.package == '1') {
+                dispatch({
+                  type: 'statePopupGlobal',
+                  payload: {
+                    open: true,
+                    children: (
+                      <PopupRequestUpdateVersion>
+                        <p className='text-start xlg:text-2xl text-xl leading-[32px] font-semibold text-[#141522]'>
+                          Theo dõi đơn hàng theo nhà cung cấp để nguyên vật liệu luôn <span className='text-[#0375F3]'>đúng và đủ</span>.
+                        </p>
+                      </PopupRequestUpdateVersion>
+                    ),
+                  },
+                });
+                return;
+              }
+              if (+dataTable?.countAll == 0) {
+                return isShow('error', dataLang?.materials_planning_please_add || 'materials_planning_please_add');
+              }
+              _ToggleModal(true);
+            }}
           >
-            {icon} {title}
-            {/* <h3 className="text-xs font-medium text-blue-600 3xl:text-base">
+            <div
+              // className="flex items-center gap-2 px-3 py-2 "
+              className=' responsive-text-sm 3xl:px-4 py-2.5 px-3 bg-blue-fmrp/80 hover:bg-blue-fmrp text-white rounded-lg flex items-center gap-x-2 transition-all duration-300'
+            >
+              {icon} {title}
+              {/* <h3 className="text-xs font-medium text-blue-600 3xl:text-base">
               {title}
             </h3> */}
-          </div>
-        </div>
-      }
-      open={open}
-      onClose={_ToggleModal.bind(this, false)}
-      classNameBtn={className}
-    >
-      <div className="mt-4">
-        <div className="flex items-center space-x-4 my-2 border-[#E7EAEE] border-opacity-70 border-b-[1px]"></div>
-        <div className="grid grid-cols-12 gap-4">
-          <div className="flex flex-col col-span-4">
-            <div className="text-[#344054] font-normal 3xl:text-[16px] text-sm mb-1 ">
-              {dataLang?.materials_planning_date_purchase ||
-                "materials_planning_date_purchase"}{" "}
-              <span className="text-red-500 ">*</span>
             </div>
-            <Controller
-              name="date"
-              control={form.control}
-              rules={{
-                required: {
-                  value: true,
-                  message:
-                    dataLang?.materials_planning_pease_select_purchase ||
-                    "materials_planning_pease_select_purchase",
-                },
-              }}
-              render={({ field, fieldState }) => {
-                return (
-                  <>
-                    <div className="relative flex flex-row custom-date-picker">
-                      <DatePicker
-                        {...field}
-                        ref={(ref) => {
-                          if (ref !== null) {
-                            field.ref({
-                              focus: ref.setFocus,
-                            });
-                          }
-                        }}
-                        fixedHeight
-                        id={field.name}
-                        showTimeSelect
-                        selected={field.value}
-                        placeholderText="DD/MM/YYYY HH:mm:ss"
-                        dateFormat="dd/MM/yyyy h:mm:ss aa"
-                        timeInputLabel={"Time: "}
-                        className={`border ${fieldState.error
-                          ? "border-red-500"
-                          : "border-[#d0d5dd]"
-                          } 3xl:text-sm 2xl:text-[13px] xl:text-[12px] text-[11px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal p-2 outline-none cursor-pointer relative`}
-                      />
-                      {field.value && (
-                        <MdClear
-                          className="absolute right-10 top-1/2 -translate-y-1/2 text-[#CCCCCC] hover:text-[#999999] scale-110 cursor-pointer"
-                          onClick={() => form.setValue("date", null)}
-                        />
-                      )}
-                      <BsCalendarEvent className="absolute right-5 top-1/2 -translate-y-1/2 text-[#CCCCCC] scale-110 cursor-pointer" />
-                    </div>
-                    {fieldState.error && (
-                      <span className="text-[12px]  text-red-500">
-                        {fieldState.error.message}{" "}
-                      </span>
-                    )}
-                  </>
-                );
-              }}
-            />
-            <Controller
-              name="type"
-              control={form.control}
-              render={({ field }) => {
-                return (
-                  <div className="flex gap-8 mt-6 items-centerem">
-                    {isState.type.map((e, index) => {
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center cursor-pointer"
-                        >
-                          <input
-                            id={e.value}
-                            type="radio"
-                            {...field}
-                            checked={field.value === e.value}
-                            onChange={() => field.onChange(e.value)}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 cursor-pointer focus:ring-blue-500 focus:ring-2"
-                          />
-                          <label
-                            htmlFor={e.value}
-                            className="ml-2 cursor-pointer 3xl:text-sm text-xs font-medium text-[#52575E]"
-                          >
-                            {dataLang[e.label] || e.label}
-                          </label>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              }}
-            />
           </div>
-          <div className="col-span-4">
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[#344054] font-normal text-sm">
-                {dataLang?.purchase_order_table_supplier}{" "}
-                <span className="text-red-500">*</span>
+        }
+        open={open}
+        onClose={_ToggleModal.bind(this, false)}
+        classNameBtn={className}
+      >
+        <div className='mt-4'>
+          <div className='flex items-center space-x-4 my-2 border-[#E7EAEE] border-opacity-70 border-b-[1px]'></div>
+          <div className='flex justify-between pb-4'>
+            <div className='flex items-center justify-between mb-1'>
+              <label className='text-[#344054] font-normal text-sm'>
+                {dataLang?.purchase_order_table_supplier} <span className='text-red-500'>*</span>
               </label>
-              <ButtonAddNew
-                onClick={() => sOpenSupplierPopup(true)}
-                title={dataLang?.suppliers_supplier_add || "Thêm nhanh NCC"}
-              />
+              <ButtonAddNew onClick={() => sOpenSupplierPopup(true)} title={dataLang?.suppliers_supplier_add || 'Thêm nhanh NCC'} />
             </div>
             <Controller
-              name="supplier"
+              name='supplier'
               rules={{
                 required: {
                   value: true,
-                  message:
-                    dataLang?.purchase_order_errSupplier ||
-                    "purchase_order_errSupplier",
+                  message: dataLang?.purchase_order_errSupplier || 'purchase_order_errSupplier',
                 },
               }}
               control={form.control}
               render={({ field, fieldState }) => {
                 return (
-                  <div className=" relative">
+                  <div className=' relative'>
                     <SelectComponent
-                      className={`${fieldState.error
-                        ? "border-red-500"
-                        : "border-transparent"
-                        }  placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
+                      className={`${
+                        fieldState.error ? 'border-red-500' : 'border-transparent'
+                      }  placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
                       isClearable={true}
-                      placeholder={
-                        dataLang?.purchase_order_supplier ??
-                        "purchase_order_supplier"
-                      }
+                      placeholder={dataLang?.purchase_order_supplier ?? 'purchase_order_supplier'}
                       options={dataSupplier}
                       {...field}
-                      onChange={(event) => {
+                      onChange={event => {
                         field.onChange(event);
                       }}
                       styles={{
                         menu: (provided, state) => ({
                           ...provided,
-                          width: "100%",
+                          width: '100%',
                           zIndex: 999,
                         }),
-                        menuPortal: (base) => ({
+                        menuPortal: base => ({
                           ...base,
                           zIndex: 9999999,
-                          position: "absolute",
+                          position: 'absolute',
                         }),
                       }}
                       value={field.value}
                       maxMenuHeight={150}
                     />
-                    {fieldState.error && (
-                      <span className="text-[12px]  text-red-500">
-                        {fieldState.error.message}{" "}
-                      </span>
-                    )}
+                    {fieldState.error && <span className='text-[12px]  text-red-500'>{fieldState.error.message} </span>}
                   </div>
                 );
               }}
             />
-          </div>
-          <div className="col-span-4">
-            <div className="text-[#344054] font-normal 3xl:text-[16px] text-sm mb-1 ">
-              {dataLang?.sales_product_note || "sales_product_note"}
+            <div className='flex justify-end mb-4'>
+              <div className='w-[320px]'>
+                <SearchActionInput value={searchTerm} onChange={setSearchTerm} placeholder='Tìm kiếm theo tên, mã sản phẩm' />
+              </div>
             </div>
-            <Controller
-              name="note"
-              control={form.control}
-              render={({ field }) => {
-                return (
-                  <textarea
-                    {...field}
-                    placeholder={
-                      dataLang?.sales_product_note || "sales_product_note"
-                    }
-                    name="fname"
-                    type="text"
-                    className="focus:border-[#92BFF7] border-[#d0d5dd] resize-none placeholder:text-slate-300 w-full min-h-[100px] max-h-[100px] bg-[#ffffff] rounded-[5.5px] text-[#52575E] font-normal p-2 border outline-none "
-                  />
-                );
-              }}
-            />
           </div>
-        </div>
-        <div className="3xl:w-[1300px] 2xl:w-[1150px] xl:w-[999px] w-[950px] 3xl:h-auto 2xl:max-h-auto xl:h-auto h-auto ">
-          <HeaderTablePopup gridCols={12}>
-            <ColumnTablePopup colSpan={4}>
-              {dataLang?.price_quote_item || "price_quote_item"}
-            </ColumnTablePopup>
-            <ColumnTablePopup colSpan={1}>
-              {dataLang?.materials_planning_dvt || "materials_planning_dvt"}
-            </ColumnTablePopup>
 
-            <ColumnTablePopup colSpan={2}>
-              {dataLang?.materials_planning_qty_need_by ||
-                "materials_planning_qty_need_by"}
-            </ColumnTablePopup>
-            <ColumnTablePopup colSpan={2}>
-              {dataLang?.materials_planning_qty_requested ||
-                "materials_planning_qty_requested"}
-            </ColumnTablePopup>
-            <ColumnTablePopup colSpan={2} className="relative">
-              {dataLang?.materials_planning_qty_buys ||
-                "materials_planning_qty_buys"}
-                <span className='normal-case whitespace-nowrap flex items-center justify-center gap-1 responsive-text-xxs text-blue-600 font-medium ai-shine-badge'>
-                  <Image src='/icon/SparkleYellow.png' alt='logo' width={10} height={10} />
-                  <span className="ai-shine-text">Gợi ý AI</span>
-                  </span>
-            </ColumnTablePopup>
-            <ColumnTablePopup colSpan={1}>
-              {dataLang?.inventory_operatione || "inventory_operatione"}
-            </ColumnTablePopup>
-          </HeaderTablePopup>
-          {isState.onFetching ? (
-            <Loading className="max-h-40 2xl:h-[160px]" color="#0f4f9e" />
-          ) : fields?.length > 0 ? (
-            <>
-              <Customscrollbar className="h-[300px] max-h-[300px] overflow-hidden">
-                <div className="h-full divide-y divide-slate-200">
-                  {fields?.map((e, index) => (
-                    <div
-                      key={e?.id?.toString()}
-                      className="grid items-center grid-cols-12 3xl:py-1.5 py-0.5 px-2 hover:bg-slate-100/40"
-                    >
-                      <h6 className="text-[13px] flex items-center font-medium py-1 col-span-4 text-left">
-                        <div className={`flex items-center gap-2`}>
-                          <div>
-                            {e?.item?.image != null ? (
-                              // <ModalImage
-                              //     small={e?.item?.image}
-                              //     large={e?.item?.image}
-                              //     alt="Product Image"
-                              //     className="custom-modal-image object-cover rounded w-[50px] h-[50px] mx-auto"
-                              // />
-                              <Image
-                                src={e?.item?.image}
-                                width={1280}
-                                height={1024}
-                                alt="Product Image"
-                                className="custom-modal-image object-cover rounded w-[50px] h-[50px] mx-auto"
-                              />
-                            ) : (
-                              <div className="w-[50px] h-[50px] object-cover  mx-auto">
-                                {/* <ModalImage
-                                                                    small="/icon/noimagelogo.png"
-                                                                    large="/icon/noimagelogo.png"
-                                                                    className="object-contain w-full h-full p-1 rounded"
-                                                                ></ModalImage> */}
-                                <Image
-                                  src="/icon/noimagelogo.png"
-                                  alt="Product Image"
-                                  width={1280}
-                                  height={1024}
-                                  className="object-contain w-full h-full p-1 rounded"
-                                />
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <h6 className="text-[13px] text-left font-medium capitalize">
-                              {e?.item?.name}
-                            </h6>
-                            <h6 className="text-[13px] text-left font-medium capitalize">
-                              {e?.item?.variation}
-                            </h6>
-                          </div>
-                        </div>
-                      </h6>
-                      <h6 className="2xl:text-[13px] xl:text-[12px] text-[11px]  px-2 py-0.5 col-span-1  rounded-md text-center break-words">
-                        {e?.unit}
-                      </h6>
-                      {/* <h6 className="2xl:text-[13px] xl:text-[12px] text-[11px]  px-2 py-0.5 col-span-2  rounded-md text-center break-words">
-                                                    {e?.quantityKeepp == 0 ? "-" : e?.quantityKeepp}
-                                                </h6> */}
-                      <h6 className="2xl:text-[13px] xl:text-[12px] text-[11px]  px-2 py-0.5 col-span-2  rounded-md text-center break-words">
-                        {e?.quantityRest == 0 ? "-" : e?.quantityRest}
-                      </h6>
-                      <h6 className="2xl:text-[13px] xl:text-[12px] text-[11px]  px-2 py-0.5 col-span-2  rounded-md text-center break-words">
-                        {e?.quantityPurchased == 0 ? "-" : e?.quantityPurchased}
-                      </h6>
-                      <h6 className="2xl:text-[13px] xl:text-[12px] text-[11px]  px-2 py-0.5 col-span-2  rounded-md text-center break-words">
-                        <Controller
-                          name={`arrayItem.${index}.quantity`}
-                          control={form.control}
-                          // defaultValue={e.quantity}
-                          rules={{
-                            required: {
-                              value: true,
-                              message:
-                                dataLang?.materials_planning_enter_quantity ||
-                                "materials_planning_enter_quantity",
-                            },
-                            validate: {
-                              fn: (value) => {
+          <div className='flex-1 min-h-[60vh] max-h-[80vh] w-[1200px] flex flex-col gap-4'>
+            {isState.onFetching ? (
+              <div className='flex-1 flex justify-center items-center h-full'>
+                <Loading className='max-h-40 2xl:h-[160px]' color='#0f4f9e' />
+              </div>
+            ) : fields?.length > 0 ? (
+              <div className='overflow-hidden flex-1'>
+                <Customscrollbar className='max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300'>
+                  <table className='w-full border-separate' style={{ borderSpacing: '0 4px' }}>
+                    <thead className='bg-white sticky top-0 z-[9999] shadow-sm'>
+                      <tr>
+                        <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>STT</th>
+                        <th className='py-2 px-3 border-b border-gray-200 text-left text-sm font-normal text-[#9295A4] w-auto'>{dataLang?.price_quote_item || 'price_quote_item'}</th>
+                        <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[100px]'>{dataLang?.materials_planning_dvt || 'materials_planning_dvt'}</th>
+                        <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[140px]'>
+                          {dataLang?.materials_planning_qty_need_by || 'materials_planning_qty_need_by'}
+                        </th>
+                        <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[140px]'>
+                          {dataLang?.materials_planning_qty_requested || 'materials_planning_qty_requested'}
+                        </th>
+                        <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[140px] relative'>
+                          {dataLang?.materials_planning_qty_buys || 'materials_planning_qty_buys'}
+                          <span className='normal-case whitespace-nowrap flex items-center justify-center gap-1 responsive-text-xxs text-blue-600 font-medium ai-shine-badge'>
+                            <Image src='/icon/SparkleYellow.png' alt='logo' width={10} height={10} />
+                            <span className='ai-shine-text'>Gợi ý AI</span>
+                          </span>
+                        </th>
+                        <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[90px]'>{dataLang?.inventory_operatione || 'inventory_operatione'}</th>
+                      </tr>
+                    </thead>
+                    <tbody className='[&>tr]:mb-1' style={{ gap: '4px' }}>
+                      {(() => {
+                        const filteredItems = (fields || []).filter(e => {
+                          if (!searchTerm) return true;
+                          const keyword = searchTerm.toLowerCase();
+                          const name = e?.item?.name?.toLowerCase() || '';
+                          const code = e?.item?.item_code?.toLowerCase() || '';
+                          return name.includes(keyword) || code.includes(keyword);
+                        });
 
+                        if (searchTerm && filteredItems.length === 0) {
+                          return (
+                            <tr>
+                              <td colSpan={7} className='py-6'>
+                                <NoData type='report' titleText='Không tìm thấy sản phẩm' />
+                              </td>
+                            </tr>
+                          );
+                        }
 
-                                try {
-                                  let mss = "";
-                                  if (value == null) {
-                                    mss =
-                                      dataLang?.materials_planning_enter_quantity ||
-                                      "materials_planning_enter_quantity";
-                                  }
-                                  if (value == 0) {
-                                    mss =
-                                      dataLang?.materials_planning_must_be_greater ||
-                                      "materials_planning_must_be_greater";
-                                  }
-
-                                  return mss || true;
-                                } catch (error) {
-                                  throw error;
-                                }
-                              },
-                            },
-                          }}
-                          render={({ field, fieldState }) => {
-
-                            return (
-                              <div className="flex flex-col items-center justify-center">
-                                <InPutNumericFormat
-                                  className={`${fieldState.error && "border-red-500"
-                                    } cursor-default appearance-none text-center 3xl:text-[13px] 2xl:text-[12px] xl:text-[11px] text-[10px] py-1 px-0.5 font-normal 2xl:w-24 xl:w-[90px] w-[63px]  focus:outline-none border-b-2 border-gray-200`}
-                                  {...field}
-                                  onValueChange={(event) =>
-                                    field.onChange(
-                                      event.value == "" ? null : +event.value
-                                    )
-                                  }
-                                  isAllowed={(values) => {
-                                    // const { floatValue, value } = values;
-                                    // if (floatValue == 0) {
-                                    //     return true;
-                                    // }
-                                    // if (floatValue > x.value) {
-                                    //     isShow('error', `Vui lòng nhập số nhỏ hơn hoặc bằng ${formatNumber(x.value)}`);
-                                    //     return false
-                                    // }
-                                    // if (floatValue < 0) {
-                                    //     isShow('error', 'Vui lòng nhập lớn hơn 0');
-                                    //     return false
-                                    // }
-                                    return true;
+                        return filteredItems.map((e, index) => {
+                          return (
+                            <tr key={e?.id?.toString()} className='relative border-b border-[#E5E7EB]/20 hover:bg-gray-50'>
+                              <td className='py-2 px-3 text-center text-sm font-semibold'>{index + 1}</td>
+                              <td className='py-2 px-3 text-left'>
+                                <div className='flex gap-2 min-w-0'>
+                                  <div className='w-16 h-16 rounded flex items-center justify-center flex-shrink-0'>
+                                    <Image
+                                      src={e?.item?.image || '/icon/default/default.png'}
+                                      alt={e?.item?.name || 'default'}
+                                      width={64}
+                                      height={64}
+                                      className='object-cover rounded aspect-square w-16 h-16 '
+                                    />
+                                  </div>
+                                  <div className='flex flex-col gap-1 flex-1 min-w-0 overflow-hidden'>
+                                    <h3 className='text-sm font-semibold text-[#141522] line-clamp-1'>{e?.item?.name}</h3>
+                                    <div className='flex flex-col gap-0.5'>
+                                      <p className='text-[10px] font-normal text-[#667085] line-clamp-1'>{e?.item?.variation}</p>
+                                      <p className='text-xs font-normal text-typo-blue-2 line-clamp-1'>{e?.item?.item_code}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className='py-2 px-3 text-center text-sm font-medium text-[#141522]'>{e?.unit || '-'}</td>
+                              <td className='py-2 px-3 text-center'>
+                                <span className='text-sm font-medium text-[#141522]'>
+                                  {e?.quantityRest == 0 ? '-' : `${e?.quantityRest} / `}
+                                  {e?.quantityRest == 0 ? '' : <span className='text-[11px] text-[#667085]'>{e?.unit || ''}</span>}
+                                </span>
+                              </td>
+                              <td className='py-2 px-3 text-center'>
+                                <span className='text-sm font-medium text-[#141522]'>
+                                  {e?.quantityPurchased == 0 ? '-' : `${e?.quantityPurchased} / `}
+                                  {e?.quantityPurchased == 0 ? '' : <span className='text-[11px] text-[#667085]'>{e?.unit || ''}</span>}
+                                </span>
+                              </td>
+                              <td className='py-2 px-3 text-center'>
+                                <Controller
+                                  name={`arrayItem.${index}.quantity`}
+                                  control={form.control}
+                                  rules={{
+                                    required: {
+                                      value: true,
+                                      message: dataLang?.materials_planning_enter_quantity || 'materials_planning_enter_quantity',
+                                    },
+                                    validate: {
+                                      fn: value => {
+                                        try {
+                                          let mss = '';
+                                          if (value == null) {
+                                            mss = dataLang?.materials_planning_enter_quantity || 'materials_planning_enter_quantity';
+                                          }
+                                          if (value == 0) {
+                                            mss = dataLang?.materials_planning_must_be_greater || 'materials_planning_must_be_greater';
+                                          }
+                                          return mss || true;
+                                        } catch (error) {
+                                          throw error;
+                                        }
+                                      },
+                                    },
+                                  }}
+                                  render={({ field, fieldState }) => {
+                                    return (
+                                      <div className='flex flex-col items-center justify-center'>
+                                        <InPutNumericFormat
+                                          className={`${
+                                            fieldState.error ? 'border-red-500' : 'border-gray-200'
+                                          } cursor-default appearance-none text-center 3xl:text-[13px] 2xl:text-[12px] xl:text-[11px] text-[10px] py-1 px-0.5 font-normal w-[80px] focus:outline-none border-b-2`}
+                                          {...field}
+                                          onValueChange={event => field.onChange(event.value == '' ? null : +event.value)}
+                                          isAllowed={() => true}
+                                        />
+                                        {fieldState.error && <span className='text-[12px] text-red-500'>{fieldState.error.message} </span>}
+                                      </div>
+                                    );
                                   }}
                                 />
-                                {fieldState.error && (
-                                  <span className="text-[12px]  text-red-500">
-                                    {fieldState.error.message}{" "}
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          }}
-                        />
-                      </h6>
-                      <div className="flex items-center justify-center col-span-1">
-                        <button
-                          // onClick={(event) => removeItem(e)}
-                          onClick={() => removeItem(index)}
-                          type="button"
-                          title="Xóa"
-                          className="transition w-[40px] h-10 rounded-[5.5px] hover:text-red-600 text-red-500 flex flex-col justify-center items-center"
-                        >
-                          <IconDelete />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Customscrollbar>
-            </>
-          ) : (
-            <NoData />
-          )}
-          <div className="mt-5 space-x-2 text-right">
-            <ButtonCancel
-              loading={false}
-              onClick={() => _ToggleModal(false)}
-              dataLang={dataLang}
-            />
-            <ButtonSubmit
-              loading={hangdingMutation.isPending}
-              dataLang={dataLang}
-              onClick={() => form.handleSubmit((data) => onSubmit(data))()}
-            />
+                              </td>
+                              <td className='py-2 px-3 text-center'>
+                                <button
+                                  onClick={() => removeItem(index)}
+                                  type='button'
+                                  title='Xóa'
+                                  className='transition w-[40px] h-10 rounded-[5.5px] hover:text-red-600 text-red-500 flex flex-col justify-center items-center'
+                                >
+                                  <IconDelete />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        });
+                      })()}
+                    </tbody>
+                  </table>
+                </Customscrollbar>
+              </div>
+            ) : (
+              <div className='flex-1 flex flex-col items-center justify-center h-full min-h-[300px] gap-4'>
+                <NoData type='report' titleText='Không có nguyên liệu nào' />
+              </div>
+            )}
+            <div className='mt-5 space-x-2 text-right'>
+              <ButtonCancel loading={false} onClick={() => _ToggleModal(false)} dataLang={dataLang} />
+              <ButtonSubmit loading={hangdingMutation.isPending} dataLang={dataLang} onClick={() => form.handleSubmit(data => onSubmit(data))()} />
+            </div>
           </div>
         </div>
-      </div>
       </PopupCustom>
       <Popup_dsncc
         dataLang={dataLang}
-        nameModel="suppliers"
+        nameModel='suppliers'
         listProvince={listProvince}
         listBr={listBranch}
         openExternal={openSupplierPopup}
         onCloseExternal={handleCloseSupplierPopup}
         onRefresh={handleSupplierCreated}
-        classNameBtnAdd="hidden"
+        classNameBtnAdd='hidden'
         // className="hidden"
       />
     </>

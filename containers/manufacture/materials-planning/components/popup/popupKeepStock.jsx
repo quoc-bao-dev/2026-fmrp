@@ -539,7 +539,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
       title={
         <div className='flex flex-col gap-1'>
           <h2 className='text-2xl font-bold capitalize'>{dataLang?.materials_planning_raw_materials || 'materials_planning_raw_materials'}</h2>
-          <p className='text-base text-typo-blue-4'>{dataTable?.listDataRight?.title || dataTable?.listDataRight?.referenceNoPo || ''}</p>
+          <p className='text-base text-blue-fmrp'>{dataTable?.listDataRight?.title || dataTable?.listDataRight?.referenceNoPo || ''}</p>
         </div>
       }
       button={
@@ -792,7 +792,19 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                     <tr>
                       {isQuickSelectMode && (
                         <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>
+<<<<<<< Updated upstream
                           <Tooltip title='Chế độ chọn nhanh: chọn tất cả' trigger='manual' open={showQuickSelectHint} position='bottom' theme='dark' distance={12} animation='perspective'>
+=======
+                          <Tooltip
+                            title='Bấm vào để chọn tất cả'
+                            trigger='manual'
+                            open={showQuickSelectHint}
+                            position='bottom'
+                            theme='dark'
+                            distance={12}
+                            animation='perspective'
+                          >
+>>>>>>> Stashed changes
                             <div className='flex justify-center'>
                               <CheckboxDefault checked={selectedItemsForQuickSelect.length > 0 && selectedItemsForQuickSelect.length === findValue.arrayItem?.length} onChange={handleSelectAllItems} />
                             </div>
