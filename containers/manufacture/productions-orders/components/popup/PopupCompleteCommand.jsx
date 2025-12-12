@@ -714,34 +714,6 @@ const PopupCompleteCommand = ({ onClose }) => {
                       </p>
                     </div>
                   ))}
-                  {errorNVLData.items.map((item, index) => (
-                    <div key={index} className='px-3 py-1 flex items-center justify-between gap-1'>
-                      <div className='flex items-center gap-2'>
-                        <Image src={'/icon/default/default.png'} alt='default' width={36} height={36} className='object-cover rounded' />
-                        <div className='flex flex-col gap-0.5'>
-                          <h3 className='text-sm font-semibold text-neutral-07'>{item.item_name}</h3>
-                          <p className='text-xs font-normal text-neutral-03'>{item.product_variation}</p>
-                        </div>
-                      </div>
-                      <p className='text-sm font-normal text-neutral-07'>
-                        <span className='text-lg font-medium text-[#EE1E1E]'>{formatNumber(item.quantity_missing)}</span>/{item.unit_name}
-                      </p>
-                    </div>
-                  ))}
-                  {errorNVLData.items.map((item, index) => (
-                    <div key={index} className='px-3 py-1 flex items-center justify-between gap-1'>
-                      <div className='flex items-center gap-2'>
-                        <Image src={'/icon/default/default.png'} alt='default' width={36} height={36} className='object-cover rounded' />
-                        <div className='flex flex-col gap-0.5'>
-                          <h3 className='text-sm font-semibold text-neutral-07'>{item.item_name}</h3>
-                          <p className='text-xs font-normal text-neutral-03'>{item.product_variation}</p>
-                        </div>
-                      </div>
-                      <p className='text-sm font-normal text-neutral-07'>
-                        <span className='text-lg font-medium text-[#EE1E1E]'>{formatNumber(item.quantity_missing)}</span>/{item.unit_name}
-                      </p>
-                    </div>
-                  ))}
                 </div>
               </div>
             )}
