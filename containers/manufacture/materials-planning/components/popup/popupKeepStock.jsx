@@ -658,7 +658,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                   const selectedLevelId = field.value?.ppi_id === option?.ppi_id ? field.value?.selectedLevel?.id : null;
                   const hasMultiLevel = Array.isArray(option?.level_bom) && option.level_bom.length > 1;
                   const displayLevelName = option?.selectedLevel?.name || (selectedLevelId && option?.level_bom?.find(lv => lv.id === selectedLevelId)?.name);
-                  
+
                   // Khi đã chọn: hiển thị gọn kèm level đã chọn
                   if (context === 'value') {
                     return (
@@ -673,9 +673,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                               {option?.item_code} - {option?.item_variation}
                             </span>
                             <h5 className='responsive-text-xs'>{option?.reference_no_detail}</h5>
-                            {hasMultiLevel && displayLevelName && (
-                              <span className='px-1 py-[1px] rounded bg-blue-fmrp/10 text-blue-600 text-[9px] font-semibold'>{`BOM ${displayLevelName}`}</span>
-                            )}
+                            {hasMultiLevel && displayLevelName && <span className='px-1 py-[1px] rounded bg-blue-fmrp/10 text-blue-600 text-[9px] font-semibold'>{`BOM ${displayLevelName}`}</span>}
                           </div>
                         </div>
                       </div>
@@ -788,21 +786,13 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
             </div>
           ) : findValue.arrayItem && findValue.arrayItem?.length > 0 ? (
             <div className='overflow-hidden flex-1'>
-              <Customscrollbar className='max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300'>
+              <Customscrollbar className={`${form.watch('type') == 'product' ? 'max-h-[calc(60vh-100px)]' : 'max-h-[60vh]'} overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300`}>
                 <table className='w-full border-separate' style={{ borderSpacing: '0 4px' }}>
                   <thead className='bg-white sticky top-0 z-[9999] shadow-sm'>
                     <tr>
                       {isQuickSelectMode && (
                         <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>
-                          <Tooltip
-                            title='Bấm vào để chọn tất cả'
-                            trigger='manual'
-                            open={showQuickSelectHint}
-                            position='bottom'
-                            theme='dark'
-                            distance={12}
-                            animation='perspective'
-                          >
+                          <Tooltip title='Bấm vào để chọn tất cả' trigger='manual' open={showQuickSelectHint} position='bottom' theme='dark' distance={12} animation='perspective'>
                             <div className='flex justify-center'>
                               <CheckboxDefault checked={selectedItemsForQuickSelect.length > 0 && selectedItemsForQuickSelect.length === findValue.arrayItem?.length} onChange={handleSelectAllItems} />
                             </div>
