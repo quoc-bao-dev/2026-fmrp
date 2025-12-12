@@ -781,7 +781,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
         </div>
 
         {/* ==== Table ==== */}
-        <div className='flex-1 min-h-[60vh] max-h-[80vh] w-[1400px] flex flex-col gap-4'>
+        <div className='flex-1 min-h-[60vh] max-h-[80vh] w-[1300px] flex flex-col gap-4'>
           {isLoading ? (
             <div className='flex-1 flex justify-center items-center h-full'>
               <Loading className='max-h-40 2xl:h-[160px]' color='#0f4f9e' />
@@ -1010,7 +1010,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                               </td>
                             )}
                             <td className='py-2 px-3 text-center text-sm font-semibold'>{index + 1}</td>
-                            <td className='py-2 px-3 text-left'>
+                            <td className='py-2 px-3 text-left min-w-[290px]'>
                               <div className='flex gap-2 min-w-0 '>
                                 {!e?.child && (
                                   <button
@@ -1124,7 +1124,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                                   return (
                                     <div onClick={ev => ev.stopPropagation()}>
                                       <WarehouseSelectDropdown
-                                        className='w-[220px]'
+                                        className='w-[200px]'
                                         dropdownClassName='!w-[300px]'
                                         options={arrWareHouse}
                                         value={currentValue}
