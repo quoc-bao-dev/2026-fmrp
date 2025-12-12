@@ -76,6 +76,7 @@ import TabKeepStock from '../ui/tabKeepStock';
 import { listDropdownCompleteStage, listLsxStatus } from './constants/listData';
 import { useProductionOrderManagers } from '@/managers/api/productions-order/useProductionOrderManagers';
 import AvatarStack from '../popup/AvatarStack';
+import { useProductionOrderPermission } from '@/managers/api/productions-order/useProductionOrderPermission';
 
 const initialState = {
   isTab: 'item',
@@ -219,6 +220,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     id: isStateProvider?.productionsOrders?.idDetailProductionOrder,
     enabled: !!isStateProvider?.productionsOrders?.idDetailProductionOrder,
   });
+
   const keepStockPurchaseCount = useMemo(() => {
     const keepCount = dataProductionOrderDetail?.keepWarehouses?.length || 0;
     const purchaseCount = dataProductionOrderDetail?.purchase_order?.length || 0;
@@ -290,6 +292,23 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
 
   const stateFilterDropdown = useSelector(state => state.stateFilterDropdown);
   const authState = useSelector(state => state.auth);
+
+  const {
+    role: productionRole,
+    hasPermission: hasPoPermission,
+    isLoading: isPermissionLoading,
+  } = useProductionOrderPermission({
+    poId: isStateProvider?.productionsOrders?.idDetailProductionOrder,
+    auth: authState,
+    enabled: !!isStateProvider?.productionsOrders?.idDetailProductionOrder,
+  });
+
+  const canKeepStock = useMemo(() => {
+    return hasPoPermission(['is_manager', 'is_btp_nvl']);
+  }, [hasPoPermission]);
+  const canPurchase = useMemo(() => {
+    return hasPoPermission(['is_manager', 'is_btp_nvl']);
+  }, [hasPoPermission]);
 
   // flag của list production
   const flagProductionOrders = useMemo(() => (dataProductionOrders ? dataProductionOrders?.pages?.flatMap(page => page?.productionOrders) : []), [dataProductionOrders]);
@@ -758,7 +777,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
   };
 
   // Hàm mở Sheet chi tiết công đoạn
-  const handleToggleSheetDetail = async item => {
+  const handleToggleSheetDetail = async (item, managerAvatars = []) => {
     if (item.poi_id === isStateProvider?.productionsOrders?.poiId) return;
 
     // Cập nhật state trước để Sheet có đủ thông tin
@@ -766,6 +785,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
       productionsOrders: {
         ...prev.productionsOrders,
         itemDetailPoi: item,
+        managerAvatars,
         selectedImages: [],
         uploadProgress: {},
       },
@@ -787,7 +807,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     // Mở Sheet sau khi URL đã cập nhật
     openSheet({
       type: 'manufacture-productions-orders',
-      content: <SheetProductionsOrderDetail {...shareProps} />,
+      content: <SheetProductionsOrderDetail {...shareProps} managerAvatars={managerAvatars} />,
       className: 'w-[90vw] md:w-[700px] xl:w-[70%] lg:w-[75%]',
     });
   };
@@ -873,6 +893,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
   const shareProps = {
     dataTable,
     dataLang,
+    managerAvatars: isStateProvider?.productionsOrders?.managerAvatars || [],
     handleToggleAccordionList,
     handShowItem: (id, type) => {
       sDataTable(prev => ({
@@ -1669,34 +1690,40 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                 {/* Kế hoạch NVL */}
                 <div className='relative z-[3] flex items-center justify-center min-w-[140px]'>
                   <UnionStepIcon active={processSteps?.materials_plan?.is_active || false} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
-                  <span className={`absolute inset-0 flex items-center justify-center font-medium text-sm whitespace-nowrap px-4 ${
-                    processSteps?.materials_plan?.is_active ? 'text-white' : 'text-[#9295A4]'
-                  }`}>
+                  <span
+                    className={`absolute inset-0 flex items-center justify-center font-medium text-sm whitespace-nowrap px-4 ${
+                      processSteps?.materials_plan?.is_active ? 'text-white' : 'text-[#9295A4]'
+                    }`}
+                  >
                     {processSteps?.materials_plan?.name || 'Kế hoạch NVL'}
                   </span>
                 </div>
-                
+
                 {/* Xuất kho sản xuất */}
                 <div className='relative z-[2] flex items-center justify-center min-w-[160px] -ml-[23px]'>
                   <UnionStepIcon active={processSteps?.export_production?.is_active || false} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
-                  <span className={`absolute inset-0 flex items-center justify-center font-medium text-sm whitespace-nowrap px-4 ml-3 ${
-                    processSteps?.export_production?.is_active ? 'text-white' : 'text-[#9295A4]'
-                  }`}>
+                  <span
+                    className={`absolute inset-0 flex items-center justify-center font-medium text-sm whitespace-nowrap px-4 ml-3 ${
+                      processSteps?.export_production?.is_active ? 'text-white' : 'text-[#9295A4]'
+                    }`}
+                  >
                     {processSteps?.export_production?.name || 'Xuất kho sản xuất'}
                   </span>
                 </div>
-                
+
                 {/* Nhập kho TP */}
                 <div className='relative z-[1] flex items-center justify-center min-w-[120px] -ml-[23px]'>
                   <UnionStepIcon active={processSteps?.import_finished_goods?.is_active || false} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
-                  <span className={`absolute inset-0 flex items-center justify-center font-medium text-sm whitespace-nowrap px-4 ${
-                    processSteps?.import_finished_goods?.is_active ? 'text-white' : 'text-[#9295A4]'
-                  }`}>
+                  <span
+                    className={`absolute inset-0 flex items-center justify-center font-medium text-sm whitespace-nowrap px-4 ${
+                      processSteps?.import_finished_goods?.is_active ? 'text-white' : 'text-[#9295A4]'
+                    }`}
+                  >
                     {processSteps?.import_finished_goods?.name || 'Nhập kho TP'}
                   </span>
                 </div>
               </div>
-              
+
               <div ref={groupButtonRef} className='flex items-center justify-end gap-2 p-0.5 mb-2'>
                 <div
                   onClick={() => {
@@ -1834,6 +1861,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                       fetchDataTable={fetchDataTable}
                       dataLang={dataLang}
                       title={e.name}
+                      hasPermission={canKeepStock}
                       dataTable={{
                         listDataRight: {
                           idCommand: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.pp_id,
@@ -1854,6 +1882,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                         fetchDataTable={fetchDataTable}
                         dataLang={dataLang}
                         title={e.name}
+                        hasPermission={canPurchase}
                         dataTable={{
                           listDataRight: {
                             idCommand: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.pp_id,

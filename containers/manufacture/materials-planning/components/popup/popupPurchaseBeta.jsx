@@ -68,6 +68,7 @@ const PopupPurchaseBeta = ({
   className,
   queryValue,
   fetchDataTable,
+  hasPermission = true,
   ...rest
 }) => {
   const isShow = useToast();
@@ -275,6 +276,9 @@ const PopupPurchaseBeta = ({
         <div
           className="bg-blue-100 rounded-lg outline-none focus:outline-none"
           onClick={() => {
+            if (!hasPermission) {
+              return isShow("error", dataLang?.no_permission || "Bạn không có quyền thực hiện thao tác này");
+            }
             if (dataSeting?.package == "1") {
               dispatch({
                 type: "statePopupGlobal",
