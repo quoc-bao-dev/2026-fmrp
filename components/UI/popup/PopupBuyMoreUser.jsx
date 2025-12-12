@@ -485,7 +485,7 @@ const PopupBuyMoreUser = props => {
                 )}
               </AnimatePresence>
               <div className='flex items-center justify-between mt-auto'>
-                <p className='text-2xl font-bold text-typo-blue-4'>
+                <p className='text-2xl font-bold text-blue-fmrp'>
                   {formatMoney(paymentTotals.total || 0)} <span className='underline'>đ</span>/{paymentInfo.month} tháng/{currentNumberOfUsers} user
                 </p>
               </div>

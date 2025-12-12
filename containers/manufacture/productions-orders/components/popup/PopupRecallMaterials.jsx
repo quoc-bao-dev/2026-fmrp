@@ -347,7 +347,7 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
       <div className='flex gap-2 justify-between'>
         <div className='flex flex-col gap-1'>
           <h2 className='text-2xl font-bold capitalize'>Thu hồi nguyên liệu</h2>
-          <p className='text-base text-typo-blue-4'>{code || data?.productionOrder?.reference_no || 'LSX-27112571'}</p>
+          <p className='text-base text-blue-fmrp'>{code || data?.productionOrder?.reference_no || 'LSX-27112571'}</p>
         </div>
         <div className='flex items-center gap-4'>
           <CustomDropdownRadioGroup
@@ -628,14 +628,14 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
                                 <td className='py-4 px-2 text-center min-w-[150px]'>
                                   <div className='flex gap-2 items-center justify-center'>
                                     <div className='text-start'>
-                                      <p className='text-blue-color font-medium text-base whitespace-nowrap'>
+                                      <p className='text-blue-fmrp font-medium text-base whitespace-nowrap'>
                                         {formatNumber(recallQuantity)} <span className='text-[#141522] font-medium text-xs'>/</span>
                                       </p>
                                       <span className='text-[#141522] text-xs font-medium'>{material.unit_manufacture_name}</span>
                                     </div>
                                     <ApproximateEqualsIcon className='size-4 text-[#141522]' />
                                     <div className='text-start'>
-                                      <p className='text-blue-color font-medium text-base whitespace-nowrap'>
+                                      <p className='text-blue-fmrp font-medium text-base whitespace-nowrap'>
                                         {formatNumber(Number(recallQuantity / Number(material.exchange_manufacture ?? 0)))} <span className='text-[#141522] font-medium text-xs'>/</span>
                                       </p>
                                       <span className='text-[#141522] text-xs font-medium'>{material.unit_parent_name}</span>

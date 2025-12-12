@@ -1132,7 +1132,7 @@ const SalesOrderForm = props => {
                           >
                             <button
                               onClick={() => handleDecrease(e?.id)}
-                              className='size-6 flex-shrink-0 bg-primary-05 hover:bg-typo-blue-4/50 font-bold flex items-center justify-center rounded-full'
+                              className='size-6 flex-shrink-0 bg-primary-05 hover:bg-blue-fmrp/50 font-bold flex items-center justify-center rounded-full'
                             >
                               <Minus size='16' className='' />
                             </button>
@@ -1151,7 +1151,7 @@ const SalesOrderForm = props => {
                             />
                             <button
                               onClick={() => handleIncrease(e.id)}
-                              className='size-6 flex-shrink-0 bg-primary-05 hover:bg-typo-blue-4/50 font-bold flex items-center justify-center p-0.5 rounded-full'
+                              className='size-6 flex-shrink-0 bg-primary-05 hover:bg-blue-fmrp/50 font-bold flex items-center justify-center p-0.5 rounded-full'
                             >
                               <Add size='16' className='' />
                             </button>

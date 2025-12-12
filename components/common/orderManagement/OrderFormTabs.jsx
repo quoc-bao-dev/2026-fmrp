@@ -24,7 +24,7 @@ const OrderFormTabs = ({ info, note }) => {
             {activeTab === tab.key && (
               <motion.div
                 layoutId="active-tab-bg"
-                className="absolute inset-0 bg-blue-color rounded-lg"
+                className="absolute inset-0 bg-blue-fmrp rounded-lg"
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               />
             )}

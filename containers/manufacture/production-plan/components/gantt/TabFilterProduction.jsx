@@ -149,8 +149,8 @@ const TabFilterProduction = React.memo((props) => {
         } whitespace-nowrap font-medium justify-center responsive-text-base flex gap-2 items-center px-4 py-2.5 outline-none transition-colors duration-200
         ${
           isActive
-            ? "text-typo-blue-4"
-            : "text-neutral-02 group-hover:text-typo-blue-4/80"
+            ? "text-blue-fmrp"
+            : "text-neutral-02 group-hover:text-blue-fmrp/80"
         }
         `}
         style={props.style}

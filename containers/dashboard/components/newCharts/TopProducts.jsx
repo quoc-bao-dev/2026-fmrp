@@ -18,7 +18,7 @@ const CardProduct = ({ name, quantity, percentageChange, className }) => {
     >
       <div className="flex-1 rounded-2xl p-6 flex justify-between items-start shadow-[0px_12px_24px_-4px_rgba(145,158,171,0.12),0px_0px_2px_0px_rgba(145,158,171,0.20)]">
         <div className="flex flex-col">
-          <h3 className="text-3xl font-bold text-typo-blue-4">{quantity?.toLocaleString()}</h3>
+          <h3 className="text-3xl font-bold text-blue-fmrp">{quantity?.toLocaleString()}</h3>
           <p className="text-sm font-normal text-typo-black-1">{name}</p>
         </div>
         {percentageChange !== undefined && percentageChange !== 0 && (

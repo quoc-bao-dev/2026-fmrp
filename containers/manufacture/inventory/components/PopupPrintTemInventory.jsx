@@ -201,7 +201,7 @@ const PopupPrintTemInventory = ({ id, onClose }) => {
               {isPrintTem ? "Mẫu tem in của bạn" : "In tem kiểm kê kho"}
             </p>
             {isPrintTem && (
-              <p className="text-typo-blue-4 text-base font-medium">
+              <p className="text-blue-fmrp text-base font-medium">
                 {`(${selectItems?.length} sản phẩm)`}
               </p>
             )}

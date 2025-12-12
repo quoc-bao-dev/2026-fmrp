@@ -203,6 +203,10 @@ export const useHandlingExportTotalPO = () => {
         queryClient.invalidateQueries({
           queryKey: ["api_production_orders"],
         });
+
+        queryClient.invalidateQueries({
+          queryKey: ["apiDetailProductionOrders"],
+        });
       }
       return data;
     },

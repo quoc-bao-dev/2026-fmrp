@@ -28,7 +28,18 @@ const SelectSearch = ({
   const menuRef = useRef(null)
   const inputRef = useRef(null)
 
-  const filteredOptions = options;
+  const filteredOptions = React.useMemo(() => {
+    if (!searchText?.trim()) return options;
+    const keyword = searchText.toLowerCase();
+    return options?.filter(opt => {
+      const label = opt?.label || '';
+      const name = opt?.e?.name || '';
+      const code = opt?.e?.code || '';
+      const variation = opt?.e?.product_variation || '';
+      const textType = opt?.e?.text_type || '';
+      return [label, name, code, variation, textType].some(v => v?.toString().toLowerCase().includes(keyword));
+    });
+  }, [options, searchText]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -149,7 +160,7 @@ const SelectSearch = ({
               onChange={handleSelectAll}
             />
               {showSelectedCount && (
-                <p className="responsive-text-sm font-normal text-blue-color">
+                <p className="responsive-text-sm font-normal text-blue-fmrp">
                   {Array.isArray(value) ? value.length : (value ? 1 : 0)} đã chọn
                 </p>
               )}

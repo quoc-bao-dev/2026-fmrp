@@ -22,7 +22,7 @@ export const AnimatedTabUnderline = () => {
 
   return (
     <motion.div
-      className="absolute bottom-0 h-[2px] bg-typo-blue-4 z-10"
+      className="absolute bottom-0 h-[2px] bg-blue-fmrp z-10"
       initial={{ left: from.left, width: from.width }}
       animate={{ left: activeTabInfo.left, width: activeTabInfo.width }}
       transition={{
