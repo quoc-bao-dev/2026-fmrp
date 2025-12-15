@@ -1,6 +1,6 @@
 import CheckboxDefault from '@/components/common/checkbox/CheckboxDefault';
 import Loading from '@/components/common/loading/loading/LoadingComponent';
-import { WarningIcon } from '@/components/icons';
+import { PlusIcon, WarningIcon } from '@/components/icons';
 import CheckIcon from '@/components/icons/common/CheckIcon';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
@@ -12,13 +12,16 @@ import { useHandlingProductCompleted, useProductCompleted } from '@/managers/api
 import { useQRCodProductCompleted } from '@/managers/api/productions-order/useQR';
 import { default as formatNumber, default as formatNumberConfig } from '@/utils/helpers/formatnumber';
 import { Lexend_Deca } from '@next/font/google';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
 import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { FaMinus, FaPlus } from 'react-icons/fa';
 import { PiWarehouseLight } from 'react-icons/pi';
 import { Tooltip } from 'react-tippy';
 import { twMerge } from 'tailwind-merge';
+import { useGetQcErrorDetails } from '@/managers/api/qc/useGetQcErrorDetails';
+import debounce from 'lodash/debounce';
+import { v4 as uuidv4 } from 'uuid';
 
 const deca = Lexend_Deca({
   subsets: ['latin'],
@@ -262,47 +265,324 @@ InputNumberCustom.displayName = 'InputNumberCustom';
 
 // CheckboxDefault.displayName = "CheckboxDefault";
 
-const ProductRow = memo(({ product, index, updateProductQuantity, updateProductError, handleSelectProduct }) => {
+const ProductRow = memo(({ product, index, updateProductQuantity, updateProductError, handleSelectProduct, errorTags, errorImages, onAddTag, onRemoveTag, onAddImage, onRemoveImage }) => {
   const handleToggleRowSelect = useCallback(() => {
     handleSelectProduct(index, !product.selected);
   }, [index, product.selected, handleSelectProduct]);
 
+  const [newTagInput, setNewTagInput] = useState('');
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [inputWidth, setInputWidth] = useState(60);
+  const [imageError, setImageError] = useState('');
+  const fileInputRef = useRef(null);
+  const measureRef = useRef(null);
+  const isAddingTagRef = useRef(false);
+  const errorValue = product.error === undefined ? 0 : product.error;
+  const hasError = errorValue > 0;
+
+  // Hook lấy danh sách lỗi QC theo sản phẩm/biến thể, log dữ liệu khi thành công
+  const { getQcErrorDetails, data: qcErrorDetailsData } = useGetQcErrorDetails({
+    onSuccess: data => {
+      console.log('QC error details response:', data);
+    },
+    onError: err => {
+      console.error('QC error details error:', err);
+    },
+  });
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  useEffect(() => {
+    if (hasError) {
+      setNewTagInput('');
+      setInputWidth(60);
+      setIsInputFocused(false);
+      setImageError('');
+    }
+  }, [hasError]);
+
+  const suggestions = useMemo(() => qcErrorDetailsData?.data || [], [qcErrorDetailsData]);
+
+  const getQcErrorDetailsRef = useRef(getQcErrorDetails);
+
+  useEffect(() => {
+    getQcErrorDetailsRef.current = getQcErrorDetails;
+  }, [getQcErrorDetails]);
+
+  const debouncedGetQcErrorDetails = useMemo(
+    () =>
+      debounce(params => {
+        getQcErrorDetailsRef.current?.(params);
+      }, 300),
+    []
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedGetQcErrorDetails.cancel();
+    };
+  }, [debouncedGetQcErrorDetails]);
+
+  useEffect(() => {
+    setShowSuggestions(suggestions.length > 0 && isInputFocused);
+  }, [suggestions, isInputFocused]);
+
+  const handleAddTag = useCallback(() => {
+    // Ngăn double trigger
+    if (isAddingTagRef.current) return;
+
+    if (newTagInput.trim()) {
+      isAddingTagRef.current = true;
+      onAddTag(index, newTagInput.trim());
+      setNewTagInput('');
+      setInputWidth(60);
+      // Reset flag sau một chút
+      setTimeout(() => {
+        isAddingTagRef.current = false;
+      }, 100);
+    }
+  }, [index, newTagInput, onAddTag]);
+
+  useEffect(() => {
+    if (measureRef.current) {
+      const width = Math.max(60, measureRef.current.offsetWidth + 0);
+      setInputWidth(width);
+    }
+  }, [newTagInput]);
+
+  const handleKeyDown = useCallback(
+    e => {
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        e.stopPropagation();
+        e.nativeEvent.stopImmediatePropagation();
+        if (newTagInput.trim()) {
+          handleAddTag();
+        }
+        // Với Tab, giữ focus ở input
+        if (e.key === 'Tab') {
+          e.target.focus();
+        }
+        // e.target.value = '';
+        setNewTagInput('');
+      }
+    },
+    [handleAddTag, newTagInput]
+  );
+
+  const handleImageUpload = useCallback(
+    e => {
+      const files = Array.from(e.target.files || []);
+      const MAX_SIZE = 3 * 1024 * 1024; // 5MB
+      let hasOversize = false;
+
+      files.forEach(file => {
+        if (file.size > MAX_SIZE) {
+          hasOversize = true;
+          return;
+        }
+        if (file.type.startsWith('image/')) {
+          const preview = URL.createObjectURL(file);
+          onAddImage(index, { file, preview });
+        }
+      });
+
+      setImageError(hasOversize ? 'Kích thước ảnh không được vượt quá 5MB' : '');
+      // Reset input để có thể chọn lại file giống nhau
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    },
+    [index, onAddImage]
+  );
+
   return (
-    <tr className='hover:bg-gray-50 cursor-pointer' onClick={handleToggleRowSelect}>
-      <td className='py-2 px-3 text-center border-b border-[#F3F3F4]'>
-        <div onClick={e => e.stopPropagation()}>
-          <Tooltip title='Chọn' position='bottom' arrow={true}>
-            <CheckboxDefault checked={product.selected} onChange={checked => handleSelectProduct(index, checked)} />
-          </Tooltip>
-        </div>
-      </td>
-      <td className='py-2 px-3 text-center border-b border-[#F3F3F4] text-sm font-semibold'>{index + 1}</td>
-      <td className='py-2 px-3 text-left border-b border-[#F3F3F4]'>
-        <div className='flex gap-2'>
-          <div className='w-16 h-16 rounded flex items-center justify-center'>
-            <Image src={product.images || '/icon/default/default.png'} alt={product.name} width={64} height={64} className='object-cover rounded' />
+    <>
+      <tr className='hover:bg-gray-50 cursor-pointer' onClick={handleToggleRowSelect}>
+        <td className='py-2 px-3 text-center border-b border-[#F3F3F4]'>
+          <div onClick={e => e.stopPropagation()}>
+            <Tooltip title='Chọn' position='bottom' arrow={true}>
+              <CheckboxDefault checked={product.selected} onChange={checked => handleSelectProduct(index, checked)} />
+            </Tooltip>
           </div>
-          <div className='flex flex-col gap-1'>
-            <h3 className='text-sm font-semibold text-neutral-07 truncate'>{product.item_name}</h3>
-            <div className='flex flex-col gap-0.5'>
-              <p className='text-[10px] font-normal text-neutral-03'>{product.product_variation}</p>
-              <p className='text-xs font-normal text-typo-blue-2'>{product.item_code}</p>
-              <p className='text-xs font-normal text-typo-blue-2'>{product.reference_no_detail}</p>
+        </td>
+        <td className='py-2 px-3 text-center border-b border-[#F3F3F4] text-sm font-semibold'>{index + 1}</td>
+        <td className='py-2 px-3 text-left border-b border-[#F3F3F4]'>
+          <div className='flex gap-2'>
+            <div className='w-16 h-16 rounded flex items-center justify-center'>
+              <Image src={product.images || '/icon/default/default.png'} alt={product.name} width={64} height={64} className='object-cover rounded' />
+            </div>
+            <div className='flex flex-col gap-1'>
+              <h3 className='text-sm font-semibold text-neutral-07 truncate'>{product.item_name}</h3>
+              <div className='flex flex-col gap-0.5'>
+                <p className='text-[10px] font-normal text-neutral-03'>{product.product_variation}</p>
+                <p className='text-xs font-normal text-typo-blue-2'>{product.item_code}</p>
+                <p className='text-xs font-normal text-typo-blue-2'>{product.reference_no_detail}</p>
+              </div>
             </div>
           </div>
-        </div>
-      </td>
-      <td className='py-2 px-3 text-center border-b border-[#F3F3F4]'>
-        <div className='flex justify-center'>
-          <InputNumberCustom state={product.quantity_success} setState={value => updateProductQuantity(index, value)} allowDecimal={true} />
-        </div>
-      </td>
-      <td className='py-2 px-3 text-center border-b border-[#F3F3F4]'>
-        <div className='flex justify-center'>
-          <InputNumberCustom state={product.error === undefined ? 0 : product.error} setState={value => updateProductError(index, value)} isError={true} allowDecimal={true} />
-        </div>
-      </td>
-    </tr>
+        </td>
+        <td className='py-2 px-3 text-center border-b border-[#F3F3F4]'>
+          <div className='flex justify-center'>
+            <InputNumberCustom state={product.quantity_success} setState={value => updateProductQuantity(index, value)} allowDecimal={true} />
+          </div>
+        </td>
+        <td className='py-2 px-3 text-center border-b border-[#F3F3F4]'>
+          <div className='flex justify-center'>
+            <InputNumberCustom state={errorValue} setState={value => updateProductError(index, value)} isError={true} allowDecimal={true} />
+          </div>
+        </td>
+      </tr>
+      <AnimatePresence>
+        {hasError && (
+          <tr className='border-l border-b border-[#DBEBFF]'>
+            <td></td>
+            <td></td>
+            <td colSpan={3} className='px-3 py-0 bg-gray-50' style={{ paddingTop: 0, paddingBottom: 0 }}>
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                style={{ overflow: 'hidden' }}
+                className='flex flex-col gap-3 '
+                onClick={e => e.stopPropagation()}
+              >
+                {/* Tags Section */}
+                <div className='flex flex-col gap-2 pt-3'>
+                  <div className='flex flex-wrap items-center gap-2'>
+                    {errorTags &&
+                      errorTags[index]?.map((tag, tagIndex) => (
+                        <span key={tagIndex} className='inline-flex items-center gap-3 px-2 py-1 leading-[20px] bg-blue-100 text-[#141522] rounded-lg text-xs font-medium'>
+                          {tag}
+                          <button type='button' onClick={() => onRemoveTag(index, tagIndex)} className='hover:text-blue-900 focus:outline-none'>
+                            <svg width='10' height='20' viewBox='0 0 7 7' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                              <path
+                                d='M6.79406 6.79379C6.68857 6.89928 6.54549 6.95854 6.39631 6.95854C6.24712 6.95854 6.10405 6.89928 5.99856 6.79379L3.47949 4.27472L0.960424 6.79379C0.854935 6.89928 0.711861 6.95854 0.562677 6.95854C0.413492 6.95854 0.270418 6.89928 0.164929 6.79379C0.05944 6.6883 0.000176842 6.54522 0.000177179 6.39604C0.000176842 6.24685 0.05944 6.10378 0.164929 5.99829L2.684 3.47922L0.164929 0.960156C0.05944 0.854667 0.000177137 0.711592 0.000177158 0.562408C0.00017685 0.413224 0.05944 0.27015 0.164929 0.164661C0.270418 0.0591715 0.413492 -9.17209e-05 0.562677 -9.17499e-05C0.711861 -9.1771e-05 0.854935 0.0591714 0.960424 0.164661L3.47949 2.68373L5.99856 0.164661C6.10405 0.0591714 6.24712 -9.1771e-05 6.39631 -9.17499e-05C6.54549 -9.17209e-05 6.68857 0.0591715 6.79406 0.164661C6.89954 0.27015 6.95881 0.413224 6.95881 0.562408C6.95881 0.711592 6.89954 0.854667 6.79406 0.960156L4.27499 3.47922L6.79406 5.99829C6.89954 6.10378 6.95881 6.24685 6.95881 6.39604C6.95881 6.54522 6.89954 6.6883 6.79406 6.79379Z'
+                                fill='#003DA0'
+                              />
+                            </svg>
+                          </button>
+                        </span>
+                      ))}
+                    <div className='flex items-center gap-2'>
+                      <button
+                        type='button'
+                        className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors ${
+                          isInputFocused ? 'bg-white border border-[#92BFF7] text-gray-700' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                        onClick={e => {
+                          // Chỉ add tag khi click trực tiếp vào button, không phải từ input
+                          if (e.target === e.currentTarget || !e.target.closest('input')) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleAddTag();
+                          }
+                        }}
+                      >
+                        {!isInputFocused && <PlusIcon className='size-3' />}
+                        <div className='relative inline-block' style={{ width: `${inputWidth}px`, minWidth: '60px' }}>
+                          <span ref={measureRef} className='absolute invisible whitespace-pre text-xs leading-[20px] px-0' style={{ font: 'inherit' }}>
+                            {newTagInput || 'Nhập lỗi'}
+                          </span>
+                          <input
+                            type='text'
+                            value={newTagInput}
+                            onChange={e => {
+                              const value = e.target.value;
+                              setNewTagInput(value);
+                              debouncedGetQcErrorDetails({
+                                item_id: product?.item_id ?? product?.id ?? '',
+                                item_variation_id: product?.item_variation_id ?? product?.item_variation_option_value_id ?? '',
+                                search: value || '',
+                              });
+                            }}
+                            onKeyDown={handleKeyDown}
+                            onFocus={() => setIsInputFocused(true)}
+                            onBlur={() => setIsInputFocused(false)}
+                            placeholder='Nhập lỗi'
+                            style={{ width: '100%' }}
+                            className='leading-[20px] bg-transparent outline-none text-xs'
+                          />
+                          {showSuggestions && (
+                            <div className='absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-[60px] overflow-auto'>
+                              {suggestions.map(item => (
+                                <button
+                                  key={item.id}
+                                  type='button'
+                                  className='w-full text-left px-3 py-2 text-xs hover:bg-blue-50'
+                                  onMouseDown={e => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
+                                  onClick={e => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const code = item.code || '';
+                                    if (code.trim()) {
+                                      onAddTag(index, code.trim());
+                                      setNewTagInput('');
+                                      setInputWidth(60);
+                                    }
+                                    setShowSuggestions(false);
+                                  }}
+                                >
+                                  {item.code || ''}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Images Section */}
+                <div className='flex flex-wrap items-center gap-2 pb-3'>
+                  {errorImages &&
+                    errorImages[index]?.map((image, imgIndex) => (
+                      <div key={imgIndex} className='relative w-[80px] h-[55px] rounded overflow-hidden'>
+                      <Image src={image?.preview || '/icon/default/default.png'} alt={`Error ${imgIndex + 1}`} width={80} height={80} className='object-cover w-full h-full' />
+                        <button type='button' onClick={() => onRemoveImage(index, imgIndex)} className='absolute top-0 right-0 bg-white text-white rounded-full p-1 hover:bg-gray-100'>
+                          <svg width='11' height='11' viewBox='0 0 7 7' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                            <path
+                              d='M6.79406 6.79379C6.68857 6.89928 6.54549 6.95854 6.39631 6.95854C6.24712 6.95854 6.10405 6.89928 5.99856 6.79379L3.47949 4.27472L0.960424 6.79379C0.854935 6.89928 0.711861 6.95854 0.562677 6.95854C0.413492 6.95854 0.270418 6.89928 0.164929 6.79379C0.05944 6.6883 0.000176842 6.54522 0.000177179 6.39604C0.000176842 6.24685 0.05944 6.10378 0.164929 5.99829L2.684 3.47922L0.164929 0.960156C0.05944 0.854667 0.000177137 0.711592 0.000177158 0.562408C0.00017685 0.413224 0.05944 0.27015 0.164929 0.164661C0.270418 0.0591715 0.413492 -9.17209e-05 0.562677 -9.17499e-05C0.711861 -9.1771e-05 0.854935 0.0591714 0.960424 0.164661L3.47949 2.68373L5.99856 0.164661C6.10405 0.0591714 6.24712 -9.1771e-05 6.39631 -9.17499e-05C6.54549 -9.17209e-05 6.68857 0.0591715 6.79406 0.164661C6.89954 0.27015 6.95881 0.413224 6.95881 0.562408C6.95881 0.711592 6.89954 0.854667 6.79406 0.960156L4.27499 3.47922L6.79406 5.99829C6.89954 6.10378 6.95881 6.24685 6.95881 6.39604C6.95881 6.54522 6.89954 6.6883 6.79406 6.79379Z'
+                              fill='#444444'
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  <button
+                    type='button'
+                    onClick={() => fileInputRef.current?.click()}
+                    className=' w-[55px]  h-[55px] flex items-center justify-center border-2 border-dashed border-gray-300 rounded hover:border-blue-500 hover:bg-blue-50 transition-colors'
+                  >
+                    <svg width='28' height='28' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                      <path
+                        d='M8.125 10.8333C8.125 10.336 8.32254 9.85906 8.67417 9.50743C9.02581 9.1558 9.50272 8.95825 10 8.95825C10.4973 8.95825 10.9742 9.1558 11.3258 9.50743C11.6775 9.85906 11.875 10.336 11.875 10.8333C11.875 11.3305 11.6775 11.8074 11.3258 12.1591C10.9742 12.5107 10.4973 12.7083 10 12.7083C9.50272 12.7083 9.02581 12.5107 8.67417 12.1591C8.32254 11.8074 8.125 11.3305 8.125 10.8333Z'
+                        fill='#5D5D5D'
+                      />
+                      <path
+                        fill-rule='evenodd'
+                        clip-rule='evenodd'
+                        d='M6.22817 6.36833C6.22796 6.02443 6.29553 5.68385 6.42704 5.36608C6.55854 5.04831 6.7514 4.75958 6.99458 4.5164C7.23776 4.27323 7.52649 4.08037 7.84426 3.94886C8.16203 3.81736 8.5026 3.74978 8.84651 3.75H11.1532C11.4971 3.74978 11.8377 3.81736 12.1554 3.94886C12.4732 4.08037 12.7619 4.27323 13.0051 4.5164C13.2483 4.75958 13.4411 5.04831 13.5726 5.36608C13.7042 5.68385 13.7717 6.02443 13.7715 6.36833C13.7717 6.37428 13.7739 6.37998 13.7779 6.38441C13.7819 6.38884 13.7873 6.39171 13.7932 6.3925L15.6515 6.5425C16.484 6.61083 17.1682 7.22583 17.324 8.04667C17.7197 10.1405 17.749 12.287 17.4107 14.3908L17.3298 14.8942C17.2557 15.3553 17.029 15.7783 16.6861 16.0954C16.3431 16.4125 15.9037 16.6054 15.4382 16.6433L13.819 16.7742C11.2771 16.9807 8.7226 16.9807 6.18067 16.7742L4.56151 16.6433C4.09584 16.6054 3.65636 16.4123 3.3134 16.0951C2.97045 15.7778 2.74384 15.3546 2.66984 14.8933L2.58901 14.3908C2.24984 12.2867 2.27984 10.1408 2.67567 8.04667C2.75136 7.64751 2.956 7.28425 3.25814 7.01266C3.56029 6.74108 3.94324 6.57619 4.34817 6.54333L6.20651 6.3925C6.2124 6.39171 6.21782 6.38884 6.2218 6.38441C6.22577 6.37998 6.22803 6.37428 6.22817 6.36833ZM9.99984 7.70833C9.17104 7.70833 8.37618 8.03757 7.79013 8.62362C7.20408 9.20968 6.87484 10.0045 6.87484 10.8333C6.87484 11.6621 7.20408 12.457 7.79013 13.043C8.37618 13.6291 9.17104 13.9583 9.99984 13.9583C10.8286 13.9583 11.6235 13.6291 12.2095 13.043C12.7956 12.457 13.1248 11.6621 13.1248 10.8333C13.1248 10.0045 12.7956 9.20968 12.2095 8.62362C11.6235 8.03757 10.8286 7.70833 9.99984 7.70833Z'
+                        fill='#5D5D5D'
+                      />
+                    </svg>
+
+                    <input ref={fileInputRef} type='file' accept='image/*' multiple onChange={handleImageUpload} className='hidden' />
+                  </button>
+
+                </div>
+                {imageError && <p className='text-xs text-red-500 mb-2 -mt-2'>{imageError}</p>}
+
+              </motion.div>
+            </td>
+          </tr>
+        )}
+      </AnimatePresence>
+    </>
   );
 });
 
@@ -355,6 +635,8 @@ const PopupCompleteCommand = ({ onClose }) => {
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
   const [showAutoTooltip, setShowAutoTooltip] = useState(false);
   const [autoTooltipText, setAutoTooltipText] = useState('');
+  const [errorTags, setErrorTags] = useState({}); // { index: ['tag1', 'tag2'] }
+  const [errorImages, setErrorImages] = useState({}); // { index: [{ file, preview }] }
   const { data: QRCode } = useQRCodProductCompleted(isStateProvider?.productionsOrders.idDetailProductionOrder);
   const showToast = useToast();
 
@@ -387,6 +669,9 @@ const PopupCompleteCommand = ({ onClose }) => {
       }));
       setProducts(itemsWithDefaults);
       setSelectAll(false);
+      // Reset error tags và images khi data mới được load
+      setErrorTags({});
+      setErrorImages({});
       // Reset flag khi data mới được load
       hasShownTooltipRef.current = false;
     }
@@ -475,16 +760,46 @@ const PopupCompleteCommand = ({ onClose }) => {
     }
 
     try {
-      const formatData = selectedProducts.map(product => ({
-        ...product,
-        quantity_success: product.quantity_success || 0,
-        quantity_error: product.error || 0,
-      }));
-      await handleProductCompleted({
+      const formatData = selectedProducts.map((product, selectedIndex) => {
+        // Tìm index thực tế của product trong mảng products gốc
+        const originalIndex = products.findIndex(p => p.uniqueId === product.uniqueId);
+        const itemId = uuidv4();
+        const imagesForItem = originalIndex !== -1 ? errorImages[originalIndex] || [] : [];
+
+        return {
+          ...product,
+          id: itemId,
+          quantity_success: product.quantity_success || 0,
+          quantity_error: product.error || 0,
+          error_tags: originalIndex !== -1 ? errorTags[originalIndex] || [] : [],
+          error_images: imagesForItem.map(img => img?.file).filter(Boolean),
+        };
+      });
+
+      const payload = {
         po_id: isStateProvider?.productionsOrders.idDetailProductionOrder,
         warehouse_id: selectedWarehouse?.value,
         items: formatData,
+      };
+
+      // Chuẩn bị log dữ liệu với key cho FormData (kèm file ảnh thật)
+      const errorImagesFormKeys = {};
+      formatData.forEach((item, itemIndex) => {
+        item.error_tags?.forEach((tag, tagIndex) => {
+          errorImagesFormKeys[`items[${itemIndex}][error_tags][${tagIndex}]`] = tag;
+        });
+        item.error_images?.forEach((file, imgIndex) => {
+          errorImagesFormKeys[`error_images[${item.id}][${imgIndex}]`] = file || null;
+        });
       });
+
+      console.log('Payload với errorTags, errorImages (file) và key FormData:', {
+        ...payload,
+        items: formatData,
+        errorImagesFormKeys,
+      });
+
+      await handleProductCompleted(payload);
     } catch (error) {
       showToast('error', error?.message || 'Có lỗi xảy ra khi cập nhật sản phẩm hoàn thành!');
     }
@@ -607,6 +922,49 @@ const PopupCompleteCommand = ({ onClose }) => {
     });
   }, []);
 
+  const handleAddTag = useCallback((index, tag) => {
+    setErrorTags(prev => ({
+      ...prev,
+      [index]: [...(prev[index] || []), tag],
+    }));
+  }, []);
+
+  const handleRemoveTag = useCallback((index, tagIndex) => {
+    setErrorTags(prev => {
+      const newTags = { ...prev };
+      if (newTags[index]) {
+        newTags[index] = newTags[index].filter((_, i) => i !== tagIndex);
+        if (newTags[index].length === 0) {
+          delete newTags[index];
+        }
+      }
+      return newTags;
+    });
+  }, []);
+
+  const handleAddImage = useCallback((index, imageObj) => {
+    setErrorImages(prev => ({
+      ...prev,
+      [index]: [...(prev[index] || []), imageObj],
+    }));
+  }, []);
+
+  const handleRemoveImage = useCallback((index, imageIndex) => {
+    setErrorImages(prev => {
+      const newImages = { ...prev };
+      if (newImages[index]) {
+        const [removed] = newImages[index].splice(imageIndex, 1);
+        if (removed?.preview) {
+          URL.revokeObjectURL(removed.preview);
+        }
+        if (newImages[index].length === 0) {
+          delete newImages[index];
+        }
+      }
+      return newImages;
+    });
+  }, []);
+
   const selectedCount = useMemo(() => products.filter(product => product.selected).length, [products]);
   const dataSeting = useSetingServer();
 
@@ -695,7 +1053,7 @@ const PopupCompleteCommand = ({ onClose }) => {
                 <Image src={QRCode?.data?.qr || '/qrCode/QR.png'} alt='complete-command' width={50} height={50} className='rounded-[4px]' />
               </Tooltip>
 
-              <button onClick={handleConfirm} disabled={isLoadingSubmit} className='flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-blue-fmrp'>
+              <button onClick={handleConfirm} disabled={isLoadingSubmit} className='flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-blue-fmrp hover:opacity-80'>
                 {isLoadingSubmit ? <span className='animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white'></span> : <CheckIcon className='size-4' />}
                 {isLoadingSubmit ? 'Đang xử lý...' : `Xác nhận${selectedCount > 0 ? ` (${selectedCount})` : ''}`}
               </button>
@@ -779,6 +1137,12 @@ const PopupCompleteCommand = ({ onClose }) => {
                     updateProductQuantity={updateProductQuantity}
                     updateProductError={updateProductError}
                     handleSelectProduct={handleSelectProduct}
+                    errorTags={errorTags}
+                    errorImages={errorImages}
+                    onAddTag={handleAddTag}
+                    onRemoveTag={handleRemoveTag}
+                    onAddImage={handleAddImage}
+                    onRemoveImage={handleRemoveImage}
                   />
                 ))}
               </tbody>

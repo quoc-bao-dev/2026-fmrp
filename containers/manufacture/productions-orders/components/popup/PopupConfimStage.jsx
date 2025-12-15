@@ -547,7 +547,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                     title='Xác nhận'
                     onClick={handleSubmit}
                     icon={<CheckIcon className='size-4' />}
-                    className={`py-2.5 2xl:py-3 px-3 2xl:px-4 text-white rounded-lg !responsive-text-base flex items-center gap-2 bg-blue-fmrp hover:bg-typo-blue-5`}
+                    className={`py-2.5 2xl:py-3 px-3 2xl:px-4 text-white rounded-lg !responsive-text-base flex items-center gap-2 bg-blue-fmrp hover:opacity-80`}
                   />
                 ) : (
                   <PackageUpgradeButton />

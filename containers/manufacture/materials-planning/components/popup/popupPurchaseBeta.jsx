@@ -130,6 +130,11 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
     return formatNumberConfig(+number, dataSeting);
   };
 
+  const normalizeText = text => {
+    if (!text) return '';
+    return text.normalize('NFC');
+  };
+
   const removeItem = e => {
     // const updatedData = findValue.arrayItem.filter((item) => item.id !== e?.id);
     // console.log("updatedData", updatedData);
@@ -381,11 +386,17 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
                     <tbody className='[&>tr]:mb-1' style={{ gap: '4px' }}>
                       {(() => {
                         const filteredItems = (fields || []).filter(e => {
+                          if (!e || !e.id) return false;
                           if (!searchTerm) return true;
-                          const keyword = searchTerm.toLowerCase();
-                          const name = e?.item?.name?.toLowerCase() || '';
-                          const code = e?.item?.item_code?.toLowerCase() || '';
-                          return name.includes(keyword) || code.includes(keyword);
+                          const keyword = normalizeText(searchTerm.toLowerCase().trim());
+                          if (!keyword) return true;
+                          const name = normalizeText((e?.item?.name || '').toLowerCase().trim());
+                          const code = normalizeText((e?.item?.item_code || '').toLowerCase().trim());
+                          const variation = normalizeText((e?.item?.variation || '').toLowerCase().trim());
+
+                          return name.includes(keyword) || code.includes(keyword) || variation.includes(keyword);
+
+
                         });
 
                         if (searchTerm && filteredItems.length === 0) {

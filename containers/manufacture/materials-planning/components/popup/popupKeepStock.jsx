@@ -200,6 +200,11 @@ const PopupKeepStock = ({
     return formatNumberConfig(+number, dataSeting);
   };
 
+  const normalizeText = text => {
+    if (!text) return '';
+    return text.normalize('NFC');
+  };
+
   const removeItem = id => {
     const updatedData = form.getValues('arrayItem').filter(item => item.id !== id);
     form.setValue('arrayItem', updatedData);
@@ -862,10 +867,12 @@ const PopupKeepStock = ({
                       const filteredItems = currentItems.filter(e => {
                         if (!e || !e.id) return false;
                         if (!searchTerm) return true;
-                        const keyword = searchTerm.toLowerCase();
-                        const name = e?.item?.name?.toLowerCase() || '';
-                        const code = e?.item?.item_code?.toLowerCase() || '';
-                        return name.includes(keyword) || code.includes(keyword);
+                        const keyword = normalizeText(searchTerm.toLowerCase().trim());
+                        if (!keyword) return true;
+                        const name = normalizeText((e?.item?.name || '').toLowerCase().trim());
+                        const code = normalizeText((e?.item?.item_code || '').toLowerCase().trim());
+                        const variation = normalizeText((e?.item?.variation || '').toLowerCase().trim());
+                        return name.includes(keyword) || code.includes(keyword) || variation.includes(keyword);
                       });
 
                       // Nếu đang tìm kiếm mà không có kết quả, hiển thị NoData
