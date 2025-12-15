@@ -500,7 +500,7 @@ const Popup_Detail = React.memo(props => {
 
   return (
     <PopupCustom
-      title={props.dataLang?.category_material_list_detail || 'category_material_list_detail'}
+      title={`${props.dataLang?.category_material_list_detail || 'category_material_list_detail'} (${list?.name ? ` ${list.name}` : ''}${list?.code ? ` - ${list.code}` : ''})`}
       button={props.children}
       onClickOpen={_ToggleModal.bind(this, true)}
       open={open}

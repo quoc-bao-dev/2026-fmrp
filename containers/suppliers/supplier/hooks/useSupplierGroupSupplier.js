@@ -1,7 +1,7 @@
 import apiSuppliers from "@/Api/apiSuppliers/suppliers/apiSuppliers";
 import { useQuery } from "@tanstack/react-query";
 
-export const useSupplierGroupSupplier = (key) => {
+export const useSupplierGroupSupplier = (key, enabled = true) => {
     return useQuery({
         queryKey: ["api_supplier_group_supplier", key],
         queryFn: async () => {
@@ -14,5 +14,6 @@ export const useSupplierGroupSupplier = (key) => {
 
             return rResult?.map((e) => ({ label: e.name, value: e.id })) || []
         },
+        enabled: enabled,
     })
 }

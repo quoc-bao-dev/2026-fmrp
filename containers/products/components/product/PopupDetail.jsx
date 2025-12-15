@@ -1,6 +1,6 @@
 import apiProducts from '@/Api/apiProducts/products/apiProducts';
-import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { CaretDropDownThinIcon } from '@/components/icons';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { ColumnTablePopup, HeaderTablePopup } from '@/components/UI/common/TablePopup';
 import TagBranch from '@/components/UI/common/Tag/TagBranch';
 import { TagColorProduct } from '@/components/UI/common/Tag/TagStatus';
@@ -13,15 +13,18 @@ import useToast from '@/hooks/useToast';
 import { formatMoment } from '@/utils/helpers/formatMoment';
 import formatMoneyConfig from '@/utils/helpers/formatMoney';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
+import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import { useQuery } from '@tanstack/react-query';
 import { TickCircle as IconTick, UserEdit as IconUserEdit } from 'iconsax-react';
 import Image from 'next/image';
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useProductDetail } from '../../hooks/product/useProductDetail';
 import { useProductDetailStage } from '../../hooks/product/useProductDetailStage';
 import Popup_Bom from './popupBom';
 import Popup_GiaiDoan from './popupStage';
+import SearchInput from '@/components/UI/common/SearchInput';
+
 const Popup_Detail = React.memo(props => {
   const isShow = useToast();
 
@@ -50,6 +53,8 @@ const Popup_Detail = React.memo(props => {
   const [dataBom, sDataBom] = useState([]);
 
   const [selectedListBom, sSelectedListBom] = useState([]);
+
+  const [searchMaterials, setSearchMaterials] = useState('');
 
   const formatBomTabLabel = value => {
     if (!value) return '';
@@ -99,6 +104,10 @@ const Popup_Detail = React.memo(props => {
 
   useEffect(() => {
     open && sTab(0);
+    // Reset tìm kiếm khi đóng popup
+    if (!open) {
+      setSearchMaterials('');
+    }
   }, [open]);
 
   // kiểm tra tab và data có trùng với tab BOM hay không, nếu có thì chuyển tab BOM
@@ -213,18 +222,31 @@ const Popup_Detail = React.memo(props => {
     };
   }, [open, dataBom, tabBom, tab]);
 
+  // Tính số lượng items cho mỗi tab
+  const tabItemsCount = useMemo(() => {
+    const countMap = new Map();
+    dataBom?.forEach(item => {
+      const tabId = item.product_variation_option_value_id;
+      const itemsCount = item?.items?.length || 0;
+      countMap.set(tabId, itemsCount);
+    });
+    return countMap;
+  }, [dataBom]);
+
   // [show-more] [step-4] Chuẩn bị options cho select và xử lý chọn tab nằm trong danh sách show-more
   const overflowOptions = useMemo(() => {
     if (!overflowTabIds?.length) return [];
     return overflowTabIds.map(id => {
       const tabItem = dataBom?.find(item => item.product_variation_option_value_id === id);
+      const itemsCount = tabItemsCount.get(id) || 0;
       return {
         value: id,
         label: formatBomTabLabel(tabItem?.name_variation),
+        count: itemsCount,
         isSelected: tabBom === id, // Đánh dấu tab đang active
       };
     });
-  }, [overflowTabIds, dataBom, tabBom]);
+  }, [overflowTabIds, dataBom, tabBom, tabItemsCount]);
 
   const handleSelectOverflowTab = option => {
     if (!option) return;
@@ -286,19 +308,34 @@ const Popup_Detail = React.memo(props => {
   // [show-more] Tính toán text và active state cho nút "Xem thêm"
   const moreButtonInfo = useMemo(() => {
     if (!overflowTabIds.length || !tabBom) {
-      return { text: props.dataLang?.more || 'Xem thêm', isActive: false };
+      return { text: props.dataLang?.more || 'Xem thêm', count: null, isActive: false };
     }
     // Kiểm tra xem tab đang active có nằm trong overflow không
     const isActiveInOverflow = overflowTabIds.includes(tabBom);
     if (isActiveInOverflow) {
       const activeTabItem = dataBom?.find(item => item.product_variation_option_value_id === tabBom);
+      const itemsCount = tabItemsCount.get(tabBom) || 0;
       return {
         text: formatBomTabLabel(activeTabItem?.name_variation) || props.dataLang?.more || 'Xem thêm',
+        count: itemsCount,
         isActive: true,
       };
     }
-    return { text: props.dataLang?.more || 'Xem thêm', isActive: false };
-  }, [overflowTabIds, tabBom, dataBom, props.dataLang?.more]);
+    return { text: props.dataLang?.more || 'Xem thêm', count: null, isActive: false };
+  }, [overflowTabIds, tabBom, dataBom, props.dataLang?.more, tabItemsCount]);
+
+  // Lọc danh sách BOM theo tên và mã (không phân biệt hoa thường và dấu)
+  const filteredBomItems = useMemo(() => {
+    if (!selectedListBom?.items) return [];
+    if (!searchMaterials.trim()) return selectedListBom.items;
+
+    const searchTerm = searchMaterials.trim();
+    return selectedListBom.items.filter(item => {
+      const itemName = item?.item_name || '';
+      const itemCode = item?.item_code || '';
+      return searchWithoutDiacritics(itemName, searchTerm) || searchWithoutDiacritics(itemCode, searchTerm);
+    });
+  }, [selectedListBom?.items, searchMaterials]);
 
   // 4 tab ở trên popup
   const dataTab = [
@@ -319,9 +356,10 @@ const Popup_Detail = React.memo(props => {
       name: props.dataLang?.stage_finishedProduct || 'stage_finishedProduct',
     },
   ];
+
   return (
     <PopupCustom
-      title={'Chi tiết thành phẩm'}
+      title={`Chi tiết thành phẩm (${list?.name ? ` ${list.name}` : ''}${list?.code ? ` - ${list.code}` : ''})`}
       button={props.children}
       onClickOpen={_ToggleModal.bind(this, true)}
       open={open}
@@ -522,7 +560,14 @@ const Popup_Detail = React.memo(props => {
                   <>
                     {dataBom?.length > 0 ? (
                       <div className='min-h-[384px] py-1'>
-                        <div className='flex items-center justify-end space-x-3 -mt-2'>
+                        <div className='flex items-center justify-between space-x-3 -mt-2'>
+                          <SearchInput
+                            value={searchMaterials}
+                            onChange={e => setSearchMaterials(e.target.value)}
+                            placeholder='Tìm kiếm theo tên và mã'
+                            className='w-1/2'
+                            onClear={() => setSearchMaterials('')}
+                          />
                           <Popup_Bom dataLang={props.dataLang} id={props.id} name={list?.name} code={list?.code} type='edit' onRefresh={props.onRefresh} onRefreshBom={refetchBom} />
                         </div>
                         {/* [show-more] [step-5] Render nhóm tab hiển thị + icon show-more điều khiển dropdown custom (icon nằm ngay sau tab cuối) */}
@@ -540,9 +585,14 @@ const Popup_Detail = React.memo(props => {
                                     onClick={_HandleSelectTabBom.bind(this, id)}
                                     className={`${
                                       isActive ? 'text-[#0F4F9E] bg-[#0F4F9E10]' : 'text-slate-600 hover:text-[#0F4F9E] bg-slate-50/50'
-                                    } outline-none min-w-fit px-3 py-1.5 rounded relative flex items-center whitespace-nowrap transition-colors duration-150`}
+                                    } outline-none min-w-fit px-3 py-1.5 rounded relative flex items-center gap-2 whitespace-nowrap transition-colors duration-150`}
                                   >
                                     <span>{formatBomTabLabel(tabItem?.name_variation)}</span>
+                                    <span className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] ${
+                                      isActive ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
+                                    }`}>
+                                      {tabItemsCount.get(id) || 0}
+                                    </span>
                                   </button>
                                 );
                               })}
@@ -557,6 +607,13 @@ const Popup_Detail = React.memo(props => {
                                     ref={selectMeasureRef}
                                   >
                                     <span>{moreButtonInfo.text}</span>
+                                    {moreButtonInfo.count !== null && (
+                                      <span className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] ${
+                                        moreButtonInfo.isActive ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
+                                      }`}>
+                                        {moreButtonInfo.count}
+                                      </span>
+                                    )}
                                     <CaretDropDownThinIcon className={`w-4 h-4 transition-transform duration-150 ${isMoreSelectOpen ? 'rotate-180' : ''}`} />
                                   </button>
                                   {isMoreSelectOpen &&
@@ -572,7 +629,14 @@ const Popup_Detail = React.memo(props => {
                                                 className='w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-gray-50 text-left'
                                                 onClick={() => handleSelectOverflowTab(opt)}
                                               >
-                                                <span className='truncate'>{opt.label}</span>
+                                                <div className='flex items-center gap-2 flex-1 min-w-0'>
+                                                  <span className='truncate'>{opt.label}</span>
+                                                  <span className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] shrink-0 ${
+                                                    opt.isSelected ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
+                                                  }`}>
+                                                    {opt.count}
+                                                  </span>
+                                                </div>
                                                 {opt.isSelected && (
                                                   <svg className='w-4 h-4 text-[#0F4F9E]' fill='currentColor' viewBox='0 0 20 20'>
                                                     <path
@@ -595,22 +659,28 @@ const Popup_Detail = React.memo(props => {
                             {/* [show-more] [step-5b] Hàng đo ẩn: đo width từng tab + width select để tính toán chính xác */}
                             <div className='absolute inset-0 pointer-events-none opacity-0 -z-10' aria-hidden='true'>
                               <div className='flex items-center gap-3'>
-                                {dataBom?.map(e => (
-                                  <button
-                                    key={`measure-${e.product_variation_option_value_id.toString()}`}
-                                    type='button'
-                                    ref={node => {
-                                      if (node) {
-                                        tabMeasureRefs.current.set(e.product_variation_option_value_id, node);
-                                      } else {
-                                        tabMeasureRefs.current.delete(e.product_variation_option_value_id);
-                                      }
-                                    }}
-                                    className='min-w-fit px-3 py-1.5 rounded whitespace-nowrap'
-                                  >
-                                    <span>{formatBomTabLabel(e?.name_variation)}</span>
-                                  </button>
-                                ))}
+                                {dataBom?.map(e => {
+                                  const itemsCount = tabItemsCount.get(e.product_variation_option_value_id) || 0;
+                                  return (
+                                    <button
+                                      key={`measure-${e.product_variation_option_value_id.toString()}`}
+                                      type='button'
+                                      ref={node => {
+                                        if (node) {
+                                          tabMeasureRefs.current.set(e.product_variation_option_value_id, node);
+                                        } else {
+                                          tabMeasureRefs.current.delete(e.product_variation_option_value_id);
+                                        }
+                                      }}
+                                      className='min-w-fit px-3 py-1.5 rounded whitespace-nowrap flex items-center gap-2'
+                                    >
+                                      <span>{formatBomTabLabel(e?.name_variation)}</span>
+                                      <span className='aspect-square h-5 p-1 text-[11px] bg-[#F97A4C] text-white rounded-full flex items-center justify-center min-w-[20px]'>
+                                        {itemsCount}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
                                 {/* Button "Xem thêm" đo ẩn để lấy đúng width thực tế */}
                                 <button type='button' ref={selectMeasureHiddenRef} className='min-w-fit px-3 py-1.5 rounded whitespace-nowrap flex items-center gap-2'>
                                   <span>Xem thêm</span>
@@ -633,13 +703,14 @@ const Popup_Detail = React.memo(props => {
 
                         <Customscrollbar className='min-h-[250px] max-h-[450px]'>
                           <div className='divide-y divide-slate-200'>
-                            {selectedListBom?.items?.map((e, index) => (
-                              <div key={e?.id ? e?.id.toString() : ''} className={`grid grid-cols-20 px-2 py-2.5 hover:bg-slate-50 items-center`}>
-                                {/* <h6 className="px-2 xl:text-[15px] text-xs col-span-2">
+                            {filteredBomItems.length > 0 ? (
+                              filteredBomItems.map((e, index) => (
+                                <div key={e?.id ? e?.id.toString() : ''} className={`grid grid-cols-20 px-2 py-2.5 hover:bg-slate-50 items-center`}>
+                                  {/* <h6 className="px-2 xl:text-[15px] text-xs col-span-2">
                                                                     {e?.str_type_item}
                                                                 </h6> */}
-                                <div className='flex items-center justify-center col-span-3 gap-1'>
-                                  {/* <span
+                                  <div className='flex items-center justify-center col-span-3 gap-1'>
+                                    {/* <span
                                                                         className={`py-[1px] px-1 rounded border h-fit w-fit font-[300] break-words leading-relaxed text-xs
                                                                      ${(e?.item_type_current === "products" && "text-lime-500 border-lime-500") ||
                                                                             (e?.item_type_current == "semi_products" && "text-orange-500 border-orange-500") ||
@@ -650,37 +721,42 @@ const Popup_Detail = React.memo(props => {
                                                                     >
                                                                         {e?.str_type_item ?? ""}
                                                                     </span> */}
-                                  <TagColorProduct
-                                    dataKey={
-                                      e?.item_type_current === 'products'
-                                        ? 0
-                                        : e?.item_type_current === 'semi_products'
-                                        ? 1
-                                        : e?.item_type_current === 'out_side'
-                                        ? 2
-                                        : e?.item_type_current === 'material'
-                                        ? 3
-                                        : e?.item_type_current === 'semi_products_outside'
-                                        ? 4
-                                        : null
-                                    }
-                                    lang={false}
-                                    name={e?.str_type_item}
-                                  />
-                                </div>
-                                <h6 className='col-span-7 text-xs 2xl:text-base xl:text-sm'>
-                                  <div className='grid grid-cols-1 gap-0.5'>
-                                    <h5 className='responsive-text-base font-medium'>{e?.item_name}</h5>
-                                    <h5 className='responsive-text-sm italic'>{e?.variation_name}</h5>
-                                    <h5 className='responsive-text-sm italic text-blue-fmrp'>{e?.item_code}</h5>
+                                    <TagColorProduct
+                                      dataKey={
+                                        e?.item_type_current === 'products'
+                                          ? 0
+                                          : e?.item_type_current === 'semi_products'
+                                          ? 1
+                                          : e?.item_type_current === 'out_side'
+                                          ? 2
+                                          : e?.item_type_current === 'material'
+                                          ? 3
+                                          : e?.item_type_current === 'semi_products_outside'
+                                          ? 4
+                                          : null
+                                      }
+                                      lang={false}
+                                      name={e?.str_type_item}
+                                    />
                                   </div>
-                                </h6>
-                                <h6 className='col-span-2 px-2 text-xs text-center 2xl:text-base xl:text-sm'>{e?.unit_name}</h6>
-                                <h6 className='col-span-2 px-2 text-xs text-center 2xl:text-base xl:text-sm'>{formatNumber(e?.quota)}</h6>
-                                <h6 className='col-span-2 px-2 text-xs text-center 2xl:text-base xl:text-sm'>{formatNumber(e?.loss)}%</h6>
-                                <h6 className='col-span-4 px-2 text-xs text-center 2xl:text-base xl:text-sm'>{e?.stage_name}</h6>
+                                  <h6 className='col-span-7 text-xs 2xl:text-base xl:text-sm'>
+                                    <div className='grid grid-cols-1 gap-0.5'>
+                                      <h5 className='responsive-text-base font-medium'>{e?.item_name}</h5>
+                                      <h5 className='responsive-text-sm italic'>{e?.variation_name}</h5>
+                                      <h5 className='responsive-text-sm italic text-blue-fmrp'>{e?.item_code}</h5>
+                                    </div>
+                                  </h6>
+                                  <h6 className='col-span-2 px-2 text-xs text-center 2xl:text-base xl:text-sm'>{e?.unit_name}</h6>
+                                  <h6 className='col-span-2 px-2 text-xs text-center 2xl:text-base xl:text-sm'>{formatNumber(e?.quota)}</h6>
+                                  <h6 className='col-span-2 px-2 text-xs text-center 2xl:text-base xl:text-sm'>{formatNumber(e?.loss)}%</h6>
+                                  <h6 className='col-span-4 px-2 text-xs text-center 2xl:text-base xl:text-sm'>{e?.stage_name}</h6>
+                                </div>
+                              ))
+                            ) : (
+                              <div className='py-8 text-center'>
+                                <NoData type='report' titleText='Không tìm thấy kết quả' />
                               </div>
-                            ))}
+                            )}
                           </div>
                         </Customscrollbar>
                       </div>
