@@ -1,5 +1,9 @@
 import { _ServerInstance as axiosCustom } from "@/services/axios";
 const apiProducts = {
+    async apiProductsCounts(params) {
+        const response = await axiosCustom('GET', `/api_web/products/counts`, params);
+        return response.data
+    },
     async apiListProducts(params) {
         const response = await axiosCustom('GET', `/api_web/api_product/product/?csrf_protection=true`, params);
         return response.data

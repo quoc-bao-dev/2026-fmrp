@@ -588,13 +588,24 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
 
 ProductRow.displayName = 'ProductRow';
 
-export const PopupOrderCompleted = ({ onClose, className }) => {
+// Popup hiển thị trạng thái/tin nhắn cho lệnh sản xuất (hoàn thành, lỗi truy cập, v.v.)
+export const PopupProductionOrderStatus = ({
+  onClose,
+  className,
+  title,
+  description,
+  icon: IconComponent = CheckIcon,
+  iconClassName = 'text-[#1FC583]',
+  isError = false,
+}) => {
+  const displayTitle = title || 'Lệnh sản xuất đã được hoàn thành';
+  const displayDescription = description || 'Xin chúc mừng, lệnh sản xuất của bạn đã được hoàn thành đầy đủ!';
   return (
     <div className={`p-9 flex flex-col gap-8 justify-center items-center rounded-3xl w-[610px] bg-neutral-00 ${deca.className} ${className}`}>
       <div className='w-full flex items-center justify-between gap-2'>
         <div className='flex items-center gap-2'>
-          <CheckIcon className='size-5 text-[#1FC583]' />
-          <h3 className='text-2xl font-semibold text-[#25387A]'>Lệnh sản xuất đã được hoàn thành</h3>
+          <IconComponent className={twMerge('size-5', iconClassName)} />
+          <h3 className={twMerge('text-2xl font-semibold', isError ? 'text-[#E42E23]' : 'text-[#25387A]')}>{displayTitle}</h3>
         </div>
         <motion.div
           whileHover={{ scale: 1.2, rotate: 90 }}
@@ -609,7 +620,7 @@ export const PopupOrderCompleted = ({ onClose, className }) => {
       <div className='flex justify-center'>
         <Image width={267} height={200} src={'/popup/commandCompleted.webp'} alt='commandCompleted' className='object-cover size-full w-[384px]' unoptimized />
       </div>
-      <p className='text-base text-typo-black-4'>Xin chúc mừng, lệnh sản xuất của bạn đã được hoàn thành đầy đủ!</p>
+      <p className='text-base text-typo-black-4 text-center'>{displayDescription}</p>
     </div>
   );
 };
@@ -990,12 +1001,24 @@ const PopupCompleteCommand = ({ onClose }) => {
     setIsWarehouseMissing(false);
   }, []);
 
+  const isAccessDenied = !isLoading && productCompleted?.isSuccess === false;
+
   return (
     <>
       {isLoading ? (
         <Loading />
+      ) : isAccessDenied ? (
+        <PopupProductionOrderStatus
+          onClose={onClose}
+          title='Thông báo'
+          description={productCompleted?.message || 'Truy cập bị từ chối'}
+          icon={WarningIcon}
+          iconClassName='text-[#EE1E1E]'
+          isError={true}
+          className='text-center'
+        />
       ) : products.length === 0 ? (
-        <PopupOrderCompleted onClose={onClose} />
+        <PopupProductionOrderStatus onClose={onClose} />
       ) : (
         <div className={`p-6 flex flex-col gap-6 rounded-3xl w-[90vw] xl:w-[1085px] max-h-[90vh] bg-neutral-00 ${deca.className}`}>
           <div className='flex gap-2 justify-between'>

@@ -22,7 +22,7 @@ import { useActiveStages } from '../../hooks/useActiveStages';
 import { useHandingFinishedStages } from '../../hooks/useHandingFinishedStages';
 import { useListFinishedStages } from '../../hooks/useListFinishedStages';
 import { useLoadOutOfStock } from '../../hooks/useLoadOutOfStock';
-import { PopupOrderCompleted } from './PopupCompleteCommand';
+import { PopupProductionOrderStatus } from './PopupCompleteCommand';
 
 const initialState = {
   open: false,
@@ -524,7 +524,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
           lockScroll={true}
           open={isState.open}
         >
-          <PopupOrderCompleted
+          <PopupProductionOrderStatus
             className={'!p-6'}
             onClose={() => {
               setIsOrderCompleted(false);

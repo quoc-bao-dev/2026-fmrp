@@ -8,6 +8,7 @@ import { StateContext } from '@/context/_state/productions-orders/StateContext';
 import useSetingServer from '@/hooks/useConfigNumber';
 import { useListBomProductPlan } from '@/managers/api/productions-order/useListBomProductPlan';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
+import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import Image from 'next/image';
 import { memo, useContext, useMemo, useState } from 'react';
 
@@ -230,35 +231,25 @@ const PlaningProductionOrder = memo(({ dataLang, searchMaterials = '' }) => {
     id: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.pp_id,
   });
 
-  const normalizeText = value => {
-    if (!value) return '';
-    return value
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
-  };
-
-  const normalizedSearch = normalizeText(searchMaterials.trim());
-
   const filteredMaterials = useMemo(() => {
-    if (!normalizedSearch) return dataListBom?.data?.materialsBom;
+    if (!searchMaterials.trim()) return dataListBom?.data?.materialsBom;
 
     return (dataListBom?.data?.materialsBom || []).filter(item => {
-      const name = normalizeText(item?.item_name);
-      const code = normalizeText(item?.item_code);
-      return name.includes(normalizedSearch) || code.includes(normalizedSearch);
+      const itemName = item?.item_name || '';
+      const itemCode = item?.item_code || '';
+      return searchWithoutDiacritics(itemName, searchMaterials) || searchWithoutDiacritics(itemCode, searchMaterials);
     });
-  }, [dataListBom?.data?.materialsBom, normalizedSearch]);
+  }, [dataListBom?.data?.materialsBom, searchMaterials]);
 
   const filteredProducts = useMemo(() => {
-    if (!normalizedSearch) return dataListBom?.data?.productsBom;
+    if (!searchMaterials.trim()) return dataListBom?.data?.productsBom;
 
     return (dataListBom?.data?.productsBom || []).filter(item => {
-      const name = normalizeText(item?.item_name);
-      const code = normalizeText(item?.item_code);
-      return name.includes(normalizedSearch) || code.includes(normalizedSearch);
+      const itemName = item?.item_name || '';
+      const itemCode = item?.item_code || '';
+      return searchWithoutDiacritics(itemName, searchMaterials) || searchWithoutDiacritics(itemCode, searchMaterials);
     });
-  }, [dataListBom?.data?.productsBom, normalizedSearch]);
+  }, [dataListBom?.data?.productsBom, searchMaterials]);
 
   const sortZeroLast = list => {
     return (list || []).slice().sort((a, b) => {
