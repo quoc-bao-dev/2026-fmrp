@@ -96,3 +96,20 @@ export const listDropdownCompleteStage = [
   //   type: 'end_production_order',
   // },
 ]
+
+export const listDropdownStock = [
+  {
+    id: 1,
+    label: 'Thêm giữ kho',
+    icon: <ExportMaterialsIcon className="3xl:size-5 size-4" />,
+    isPremium: false,
+    type: 'keep_stock',
+  },
+  {
+    id: 2,
+    label: 'Thu hồi giữ kho',
+    icon: <ExportMaterialsIcon className="3xl:size-5 size-4" />,
+    isPremium: false,
+    type: 'recall_stock',
+  },
+]

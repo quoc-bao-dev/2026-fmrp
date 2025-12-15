@@ -52,7 +52,20 @@ const initForm = {
   idProductionOrder: null,
 };
 
-const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValue, fetchDataTable, hasPermission = true, ...rest }) => {
+const PopupKeepStock = ({
+  dataLang,
+  icon,
+  title,
+  dataTable,
+  className,
+  queryValue,
+  fetchDataTable,
+  hasPermission = true,
+  hideTrigger = false,
+  forceOpen = false,
+  onForceClose,
+  ...rest
+}) => {
   const [open, sOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showQuickSelectHint, setShowQuickSelectHint] = useState(false);
@@ -60,6 +73,27 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
   const isShow = useToast();
 
   const _ToggleModal = e => sOpen(e);
+
+  const handleOpenModal = () => {
+    if (!hasPermission) {
+      isShow('error', dataLang?.no_permission || 'Bạn không có quyền thực hiện thao tác này');
+      onForceClose?.();
+      return;
+    }
+    if (+dataTable?.countAll == 0) {
+      isShow('error', dataLang?.materials_planning_please_add || 'materials_planning_please_add');
+      onForceClose?.();
+      return;
+    }
+    _ToggleModal(true);
+  };
+
+  useEffect(() => {
+    if (forceOpen) {
+      handleOpenModal();
+      onForceClose?.();
+    }
+  }, [forceOpen]);
 
   const dataSeting = useSetingServer();
 
@@ -127,6 +161,7 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
           queryValue({ page: 1 });
           fetchDataTable(1, 'submit');
           _ToggleModal(false);
+          onForceClose?.();
           form.reset();
           return;
         }
@@ -543,24 +578,20 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
         </div>
       }
       button={
-        <div
-          // className="bg-blue-100 rounded-lg outline-none focus:outline-none"
-          className='responsive-text-sm 3xl:px-4 py-2.5 px-3 bg-blue-fmrp/80 hover:bg-blue-fmrp text-white rounded-lg flex items-center gap-x-2 transition-all duration-300'
-          onClick={() => {
-            if (!hasPermission) {
-              return isShow('error', dataLang?.no_permission || 'Bạn không có quyền thực hiện thao tác này');
-            }
-            if (+dataTable?.countAll == 0) {
-              return isShow('error', dataLang?.materials_planning_please_add || 'materials_planning_please_add');
-            }
-            _ToggleModal(true);
-          }}
-        >
-          {icon} {title}
-        </div>
+        hideTrigger ? null : (
+          <div
+            className='responsive-text-sm 3xl:px-4 py-2.5 px-3 bg-blue-fmrp/80 hover:bg-blue-fmrp text-white rounded-lg flex items-center gap-x-2 transition-all duration-300'
+            onClick={handleOpenModal}
+          >
+            {icon} {title}
+          </div>
+        )
       }
       open={open}
-      onClose={_ToggleModal.bind(this, false)}
+      onClose={() => {
+        _ToggleModal(false);
+        onForceClose?.();
+      }}
       classNameBtn={className}
     >
       <div className='mt-4'>

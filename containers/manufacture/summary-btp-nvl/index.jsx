@@ -180,6 +180,7 @@ const SummaryBtpNvl = () => {
   const { data: dataProductionOrders, isLoading: isLoadingProductionOrderList } = useProductionOrdersList({
     limit: limit,
     branch_id: valueBr?.value || '',
+    is_nvl: 1,
     _po_ids: Array.isArray(valueProductionOrders) && valueProductionOrders.length > 0 ? valueProductionOrders.map(po => po.value) : '',
     date_start: formatDateToDMY(dateRange.startDate),
     date_end: formatDateToDMY(dateRange.endDate),
