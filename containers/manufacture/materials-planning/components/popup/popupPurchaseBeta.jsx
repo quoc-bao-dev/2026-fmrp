@@ -71,7 +71,7 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
   const queryClient = useQueryClient();
 
   const [openSupplierPopup, sOpenSupplierPopup] = useState(false);
-  const { data: listProvince = [] } = useProvinceList({});
+  const { data: listProvince = [] } = useProvinceList({ enabled: openSupplierPopup });
   const { data: listBranch = [] } = useBranchList({});
 
   const [isState, sIsState] = useState(initialState);

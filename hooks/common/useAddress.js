@@ -1,7 +1,7 @@
 import apiComons from "@/Api/apiComon/apiComon";
 import { useQuery } from "@tanstack/react-query";
 
-export const useWardList = (key, value = null) => {
+export const useWardList = (key, value = null, enabled = true) => {
     return useQuery({
         queryKey: ["api_ward", key],
         queryFn: async () => {
@@ -17,22 +17,24 @@ export const useWardList = (key, value = null) => {
                 value: e.wardid,
             })) || []
         },
+        enabled: enabled,
     })
 }
 
 // danh sách tỉnh thành
-export const useProvinceList = ({ provinceid = null }) => {
+export const useProvinceList = ({ provinceid = null, enabled = true } = {}) => {
     return useQuery({
         queryKey: ["api_province"],
         queryFn: async () => {
             const { rResult } = await apiComons.apiListProvince();
             return rResult?.map((e) => ({ label: e?.name, value: e?.provinceid })) || [];
         },
+        enabled: enabled,
     });
 };
 
 // danh sách quận huyện
-export const useDistrictList = (key) => {
+export const useDistrictList = (key, enabled = true) => {
     const params = {
         provinceid: key?.value ? key?.value : -1,
     }
@@ -45,5 +47,6 @@ export const useDistrictList = (key) => {
                 value: e.districtid,
             })) || []
         },
+        enabled: enabled,
     })
 }

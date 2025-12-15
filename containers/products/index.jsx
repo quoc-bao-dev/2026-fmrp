@@ -406,7 +406,7 @@ const Products = props => {
                   <ColumnTable colSpan={1} textAlign={'center'}>
                     {dataLang?.image || 'image'}
                   </ColumnTable>
-                  <ColumnTable colSpan={1} textAlign={'left'}>
+                  <ColumnTable colSpan={1.5} textAlign={'left'}>
                     {dataLang?.category_titel}
                   </ColumnTable>
                   <ColumnTable colSpan={1} textAlign={'left'}>
@@ -433,7 +433,7 @@ const Products = props => {
                   <ColumnTable colSpan={1} textAlign={'left'}>
                     {dataLang?.note || 'note'}
                   </ColumnTable>
-                  <ColumnTable colSpan={2} textAlign={'left'}>
+                  <ColumnTable colSpan={1.5} textAlign={'left'}>
                     {dataLang?.client_list_brand || 'client_list_brand'}
                   </ColumnTable>
                   <ColumnTable colSpan={1} textAlign={'center'}>
@@ -446,20 +446,20 @@ const Products = props => {
                   <React.Fragment>
                     {data?.rResult?.length == 0 && <NoData />}
                     <div className='divide-y divide-slate-200'>
-                      {data?.rResult?.map(e => (
+                      {data?.rResult?.map((e, index) => (
                         <RowTable key={e?.id.toString()} gridCols={13}>
-                          <RowItemTable colSpan={1} className='flex self-center justify-center'>
+                          <RowItemTable colSpan={1} className='flex self-center justify-center !p-0'>
                             {e?.images == null ? (
                               <ModalImage small='/icon/noimagelogo.png' large='/icon/noimagelogo.png' className='object-cover w-full h-12 rounded' />
                             ) : (
                               <ModalImage small={e?.images} large={e?.images} className='object-contain w-full h-12 rounded' />
                             )}
                           </RowItemTable>
-                          <RowItemTable colSpan={1} textAlign={'left'}>
+                          <RowItemTable colSpan={1.5} textAlign={'left'}>
                             {e?.category_name}
                           </RowItemTable>
                           <RowItemTable colSpan={1} textAlign={'left'}>
-                            <Popup_Detail id={e?.id} dataProduct={e} dataProductExpiry={dataProductExpiry} dataLang={dataLang} classNameBtn='w-full'>
+                            <Popup_Detail id={e?.id} dataProduct={e} dataProductExpiry={dataProductExpiry} dataLang={dataLang} classNameBtn='w-full text-left'>
                               <p className='w-full text-[#0F4F9E] hover:text-blue-500 transition-all ease-linear outline-none break-words'>{e?.code}</p>
                             </Popup_Detail>
                           </RowItemTable>
@@ -499,7 +499,7 @@ const Products = props => {
                           <RowItemTable colSpan={1} textAlign={'left'}>
                             {e?.note}
                           </RowItemTable>
-                          <RowItemTable colSpan={2}>
+                          <RowItemTable colSpan={1.5}>
                             {e?.branch.map((i, index) => (
                               <span className='flex flex-wrap items-center justify-start gap-2' key={index}>
                                 {i.name}
