@@ -4,6 +4,7 @@ import { useCheckQualityDetail } from '../hooks/useCheckQualityDetail';
 import { Lexend_Deca } from '@next/font/google';
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 const deca = Lexend_Deca({
   subsets: ['latin'],
@@ -122,8 +123,11 @@ const PopupErrorInformation = ({ onClose, qcId }) => {
       return (prev + 1) % galleryImages.length;
     });
   };
-  return (
-    <div className={`${deca.className} bg-white rounded-[24px] w-[546px] h-[310px]- p-6 relative`}>
+  if (typeof window === 'undefined') return null;
+
+  const popupBody = (
+    <div className='fixed inset-0 z-[1100] flex items-center justify-center bg-[#25387A50] backdrop-blur-[2.5px]'>
+      <div className={`${deca.className} bg-white rounded-[24px] w-[546px] h-[310px]- p-6 relative`}>
       {/* Close Button */}
       <button onClick={onClose} className='absolute top-4 right-4 cursor-pointer bg-transparent rounded-full p-1 hover:bg-gray-100 transition-colors' aria-label='Đóng'>
         {/* <IconClose className='rotate-45' size={40} color='#6B7280' /> */}
@@ -208,7 +212,7 @@ const PopupErrorInformation = ({ onClose, qcId }) => {
       </div>
 
       {currentImageSrc && (
-        <div className='fixed inset-0 z-[1200] flex items-center justify-center bg-black/60 backdrop-blur-sm' onClick={handleCloseImageModal}>
+        <div className='fixed inset-0 z-[1201] flex items-center justify-center bg-black/60 backdrop-blur-sm' onClick={handleCloseImageModal}>
           <div className='relative w-[50vw] max-w-[900px] h-[70vh] bg-[#0F0F11] rounded-[24px] overflow-hidden flex items-center justify-center' onClick={e => e.stopPropagation()}>
             <button
               type='button'
@@ -258,8 +262,11 @@ const PopupErrorInformation = ({ onClose, qcId }) => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
+
+  return createPortal(popupBody, document.body);
 };
 
 export default PopupErrorInformation;
