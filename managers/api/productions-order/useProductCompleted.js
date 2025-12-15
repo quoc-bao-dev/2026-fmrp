@@ -24,21 +24,40 @@ export const useHandlingProductCompleted = () => {
       formData.append("warehouse_id", data.warehouse_id);
       if (data.items && Array.isArray(data.items)) {
         data.items.forEach((item, index) => {
-          Object.entries(item).forEach(([key, value]) => {
+          const { error_tags = [], error_images = [], ...rest } = item;
+
+          // Append all primitive fields (non-object) of the item (e.g., id, item_id, variation ids, quantities)
+          Object.entries(rest).forEach(([key, value]) => {
             if (value !== undefined && typeof value !== "object") {
               formData.append(`items[${index}][${key}]`, value);
             }
           });
+
+          // Explicit quantities (ensure defaults)
           formData.append(
             `items[${index}][quantity_success]`,
-            item.quantity_success || 0
+            rest.quantity_success ?? item.quantity_success ?? 0
           );
           formData.append(
             `items[${index}][quantity_error]`,
-            item.quantity_error || 0
+            rest.quantity_error ?? item.quantity_error ?? 0
           );
           if (item.quantity1 !== undefined)
             formData.append(`items[${index}][quantity1]`, item.quantity1);
+
+          // Error tags: items[i][error_tags][j]
+          error_tags.forEach((tag, tagIndex) => {
+            if (tag !== undefined && tag !== null) {
+              formData.append(`items[${index}][error_tags][${tagIndex}]`, tag);
+            }
+          });
+
+          // Error images keyed by item id: error_images[item.id][j]
+          error_images.forEach((file, imgIndex) => {
+            if (file instanceof File) {
+              formData.append(`error_images[${item.id}][${imgIndex}]`, file);
+            }
+          });
         });
       }
       const response = await apiProductionsOrders.apiHandlingProductCompleted(

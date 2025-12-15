@@ -1,11 +1,5 @@
 import apiMaterialsPlanning from '@/Api/apiManufacture/manufacture/materialsPlanning/apiMaterialsPlanning';
 import apiProductionsOrders from '@/Api/apiManufacture/manufacture/productionsOrders/apiProductionsOrders';
-import BreadcrumbCustom from '@/components/UI/breadcrumb/BreadcrumbCustom';
-import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
-import Loading from '@/components/UI/loading/loading';
-import MultiValue from '@/components/UI/mutiValue/multiValue';
-import NoData from '@/components/UI/noData/nodata';
-import PopupConfim from '@/components/UI/popupConfim/popupConfim';
 import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew';
 import StatusCheckboxGroup from '@/components/common/checkbox/StatusCheckboxGroup';
 import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
@@ -16,23 +10,28 @@ import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
 import {
   ArrowCounterClockWiseIcon,
-  CalendarIcon,
   CaretDownIcon,
   CaretDropDownThinIcon,
   ChartDonutIcon,
   CheckThinIcon,
   CloseXIcon,
+  KanbanIcon,
   MagnifyingGlassIcon,
   PlusIcon,
   PrinterIcon,
   StickerIcon,
   TrashIcon,
-  UnionIcon,
   UserPlusIcon,
 } from '@/components/icons';
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
 import UnionStepIcon from '@/components/icons/common/UnionStepIcon';
+import BreadcrumbCustom from '@/components/UI/breadcrumb/BreadcrumbCustom';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComponent';
+import Loading from '@/components/UI/loading/loading';
+import MultiValue from '@/components/UI/mutiValue/multiValue';
+import NoData from '@/components/UI/noData/nodata';
+import PopupConfim from '@/components/UI/popupConfim/popupConfim';
 import { CONFIRM_DELETION, TITLE_DELETE_COMMAND, TITLE_DELETE_PRODUCTIONS_ORDER } from '@/constants/delete/deleteTable';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import PopupKeepStock from '@/containers/manufacture/materials-planning/components/popup/popupKeepStock';
@@ -51,6 +50,8 @@ import useToast from '@/hooks/useToast';
 import { useToggle } from '@/hooks/useToggle';
 import { fetchItemsManufactures, fetchPDFManufactures, fetchPDFPlanManufactures } from '@/managers/api/productions-order/useLinkFilePDF';
 import { useProductionOrderDetail } from '@/managers/api/productions-order/useProductionOrderDetail';
+import { useProductionOrderManagers } from '@/managers/api/productions-order/useProductionOrderManagers';
+import { useProductionOrderPermission } from '@/managers/api/productions-order/useProductionOrderPermission';
 import { useProductionOrdersList } from '@/managers/api/productions-order/useProductionOrdersList';
 import { formatMoment } from '@/utils/helpers/formatMoment';
 import { FnlocalStorage } from '@/utils/helpers/localStorage';
@@ -66,6 +67,7 @@ import { v4 as uddid } from 'uuid';
 import { useProductionOrdersCombobox } from '../../hooks/useProductionOrdersCombobox';
 import { useProductionOrdersComboboxDetail } from '../../hooks/useProductionOrdersComboboxDetail';
 import ModalDetail from '../modal/modalDetail';
+import AvatarStack from '../popup/AvatarStack';
 import PopupCompleteCommand from '../popup/PopupCompleteCommand';
 import PopupConfimStage from '../popup/PopupConfimStage';
 import PopupPrintTemProduct from '../popup/PopupPrintTemProduct';
@@ -75,9 +77,6 @@ import DetailProductionOrderList from '../ui/DetailProductionOrderList';
 import PlaningProductionOrder from '../ui/PlaningProductionOrder';
 import TabKeepStock from '../ui/tabKeepStock';
 import { listDropdownCompleteStage, listLsxStatus } from './constants/listData';
-import { useProductionOrderManagers } from '@/managers/api/productions-order/useProductionOrderManagers';
-import AvatarStack from '../popup/AvatarStack';
-import { useProductionOrderPermission } from '@/managers/api/productions-order/useProductionOrderPermission';
 
 const initialState = {
   isTab: 'item',
@@ -1001,7 +1000,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
 
   // trigger button hoàn thành công đoạn
   const triggerCompleteStage = (
-    <div className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center xl:gap-4 gap-2 font-medium text-white border border-[#0375F3] bg-[#0375F3] hover:bg-[#0375F3] cursor-pointer hover:shadow-hover-button rounded-lg custom-transition'>
+    <div className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center xl:gap-4 gap-2 font-medium text-white border-[#0375F3] bg-[#0375F3] hover:bg-[#0375F3] hover:opacity-80 cursor-pointer hover:shadow-hover-button rounded-lg custom-transition'>
       <span className='flex items-center gap-1 xl:gap-2'>
         <CheckThinIcon className='xl:size-4 size-3.5 shrink-0' />
         <span className='responsive-text-base'>Tác vụ</span>
@@ -1077,6 +1076,23 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
 
   //phần dropdown hoàn thành công đoạn
   const handClickDropdownCompleteStage = type => {
+    // Kiểm tra quyền trước khi thực hiện action
+    const tab = listDropdownCompleteStage?.find(item => item.type === type);
+
+    console.log({productionRole});
+    console.log(tab?.permission);
+    
+    
+
+    if (tab?.permission && hasPoPermission) {
+      const hasPermission = hasPoPermission(tab.permission);
+console.log({hasPermission});
+      if (!hasPermission) {
+        isShow('error', dataLang?.no_permission || 'Bạn không có quyền thực hiện thao tác này');
+        return;
+      }
+    }
+
     const currentPackage = dataSeting?.package;
 
     if (type === 'recall_materials') {
@@ -1767,25 +1783,43 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
 
                       const borderClass = isLast ? 'border-transparent rounded-b-lg border-t-transparent' : isFirst ? 'rounded-t-lg border-t-transparent' : 'border-t-transparent';
 
+                      // Kiểm tra quyền cho từng tab
+                      const hasTabPermission = tab?.permission && hasPoPermission ? hasPoPermission(tab.permission) : true;
+
                       return (
                         <div
                           key={tab.id}
                           className={`hover:bg-[#F3F4F6] border-b border-[#F7F8F9] border-t flex items-center gap-3 cursor-pointer px-4 py-3 custom-transition whitespace-nowrap ${borderClass} select-none`}
-                          onClick={() => handClickDropdownCompleteStage(tab.type)}
+                          onClick={() => {
+                            if (!hasTabPermission) {
+                              isShow('error', dataLang?.no_permission || 'Bạn không có quyền thực hiện thao tác này');
+                              return;
+                            }
+                            handClickDropdownCompleteStage(tab.type);
+                          }}
                         >
                           {/* nút 'hoàn thành chi tiết' - cho phép tất cả gói sử dụng, hiển thị badge pro cho gói pro */}
                           {tab.type === 'complete_stage' ? (
-                            <div className='flex items-center gap-2 w-full' onClick={e => e.stopPropagation()}>
+                            <div className='flex items-center gap-2 w-full' onClick={e => !!hasTabPermission ? e.stopPropagation() : null}>
                               <div className='flex-1'>
-                                <PopupConfimStage
-                                  dataLang={dataLang}
-                                  dataRight={isStateProvider?.productionsOrders}
-                                  typePageMoblie={typePageMoblie}
-                                  refetch={() => {
-                                    refetchProductionOrderList();
-                                    // refetch()
-                                  }}
-                                />
+                                {hasTabPermission ? (
+                                  <PopupConfimStage
+                                    dataLang={dataLang}
+                                    dataRight={isStateProvider?.productionsOrders}
+                                    typePageMoblie={typePageMoblie}
+                                    refetch={() => {
+                                      refetchProductionOrderList();
+                                      // refetch()
+                                    }}
+                                  />
+                                ) : (
+                                  <div className='flex items-center gap-2'>
+                                    <span className='3xl:size-5 size-4 text-[#0375F3] shrink-0'>
+                                      <KanbanIcon className='size-full' />
+                                    </span>
+                                    <span className='3xl:text-base text-sm font-normal text-[#101828] text-left'>Hoàn thành chi tiết công đoạn</span>
+                                  </div>
+                                )}
                               </div>
                               {authState?.is_upgrade && <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs shrink-0'>pro</span>}
                             </div>
