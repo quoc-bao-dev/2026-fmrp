@@ -65,6 +65,7 @@ export const listDropdownCompleteStage = [
     icon: <ExportMaterialsIcon className="size-full" />,
     isPremium: false,
     type: 'export_materials',
+    permission: ['is_manager', 'is_btp_nvl'], // Nhóm quyền 1: Xuất kho & Thu hồi nguyên liệu
   },
   {
     id: 2,
@@ -72,6 +73,7 @@ export const listDropdownCompleteStage = [
     icon: <RecallMaterialsIcon className="size-full" />,
     isPremium: true,
     type: 'recall_materials',
+    permission: ['is_manager', 'is_btp_nvl'], // Nhóm quyền 1: Xuất kho & Thu hồi nguyên liệu
   },
   {
     id: 3,
@@ -79,6 +81,7 @@ export const listDropdownCompleteStage = [
     icon: <ListChecksIcon className="size-full " />, // bạn thay bằng icon tương ứng
     isPremium: false,
     type: 'normal',
+    permission: ['is_manager', 'is_manufacture'], // Nhóm quyền 2: Hoàn thành lệnh & công đoạn
   },
   {
     id: 4,
@@ -86,6 +89,7 @@ export const listDropdownCompleteStage = [
     icon: <KanbanIcon className="size-full" />,
     isPremium: true,
     type: 'complete_stage',
+    permission: ['is_manager', 'is_manufacture'], // Nhóm quyền 2: Hoàn thành lệnh & công đoạn
   },
   // {
   //   id: 5,
