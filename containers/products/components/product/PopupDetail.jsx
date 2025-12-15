@@ -359,7 +359,7 @@ const Popup_Detail = React.memo(props => {
 
   return (
     <PopupCustom
-      title={`Chi tiết thành phẩm (${list?.name ? ` ${list.name}` : ''}${list?.code ? ` - ${list.code}` : ''})`}
+      title={<div>Chi tiết thành phẩm <span className="text-blue-fmrp">({list?.name ? ` ${list.name}` : ''} {list?.code ? ` - ${list.code}` : ''})</span></div>}
       button={props.children}
       onClickOpen={_ToggleModal.bind(this, true)}
       open={open}
