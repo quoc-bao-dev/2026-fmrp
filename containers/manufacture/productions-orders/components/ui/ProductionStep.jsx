@@ -272,11 +272,7 @@ const ProductionSteps = ({ stages }) => {
         </div>
       )}
 
-      {errorPopupQcId && (
-        <div className='fixed inset-0 z-[1100] flex items-center justify-center bg-[#25387A50] backdrop-blur-[2.5px]'>
-          <PopupErrorInformation onClose={() => setErrorPopupQcId(null)} qcId={errorPopupQcId} />
-        </div>
-      )}
+      {errorPopupQcId && <PopupErrorInformation onClose={() => setErrorPopupQcId(null)} qcId={errorPopupQcId} />}
 
       {/* {hiddenCount > 0 && !showAll && (
                 <div
