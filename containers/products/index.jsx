@@ -13,14 +13,12 @@ import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';
 import Loading from '@/components/UI/loading/loading';
 import MultiValue from '@/components/UI/mutiValue/multiValue';
+import TabFilter from '@/components/UI/TabFilter';
 import NoData from '@/components/UI/noData/nodata';
 import Pagination from '@/components/UI/pagination';
 import SelectOptionLever from '@/components/UI/selectOptionLever/selectOptionLever';
 import { WARNING_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 import { useBranchList } from '@/hooks/common/useBranch';
-import { useUnitList, useVariantList } from '@/hooks/common/useItems';
-import { useProductTypeProducts } from '@/hooks/common/useProductTypeProducts';
-import { useStageList } from '@/hooks/common/useStages';
 import useFeature from '@/hooks/useConfigFeature';
 import useSetingServer from '@/hooks/useConfigNumber';
 import { useLimitAndTotalItems } from '@/hooks/useLimitAndTotalItems';
@@ -42,6 +40,7 @@ import Popup_Detail from './components/product/PopupDetail';
 import Popup_Products from './components/product/popupProducts';
 import { useCategoryOptions } from './hooks/product/useCategoryOptions';
 import { useProductList } from './hooks/product/useProductList';
+import { useProductsCounts } from './hooks/product/useProductsCounts';
 
 const Products = props => {
   const dataLang = props.dataLang;
@@ -89,23 +88,32 @@ const Products = props => {
     'filter[id]': valueFinishedPro?.value ? valueFinishedPro?.value : '',
   };
 
-  // danh sách đơn vị tính
-  const { data: dataUnit } = useUnitList();
-  // danh sách công đoạn
-  const { data: dataStage } = useStageList(dataLang);
-  // dnah sách biến thể
-  const { data: dataVariant } = useVariantList();
-  // danh sách sản phẩm theo type
-  const { data: dataProductType } = useProductTypeProducts(dataLang);
   // danh sách danh mục
   const { data: dataCategory = [] } = useCategoryOptions({});
   // danh sách chi nhánh
   const { data: dataBranchOption = [] } = useBranchList();
   // danh sách sản phẩm
+  const { data: dataProductsCounts, refetch: refetchProductsCounts } = useProductsCounts(params);
+  const [productCounts, setProductCounts] = useState(null);
+  const totalAll =
+    (+productCounts?.product_count_products || 0) +
+    (+productCounts?.product_count_semi_products || 0);
   const { data, isFetching, refetch } = useProductList(params);
   const formatNumber = number => {
     return formatNumberConfig(+number, dataSeting);
   };
+
+  // lưu lại số đếm, chỉ cập nhật khi có thay đổi
+  useEffect(() => {
+    if (!dataProductsCounts) return;
+    setProductCounts(prev => {
+      if (!prev) return dataProductsCounts;
+      const changed =
+        prev?.product_count_products !== dataProductsCounts?.product_count_products ||
+        prev?.product_count_semi_products !== dataProductsCounts?.product_count_semi_products;
+      return changed ? dataProductsCounts : prev;
+    });
+  }, [dataProductsCounts]);
 
   // hàm tìm kiếm trong table
   const _HandleOnChangeKeySearch = debounce(({ target: { value } }) => {
@@ -132,14 +140,6 @@ const Products = props => {
   const multiDataSet = [
     {
       columns: [
-        {
-          title: 'ID',
-          width: { wch: 4 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
         {
           title: `${dataLang?.category_titel} `,
           width: { wpx: 100 },
@@ -214,7 +214,6 @@ const Products = props => {
         },
       ],
       data: data?.rResult?.map(e => [
-        { value: `${e.id}`, style: { numFmt: '0' } },
         { value: `${e.category_name ? e.category_name : ''}` },
         { value: `${e.code ? e.code : ''}` },
         { value: `${e.name ? e.name : ''}` },
@@ -222,7 +221,7 @@ const Products = props => {
           value: `${e?.type_products?.name ? e?.type_products?.name : ''}`,
         },
         { value: `${e.unit ? e.unit : ''}` },
-        { value: `${e.variation ? e.variation?.length : 0}` },
+        { value: `${e.variation_count ? +e.variation_count - 1 : 0}` },
         {
           value: `${e.stock_quantity ? Number(e?.stock_quantity).toLocaleString() : ''}`,
         },
@@ -231,6 +230,7 @@ const Products = props => {
       ]),
     },
   ];
+
   const breadcrumbItems = [
     {
       label: `${dataLang?.header_category_material || 'header_category_material'}`,
@@ -240,6 +240,7 @@ const Products = props => {
       label: `${dataLang?.header_category_finishedProduct_list || 'header_category_finishedProduct_list'}`,
     },
   ];
+
   return (
     <div className='min-h-screen relative'>
       <LayOutTableDynamic
@@ -290,30 +291,26 @@ const Products = props => {
         fillterTab={
           <>
             <div className='flex items-center space-x-4 border-[#E7EAEE] border-opacity-70 border-b-[1px]'>
-              <button
-                onClick={_HandleSelectTab.bind(this, 'all')}
-                className={`${
-                  router.query?.tab === 'all' ? 'text-[#0F4F9E]  border-b-2 border-[#0F4F9E]' : 'hover:text-[#0F4F9E] '
-                } 2xl:text-base text-[15px] px-4 2xl:py-2 py-1 outline-none font-medium`}
-              >
+              <TabFilter active='all' onClick={_HandleSelectTab.bind(this, 'all')} className='2xl:text-base text-[15px] px-4 2xl:py-2 py-1'>
                 {props.dataLang?.all_group}
-              </button>
-              <button
+                {totalAll > 0 ? ` (${totalAll})` : ''}
+              </TabFilter>
+              <TabFilter
+                active='products'
                 onClick={_HandleSelectTab.bind(this, 'products')}
-                className={`${
-                  router.query?.tab === 'products' ? 'text-[#0F4F9E]  border-b-2 border-[#0F4F9E]' : 'hover:text-[#0F4F9E] '
-                } 2xl:text-base text-[15px] px-4 2xl:py-2 py-1 outline-none font-medium`}
+                className='2xl:text-base text-[15px] px-4 2xl:py-2 py-1'
+                total={productCounts?.product_count_products || 0}
               >
                 {dataLang?.product}
-              </button>
-              <button
+              </TabFilter>
+              <TabFilter
+                active='semi_products'
                 onClick={_HandleSelectTab.bind(this, 'semi_products')}
-                className={`${
-                  router.query?.tab === 'semi_products' ? 'text-[#0F4F9E]  border-b-2 border-[#0F4F9E]' : 'hover:text-[#0F4F9E] '
-                } 2xl:text-base text-[15px] px-4 2xl:py-2 py-1 outline-none font-medium`}
+                className='2xl:text-base text-[15px] px-4 2xl:py-2 py-1'
+                total={productCounts?.product_count_semi_products || 0}
               >
                 {dataLang?.catagory_finishedProduct_type_semi_products}
-              </button>
+              </TabFilter>
               {/* <button
                                 onClick={_HandleSelectTab.bind(this, "semi_products_outside")}
                                 className={`${router.query?.tab === "semi_products_outside"
@@ -385,7 +382,13 @@ const Products = props => {
                                 /> */}
               </div>
               <div className='flex items-center justify-end space-x-2'>
-                <OnResetData sOnFetching={() => {}} onClick={refetch.bind(this)} />
+                <OnResetData
+                  sOnFetching={() => {}}
+                  onClick={() => {
+                    refetch();
+                    refetchProductsCounts();
+                  }}
+                />
                 {role == true || checkExport ? (
                   <div className={``}>{data?.rResult?.length > 0 && <ExcelFileComponent multiDataSet={multiDataSet} filename={dataLang?.product} title='DSTP' dataLang={dataLang} />}</div>
                 ) : (
@@ -406,7 +409,7 @@ const Products = props => {
                   <ColumnTable colSpan={1} textAlign={'center'}>
                     {dataLang?.image || 'image'}
                   </ColumnTable>
-                  <ColumnTable colSpan={1} textAlign={'left'}>
+                  <ColumnTable colSpan={1.5} textAlign={'left'}>
                     {dataLang?.category_titel}
                   </ColumnTable>
                   <ColumnTable colSpan={1} textAlign={'left'}>
@@ -424,16 +427,16 @@ const Products = props => {
                   {/* <ColumnTable colSpan={1} textAlign={'center'}>
                                             {dataLang?.stock || "stock"}
                                         </ColumnTable> */}
-                  <ColumnTable colSpan={1} textAlign={'center'} className={"px-0"}>
+                  <ColumnTable colSpan={1} textAlign={'center'} className={'px-0'}>
                     {dataLang?.bom_finishedProduct}
                   </ColumnTable>
-                  <ColumnTable colSpan={1} textAlign={'center'} className={"px-0"}>
+                  <ColumnTable colSpan={1} textAlign={'center'} className={'px-0'}>
                     {dataLang?.settings_category_stages_title || 'settings_category_stages_title'}
                   </ColumnTable>
                   <ColumnTable colSpan={1} textAlign={'left'}>
                     {dataLang?.note || 'note'}
                   </ColumnTable>
-                  <ColumnTable colSpan={2} textAlign={'left'}>
+                  <ColumnTable colSpan={1.5} textAlign={'left'}>
                     {dataLang?.client_list_brand || 'client_list_brand'}
                   </ColumnTable>
                   <ColumnTable colSpan={1} textAlign={'center'}>
@@ -446,20 +449,20 @@ const Products = props => {
                   <React.Fragment>
                     {data?.rResult?.length == 0 && <NoData />}
                     <div className='divide-y divide-slate-200'>
-                      {data?.rResult?.map(e => (
+                      {data?.rResult?.map((e, index) => (
                         <RowTable key={e?.id.toString()} gridCols={13}>
-                          <RowItemTable colSpan={1} className='flex self-center justify-center'>
+                          <RowItemTable colSpan={1} className='flex self-center justify-center !p-0'>
                             {e?.images == null ? (
                               <ModalImage small='/icon/noimagelogo.png' large='/icon/noimagelogo.png' className='object-cover w-full h-12 rounded' />
                             ) : (
                               <ModalImage small={e?.images} large={e?.images} className='object-contain w-full h-12 rounded' />
                             )}
                           </RowItemTable>
-                          <RowItemTable colSpan={1} textAlign={'left'}>
+                          <RowItemTable colSpan={1.5} textAlign={'left'}>
                             {e?.category_name}
                           </RowItemTable>
                           <RowItemTable colSpan={1} textAlign={'left'}>
-                            <Popup_Detail id={e?.id} dataProduct={e} dataProductExpiry={dataProductExpiry} dataLang={dataLang} classNameBtn='w-full'>
+                            <Popup_Detail id={e?.id} dataProduct={e} dataProductExpiry={dataProductExpiry} dataLang={dataLang} classNameBtn='w-full text-left'>
                               <p className='w-full text-[#0F4F9E] hover:text-blue-500 transition-all ease-linear outline-none break-words'>{e?.code}</p>
                             </Popup_Detail>
                           </RowItemTable>
@@ -499,7 +502,7 @@ const Products = props => {
                           <RowItemTable colSpan={1} textAlign={'left'}>
                             {e?.note}
                           </RowItemTable>
-                          <RowItemTable colSpan={2}>
+                          <RowItemTable colSpan={1.5}>
                             {e?.branch.map((i, index) => (
                               <span className='flex flex-wrap items-center justify-start gap-2' key={index}>
                                 {i.name}

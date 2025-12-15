@@ -1,6 +1,6 @@
 import { RefreshIcon } from "@/components/icons";
 
-const OnResetData = ({ sOnFetching, className, ...res }) => {
+const OnResetData = ({ sOnFetching = () => {}, onClick, className, ...res }) => {
   const _HandleFresh = () => {
     sOnFetching(true) ||
       sOnFetching((prev) => ({
@@ -8,6 +8,8 @@ const OnResetData = ({ sOnFetching, className, ...res }) => {
         onFetching: true,
         onFetching_filter: true,
       }));
+
+    if (typeof onClick === "function") onClick();
   };
 
   return (

@@ -9,5 +9,8 @@ export const useListSuggestPo = (data) => {
       return response.data;
     },
     enabled: !!data && !!data.po_id && Array.isArray(data.poi_ids) && data.poi_ids.length > 0,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: "always"
   });
 };
