@@ -308,6 +308,9 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
   const canPurchase = useMemo(() => {
     return hasPoPermission(['is_manager', 'is_btp_nvl']);
   }, [hasPoPermission]);
+  const canManageManagers = useMemo(() => {
+    return hasPoPermission(['is_manager']);
+  }, [hasPoPermission]);
 
   // flag của list production
   const flagProductionOrders = useMemo(() => (dataProductionOrders ? dataProductionOrders?.pages?.flatMap(page => page?.productionOrders) : []), [dataProductionOrders]);
@@ -894,6 +897,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     dataLang,
     searchMaterials,
     managerAvatars: isStateProvider?.productionsOrders?.managerAvatars || [],
+    canManageManagers,
     handleToggleAccordionList,
     handShowItem: (id, type) => {
       sDataTable(prev => ({
@@ -2085,6 +2089,7 @@ console.log({hasPermission});
         initialManagers={managerInitialData}
         onRefreshDetail={refetchProductionOrderDetail}
         onRefreshManagers={refetchProductionOrderManagers}
+        canManageManagers={canManageManagers}
       />
     </React.Fragment>
   );

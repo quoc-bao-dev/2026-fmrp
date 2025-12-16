@@ -2,6 +2,7 @@ import { CheckThinIcon, MagnifyingGlassIcon } from '@/components/icons';
 import { Lexend_Deca } from '@next/font/google';
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import PopupConfim from '@/components/UI/popupConfim/popupConfim';
 import ResponsibleAvatar from './ResponsibleAvatar';
 
 const deca = Lexend_Deca({
@@ -36,6 +37,7 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
   const [placement, setPlacement] = useState('below'); // below | above
   const [isReady, setIsReady] = useState(false);
   const [errorMap, setErrorMap] = useState({});
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   // Reset localSelected về selected mới nhất khi mở popup hoặc khi selected thay đổi
   useEffect(() => {
@@ -121,18 +123,35 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
     });
   }, [open, placement, dropdownHeights.container, dropdownHeights.list, style]);
 
-  // Handle click outside to close
+  // Handle click outside to close với xác nhận nếu có thay đổi
   useEffect(() => {
     if (!open) return;
-    
+
     const handler = e => {
+      // Nếu đang mở popup confirm thì bỏ qua click outside
+      if (isConfirmOpen) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+        return;
+      }
+
       if (dropdownRef.current && !dropdownRef.current.contains(e.target) && triggerRef.current && !triggerRef.current.contains(e.target)) {
-        onClose?.();
+        const hasChanges = !areArraysEqual(localSelected, selected);
+        if (hasChanges) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+          setIsConfirmOpen(true);
+          return;
+        } else {
+          onClose?.();
+        }
       }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [open, onClose]);
+  }, [open, onClose, localSelected, selected, isConfirmOpen]);
 
   useEffect(() => {
     if (!open) {
@@ -194,7 +213,7 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
       
       if (rect.width === 0 && rect.height === 0) return;
 
-      const GAP = 8;
+      const GAP = 4;
       const estimatedHeight = dropdownHeights.container || 414;
       const belowSpace = window.innerHeight - rect.bottom - GAP;
       const aboveSpace = rect.top - GAP;
@@ -288,14 +307,14 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
       {triggerElement}
       {open && isReady && style &&
         createPortal(
-          <div className='fixed inset-0 z-[1400] pointer-events-none' data-rpcb-root>
+          <div className='fixed inset-0 z-[1000] pointer-events-none' data-rpcb-root>
             <div
               ref={dropdownRef}
                 className={`${deca.className} w-[389px] max-h-[414px] bg-white rounded-[16px] shadow-xl flex flex-col overflow-hidden pointer-events-auto ${className}`}
                 style={{ ...style, maxHeight: dropdownHeights.container }}
             >
               {/* Search */}
-              <div className='px-4 pt-4'>
+              <div className='px-3 pt-3'>
                 <div className='flex items-center  gap-2'>
                   <div className='flex-1 flex items-center gap-3 pl-4 pr-1 py-1 border border-[#D0D5DD] rounded-[12px] bg-white focus-within:ring-2 focus-within:ring-[#1760B9]'>
                     <input
@@ -326,10 +345,10 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
               {/* List */}
               <div
                 ref={listRef}
-                className='flex-1 overflow-y-auto px-4 pt-4 pb-2 max-h-[300px]'
+                className='flex-1 overflow-y-auto px-3 pb-2 max-h-[300px]'
                 style={{ maxHeight: dropdownHeights.list }}
               >
-                <div className='space-y-2'>
+                <div className='space-y-1'>
                   {filtered
                     .slice()
                     .sort((a, b) => {
@@ -345,13 +364,13 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
                           <button
                             data-rpcb-item={person.id}
                             onClick={() => toggleLocal(person)}
-                            className={`w-full flex items-center gap-3 px-3 py-3 rounded-[12px] text-left transition-colors  border-[#E7EAEE] ${
+                            className={`w-full flex items-center gap-3 px-2 py-1.5 rounded-[10px] text-left transition-colors  border-[#E7EAEE] ${
                               active ? 'bg-[#EBF5FF]' : 'bg-white hover:bg-[#F6F8FB]'
                             }`}
                           >
-                            <ResponsibleAvatar avatarUrl={person.avatarUrl} fullName={person.name} size={40} className='!min-w-10 !max-w-10 !min-h-10 !max-h-10 !h-10 !w-10 text-base' />
-                            <div className='flex-1 text-base text-[#101828]'>{person.name}</div>
-                            {active && <CheckThinIcon className='size-5 text-[#1760B9]' />}
+                            <ResponsibleAvatar avatarUrl={person.avatarUrl} fullName={person.name} size={32} className='!min-w-8 !max-w-8 !min-h-8 !max-h-8 !h-8 !w-8 text-base' />
+                            <div className='flex-1 text-sm text-[#101828]'>{person.name}</div>
+                            {active && <CheckThinIcon className='size-4 text-[#1760B9]' />}
                           </button>
                         </div>
                       );
@@ -369,6 +388,20 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
           </div>,
           document.body
         )}
+      <PopupConfim
+        type='warning'
+        title='Bạn có muốn huỷ thao tác này không?'
+        subtitle='Các thay đổi chọn người phụ trách sẽ không được lưu.'
+        isOpen={isConfirmOpen}
+        forceConfirm
+        save={() => {
+          setIsConfirmOpen(false);
+          onClose?.();
+        }}
+        cancel={() => {
+          setIsConfirmOpen(false);
+        }}
+      />
     </>
   );
 };
