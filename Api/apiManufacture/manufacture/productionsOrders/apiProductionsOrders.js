@@ -1,4 +1,5 @@
 import { _ServerInstance as axiosCustom } from "@/services/axios";
+import Cookies from 'js-cookie';
 
 /**
  * @typedef {Object} ProductionOrderManagerItem
@@ -182,6 +183,110 @@ const apiProductionsOrders = {
         return response.data
     },
     // api lưu hoàn thành
+    async apiHandlingFinishedStagesFetch(data, opts = {}) {
+        const {
+          debug = true,
+          timeoutMs = 60000,
+        } = opts;
+      
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFMRP = urlParams.get('tokenFMRP');
+        const databaseappFMRP = urlParams.get('databaseappFMRP');
+      
+        let token = '';
+        let databaseApp = '';
+      
+        try { token = Cookies.get('tokenFMRP') ?? tokenFMRP ?? ''; } catch (_) {}
+        try { databaseApp = Cookies.get('databaseappFMRP') ?? databaseappFMRP ?? ''; } catch (_) {}
+      
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          'x-api-key': databaseApp,
+          // LƯU Ý: browser tự set Content-Type cho FormData
+        };
+      
+        const baseURL = process.env.NEXT_PUBLIC_URL_API || '';
+        const url = `${baseURL}/api_web/api_manufactures/handlingFinishedStages`;
+      
+        // "trace-time" tương đương: log theo timestamp + đo timing
+        const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+        const t0 = now();
+        const trace = (...args) => debug && console.log(`[trace +${(now() - t0).toFixed(1)}ms]`, ...args);
+      
+        // Tránh pending vô hạn
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs);
+      
+        try {
+          trace('POST', url);
+          trace('headers', { ...headers, Authorization: 'Bearer ***' });
+          trace('body(FormData)?', data instanceof FormData);
+      
+          const response = await fetch(url, {
+            method: 'POST',
+            headers,
+            body: data,
+            credentials: 'omit',
+            signal: controller.signal,
+          });
+      
+          trace('response status', response.status, response.statusText);
+      
+          // Dump response headers (gần giống curl -v)
+          if (debug) {
+            const h = {};
+            response.headers.forEach((v, k) => (h[k] = v));
+            trace('response headers', h);
+          }
+      
+          // Parse JSON
+          const responseData = await response.json().catch(() => ({}));
+          trace('response json keys', responseData && typeof responseData === 'object' ? Object.keys(responseData) : responseData);
+      
+          // Đo protocol thực tế (h2/h3/http1.1) + timing breakdown
+          // (không ép được --http1.1, nhưng biết nó đang chạy protocol gì)
+          try {
+            const entries = performance.getEntriesByName(url);
+            const e = entries && entries.length ? entries[entries.length - 1] : null;
+            if (e) {
+              trace('net nextHopProtocol', e.nextHopProtocol); // h2 / h3 / http/1.1 ...
+              trace('timing(ms)', {
+                dns: e.domainLookupEnd - e.domainLookupStart,
+                tcp: e.connectEnd - e.connectStart,
+                ssl: e.secureConnectionStart ? (e.connectEnd - e.secureConnectionStart) : 0,
+                ttfb: e.responseStart - e.requestStart,
+                download: e.responseEnd - e.responseStart,
+                total: e.duration,
+              });
+            } else {
+              trace('net timing: no performance entry (check Timing-Allow-Origin on server)');
+            }
+          } catch (err) {
+            trace('net timing error', err);
+          }
+      
+          if (!response.ok) {
+            const status = response.status;
+            const message = responseData?.message || 'An error occurred';
+      
+            const error = new Error(message);
+            error.response = { status, data: responseData };
+      
+            if (status === 403) setTimeout(() => (window.location.href = '/error/403'), 1500);
+            else if (status === 404) window.location.href = '/error/404';
+      
+            throw error;
+          }
+      
+          return responseData;
+        } catch (error) {
+          trace('ERROR', error);
+          throw error;
+        } finally {
+          clearTimeout(timer);
+        }
+      },
+
     async apiHandlingFinishedStages(data) {
         const response = await axiosCustom('POST', `/api_web/api_manufactures/handlingFinishedStages`, data);
         return response.data
