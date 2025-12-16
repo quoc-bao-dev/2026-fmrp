@@ -72,11 +72,12 @@ import PopupCompleteCommand from '../popup/PopupCompleteCommand';
 import PopupConfimStage from '../popup/PopupConfimStage';
 import PopupPrintTemProduct from '../popup/PopupPrintTemProduct';
 import PopupRecallMaterials from '../popup/PopupRecallMaterials';
+import PopupRecallStock from '../popup/PopupRecallStock';
 import SheetProductionsOrderDetail from '../sheet/SheetProductionsOrderDetail';
 import DetailProductionOrderList from '../ui/DetailProductionOrderList';
 import PlaningProductionOrder from '../ui/PlaningProductionOrder';
 import TabKeepStock from '../ui/tabKeepStock';
-import { listDropdownCompleteStage, listLsxStatus } from './constants/listData';
+import { listDropdownCompleteStage, listDropdownStock, listLsxStatus } from './constants/listData';
 
 const initialState = {
   isTab: 'item',
@@ -115,11 +116,6 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
   ];
 
   const arrButton = [
-    {
-      id: 1,
-      name: dataLang?.salesOrder_keep_stock || 'salesOrder_keep_stock',
-      icon: <PlusIcon className='text-white' />,
-    },
     {
       id: 2,
       name: 'Thêm mua hàng',
@@ -169,6 +165,8 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
 
   const [isOpenSearch, setIsOpenSearch] = useState(false);
   const [searchMaterials, setSearchMaterials] = useState('');
+  const [isOpenKeepStock, setIsOpenKeepStock] = useState(false);
+  const [isOpenRecallStock, setIsOpenRecallStock] = useState(false);
 
   const { isOpen: isOpenSheet, openSheet, closeSheet, sheetData } = useSheet();
   const { isOpen: isOpenSheetDetail, openSheetDetail, closeSheetDetail, sheetDetailData } = useSheet();
@@ -1016,6 +1014,13 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     </div>
   );
 
+  const triggerStock = (
+    <div className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 border border-[#D0D5DD] hover:border-[#3276FA] bg-white hover:bg-[#EBF5FF] cursor-pointer hover:shadow-hover-button rounded-lg custom-transition'>
+      <span className='responsive-text-base font-medium text-[#3A3E4C]'>Tác vụ giữ kho</span>
+      <CaretDownIcon className='text-[#9295A4] size-4' />
+    </div>
+  );
+
   // toggle click vào ra ô search
   const toggleSearch = () => {
     setIsOpenSearch(!isOpenSearch);
@@ -1293,6 +1298,15 @@ console.log({hasPermission});
       isShow('error', dataLang[message] || message);
     }
     handleQueryId({ status: false });
+  };
+
+  const handleStockDropdown = type => {
+    if (type === 'keep_stock') {
+      setIsOpenKeepStock(true);
+    }
+    if (type === 'recall_stock') {
+      setIsOpenRecallStock(true);
+    }
   };
 
   return (
@@ -1907,17 +1921,45 @@ console.log({hasPermission});
                 </button>
               </div>
               <div className='flex items-center gap-2'>
-                <div ref={groupButtonRef} className='flex items-center justify-end gap-2 p-0.5 mb-2'>
+                <FilterDropdown
+                  trigger={triggerStock}
+                  style={{
+                    boxShadow: '0px 5px 35px 0px #00000012',
+                  }}
+                  className='flex flex-col !p-0 border-[#D8DAE5] rounded-lg shrink-0 w-fit'
+                  classNameContainer='!w-fit'
+                  dropdownId='dropdownStock'
+                  placement='bottom-left'
+                >
+                  {listDropdownStock?.map((tab, index) => {
+                    const isFirst = index === 0;
+                    const isLast = index === listDropdownStock.length - 1;
+
+                    const borderClass = isLast ? 'border-transparent rounded-b-lg border-t-transparent' : isFirst ? 'rounded-t-lg border-t-transparent' : 'border-t-transparent';
+
+                    return (
+                      <div
+                        key={tab.id}
+                        className={`group hover:bg-[#F3F4F6] border-b border-[#F7F8F9] border-t flex items-center gap-3 cursor-pointer px-4 py-3 custom-transition whitespace-nowrap ${borderClass} select-none`}
+                        onClick={() => handleStockDropdown(tab.type)}
+                      >
+                        {tab.icon}
+                        <span className='responsive-text-base text-[#101828] group-hover:text-[#0375F3]'>{tab.label}</span>
+                      </div>
+                    );
+                  })}
+                </FilterDropdown>
+                <div ref={groupButtonRef} className='flex items-center justify-end gap-2'>
                   {arrButton.map(e => (
                     <React.Fragment key={e.id}>
-                      {(e.id == 1 && (
-                        <PopupKeepStock
+                      {(e.id == 2 && (
+                        <PopupPurchaseBeta
                           id={e.id}
                           queryValue={queryValue}
                           fetchDataTable={fetchDataTable}
                           dataLang={dataLang}
                           title={e.name}
-                          hasPermission={canKeepStock}
+                          hasPermission={canPurchase}
                           dataTable={{
                             listDataRight: {
                               idCommand: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.pp_id,
@@ -1931,27 +1973,6 @@ console.log({hasPermission});
                           icon={e.icon}
                         />
                       )) ||
-                        (e.id == 2 && (
-                          <PopupPurchaseBeta
-                            id={e.id}
-                            queryValue={queryValue}
-                            fetchDataTable={fetchDataTable}
-                            dataLang={dataLang}
-                            title={e.name}
-                            hasPermission={canPurchase}
-                            dataTable={{
-                              listDataRight: {
-                                idCommand: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.pp_id,
-                                title: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.title,
-                                dataBom: {
-                                  materialsBom: dataProductionOrderDetail?.listBom?.materialsBom || [],
-                                  productsBom: dataProductionOrderDetail?.listBom?.productsBom || [],
-                                },
-                              },
-                            }}
-                            icon={e.icon}
-                          />
-                        )) ||
                         (e.id == 2 && (
                           <PopupPurchaseBeta
                             id={e.id}
@@ -2018,6 +2039,50 @@ console.log({hasPermission});
       </div>
 
       <ModalDetail {...shareProps} />
+      <PopupKeepStock
+        dataLang={dataLang}
+        queryValue={queryValue}
+        fetchDataTable={fetchDataTable}
+        hasPermission={canKeepStock}
+        dataTable={{
+          countAll: dataProductionOrderDetail?.listBom?.materialsBom?.length ?? 1,
+          listDataRight: {
+            idCommand: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.pp_id,
+            title: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.title,
+            dataBom: {
+              materialsBom: dataProductionOrderDetail?.listBom?.materialsBom || [],
+              productsBom: dataProductionOrderDetail?.listBom?.productsBom || [],
+            },
+          },
+        }}
+        title={dataLang?.salesOrder_keep_stock || 'salesOrder_keep_stock'}
+        icon={<PlusIcon className='text-white' />}
+        hideTrigger
+        forceOpen={isOpenKeepStock}
+        onForceClose={() => setIsOpenKeepStock(false)}
+      />
+      <PopupRecallStock
+        dataLang={dataLang}
+        queryValue={queryValue}
+        fetchDataTable={fetchDataTable}
+        hasPermission={canKeepStock}
+        dataTable={{
+          countAll: dataProductionOrderDetail?.listBom?.materialsBom?.length ?? 1,
+          listDataRight: {
+            idCommand: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.pp_id,
+            title: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.title,
+            dataBom: {
+              materialsBom: dataProductionOrderDetail?.listBom?.materialsBom || [],
+              productsBom: dataProductionOrderDetail?.listBom?.productsBom || [],
+            },
+          },
+        }}
+        title='Thu hồi giữ kho'
+        icon={<PlusIcon className='text-white' />}
+        hideTrigger
+        forceOpen={isOpenRecallStock}
+        onForceClose={() => setIsOpenRecallStock(false)}
+      />
       <PopupConfim
         dataLang={dataLang}
         type='warning'

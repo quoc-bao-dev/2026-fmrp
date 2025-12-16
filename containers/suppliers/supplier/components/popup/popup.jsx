@@ -1,15 +1,15 @@
 import apiSuppliers from '@/Api/apiSuppliers/suppliers/apiSuppliers';
+import { PlusIcon } from '@/components/icons';
+import EditIcon from '@/components/icons/common/EditIcon';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import PopupCustom from '@/components/UI/popup';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
 import { CONFIRM_DELETION, TITLE_DELETE } from '@/constants/delete/deleteTable';
-import { useDistrictList, useProvinceList, useWardList } from '@/hooks/common/useAddress';
-import { useBranchList } from '@/hooks/common/useBranch';
+import { useDistrictList, useWardList } from '@/hooks/common/useAddress';
 import useActionRole from '@/hooks/useRole';
 import useToast from '@/hooks/useToast';
 import { useToggle } from '@/hooks/useToggle';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Edit as IconEdit } from 'iconsax-react';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
@@ -17,8 +17,6 @@ import { useSupplierGroupSupplier } from '../../hooks/useSupplierGroupSupplier';
 import ButtonAdd from '../button/buttonAdd';
 import FormContact from '../form/formContact';
 import FormInfo from '../form/formInfo';
-import EditIcon from '@/components/icons/common/EditIcon';
-import { PlusIcon } from '@/components/icons';
 
 const initalState = {
   open: false,
@@ -155,11 +153,11 @@ const Popup_dsncc = props => {
     enabled: isState.open && !!props?.id,
   });
 
-  const { data: dataGroup } = useSupplierGroupSupplier(isState.valueBr);
+  const { data: dataGroup } = useSupplierGroupSupplier(isState.valueBr, isState.open);
 
-  const { data: dataDitrict } = useDistrictList(isState.valueCt);
+  const { data: dataDitrict } = useDistrictList(isState.valueCt, isState.open);
 
-  const { data: dataWar } = useWardList(isState.valueDitrict);
+  const { data: dataWar } = useWardList(isState.valueDitrict, null, isState.open);
 
   useEffect(() => {
     isState.valueBr?.length == 0 && queryState({ valueGr: [] });

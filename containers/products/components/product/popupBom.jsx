@@ -7,11 +7,14 @@ import { ColumnTablePopup, HeaderTablePopup } from '@/components/UI/common/Table
 import InPutNumericFormat from '@/components/UI/inputNumericFormat/inputNumericFormat';
 import Loading from '@/components/UI/loading/loading';
 import MultiValue from '@/components/UI/mutiValue/multiValue';
+import NoData from '@/components/UI/noData/nodata';
 import PopupCustom from '@/components/UI/popup';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
+import SearchInput from '@/components/UI/common/SearchInput';
 import { WARNING_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 import useActionRole from '@/hooks/useRole';
 import useToast from '@/hooks/useToast';
+import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import { useQuery } from '@tanstack/react-query';
 import { AttachCircle, Add as IconAdd } from 'iconsax-react';
 import { debounce } from 'lodash';
@@ -88,6 +91,8 @@ const Popup_Bom = React.memo(props => {
 
   const [deleteBomId, sDeleteBomId] = useState(null);
 
+  const [searchMaterials, setSearchMaterials] = useState('');
+
   // [show-more] [step-1] Khai báo ref/state để đo kích thước tabs và điều khiển select show-more
   const tabContainerRef = useRef(null);
   const tabMeasureRefs = useRef(new Map());
@@ -142,6 +147,10 @@ const Popup_Bom = React.memo(props => {
     isOpen && sErrValue(false);
     sDataSelectedVariant([]);
     sSelectedList({});
+    // Reset tìm kiếm khi đóng popup
+    if (!isOpen) {
+      setSearchMaterials('');
+    }
     // if (isOpen) {
     //     setTimeout(() => {
     //         dispatch({
@@ -641,6 +650,18 @@ const Popup_Bom = React.memo(props => {
     }
   }, [tab, dataSelectedVariant, isOpen]);
 
+  // Lọc danh sách items theo tên và mã (không phân biệt hoa thường và dấu)
+  const filteredItems = useMemo(() => {
+    if (!selectedList?.child) return [];
+    if (!searchMaterials.trim()) return selectedList.child;
+
+    return selectedList.child.filter(item => {
+      const itemName = item?.name?.label || '';
+      const itemCode = item?.name?.code || '';
+      return searchWithoutDiacritics(itemName, searchMaterials) || searchWithoutDiacritics(itemCode, searchMaterials);
+    });
+  }, [selectedList?.child, searchMaterials]);
+
   // [show-more] [step-2] Tính toán tabs hiển thị và overflow
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -744,18 +765,31 @@ const Popup_Bom = React.memo(props => {
     };
   }, [isOpen, dataSelectedVariant, tab]);
 
+  // Tính số lượng items cho mỗi tab
+  const tabItemsCount = useMemo(() => {
+    const countMap = new Map();
+    dataSelectedVariant?.forEach(item => {
+      const tabId = item.value;
+      const itemsCount = item?.child?.length || 0;
+      countMap.set(tabId, itemsCount);
+    });
+    return countMap;
+  }, [dataSelectedVariant]);
+
   // [show-more] [step-3] Chuẩn bị options cho dropdown
   const overflowOptions = useMemo(() => {
     if (!overflowTabIds?.length) return [];
     return overflowTabIds.map(id => {
       const tabItem = dataSelectedVariant?.find(item => item.value === id);
+      const itemsCount = tabItemsCount.get(id) || 0;
       return {
         value: id,
         label: tabItem?.label?.includes('NONE') ? 'Mặc định' : tabItem?.label,
+        count: itemsCount,
         isSelected: tab === id,
       };
     });
-  }, [overflowTabIds, dataSelectedVariant, tab]);
+  }, [overflowTabIds, dataSelectedVariant, tab, tabItemsCount]);
 
   // [show-more] Xử lý chọn tab từ dropdown
   const handleSelectOverflowTab = option => {
@@ -791,18 +825,20 @@ const Popup_Bom = React.memo(props => {
   // [show-more] Tính toán text và active state cho nút "Xem thêm"
   const moreButtonInfo = useMemo(() => {
     if (!overflowTabIds.length || !tab) {
-      return { text: props.dataLang?.more || 'Xem thêm', isActive: false };
+      return { text: props.dataLang?.more || 'Xem thêm', count: null, isActive: false };
     }
     const isActiveInOverflow = overflowTabIds.includes(tab);
     if (isActiveInOverflow) {
       const activeTabItem = dataSelectedVariant?.find(item => item.value === tab);
+      const itemsCount = tabItemsCount.get(tab) || 0;
       return {
         text: activeTabItem?.label?.includes('NONE') ? 'Mặc định' : activeTabItem?.label || props.dataLang?.more || 'Xem thêm',
+        count: itemsCount,
         isActive: true,
       };
     }
-    return { text: props.dataLang?.more || 'Xem thêm', isActive: false };
-  }, [overflowTabIds, tab, dataSelectedVariant, props.dataLang?.more]);
+    return { text: props.dataLang?.more || 'Xem thêm', count: null, isActive: false };
+  }, [overflowTabIds, tab, dataSelectedVariant, props.dataLang?.more, tabItemsCount]);
 
   // [show-more] Lắng nghe click ngoài để đóng dropdown
   useEffect(() => {
@@ -1034,49 +1070,50 @@ const Popup_Bom = React.memo(props => {
       onClose={_ToggleModal.bind(this, false)}
       classNameBtn={props.className}
     >
-      <div className='py-4 w-[1130px] space-y-2'>
+      <div className='w-[1130px] space-y-2'>
         <>
-          <div className='flex items-end justify-between pb-2'>
-            <div className='w-2/3'>
-              <label className='text-[#344054] font-normal text-sm mb-1 '>
-                {props.dataLang?.category_material_list_variant} <span className='text-red-500'>*</span>
-              </label>
-              <Select
-                closeMenuOnSelect={false}
-                placeholder={props.dataLang?.category_material_list_variant}
-                options={options}
-                isSearchable={true}
-                onChange={_HandleChangeSelect.bind(this)}
-                noOptionsMessage={() => 'Không có dữ liệu'}
-                value={valueVariant}
-                maxMenuHeight='200px'
-                isClearable={true}
-                isMulti
-                menuPortalTarget={document.body}
-                onMenuOpen={handleMenuOpen}
-                components={{ MultiValue }}
-                styles={{
-                  placeholder: base => ({
-                    ...base,
-                    color: '#cbd5e1',
-                  }),
-                  menuPortal: base => ({
-                    ...base,
-                    zIndex: 9999,
-                    position: 'absolute',
-                  }),
-                  control: provided => ({
-                    ...provided,
-                    border: '1px solid #d0d5dd',
-                    '&:focus': {
-                      outline: 'none',
-                      border: 'none',
-                    },
-                  }),
-                }}
-              />
-            </div>
-            {/* <ChatAi
+          <div className='flex items-end justify-between'>
+            <div className='flex items-end justify-end gap-2 w-1/2'>
+              <div className='w-full'>
+                <label className='text-[#344054] font-normal text-sm mb-1 '>
+                  {props.dataLang?.category_material_list_variant} <span className='text-red-500'>*</span>
+                </label>
+                <Select
+                  closeMenuOnSelect={false}
+                  placeholder={props.dataLang?.category_material_list_variant}
+                  options={options}
+                  isSearchable={true}
+                  onChange={_HandleChangeSelect.bind(this)}
+                  noOptionsMessage={() => 'Không có dữ liệu'}
+                  value={valueVariant}
+                  maxMenuHeight='200px'
+                  isClearable={true}
+                  isMulti
+                  menuPortalTarget={document.body}
+                  onMenuOpen={handleMenuOpen}
+                  components={{ MultiValue }}
+                  styles={{
+                    placeholder: base => ({
+                      ...base,
+                      color: '#cbd5e1',
+                    }),
+                    menuPortal: base => ({
+                      ...base,
+                      zIndex: 9999,
+                      position: 'absolute',
+                    }),
+                    control: provided => ({
+                      ...provided,
+                      border: '1px solid #d0d5dd',
+                      '&:focus': {
+                        outline: 'none',
+                        border: 'none',
+                      },
+                    }),
+                  }}
+                />
+              </div>
+              {/* <ChatAi
                             type="bom"
                             dataLang={props.dataLang}
                             setData={{
@@ -1086,16 +1123,27 @@ const Popup_Bom = React.memo(props => {
                                 selectedList, currentData, dataSelectedVariant
                             }}
                         /> */}
-            <div className='flex items-center justify-end gap-2'>
-              <OnResetData sOnFetching={() => {}} onClick={() => refetch()} />
+              {/* <OnResetData sOnFetching={() => {}} onClick={() => refetch()} /> */}
               <button
                 onClick={_HandleApplyVariant.bind(this)}
                 disabled={valueVariant?.length > 0 ? false : true}
-                className='disabled:grayscale outline-none px-4 py-2 rounded-lg bg-[#E2F0FE] text-sm font-medium hover:scale-105 disabled:hover:scale-100 disabled:opacity-50 transition'
+                className='disabled:grayscale outline-none px-4 py-2 whitespace-nowrap rounded-lg bg-[#E2F0FE] text-sm font-medium hover:scale-105 disabled:hover:scale-100 disabled:opacity-50 transition'
               >
                 {props.dataLang?.apply || 'apply'}
               </button>
             </div>
+
+            {dataSelectedVariant?.length > 0 && selectedList && (
+              <div className='flex items-center justify-end w-1/3'>
+                <SearchInput
+                  value={searchMaterials}
+                  onChange={e => setSearchMaterials(e.target.value)}
+                  placeholder='Tìm kiếm theo tên và mã'
+                  className='w-full'
+                  onClear={() => setSearchMaterials('')}
+                />
+              </div>
+            )}
           </div>
           {dataSelectedVariant?.length > 0 && (
             <div className='pb-2'>
@@ -1111,9 +1159,16 @@ const Popup_Bom = React.memo(props => {
                           onClick={_HandleSelectTab.bind(this, id)}
                           className={`${
                             isActive ? 'text-[#0F4F9E] bg-[#0F4F9E10]' : 'hover:text-[#0F4F9E] bg-slate-50/50'
-                          } outline-none min-w-fit pl-3 pr-10 py-1.5 rounded relative flex items-center whitespace-nowrap transition-colors duration-150`}
+                          } outline-none min-w-fit px-3 py-1.5 rounded relative flex items-center gap-2 whitespace-nowrap transition-colors duration-150`}
                         >
                           <span>{tabItem?.label?.includes('NONE') ? 'Mặc định' : tabItem?.label}</span>
+                          <span
+                            className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] ${
+                              isActive ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
+                            }`}
+                          >
+                            {tabItemsCount.get(id) || 0}
+                          </span>
                         </button>
                         <button type='button' onClick={() => sDeleteBomId(id)} className='text-red-500 ml-1'>
                           <TrashIcon className='size-5 text-red-01' />
@@ -1133,6 +1188,15 @@ const Popup_Bom = React.memo(props => {
                           ref={selectMeasureRef}
                         >
                           <span>{moreButtonInfo.text}</span>
+                          {moreButtonInfo.count !== null && (
+                            <span
+                              className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] ${
+                                moreButtonInfo.isActive ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
+                              }`}
+                            >
+                              {moreButtonInfo.count}
+                            </span>
+                          )}
                           <CaretDropDownThinIcon className={`w-4 h-4 transition-transform duration-150 ${isMoreSelectOpen ? 'rotate-180' : ''}`} />
                         </button>
                         {moreButtonInfo.isActive && (
@@ -1157,7 +1221,16 @@ const Popup_Bom = React.memo(props => {
                                 {overflowOptions.map(opt => (
                                   <div key={opt.value} className='w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-gray-50 group'>
                                     <button type='button' className='flex-1 flex items-center justify-between text-left' onClick={() => handleSelectOverflowTab(opt)}>
-                                      <span className='truncate'>{opt.label}</span>
+                                      <div className='flex items-center gap-2 flex-1 min-w-0'>
+                                        <span className='truncate'>{opt.label}</span>
+                                        <span
+                                          className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] shrink-0 ${
+                                            opt.isSelected ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
+                                          }`}
+                                        >
+                                          {opt.count}
+                                        </span>
+                                      </div>
                                       {opt.isSelected && (
                                         <svg className='w-4 h-4 text-[#0F4F9E] ml-2' fill='currentColor' viewBox='0 0 20 20'>
                                           <path
@@ -1192,26 +1265,30 @@ const Popup_Bom = React.memo(props => {
                 {/* [show-more] [step-5] Hàng đo ẩn: đo width từng tab (bao gồm nút xóa) + width nút "Xem thêm" để tính toán chính xác */}
                 <div className='absolute inset-0 pointer-events-none opacity-0 -z-10' aria-hidden='true'>
                   <div className='flex items-center gap-3'>
-                    {dataSelectedVariant?.map(e => (
-                      <div
-                        key={`measure-${e.value}`}
-                        className='flex items-center'
-                        ref={node => {
-                          if (node) {
-                            tabMeasureRefs.current.set(e.value, node);
-                          } else {
-                            tabMeasureRefs.current.delete(e.value);
-                          }
-                        }}
-                      >
-                        <button type='button' className='min-w-fit pl-3 pr-10 py-1.5 rounded whitespace-nowrap'>
-                          <span>{e?.label?.includes('NONE') ? 'Mặc định' : e?.label}</span>
-                        </button>
-                        <button type='button' className='text-red-500 ml-1'>
-                          <TrashIcon className='size-5 text-red-01' />
-                        </button>
-                      </div>
-                    ))}
+                    {dataSelectedVariant?.map(e => {
+                      const itemsCount = tabItemsCount.get(e.value) || 0;
+                      return (
+                        <div
+                          key={`measure-${e.value}`}
+                          className='flex items-center'
+                          ref={node => {
+                            if (node) {
+                              tabMeasureRefs.current.set(e.value, node);
+                            } else {
+                              tabMeasureRefs.current.delete(e.value);
+                            }
+                          }}
+                        >
+                          <button type='button' className='min-w-fit pl-3 pr-10 py-1.5 rounded whitespace-nowrap flex items-center gap-2'>
+                            <span>{e?.label?.includes('NONE') ? 'Mặc định' : e?.label}</span>
+                            <span className='aspect-square h-5 p-1 text-[11px] bg-[#F97A4C] text-white rounded-full flex items-center justify-center min-w-[20px]'>{itemsCount}</span>
+                          </button>
+                          <button type='button' className='text-red-500 ml-1'>
+                            <TrashIcon className='size-5 text-red-01' />
+                          </button>
+                        </div>
+                      );
+                    })}
                     {/* Nút "Xem thêm" đo ẩn để lấy đúng width thực tế (bao gồm cả icon xóa nếu có) */}
                     <div className='flex items-center gap-1' ref={selectMeasureHiddenRef}>
                       <button type='button' className='min-w-fit px-3 py-1.5 rounded whitespace-nowrap flex items-center gap-2'>
@@ -1243,220 +1320,226 @@ const Popup_Bom = React.memo(props => {
               </ColumnTablePopup>
               <ColumnTablePopup>{props.dataLang?.branch_popup_properties || 'branch_popup_properties'}</ColumnTablePopup>
             </HeaderTablePopup>
-            <Customscrollbar className='max-h-[200px] h-[200px]'>
+            <Customscrollbar className='max-h-[50vh] min-h-[300px]'>
               <div className='divide-y divide-slate-100 min:h-[170px]  max:h-[170px]'>
                 {isLoading || isFetching || loadingData ? (
                   <Loading className='h-full' color='#0f4f9e' />
                 ) : (
                   <>
-                    {selectedList?.child?.map((e, index) => (
-                      <div key={e.id} className='grid gap-2 items-center w-full px-2 py-1 grid-cols-20 hover:bg-slate-100'>
-                        <div className='col-span-3'>
-                          <Select
-                            options={dataTypeCd}
-                            value={e.type}
-                            onChange={_HandleChangeItemBOM.bind(this, selectedList?.value, e.id, 'type')}
-                            placeholder={props.dataLang?.warehouses_detail_type || 'warehouses_detail_type'}
-                            noOptionsMessage={() => `${props.dataLang?.no_data_found}`}
-                            menuPortalTarget={document.body}
-                            onMenuOpen={handleMenuOpen}
-                            classNamePrefix='Select'
-                            className={`${errValue && e.type == null ? 'border-red-500' : 'border-transparent'} 
+                    {filteredItems.length > 0 ? (
+                      filteredItems.map((e, index) => (
+                        <div key={e.id} className='grid gap-2 items-center w-full px-2 py-1 grid-cols-20 hover:bg-slate-100'>
+                          <div className='col-span-3'>
+                            <Select
+                              options={dataTypeCd}
+                              value={e.type}
+                              onChange={_HandleChangeItemBOM.bind(this, selectedList?.value, e.id, 'type')}
+                              placeholder={props.dataLang?.warehouses_detail_type || 'warehouses_detail_type'}
+                              noOptionsMessage={() => `${props.dataLang?.no_data_found}`}
+                              menuPortalTarget={document.body}
+                              onMenuOpen={handleMenuOpen}
+                              classNamePrefix='Select'
+                              className={`${errValue && e.type == null ? 'border-red-500' : 'border-transparent'} 
                                                         [&>div>div_div]:!whitespace-nowrap placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border text-[13px] `}
-                            components={{
-                              IndicatorSeparator: () => null,
-                            }}
-                            theme={theme => ({
-                              ...theme,
-                              colors: {
-                                ...theme.colors,
-                                primary25: '#EBF5FF',
-                                primary50: '#92BFF7',
-                                primary: '#0F4F9E',
-                              },
-                            })}
-                            styles={{
-                              placeholder: base => ({
-                                ...base,
-                                color: '#cbd5e1',
-                              }),
-                              menuPortal: base => ({
-                                ...base,
-                                zIndex: 9999,
-                                position: 'absolute',
-                              }),
-                            }}
-                          />
-                        </div>
-                        <div className='col-span-6'>
-                          <Select
-                            options={e.dataName}
-                            value={e.name}
-                            onChange={_HandleChangeItemBOM.bind(this, selectedList?.value, e.id, 'name')}
-                            onInputChange={x => {
-                              _HandleSeachApi(x, selectedList?.value, e?.type, e.id, e.name);
-                            }}
-                            formatOptionLabel={option => (
-                              <div className='flex flex-col'>
-                                <h2 className='responsive-text-sm font-medium'>{option?.label}</h2>
-                                <h2 className='responsive-text-xs'>{option?.product_variation}</h2>
-                                <h2 className='responsive-text-xs text-blue-fmrp'>{option?.code}</h2>
-                              </div>
-                            )}
-                            components={{
-                              IndicatorSeparator: () => null,
-                            }}
-                            placeholder={props.dataLang?.name || 'name'}
-                            noOptionsMessage={() => `${props.dataLang?.no_data_found}`}
-                            menuPortalTarget={document.body}
-                            onMenuOpen={handleMenuOpen}
-                            classNamePrefix='Select '
-                            className={`${
-                              errValue && e.name == null ? 'border-red-500' : 'border-transparent'
-                            } Select__custom white placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border text-[13px] `}
-                            theme={theme => ({
-                              ...theme,
-                              colors: {
-                                ...theme.colors,
-                                primary25: '#EBF5FF',
-                                primary50: '#92BFF7',
-                                primary: '#0F4F9E',
-                              },
-                            })}
-                            styles={{
-                              placeholder: base => ({
-                                ...base,
-                                color: '#cbd5e1',
-                              }),
-                              menuPortal: base => ({
-                                ...base,
-                                zIndex: 9999,
-                                position: 'absolute',
-                              }),
-                              // menu: (provided, state) => ({
-                              //   ...provided,
-                              //   width: '180%',
-                              // }),
-                            }}
-                          />
-                        </div>
-                        <div className='col-span-2'>
-                          <Select
-                            options={e.dataUnit}
-                            value={e.unit}
-                            onChange={_HandleChangeItemBOM.bind(this, selectedList?.value, e.id, 'unit')}
-                            placeholder={props.dataLang?.unit}
-                            noOptionsMessage={() => `${props.dataLang?.no_data_found}`}
-                            menuPortalTarget={document.body}
-                            onMenuOpen={handleMenuOpen}
-                            classNamePrefix='Select'
-                            className={`${
-                              errValue && e.unit == null ? 'border-red-500' : 'border-transparent'
-                            } Select__custom placeholder:text-slate-300 bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border text-[13px] `}
-                            theme={theme => ({
-                              ...theme,
-                              colors: {
-                                ...theme.colors,
-                                primary25: '#EBF5FF',
-                                primary50: '#92BFF7',
-                                primary: '#0F4F9E',
-                              },
-                            })}
-                            components={{
-                              IndicatorSeparator: () => null,
-                            }}
-                            styles={{
-                              placeholder: base => ({
-                                ...base,
-                                color: '#cbd5e1',
-                              }),
-                              menuPortal: base => ({
-                                ...base,
-                                zIndex: 9999,
-                                position: 'absolute',
-                              }),
-                              // menu: (provided, state) => ({
-                              //   ...provided,
-                              //   width: '150%',
-                              // }),
-                            }}
-                          />
-                        </div>
-                        <div className='col-span-2'>
-                          <InPutNumericFormat
-                            value={e?.norm}
-                            onValueChange={_HandleChangeItemBOM.bind(this, selectedList?.value, e.id, 'norm')}
-                            placeholder={props.dataLang?.norm_finishedProduct || 'norm_finishedProduct'}
-                            className={`focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal p-2 border outline-none`}
-                          />
-                        </div>
-                        <div className='col-span-2'>
-                          <InPutNumericFormat
-                            isAllowed={values => {
-                              const { floatValue } = values;
-                              if (floatValue > 100) {
-                                isShow('error', 'Vui lòng nhập nhỏ hơn hoặc bằng 100%');
-                                return false;
-                              }
-                              return true;
-                            }}
-                            value={e?.loss}
-                            onValueChange={_HandleChangeItemBOM.bind(this, selectedList?.value, e.id, 'loss')}
-                            placeholder={`%${props.dataLang?.loss_finishedProduct || 'loss_finishedProduct'}`}
-                            className={`focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal p-2 border outline-none`}
-                          />
-                        </div>
-                        <div className='col-span-4'>
-                          <Select
-                            options={dataCd}
-                            value={e.stage}
-                            onChange={_HandleChangeItemBOM.bind(this, selectedList?.value, e.id, 'stage')}
-                            placeholder={props.dataLang?.stage_usage_finishedProduct || 'stage_usage_finishedProduct'}
-                            noOptionsMessage={() => `${props.dataLang?.no_data_found}`}
-                            menuPortalTarget={document.body}
-                            onMenuOpen={handleMenuOpen}
-                            className={`${
-                              errValue && e.stage == null ? 'border-red-500' : 'border-transparent'
-                            } [&>div>div_div]:!whitespace-nowrap placeholder:text-slate-300 bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border text-[13px] `}
-                            theme={theme => ({
-                              ...theme,
-                              colors: {
-                                ...theme.colors,
-                                primary25: '#EBF5FF',
-                                primary50: '#92BFF7',
-                                primary: '#0F4F9E',
-                              },
-                            })}
-                            components={{
-                              IndicatorSeparator: () => null,
-                            }}
-                            styles={{
-                              placeholder: base => ({
-                                ...base,
-                                color: '#cbd5e1',
-                              }),
-                              menuPortal: base => ({
-                                ...base,
-                                zIndex: 9999,
-                                position: 'absolute',
-                              }),
-                              // menu: (provided, state) => ({
-                              //   ...provided,
-                              //   width: '150%',
-                              // }),
-                            }}
-                          />
-                        </div>
-                        <div className='col-span-1 text-center'>
-                          <div className='flex justify-center'>
-                            <ButtonDelete onClick={_HandleDeleteItemBOM.bind(this, selectedList?.value, e.id)} />
+                              components={{
+                                IndicatorSeparator: () => null,
+                              }}
+                              theme={theme => ({
+                                ...theme,
+                                colors: {
+                                  ...theme.colors,
+                                  primary25: '#EBF5FF',
+                                  primary50: '#92BFF7',
+                                  primary: '#0F4F9E',
+                                },
+                              })}
+                              styles={{
+                                placeholder: base => ({
+                                  ...base,
+                                  color: '#cbd5e1',
+                                }),
+                                menuPortal: base => ({
+                                  ...base,
+                                  zIndex: 9999,
+                                  position: 'absolute',
+                                }),
+                              }}
+                            />
                           </div>
-                          {/* <button onClick={_HandleDeleteItemBOM.bind(this, selectedList?.value, e.id)} type='button' className='text-red-500'>
+                          <div className='col-span-6'>
+                            <Select
+                              options={e.dataName}
+                              value={e.name}
+                              onChange={_HandleChangeItemBOM.bind(this, selectedList?.value, e.id, 'name')}
+                              onInputChange={x => {
+                                _HandleSeachApi(x, selectedList?.value, e?.type, e.id, e.name);
+                              }}
+                              formatOptionLabel={option => (
+                                <div className='flex flex-col'>
+                                  <h2 className='responsive-text-sm font-medium'>{option?.label}</h2>
+                                  <h2 className='responsive-text-xs'>{option?.product_variation}</h2>
+                                  <h2 className='responsive-text-xs text-blue-fmrp'>{option?.code}</h2>
+                                </div>
+                              )}
+                              components={{
+                                IndicatorSeparator: () => null,
+                              }}
+                              placeholder={props.dataLang?.name || 'name'}
+                              noOptionsMessage={() => `${props.dataLang?.no_data_found}`}
+                              menuPortalTarget={document.body}
+                              onMenuOpen={handleMenuOpen}
+                              classNamePrefix='Select '
+                              className={`${
+                                errValue && e.name == null ? 'border-red-500' : 'border-transparent'
+                              } Select__custom white placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border text-[13px] `}
+                              theme={theme => ({
+                                ...theme,
+                                colors: {
+                                  ...theme.colors,
+                                  primary25: '#EBF5FF',
+                                  primary50: '#92BFF7',
+                                  primary: '#0F4F9E',
+                                },
+                              })}
+                              styles={{
+                                placeholder: base => ({
+                                  ...base,
+                                  color: '#cbd5e1',
+                                }),
+                                menuPortal: base => ({
+                                  ...base,
+                                  zIndex: 9999,
+                                  position: 'absolute',
+                                }),
+                                // menu: (provided, state) => ({
+                                //   ...provided,
+                                //   width: '180%',
+                                // }),
+                              }}
+                            />
+                          </div>
+                          <div className='col-span-2'>
+                            <Select
+                              options={e.dataUnit}
+                              value={e.unit}
+                              onChange={_HandleChangeItemBOM.bind(this, selectedList?.value, e.id, 'unit')}
+                              placeholder={props.dataLang?.unit}
+                              noOptionsMessage={() => `${props.dataLang?.no_data_found}`}
+                              menuPortalTarget={document.body}
+                              onMenuOpen={handleMenuOpen}
+                              classNamePrefix='Select'
+                              className={`${
+                                errValue && e.unit == null ? 'border-red-500' : 'border-transparent'
+                              } Select__custom placeholder:text-slate-300 bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border text-[13px] `}
+                              theme={theme => ({
+                                ...theme,
+                                colors: {
+                                  ...theme.colors,
+                                  primary25: '#EBF5FF',
+                                  primary50: '#92BFF7',
+                                  primary: '#0F4F9E',
+                                },
+                              })}
+                              components={{
+                                IndicatorSeparator: () => null,
+                              }}
+                              styles={{
+                                placeholder: base => ({
+                                  ...base,
+                                  color: '#cbd5e1',
+                                }),
+                                menuPortal: base => ({
+                                  ...base,
+                                  zIndex: 9999,
+                                  position: 'absolute',
+                                }),
+                                // menu: (provided, state) => ({
+                                //   ...provided,
+                                //   width: '150%',
+                                // }),
+                              }}
+                            />
+                          </div>
+                          <div className='col-span-2'>
+                            <InPutNumericFormat
+                              value={e?.norm}
+                              onValueChange={_HandleChangeItemBOM.bind(this, selectedList?.value, e.id, 'norm')}
+                              placeholder={props.dataLang?.norm_finishedProduct || 'norm_finishedProduct'}
+                              className={`focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal p-2 border outline-none`}
+                            />
+                          </div>
+                          <div className='col-span-2'>
+                            <InPutNumericFormat
+                              isAllowed={values => {
+                                const { floatValue } = values;
+                                if (floatValue > 100) {
+                                  isShow('error', 'Vui lòng nhập nhỏ hơn hoặc bằng 100%');
+                                  return false;
+                                }
+                                return true;
+                              }}
+                              value={e?.loss}
+                              onValueChange={_HandleChangeItemBOM.bind(this, selectedList?.value, e.id, 'loss')}
+                              placeholder={`%${props.dataLang?.loss_finishedProduct || 'loss_finishedProduct'}`}
+                              className={`focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal p-2 border outline-none`}
+                            />
+                          </div>
+                          <div className='col-span-4'>
+                            <Select
+                              options={dataCd}
+                              value={e.stage}
+                              onChange={_HandleChangeItemBOM.bind(this, selectedList?.value, e.id, 'stage')}
+                              placeholder={props.dataLang?.stage_usage_finishedProduct || 'stage_usage_finishedProduct'}
+                              noOptionsMessage={() => `${props.dataLang?.no_data_found}`}
+                              menuPortalTarget={document.body}
+                              onMenuOpen={handleMenuOpen}
+                              className={`${
+                                errValue && e.stage == null ? 'border-red-500' : 'border-transparent'
+                              } [&>div>div_div]:!whitespace-nowrap placeholder:text-slate-300 bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border text-[13px] `}
+                              theme={theme => ({
+                                ...theme,
+                                colors: {
+                                  ...theme.colors,
+                                  primary25: '#EBF5FF',
+                                  primary50: '#92BFF7',
+                                  primary: '#0F4F9E',
+                                },
+                              })}
+                              components={{
+                                IndicatorSeparator: () => null,
+                              }}
+                              styles={{
+                                placeholder: base => ({
+                                  ...base,
+                                  color: '#cbd5e1',
+                                }),
+                                menuPortal: base => ({
+                                  ...base,
+                                  zIndex: 9999,
+                                  position: 'absolute',
+                                }),
+                                // menu: (provided, state) => ({
+                                //   ...provided,
+                                //   width: '150%',
+                                // }),
+                              }}
+                            />
+                          </div>
+                          <div className='col-span-1 text-center'>
+                            <div className='flex justify-center'>
+                              <ButtonDelete onClick={_HandleDeleteItemBOM.bind(this, selectedList?.value, e.id)} />
+                            </div>
+                            {/* <button onClick={_HandleDeleteItemBOM.bind(this, selectedList?.value, e.id)} type='button' className='text-red-500'>
                             <TrashIcon className='size-5' />
                           </button> */}
+                          </div>
                         </div>
+                      ))
+                    ) : (
+                      <div className='py-8 text-center'>
+                        <NoData type='report' titleText='Không tìm thấy kết quả' />
                       </div>
-                    ))}
+                    )}
                   </>
                 )}
               </div>

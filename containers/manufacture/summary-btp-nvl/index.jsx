@@ -24,6 +24,7 @@ import { useProductionOrdersList } from '@/managers/api/productions-order/usePro
 import { formatMoment } from '@/utils/helpers/formatMoment';
 import formatNumber from '@/utils/helpers/formatnumber';
 import { FnlocalStorage } from '@/utils/helpers/localStorage';
+import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import { debounce } from 'lodash';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
@@ -64,17 +65,6 @@ const parseNumber = value => {
   if (value === null || value === undefined || value === '') return 0;
   const numeric = typeof value === 'number' ? value : Number(String(value).replace(/,/g, ''));
   return Number.isNaN(numeric) ? 0 : numeric;
-};
-
-const normalizeText = value => {
-  if (!value) return '';
-  return String(value)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd')
-    .replace(/Đ/g, 'd')
-    .toLowerCase()
-    .trim();
 };
 
 const createNumberCell = rawValue => {
@@ -190,6 +180,7 @@ const SummaryBtpNvl = () => {
   const { data: dataProductionOrders, isLoading: isLoadingProductionOrderList } = useProductionOrdersList({
     limit: limit,
     branch_id: valueBr?.value || '',
+    is_nvl: 1,
     _po_ids: Array.isArray(valueProductionOrders) && valueProductionOrders.length > 0 ? valueProductionOrders.map(po => po.value) : '',
     date_start: formatDateToDMY(dateRange.startDate),
     date_end: formatDateToDMY(dateRange.endDate),
@@ -314,11 +305,10 @@ const SummaryBtpNvl = () => {
       return materialsDataRaw;
     }
 
-    const searchTerm = normalizeText(searchMaterial);
     return materialsDataRaw.filter(item => {
-      const itemCode = normalizeText(item?.item_code);
-      const itemName = normalizeText(item?.item_name);
-      return itemCode.includes(searchTerm) || itemName.includes(searchTerm);
+      const itemCode = item?.item_code || '';
+      const itemName = item?.item_name || '';
+      return searchWithoutDiacritics(itemCode, searchMaterial) || searchWithoutDiacritics(itemName, searchMaterial);
     });
   }, [materialsDataRaw, searchMaterial]);
 
@@ -327,11 +317,10 @@ const SummaryBtpNvl = () => {
       return finishedProductsDataRaw;
     }
 
-    const searchTerm = normalizeText(searchMaterial);
     return finishedProductsDataRaw.filter(item => {
-      const itemCode = normalizeText(item?.item_code);
-      const itemName = normalizeText(item?.item_name);
-      return itemCode.includes(searchTerm) || itemName.includes(searchTerm);
+      const itemCode = item?.item_code || '';
+      const itemName = item?.item_name || '';
+      return searchWithoutDiacritics(itemCode, searchMaterial) || searchWithoutDiacritics(itemName, searchMaterial);
     });
   }, [finishedProductsDataRaw, searchMaterial]);
 

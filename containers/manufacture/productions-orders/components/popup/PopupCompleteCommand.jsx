@@ -333,6 +333,7 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
     if (newTagInput.trim()) {
       isAddingTagRef.current = true;
       onAddTag(index, newTagInput.trim());
+      handleSelectProduct(index, true);
       setNewTagInput('');
       setInputWidth(60);
       // Reset flag sau một chút
@@ -372,7 +373,7 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
   const handleImageUpload = useCallback(
     e => {
       const files = Array.from(e.target.files || []);
-      const MAX_SIZE = 3 * 1024 * 1024; // 5MB
+      const MAX_SIZE = 5 * 1024 * 1024; // 5MB
       let hasOversize = false;
 
       files.forEach(file => {
@@ -383,6 +384,7 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
         if (file.type.startsWith('image/')) {
           const preview = URL.createObjectURL(file);
           onAddImage(index, { file, preview });
+          handleSelectProduct(index, true);
         }
       });
 
@@ -470,20 +472,13 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
                         className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors ${
                           isInputFocused ? 'bg-white border border-[#92BFF7] text-gray-700' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                         }`}
-                        onClick={e => {
-                          // Chỉ add tag khi click trực tiếp vào button, không phải từ input
-                          if (e.target === e.currentTarget || !e.target.closest('input')) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleAddTag();
-                          }
-                        }}
                       >
                         {!isInputFocused && <PlusIcon className='size-3' />}
                         <div className='relative inline-block' style={{ width: `${inputWidth}px`, minWidth: '60px' }}>
                           <span ref={measureRef} className='absolute invisible whitespace-pre text-xs leading-[20px] px-0' style={{ font: 'inherit' }}>
                             {newTagInput || 'Nhập lỗi'}
                           </span>
+                          <div className="relative">
                           <input
                             type='text'
                             value={newTagInput}
@@ -498,18 +493,22 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
                             }}
                             onKeyDown={handleKeyDown}
                             onFocus={() => setIsInputFocused(true)}
-                            onBlur={() => setIsInputFocused(false)}
+                            onBlur={() => {
+                              setIsInputFocused(false);
+                            }}
                             placeholder='Nhập lỗi'
                             style={{ width: '100%' }}
                             className='leading-[20px] bg-transparent outline-none text-xs'
                           />
+                          {isInputFocused && <div className='absolute -bottom-1.5 left-[125%] text-[10px] text-gray-400 truncate'>(Nhấn Enter để nhập tag)</div>}
+                          </div>
                           {showSuggestions && (
-                            <div className='absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-[60px] overflow-auto'>
+                            <div className='absolute -left-2 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-[60px] overflow-auto min-w-[80px]'>
                               {suggestions.map(item => (
                                 <button
                                   key={item.id}
                                   type='button'
-                                  className='w-full text-left px-3 py-2 text-xs hover:bg-blue-50'
+                                  className='w-full text-left px-3 py-2 text-xs hover:bg-blue-50 truncate'
                                   onMouseDown={e => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -542,7 +541,7 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
                   {errorImages &&
                     errorImages[index]?.map((image, imgIndex) => (
                       <div key={imgIndex} className='relative w-[80px] h-[55px] rounded overflow-hidden'>
-                      <Image src={image?.preview || '/icon/default/default.png'} alt={`Error ${imgIndex + 1}`} width={80} height={80} className='object-cover w-full h-full' />
+                        <Image src={image?.preview || '/icon/default/default.png'} alt={`Error ${imgIndex + 1}`} width={80} height={80} className='object-cover w-full h-full' />
                         <button type='button' onClick={() => onRemoveImage(index, imgIndex)} className='absolute top-0 right-0 bg-white text-white rounded-full p-1 hover:bg-gray-100'>
                           <svg width='11' height='11' viewBox='0 0 7 7' fill='none' xmlns='http://www.w3.org/2000/svg'>
                             <path
@@ -573,10 +572,8 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
 
                     <input ref={fileInputRef} type='file' accept='image/*' multiple onChange={handleImageUpload} className='hidden' />
                   </button>
-
                 </div>
                 {imageError && <p className='text-xs text-red-500 mb-2 -mt-2'>{imageError}</p>}
-
               </motion.div>
             </td>
           </tr>
@@ -588,13 +585,16 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
 
 ProductRow.displayName = 'ProductRow';
 
-export const PopupOrderCompleted = ({ onClose, className }) => {
+// Popup hiển thị trạng thái/tin nhắn cho lệnh sản xuất (hoàn thành, lỗi truy cập, v.v.)
+export const PopupProductionOrderStatus = ({ onClose, className, title, description, icon: IconComponent = CheckIcon, iconClassName = 'text-[#1FC583]', isError = false }) => {
+  const displayTitle = title || 'Lệnh sản xuất đã được hoàn thành';
+  const displayDescription = description || 'Xin chúc mừng, lệnh sản xuất của bạn đã được hoàn thành đầy đủ!';
   return (
     <div className={`p-9 flex flex-col gap-8 justify-center items-center rounded-3xl w-[610px] bg-neutral-00 ${deca.className} ${className}`}>
       <div className='w-full flex items-center justify-between gap-2'>
         <div className='flex items-center gap-2'>
-          <CheckIcon className='size-5 text-[#1FC583]' />
-          <h3 className='text-2xl font-semibold text-[#25387A]'>Lệnh sản xuất đã được hoàn thành</h3>
+          <IconComponent className={twMerge('size-5', iconClassName)} />
+          <h3 className={twMerge('text-2xl font-semibold', isError ? 'text-[#E42E23]' : 'text-[#25387A]')}>{displayTitle}</h3>
         </div>
         <motion.div
           whileHover={{ scale: 1.2, rotate: 90 }}
@@ -609,7 +609,7 @@ export const PopupOrderCompleted = ({ onClose, className }) => {
       <div className='flex justify-center'>
         <Image width={267} height={200} src={'/popup/commandCompleted.webp'} alt='commandCompleted' className='object-cover size-full w-[384px]' unoptimized />
       </div>
-      <p className='text-base text-typo-black-4'>Xin chúc mừng, lệnh sản xuất của bạn đã được hoàn thành đầy đủ!</p>
+      <p className='text-base text-typo-black-4 text-center'>{displayDescription}</p>
     </div>
   );
 };
@@ -990,12 +990,24 @@ const PopupCompleteCommand = ({ onClose }) => {
     setIsWarehouseMissing(false);
   }, []);
 
+  const isAccessDenied = !isLoading && productCompleted?.isSuccess === false;
+
   return (
     <>
       {isLoading ? (
         <Loading />
+      ) : isAccessDenied ? (
+        <PopupProductionOrderStatus
+          onClose={onClose}
+          title='Thông báo'
+          description={productCompleted?.message || 'Truy cập bị từ chối'}
+          icon={WarningIcon}
+          iconClassName='text-[#EE1E1E]'
+          isError={true}
+          className='text-center'
+        />
       ) : products.length === 0 ? (
-        <PopupOrderCompleted onClose={onClose} />
+        <PopupProductionOrderStatus onClose={onClose} />
       ) : (
         <div className={`p-6 flex flex-col gap-6 rounded-3xl w-[90vw] xl:w-[1085px] max-h-[90vh] bg-neutral-00 ${deca.className}`}>
           <div className='flex gap-2 justify-between'>
