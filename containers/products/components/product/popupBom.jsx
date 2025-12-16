@@ -1,6 +1,6 @@
 import apiProducts from '@/Api/apiProducts/products/apiProducts';
+import SearchActionInput from '@/components/common/input/SearchActionInput';
 import { CaretDropDownThinIcon, EditIcon, TrashIcon } from '@/components/icons';
-import OnResetData from '@/components/UI/btnResetData/btnReset';
 import { ButtonDelete } from '@/components/UI/button/buttonDelete';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { ColumnTablePopup, HeaderTablePopup } from '@/components/UI/common/TablePopup';
@@ -10,7 +10,6 @@ import MultiValue from '@/components/UI/mutiValue/multiValue';
 import NoData from '@/components/UI/noData/nodata';
 import PopupCustom from '@/components/UI/popup';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
-import SearchInput from '@/components/UI/common/SearchInput';
 import { WARNING_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 import useActionRole from '@/hooks/useRole';
 import useToast from '@/hooks/useToast';
@@ -1135,12 +1134,11 @@ const Popup_Bom = React.memo(props => {
 
             {dataSelectedVariant?.length > 0 && selectedList && (
               <div className='flex items-center justify-end w-1/3'>
-                <SearchInput
+                <SearchActionInput
                   value={searchMaterials}
-                  onChange={e => setSearchMaterials(e.target.value)}
+                  onChange={setSearchMaterials}
                   placeholder='Tìm kiếm theo tên và mã'
                   className='w-full'
-                  onClear={() => setSearchMaterials('')}
                 />
               </div>
             )}

@@ -1,4 +1,4 @@
-import { EndProductionOrderIcon, ExportMaterialsIcon, KanbanIcon, ListChecksIcon, RecallMaterialsIcon } from '@/components/icons'
+import { ExportMaterialsIcon, KanbanIcon, KeepStockIcon, ListChecksIcon, RecallMaterialsIcon, RecallStockIcon } from '@/components/icons'
 
 // export const listTab = [
 //   {
@@ -105,14 +105,14 @@ export const listDropdownStock = [
   {
     id: 1,
     label: 'Thêm giữ kho',
-    icon: <ExportMaterialsIcon className="3xl:size-5 size-4" />,
+    icon: <KeepStockIcon className="3xl:size-5 size-4" />,
     isPremium: false,
     type: 'keep_stock',
   },
   {
     id: 2,
     label: 'Thu hồi giữ kho',
-    icon: <ExportMaterialsIcon className="3xl:size-5 size-4" />,
+    icon: <RecallStockIcon className="3xl:size-5 size-4" />,
     isPremium: false,
     type: 'recall_stock',
   },

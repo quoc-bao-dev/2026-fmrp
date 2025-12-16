@@ -60,6 +60,7 @@ import FileIcon from './source/file-icon.svg';
 import FunnelIcon from './source/funnel.svg';
 import IconStarIcon from './source/icon-star.svg';
 import KanbanIcon from './source/kanban-icon.svg';
+import KeepStockIcon from './source/keep-stock.svg';
 import LateLSXIcon from './source/late-l-s-x.svg';
 import ListChecksIcon from './source/list-checks-icon.svg';
 import LoadingDataChatBotIcon from './source/loading-data-chat-bot.svg';
@@ -73,6 +74,7 @@ import PrinterIcon from './source/printer-icon.svg';
 import PrinterIcon2 from './source/printer-icon2.svg';
 import PrinterTemIcon from './source/printer-tem.svg';
 import RefreshIcon from './source/refresh.svg';
+import RecallStockIcon from './source/recall-stock.svg';
 import SaleIcon from './source/sale-icon.svg';
 import SaveIcon from './source/save-icon.svg';
 import SealCheckIcon from './source/seal-check.svg';
@@ -133,6 +135,7 @@ export {
   FunnelIcon,
   IconStarIcon,
   KanbanIcon,
+  KeepStockIcon,
   LateLSXIcon,
   ListChecksIcon,
   LoadingDataChatBotIcon,
@@ -146,6 +149,7 @@ export {
   PrinterIcon2,
   PrinterTemIcon,
   RefreshIcon,
+  RecallStockIcon,
   SaleIcon,
   SaveIcon,
   SealCheckIcon,

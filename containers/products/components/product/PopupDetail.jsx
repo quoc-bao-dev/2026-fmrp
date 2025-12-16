@@ -1,4 +1,5 @@
 import apiProducts from '@/Api/apiProducts/products/apiProducts';
+import SearchActionInput from '@/components/common/input/SearchActionInput';
 import { CaretDropDownThinIcon } from '@/components/icons';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { ColumnTablePopup, HeaderTablePopup } from '@/components/UI/common/TablePopup';
@@ -23,7 +24,6 @@ import { useProductDetail } from '../../hooks/product/useProductDetail';
 import { useProductDetailStage } from '../../hooks/product/useProductDetailStage';
 import Popup_Bom from './popupBom';
 import Popup_GiaiDoan from './popupStage';
-import SearchInput from '@/components/UI/common/SearchInput';
 
 const Popup_Detail = React.memo(props => {
   const isShow = useToast();
@@ -561,12 +561,11 @@ const Popup_Detail = React.memo(props => {
                     {dataBom?.length > 0 ? (
                       <div className='min-h-[384px] py-1'>
                         <div className='flex items-center justify-between space-x-3 -mt-2'>
-                          <SearchInput
+                          <SearchActionInput
                             value={searchMaterials}
-                            onChange={e => setSearchMaterials(e.target.value)}
+                            onChange={setSearchMaterials}
                             placeholder='Tìm kiếm theo tên và mã'
                             className='w-1/2'
-                            onClear={() => setSearchMaterials('')}
                           />
                           <Popup_Bom dataLang={props.dataLang} id={props.id} name={list?.name} code={list?.code} type='edit' onRefresh={props.onRefresh} onRefreshBom={refetchBom} />
                         </div>

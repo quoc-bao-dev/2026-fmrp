@@ -83,6 +83,7 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
 
   const { data: listSuppiler, refetch: refetchSupplierList } = useSupplierList({
     'filter[branch_id]': form.watch('idBranch'),
+    enabled: open && !!form.watch('idBranch'), // Chỉ gọi API khi popup mở và có branch_id
   });
 
   const dataSupplier = form.watch('idBranch') ? listSuppiler?.rResult?.map(e => ({ label: e.name, value: e.id })) : [];
