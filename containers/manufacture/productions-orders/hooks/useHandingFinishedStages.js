@@ -4,6 +4,7 @@ import useFeature from "@/hooks/useConfigFeature";
 import useToast from "@/hooks/useToast";
 import { formatMoment } from "@/utils/helpers/formatMoment";
 import { useMutation } from "@tanstack/react-query";
+import { v4 as uuidv4 } from "uuid";
 
 export const useHandingFinishedStages = () => {
     const isToast = useToast()
@@ -39,6 +40,14 @@ export const useHandingFinishedStages = () => {
                     isToast('error', 'Vui lòng kiểm tra dữ liệu')
                     return
                 }
+                // Bổ sung id, error_tags, error_images (file) giống cấu trúc useProductCompleted
+                const itemId = element?.id || uuidv4();
+                const idImage = itemId
+                const errorTags = element?.error_tags || [];
+                const errorImages = element?.error_images || [];
+
+                formData.append(`items[${index}][id]`, itemId);
+                formData.append(`items[${index}][id_image]`, idImage);
                 formData.append(`items[${index}][bom_id]`, element?.bom_id ?? "")
                 formData.append(`items[${index}][poi_id]`, element?.poi_id ?? "")
                 formData.append(`items[${index}][pp_id]`, element?.pp_id ?? "")
@@ -49,6 +58,7 @@ export const useHandingFinishedStages = () => {
                 formData.append(`items[${index}][unit_name]`, element?.unit_name ?? "")
                 formData.append(`items[${index}][reference_no_detail]`, element?.reference_no_detail ?? "")
                 formData.append(`items[${index}][quantity]`, element?.quantityEnterClient ?? 0)
+                formData.append(`items[${index}][quantity_success]`, element?.quantityEnterClient ?? 0)
                 formData.append(`items[${index}][quantity_error]`, element?.quantityError ?? 0)
                 formData.append(`items[${index}][quantity_rest]`, element?.quantity_rest ?? 0)
                 formData.append(`items[${index}][product_variation]`, element?.product_variation ?? "")
@@ -78,7 +88,21 @@ export const useHandingFinishedStages = () => {
                         }
                     }
                 }
+
+                // Error tags
+                errorTags.forEach((tag, tagIndex) => {
+                    if (tag !== undefined && tag !== null) {
+                        formData.append(`items[${index}][error_tags][${tagIndex}]`, tag);
+                    }
+                });
+                // Error images keyed by item id
+                errorImages.forEach((file, imgIndex) => {
+                    if (file instanceof File) {
+                        formData.append(`error_images[${itemId}][${imgIndex}]`, file);
+                    }
+                });
             }
+
 
             // ds Xuất kho sản xuất
             for (let index = 0; index < dataTableBom?.data?.boms?.length; index++) {
@@ -122,6 +146,12 @@ export const useHandingFinishedStages = () => {
 
             // bomItemsPod
             formData.append("bomItemsPod", JSON.stringify(dataTableBom?.data?.bomItemsPod))
+
+            // Log all FormData key-value pairs for debugging
+            // for (let [key, value] of formData.entries()) {
+            //     console.log(key, value);
+            // }
+            
 
             const r = await submitMutation.mutateAsync(formData);
             if (r?.isSuccess == 1) {

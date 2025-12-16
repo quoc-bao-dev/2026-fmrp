@@ -1,6 +1,5 @@
 import PackageUpgradeButton from '@/components/common/button/PackageUpgradeButton';
-import InputCustom from '@/components/common/input/InputCustom';
-import { CalendarIcon, KanbanIcon, TrashIcon, WarningIcon } from '@/components/icons';
+import { KanbanIcon, WarningIcon } from '@/components/icons';
 import CheckIcon from '@/components/icons/common/CheckIcon';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import ButtonSubmit from '@/components/UI/button/buttonSubmit';
@@ -15,7 +14,7 @@ import useToast from '@/hooks/useToast';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import DatePicker from 'react-datepicker';
+import { v4 as uuidv4 } from 'uuid';
 import { FaCheckCircle } from 'react-icons/fa';
 import { PiWarehouseLight } from 'react-icons/pi';
 import { useActiveStages } from '../../hooks/useActiveStages';
@@ -23,6 +22,7 @@ import { useHandingFinishedStages } from '../../hooks/useHandingFinishedStages';
 import { useListFinishedStages } from '../../hooks/useListFinishedStages';
 import { useLoadOutOfStock } from '../../hooks/useLoadOutOfStock';
 import { PopupProductionOrderStatus } from './PopupCompleteCommand';
+import ProductRow from './ProductRow';
 
 const initialState = {
   open: false,
@@ -37,7 +37,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
   const isToast = useToast();
   const tableRefTotal = useRef(null);
   const dataSeting = useSetingServer();
-  
+
   // Kiểm tra có phải gói pro không
   const isProPackage = dataSeting?.package !== '1';
 
@@ -47,6 +47,16 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
   const [isState, setState] = useState(initialState);
   const [isWarehouseMissing, setIsWarehouseMissing] = useState(false);
   const [isOrderCompleted, setIsOrderCompleted] = useState(false);
+  // UI lỗi khi xác nhận hoàn thành công đoạn
+  const [confirmErrorTags, setConfirmErrorTags] = useState([]);
+  const [confirmNewTagInput, setConfirmNewTagInput] = useState('');
+  const [confirmIsInputFocused, setConfirmIsInputFocused] = useState(false);
+  const [confirmInputWidth, setConfirmInputWidth] = useState(60);
+  const [confirmErrorImages, setConfirmErrorImages] = useState([]);
+  const [confirmImageError, setConfirmImageError] = useState('');
+  const confirmFileInputRef = useRef(null);
+  const confirmMeasureRef = useRef(null);
+  const confirmIsAddingTagRef = useRef(false);
   const [activeStep, setActiveStep] = useState({ type: null, item: null });
 
   const formatNumber = number => {
@@ -118,9 +128,54 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
       return;
     }
 
+    // Chuẩn bị payload giống cấu trúc bên PopupCompleteCommand (kèm id uuid, tag, ảnh)
+    const formatData =
+      isState.dataTableProducts?.data?.items?.map(item => {
+        const id = item?.id || uuidv4();
+        // Lấy error_tags và error_images từ mỗi row object (mỗi row độc lập)
+        const error_tags = item?.error_tags || [];
+        const error_images = (item?.error_images || []).map(img => img?.file).filter(Boolean);
+
+        return {
+          ...item,
+          id,
+          quantity_success: item?.quantityEnterClient || 0,
+          quantity_error: item?.quantityError || 0,
+          error_tags,
+          error_images,
+        };
+      }) || [];
+
+    const payload = {
+      po_id: dataRight?.idDetailProductionOrder,
+      warehouse_id: isState?.objectWareHouse?.value || isState?.objectWareHouse,
+      items: formatData,
+    };
+
+    // Log key FormData tương tự PopupCompleteCommand
+    const errorImagesFormKeys = {};
+    formatData.forEach((item, itemIndex) => {
+      item.error_tags?.forEach((tag, tagIndex) => {
+        errorImagesFormKeys[`items[${itemIndex}][error_tags][${tagIndex}]`] = tag;
+      });
+      item.error_images?.forEach((file, imgIndex) => {
+        errorImagesFormKeys[`error_images[${item.id}][${imgIndex}]`] = file || null;
+      });
+    });
+
+    // Gọi submit với objectData đã gắn id, error_tags, error_images để FormData bám đúng
     const r = await onSubmit({
       poId: dataRight?.idDetailProductionOrder,
-      objectData: isState,
+      objectData: {
+        ...isState,
+        dataTableProducts: {
+          ...isState.dataTableProducts,
+          data: {
+            ...isState.dataTableProducts?.data,
+            items: formatData,
+          },
+        },
+      },
     });
 
     if (r?.isSuccess == 1) {
@@ -509,6 +564,82 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
     );
   }, [isState.dataTableProducts?.data?.items]);
 
+  // --- Handlers cho phần Tag + Ảnh lỗi khi xác nhận ---
+  const handleConfirmAddTag = useCallback(() => {
+    if (confirmIsAddingTagRef.current) return;
+    if (confirmNewTagInput.trim()) {
+      confirmIsAddingTagRef.current = true;
+      setConfirmErrorTags(prev => [...prev, confirmNewTagInput.trim()]);
+      setConfirmNewTagInput('');
+      setConfirmInputWidth(60);
+      setTimeout(() => {
+        confirmIsAddingTagRef.current = false;
+      }, 100);
+    }
+  }, [confirmNewTagInput]);
+
+  useEffect(() => {
+    if (confirmMeasureRef.current) {
+      const width = Math.max(60, confirmMeasureRef.current.offsetWidth + 0);
+      setConfirmInputWidth(width);
+    }
+  }, [confirmNewTagInput]);
+
+  const handleConfirmKeyDown = useCallback(
+    e => {
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        e.stopPropagation();
+        e.nativeEvent.stopImmediatePropagation();
+        if (confirmNewTagInput.trim()) {
+          handleConfirmAddTag();
+        }
+        if (e.key === 'Tab') {
+          e.target.focus();
+        }
+        setConfirmNewTagInput('');
+      }
+    },
+    [handleConfirmAddTag, confirmNewTagInput]
+  );
+
+  const handleConfirmRemoveTag = useCallback(tagIndex => {
+    setConfirmErrorTags(prev => prev.filter((_, i) => i !== tagIndex));
+  }, []);
+
+  const handleConfirmImageUpload = useCallback(e => {
+    const files = Array.from(e.target.files || []);
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    let hasOversize = false;
+
+    files.forEach(file => {
+      if (file.size > MAX_SIZE) {
+        hasOversize = true;
+        return;
+      }
+      if (file.type.startsWith('image/')) {
+        const preview = URL.createObjectURL(file);
+        setConfirmErrorImages(prev => [...prev, { file, preview }]);
+      }
+    });
+
+    setConfirmImageError(hasOversize ? 'Kích thước ảnh không được vượt quá 5MB' : '');
+    if (confirmFileInputRef.current) {
+      confirmFileInputRef.current.value = '';
+    }
+  }, []);
+
+  const handleConfirmRemoveImage = useCallback(imgIndex => {
+    setConfirmErrorImages(prev => {
+      const next = [...prev];
+      const [removed] = next.splice(imgIndex, 1);
+      if (removed?.preview) {
+        URL.revokeObjectURL(removed.preview);
+      }
+      return next;
+    });
+  }, []);
+
   return (
     <>
       {isOrderCompleted ? (
@@ -802,175 +933,20 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                           </div>
                         ) : isState.dataTableProducts?.data?.items?.length > 0 ? (
                           isState.dataTableProducts?.data?.items?.map((row, index) => (
-                            <div className='grid grid-cols-25 items-center h-full' key={index}>
-                              <div className='col-span-1 py-2 px-1 flex justify-center items-center'>
-                                <p className='responsive-text-sm text-neutral-07 font-semibold'>{index + 1}</p>
-                              </div>
-                              <div className={`flex gap-2 p-2 ${showExpiryColumns || showSerialColumns ? 'col-span-4' : 'col-span-6'}`}>
-                                <Image
-                                  src={row?.images ? row?.images : '/icon/noimagelogo.png'}
-                                  width={100}
-                                  height={100}
-                                  alt={row?.images ? row?.images : '/icon/noimagelogo.png'}
-                                  className='object-cover rounded-md min-w-10 min-h-10 w-10 h-10 max-w-10 max-h-10'
-                                />
-                                <div className='flex flex-col gap-1'>
-                                  <p className='responsive-text-sm text-neutral-07 font-semibold'>{row?.item_name}</p>
-                                  <p className='responsive-text-xs text-neutral-03 font-normal'>{row?.product_variation}</p>
-                                  <p className='responsive-text-xs text-typo-blue-2 font-normal'>{row?.reference_no_detail}</p>
-                                </div>
-                              </div>
-
-                              <h3 className='col-span-2 p-2 responsive-text-sm text-neutral-07 font-semibold'>{row?.unit_name}</h3>
-                              <div className={`p-2 ${showExpiryColumns || showSerialColumns ? 'col-span-3' : 'col-span-4'}`}>
-                                <InputCustom
-                                  state={row?.quantityEnterClient || 0}
-                                  setState={value => handleQuantityChange(value, row, 'quantityEnterClient')}
-                                  className={`${!row?.quantityEnterClient && !row?.quantityError ? '!border-red-500' : '!border-gray-200'} !w-full p-1`}
-                                  classNameInput='w-full !responsive-text-sm'
-                                  classNameButton='size-6 2xl:size-8'
-                                  min={0}
-                                  max={Infinity}
-                                  disabled={false}
-                                  isError={false}
-                                  step={1}
-                                  debounceTime={500}
-                                />
-                              </div>
-                              {showSerialColumns && (
-                                <Customscrollbar className={`col-span-3 py-2 ${isState.dataTableProducts?.data?.items?.length <= 1 ? 'max-h-[calc(80vh-136px)]' : 'max-h-60'}`}>
-                                  {showSerialColumns ? (
-                                    <div className='flex flex-col gap-1'>
-                                      {[...Array(Math.ceil(Math.max(0, Number(row?.quantityEnterClient) || 0)))].map((_, sIndex) => {
-                                        return (
-                                          <input
-                                            key={sIndex}
-                                            value={row.serial?.[sIndex]?.value || ''}
-                                            onChange={e => {
-                                              handleChange({
-                                                table: 'product',
-                                                type: 'serial',
-                                                value: e.target.value.trim(),
-                                                row,
-                                                index: sIndex,
-                                              });
-                                            }}
-                                            className={`border text-center py-1 px-1 w-full focus:outline-none rounded-md responsive-text-sm text-neutral-07 font-medium ${
-                                              row.serial?.[sIndex]?.isDuplicate ? 'border-red-500' : 'border-gray-200'
-                                            }`}
-                                          />
-                                        );
-                                      })}
-                                    </div>
-                                  ) : null}
-                                </Customscrollbar>
-                              )}
-
-                              <div className={`p-2 ${showExpiryColumns || showSerialColumns ? 'col-span-3' : 'col-span-4'}`}>
-                                <InputCustom
-                                  state={row?.quantityError || 0}
-                                  setState={value => handleQuantityChange(value, row, 'quantityError')}
-                                  className={`${!row?.quantityEnterClient && !row?.quantityError ? '!border-red-500' : '!border-gray-200'} !w-full p-1`}
-                                  classNameInput='w-full !responsive-text-sm'
-                                  classNameButton='size-6 2xl:size-8'
-                                  min={0}
-                                  max={Infinity}
-                                  disabled={false}
-                                  isError={false}
-                                  step={1}
-                                  debounceTime={500}
-                                />
-                              </div>
-                              {showSerialColumns && (
-                                <Customscrollbar className={`col-span-3 py-2 ${isState.dataTableProducts?.data?.items?.length <= 1 ? 'max-h-[calc(80vh-136px)]' : 'max-h-60'}`}>
-                                  <div className='flex flex-col gap-1'>
-                                    {showSerialColumns &&
-                                      [...Array(Math.ceil(Math.max(0, Number(row?.quantityError) || 0)))].map((_, sIndex) => {
-                                        return (
-                                          <input
-                                            key={sIndex}
-                                            value={row.serialError?.[sIndex]?.value || ''}
-                                            onChange={e => {
-                                              handleChange({
-                                                table: 'product',
-                                                type: 'serialError',
-                                                value: e.target.value.trim(),
-                                                row,
-                                                index: sIndex,
-                                              });
-                                            }}
-                                            className={`border text-center py-1 px-1 w-full focus:outline-none rounded-md responsive-text-sm text-neutral-07 font-medium ${
-                                              row.serialError?.[sIndex]?.isDuplicate ? 'border-red-500' : 'border-gray-200'
-                                            }`}
-                                          />
-                                        );
-                                      })}
-                                  </div>
-                                </Customscrollbar>
-                              )}
-                              {showExpiryColumns && (
-                                <>
-                                  <div className='col-span-3'>
-                                    <input
-                                      value={row?.lot || ''}
-                                      disabled={(dataProductExpiry?.is_enable == '1' && false) || (dataProductExpiry?.is_enable == '0' && true)}
-                                      onChange={e => {
-                                        handleChange({
-                                          table: 'product',
-                                          type: 'lot',
-                                          value: e.target.value,
-                                          row,
-                                        });
-                                      }}
-                                      className='border text-center rounded-lg responsive-text-sm text-neutral-07 font-semibold py-2 px-1 w-full focus:outline-none border-gray-200'
-                                    />
-                                  </div>
-                                  <div className='col-span-3 p-2 text-sm'>
-                                    <div className='relative'>
-                                      <DatePicker
-                                        dateFormat='dd/MM/yyyy'
-                                        placeholderText={dataLang?.warehouses_detail_date ?? 'warehouses_detail_date'}
-                                        selected={row?.date}
-                                        disabled={(dataProductExpiry?.is_enable == '1' && false) || (dataProductExpiry?.is_enable == '0' && true)}
-                                        portalId='menu-time'
-                                        onChange={e => {
-                                          handleChange({
-                                            table: 'product',
-                                            type: 'date',
-                                            value: e,
-                                            row,
-                                          });
-                                        }}
-                                        className='border-gray-200 bg-transparent disabled:bg-gray-100 relative z-1 placeholder:text-slate-300 w-full rounded-lg text-[#52575E] p-2 pl-6 border outline-none responsive-text-sm'
-                                      />
-                                      <CalendarIcon className='size-4 absolute left-1.5 -translate-y-1/2 top-1/2 opacity-60' />
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-                              <h3
-                                className={`p-2 responsive-text-sm text-neutral-07 font-semibold text-center
-                                  ${showExpiryColumns || showSerialColumns ? 'col-span-2' : 'col-span-3'}
-                                  `}
-                              >
-                                {formatNumber(row?.quantity_enter)}
-                              </h3>
-                              <h3
-                                className={`p-2 responsive-text-sm text-neutral-07 font-semibold text-center
-                                  ${showExpiryColumns || showSerialColumns ? 'col-span-2' : 'col-span-3'}
-                                  `}
-                              >
-                                {formatNumber(row?.quantity_entered)}
-                              </h3>
-                              <div className='col-span-2 p-2 flex justify-center items-center'>
-                                <button
-                                  onClick={() => handleRemove('product', row)}
-                                  className='group hover:border-red-01 hover:bg-red-02 rounded-lg w-fit p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer'
-                                >
-                                  <TrashIcon className='size-5 2xl:size-6 text-[#EE1E1E]' />
-                                </button>
-                              </div>
-                            </div>
+                            <ProductRow
+                              key={index}
+                              row={row}
+                              index={index}
+                              showExpiryColumns={showExpiryColumns}
+                              showSerialColumns={showSerialColumns}
+                              formatNumber={formatNumber}
+                              handleQuantityChange={handleQuantityChange}
+                              handleChange={handleChange}
+                              handleRemove={handleRemove}
+                              dataProductExpiry={dataProductExpiry}
+                              dataLang={dataLang}
+                              itemsLength={isState.dataTableProducts?.data?.items?.length}
+                            />
                           ))
                         ) : (
                           <div className='col-span-25 p-2 text-center text-red-500 h-40 my-auto flex justify-center items-center'>Không có mặt hàng để hoàn thành</div>
