@@ -213,7 +213,7 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
       
       if (rect.width === 0 && rect.height === 0) return;
 
-      const GAP = 8;
+      const GAP = 4;
       const estimatedHeight = dropdownHeights.container || 414;
       const belowSpace = window.innerHeight - rect.bottom - GAP;
       const aboveSpace = rect.top - GAP;
@@ -314,7 +314,7 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
                 style={{ ...style, maxHeight: dropdownHeights.container }}
             >
               {/* Search */}
-              <div className='px-4 pt-4'>
+              <div className='px-3 pt-3'>
                 <div className='flex items-center  gap-2'>
                   <div className='flex-1 flex items-center gap-3 pl-4 pr-1 py-1 border border-[#D0D5DD] rounded-[12px] bg-white focus-within:ring-2 focus-within:ring-[#1760B9]'>
                     <input
@@ -345,7 +345,7 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
               {/* List */}
               <div
                 ref={listRef}
-                className='flex-1 overflow-y-auto px-4 pb-2 max-h-[300px]'
+                className='flex-1 overflow-y-auto px-3 pb-2 max-h-[300px]'
                 style={{ maxHeight: dropdownHeights.list }}
               >
                 <div className='space-y-1'>
