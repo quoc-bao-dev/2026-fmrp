@@ -321,7 +321,7 @@ const ExportProduction = (props) => {
               <RowItemTable className="w-32 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] !text-new-blue !responsive-text-sm font-semibold flex-shrink-0">
                 <PopupDetail
                   dataLang={dataLang}
-                  className="responsive-text-sm font-semibold text-center text-[#003DA0] hover:text-blue-600 transition-all ease-linear cursor-pointer "
+                  className="responsive-text-sm break-words font-semibold text-center text-[#003DA0] hover:text-blue-600 transition-all ease-linear cursor-pointer "
                   name={item.code}
                   id={item.id}
                 />
