@@ -388,7 +388,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
 
     const cookieLsxActive = CookieCore.get('lsx_active') || '{}';
     const parseCookieLsxActive = JSON?.parse(cookieLsxActive);
-    const foundFlag = flagProductionOrders.find(item => item?.id === parseCookieLsxActive?.id);
+    const foundFlag = flagProductionOrders?.find(item => item?.id === parseCookieLsxActive?.id);
 
     if (router.query?.poi_id && foundFlag) {
       // Có poi_id trên URL + có trong cookie
@@ -546,7 +546,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     if (router.pathname === '/manufacture/productions-orders' && !router.query?.poi_id) {
       const currentId = isStateProvider?.productionsOrders?.idDetailProductionOrder;
 
-      const currentItemExists = flagProductionOrders.some(item => item.id === currentId);
+      const currentItemExists = flagProductionOrders.some(item => item?.id === currentId);
 
       if (!currentId || !currentItemExists) {
         const firstItem = flagProductionOrders[0];
@@ -2062,24 +2062,6 @@ console.log({hasPermission});
         onForceClose={() => setIsOpenKeepStock(false)}
       />
       <PopupRecallStock
-        dataLang={dataLang}
-        queryValue={queryValue}
-        fetchDataTable={fetchDataTable}
-        hasPermission={canKeepStock}
-        dataTable={{
-          countAll: dataProductionOrderDetail?.listBom?.materialsBom?.length ?? 1,
-          listDataRight: {
-            idCommand: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.pp_id,
-            title: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.title,
-            dataBom: {
-              materialsBom: dataProductionOrderDetail?.listBom?.materialsBom || [],
-              productsBom: dataProductionOrderDetail?.listBom?.productsBom || [],
-            },
-          },
-        }}
-        title='Thu hồi giữ kho'
-        icon={<PlusIcon className='text-white' />}
-        hideTrigger
         forceOpen={isOpenRecallStock}
         onForceClose={() => setIsOpenRecallStock(false)}
       />
