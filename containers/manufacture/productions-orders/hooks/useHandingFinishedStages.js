@@ -13,7 +13,7 @@ export const useHandingFinishedStages = () => {
 
     const submitMutation = useMutation({
         mutationFn: (data) => {
-            return apiProductionsOrders.apiHandlingFinishedStagesFetch(data)
+            return apiProductionsOrders.apiHandlingFinishedStages(data)
         }
     })
 
