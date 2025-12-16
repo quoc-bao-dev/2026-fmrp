@@ -15,7 +15,8 @@ import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import { useSaveProductionOrderManagerDetail } from '@/managers/api/productions-order/useSaveProductionOrderManagerDetail';
 
 // Sub-component for ProductRow to use hooks
-const ProductRow = memo(({ product, index, item, totalLength, formatNumber, handleToggleSheetDetail, isStateProvider, dataLang, openManagerComboId, setOpenManagerComboId, branchId }) => {
+const ProductRow = memo(
+  ({ product, index, item, totalLength, formatNumber, handleToggleSheetDetail, isStateProvider, dataLang, openManagerComboId, setOpenManagerComboId, branchId, canManageManagers = true }) => {
   const po_id = item.po_id;
   const poi_id = product.poi_id;
 
@@ -142,34 +143,38 @@ const ProductRow = memo(({ product, index, item, totalLength, formatNumber, hand
       <h4 className='col-span-2 text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1'>{product.quantity > 0 ? formatNumber(product.quantity) : '-'}</h4>
       <h4 className='col-span-2 text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1'>{product.quantity_stage_end > 0 ? formatNumber(product.quantity_stage_end) : '-'}</h4>
       <h4 className='col-span-3 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1 flex justify-center items-center'>
-        <div
-          onClick={e => {
-            setOpenManagerComboId(product.poi_id);
-            e.stopPropagation();
-          }}
-        >
-          <ResponsiblePersonComboBox
-            className='!max-h-[300px]'
-            open={openManagerComboId === product.poi_id}
-            onClose={() => setOpenManagerComboId(null)}
-            data={listStaffs}
-            selected={selectedManagers}
-            hideSelected={false}
-            onConfirm={selected => {
-              handleSubmit(selected);
+        {canManageManagers ? (
+          <div
+            onClick={e => {
+              setOpenManagerComboId(product.poi_id);
+              e.stopPropagation();
             }}
           >
-            <div>
-              {managerAvatars.length > 0 ? (
-                <AvatarStack people={managerAvatars} />
-              ) : (
-                <button className='cursor-pointer flex items-center justify-start w-[112px] px-3 h-10 rounded-lg border border-[#003DA0] hover:bg-[#EBF5FF] transition-colors'>
-                  <UserPlusIcon className='size-5 text-[#11315B]' />
-                </button>
-              )}
-            </div>
-          </ResponsiblePersonComboBox>
-        </div>
+            <ResponsiblePersonComboBox
+              className='!max-h-[300px]'
+              open={openManagerComboId === product.poi_id}
+              onClose={() => setOpenManagerComboId(null)}
+              data={listStaffs}
+              selected={selectedManagers}
+              hideSelected={false}
+              onConfirm={selected => {
+                handleSubmit(selected);
+              }}
+            >
+              <div>
+                {managerAvatars.length > 0 ? (
+                  <AvatarStack people={managerAvatars} />
+                ) : (
+                  <button className='cursor-pointer flex items-center justify-start w-[112px] px-3 h-10 rounded-lg border border-[#003DA0] hover:bg-[#EBF5FF] transition-colors'>
+                    <UserPlusIcon className='size-5 text-[#11315B]' />
+                  </button>
+                )}
+              </div>
+            </ResponsiblePersonComboBox>
+          </div>
+        ) : managerAvatars.length > 0 ? (
+          <AvatarStack people={managerAvatars} />
+        ) : null}
       </h4>
 
       <h4 className='col-span-3 flex items-center justify-start px-1'>
@@ -185,7 +190,7 @@ const ProductRow = memo(({ product, index, item, totalLength, formatNumber, hand
 
 ProductRow.displayName = 'ProductRow';
 
-const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRight, dataLang, handleToggleSheetDetail }) => {
+const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRight, dataLang, handleToggleSheetDetail, canManageManagers = true }) => {
   const dataSeting = useSetingServer();
   const formatNumber = useCallback(num => formatNumberConfig(+num, dataSeting), [dataSeting]);
   const { isStateProvider } = useContext(StateContext);
@@ -222,6 +227,7 @@ const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRi
           openManagerComboId={openManagerComboId}
           setOpenManagerComboId={setOpenManagerComboId}
           branchId={branchId}
+          canManageManagers={canManageManagers}
         />
       );
     },
@@ -278,7 +284,7 @@ const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRi
                   <h4 className='xl:text-sm text-xs text-start text-[#9295A4] font-semibold col-span-2 px-1'>{dataLang?.Q_materials_unit || 'Q_materials_unit'}</h4>
                   <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-2 px-1'>SL cần</h4>
                   <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-2 px-1'>SL đã nhập</h4>
-                  <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-3 px-1'>Người phụ trách</h4>
+                  <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-3 px-1'>Phụ trách sản xuất</h4>
                   <h4 className='xl:text-sm text-xs text-start text-[#9295A4] font-semibold col-span-3 px-1'>{dataLang?.Q_materials_status || 'Q_materials_status'}</h4>
                   <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold block col-span-5 px-1'>{dataLang?.Q_materials_progress || 'Q_materials_progress'}</h4>
                 </div>

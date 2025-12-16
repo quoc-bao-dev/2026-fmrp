@@ -326,10 +326,10 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
               {/* List */}
               <div
                 ref={listRef}
-                className='flex-1 overflow-y-auto px-4 pt-4 pb-2 max-h-[300px]'
+                className='flex-1 overflow-y-auto px-4 pb-2 max-h-[300px]'
                 style={{ maxHeight: dropdownHeights.list }}
               >
-                <div className='space-y-2'>
+                <div className='space-y-1'>
                   {filtered
                     .slice()
                     .sort((a, b) => {
@@ -345,13 +345,13 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
                           <button
                             data-rpcb-item={person.id}
                             onClick={() => toggleLocal(person)}
-                            className={`w-full flex items-center gap-3 px-3 py-3 rounded-[12px] text-left transition-colors  border-[#E7EAEE] ${
+                            className={`w-full flex items-center gap-3 px-2 py-1.5 rounded-[10px] text-left transition-colors  border-[#E7EAEE] ${
                               active ? 'bg-[#EBF5FF]' : 'bg-white hover:bg-[#F6F8FB]'
                             }`}
                           >
-                            <ResponsibleAvatar avatarUrl={person.avatarUrl} fullName={person.name} size={40} className='!min-w-10 !max-w-10 !min-h-10 !max-h-10 !h-10 !w-10 text-base' />
-                            <div className='flex-1 text-base text-[#101828]'>{person.name}</div>
-                            {active && <CheckThinIcon className='size-5 text-[#1760B9]' />}
+                            <ResponsibleAvatar avatarUrl={person.avatarUrl} fullName={person.name} size={32} className='!min-w-8 !max-w-8 !min-h-8 !max-h-8 !h-8 !w-8 text-base' />
+                            <div className='flex-1 text-sm text-[#101828]'>{person.name}</div>
+                            {active && <CheckThinIcon className='size-4 text-[#1760B9]' />}
                           </button>
                         </div>
                       );

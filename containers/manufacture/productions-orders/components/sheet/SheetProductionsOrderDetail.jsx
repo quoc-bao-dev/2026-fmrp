@@ -231,9 +231,10 @@ const SheetProductionsOrderDetail = memo(({ dataLang, ...props }) => {
         <div className='flex flex-col 3xl:gap-6 gap-4 pr-4'>
           {/* Information */}
           <div className='flex flex-col 3xl:gap-6 gap-4 w-full border border-[#D0D5DD] rounded-2xl bg-white 3xl:px-8 px-6 3xl:py-6 py-4'>
-            <h2 className='text-title-small text-[#11315B] font-medium capitalize'>Thông tin chung</h2>
-            <div className='w-fit'>{managerAvatars.length > 0 ? <AvatarStack people={managerAvatars} /> : <span className='text-sm text-[#9295A4]'>Chưa có người phụ trách</span>}</div>
-
+            <div className='flex items-center justify-between w-full'>
+              <h2 className='text-title-small text-[#11315B] font-medium capitalize'>Thông tin chung</h2>
+              <div className='w-fit'>{managerAvatars.length > 0 ? <AvatarStack people={managerAvatars} /> : <span className='text-sm text-[#9295A4]'>Chưa có người phụ trách</span>}</div>
+            </div>
             <div className='grid grid-cols-2'>
               <div className='flex flex-col gap-1 col-span-1 w-full'>
                 <div className='flex items-center gap-1'>
