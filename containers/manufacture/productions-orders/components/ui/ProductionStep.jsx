@@ -206,10 +206,6 @@ const ProductionSteps = ({ stages }) => {
                 {step?.purchase_items &&
                   step?.purchase_items?.map((item, index) => (
                     <div key={`purchase-${index}`} className='text-[10px] flex flex-wrap gap-2 mt-1'>
-                      {/* <span className="border rounded-full px-2 py-0.5 border-gray-300">
-                                            {item?.reference_no} - SL: {item?.quantity}
-                                        </span> */}
-
                       <div className='flex justify-between items-center w-full'>
                         <div className='flex flex-col gap-0.5 bg-[#F7F8F9] rounded-md text-[10px] p-1'>
                           <div className='text-[#667085]'>{item?.reference_no}</div>
@@ -220,7 +216,7 @@ const ProductionSteps = ({ stages }) => {
                           </div>
                         </div>
 
-                        {item?.quantity_error > 0 && (
+                        {  !!item?.has_qc_error && item?.quantity_error > 0 && (
                           <button
                             className='px-2 py-1 text-[10px] leading-0 text-center bg-blue-fmrp text-white rounded-full hover:bg-blue-fmrp/80 cursor-pointer'
                             onClick={() => {
@@ -272,7 +268,7 @@ const ProductionSteps = ({ stages }) => {
         </div>
       )}
 
-      {errorPopupQcId && <PopupErrorInformation onClose={() => setErrorPopupQcId(null)} qcId={errorPopupQcId} />}
+      {!!errorPopupQcId && <PopupErrorInformation onClose={() => setErrorPopupQcId(null)} qcId={errorPopupQcId} />}
 
       {/* {hiddenCount > 0 && !showAll && (
                 <div
