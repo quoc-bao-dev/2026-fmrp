@@ -2,6 +2,7 @@ import { CheckThinIcon, MagnifyingGlassIcon } from '@/components/icons';
 import { Lexend_Deca } from '@next/font/google';
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import PopupConfim from '@/components/UI/popupConfim/popupConfim';
 import ResponsibleAvatar from './ResponsibleAvatar';
 
 const deca = Lexend_Deca({
@@ -36,6 +37,7 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
   const [placement, setPlacement] = useState('below'); // below | above
   const [isReady, setIsReady] = useState(false);
   const [errorMap, setErrorMap] = useState({});
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   // Reset localSelected về selected mới nhất khi mở popup hoặc khi selected thay đổi
   useEffect(() => {
@@ -121,18 +123,35 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
     });
   }, [open, placement, dropdownHeights.container, dropdownHeights.list, style]);
 
-  // Handle click outside to close
+  // Handle click outside to close với xác nhận nếu có thay đổi
   useEffect(() => {
     if (!open) return;
-    
+
     const handler = e => {
+      // Nếu đang mở popup confirm thì bỏ qua click outside
+      if (isConfirmOpen) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+        return;
+      }
+
       if (dropdownRef.current && !dropdownRef.current.contains(e.target) && triggerRef.current && !triggerRef.current.contains(e.target)) {
-        onClose?.();
+        const hasChanges = !areArraysEqual(localSelected, selected);
+        if (hasChanges) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+          setIsConfirmOpen(true);
+          return;
+        } else {
+          onClose?.();
+        }
       }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [open, onClose]);
+  }, [open, onClose, localSelected, selected, isConfirmOpen]);
 
   useEffect(() => {
     if (!open) {
@@ -288,7 +307,7 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
       {triggerElement}
       {open && isReady && style &&
         createPortal(
-          <div className='fixed inset-0 z-[1400] pointer-events-none' data-rpcb-root>
+          <div className='fixed inset-0 z-[1000] pointer-events-none' data-rpcb-root>
             <div
               ref={dropdownRef}
                 className={`${deca.className} w-[389px] max-h-[414px] bg-white rounded-[16px] shadow-xl flex flex-col overflow-hidden pointer-events-auto ${className}`}
@@ -369,6 +388,20 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
           </div>,
           document.body
         )}
+      <PopupConfim
+        type='warning'
+        title='Bạn có muốn huỷ thao tác này không?'
+        subtitle='Các thay đổi chọn người phụ trách sẽ không được lưu.'
+        isOpen={isConfirmOpen}
+        forceConfirm
+        save={() => {
+          setIsConfirmOpen(false);
+          onClose?.();
+        }}
+        cancel={() => {
+          setIsConfirmOpen(false);
+        }}
+      />
     </>
   );
 };
