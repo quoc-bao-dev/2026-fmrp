@@ -31,7 +31,6 @@ const rawMockExpense = [
     2: '6422',
     3: '<a onclick="view_costs_detail(4)">CHI PHÍ CÔNG TY</a>',
     4: "<p class='text-right'>397,302,704</p>",
-    DT_RowClass: 'alert-header bold success',
   },
   {
     0: '26',
@@ -39,7 +38,6 @@ const rawMockExpense = [
     2: '64221',
     3: '<a onclick="view_costs_detail(26)">Chi phí văn phòng</a>',
     4: "<p class='text-right'>15,056,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   ['35', '64221', '', '<a onclick="view_costs_detail(35)">Chi phí máy in</a>', "<p class='text-right'>1,550,000</p>"],
   ['36', '64221', '', '<a onclick="view_costs_detail(36)">Chi phí mua vật dụng VP</a>', "<p class='text-right'>10,000,000</p>"],
@@ -52,7 +50,6 @@ const rawMockExpense = [
     2: '64222',
     3: '<a onclick="view_costs_detail(27)">Chi phí ngân hàng</a>',
     4: "<p class='text-right'>100,429</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '28',
@@ -60,7 +57,6 @@ const rawMockExpense = [
     2: '64223',
     3: '<a onclick="view_costs_detail(28)">Chi phí vận chuyển</a>',
     4: "<p class='text-right'>5,500,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '29',
@@ -68,7 +64,6 @@ const rawMockExpense = [
     2: '64224',
     3: '<a onclick="view_costs_detail(29)">Chi phí thuê kho xưởng</a>',
     4: "<p class='text-right'>110,775,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '30',
@@ -76,7 +71,6 @@ const rawMockExpense = [
     2: '64225',
     3: '<a onclick="view_costs_detail(30)">Chi phí vật dụng kho</a>',
     4: "<p class='text-right'>1,302,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '31',
@@ -84,7 +78,6 @@ const rawMockExpense = [
     2: '64226',
     3: '<a onclick="view_costs_detail(31)">Chi phí tiền điện</a>',
     4: "<p class='text-right'>6,470,656</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '32',
@@ -92,7 +85,6 @@ const rawMockExpense = [
     2: '64227',
     3: '<a onclick="view_costs_detail(32)">Chi phí mua đồ cúng</a>',
     4: "<p class='text-right'>608,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '33',
@@ -100,7 +92,6 @@ const rawMockExpense = [
     2: '64228',
     3: '<a onclick="view_costs_detail(33)">Chi phí khác</a>',
     4: "<p class='text-right'>701,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '34',
@@ -108,7 +99,6 @@ const rawMockExpense = [
     2: '64229',
     3: '<a onclick="view_costs_detail(34)">Chi phí lương nhân viên</a>',
     4: "<p class='text-right'>256,637,609</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '45',
@@ -116,7 +106,6 @@ const rawMockExpense = [
     2: '64230',
     3: '<a onclick="view_costs_detail(45)">Chi phí vật dụng vệ sinh</a>',
     4: "<p class='text-right'>122,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '5',
@@ -124,7 +113,6 @@ const rawMockExpense = [
     2: '331',
     3: '<a onclick="view_costs_detail(5)">CHI TRẢ TIỀN MUA HÀNG</a>',
     4: "<p class='text-right'>5,982,760,069</p>",
-    DT_RowClass: 'alert-header bold success',
   },
   {
     0: '6',
@@ -132,7 +120,6 @@ const rawMockExpense = [
     2: '6411',
     3: '<a onclick="view_costs_detail(6)">CHI PHÍ XE MÁY</a>',
     4: "<p class='text-right'>45,000</p>",
-    DT_RowClass: 'alert-header bold success',
   },
   {
     0: '9',
@@ -140,7 +127,6 @@ const rawMockExpense = [
     2: '64112',
     3: '<a onclick="view_costs_detail(9)">Chi phí sửa xe máy - 52T8 5449 - Wave</a>',
     4: "<p class='text-right'>25,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '48',
@@ -148,7 +134,6 @@ const rawMockExpense = [
     2: '64113',
     3: '<a onclick="view_costs_detail(48)">Chi phí sửa xe máy - 59S2 386.67 - Blade</a>',
     4: "<p class='text-right'>20,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '11',
@@ -156,7 +141,6 @@ const rawMockExpense = [
     2: '6412',
     3: '<a onclick="view_costs_detail(11)">CHI PHÍ BA GÁC</a>',
     4: "<p class='text-right'>1,795,000</p>",
-    DT_RowClass: 'alert-header bold success',
   },
   {
     0: '12',
@@ -164,7 +148,6 @@ const rawMockExpense = [
     2: '64121',
     3: '<a onclick="view_costs_detail(12)">Chi phí xăng xe ba gác</a>',
     4: "<p class='text-right'>445,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '13',
@@ -172,7 +155,6 @@ const rawMockExpense = [
     2: '64122',
     3: '<a onclick="view_costs_detail(13)">Chi phí sửa xe ba gác</a>',
     4: "<p class='text-right'>1,350,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   ['8', '64122', '64111', '<a onclick="view_costs_detail(8)">Chi phí xăng xe máy</a>', "<p class='text-right'>1,200,000</p>"],
   {
@@ -181,7 +163,6 @@ const rawMockExpense = [
     2: '6413',
     3: '<a onclick="view_costs_detail(14)">CHI PHÍ XE NÂNG</a>',
     4: "<p class='text-right'>2,000,000</p>",
-    DT_RowClass: 'alert-header bold success',
   },
   {
     0: '16',
@@ -189,7 +170,6 @@ const rawMockExpense = [
     2: '64131',
     3: '<a onclick="view_costs_detail(16)">Chi phí dầu xe nâng</a>',
     4: "<p class='text-right'>2,000,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '18',
@@ -197,7 +177,6 @@ const rawMockExpense = [
     2: '6414',
     3: '<a onclick="view_costs_detail(18)">CHI PHÍ XE TẢI</a>',
     4: "<p class='text-right'>6,207,000</p>",
-    DT_RowClass: 'alert-header bold success',
   },
   {
     0: '19',
@@ -205,7 +184,6 @@ const rawMockExpense = [
     2: '64141',
     3: '<a onclick="view_costs_detail(19)">Chi phí dầu xe tải ISUZU - 51C 46965</a>',
     4: "<p class='text-right'>1,000,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '20',
@@ -213,7 +191,6 @@ const rawMockExpense = [
     2: '64142',
     3: '<a onclick="view_costs_detail(20)">Chi phí sửa xe tải ISUZU - 51C 46965</a>',
     4: "<p class='text-right'>2,057,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '21',
@@ -221,7 +198,6 @@ const rawMockExpense = [
     2: '64143',
     3: '<a onclick="view_costs_detail(21)">Chi phí dầu xe tải KIA - 51C 78531</a>',
     4: "<p class='text-right'>1,820,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '22',
@@ -229,7 +205,6 @@ const rawMockExpense = [
     2: '64144',
     3: '<a onclick="view_costs_detail(22)">Chi phí sửa xe tải KIA - 51C 78531</a>',
     4: "<p class='text-right'>330,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '46',
@@ -237,7 +212,6 @@ const rawMockExpense = [
     2: '64145',
     3: '<a onclick="view_costs_detail(46)">Chi phí xăng, dầu xe tải khác (mượn, đổi)</a>',
     4: "<p class='text-right'>1,000,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '23',
@@ -245,7 +219,6 @@ const rawMockExpense = [
     2: '6415',
     3: '<a onclick="view_costs_detail(23)">CHI PHÍ XE VAN</a>',
     4: "<p class='text-right'>1,580,000</p>",
-    DT_RowClass: 'alert-header bold success',
   },
   {
     0: '24',
@@ -253,7 +226,6 @@ const rawMockExpense = [
     2: '64151',
     3: '<a onclick="view_costs_detail(24)">Chi phí xăng xe Van - 50G 02556</a>',
     4: "<p class='text-right'>1,500,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '25',
@@ -261,7 +233,6 @@ const rawMockExpense = [
     2: '64152',
     3: '<a onclick="view_costs_detail(25)">Chi phí sửa xe Van - 50G 02556</a>',
     4: "<p class='text-right'>80,000</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
   {
     0: '44',
@@ -269,7 +240,6 @@ const rawMockExpense = [
     2: '333',
     3: '<a onclick="view_costs_detail(44)">Chi nộp thuế</a>',
     4: "<p class='text-right'>20,340,529</p>",
-    DT_RowClass: 'alert-header bold success',
   },
   {
     0: '49',
@@ -277,7 +247,6 @@ const rawMockExpense = [
     2: '33311',
     3: '<a onclick="view_costs_detail(49)">Thuế GTGT đầu ra</a>',
     4: "<p class='text-right'>20,340,529</p>",
-    DT_RowClass: 'alert-header bold warning',
   },
 ];
 
@@ -382,6 +351,45 @@ const Expense = () => {
   const dataSource = normalizeMockExpense;
   // const dataSource = orderTrackingData?.rResult?.length ? orderTrackingData?.rResult : normalizeMockExpense;
 
+  // Tính cấp độ theo chuỗi mã mục cha (đệ quy)
+  const codeMap = new Map((dataSource || []).map(r => [r?.item_code || r?.id, r]));
+  const depthMemo = {};
+  const getDepth = row => {
+    const key = row?.item_code || row?.id || row?.code_purchase_order || `row-${Math.random()}`;
+    if (depthMemo[key]) return depthMemo[key];
+
+    let depth = 1;
+    let current = row;
+    const visited = new Set();
+    while (current?.code_purchase_order) {
+      const currentKey = current?.item_code || current?.id || current?.code_purchase_order;
+      if (currentKey && visited.has(currentKey)) {
+        depth = Math.max(depth, 3); // phát hiện vòng lặp, coi như cấp 3+
+        break;
+      }
+      if (currentKey) visited.add(currentKey);
+
+      const parent = codeMap.get(current.code_purchase_order);
+      if (!parent) {
+        depth += 1;
+        break;
+      }
+      depth += 1;
+      current = parent;
+      if (depth > 10) break; // tránh vòng lặp sâu bất thường
+    }
+
+    depthMemo[key] = depth;
+    return depth;
+  };
+
+  const getRowBg = row => {
+    const depth = getDepth(row);
+    if (depth === 1) return '#DFF0D8';
+    if (depth === 2) return '#FCF8E3';
+    return '#ffffff';
+  };
+
   // Khai báo cột: dùng chung cho thead/tbody/tfoot
   const columns = [
     {
@@ -485,17 +493,22 @@ const Expense = () => {
               </thead>
               <tbody>
                 {dataSource?.map((row, rowIndex) => (
-                  <tr key={`${row.id || 'row'}-${row.purchase_order_item_id || rowIndex}`} className='hover:bg-gray-50 responsive-text-sm relative'>
+                  <tr
+                    key={`${row.id || 'row'}-${row.purchase_order_item_id || rowIndex}`}
+                    className='hover:bg-gray-50 responsive-text-sm relative'
+                    style={{ backgroundColor: getRowBg(row) }}
+                  >
                     {columns.map((col, index) => {
                       if (col.rowSpan) {
                         if (!row.isFirstItem) return null;
                         return (
-                          <td key={col.key} rowSpan={row.totalItems} className={col.tdClass}>
+                          <td key={col.key} rowSpan={row.totalItems} className={col.tdClass} style={{ backgroundColor: getRowBg(row) }}>
                             <div
                               className={`w-full h-full flex items-center px-3 py-2 border-r border-[#E0E0E1] 
                                 ${col.tdClass?.includes('text-center') ? 'justify-center' : ''} 
                                 ${index === 0 ? 'border-l' : ''} 
                                 ${rowIndex === (orderTrackingData?.rResult?.length || 0) - 1 ? '' : 'border-b'}`}
+                              style={{ backgroundColor: getRowBg(row) }}
                             >
                               {col.render(row)}
                             </div>
@@ -503,13 +516,14 @@ const Expense = () => {
                         );
                       }
                       return (
-                        <td key={col.key} className={col.tdClass}>
+                        <td key={col.key} className={col.tdClass} style={{ backgroundColor: getRowBg(row) }}>
                           <div
                             className={`w-full h-full flex items-center ${col.tdClass?.includes('text-center') ? 'justify-center' : ''} px-3 py-2 border-r ${
                               rowIndex === (orderTrackingData?.rResult?.length || 0) - 1 ? '' : 'border-b'
                             }
                             ${index === 0 ? 'border-l' : ''}
                             border-[#E0E0E1]`}
+                            style={{ backgroundColor: getRowBg(row) }}
                           >
                             {col.render(row, rowIndex)}
                           </div>
