@@ -262,7 +262,7 @@ const OrderProgress = () => {
                 mode='multiple'
               />
             </div>
-            <div className='flex gap-3 items-center'>
+            <div className='flex justify-end gap-3 items-center w-auto flex-shrink-0'>
               <SearchComponent dataLang={dataLang} onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' placeholder='Tìm kiếm...' />
               <OnResetData sOnFetching={() => {}} onClick={refetchOrderProgress} className='!py-3' />
               <ExcelFileComponent dataLang={dataLang} filename='Báo cáo tiến độ theo đơn hàng' title='BCTDTDH' multiDataSet={multiDataSet} classBtn='!py-3' />

@@ -1,7 +1,7 @@
-import moment from 'moment';
 import * as XLSX from 'xlsx-js-style';
 
-export const exportOrderTracking = (rawData = [], rTotal = {}, filename = 'Theo_dõi_đơn_đặt_hàng.xlsx') => {
+// Xuất Excel theo đúng dữ liệu hiển thị trên giao diện Tổng hợp tồn quỹ
+export const exportSyntheticFund = (rawData = [], rTotal = {}, filename = 'Tong_hop_ton_quy.xlsx') => {
   const multiDataSet = [
     {
       columns: [
@@ -13,129 +13,89 @@ export const exportOrderTracking = (rawData = [], rTotal = {}, filename = 'Theo_
             font: { bold: true },
           },
         },
-        {
-          title: 'Ngày chứng từ',
-          width: { wch: 20 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
-        {
-          title: 'Mã chứng từ',
-          width: { wch: 18 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
-        {
-          title: 'Mã hàng',
-          width: { wch: 15 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
-        {
-          title: 'Tên hàng',
-          width: { wch: 30 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
-        {
-          title: 'Biến thể',
-          width: { wch: 20 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
-        {
-          title: 'ĐVT',
-          width: { wch: 10 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
-        {
-          title: 'Số lượng',
-          width: { wch: 15 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
-        {
-          title: 'Số lượng đã nhập',
-          width: { wch: 18 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
-        {
-          title: 'Số lượng còn lại',
-          width: { wch: 18 },
-          style: {
-            fill: { fgColor: { rgb: 'C7DFFB' } },
-            font: { bold: true },
-          },
-        },
+        { title: 'Tên tài khoản', width: { wch: 30 }, style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } } },
+        { title: 'Số dư đầu kỳ - Thu', width: { wch: 18 }, style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } } },
+        { title: 'Số dư đầu kỳ - Chi', width: { wch: 18 }, style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } } },
+        { title: 'Phát sinh - Thu', width: { wch: 18 }, style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } } },
+        { title: 'Phát sinh - Chi', width: { wch: 18 }, style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } } },
+        { title: 'Số dư cuối kỳ - Thu', width: { wch: 18 }, style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } } },
+        { title: 'Số dư cuối kỳ - Chi', width: { wch: 18 }, style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } } },
       ],
-      data: rawData.map((item, index) => [
-        { value: String(index + 1) },
-        { value: item.date ? moment(item.date).format('DD/MM/YYYY HH:mm:ss') : '' },
-        { value: item.code_purchase_order || '' },
-        { value: item.item_code || '' },
-        { value: item.item_name || '' },
-        { value: item.item_variation || '' },
-        { value: item.unit_name || '' },
-        { 
-          value: item.quantity ? Number(item.quantity) : 0,
-          style: { numFmt: '#,##0' }
-        },
-        { 
-          value: item.quantity_import ? Number(item.quantity_import) : 0,
-          style: { numFmt: '#,##0' }
-        },
-        { 
-          value: item.quantity_left ? Number(item.quantity_left) : 0,
-          style: { numFmt: '#,##0' }
-        },
-      ]) || []
+      data:
+        rawData.map((item, index) => {
+          const opening = Number(item?.opening_total) || 0;
+          const closing = Number(item?.closing_total) || 0;
+          const phatSinhThu = Number(item?.payslips_opening) || 0; // giữ nguyên logic hiển thị
+          const phatSinhChi = Number(item?.payslips_period) || 0;
+
+          return [
+            { value: String(index + 1) },
+            { value: item?.name || '' },
+            {
+              value: opening > 0 ? opening : '',
+              style: { numFmt: '#,##0' },
+            },
+            {
+              value: opening < 0 ? Math.abs(opening) : '',
+              style: { numFmt: '#,##0' },
+            },
+            {
+              value: phatSinhThu !== 0 ? phatSinhThu : '',
+              style: { numFmt: '#,##0' },
+            },
+            {
+              value: phatSinhChi !== 0 ? phatSinhChi : '',
+              style: { numFmt: '#,##0' },
+            },
+            {
+              value: closing > 0 ? closing : '',
+              style: { numFmt: '#,##0' },
+            },
+            {
+              value: closing < 0 ? Math.abs(closing) : '',
+              style: { numFmt: '#,##0' },
+            },
+          ];
+        }) || [],
     }
   ];
 
-  // Lấy tổng cộng từ rTotal
-  const totalQuantity = Number(rTotal?.total_quantity) || 0;
-  const totalQuantityImport = Number(rTotal?.total_quantity_import) || 0;
-  const totalQuantityLeft = Number(rTotal?.total_quantity_left) || 0;
+  // Lấy tổng cộng từ rTotal (theo đúng hiển thị)
+  const totalOpening = Number(rTotal?.opening_total) || 0;
+  const totalPhatSinhThu = Number(rTotal?.payslips_opening) || 0;
+  const totalPhatSinhChi = Number(rTotal?.payslips_period) || 0;
+  const totalClosing = Number(rTotal?.closing_total) || 0;
 
   // Thêm dòng tổng cộng
   if (multiDataSet[0].data.length > 0) {
     multiDataSet[0].data.push([
       { value: '' },
       { value: 'Tổng cộng' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { 
-        value: totalQuantity,
-        style: { numFmt: '#,##0', font: { bold: true } }
+      {
+        value: totalOpening > 0 ? totalOpening : '',
+        style: { numFmt: '#,##0', font: { bold: true } },
       },
-      { 
-        value: totalQuantityImport,
-        style: { numFmt: '#,##0', font: { bold: true } }
+      {
+        // Theo giao diện hiện tại không hiển thị tổng âm, để trống
+        value: totalOpening < 0 ? Math.abs(totalOpening) : '',
+        style: { numFmt: '#,##0', font: { bold: true } },
       },
-      { 
-        value: totalQuantityLeft,
-        style: { numFmt: '#,##0', font: { bold: true } }
+      {
+        value: totalPhatSinhThu !== 0 ? totalPhatSinhThu : '',
+        style: { numFmt: '#,##0', font: { bold: true } },
+      },
+      {
+        value: totalPhatSinhChi !== 0 ? totalPhatSinhChi : '',
+        style: { numFmt: '#,##0', font: { bold: true } },
+      },
+      {
+        value: totalClosing > 0 ? totalClosing : '',
+        style: { numFmt: '#,##0', font: { bold: true } },
+      },
+      {
+        // Theo giao diện hiện tại không hiển thị tổng âm, để trống
+        value: totalClosing < 0 ? Math.abs(totalClosing) : '',
+        style: { numFmt: '#,##0', font: { bold: true } },
       },
     ]);
   }
@@ -171,7 +131,7 @@ export const exportOrderTracking = (rawData = [], rTotal = {}, filename = 'Theo_
       });
     });
 
-    XLSX.utils.book_append_sheet(wb, ws, 'Theo dõi đơn đặt hàng');
+    XLSX.utils.book_append_sheet(wb, ws, 'Tong hop ton quy');
   });
 
   XLSX.writeFile(wb, filename);

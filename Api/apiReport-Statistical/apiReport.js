@@ -183,6 +183,11 @@ const apiReport = {
     const response = await axiosCustom('GET', `/api_web/api_reports/aggregate_fund_balance`, data);
     return response.data;
   },
+
+  async apiGetExpense(data) {
+    const response = await axiosCustom('GET', `/api_web/api_reports/report_financial`, data);
+    return response.data;
+  },
 };
 
 export default apiReport;

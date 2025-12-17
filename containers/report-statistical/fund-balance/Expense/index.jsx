@@ -11,15 +11,15 @@ import ExcelIcon from '@/components/icons/common/Excel';
 import ReportLayout from '@/components/layout/ReportLayout';
 import { useLanguageContext } from '@/context/ui/LanguageContext';
 import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
-import { useGetItemsWithBranch, useGetSuppliersWithBranch } from '@/hooks/useComboBoxReport';
+import { useGetItemsWithBranch } from '@/hooks/useComboBoxReport';
 import usePagination from '@/hooks/usePagination';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import { useRouter } from 'next/router';
 import { useMemo, useState } from 'react';
 import { PiPackage } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
-import { useGetOrderTracking } from './hook';
-import { exportOrderTracking } from './hook/useExportExcel';
+import { useGetExpense } from './hook';
+import { exportExpense } from './hook/useExportExcel';
 
 const breadcrumbItems = [{ label: 'Báo cáo' }, { label: 'Tồn quỹ' }, { label: 'Báo cáo chi phí' }];
 
@@ -237,10 +237,10 @@ const Expense = () => {
   });
 
   const {
-    data: orderTrackingData,
-    isFetching: isFetchingOrderTracking,
-    refetch: refetchOrderTracking,
-  } = useGetOrderTracking({
+    data: expenseData,
+    isFetching: isFetchingExpense,
+    refetch: refetchExpense,
+  } = useGetExpense({
     page: currentPage,
     limit: limit,
     search: debouncedSearchValue,
@@ -275,15 +275,14 @@ const Expense = () => {
   };
 
   const handleExportExcel = () => {
-    exportOrderTracking(dataSource || [], orderTrackingData?.rTotal || {}, 'Theo dõi đơn đặt hàng.xlsx');
+    exportExpense(dataSource || [], expenseData?.recordsTotal || {}, 'Theo dõi đơn đặt hàng.xlsx');
   };
 
-  const dataSource = orderTrackingData?.rResult?.length ? orderTrackingData?.rResult : [];
+  const dataSource = expenseData?.data || [];
 
-  // Flatten mock data để render
   const flattenedData = useMemo(() => {
-    return flattenTree(mockExpenseData);
-  }, []);
+    return flattenTree(dataSource || []);
+  }, [dataSource]);
 
   // Nhóm các items theo parent level 0
   const groupedData = useMemo(() => {
@@ -310,13 +309,13 @@ const Expense = () => {
 
   // Render row cho item
   const renderRow = (item, isLevel0 = false) => {
-    const { level, displayIndex, code, name, amount } = item;
+    const { level, displayIndex, code, name, total } = item;
     const isLevel1 = level === 1;
     const isLevel2 = level === 2;
 
     return (
       <div key={item.id} className='w-full flex items-center responsive-text-sm border-x border-[#E0E0E1] relative'>
-        <div className={`w-24 px-3 py-2 text-center font-medium text-gray-700 border-r border-[#E0E0E1] ${!isLevel0 ? 'h-8' : ''}`}>{displayIndex || ''}</div>
+        <div className={`w-24 px-3 py-2 text-center font-medium text-gray-700 border-r border-[#E0E0E1] ${!isLevel0 ? 'h-8 2xl:h-9' : ''}`}>{displayIndex || ''}</div>
 
         {isLevel1 && (
           <div className='w-12 px-3 py-2 font-medium text-gray-700 relative pl-4 before:absolute before:left-5 before:top-1/3 before:-translate-y-1/2 before:w-[calc(32px)] before:h-4 before:border-l-2 before:border-b-2 before:border-gray-100 before:rounded-bl-xl'></div>
@@ -333,12 +332,11 @@ const Expense = () => {
           {code} - {name}
         </div>
 
-        <div className='w-40 px-3 py-2 text-center font-medium text-blue-fmrp border-l border-[#E0E0E1]'>{formatAmount(amount)}</div>
+        <div className='w-40 px-3 py-2 text-right font-medium text-blue-fmrp border-l border-[#E0E0E1]'>{formatAmount(total)}</div>
       </div>
     );
   };
 
-  // Render children với đường kẻ dọc
   const renderChildren = children => {
     // Nhóm children theo level 1 parent
     const level1Groups = [];
@@ -360,8 +358,8 @@ const Expense = () => {
     }
 
     return (
-      <div className='relative border-b border-[#E0E0E1]'>
-        <div className='absolute left-[117px] w-0.5 bg-gray-100 z-0 top-0 bottom-0 h-[calc(100%-24px)]'></div>
+      <div className='relative'>
+        {level1Groups.length > 1 && <div className='absolute left-[117px] w-0.5 bg-gray-100 z-0 top-0 bottom-0 h-[calc(100%-24px)]'></div>}
 
         {level1Groups.map((group, groupIndex) => (
           <div key={group.parent.id}>
@@ -407,7 +405,7 @@ const Expense = () => {
           </div>
           <div className='flex justify-end gap-3 items-center w-auto flex-shrink-0'>
             <SearchComponent dataLang={dataLang} placeholder='Tìm kiếm theo phiếu' onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' />
-            <OnResetData sOnFetching={refetchOrderTracking} className='!py-3' />
+            <OnResetData sOnFetching={refetchExpense} className='!py-3' />
             <button onClick={handleExportExcel} className='!py-3 3xl:py-3 3xl:px-4 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded-lg border border-blue-fmrp transition'>
               <ExcelIcon className='3xl:size-5 size-4 text-blue-fmrp' />
               <span className='text-blue-fmrp responsive-text-sm font-medium whitespace-nowrap'>{dataLang?.client_list_exportexcel}</span>
@@ -416,33 +414,40 @@ const Expense = () => {
         </div>
       }
       tableSection={
-        isFetchingOrderTracking ? (
+        isFetchingExpense ? (
           <Loading color='#0f4f9e' />
         ) : flattenedData?.length > 0 ? (
           <Customscrollbar alwaysShowScrollbar={true} className='h-full flex-1 overflow-auto  border-y border-[#E0E0E1]'>
-            <div className='w-full relative'>
+            <div className='w-full h-full relative'>
               <div className='sticky top-0 z-50 bg-white responsive-text-sm capitalize border-x border-b border-[#E0E0E1]'>
                 <div className='flex items-center'>
                   <div className='w-24 px-3 py-2 text-center font-semibold text-gray-700 border-r border-[#E0E0E1]'>STT</div>
                   <div className='w-60 flex-1 px-3 py-2 font-semibold text-gray-700'>Tên khoản chi phí</div>
-                  <div className='w-40 px-3 py-2 text-center font-semibold text-gray-700 border-l border-[#E0E0E1]'>Chi phí</div>
+                  <div className='w-40 px-3 py-2 text-right font-semibold text-gray-700 border-l border-[#E0E0E1]'>Chi phí</div>
                 </div>
               </div>
               {groupedData.map(group => (
-                <div key={group.parent.id}>
+                <div key={group.parent.id} className='border-b border-[#E0E0E1]'>
                   {renderRow(group.parent, true)}
                   {group.children.length > 0 && renderChildren(group.children)}
                 </div>
               ))}
+              {expenseData?.grand_total !== undefined && (
+                <div className='sticky bottom-0 border-b border-x border-[#E0E0E1]'>
+                  <div className='w-full flex items-center responsive-text-sm bg-[#F8FAFF]'>
+                    <div className='w-24 h-8 2xl:h-9 px-3 py-2 text-center font-semibold text-gray-700 border-r border-[#E0E0E1]'></div>
+                    <div className='w-60 flex-1 px-3 py-2 font-semibold text-gray-700 uppercase'>Tổng cộng</div>
+                    <div className='w-40 px-3 py-2 text-right font-semibold text-blue-fmrp border-l border-[#E0E0E1]'>{formatAmount(Number(expenseData?.grand_total || 0))}</div>
+                  </div>
+                </div>
+              )}
             </div>
           </Customscrollbar>
         ) : (
           <NoData type='report' classNameImage='w-[245px]' />
         )
       }
-      totalSection={
-        dataSource?.length > 0 && <Pagination postsPerPage={limit} totalPosts={Number(orderTrackingData?.output?.iTotalDisplayRecords) || 0} paginate={paginate} currentPage={currentPage} />
-      }
+      totalSection={dataSource?.length > 0 && <Pagination postsPerPage={limit} totalPosts={Number(expenseData?.recordsTotal) || 0} paginate={paginate} currentPage={currentPage} />}
       paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}
     />
   );

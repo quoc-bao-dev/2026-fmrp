@@ -15,13 +15,39 @@ export const useObject = (dataLang) => {
 }
 // danh sách đối tượng
 export const useObjectList = (dataLang, idBranch, idObject) => {
+    // Hỗ trợ truyền nhiều chi nhánh (array) => filter[branch_ids][0], [1], ...
+    const normalizeBranchIds = () => {
+        if (Array.isArray(idBranch)) {
+            return idBranch
+                .map((b) => b?.value || b?.id || b)
+                .filter(Boolean);
+        }
+        const single = idBranch?.value || idBranch?.id || idBranch;
+        return single ? [single] : [];
+    };
+
+    const branchIds = normalizeBranchIds();
+
+    const buildBranchParams = () => {
+        if (!branchIds.length) return {};
+        // Nếu chỉ có 1 chi nhánh => filter[branch_id]
+        if (branchIds.length === 1) {
+            return { "filter[branch_id]": branchIds[0] };
+        }
+        // Nếu nhiều chi nhánh => filter[branch_ids][0], [1], ...
+        return branchIds.reduce((acc, value, idx) => {
+            acc[`filter[branch_ids][${idx}]`] = value;
+            return acc;
+        }, {});
+    };
+
     return useQuery({
-        queryKey: ['api_object_list', idBranch, idObject],
+        queryKey: ['api_object_list', branchIds.join(','), idObject?.value || idObject],
         queryFn: async () => {
             const { rResult } = await apiComons.apiObjectList({
                 params: {
                     type: idObject?.value,
-                    "filter[branch_id]": idBranch?.value,
+                    ...buildBranchParams(),
                 }
             });
             return rResult?.map((e) => ({ label: dataLang[e?.name] || e?.name, value: e?.staffid || e?.id })) || []
