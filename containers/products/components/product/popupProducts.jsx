@@ -33,6 +33,7 @@ const Popup_Products = React.memo(props => {
   const dataOptBranch = useSelector(state => state.branch);
   //    danh sách loại thành phẩm
   const dataOptType = useSelector(state => state.type_finishedProduct);
+  console.log(dataOptType)
   //  danh sách đơn vị tính
   const dataOptUnit = useSelector(state => state.unit_finishedProduct);
   // danh sách biến thể

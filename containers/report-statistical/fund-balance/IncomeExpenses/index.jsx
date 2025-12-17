@@ -20,7 +20,7 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { PiPackage } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
-import { useGetOrderTracking } from './hook';
+import { useGetDiaryOfRevenueAndExpenditure, useGetOrderTracking } from './hook';
 import { exportOrderTracking } from './hook/useExportExcel';
 
 const breadcrumbItems = [{ label: 'Báo cáo' }, { label: 'Tồn quỹ' }, { label: 'Nhật ký thu - chi' }];
@@ -63,7 +63,7 @@ const IncomeExpenses = () => {
     data: orderTrackingData,
     isFetching: isFetchingOrderTracking,
     refetch: refetchOrderTracking,
-  } = useGetOrderTracking({
+  } = useGetDiaryOfRevenueAndExpenditure({
     page: currentPage,
     limit: limit,
     search: debouncedSearchValue,
@@ -186,7 +186,7 @@ const IncomeExpenses = () => {
       key: 'quantity_left',
       header: 'Thu',
       thClass: 'min-w-36 h-2 p-0 text-center font-semibold text-gray-700',
-      tdClass: 'p-0 h-2 text-center text-gray-700',
+      tdClass: 'p-0 h-2 text-center text-blue-fmrp',
       rowSpan: false,
       render: row => (Number(row?.quantity_left) !== 0 ? formatNumber(Number(row?.quantity_left)) : '-'),
       footer: rTotal => (Number(rTotal?.total_quantity_left) !== 0 ? formatNumber(Number(rTotal?.total_quantity_left) || 0) : '-'),
@@ -195,7 +195,7 @@ const IncomeExpenses = () => {
       key: 'quantity_right',
       header: 'Chi',
       thClass: 'min-w-36 h-2 p-0 text-center font-semibold text-gray-700',
-      tdClass: 'p-0 h-2 text-center text-gray-700',
+      tdClass: 'p-0 h-2 text-center text-blue-fmrp',
       rowSpan: false,
       render: row => (Number(row?.quantity_left) !== 0 ? formatNumber(Number(row?.quantity_left)) : '-'),
       footer: rTotal => (Number(rTotal?.total_quantity_left) !== 0 ? formatNumber(Number(rTotal?.total_quantity_left) || 0) : '-'),

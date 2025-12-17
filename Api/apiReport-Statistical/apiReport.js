@@ -172,6 +172,17 @@ const apiReport = {
     const response = await axiosCustom('GET', `/api_web/Api_reports/debt_suppliers`, data);
     return response.data;
   },
+
+  //Báo cáo quỹ
+  async apiGetDiaryOfRevenueAndExpenditure(data) {
+    const response = await axiosCustom('GET', `/api_web/api_reports/diary_of_revenue_and_expenditure`, data);
+    return response.data;
+  },
+
+  async apiGetAggregateFundBalance(data) {
+    const response = await axiosCustom('GET', `/api_web/api_reports/aggregate_fund_balance`, data);
+    return response.data;
+  },
 };
 
 export default apiReport;
