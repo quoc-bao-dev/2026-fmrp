@@ -41,6 +41,9 @@ import Popup_Products from './components/product/popupProducts';
 import { useCategoryOptions } from './hooks/product/useCategoryOptions';
 import { useProductList } from './hooks/product/useProductList';
 import { useProductsCounts } from './hooks/product/useProductsCounts';
+import { useProductTypeProducts } from '@/hooks/common/useProductTypeProducts';
+import { useUnitList, useVariantList } from '@/hooks/common/useItems';
+import { useStageList } from '@/hooks/common/useStages';
 
 const Products = props => {
   const dataLang = props.dataLang;
@@ -88,6 +91,14 @@ const Products = props => {
     'filter[id]': valueFinishedPro?.value ? valueFinishedPro?.value : '',
   };
 
+   // danh sách đơn vị tính
+ const { data: dataUnit } = useUnitList();
+ // danh sách công đoạn
+ const { data: dataStage } = useStageList(dataLang);
+ // dnah sách biến thể
+ const { data: dataVariant } = useVariantList();
+ // danh sách sản phẩm theo type
+ const { data: dataProductType } = useProductTypeProducts(dataLang);
   // danh sách danh mục
   const { data: dataCategory = [] } = useCategoryOptions({});
   // danh sách chi nhánh
