@@ -162,57 +162,72 @@ const Navbar = props => {
   const isNavbarFundBalance = [
     {
       id: uuidv4(),
-      title: 'Thu chi',
-      children: [
-        {
-          id: uuidv4(),
-          name: 'Nhật ký thu',
-          path: '/report-statistical/fund-balance/autumn-diary',
-        },
-        {
-          id: uuidv4(),
-          name: 'Nhật ký chi',
-          path: '/report-statistical/fund-balance/spend-diary',
-        },
-        {
-          id: uuidv4(),
-          name: 'Nhật ký thu chi',
-          path: '/report-statistical/fund-balance/income-expenses',
-        },
-      ],
+      name: 'Nhật ký thu - chi',
+      path: '/report-statistical/fund-balance/income-expenses',
     },
     {
       id: uuidv4(),
-      title: 'Tồn quỹ',
-      children: [
-        {
-          id: uuidv4(),
-          name: 'Tổng hợp tồn quỹ',
-          path: '/report-statistical/fund-balance/synthetic-fund',
-        },
-        {
-          id: uuidv4(),
-          name: 'Sổ quỹ tiền mặt',
-          path: '/report-statistical/fund-balance/cash-fund',
-        },
-        {
-          id: uuidv4(),
-          name: 'Sổ quỹ ngân hàng',
-          path: '/report-statistical/fund-balance/bank-fund',
-        },
-      ],
+      name: 'Tổng hợp tồn quỹ',
+      path: '/report-statistical/fund-balance/synthetic-fund',
     },
     {
       id: uuidv4(),
-      title: 'Báo cáo chi phí',
-      children: [
-        {
-          id: uuidv4(),
-          name: 'Chi phí',
-          path: '/report-statistical/fund-balance/expense',
-        },
-      ],
+      name: 'Báo cáo chi phí',
+      path: '/report-statistical/fund-balance/expense',
     },
+    // {
+    //   id: uuidv4(),
+    //   title: 'Thu chi',
+    //   children: [
+    //     {
+    //       id: uuidv4(),
+    //       name: 'Nhật ký thu - chi',
+    //       path: '/report-statistical/fund-balance/autumn-diary',
+    //     },
+    //     {
+    //       id: uuidv4(),
+    //       name: 'Nhật ký chi',
+    //       path: '/report-statistical/fund-balance/spend-diary',
+    //     },
+    //     {
+    //       id: uuidv4(),
+    //       name: 'Nhật ký thu chi',
+    //       path: '/report-statistical/fund-balance/income-expenses',
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: uuidv4(),
+    //   title: 'Tồn quỹ',
+    //   children: [
+    //     {
+    //       id: uuidv4(),
+    //       name: 'Tổng hợp tồn quỹ',
+    //       path: '/report-statistical/fund-balance/synthetic-fund',
+    //     },
+    //     {
+    //       id: uuidv4(),
+    //       name: 'Sổ quỹ tiền mặt',
+    //       path: '/report-statistical/fund-balance/cash-fund',
+    //     },
+    //     {
+    //       id: uuidv4(),
+    //       name: 'Sổ quỹ ngân hàng',
+    //       path: '/report-statistical/fund-balance/bank-fund',
+    //     },
+    //   ],
+    // },
+    // {
+    //   id: uuidv4(),
+    //   title: 'Báo cáo chi phí',
+    //   children: [
+    //     {
+    //       id: uuidv4(),
+    //       name: 'Chi phí',
+    //       path: '/report-statistical/fund-balance/expense',
+    //     },
+    //   ],
+    // },
   ];
 
   // Công nợ phải thu
