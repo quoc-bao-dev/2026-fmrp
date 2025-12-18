@@ -46,15 +46,11 @@ const IncomeExpenses = () => {
   const [selectedPaymentMode, setSelectedPaymentMode] = useState(null);
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearchValue] = useDebounce(searchValue, 500);
-  
+
   const { selectedBranches, setSelectedBranches } = usePersistedBranches('report_branch_ids');
   const { data: objectCombobox = [] } = useObjectCombobox(dataLang);
-  
-  const { data: objectList = [] } = useObjectList(
-    dataLang,
-    selectedBranches,
-    selectedObjectType ? { value: selectedObjectType } : null
-  );
+
+  const { data: objectList = [] } = useObjectList(dataLang, selectedBranches, selectedObjectType ? { value: selectedObjectType } : null);
   const { data: paymentModes = [] } = usePayment();
 
   const {
@@ -323,7 +319,7 @@ const IncomeExpenses = () => {
             />
           </div>
           <div className='flex justify-end gap-3 items-center w-auto flex-shrink-0'>
-            <SearchComponent dataLang={dataLang} placeholder='Tìm kiếm theo phiếu' onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' />
+            <SearchComponent dataLang={dataLang} placeholder='Tìm kiếm ...' onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' />
             <OnResetData sOnFetching={refetchDiary} className='!py-3' />
             <button onClick={handleExportExcel} className='!py-3 3xl:py-3 3xl:px-4 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded-lg border border-blue-fmrp transition'>
               <ExcelIcon className='3xl:size-5 size-4 text-blue-fmrp' />

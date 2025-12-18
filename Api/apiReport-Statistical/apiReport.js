@@ -188,6 +188,11 @@ const apiReport = {
     const response = await axiosCustom('GET', `/api_web/api_reports/report_financial`, data);
     return response.data;
   },
+
+  async apiGetExpenseDetail(data) {
+    const response = await axiosCustom('GET', `/api_web/api_reports/detail_financial_costs`, data);
+    return response.data;
+  },
 };
 
 export default apiReport;

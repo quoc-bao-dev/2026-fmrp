@@ -176,3 +176,89 @@ export const exportOrderTracking = (rawData = [], rTotal = {}, filename = 'Theo_
 
   XLSX.writeFile(wb, filename);
 };
+
+export const exportExpenseDetailExcel = (rawData = [], filename = 'Chi_tiet_chi_phi.xlsx') => {
+  if (!Array.isArray(rawData) || rawData.length === 0) return;
+
+  const wb = XLSX.utils.book_new();
+
+  const headers = [
+    'STT',
+    'Ngày chứng từ',
+    'Danh sách chứng từ',
+    'Chi nhánh',
+    'Nhân viên lập phiếu',
+    'Nội dung',
+    'Giá trị',
+  ];
+
+  const dataRows = rawData.map((row, index) => [
+    index + 1,
+    row?.date ? moment(row.date).format('DD/MM/YYYY HH:mm:ss') : '',
+    row?.code || '',
+    row?.branch_name || '',
+    row?.staff_name || '',
+    row?.note || '',
+    Number(row?.total || 0),
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
+
+  ws['!cols'] = [
+    { wch: 6 },
+    { wch: 20 },
+    { wch: 18 },
+    { wch: 20 },
+    { wch: 22 },
+    { wch: 40 },
+    { wch: 16 },
+  ];
+
+  // Style header
+  headers.forEach((_, colIndex) => {
+    const cellRef = XLSX.utils.encode_cell({ r: 0, c: colIndex });
+    if (!ws[cellRef]) return;
+    ws[cellRef].s = {
+      font: { bold: true, color: { rgb: 'FFFFFF' } },
+      alignment: { horizontal: 'center', vertical: 'middle', wrapText: true },
+      fill: { fgColor: { rgb: '0F4F9E' } },
+      border: {
+        top: { style: 'thin', color: { rgb: '000000' } },
+        bottom: { style: 'thin', color: { rgb: '000000' } },
+        left: { style: 'thin', color: { rgb: '000000' } },
+        right: { style: 'thin', color: { rgb: '000000' } },
+      },
+    };
+  });
+
+  // Style body
+  dataRows.forEach((row, rowIndex) => {
+    row.forEach((cell, colIndex) => {
+      const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: colIndex });
+      if (!ws[cellRef]) return;
+
+      ws[cellRef].s = {
+        alignment: {
+          horizontal: colIndex === 6 ? 'right' : colIndex === 0 ? 'center' : 'left',
+          vertical: 'middle',
+          wrapText: true,
+        },
+        border: {
+          top: { style: 'thin', color: { rgb: '000000' } },
+          bottom: { style: 'thin', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } },
+        },
+      };
+
+      if (colIndex === 6) {
+        ws[cellRef].t = 'n';
+        ws[cellRef].s.numFmt = '#,##0';
+      }
+    });
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Chi tiết chi phí');
+  XLSX.writeFile(wb, filename);
+};
+

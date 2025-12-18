@@ -6,15 +6,18 @@ import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
 import Pagination from '@/components/UI/pagination';
+import SelectSearchReport from '@/components/common/select/SelectSearchReport';
 import ExcelIcon from '@/components/icons/common/Excel';
 import ReportLayout from '@/components/layout/ReportLayout';
 import { useLanguageContext } from '@/context/ui/LanguageContext';
+import { usePayment } from '@/hooks/common/usePayment';
 import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
 import usePagination from '@/hooks/usePagination';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import formatNumber from '@/utils/helpers/formatnumber';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
+import { PiPackage } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
 import { useGetSyntheticFund } from './hook';
 import { exportSyntheticFund } from './hook/useExportExcel';
@@ -30,6 +33,8 @@ const SyntheticFund = () => {
 
   const [limit, setLimit] = useState(15);
   const [searchValue, setSearchValue] = useState('');
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState(null);
+
   const [debouncedSearchValue] = useDebounce(searchValue, 500);
   const [dateRange, setDateRange] = useState({
     startDate: undefined,
@@ -37,6 +42,7 @@ const SyntheticFund = () => {
   });
 
   const { selectedBranches, setSelectedBranches } = usePersistedBranches('report_branch_ids');
+  const { data: paymentModes = [] } = usePayment();
 
   const {
     data: syntheticFundData,
@@ -50,6 +56,7 @@ const SyntheticFund = () => {
       // product_id: selectedItem ? selectedItem : undefined,
       // id_suppliers: selectedSupplier ? selectedSupplier : undefined,
       branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
+      ...(selectedPaymentMode ? { payment_mode_id: selectedPaymentMode } : {}),
       ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
       ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
     },
@@ -74,6 +81,10 @@ const SyntheticFund = () => {
 
   const handleExportExcel = () => {
     exportSyntheticFund(syntheticFundData?.data || [], syntheticFundData?.rTotal || {}, 'Tong_hop_ton_quy.xlsx');
+  };
+
+  const handlePaymentModeChange = value => {
+    setSelectedPaymentMode(value || null);
   };
 
   // Khai báo cột: dùng chung cho thead/tbody/tfoot
@@ -141,8 +152,8 @@ const SyntheticFund = () => {
           header: 'Thu',
           thClass: 'min-w-28 h-2 p-0 text-center font-semibold text-gray-700',
           tdClass: 'p-0 h-2 text-center text-neutral-07',
-          render: row => (Number(row?.payslips_opening) !== 0 ? formatNumber(Number(row?.payslips_opening)) : '-'),
-          footer: rTotal => (Number(rTotal?.payslips_opening) !== 0 ? formatNumber(Number(rTotal?.payslips_opening) || 0) : '-'),
+          render: row => (Number(row?.coupons_period) !== 0 ? formatNumber(Number(row?.coupons_period)) : '-'),
+          footer: rTotal => (Number(rTotal?.coupons_period) !== 0 ? formatNumber(Number(rTotal?.coupons_period) || 0) : '-'),
         },
         {
           key: 'payslips_period',
@@ -202,11 +213,20 @@ const SyntheticFund = () => {
       onBranchClear={() => setSelectedBranches([])}
       filterSection={
         <div className='w-full items-center flex justify-between gap-4'>
-          <div className='grid grid-cols-1 gap-3'>
+          <div className='grid grid-cols-2 gap-3'>
             <DateToDateReport placeholder='Từ ngày đến ngày' value={dateRange} onChange={handleDateChange} className='w-full' />
+            <SelectSearchReport
+              placeholder='Tài khoản'
+              onChange={handlePaymentModeChange}
+              onClear={() => setSelectedPaymentMode(null)}
+              icon={<PiPackage color='#9295A4' className='size-4' />}
+              className='w-full'
+              options={paymentModes || []}
+              value={selectedPaymentMode}
+            />
           </div>
           <div className='flex justify-end gap-3 items-center w-auto flex-shrink-0'>
-            <SearchComponent dataLang={dataLang} placeholder='Tìm kiếm theo phiếu' onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' />
+            {/* <SearchComponent dataLang={dataLang} placeholder='Tìm kiếm ...' onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' /> */}
             <OnResetData sOnFetching={refetchSyntheticFund} className='!py-3' />
             <button onClick={handleExportExcel} className='!py-3 3xl:py-3 3xl:px-4 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded-lg border border-blue-fmrp transition'>
               <ExcelIcon className='3xl:size-5 size-4 text-blue-fmrp' />
@@ -235,7 +255,7 @@ const SyntheticFund = () => {
                     </th>
                   ))}
                 </tr>
-                <tr className='responsive-text-sm sticky top-[34px] 2xl:top-[36px] z-40 bg-white capitalize'>
+                <tr className='responsive-text-sm sticky top-[34px] 2xl:top-[38px] z-40 bg-white capitalize'>
                   {columns
                     .filter(col => col.children)
                     .flatMap(col => col.children)
