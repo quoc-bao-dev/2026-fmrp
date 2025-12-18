@@ -125,14 +125,14 @@ const InfoTooltip = ({
                     e.stopPropagation();
                     setIsOpen(!isOpen);
                 }}
-                className="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-full transition-all"
+                className="focus:outline-none -focus:ring-2 -focus:ring-blue-500 -focus:ring-offset-1 rounded-full transition-all"
                 aria-label="Thông tin"
             >
                 {IconComponent ? (
                     IconComponent
                 ) : (
                     <InfoCircle 
-                        size={16} 
+                        size={14} 
                         variant="Outline" 
                         className={`text-blue-fmrp transition-colors ${isOpen ? 'text-blue-600' : ''}`}
                         {...iconProps}
@@ -161,10 +161,10 @@ const InfoTooltip = ({
                                 maxWidth: '300px',
                             }}
                         >
-                            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-3 relative">
+                            <div className="bg-blue-50 rounded-xl shadow-lg border border-blue-200 p-4 relative">
                                 {/* Arrow pointer - nằm ở giữa trên cùng của tooltip */}
                                 <div
-                                    className={`absolute w-2.5 h-2.5 bg-white border-l border-t border-gray-200 ${
+                                    className={`absolute w-2.5 h-2.5 bg-blue-50 border-l border-t border-blue-200 ${
                                         position === 'bottom' || position === 'bottom-center'
                                             ? '-top-[6px] left-1/2 -translate-x-1/2 rotate-45'
                                             : position === 'top'
@@ -176,7 +176,7 @@ const InfoTooltip = ({
                                 />
                                 
                                 {/* Content */}
-                                <p className="!text-sm !text-gray-700 leading-relaxed whitespace-normal !text-start !font-normal normal-case">
+                                <p className="!text-sm !text-blue-900 leading-relaxed whitespace-normal !text-start !font-normal normal-case">
                                     {content}
                                 </p>
                             </div>
