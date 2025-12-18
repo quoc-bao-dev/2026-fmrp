@@ -130,7 +130,7 @@ const Index = ({ children, ...props }) => {
           {statePopupGlobal.open && <PopupGlobal {...props} />}
 
           <PopupAppTrial {...props} />
-          <PopupAppRenewal {...props} />
+          {/* <PopupAppRenewal {...props} /> */}
           {statePopupUpdateVersion?.open && <PopupUpdateVersion {...props} />}
           {statePopupAccountInformation?.open && <PopupAccountInformation {...props} />}
           {statePopupChangePassword?.open && <PopupChangePassword {...props} />}
