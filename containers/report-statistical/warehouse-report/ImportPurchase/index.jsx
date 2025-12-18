@@ -315,7 +315,7 @@ const ImportPurchase = (props) => {
               <RowItemTable className="flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] !text-new-blue !responsive-text-sm font-semibold w-32 flex-shrink-0">
                 <PopupDetail
                   dataLang={dataLang}
-                  className="responsive-text-sm font-semibold text-center text-[#003DA0] hover:text-blue-600 transition-all ease-linear cursor-pointer "
+                  className="responsive-text-sm break-words font-semibold text-center text-[#003DA0] hover:text-blue-600 transition-all ease-linear cursor-pointer "
                   name={item.code_import}
                   id={item.id}
                 />
@@ -328,7 +328,9 @@ const ImportPurchase = (props) => {
                 {item.name_supplier}
               </RowItemTable>
               <RowItemTable className="flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-32 flex-shrink-0">
-                {item.item_code}
+                <span className="break-words w-full">
+                  {item.item_code}
+                </span>
               </RowItemTable>
               <RowItemTable className="flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-60 flex-shrink-0">
                 <div className="flex flex-col gap-2 justify-start">

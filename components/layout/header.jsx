@@ -747,6 +747,12 @@ const Header = () => {
               link: '/report-statistical/purchase-report/import-goods',
               // forceDisableForAdmin: true,
             },
+            {
+              viewOwn: 1,
+              view: 1,
+              name: 'Tồn quỹ',
+              link: '/report-statistical/fund-balance/income-expenses',
+            },
           ],
         },
       ],
