@@ -13,7 +13,7 @@ import { useState } from 'react';
 import { useGetExpenseDetail } from './hook';
 import { exportExpenseDetailExcel } from './hook/useExportExcel';
 
-const ExpenseDetailPopup = ({ item, children }) => {
+const ExpenseDetailPopup = ({ item, children, dateRange }) => {
   const [open, setOpen] = useState(false);
   const [limit, setLimit] = useState(15);
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,6 +29,8 @@ const ExpenseDetailPopup = ({ item, children }) => {
       cost_id: item?.id,
       filter: {
         branch_ids: selectedBranches?.length > 0 ? selectedBranches : null,
+        ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
+        ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
       },
     },
     open
@@ -95,7 +97,7 @@ const ExpenseDetailPopup = ({ item, children }) => {
                     className='grid grid-cols-[60px,160px,160px,200px,1fr] text-xs 2xl:text-sm text-gray-700 border-b last:border-b-0 border-[#E0E0E1]'
                   >
                     <div className='px-3 py-2 text-center border-r border-[#E0E0E1]'>{index + 1}</div>
-                    <div className='px-3 py-2 border-r border-[#E0E0E1]'>{moment(row?.date).format('DD/MM/YYYY HH:mm:ss') || '—'}</div>
+                    <div className='px-3 py-2 border-r border-[#E0E0E1]'>{row?.date ? moment(row.date).format('DD/MM/YYYY HH:mm:ss') : '—'}</div>
                     <div className='px-3 py-2 border-r border-[#E0E0E1] break-words'>{row?.code || '—'}</div>
                     <div className='px-3 py-2 border-r border-[#E0E0E1] text-right font-semibold text-blue-fmrp'>{formatNumber(+row?.total || 0)}</div>
                     <div className='px-3 py-2 border-[#E0E0E1] break-words'>{row?.note || '—'}</div>

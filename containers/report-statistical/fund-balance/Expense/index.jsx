@@ -1,64 +1,35 @@
 import OnResetData from '@/components/UI/btnResetData/btnReset';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
-import DropdowLimit from '@/components/UI/dropdowLimit/dropdowLimit';
 import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport';
 import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
-import Pagination from '@/components/UI/pagination';
 import SelectSearchReport from '@/components/common/select/SelectSearchReport';
 import ExcelIcon from '@/components/icons/common/Excel';
 import ReportLayout from '@/components/layout/ReportLayout';
 import { useLanguageContext } from '@/context/ui/LanguageContext';
 import { useCostComboboxByBranch } from '@/hooks/common/useOther';
 import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
-import usePagination from '@/hooks/usePagination';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import formatNumber from '@/utils/helpers/formatnumber';
 import { useRouter } from 'next/router';
 import { useMemo, useState } from 'react';
 import { PiPackage } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
+import ExpenseDetailPopup from './ExpenseDetailPopup';
 import { useGetExpense } from './hook';
 import { exportExpense } from './hook/useExportExcel';
-import ExpenseDetailPopup from './ExpenseDetailPopup';
 
 const breadcrumbItems = [{ label: 'Báo cáo' }, { label: 'Tồn quỹ' }, { label: 'Báo cáo chi phí' }];
 
-// Hàm flatten tree thành mảng phẳng với thông tin level
-const flattenTree = (items, level = 0, parentIndex = 0, allItems = []) => {
-  let result = [];
-  let index = parentIndex;
-
-  items.forEach((item, idx) => {
-    if (level === 0) {
-      index = idx + 1;
-    }
-
-    const flattenedItem = {
-      ...item,
-      level,
-      displayIndex: level === 0 ? index : null,
-      hasChildren: item.children && item.children.length > 0,
-      isLastChild: idx === items.length - 1,
-      isFirstChild: level > 0 && idx === 0,
-    };
-
-    result.push(flattenedItem);
-    const currentIndex = allItems.length + result.length - 1;
-
-    if (item.children && item.children.length > 0) {
-      const children = flattenTree(item.children, level + 1, index, [...allItems, ...result]);
-      result = result.concat(children);
-    }
-  });
-
-  return result;
-};
+// Các hằng số hỗ trợ tính toán vị trí vẽ line/tree
+const STT_COLUMN_WIDTH = 73; // px - w-24 (24 * 4)
+const INDENT_WIDTH_PER_LEVEL = 48; // px - mỗi level thụt vào 48px
+const CONNECTOR_OFFSET = 0; // px - offset để căn đường nối/đường cong
 
 const Expense = () => {
   const router = useRouter();
-  const { paginate } = usePagination();
+  // const { paginate } = usePagination();
   const dataLang = useLanguageContext();
   const statusExprired = useStatusExprired();
   const currentPage = Number(router.query.page) || 1;
@@ -108,16 +79,8 @@ const Expense = () => {
     setSearchValue(searchValue);
   };
 
-  const handleLimitChange = newLimit => {
-    setLimit(newLimit);
-    router.push({
-      pathname: router.pathname,
-      query: { ...router.query, page: 1, limit: newLimit },
-    });
-  };
-
   const handleExportExcel = () => {
-    exportExpense(dataSource || [], expenseData?.recordsTotal || {}, 'Theo dõi đơn đặt hàng.xlsx');
+    exportExpense(dataSource || [], expenseData || {}, 'Bao_cao_chi_phi.xlsx');
   };
 
   const dataSource = expenseData?.data || [];
@@ -132,56 +95,24 @@ const Expense = () => {
     });
   }, [costOptions]);
 
-  const flattenedData = useMemo(() => {
-    return flattenTree(dataSource || []);
-  }, [dataSource]);
-
-  // Nhóm các items theo parent level 0
-  const groupedData = useMemo(() => {
-    const groups = [];
-    let currentGroup = null;
-
-    flattenedData.forEach(item => {
-      if (item.level === 0) {
-        if (currentGroup) {
-          groups.push(currentGroup);
-        }
-        currentGroup = { parent: item, children: [] };
-      } else if (currentGroup) {
-        currentGroup.children.push(item);
-      }
-    });
-
-    if (currentGroup) {
-      groups.push(currentGroup);
-    }
-
-    return groups;
-  }, [flattenedData]);
-
-  // Render row cho item
+  // Render row cho item (thụt đều theo level và giữ đường cong)
   const renderRow = (item, isLevel0 = false) => {
-    const { level, displayIndex, code, name, total } = item;
-    const isLevel1 = level === 1;
-    const isLevel2 = level === 2;
+    const { level = 0, displayIndex, code, name, total } = item;
+    const depth = level || 0;
 
     return (
       <div key={item.id} className='w-full flex items-center responsive-text-sm border-x border-[#E0E0E1] relative'>
         <div className={`w-24 px-3 py-2 text-center font-medium text-gray-700 border-r border-[#E0E0E1] min-h-9 2xl:h-[41px] ${!isLevel0 ? 'h-9 2xl:h-[41px]' : ''}`}>{displayIndex || ''}</div>
 
-        {isLevel1 && (
-          <div className='w-12 px-3 py-2 font-medium text-gray-700 relative pl-4 before:absolute before:left-5 before:top-[-6px] before:-translate-y-1/2 before:w-[calc(32px)] before:h-6 before:border-l-2 before:border-b-2 before:border-gray-100 before:rounded-bl-xl'></div>
-        )}
-
-        {isLevel2 && (
-          <>
-            <div className='w-16 px-3 py-2 text-center font-medium text-gray-700 '></div>
-            <div className='w-12 px-3 py-2 font-medium text-gray-700 relative pl-4 before:absolute before:left-5 before:top-[-6px] before:-translate-y-1/2 before:w-[calc(32px)] before:h-6 before:border-l-2 before:border-b-2 before:border-gray-100 before:rounded-bl-xl'></div>
-          </>
+        {depth > 0 && (
+          <div className='px-3 py-2 font-medium text-gray-700 relative pl-4' style={{ width: INDENT_WIDTH_PER_LEVEL * depth }}>
+            {/* Đường cong từ parent sang con */}
+            <div className='absolute right-[-8px] top-[-6px] -translate-y-1/2 w-8 h-6 border-l-2 border-b-2 border-gray-100 rounded-bl-xl' />
+          </div>
         )}
 
         <div className={`w-60 flex-1 px-3 py-2 text-gray-700 ${isLevel0 ? 'font-semibold' : 'font-normal'}`}>
-          <ExpenseDetailPopup item={item}>
+          <ExpenseDetailPopup item={item} dateRange={dateRange}>
             {code} - {name}
           </ExpenseDetailPopup>
         </div>
@@ -191,42 +122,40 @@ const Expense = () => {
     );
   };
 
-  const renderChildren = children => {
-    // Nhóm children theo level 1 parent
-    const level1Groups = [];
-    let currentLevel1Group = null;
+  // Render tree đệ quy, mỗi cấp con được bọc 1 div relative để vẽ đường thẳng dài
+  const renderTree = (nodes, level = 0) => {
+    if (!nodes || nodes.length === 0) return null;
 
-    children.forEach(child => {
-      if (child.level === 1) {
-        if (currentLevel1Group) {
-          level1Groups.push(currentLevel1Group);
-        }
-        currentLevel1Group = { parent: child, children: [] };
-      } else if (child.level === 2 && currentLevel1Group) {
-        currentLevel1Group.children.push(child);
-      }
-    });
+    // Chỉ vẽ line dọc cho level > 0 và khi có từ 2 phần tử trở lên
+    const shouldDrawVerticalLine = level > 0 && nodes.length > 1;
 
-    if (currentLevel1Group) {
-      level1Groups.push(currentLevel1Group);
-    }
+    // Tính vị trí ngang (left) của line theo level
+    const leftPosition = STT_COLUMN_WIDTH + INDENT_WIDTH_PER_LEVEL * level + CONNECTOR_OFFSET;
 
     return (
       <div className='relative'>
-        {level1Groups.length > 1 && <div className='absolute left-[117px] w-0.5 bg-gray-100 z-0 top-0 bottom-0 h-[calc(100%-24px)]'></div>}
+        {shouldDrawVerticalLine && <div className='absolute top-0 bottom-10 border-l-2 border-gray-100' style={{ left: `${leftPosition}px` }} />}
 
-        {level1Groups.map((group, groupIndex) => (
-          <div key={group.parent.id}>
-            {renderRow(group.parent)}
+        {nodes.map((node, idx) => {
+          const isRootLevel = level === 0;
+          const displayIndex = isRootLevel ? idx + 1 : null;
+          const isLastRootNode = isRootLevel && idx === nodes.length - 1;
 
-            {group.children.length > 0 && (
-              <div className='relative'>
-                <div className='absolute left-[181px] w-0.5 bg-gray-100 z-0 top-0 bottom-0 h-[calc(100%-32px)]'></div>
-                {group.children.map(child => renderRow(child))}
-              </div>
-            )}
-          </div>
-        ))}
+          return (
+            <div key={node.id} className={isRootLevel && !isLastRootNode ? 'border-b border-[#E0E0E1]' : ''}>
+              {renderRow(
+                {
+                  ...node,
+                  level,
+                  displayIndex,
+                },
+                isRootLevel
+              )}
+
+              {node.children && node.children.length > 0 && renderTree(node.children, level + 1)}
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -256,7 +185,7 @@ const Expense = () => {
             />
           </div>
           <div className='flex justify-end gap-3 items-center w-auto flex-shrink-0'>
-            <SearchComponent dataLang={dataLang} placeholder='Tìm kiếm...' onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' />
+            {/* <SearchComponent dataLang={dataLang} placeholder='Tìm kiếm...' onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' /> */}
             <OnResetData sOnFetching={handleRefetch} className='!py-3' />
             <button onClick={handleExportExcel} className='!py-3 3xl:py-3 3xl:px-4 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded-lg border border-blue-fmrp transition'>
               <ExcelIcon className='3xl:size-5 size-4 text-blue-fmrp' />
@@ -268,7 +197,7 @@ const Expense = () => {
       tableSection={
         isFetchingExpense ? (
           <Loading color='#0f4f9e' />
-        ) : flattenedData?.length > 0 ? (
+        ) : dataSource?.length > 0 ? (
           <Customscrollbar alwaysShowScrollbar={true} className='h-full flex-1 overflow-auto border-t border-[#E0E0E1]'>
             <div className='w-full h-full relative'>
               <div className='sticky top-0 z-50 bg-white responsive-text-sm capitalize border-x border-b border-[#E0E0E1]'>
@@ -278,14 +207,9 @@ const Expense = () => {
                   <div className='w-40 px-3 py-2 text-right font-semibold text-gray-700 border-l border-[#E0E0E1]'>Chi phí</div>
                 </div>
               </div>
-              {groupedData.map(group => (
-                <div key={group.parent.id} className='border-b border-[#E0E0E1]'>
-                  {renderRow(group.parent, true)}
-                  {group.children.length > 0 && renderChildren(group.children)}
-                </div>
-              ))}
+              <div>{renderTree(dataSource, 0)}</div>
               {expenseData?.grand_total !== undefined && (
-                <div className='sticky bottom-0 border-b border-x border-[#E0E0E1]'>
+                <div className='sticky bottom-0 border border-[#E0E0E1]'>
                   <div className='w-full flex items-center responsive-text-sm bg-[#F8FAFF]'>
                     <div className='w-24 h-8 2xl:h-9 px-3 py-2 text-center font-semibold text-gray-700 border-r border-[#E0E0E1]'></div>
                     <div className='w-60 flex-1 px-3 py-2 font-semibold text-gray-700 uppercase'>Tổng cộng</div>
