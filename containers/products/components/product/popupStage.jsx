@@ -16,7 +16,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Select from "react-select";
 import { v4 as uddidV4 } from "uuid";
 import PopupStageAdd from "./popupStageAdd";
-import { TrashIcon } from "@/components/icons";
+import { EditIcon, TrashIcon } from "@/components/icons";
 
 const Popup_Stage = React.memo((props) => {
     // lấy danh sách công đoạn trong redux
@@ -410,13 +410,14 @@ const Popup_Stage = React.memo((props) => {
                             isShow("error", WARNING_STATUS_ROLE);
                         }
                     }}
-                    className={props.type == "add" && "hover:bg-primary-05 group rounded-lg w-full p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer"}
+                    className={`${props.type == "add" ? "hover:bg-primary-05 group rounded-lg w-full p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer" : "flex items-center gap-2"}`}
                 >
                     {props.type == "add" && (
                         <I3Square size={20} className="text-neutral-03 group-hover:text-neutral-07" />
                         // <I3Square size={20} className="group-hover:text-amber-500 group-hover:scale-110" />
                     )}
-                    <button type="button" className="text-neutral-03 group-hover:text-neutral-07 font-normal whitespace-nowrap">
+                    {props.type == "edit" && <EditIcon className='size-5 text-white' />}
+                    <button type="button" className={`${props.type == "edit" ? "text-white" : "text-neutral-03 group-hover:text-neutral-07"} font-normal whitespace-nowrap`}>
                         {props.type == "add" ? `${props.dataLang?.stage_design_finishedProduct || "stage_design_finishedProduct"}` : `${props.dataLang?.edit || "edit"}`}
                     </button>
                 </div>
