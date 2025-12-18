@@ -16,16 +16,17 @@ import { useLimitAndTotalItems } from '@/hooks/useLimitAndTotalItems';
 import usePagination from '@/hooks/usePagination';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import useTab from '@/hooks/useTab';
-import { CloseCircle, ArrowDown2 as IconDown, Minus as IconMinus, TickCircle, InfoCircle } from 'iconsax-react';
-import PriceInput from '@/components/common/input/PriceInput';
+import formatNumber from '@/utils/helpers/formatnumber';
+import { CloseCircle, ArrowDown2 as IconDown, Minus as IconMinus, InfoCircle, TickCircle } from 'iconsax-react';
 import { debounce } from 'lodash';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import PopupCategory from './components/popupCategory';
 import { useCategoryList } from './hooks/useCategory';
 import { ListBtn_Setting } from './information';
-import { useSelector } from 'react-redux';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 
 const Category = props => {
   const dataLang = props.dataLang;
@@ -161,7 +162,7 @@ const Category = props => {
                               Đơn giá
                               <span className='text-blue-fmrp'>
                                 {' '}
-                                <InfoCircle size={16} variant='Outline' />
+                                <InfoTooltip content='Đơn giá là số tiền trả cho mỗi công đoạn sản xuất đã hoàn thành, dùng để tính lương và sản lượng cho công nhân.' position='bottom' />
                               </span>
                             </p>
                           </ColumnTable>
@@ -218,7 +219,7 @@ const Category = props => {
                                     {e?.status_qc === '1' ? <TickCircle size={32} color='#0BAA2E' /> : <CloseCircle size={32} color='#EE1E1E' />}
                                   </RowItemTable>
                                   <RowItemTable colSpan={2} className='flex justify-center items-end'>
-                                    <p>50,000 / </p> <p className='text-[10px] pt-1'>đơn vị</p>
+                                    <p>{formatNumber(Number(e?.price_default) || 0, dataSetting)} / </p> <p className='text-[10px] pt-1'>đơn vị</p>
                                   </RowItemTable>
                                   <RowItemTable colSpan={2}>{e?.note}</RowItemTable>
                                 </React.Fragment>

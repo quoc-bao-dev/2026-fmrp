@@ -25,6 +25,7 @@ import { useProductDetail } from '../../hooks/product/useProductDetail';
 import { useProductDetailStage } from '../../hooks/product/useProductDetailStage';
 import Popup_Bom from './popupBom';
 import Popup_GiaiDoan from './popupStage';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 
 const Popup_Detail = React.memo(props => {
   const isShow = useToast();
@@ -782,24 +783,21 @@ const Popup_Detail = React.memo(props => {
                     {dataStage?.length > 0 ? (
                       <div className='space-y-0.5 min-h-[384px]'>
                         <HeaderTablePopup gridCols={10}>
-                            <ColumnTablePopup>{props.dataLang?.no || 'no'}</ColumnTablePopup>
-                            <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_finishedProduct}</ColumnTablePopup>
-                            <ColumnTablePopup colSpan={2}>
-                              <span className='flex items-center gap-2 justify-center'>
-                                Đơn giá
-                                <InfoCircle size={14} variant='Outline' className='text-blue-fmrp' />
-                              </span>
-                            </ColumnTablePopup>
-                            <ColumnTablePopup colSpan={3}>{props.dataLang?.check_first_stage_finishedProduct}</ColumnTablePopup>
-                            <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_last_finishedProduct}</ColumnTablePopup>
+                          <ColumnTablePopup>{props.dataLang?.no || 'no'}</ColumnTablePopup>
+                          <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_finishedProduct}</ColumnTablePopup>
+                          <ColumnTablePopup colSpan={2}>
+                            <span className='flex items-center gap-2 justify-center'>
+                              Đơn giá
+                              <InfoTooltip content='Đơn giá là số tiền trả cho từng công đoạn cụ thể trong quá trình làm ra một sản phẩm khi công đoạn đó hoàn thành, làm căn cứ tính lương và sản lượng.' position='bottom' />
+                            </span>
+                          </ColumnTablePopup>
+                          <ColumnTablePopup colSpan={3}>{props.dataLang?.check_first_stage_finishedProduct}</ColumnTablePopup>
+                          <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_last_finishedProduct}</ColumnTablePopup>
                         </HeaderTablePopup>
                         <Customscrollbar className='min-h-[250px] max-h-[450px]'>
                           <div className='divide-y divide-slate-200'>
                             {dataStage?.map((e, index) => (
-                              <div
-                                key={e?.id ? e?.id.toString() : index}
-                                className='grid grid-cols-10 gap-2 px-2 py-2.5 items-center hover:bg-slate-50'
-                              >
+                              <div key={e?.id ? e?.id.toString() : index} className='grid grid-cols-10 gap-2 px-2 py-2.5 items-center hover:bg-slate-50'>
                                 {/* STT */}
                                 <h6 className='px-2 text-xs text-center xl:text-base'>{index + 1}</h6>
 
@@ -808,19 +806,14 @@ const Popup_Detail = React.memo(props => {
 
                                 {/* Đơn giá */}
                                 <h6 className='col-span-2 px-2 text-xs text-center xl:text-sm 2xl:text-base'>
-                                  {formatMoney(50000)}{' '}
-                                  <span className='text-[10px] text-slate-500'>/ đơn vị</span>
+                                  {formatMoney(Number(e?.price_stage ?? 0))} <span className='text-[10px] text-slate-500'>/ đơn vị</span>
                                 </h6>
 
                                 {/* Công đoạn đầu tiên */}
-                                <h6 className='col-span-3 px-2 text-xs xl:text-base flex justify-center text-green-600'>
-                                  {e?.type == '2' && <IconTick />}
-                                </h6>
+                                <h6 className='col-span-3 px-2 text-xs xl:text-base flex justify-center text-green-600'>{e?.type == '2' && <IconTick />}</h6>
 
                                 {/* Công đoạn cuối cùng */}
-                                <h6 className='col-span-2 px-2 text-xs xl:text-base flex justify-center text-green-600'>
-                                  {e?.final_stage == '1' && <IconTick />}
-                                </h6>
+                                <h6 className='col-span-2 px-2 text-xs xl:text-base flex justify-center text-green-600'>{e?.final_stage == '1' && <IconTick />}</h6>
                               </div>
                             ))}
                           </div>

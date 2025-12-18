@@ -6,6 +6,7 @@ import Loading from "@/components/UI/loading/loading";
 import PopupCustom from "@/components/UI/popup";
 import { WARNING_STATUS_ROLE } from "@/constants/warningStatus/warningStatus";
 import useDragAndDrop from "@/hooks/useDragAndDrop";
+import { useStageList } from "@/hooks/common/useStages";
 import useActionRole from "@/hooks/useRole";
 import useToast from "@/hooks/useToast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,14 +19,191 @@ import Select from "react-select";
 import { v4 as uddidV4 } from "uuid";
 import PopupStageAdd from "./popupStageAdd";
 import { TrashIcon } from "@/components/icons";
+import InfoTooltip from "@/components/UI/common/InfoTooltip";
+
+// DraggableItem component - tách ra để tránh mất focus khi rerender
+const DraggableItem = React.memo(({ 
+    value, 
+    index, 
+    dataLang,
+    listCdRest,
+    errName,
+    handleSelectChange,
+    handlePriceChange,
+    handleRatioChange,
+    handleDelete,
+    handleMenuOpen
+}) => {
+    return (
+        <Draggable
+            key={value.id}
+            draggableId={`${value.id}`}
+            index={index}
+            isDragDisabled={false}
+        >
+            {(provided, snapshot) => (
+                <div
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    className={`draggable-item`}
+                    style={{
+                        ...provided.draggableProps.style,
+                        position: 'static'
+                    }}
+                >
+                    <div className="grid items-center h-full grid-cols-15 py-1 bg-white hover:bg-slate-50">
+                        {/* STT */}
+                        <h6 className="col-span-1 px-2 text-center">{index + 1}</h6>
+                        {/* Tên công đoạn */}
+                        <div className="col-span-5 px-2 ">
+                            <Select
+                                closeMenuOnSelect={true}
+                                placeholder={dataLang?.stage_finishedProduct}
+                                options={listCdRest}
+                                value={value.name}
+                                onChange={(val) => handleSelectChange(value.id, val)}
+                                isSearchable={true}
+                                noOptionsMessage={() => "Không có dữ liệu"}
+                                maxMenuHeight="200px"
+                                isClearable={true}
+                                menuPortalTarget={document.body}
+                                onMenuOpen={handleMenuOpen}
+                                styles={{
+                                    placeholder: (base) => ({
+                                        ...base,
+                                        color: "#cbd5e1",
+                                    }),
+                                    menuPortal: (base) => ({
+                                        ...base,
+                                        zIndex: 9999,
+                                        position: "absolute",
+                                    }),
+                                }}
+                                className={`${errName && value.name == null ? "border-red-500" : "border-transparent"
+                                    } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
+                            />
+                        </div>
+                        {/* Đơn giá */}
+                        <div className="col-span-3 px-2 flex justify-center">
+                            <PriceInput
+                                className="w-[80px]"
+                                defaultValue={0}
+                                value={typeof value?.price === 'number' ? value.price : 0}
+                                onChange={val => handlePriceChange(value.id, val)}
+                            />
+                        </div>
+                        {/* Công đoạn bắt đầu */}
+                        <div className="flex items-center justify-center col-span-2">
+                            <input
+                                type="radio"
+                                id={`radio1 + ${value.id}`}
+                                onChange={() => handleRatioChange(value.id, "radio1")}
+                                checked={value.radio1 === 0 ? false : true}
+                                name="radio1"
+                                className="scale-150 outline-none accent-blue-500"
+                            />
+                            <label
+                                htmlFor={`radio1 + ${value.id}`}
+                                className="relative flex items-center p-3 rounded-full cursor-pointer"
+                                data-ripple-dark="true"
+                            >
+                                {"Chọn"}
+                            </label>
+                        </div>
+                        {/* Công đoạn kết thúc */}
+                        <div className="flex items-center justify-center col-span-2">
+                            <input
+                                type="radio"
+                                id={`radio2 + ${value.id}`}
+                                onChange={() => handleRatioChange(value.id, "radio2")}
+                                checked={value.radio2 === 0 ? false : true}
+                                name="radio2"
+                                className="scale-150 outline-none accent-blue-500"
+                            />
+                            <label
+                                htmlFor={`radio2 + ${value.id}`}
+                                className="relative flex items-center p-3 rounded-full cursor-pointer"
+                                data-ripple-dark="true"
+                            >
+                                {"Chọn"}
+                            </label>
+                        </div>
+                        {/* Hành động */}
+                        <div className="flex items-center justify-center col-span-2 gap-2">
+                            <div
+                                {...provided.dragHandleProps}
+                                className="relative flex flex-col items-center justify-center text-blue-500 cursor-move p-1 rounded-lg border border-transparent hover:border-blue-500">
+                                <IconMax size="18" className="-rotate-45" />
+                                <IconMax size="18" className="absolute rotate-45" />
+                            </div>
+                            <button onClick={() => handleDelete(value?.id)} type="button" className="text-red-500 p-0.5 rounded-lg border border-transparent hover:border-red-500">
+                                <TrashIcon className="size-6 text-red-500"/>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </Draggable>
+    );
+});
+
+DraggableItem.displayName = 'DraggableItem';
+
+// DroppableContainer component - tách ra để tránh mất focus khi rerender
+const DroppableContainer = React.memo(({ 
+    options,
+    dataLang,
+    listCdRest,
+    errName,
+    handleSelectChange,
+    handlePriceChange,
+    handleRatioChange,
+    handleDelete,
+    handleMenuOpen
+}) => {
+    return (
+        <Droppable droppableId="droppable">
+            {(provided, snapshot) => (
+                <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className={`${snapshot.isDraggingOver ? "bg-slate-50" : "bg-white"} w-full transition-all duration-100 ease-in-out`}
+                >
+                    <div className="flex flex-col h-fit">
+                        {options.map((item, index) => (
+                            <DraggableItem 
+                                key={item.id} 
+                                value={item} 
+                                index={index}
+                                dataLang={dataLang}
+                                listCdRest={listCdRest}
+                                errName={errName}
+                                handleSelectChange={handleSelectChange}
+                                handlePriceChange={handlePriceChange}
+                                handleRatioChange={handleRatioChange}
+                                handleDelete={handleDelete}
+                                handleMenuOpen={handleMenuOpen}
+                            />
+                        ))}
+                    </div>
+                    {provided.placeholder}
+                </div>
+            )}
+        </Droppable>
+    );
+});
+
+DroppableContainer.displayName = 'DroppableContainer';
 
 const Popup_Stage = React.memo((props) => {
-    // lấy danh sách công đoạn trong redux
+    // Lấy danh sách công đoạn trong redux
     const listCd = useSelector((state) => state.stage_finishedProduct);
+
+    // Gọi API lấy danh sách công đoạn, lưu vào Redux (chạy 1 lần theo vòng đời component)
+    useStageList(props.dataLang);
 
     const isShow = useToast();
     const dispatch = useDispatch();
-    const queryClient = useQueryClient();
 
     const [isOpen, sIsOpen] = useState(false);
 
@@ -120,9 +298,11 @@ const Popup_Stage = React.memo((props) => {
             const data = await apiProducts.apiDataDesignStage(props.id);
             const mappedData = data.map((e) => ({
                 id: `${e.id}`,
-                name: { label: e.stage_name, value: e.stage_id },
+                name: { label: e.stage_name, value: e.stage_id, price_default: e.price_stage },
                 radio1: e.type !== "0" ? 1 : 0,
                 radio2: e.final_stage !== "0" ? 1 : 0,
+                // Đơn giá hiện tại của công đoạn (dùng cho PriceInput và lưu price_stage)
+                price: typeof e.price_stage === "number" ? e.price_stage : Number(e.price_stage) || 0,
             }));
             // Tự động set radio cho phần tử đầu và cuối
             const autoSetData = autoSetRadio(mappedData);
@@ -147,8 +327,14 @@ const Popup_Stage = React.memo((props) => {
                 formData.append(`data[${index}][stages]`, item?.name?.value);
                 formData.append(`data[${index}][type]`, item.radio1);
                 formData.append(`data[${index}][final_stage]`, item.radio2);
+                // Lưu đơn giá cho từng công đoạn từ PriceInput
+                formData.append(
+                    `data[${index}][price_stage]`,
+                    typeof item?.price === "number" ? item.price : Number(item?.price) || 0
+                );
             });
         }
+
         try {
             const { isSuccess, message } = await apiProducts.apiHandingStage(formData);
             if (isSuccess) {
@@ -260,11 +446,27 @@ const Popup_Stage = React.memo((props) => {
     };
 
     /// change option trong công đoạn
-    const handleSelectChange = (id, value) => {
+    const handleSelectChange = (id, selectedStage) => {
         const index = option.findIndex((x) => x.id == id);
-        option[index].name = value;
-        sOption([...option]);
-        sListCdChosen(option.map((e) => e.name));
+        if (index === -1) return;
+
+        const next = [...option];
+
+        // Lấy đơn giá mặc định từ stage (nếu có)
+        const defaultPrice =
+            typeof selectedStage?.price_default === "number"
+                ? selectedStage.price_default
+                : Number(selectedStage?.price_default) || 0;
+
+        next[index] = {
+            ...next[index],
+            name: selectedStage,
+            // Luôn cập nhật lại price theo price_default của công đoạn (nếu không có thì defaultPrice = 0)
+            price: defaultPrice,
+        };
+
+        sOption(next);
+        sListCdChosen(next.map((e) => e.name));
     };
 
     // change price in option row
@@ -274,143 +476,6 @@ const Popup_Stage = React.memo((props) => {
         const next = [...option];
         next[index] = { ...next[index], price };
         sOption(next);
-    };
-
-    const DraggableItem = ({ value, index }) => {
-        return (
-            <Draggable
-                key={value.id}
-                draggableId={`${value.id}`}
-                index={index}
-                isDragDisabled={false} // Disable dragging by default
-            >
-                {(provided, snapshot) => (
-                    <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        className={`draggable-item`}
-                        style={{
-                            ...provided.draggableProps.style,
-                            position: 'static'
-                        }}
-                    >
-                        <div className="grid items-center h-full grid-cols-15 py-1 bg-white hover:bg-slate-50">
-                            {/* STT */}
-                            <h6 className="col-span-1 px-2 text-center">{index + 1}</h6>
-                            {/* Tên công đoạn */}
-                            <div className="col-span-5 px-2 ">
-                                <Select
-                                    closeMenuOnSelect={true}
-                                    placeholder={props.dataLang?.stage_finishedProduct}
-                                    options={listCdRest}
-                                    value={value.name}
-                                    onChange={handleSelectChange.bind(this, value.id)}
-                                    isSearchable={true}
-                                    noOptionsMessage={() => "Không có dữ liệu"}
-                                    maxMenuHeight="200px"
-                                    isClearable={true}
-                                    menuPortalTarget={document.body}
-                                    onMenuOpen={handleMenuOpen}
-                                    styles={{
-                                        placeholder: (base) => ({
-                                            ...base,
-                                            color: "#cbd5e1",
-                                        }),
-                                        menuPortal: (base) => ({
-                                            ...base,
-                                            zIndex: 9999,
-                                            position: "absolute",
-                                        }),
-                                    }}
-                                    className={`${errName && value.name == null ? "border-red-500" : "border-transparent"
-                                        } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
-                                />
-                            </div>
-                            {/* Đơn giá */}
-                            <div className="col-span-3 px-2 flex justify-center">
-                                <PriceInput
-                                className="w-[80px]"
-                                    defaultValue={0}
-                                    value={typeof value?.price === 'number' ? value.price : 0}
-                                    onChange={val => handlePriceChange(value.id, val)}
-                                />
-                            </div>
-                            {/* Công đoạn bắt đầu */}
-                            <div className="flex items-center justify-center col-span-2">
-                                <input
-                                    type="radio"
-                                    id={`radio1 + ${value.id}`}
-                                    onChange={handleRatioChange.bind(this, value.id, "radio1")}
-                                    checked={value.radio1 === 0 ? false : true}
-                                    name="radio1"
-                                    className="scale-150 outline-none accent-blue-500"
-                                />
-                                <label
-                                    htmlFor={`radio1 + ${value.id}`}
-                                    className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                    data-ripple-dark="true"
-                                >
-                                    {"Chọn"}
-                                </label>
-                            </div>
-                            {/* Công đoạn kết thúc */}
-                            <div className="flex items-center justify-center col-span-2">
-                                <input
-                                    type="radio"
-                                    id={`radio2 + ${value.id}`}
-                                    onChange={handleRatioChange.bind(this, value.id, "radio2")}
-                                    checked={value.radio2 === 0 ? false : true}
-                                    name="radio2"
-                                    className="scale-150 outline-none accent-blue-500"
-                                />
-                                <label
-                                    htmlFor={`radio2 + ${value.id}`}
-                                    className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                    data-ripple-dark="true"
-                                >
-                                    {"Chọn"}
-                                </label>
-                            </div>
-                            {/* Hành động */}
-                            <div className="flex items-center justify-center col-span-2 gap-2">
-                                <div
-                                    {...provided.dragHandleProps}
-                                    className="relative flex flex-col items-center justify-center text-blue-500 cursor-move p-1 rounded-lg border border-transparent hover:border-blue-500">
-                                    <IconMax size="18" className="-rotate-45" />
-                                    <IconMax size="18" className="absolute rotate-45" />
-                                </div>
-                                <button onClick={() => handleDelete(value?.id)} type="button" className="text-red-500 p-0.5 rounded-lg border border-transparent hover:border-red-500">
-                                    <TrashIcon className="size-6 text-red-500"/>
-                                </button>
-                            </div>
-                        </div>
-
-                    </div>
-                )}
-            </Draggable>
-        );
-    };
-
-
-    const DroppableContainer = ({ options }) => {
-        return (
-            <Droppable droppableId="droppable">
-                {(provided, snapshot) => (
-                    <div
-                        {...provided.droppableProps}
-                        ref={provided.innerRef}
-                        className={`${snapshot.isDraggingOver ? "bg-slate-50" : "bg-white"} w-full transition-all duration-100 ease-in-out`}
-                    >
-                        <div className="flex flex-col h-fit">
-                            {options.map((item, index) => (
-                                <DraggableItem key={item.id} value={item} index={index} />
-                            ))}
-                        </div>
-                        {provided.placeholder}
-                    </div>
-                )}
-            </Droppable>
-        );
     };
 
 
@@ -438,7 +503,6 @@ const Popup_Stage = React.memo((props) => {
                 >
                     {props.type == "add" && (
                         <I3Square size={20} className="text-neutral-03 group-hover:text-neutral-07" />
-                        // <I3Square size={20} className="group-hover:text-amber-500 group-hover:scale-110" />
                     )}
                     <button type="button" className="text-neutral-03 group-hover:text-neutral-07 font-normal whitespace-nowrap">
                         {props.type == "add" ? `${props.dataLang?.stage_design_finishedProduct || "stage_design_finishedProduct"}` : `${props.dataLang?.edit || "edit"}`}
@@ -472,9 +536,12 @@ const Popup_Stage = React.memo((props) => {
                     </div>
                     {/* Đơn giá */}
                     <h4 className="col-span-3 xl:text-[14px] text-[12px] px-2 text-[#667085] font-[400] text-center">
-                        <span className="flex items-center justify-center gap-1">
+                        <span className="flex items-center justify-center gap-2">
                             Đơn giá
-                            <InfoCircle size={16} variant="Outline" className="text-blue-fmrp" />
+                            <InfoTooltip 
+                                content="Đơn giá là số tiền trả cho từng công đoạn cụ thể trong quá trình làm ra một sản phẩm khi công đoạn đó hoàn thành, làm căn cứ tính lương và sản lượng."
+                                position="bottom"
+                            />
                         </span>
                     </h4>
                     <h4 className="col-span-2 xl:text-[14px] text-[12px] px-2 text-[#667085] font-[400] text-center">
@@ -493,7 +560,17 @@ const Popup_Stage = React.memo((props) => {
                     <>
                         <Customscrollbar className="3xl:h-[600px]  2xl:h-[470px] xl:h-[380px] lg:h-[350px] h-[400px]">
                             <DragDropContext onDragEnd={onDragEnd}>
-                                <DroppableContainer options={option} />
+                                <DroppableContainer 
+                                    options={option}
+                                    dataLang={props.dataLang}
+                                    listCdRest={listCdRest}
+                                    errName={errName}
+                                    handleSelectChange={handleSelectChange}
+                                    handlePriceChange={handlePriceChange}
+                                    handleRatioChange={handleRatioChange}
+                                    handleDelete={handleDelete}
+                                    handleMenuOpen={handleMenuOpen}
+                                />
                             </DragDropContext>
                             <button
                                 type="button"
@@ -537,6 +614,8 @@ const Popup_Stage = React.memo((props) => {
                             const stageList = stage?.map((e) => ({
                                 label: e.name,
                                 value: e.id,
+                                // Đưa luôn price_default vào option để Select và handleSelectChange dùng được
+                                price_default: typeof e.price_default === 'number' ? e.price_default : Number(e.price_default) || 0,
                             }));
                             
                             // Cập nhật Redux state - useEffect sẽ tự động tính toán lại listCdRest
@@ -555,7 +634,7 @@ const Popup_Stage = React.memo((props) => {
                                         const currentListCdChosen = option.map((e) => e.name).filter(Boolean);
                                         const updatedOption = option.map((item, index) => {
                                             if (index === 0) {
-                                                return { ...item, name: foundStage };
+                                                return { ...item, name: foundStage, price: foundStage.price_default || 0 };
                                             }
                                             return item;
                                         });
