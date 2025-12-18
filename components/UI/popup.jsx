@@ -30,6 +30,7 @@ const Popup = (props) => {
                 repositionOnResiz
                 // repositionOnResiz={props.repositionOnResiz}
                 className={`${props.className} popup-edit`}
+                overlayStyle={props.overlayStyle}
             >
                 <div 
                     onClick={(e) => e.stopPropagation()}
