@@ -1088,14 +1088,8 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     // Kiểm tra quyền trước khi thực hiện action
     const tab = listDropdownCompleteStage?.find(item => item.type === type);
 
-    console.log({productionRole});
-    console.log(tab?.permission);
-    
-    
-
     if (tab?.permission && hasPoPermission) {
       const hasPermission = hasPoPermission(tab.permission);
-console.log({hasPermission});
       if (!hasPermission) {
         isShow('error', dataLang?.no_permission || 'Bạn không có quyền thực hiện thao tác này');
         return;
@@ -1769,7 +1763,7 @@ console.log({hasPermission});
                   className='cursor-pointer'
                 >
                   {managerAvatars?.length > 0 ? (
-                    <AvatarStack people={managerAvatars} className='mr-2' />
+                    <AvatarStack people={managerAvatars} size={32} className='mr-2' />
                   ) : (
                     <ButtonAnimationNew
                       icon={

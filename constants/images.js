@@ -2,6 +2,7 @@ export const IMAGES = {
   // a
   appstore: "/qrCode/appstore.svg",
   // b
+  bullet: "/upgrade/bullet.png",
   // c
   // d
   // e
@@ -28,6 +29,8 @@ export const IMAGES = {
   summary_LSX: "/background/system/summaryLSX.webp",
   // t
   // u
+  upgrade_pro: '/upgrade/upgrade.png',
+  upgrade_pro_gif: '/upgrade/upgrade.gif',
   // v
   // w
   warningMobile: "/popup/Code.webp"
