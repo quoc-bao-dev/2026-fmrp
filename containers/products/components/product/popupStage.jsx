@@ -9,7 +9,8 @@ import useDragAndDrop from "@/hooks/useDragAndDrop";
 import useActionRole from "@/hooks/useRole";
 import useToast from "@/hooks/useToast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { I3Square, Add as IconAdd, Trash as IconDelete, Maximize4 as IconMax } from "iconsax-react";
+import { I3Square, Add as IconAdd, Trash as IconDelete, Maximize4 as IconMax, InfoCircle } from "iconsax-react";
+import PriceInput from "@/components/common/input/PriceInput";
 import React, { useEffect, useRef, useState } from "react";
 import { DragDropContext, Draggable, Droppable, } from 'react-beautiful-dnd';
 import { useDispatch, useSelector } from "react-redux";
@@ -266,6 +267,15 @@ const Popup_Stage = React.memo((props) => {
         sListCdChosen(option.map((e) => e.name));
     };
 
+    // change price in option row
+    const handlePriceChange = (id, price) => {
+        const index = option.findIndex(x => x.id === id);
+        if (index === -1) return;
+        const next = [...option];
+        next[index] = { ...next[index], price };
+        sOption(next);
+    };
+
     const DraggableItem = ({ value, index }) => {
         return (
             <Draggable
@@ -285,8 +295,10 @@ const Popup_Stage = React.memo((props) => {
                         }}
                     >
                         <div className="grid items-center h-full grid-cols-15 py-1 bg-white hover:bg-slate-50">
+                            {/* STT */}
                             <h6 className="col-span-1 px-2 text-center">{index + 1}</h6>
-                            <div className="col-span-6 px-2 ">
+                            {/* Tên công đoạn */}
+                            <div className="col-span-5 px-2 ">
                                 <Select
                                     closeMenuOnSelect={true}
                                     placeholder={props.dataLang?.stage_finishedProduct}
@@ -314,7 +326,17 @@ const Popup_Stage = React.memo((props) => {
                                         } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
                                 />
                             </div>
-                            <div className="flex items-center justify-center col-span-3">
+                            {/* Đơn giá */}
+                            <div className="col-span-3 px-2 flex justify-center">
+                                <PriceInput
+                                className="w-[80px]"
+                                    defaultValue={0}
+                                    value={typeof value?.price === 'number' ? value.price : 0}
+                                    onChange={val => handlePriceChange(value.id, val)}
+                                />
+                            </div>
+                            {/* Công đoạn bắt đầu */}
+                            <div className="flex items-center justify-center col-span-2">
                                 <input
                                     type="radio"
                                     id={`radio1 + ${value.id}`}
@@ -331,7 +353,8 @@ const Popup_Stage = React.memo((props) => {
                                     {"Chọn"}
                                 </label>
                             </div>
-                            <div className="flex items-center justify-center col-span-3">
+                            {/* Công đoạn kết thúc */}
+                            <div className="flex items-center justify-center col-span-2">
                                 <input
                                     type="radio"
                                     id={`radio2 + ${value.id}`}
@@ -348,6 +371,7 @@ const Popup_Stage = React.memo((props) => {
                                     {"Chọn"}
                                 </label>
                             </div>
+                            {/* Hành động */}
                             <div className="flex items-center justify-center col-span-2 gap-2">
                                 <div
                                     {...provided.dragHandleProps}
@@ -434,7 +458,7 @@ const Popup_Stage = React.memo((props) => {
                     <h4 className="xl:text-[14px] text-[12px] px-2 text-[#667085] uppercase col-span-1 font-[400] text-center">
                         {props.dataLang?.no || "no"}
                     </h4>
-                    <div className="col-span-6 flex gap-4 px-2">
+                    <div className="col-span-5 flex gap-4 px-2">
                         <h4 className="xl:text-[14px] text-[12px] text-[#667085] font-[400] text-left">
                             {props.dataLang?.stage_name_finishedProduct}
                         </h4>
@@ -446,10 +470,17 @@ const Popup_Stage = React.memo((props) => {
                             title="Thêm nhanh công đoạn"
                         />
                     </div>
+                    {/* Đơn giá */}
                     <h4 className="col-span-3 xl:text-[14px] text-[12px] px-2 text-[#667085] font-[400] text-center">
+                        <span className="flex items-center justify-center gap-1">
+                            Đơn giá
+                            <InfoCircle size={16} variant="Outline" className="text-blue-fmrp" />
+                        </span>
+                    </h4>
+                    <h4 className="col-span-2 xl:text-[14px] text-[12px] px-2 text-[#667085] font-[400] text-center">
                         Công đoạn bắt đầu
                     </h4>
-                    <h4 className="col-span-3 xl:text-[14px] text-[12px] px-2 text-[#667085] font-[400] text-center">
+                    <h4 className="col-span-2 xl:text-[14px] text-[12px] px-2 text-[#667085] font-[400] text-center">
                         {props.dataLang?.stage_last_finishedProduct}
                     </h4>
                     <h4 className="col-span-2 xl:text-[14px] text-[12px] px-2 text-[#667085] font-[400] text-center">

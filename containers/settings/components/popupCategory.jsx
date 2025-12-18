@@ -4,11 +4,12 @@ import PopupCustom from "@/components/UI/popup";
 import SelectOptionLever from "@/components/UI/selectOptionLever/selectOptionLever";
 import { useBranchList } from "@/hooks/common/useBranch";
 import useToast from "@/hooks/useToast";
-import { Edit as IconEdit } from "iconsax-react";
+import { Edit as IconEdit, InfoCircle } from "iconsax-react";
 import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import { useCostCombobox } from "../hooks/useCategory";
+import PriceInput from "@/components/common/input/PriceInput";
 
 const PopupCategory = (props) => {
     const router = useRouter();
@@ -344,6 +345,20 @@ const PopupCategory = (props) => {
                                                     {props.dataLang?.settings_category_stages_errName}
                                                 </label>
                                             )}
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full">
+                                        <label className="text-[#344054] font-normal text-sm mb-1 flex gap-2 items-center">
+                                            Đơn giá  <InfoCircle size={14} variant='Outline' className='text-blue-fmrp' />
+                                        </label>
+                                        <div>
+                                            <PriceInput
+                                                defaultValue={0}
+                                                value={typeof stages_unit_price === 'number' ? stages_unit_price : 0}
+                                                onChange={val => _HandleChangeInput('unit_price', val)}
+                                                // suffix={props.dataLang?.currency_symbol || 'VND'}
+                                            />
                                         </div>
                                     </div>
 
