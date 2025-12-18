@@ -750,7 +750,7 @@ const Header = () => {
             {
               viewOwn: 1,
               view: 1,
-              name: 'Tồn quỹ',
+              name: 'Báo cáo quỹ',
               link: '/report-statistical/fund-balance/income-expenses',
             },
           ],

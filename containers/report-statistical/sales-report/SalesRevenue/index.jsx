@@ -181,7 +181,7 @@ const SalesRevenue = props => {
                 mode='multiple'
               />
             </div>
-            <div className='flex gap-3 items-center'>
+            <div className='flex justify-end gap-3 items-center w-auto flex-shrink-0'>
               <SearchComponent dataLang={dataLang} placeholder='Tìm kiếm theo phiếu' onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' />
               <OnResetData sOnFetching={refetchSalesRevenue} className='!py-3' />
               <button
