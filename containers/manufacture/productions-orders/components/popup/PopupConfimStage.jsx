@@ -609,7 +609,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
 
   const handleConfirmImageUpload = useCallback(e => {
     const files = Array.from(e.target.files || []);
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    const MAX_SIZE = 1 * 1024 * 1024; // 1MB
     let hasOversize = false;
 
     files.forEach(file => {
@@ -623,7 +623,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
       }
     });
 
-    setConfirmImageError(hasOversize ? 'Kích thước ảnh không được vượt quá 5MB' : '');
+    setConfirmImageError(hasOversize ? 'Kích thước ảnh không được vượt quá 1MB' : '');
     if (confirmFileInputRef.current) {
       confirmFileInputRef.current.value = '';
     }

@@ -373,7 +373,7 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
   const handleImageUpload = useCallback(
     e => {
       const files = Array.from(e.target.files || []);
-      const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+      const MAX_SIZE = 1 * 1024 * 1024; // 1MB
       let hasOversize = false;
 
       files.forEach(file => {
@@ -388,7 +388,7 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
         }
       });
 
-      setImageError(hasOversize ? 'Kích thước ảnh không được vượt quá 5MB' : '');
+      setImageError(hasOversize ? 'Kích thước ảnh không được vượt quá 1MB' : '');
       // Reset input để có thể chọn lại file giống nhau
       if (fileInputRef.current) {
         fileInputRef.current.value = '';

@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import React from 'react';
+import useSettingExpiration from '@/hooks/useSettingExpiration';
 import ToggleBotAI from '../botAI/components/ToggleBotAI';
 import BarChartHorizontal from './components/newCharts/BarChartHorizontal';
 import BarChartVertical from './components/newCharts/BarChartVertical';
@@ -11,13 +12,16 @@ import ProgressPath from './components/ProgressPath';
 const Dashboard = props => {
   const { dataLang } = props;
 
+  const { isNearlyExpired } = useSettingExpiration();
+  const hasAlert = isNearlyExpired;
+  const classNameSpace =  hasAlert ? "pt-[124px] " : "pt-[96px]"
   return (
     <React.Fragment>
       <Head>
         <title>Tổng quan</title>
       </Head>
 
-      <div className='py-6 flex flex-col gap-6 bg-[#FDFDFE] min-h-screen pt-[96px] relative'>
+      <div className={`py-6 flex flex-col gap-6 bg-[#FDFDFE] min-h-screen relative ${classNameSpace}`}>
         <div className='relative'>
           <div className='absolute -top-[46px] left-0 w-full h-[60px] bg-[#FDFDFE]  z-10'></div>
           <ProgressPath />

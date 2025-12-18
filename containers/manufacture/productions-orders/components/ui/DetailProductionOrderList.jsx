@@ -163,7 +163,7 @@ const ProductRow = memo(
             >
               <div>
                 {managerAvatars.length > 0 ? (
-                  <AvatarStack people={managerAvatars} />
+                  <AvatarStack people={managerAvatars} size={32} />
                 ) : (
                   <button className='cursor-pointer flex items-center justify-start w-[112px] px-3 h-10 rounded-lg border border-[#003DA0] hover:bg-[#EBF5FF] transition-colors'>
                     <UserPlusIcon className='size-5 text-[#11315B]' />
@@ -173,7 +173,7 @@ const ProductRow = memo(
             </ResponsiblePersonComboBox>
           </div>
         ) : managerAvatars.length > 0 ? (
-          <AvatarStack people={managerAvatars} />
+          <AvatarStack people={managerAvatars} size={32} />
         ) : null}
       </h4>
 
