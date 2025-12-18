@@ -167,16 +167,16 @@ const Expense = () => {
 
     return (
       <div key={item.id} className='w-full flex items-center responsive-text-sm border-x border-[#E0E0E1] relative'>
-        <div className={`w-24 px-3 py-2 text-center font-medium text-gray-700 border-r border-[#E0E0E1] min-h-9 ${!isLevel0 ? 'h-9' : ''}`}>{displayIndex || ''}</div>
+        <div className={`w-24 px-3 py-2 text-center font-medium text-gray-700 border-r border-[#E0E0E1] min-h-9 2xl:h-[41px] ${!isLevel0 ? 'h-9 2xl:h-[41px]' : ''}`}>{displayIndex || ''}</div>
 
         {isLevel1 && (
-          <div className='w-12 px-3 py-2 font-medium text-gray-700 relative pl-4 before:absolute before:left-5 before:top-1/3 before:-translate-y-1/2 before:w-[calc(32px)] before:h-4 before:border-l-2 before:border-b-2 before:border-gray-100 before:rounded-bl-xl'></div>
+          <div className='w-12 px-3 py-2 font-medium text-gray-700 relative pl-4 before:absolute before:left-5 before:top-[-6px] before:-translate-y-1/2 before:w-[calc(32px)] before:h-6 before:border-l-2 before:border-b-2 before:border-gray-100 before:rounded-bl-xl'></div>
         )}
 
         {isLevel2 && (
           <>
             <div className='w-16 px-3 py-2 text-center font-medium text-gray-700 '></div>
-            <div className='w-12 px-3 py-2 font-medium text-gray-700 relative pl-4 before:absolute before:left-5 before:top-1/3 before:-translate-y-1/2 before:w-[calc(32px)] before:h-4 before:border-l-2 before:border-b-2 before:border-gray-100 before:rounded-bl-xl'></div>
+            <div className='w-12 px-3 py-2 font-medium text-gray-700 relative pl-4 before:absolute before:left-5 before:top-[-6px] before:-translate-y-1/2 before:w-[calc(32px)] before:h-6 before:border-l-2 before:border-b-2 before:border-gray-100 before:rounded-bl-xl'></div>
           </>
         )}
 
@@ -186,7 +186,7 @@ const Expense = () => {
           </ExpenseDetailPopup>
         </div>
 
-        <div className='w-40 px-3 py-2 text-right font-medium text-blue-fmrp border-l border-[#E0E0E1] min-h-9'>{formatNumber(total)}</div>
+        <div className='w-40 px-3 py-2 text-right font-medium text-blue-fmrp border-l border-[#E0E0E1] min-h-9 2xl:h-[41px]'>{formatNumber(total)}</div>
       </div>
     );
   };
@@ -221,7 +221,7 @@ const Expense = () => {
 
             {group.children.length > 0 && (
               <div className='relative'>
-                <div className='absolute left-[181px] w-0.5 bg-gray-100 z-0 top-0 bottom-0 h-[calc(100%-24px)]'></div>
+                <div className='absolute left-[181px] w-0.5 bg-gray-100 z-0 top-0 bottom-0 h-[calc(100%-32px)]'></div>
                 {group.children.map(child => renderRow(child))}
               </div>
             )}
@@ -269,7 +269,7 @@ const Expense = () => {
         isFetchingExpense ? (
           <Loading color='#0f4f9e' />
         ) : flattenedData?.length > 0 ? (
-          <Customscrollbar alwaysShowScrollbar={true} className='h-full flex-1 overflow-auto  border-y border-[#E0E0E1]'>
+          <Customscrollbar alwaysShowScrollbar={true} className='h-full flex-1 overflow-auto border-t border-[#E0E0E1]'>
             <div className='w-full h-full relative'>
               <div className='sticky top-0 z-50 bg-white responsive-text-sm capitalize border-x border-b border-[#E0E0E1]'>
                 <div className='flex items-center'>
@@ -299,8 +299,8 @@ const Expense = () => {
           <NoData type='report' classNameImage='w-[245px]' />
         )
       }
-      totalSection={dataSource?.length > 0 && <Pagination postsPerPage={limit} totalPosts={Number(expenseData?.recordsTotal) || 0} paginate={paginate} currentPage={currentPage} />}
-      paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}
+      // totalSection={dataSource?.length > 0 && <Pagination postsPerPage={limit} totalPosts={Number(expenseData?.recordsTotal) || 0} paginate={paginate} currentPage={currentPage} />}
+      // paginationSection={<DropdowLimit sLimit={handleLimitChange} limit={limit} dataLang={dataLang} />}
     />
   );
 };
