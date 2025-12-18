@@ -376,7 +376,7 @@ const Popup_Detail = React.memo(props => {
       nested
       classNameBtn={props.classNameBtn}
     >
-      <div className='py-4 xl:w-[1000px] w-[900px] space-y-5'>
+      <div className='py-4  2xl:w-[1100px] xl:w-[1000px] w-[900px] space-y-5'>
         <div className='flex items-center space-x-4 border-[#E7EAEE] border-opacity-70 border-b-[1px]'>
           {dataTab?.map(item => (
             <button

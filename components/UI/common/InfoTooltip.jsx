@@ -56,18 +56,28 @@ const InfoTooltip = ({
         return 0;
     };
 
+    const getTransformOrigin = () => {
+        if (position === 'bottom' || position === 'bottom-center') return 'top center';
+        if (position === 'top') return 'bottom center';
+        if (position === 'left') return 'center right';
+        if (position === 'right') return 'center left';
+        return 'center center';
+    };
+
     const tooltipVariants = {
         hidden: {
             opacity: 0,
             y: getAnimationY(),
             x: getAnimationX(),
             scale: 0.95,
+            transformOrigin: getTransformOrigin(),
         },
         visible: {
             opacity: 1,
             y: 0,
             x: 0,
             scale: 1,
+            transformOrigin: getTransformOrigin(),
             transition: {
                 duration: 0.2,
                 ease: 'easeOut',
@@ -78,6 +88,7 @@ const InfoTooltip = ({
             y: getAnimationY(),
             x: getAnimationX(),
             scale: 0.95,
+            transformOrigin: getTransformOrigin(),
             transition: {
                 duration: 0.15,
                 ease: 'easeIn',
@@ -106,7 +117,7 @@ const InfoTooltip = ({
     };
 
     return (
-        <div className={`relative inline-flex items-center justify-center ${className}`}>
+        <div className={`relative inline-flex items-center justify-center !w-fit ${className}`}>
             <button
                 ref={iconRef}
                 type="button"
