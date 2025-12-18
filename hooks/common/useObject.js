@@ -34,9 +34,9 @@ export const useObjectList = (dataLang, idBranch, idObject) => {
         if (branchIds.length === 1) {
             return { "filter[branch_id]": branchIds[0] };
         }
-        // Nếu nhiều chi nhánh => filter[branch_ids][0], [1], ...
+        // Nếu nhiều chi nhánh => filter[branch_id][0], [1], ...
         return branchIds.reduce((acc, value, idx) => {
-            acc[`filter[branch_ids][${idx}]`] = value;
+            acc[`filter[branch_id][${idx}]`] = value;
             return acc;
         }, {});
     };

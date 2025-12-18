@@ -91,7 +91,8 @@ const Products = props => {
     'filter[id]': valueFinishedPro?.value ? valueFinishedPro?.value : '',
   };
 
-   // danh sách đơn vị tính
+  // 4 api dưới gọi trong redux nên không được xóa
+  // danh sách đơn vị tính
  const { data: dataUnit } = useUnitList();
  // danh sách công đoạn
  const { data: dataStage } = useStageList(dataLang);
@@ -110,6 +111,13 @@ const Products = props => {
     (+productCounts?.product_count_products || 0) +
     (+productCounts?.product_count_semi_products || 0);
   const { data, isFetching, refetch } = useProductList(params);
+
+  // Refetch lại danh sách + số đếm sau khi thêm/cập nhật BOM (hoặc thao tác ảnh hưởng list)
+  const refreshProductsList = () => {
+    refetch();
+    refetchProductsCounts();
+  };
+
   const formatNumber = number => {
     return formatNumberConfig(+number, dataSeting);
   };
@@ -473,12 +481,12 @@ const Products = props => {
                             {e?.category_name}
                           </RowItemTable>
                           <RowItemTable colSpan={1} textAlign={'left'}>
-                            <Popup_Detail id={e?.id} dataProduct={e} dataProductExpiry={dataProductExpiry} dataLang={dataLang} classNameBtn='w-full text-left'>
+                            <Popup_Detail id={e?.id} onRefresh={refreshProductsList} dataProduct={e} dataProductExpiry={dataProductExpiry} dataLang={dataLang} classNameBtn='w-full text-left'>
                               <p className='w-full text-[#0F4F9E] hover:text-blue-500 transition-all ease-linear outline-none break-words'>{e?.code}</p>
                             </Popup_Detail>
                           </RowItemTable>
                           <RowItemTable colSpan={2} textAlign={'left'} className='flex flex-col items-start justify-start gap-y-[4px]'>
-                            <Popup_Detail id={e?.id} dataProduct={e} dataProductExpiry={dataProductExpiry} dataLang={dataLang} classNameBtn='w-full'>
+                            <Popup_Detail id={e?.id} onRefresh={refreshProductsList} dataProduct={e} dataProductExpiry={dataProductExpiry} dataLang={dataLang} classNameBtn='w-full'>
                               <p className='w-full text-left text-[#0F4F9E] hover:text-blue-500 transition-all ease-linear outline-none break-words'>{e?.name}</p>
                             </Popup_Detail>
                             {/* <h6 className="flex items-center gap-1"> */}
@@ -523,7 +531,7 @@ const Products = props => {
                           </RowItemTable>
                           <RowItemTable colSpan={1} className='pl-2 py-2.5 flex space-x-2 justify-center'>
                             <BtnAction
-                              onRefresh={refetch.bind(this)}
+                              onRefresh={refreshProductsList}
                               dataLang={dataLang}
                               dataProductExpiry={dataProductExpiry}
                               id={e.id}

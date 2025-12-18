@@ -25,7 +25,7 @@ import { fetchPDFDelivery, fetchPDFPayments, fetchPDFReceipts, fetchPDFSaleOrder
 import { routerImport, routerOrder, routerPurchases, routerReturns } from '@/routers/buyImportGoods';
 import { routerExportToOther, routerInternalPlan, routerProductionWarehouse, routerProductsWarehouse, routerRecall, routerWarehouseTransfer } from '@/routers/manufacture';
 import { routerDeliveryReceipt, routerPriceQuote, routerReturnSales, routerSalesOrder } from '@/routers/sellingGoods';
-import { AttachCircle, Box1, BoxSearch } from 'iconsax-react';
+import { AttachCircle, Box1, BoxSearch, Copy } from 'iconsax-react';
 import { useRouter } from 'next/router';
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
@@ -639,7 +639,7 @@ export const BtnAction = React.memo(props => {
 
     // Trường hợp đặc biệt cho products
     if (props.type === 'products') {
-      return 5; // 3 nút đặc biệt (Stage, Bom, Products) + FilePDF + Delete
+      return 6; // Stage + Bom + Products(edit) + Copy + FilePDF + Delete
     }
 
     // Count edit button
@@ -801,6 +801,19 @@ export const BtnAction = React.memo(props => {
           dataLang={props.dataLang}
           id={props?.id}
           dataProduct={props?.dataProduct}
+          type={props?.typeOpen}
+          className='text-sm hover:bg-slate-50 text-left cursor-pointer whitespace-nowrap w-full'
+        />
+      );
+
+      // Copy thành phẩm (nằm dưới nút sửa và trên nút xóa)
+      allButtons.push(
+        <Popup_Products
+          key='copy'
+          onRefresh={props.onRefresh}
+          dataProductExpiry={props.dataProductExpiry}
+          dataLang={props.dataLang}
+          copyId={props?.id}
           type={props?.typeOpen}
           className='text-sm hover:bg-slate-50 text-left cursor-pointer whitespace-nowrap w-full'
         />
