@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { createContext, forwardRef, useContext, useRef, useState } from 'react'
 import { Customscrollbar } from './Customscrollbar'
+import useSettingExpiration from '@/hooks/useSettingExpiration'
 
 // Tạo context để lưu trữ thông tin active tab
 export const TabContext = createContext(null)
@@ -57,9 +58,13 @@ export const ContainerFilterTab = forwardRef(({ children, className }, ref) => {
 })
 
 export const Container = ({ children, className }) => {
+  const { isNearlyExpired } = useSettingExpiration()
+  const hasAlert = isNearlyExpired
+
+  const classNameSpace =  hasAlert ? "xl:pt-[100px] pt-[88px] " : "xl:pt-[72px] pt-[60px] "
   return (
     <div
-      className={`xl:pt-[72px] pt-[60px] 3xl:px-6 2xl:px-4 xl:px-4 px-3 3xl:space-y-2 space-y-1 overflow-hidden h-screen ${className}`}
+      className={`${classNameSpace} 3xl:px-6 2xl:px-4 xl:px-4 px-3 3xl:space-y-2 space-y-1 overflow-hidden h-screen ${className}`}
     >
       {children}
     </div>

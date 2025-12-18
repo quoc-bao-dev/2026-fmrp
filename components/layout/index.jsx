@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { useRouter } from 'next/router';
 import React, { useContext, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import useSettingExpiration from '@/hooks/useSettingExpiration';
 import PopupGlobal from '../common/popup/PopupGlobal';
 import PopupUpdateNewVersion from '../common/popup/PopupUpdateNewVersion';
 import ChatBubbleAI from '../UI/chat/ChatAiBubble';
@@ -19,6 +20,7 @@ import PopupSuccessfulPayment from '../UI/popup/PopupSuccessfulPayment';
 import PopupSuccessfulBuyMoreUser from '../UI/popup/PopupSuccessfulBuyMoreUser';
 import PopupUpdateVersion from '../UI/popup/PopupUpdateVersion';
 import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
+import PopupUpgradePro from '../UI/popup/PopupUpgradePro';
 import Header from './header';
 
 const queryClient = new QueryClient({
@@ -45,9 +47,12 @@ const Index = ({ children, ...props }) => {
   const statePopupRecommendation = useSelector(state => state.statePopupRecommendation);
   const statePopupUpdateVersion = useSelector(state => state.statePopupUpdateVersion);
   const statePopupUpgradeProfessional = useSelector(state => state.statePopupUpgradeProfessional);
+  const statePopupUpgradePro = useSelector(state => state.statePopupUpgradePro);
   const statePopupSuccessfulPayment = useSelector(state => state.statePopupSuccessfulPayment);
   const statePopupSuccessfulBuyMoreUser = useSelector(state => state.statePopupSuccessfulBuyMoreUser);
   const statePopupGlobal = useSelector(state => state.statePopupGlobal);
+
+  const { isExpired } = useSettingExpiration();
 
   useEffect(() => {
     if (!router?.route?.startsWith('/manufacture/productions-orders')) {
@@ -85,6 +90,16 @@ const Index = ({ children, ...props }) => {
   }, [hasNewVersion, version]);
   const queryClient = useQueryClient();
 
+  // Auto open Pro upgrade popup when system is expired
+  useEffect(() => {
+    if (isExpired && !statePopupUpgradePro?.open) {
+      dispatch({
+        type: 'statePopupUpgradePro',
+        payload: { open: true },
+      });
+    }
+  }, [isExpired, statePopupUpgradePro?.open, dispatch]);
+
   useEffect(() => {
     if (!socket) return;
     const topic = `update_version`;
@@ -121,6 +136,43 @@ const Index = ({ children, ...props }) => {
           {statePopupChangePassword?.open && <PopupChangePassword {...props} />}
           {statePopupRecommendation?.open && <PopupRecommendation {...props} />}
           {statePopupUpgradeProfessional?.open && <PopupUpgradeProfessional {...props} />}
+          {statePopupUpgradePro?.open && (
+            <PopupUpgradePro
+              open={statePopupUpgradePro.open}
+              onClose={() => {
+                dispatch({
+                  type: 'statePopupUpgradePro',
+                  payload: { open: false },
+                });
+              }}
+              onUpgrade={() => {
+                // Đóng popup Pro upgrade hiện tại
+                dispatch({
+                  type: 'statePopupUpgradePro',
+                  payload: { open: false },
+                });
+
+                // Mở popup nâng cấp Professional giống ở header
+                dispatch({
+                  type: 'statePopupGlobal',
+                  payload: {
+                    open: true,
+                    children: (
+                      <PopupUpgradeProfessional
+                        {...props}
+                        onClose={() =>
+                          dispatch({
+                            type: 'statePopupGlobal',
+                            payload: { open: false },
+                          })
+                        }
+                      />
+                    ),
+                  },
+                });
+              }}
+            />
+          )}
           {statePopupSuccessfulPayment?.open && <PopupSuccessfulPayment {...props} />}
           {statePopupSuccessfulBuyMoreUser?.open && <PopupSuccessfulBuyMoreUser {...props} />}
         </React.Fragment>
