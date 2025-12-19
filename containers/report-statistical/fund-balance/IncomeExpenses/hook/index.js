@@ -1,14 +1,14 @@
 import apiReport from '@/Api/apiReport-Statistical/apiReport';
 import { useQuery } from '@tanstack/react-query';
 
-export const useGetOrderTracking = data => {
-  const fetchOrderTracking = async () => {
-    const response = await apiReport.apiGetOrderTracking({ params: data });
+export const useGetDiaryOfRevenueAndExpenditure = data => {
+  const fetchDiaryOfRevenueAndExpenditure = async () => {
+    const response = await apiReport.apiGetDiaryOfRevenueAndExpenditure({ params: data });
     return response;
   };
   return useQuery({
-    queryKey: ['api_get_order_tracking', data],
-    queryFn: fetchOrderTracking,
+    queryKey: ['api_get_diary_of_revenue_and_expenditure', data],
+    queryFn: fetchDiaryOfRevenueAndExpenditure,
     enabled: !!data?.filter?.branch_ids
   });
 };

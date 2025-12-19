@@ -279,7 +279,7 @@ const EntryAndExist = (props) => {
                 mode="multiple"
               />
             </div>
-            <div className="flex gap-3 items-center">
+            <div className="flex gap-3 items-center ">
               <SearchComponent
                 dataLang={dataLang}
                 onChange={handleSearch}

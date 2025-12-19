@@ -359,7 +359,14 @@ const Popup_Detail = React.memo(props => {
 
   return (
     <PopupCustom
-      title={<div>Chi tiết thành phẩm <span className="text-blue-fmrp">({list?.name ? ` ${list.name}` : ''} {list?.code ? ` - ${list.code}` : ''})</span></div>}
+      title={
+        <div>
+          Chi tiết thành phẩm{' '}
+          <span className='text-blue-fmrp'>
+            ({list?.name ? ` ${list.name}` : ''} {list?.code ? ` - ${list.code}` : ''})
+          </span>
+        </div>
+      }
       button={props.children}
       onClickOpen={_ToggleModal.bind(this, true)}
       open={open}
@@ -561,12 +568,7 @@ const Popup_Detail = React.memo(props => {
                     {dataBom?.length > 0 ? (
                       <div className='min-h-[384px] py-1'>
                         <div className='flex items-center justify-between space-x-3 -mt-2'>
-                          <SearchActionInput
-                            value={searchMaterials}
-                            onChange={setSearchMaterials}
-                            placeholder='Tìm kiếm theo tên và mã'
-                            className='w-1/2'
-                          />
+                          <SearchActionInput value={searchMaterials} onChange={setSearchMaterials} placeholder='Tìm kiếm theo tên và mã' className='w-1/2' />
                           <Popup_Bom dataLang={props.dataLang} id={props.id} name={list?.name} code={list?.code} type='edit' onRefresh={props.onRefresh} onRefreshBom={refetchBom} />
                         </div>
                         {/* [show-more] [step-5] Render nhóm tab hiển thị + icon show-more điều khiển dropdown custom (icon nằm ngay sau tab cuối) */}
@@ -587,9 +589,11 @@ const Popup_Detail = React.memo(props => {
                                     } outline-none min-w-fit px-3 py-1.5 rounded relative flex items-center gap-2 whitespace-nowrap transition-colors duration-150`}
                                   >
                                     <span>{formatBomTabLabel(tabItem?.name_variation)}</span>
-                                    <span className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] ${
-                                      isActive ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
-                                    }`}>
+                                    <span
+                                      className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] ${
+                                        isActive ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
+                                      }`}
+                                    >
                                       {tabItemsCount.get(id) || 0}
                                     </span>
                                   </button>
@@ -607,9 +611,11 @@ const Popup_Detail = React.memo(props => {
                                   >
                                     <span>{moreButtonInfo.text}</span>
                                     {moreButtonInfo.count !== null && (
-                                      <span className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] ${
-                                        moreButtonInfo.isActive ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
-                                      }`}>
+                                      <span
+                                        className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] ${
+                                          moreButtonInfo.isActive ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
+                                        }`}
+                                      >
                                         {moreButtonInfo.count}
                                       </span>
                                     )}
@@ -630,9 +636,11 @@ const Popup_Detail = React.memo(props => {
                                               >
                                                 <div className='flex items-center gap-2 flex-1 min-w-0'>
                                                   <span className='truncate'>{opt.label}</span>
-                                                  <span className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] shrink-0 ${
-                                                    opt.isSelected ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
-                                                  }`}>
+                                                  <span
+                                                    className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] shrink-0 ${
+                                                      opt.isSelected ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
+                                                    }`}
+                                                  >
                                                     {opt.count}
                                                   </span>
                                                 </div>
@@ -674,9 +682,7 @@ const Popup_Detail = React.memo(props => {
                                       className='min-w-fit px-3 py-1.5 rounded whitespace-nowrap flex items-center gap-2'
                                     >
                                       <span>{formatBomTabLabel(e?.name_variation)}</span>
-                                      <span className='aspect-square h-5 p-1 text-[11px] bg-[#F97A4C] text-white rounded-full flex items-center justify-center min-w-[20px]'>
-                                        {itemsCount}
-                                      </span>
+                                      <span className='aspect-square h-5 p-1 text-[11px] bg-[#F97A4C] text-white rounded-full flex items-center justify-center min-w-[20px]'>{itemsCount}</span>
                                     </button>
                                   );
                                 })}
@@ -773,25 +779,7 @@ const Popup_Detail = React.memo(props => {
                 ) : (
                   <React.Fragment>
                     {dataStage?.length > 0 ? (
-                      <div className='space-y-0.5 min-h-[384px]'>
-                        <HeaderTablePopup gridCols={8}>
-                          <ColumnTablePopup>{props.dataLang?.no || 'no'}</ColumnTablePopup>
-                          <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_finishedProduct}</ColumnTablePopup>
-                          <ColumnTablePopup colSpan={3}>{props.dataLang?.check_first_stage_finishedProduct}</ColumnTablePopup>
-                          <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_last_finishedProduct}</ColumnTablePopup>
-                        </HeaderTablePopup>
-                        <Customscrollbar className='min-h-[250px] max-h-[450px]'>
-                          <div className='divide-y divide-slate-200'>
-                            {dataStage?.map((e, index) => (
-                              <div key={e?.id ? e?.id.toString() : ''} className={`grid-cols-8 grid gap-2 px-2 py-2.5 hover:bg-slate-50 items-center`}>
-                                <h6 className='px-2 text-xs text-center xl:text-base'>{index + 1}</h6>
-                                <h6 className='col-span-2 px-2 text-xs xl:text-base'>{e?.stage_name}</h6>
-                                <h6 className='flex justify-center col-span-3 px-2 text-xs text-green-600 xl:text-base'>{e?.type == '2' && <IconTick />}</h6>
-                                <h6 className='flex justify-center col-span-2 px-2 text-xs text-green-600 xl:text-base'>{e?.final_stage == '1' && <IconTick />}</h6>
-                              </div>
-                            ))}
-                          </div>
-                        </Customscrollbar>
+                      <>
                         <div className='flex items-center justify-end space-x-3'>
                           <Popup_GiaiDoan
                             dataLang={props.dataLang}
@@ -799,11 +787,31 @@ const Popup_Detail = React.memo(props => {
                             name={list?.name}
                             onRefresh={refetchStage.bind(this)}
                             code={list?.code}
-                            typeOpen='edit'
-                            className='px-4 py-2 text-base transition rounded-lg bg-slate-200 hover:opacity-90 hover:scale-105'
+                            type='edit'
+                            className='px-4 py-2 text-base transition rounded-lg bg-blue-fmrp hover:opacity-90 hover:scale-105'
                           />
                         </div>
-                      </div>
+                        <div className='space-y-0.5 min-h-[384px]'>
+                          <HeaderTablePopup gridCols={8}>
+                            <ColumnTablePopup>{props.dataLang?.no || 'no'}</ColumnTablePopup>
+                            <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_finishedProduct}</ColumnTablePopup>
+                            <ColumnTablePopup colSpan={3}>{props.dataLang?.check_first_stage_finishedProduct}</ColumnTablePopup>
+                            <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_last_finishedProduct}</ColumnTablePopup>
+                          </HeaderTablePopup>
+                          <Customscrollbar className='min-h-[250px] max-h-[450px]'>
+                            <div className='divide-y divide-slate-200'>
+                              {dataStage?.map((e, index) => (
+                                <div key={e?.id ? e?.id.toString() : ''} className={`grid-cols-8 grid gap-2 px-2 py-2.5 hover:bg-slate-50 items-center`}>
+                                  <h6 className='px-2 text-xs text-center xl:text-base'>{index + 1}</h6>
+                                  <h6 className='col-span-2 px-2 text-xs xl:text-base'>{e?.stage_name}</h6>
+                                  <h6 className='flex justify-center col-span-3 px-2 text-xs text-green-600 xl:text-base'>{e?.type == '2' && <IconTick />}</h6>
+                                  <h6 className='flex justify-center col-span-2 px-2 text-xs text-green-600 xl:text-base'>{e?.final_stage == '1' && <IconTick />}</h6>
+                                </div>
+                              ))}
+                            </div>
+                          </Customscrollbar>
+                        </div>
+                      </>
                     ) : (
                       <NoData />
                     )}

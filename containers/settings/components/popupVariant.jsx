@@ -1,4 +1,5 @@
 import apiVariant from "@/Api/apiSettings/apiVariant";
+import { EditIcon } from "@/components/icons";
 import PopupCustom from "@/components/UI/popup";
 import useToast from "@/hooks/useToast";
 import { Add as IconAdd, Trash as IconDelete, Edit as IconEdit } from "iconsax-react";
@@ -116,7 +117,11 @@ const PopupVariant = (props) => {
             title={
                 props.id ? `${props.dataLang?.variant_popup_edit}` : `${props.dataLang?.branch_popup_create_new_variant}`
             }
-            button={props.id ? <IconEdit /> : `${props.dataLang?.branch_popup_create_new}`}
+            button={props.id ? 
+                <div className="group rounded-lg w-full p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer hover:border-[#064E3B] hover:bg-[#064E3B]/10">
+                    <EditIcon color="#064E3B" className="size-5"/>
+                </div>
+                  : `${props.dataLang?.branch_popup_create_new}`}
             onClickOpen={_ToggleModal.bind(this, true)}
             open={open}
             onClose={_ToggleModal.bind(this, false)}
