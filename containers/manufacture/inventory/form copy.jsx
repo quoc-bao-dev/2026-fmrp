@@ -1,55 +1,36 @@
 import apiInventory from '@/Api/apiManufacture/warehouse/inventory/apiInventory';
-import InputCustom from '@/components/common/input/InputCustom';
-import ButtonDelete from '@/components/common/orderManagement/ButtonDelete';
-import { DocumentDate, DocumentNumber } from '@/components/common/orderManagement/GeneralInfo';
-import OrderFormTabs from '@/components/common/orderManagement/OrderFormTabs';
-import SelectSearch from '@/components/common/orderManagement/SelectSearch';
-import SelectWithRadio from '@/components/common/orderManagement/SelectWithRadio';
-import { EditIcon, WarningIcon } from '@/components/icons';
-import CloseXIcon from '@/components/icons/common/CloseXIcon';
-import LayoutForm from '@/components/layout/LayoutForm';
 import Breadcrumb from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import ButtonBack from '@/components/UI/button/buttonBack';
 import ButtonSubmit from '@/components/UI/button/buttonSubmit';
-import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { EmptyExprired } from '@/components/UI/common/EmptyExprired';
 import { Container } from '@/components/UI/common/layout';
-import { TagColorProduct } from '@/components/UI/common/Tag/TagStatus';
-import SelectComponent from '@/components/UI/filterComponents/selectComponent';
 import InPutMoneyFormat from '@/components/UI/inputNumericFormat/inputMoneyFormat';
 import InPutNumericFormat from '@/components/UI/inputNumericFormat/inputNumericFormat';
 import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
 import PopupCustom from '@/components/UI/popup';
-import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
+import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import { useBranchList } from '@/hooks/common/useBranch';
 import { useLocationByWarehouseInventory, useWarehouseInventory } from '@/hooks/common/useWarehouses';
-import { useAuththentication } from '@/hooks/useAuth';
 import useFeature from '@/hooks/useConfigFeature';
 import useSetingServer from '@/hooks/useConfigNumber';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import useToast from '@/hooks/useToast';
-import { routerWarehouseTransfer } from '@/routers/manufacture';
 import { isAllowedNumber } from '@/utils/helpers/common';
-import { formatMoment } from '@/utils/helpers/formatMoment';
 import formatMoneyConfig from '@/utils/helpers/formatMoney';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
 import { CreatableSelectCore } from '@/utils/lib/CreatableSelect';
 import { SelectCore } from '@/utils/lib/Select';
-import { Add, Add as IconAdd, Calendar as IconCalendar, Trash as IconDelete, Image as IconImage } from 'iconsax-react';
+import { Add as IconAdd, Calendar as IconCalendar, Trash as IconDelete, Image as IconImage } from 'iconsax-react';
 import moment from 'moment';
 import Head from 'next/head';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DatePicker from 'react-datepicker';
-import { PiMapPinLight } from 'react-icons/pi';
-import { useDebounce } from 'use-debounce';
-import { useQuery } from '@tanstack/react-query';
-import { optionsQuery } from '@/configs/optionsQuery';
 import PopupImportExcel from './components/popupImportExcel';
 import PopupProduct from './components/popupProduct';
-import { useImportItemByOrder } from '@/containers/purchase-order/import/hooks/useImportItemByOrder';
+import { useAuththentication } from '@/hooks/useAuth';
+import { WarningIcon } from '@/components/icons';
 
 const InventoryForm = props => {
   const dataLang = props.dataLang;
@@ -64,7 +45,7 @@ const InventoryForm = props => {
   const dataSeting = useSetingServer();
   const [onSending, sOnSending] = useState(false);
   const [dataChoose, sDataChoose] = useState([]);
-  const [voucherdate, sVoucherdate] = useState(new Date());
+  const voucherdate = new Date();
   const [code, sCode] = useState('');
   const [warehouse, sWarehouse] = useState(null);
   const [branch, sBranch] = useState(null);
@@ -80,8 +61,6 @@ const InventoryForm = props => {
   const [errData, sErrData] = useState([]);
   const [isSubmitted, sIsSubmitted] = useState(false);
   const [dataErr, sDataErr] = useState(false);
-  const [inputValue, setInputValue] = useState('');
-  const [debouncedInputValue] = useDebounce(inputValue, 500);
   // [Import] [step 1] Khởi tạo state hiển thị banner lỗi khi import Excel
   const [importErrorBanner, setImportErrorBanner] = useState({
     message: '',
@@ -98,27 +77,13 @@ const InventoryForm = props => {
   const { data: dataPstWH } = useLocationByWarehouseInventory(warehouse?.value);
 
   const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature();
-  const { data: dataItems = [] } = useImportItemByOrder(null, null, branch, null, debouncedInputValue);
-  const options = dataItems?.map(e => ({
-    label: `${e.name}`,
-    value: e.id,
-    e,
-  }));
+
   const formatNumber = number => {
     return formatNumberConfig(+number, dataSeting);
   };
 
   const formatMoney = number => {
     return formatMoneyConfig(+number, dataSeting);
-  };
-
-  const getTypeDataKey = textType => {
-    const typeMap = {
-      products: 0,
-      material: 1,
-      semi_products: 2,
-    };
-    return typeMap[textType] ?? 0;
   };
 
   useEffect(() => {
@@ -186,7 +151,6 @@ const InventoryForm = props => {
                 show: true,
                 dataLot: [],
                 dataSerial: [],
-                dataWarehouse: [],
                 child: [],
                 checkChild: [],
               });
@@ -237,7 +201,6 @@ const InventoryForm = props => {
               serial: row?.serial ?? null,
               quantity: Number(row?.quantity ?? 0),
               price: Number(row?.price ?? 0),
-              dataWarehouse: [],
             };
 
             const isChildDuplicated = parent.child.some(existing => {
@@ -294,126 +257,6 @@ const InventoryForm = props => {
     warehouse !== null && sErrWareHouse(false);
   }, [warehouse]);
 
-  const [selectedItem, setSelectedItem] = useState(null);
-
-  // Xử lý khi chọn item từ SelectSearch
-  const _HandleAddParent = useCallback(
-    async value => {
-      if (!value) return;
-
-      // Kiểm tra xem item đã tồn tại chưa
-      const checkData = dataChoose?.some(e => {
-        const itemId = e.id?.toString();
-        const valueId = value?.value?.toString();
-        return itemId === valueId || itemId?.includes(valueId);
-      });
-
-      if (checkData) {
-        isShow('error', 'Mặt hàng này đã được thêm vào danh sách');
-        return;
-      }
-
-      if (!warehouse) {
-        isShow('error', 'Vui lòng chọn kho hàng');
-        sErrWareHouse(true);
-        return;
-      }
-
-      setSelectedItem(value);
-    },
-    [dataChoose, warehouse, isShow, sErrWareHouse]
-  );
-
-  // Gọi API để lấy thông tin chi tiết của item
-  const { isFetching: isFetchingItem } = useQuery({
-    queryKey: ['api_inventory_variation_by_id', selectedItem?.value, warehouse?.value],
-    queryFn: async () => {
-      if (!selectedItem || !warehouse) return null;
-
-      const { isSuccess } = await apiInventory.apiGetVariantInventoryVariation({
-        data: {
-          id: selectedItem?.value,
-          warehouse_id: warehouse?.value,
-        },
-      });
-
-      if (isSuccess?.result) {
-        const mappedItems = isSuccess.result.map(e => ({
-          id: e.id,
-          code: e.code,
-          name: e.name,
-          img: e.images,
-          variant: e.product_variation,
-          type: e.text_type,
-          checkExpiry: e.expiry ? '1' : '0',
-          // e.serial là chuỗi "0" hoặc "1" => cần so sánh giá trị, không dùng truthy
-          checkSerial: e.serial === '1' ? '1' : '0',
-          show: true,
-          dataLot:
-            e.lot_array?.map(lot => ({
-              label: lot,
-              value: lot,
-            })) || [],
-          dataSerial:
-            e.serial_array?.length > 0
-              ? e.serial_array.map(serial => ({
-                  label: serial,
-                  value: serial,
-                }))
-              : [],
-          dataWarehouse:
-            e?.warehouse?.map(wh => ({
-              label: wh?.location_name,
-              value: wh?.id,
-              warehouse_name: wh?.warehouse_name,
-              qty: wh?.quantity,
-            })) || [],
-          child: [
-            {
-              id: Date.now(),
-              locate: null,
-              amount: null,
-              lot: null,
-              date: null,
-              serial: null,
-              quantity: null,
-              price: null,
-              dataWarehouse:
-                e?.warehouse?.map(wh => ({
-                  label: wh?.location_name,
-                  value: wh?.id,
-                  warehouse_name: wh?.warehouse_name,
-                  qty: wh?.quantity,
-                })) || [],
-            },
-          ],
-          checkChild:
-            e?.warehouse?.map(ce => ({
-              amount: null,
-              quantity: Number(ce.quantity),
-              serial: ce.serial,
-              lot: ce.lot,
-              date: ce.expiration_date ? moment(ce.expiration_date).format('DD/MM/yyyy') : null,
-              locate: ce.location_id,
-            })) || [],
-        }));
-
-        // Lọc các item chưa có trong dataChoose
-        const newItems = mappedItems.filter(item => !dataChoose.some(existing => existing.id === item.id));
-
-        if (newItems.length > 0) {
-          sDataChoose(prev => [...prev, ...newItems]);
-        }
-
-        setSelectedItem(null);
-      }
-
-      return isSuccess;
-    },
-    enabled: !!selectedItem && !!warehouse,
-    ...optionsQuery,
-  });
-
   const _HandleActionItem = (id, type) => {
     if (type === 'add') {
       const newData = dataChoose.map(e => {
@@ -427,7 +270,6 @@ const InventoryForm = props => {
             serial: null,
             quantity: null,
             price: null,
-            dataWarehouse: e?.dataWarehouse || [],
           });
           return { ...e, show: true };
         }
@@ -777,13 +619,142 @@ const InventoryForm = props => {
       label: `Thêm Phiếu Kiểm Kê Kho`,
     },
   ];
-
-  console.log(dataChoose);
-
   return (
     <>
+      <Head>
+        <title>Thêm phiếu kiểm kê kho</title>
+      </Head>
+
       <Container className={'!h-auto'}>
+        {statusExprired ? (
+          <EmptyExprired />
+        ) : (
+          <Breadcrumb items={breadcrumbItems} className='3xl:text-sm 2xl:text-xs xl:text-[10px] lg:text-[10px]' />
+          // <div className="flex space-x-1 mt-4 3xl:text-sm 2xl:text-[11px] xl:text-[10px] lg:text-[10px]">
+          //     <h6 className="text-[#141522]/40">Kiểm kê kho</h6>
+          //     <span className="text-[#141522]/40">/</span>
+          //     <h6>Thêm phiếu kiểm kê kho</h6>
+          // </div>
+        )}
+        <h2 className='text-title-section text-[#52575E] capitalize font-medium'>Thêm Phiếu Kiểm Kê Kho</h2>
         <div className='space-y-5'>
+          <div className='space-y-2'>
+            <h2 className='px-4 py-2 rounded bg-slate-100'>Thông tin chung</h2>
+            <div className='grid grid-cols-4 gap-5'>
+              <div className='space-y-1'>
+                <label className='text-[#344054] font-normal text-sm mb-1 '>
+                  {'Mã chứng từ'} <span className='text-red-500'>*</span>
+                </label>
+                <input
+                  value={code}
+                  onChange={_HandleChangeValue.bind(this, 'code')}
+                  type='text'
+                  placeholder={'Mặc định theo hệ thống'}
+                  className={`focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal  p-2 border outline-none`}
+                />
+              </div>
+              <div className='space-y-1'>
+                <label className='text-[#344054] font-normal text-sm mb-1 '>
+                  {'Ngày chứng từ'} <span className='text-red-500'>*</span>
+                </label>
+                <div className='relative flex items-center'>
+                  <DatePicker
+                    selected={voucherdate}
+                    dateFormat='dd/MM/yyyy'
+                    disabled
+                    className={`disabled:bg-[#f2f2f2] disabled:text-[#9999b0] focus:border-[#92BFF7] border-[#d0d5dd] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal  p-2 border outline-none`}
+                  />
+                  <IconCalendar size={22} className='absolute right-3 text-[#cccccc]' />
+                </div>
+              </div>
+              <div className='space-y-1'>
+                <label className='text-[#344054] text-sm mb-1 '>
+                  {'Chi nhánh'} <span className='text-red-500'>*</span>
+                </label>
+                <SelectCore
+                  options={dataBranch}
+                  value={branch}
+                  onChange={_HandleChangeValue.bind(this, 'branch')}
+                  placeholder={dataLang?.client_list_filterbrand}
+                  isClearable={true}
+                  isDisabled={dataChoose.length > 0}
+                  className={`${errBranch && branch == null ? 'border-red-500' : 'border-transparent'} placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] outline-none border `}
+                  isSearchable={true}
+                  noOptionsMessage={() => `${dataLang?.no_data_found}`}
+                  style={{
+                    border: 'none',
+                    boxShadow: 'none',
+                    outline: 'none',
+                  }}
+                  theme={theme => ({
+                    ...theme,
+                    colors: {
+                      ...theme.colors,
+                      primary25: '#EBF5FF',
+                      primary50: '#92BFF7',
+                      primary: '#0F4F9E',
+                    },
+                  })}
+                  styles={{
+                    placeholder: base => ({
+                      ...base,
+                      color: '#cbd5e1',
+                    }),
+                    control: (base, state) => ({
+                      ...base,
+                      boxShadow: 'none',
+                      ...(state.isFocused && {
+                        border: '0 0 0 1px #92BFF7',
+                      }),
+                    }),
+                  }}
+                />
+              </div>
+              <div className='space-y-1'>
+                <label className='text-[#344054] text-sm mb-1 '>
+                  {'Kho hàng'} <span className='text-red-500'>*</span>
+                </label>
+                <SelectCore
+                  options={dataWareHouse}
+                  value={warehouse}
+                  onChange={_HandleChangeValue.bind(this, 'warehouse')}
+                  placeholder={'Chọn kho hàng'}
+                  isDisabled={dataChoose.length > 0}
+                  isClearable={true}
+                  className={`${errWareHouse ? 'border-red-500' : 'border-transparent'} placeholder:text-slate-300 w-full disabled:bg-slate-50 rounded text-[#52575E] outline-none border `}
+                  isSearchable={true}
+                  noOptionsMessage={() => `${dataLang?.no_data_found}`}
+                  style={{
+                    border: 'none',
+                    boxShadow: 'none',
+                    outline: 'none',
+                  }}
+                  theme={theme => ({
+                    ...theme,
+                    colors: {
+                      ...theme.colors,
+                      primary25: '#EBF5FF',
+                      primary50: '#92BFF7',
+                      primary: '#0F4F9E',
+                    },
+                  })}
+                  styles={{
+                    placeholder: base => ({
+                      ...base,
+                      color: '#cbd5e1',
+                    }),
+                    control: (base, state) => ({
+                      ...base,
+                      boxShadow: 'none',
+                      ...(state.isFocused && {
+                        border: '0 0 0 1px #92BFF7',
+                      }),
+                    }),
+                  }}
+                />
+              </div>
+            </div>
+          </div>
           <div className='flex items-center justify-between px-4 py-2 rounded bg-slate-100'>
             <h2 className=''>Mặt hàng cần kiểm kê</h2>
             <div>
@@ -811,6 +782,7 @@ const InventoryForm = props => {
               </div>
             </div>
           </div>
+          {/* [Import] [step 4] Hiển thị banner cảnh báo lỗi import Excel */}
           {importErrorBanner?.items?.length > 0 && (
             <div className='px-4 mt-3'>
               <div className='py-3 px-4 flex flex-col gap-3 bg-[#FFEEF0] border border-[#991B1B] rounded-lg shadow-sm'>
@@ -859,6 +831,7 @@ const InventoryForm = props => {
               <>
                 <div className='grid grid-cols-6 pt-3 pb-2 shadow'>
                   <h5 className='font-[300] text-slate-600 col-span-1 px-1.5'>Tên mặt hàng</h5>
+                  {/* <div className={`${(dataMaterialExpiry.is_enable == "0" && dataProductSerial.is_enable == "0") ? "grid-cols-7" : (dataProductExpiry.checkExpiry == "1" ? "grid-cols-9" : "grid-cols-8") } col-span-5 grid`}> */}
                   <div
                     className={`${
                       dataProductSerial.is_enable == '1'
@@ -875,6 +848,9 @@ const InventoryForm = props => {
                     } grid col-span-5 `}
                   >
                     <h5 className='font-[300] text-slate-600  px-1.5'>Vị trí kho</h5>
+                    {/* {dataMaterialExpiry?.is_enable == "1" && <h5 className='font-[300] text-slate-600 text-center px-1.5'>LOT</h5>}
+                                        {dataProductExpiry?.is_enable == "1" && <h5 className='font-[300] text-slate-600 text-center px-1.5'>Date</h5>}
+                                        {dataProductSerial?.is_enable == "1" && <h5 className='font-[300] text-slate-600 text-center px-1.5'>Serial</h5>} */}
                     {dataProductSerial.is_enable === '1' && <h4 className='font-[300] text-slate-600 text-center px-1.5'>{'Serial'}</h4>}
                     {dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' ? (
                       <>
@@ -915,6 +891,7 @@ const InventoryForm = props => {
                           </button>
                         </div>
                       </div>
+                      {/* <div className={`${(e?.checkExpiry == "0" && e?.checkSerial == "0") ? "grid-cols-7" : (e?.checkExpiry == "1" ? "grid-cols-9" : "grid-cols-8") } col-span-5 grid`}> */}
                       <div
                         className={`${
                           dataProductSerial.is_enable == '1'
@@ -930,6 +907,8 @@ const InventoryForm = props => {
                             : 'grid-cols-7'
                         } grid col-span-5  h-full items-center`}
                       >
+                        {/* {loadingData ? <h1 className='text-4xl font-bold'>Loading</h1> */}
+                        {/* : */}
                         <>
                           {e.child?.map(ce => (
                             <React.Fragment key={ce?.id}>
@@ -1108,6 +1087,7 @@ const InventoryForm = props => {
                             </React.Fragment>
                           ))}
                         </>
+                        {/* } */}
                       </div>
                     </div>
                   ))}
@@ -1115,378 +1095,87 @@ const InventoryForm = props => {
               </>
             )}
           </div>
-        </div>
-      </Container>
-      <LayoutForm
-        title='Thêm phiếu kiểm kê kho'
-        breadcrumbItems={breadcrumbItems}
-        heading='Thêm phiếu kiểm kê kho'
-        dataLang={dataLang}
-        statusExprired={statusExprired}
-        onSave={_HandleSubmit.bind(this)}
-        onExit={() => router.push('/manufacture/inventory')}
-        buttonAction={
-          <PopupImportExcel
-            dataLang={props.dataLang}
-            sDataErr={sDataErr}
-            warehouse={warehouse}
-            sErrWareHouse={sErrWareHouse}
-            sDataChoose={sDataChoose}
-            dataChoose={dataChoose}
-            // [Import] [step 3] Đăng ký callback nhận dữ liệu import từ popup
-            onImportResult={_HandleImportExcelResult}
-          />
-        }
-        leftContent={
-          <div className='flex flex-col h-full min-h-0'>
-            <div className='flex items-center justify-between flex-shrink-0 mb-4'>
-              <h2 className='responsive-text-xl font-medium text-brand-color w-full'>Thông tin mặt hàng</h2>
-              <SelectSearch
-                options={options}
-                placeholder='Tìm kiếm mặt hàng'
-                value={null}
-                multiple={false}
-                showCheckbox={false}
-                showSelectedCount={false}
-                setSearch={setInputValue}
-                noDataMessage={
-                  !branch ? <span className='text-new-blue'>Vui lòng chọn chi nhánh</span> : !warehouse ? <span className='text-new-blue'>Vui lòng chọn kho hàng</span> : 'Không có dữ liệu'
-                }
-                onChange={_HandleAddParent}
-                formatOptionLabel={option => (
-                  <div className='flex items-start p-1 cursor-pointer font-deca'>
-                    <div className='flex items-center gap-2'>
-                      <img src={option.e?.images ?? '/icon/noimagelogo.png'} alt={option?.e?.name} className='size-16 object-cover rounded-md' />
-                      <div className='flex flex-col gap-1 3xl:text-[10px] text-[9px] font-normal overflow-hidden w-full'>
-                        <h3 className='font-semibold responsive-text-sm truncate text-black'>{option.e?.name}</h3>
-
-                        <h5 className='text-blue-fmrp truncate'>
-                          {option.e?.code}: {option?.e?.product_variation}
-                        </h5>
-
-                        <div className='flex flex-wrap items-center gap-2 text-neutral-03'>
-                          ĐVT: {option.e?.unit_name} - {dataLang[option.e?.text_type]} - {dataLang?.purchase_survive || 'purchase_survive'}:{' '}
-                          {option.e?.qty_warehouse ? formatNumber(option.e?.qty_warehouse) : '0'}
-                        </div>
-                        {/* {option.e?.text_type && (
-                          <TagColorProduct dataLang={dataLang} dataKey={getTypeDataKey(option.e?.text_type)} name={option.e?.text_type} className='!px-1' textSize='text-[11px]' />
-                        )} */}
-                      </div>
-                    </div>
-                  </div>
-                )}
+          <hr className='' />
+          <div className='grid grid-cols-2'>
+            <div className='flex flex-col space-y-1'>
+              <label>Ghi chú</label>
+              <textarea
+                value={note}
+                onChange={_HandleChangeValue.bind(this, 'note')}
+                placeholder='Ghi chú'
+                className='w-2/3 resize-none p-3 rounded border outline-none focus:border-[#92BFF7]'
+                rows={4}
               />
             </div>
-            <div className='flex flex-col flex-1 min-h-0 overflow-hidden'>
-              <div className='grid grid-cols-22 gap-2 items-center responsive-text-base text-neutral-02 font-semibold py-2 z-10 border-b border-b-[#F3F3F4] flex-shrink-0'>
-                <h4 className='col-span-4'>{dataLang?.import_from_items || 'import_from_items'}</h4>
-                <h4 className='col-span-3 text-center'>Vị trí kho</h4>
-                <h4 className='col-span-3 text-center'>Lot</h4>
-                <h4 className='col-span-3 text-center'>Date</h4>
-                <h4 className='col-span-3 text-center'>Đơn giá</h4>
-                <h4 className='col-span-3 text-center'>SL thực</h4>
-                <h4 className='col-span-2 text-center whitespace-nowrap'>Thành tiền</h4>
-                <h4 className='col-span-1 text-center'></h4>
+            <div className='flex flex-col items-end space-y-2'>
+              <div className='flex'>
+                <h5 className='min-w-[230px]'>Tổng số lượng : </h5>
+                <span className='min-w-[150px] text-right'>
+                  {formatNumber(
+                    dataChoose.reduce((acc, obj) => {
+                      return (
+                        acc +
+                        obj.child?.reduce((acc2, obj2) => {
+                          return acc2 + obj2.quantity;
+                        }, 0)
+                      );
+                    }, 0)
+                  )}
+                </span>
               </div>
-              <Customscrollbar className='flex-1 min-h-0 h-0'>
-                {isFetchingItem ? (
-                  <Loading className='w-full h-10' color='#0f4f9e' />
-                ) : dataChoose?.length === 0 ? (
-                  <NoData type='report' titleText='Chưa có mặt hàng. Bắt đầu thêm mặt hàng tại khung tìm kiếm ngay!' className='h-[50vh]' />
-                ) : (
-                  dataChoose?.map(e => (
-                    <div key={e?.id?.toString()} className='grid items-start grid-cols-22 gap-2 py-2 border-b border-b-[#F3F3F4]'>
-                      <div className='h-full col-span-4'>
-                        <div className='flex items-center justify-between gap-2'>
-                          <div className='flex items-center gap-2'>
-                            <div className='size-12 flex-shrink-0 rounded-md overflow-hidden'>
-                              {e?.img != null ? (
-                                <Image src={e?.img} alt='Product Image' className='size-full object-cover' width={64} height={64} />
-                              ) : (
-                                <Image src='/icon/noimagelogo.png' alt='Product Image' className='size-full object-cover' width={64} height={64} />
-                              )}
-                            </div>
-                            <div className='flex flex-col gap-1'>
-                              <h3 className='text-neutral-07 font-medium responsive-text-sm'>{e?.name}</h3>
-                              <h5 className='text-neutral-03 font-normal responsive-text-xs'>
-                                {e?.code}: {e?.variant}
-                              </h5>
-                              {e?.type && <TagColorProduct dataLang={dataLang} dataKey={getTypeDataKey(e?.type)} name={e?.type} className='!px-1' textSize='text-[11px]' />}
-                            </div>
-                          </div>
-                          <button
-                            onClick={_HandleActionItem.bind(this, e?.id, 'add')}
-                            className='p-1 transition ease-in-out rounded bg-primary-05 hover:rotate-45 hover:bg-slate-200 hover:scale-105 hover:text-red-500'
-                          >
-                            <Add className='size-4' />
-                          </button>
-                        </div>
-                      </div>
-                      <div className='col-span-18'>
-                        <div className='grid grid-cols-18 gap-2'>
-                          {e?.child?.map((ce, index) => (
-                            <div key={ce?.id?.toString()} className='col-span-18 grid grid-cols-18 gap-1'>
-                              <div className='col-span-3 flex flex-col justify-center h-fit'>
-                                <SelectComponent
-                                  options={dataPstWH || []}
-                                  value={ce?.locate}
-                                  onChange={value => _HandleChangeChild(e?.id, ce?.id, 'locate', value)}
-                                  placeholder='Vị trí kho'
-                                  isClearable={true}
-                                  className='w-full'
-                                  classParent={`${errNullLocate && ce.locate == null ? 'border-red-500 border rounded-lg' : ''}`}
-                                  noOptionsMessage={() => dataLang?.no_data_found || 'no_data_found'}
-                                  menuPortalTarget={document.body}
-                                />
-                              </div>
-                              {dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' ? (
-                                <div className='col-span-3 flex flex-col justify-center h-fit'>
-                                  <CreatableSelectCore
-                                    isDisabled={e?.checkExpiry == '0'}
-                                    placeholder={'Lot'}
-                                    options={e?.dataLot}
-                                    value={ce?.lot}
-                                    onChange={_HandleChangeChild.bind(this, e?.id, ce?.id, 'lot')}
-                                    isClearable={true}
-                                    classNamePrefix='Select'
-                                    className={`${
-                                      e?.checkExpiry == '0' ? 'border-transparent' : errNullLot && ce.lot == null ? 'border-red-500 border' : 'border-transparent'
-                                    } Select__custom removeDivide placeholder:text-slate-300 w-full bg-[#ffffff] rounded-lg text-[#52575E] font-normal outline-none border text-[13px]`}
-                                    isSearchable={true}
-                                    menuPortalTarget={document.body}
-                                    onMenuOpen={handleMenuOpen}
-                                    noOptionsMessage={() => `Chưa có gợi ý`}
-                                    formatCreateLabel={value => `Tạo "${value}"`}
-                                    style={{
-                                      border: 'none',
-                                      boxShadow: 'none',
-                                      outline: 'none',
-                                      borderRadius: '8px',
-                                    }}
-                                    theme={theme => ({
-                                      ...theme,
-                                      colors: {
-                                        ...theme.colors,
-                                        primary25: '#EBF5FF',
-                                        primary50: '#92BFF7',
-                                        primary: '#0F4F9E',
-                                      },
-                                    })}
-                                    styles={{
-                                      placeholder: base => ({
-                                        ...base,
-                                        color: '#cbd5e1',
-                                        borderRadius: '8px',
-                                      }),
-                                      menuPortal: base => ({
-                                        ...base,
-                                        zIndex: 9999,
-                                        position: 'absolute',
-                                      }),
-                                      control: (base, state) => ({
-                                        ...base,
-                                        boxShadow: 'none',
-                                        ...(state.isFocused && {
-                                          border: '0 0 0 1px #92BFF7',
-                                        }),
-                                        borderRadius: '8px',
-                                      }),
-                                    }}
-                                  />
-                                </div>
-                              ) : null}
-                              {dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' ? (
-                                <div className='col-span-3 flex flex-col justify-center h-fit [&>div]:gap-y-0 [&>div]:w-full [&>div>div:first-child]:hidden'>
-                                  <DocumentDate
-                                    dataLang={dataLang}
-                                    value={ce?.date}
-                                    onChange={date => _HandleChangeChild(e?.id, ce?.id, 'date', date)}
-                                    errDate={errNullDate && ce?.date == null}
-                                    isRequired={false}
-                                    label=''
-                                    showTime={false}
-                                    format='DD/MM/YYYY'
-                                    disabled={e?.checkExpiry == '0'}
-                                    height='h-[38px]'
-                                  />
-                                </div>
-                              ) : null}
-                              <div className='col-span-3 flex flex-col justify-center h-fit'>
-                                <InPutNumericFormat
-                                  value={ce?.price}
-                                  onValueChange={value => _HandleChangeChild(e?.id, ce?.id, 'price', value)}
-                                  className='h-[38px] rounded-lg appearance-none text-right p-2 text-neutral-07 responsive-text-base font-medium placeholder:font-normal w-full focus:outline-none focus:border-brand-color hover:border-brand-color border border-neutral-N400'
-                                  isAllowed={isAllowedNumber}
-                                  placeholder='Nhập đơn giá'
-                                />
-                              </div>
-                              <div className='col-span-3 flex flex-col justify-center h-fit'>
-                                <InPutNumericFormat
-                                  value={ce?.amount}
-                                  placeholder='Nhập số lượng thực'
-                                  onValueChange={value => _HandleChangeChild(e?.id, ce?.id, 'amount', value)}
-                                  className={`${
-                                    errNullQty && ce?.amount == null ? 'border-red-500' : 'border-gray-200'
-                                  } h-[38px] appearance-none text-center p-2 rounded-lg text-neutral-07 responsive-text-base font-medium placeholder:font-normal w-full focus:outline-none focus:border-brand-color hover:border-brand-color border border-neutral-N400`}
-                                  isAllowed={values => {
-                                    const { floatValue, value } = values;
-                                    // Nếu xóa hết (giá trị rỗng hoặc null) thì trả về true (hiển thị về 0)
-                                    if (value === '' || value === null || typeof value === 'undefined') {
-                                      return true;
-                                    }
-                                    if (e?.checkSerial == '1') {
-                                      return floatValue >= 0 && floatValue < 2;
-                                    } else {
-                                      return floatValue >= 0;
-                                    }
-                                  }}
-                                />
-                                <h3 className='mt-1 text-[8px]'>SL phần mềm: {formatNumber(ce?.quantity || 0)}</h3>
-                                <h3 className='text-[8px] text-blue-fmrp'>Chênh lệch: {(ce?.amount != null && formatNumber(ce?.amount - (ce?.quantity || 0))) || 0}</h3>
-                              </div>
-                              <div className='col-span-2 flex justify-center pt-2 h-full'>{(ce?.amount != null && formatNumber(ce?.amount * (ce?.price || 0))) || 0}</div>
-                              <div className='flex pt-2 justify-center h-full'>
-                                <ButtonDelete onDelete={_HandleDeleteChild.bind(this, e?.id, ce?.id)} className='h-fit' />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </Customscrollbar>
+              <div className='flex'>
+                <h5 className='min-w-[230px]'>Tổng số lượng thực : </h5>
+                <span className='min-w-[150px] text-right'>
+                  {formatNumber(
+                    dataChoose.reduce((acc, obj) => {
+                      return (
+                        acc +
+                        obj.child?.reduce((acc2, obj2) => {
+                          return acc2 + obj2.amount;
+                        }, 0)
+                      );
+                    }, 0)
+                  )}
+                </span>
+              </div>
+              <div className='flex'>
+                <h5 className='min-w-[230px]'>Tổng số lượng chênh lệch : </h5>
+                <span className='min-w-[150px] text-right'>
+                  {formatNumber(
+                    dataChoose.reduce((acc, obj) => {
+                      return (
+                        acc +
+                        obj.child?.reduce((acc2, obj2) => {
+                          return acc2 + (obj2.amount - obj2.quantity);
+                        }, 0)
+                      );
+                    }, 0)
+                  )}
+                </span>
+              </div>
+              <div className='flex'>
+                <h5 className='min-w-[230px]'>Thành tiền : </h5>
+                <span className='min-w-[150px] text-right'>
+                  {formatMoney(
+                    dataChoose.reduce((acc, obj) => {
+                      return (
+                        acc +
+                        obj.child?.reduce((acc2, obj2) => {
+                          return acc2 + obj2.amount * obj2.price;
+                        }, 0)
+                      );
+                    }, 0)
+                  )}
+                </span>
+              </div>
+              <div className='space-x-2'>
+                <ButtonBack onClick={() => router.back()} dataLang={dataLang} />
+                <ButtonSubmit loading={onSending} onClick={e => _HandleSubmit(e)} dataLang={dataLang} />
+              </div>
             </div>
           </div>
-        }
-        info={
-          <OrderFormTabs
-            info={
-              <div className='flex flex-col gap-3'>
-                <DocumentNumber dataLang={dataLang} value={code} onChange={_HandleChangeValue.bind(this, 'code')} />
-
-                <DocumentDate
-                  dataLang={dataLang}
-                  value={voucherdate}
-                  onChange={date => {
-                    sVoucherdate(date);
-                  }}
-                  // errDate={errDate}
-                  isRequired={true}
-                  disabled={true}
-                />
-
-                <SelectWithRadio
-                  isRequired={true}
-                  label={dataLang?.import_branch || 'import_branch'}
-                  placeholderText={dataLang?.import_branch || 'import_branch'}
-                  options={dataBranch}
-                  value={branch}
-                  onChange={value => {
-                    const newValue = dataBranch.find(item => item.value === value);
-                    _HandleChangeValue('branch', newValue);
-                  }}
-                  isError={errBranch}
-                  icon={<PiMapPinLight />}
-                  errMess={dataLang?.purchase_order_errBranch || 'purchase_order_errBranch'}
-                />
-
-                <SelectWithRadio
-                  isRequired={true}
-                  label='Kho hàng'
-                  placeholderText='Chọn kho hàng'
-                  options={dataWareHouse}
-                  value={warehouse}
-                  onChange={value => {
-                    const newValue = dataWareHouse.find(item => item.value === value);
-                    _HandleChangeValue('warehouse', newValue);
-                  }}
-                  isError={errWareHouse}
-                  icon={<PiMapPinLight />}
-                  errMess={'Vui lòng chọn kho'}
-                />
-              </div>
-            }
-            note={
-              <div className='flex flex-col gap-6'>
-                <div className='text-typo-gray-4 font-normal responsive-text-base'>{dataLang?.purchase_order_note || 'purchase_order_note'}</div>
-                <textarea
-                  value={note}
-                  placeholder={dataLang?.purchase_order_note || 'purchase_order_note'}
-                  onChange={_HandleChangeValue.bind(this, 'note')}
-                  name='fname'
-                  type='text'
-                  className='responsive-text-base placeholder:responsive-text-base focus:border-[#92BFF7] border-[#919EAB3D] placeholder:text-slate-300 w-full min-h-[220px] bg-[#ffffff] rounded-[5.5px] font-normal p-2 border outline-none text-[#919EAB]'
-                />
-              </div>
-            }
-          />
-        }
-        total={
-          <div className='flex flex-col gap-3 justify-between text-right '>
-            <div className='flex justify-between '>
-              <h3 className='text-base'>Tổng số lượng :</h3>
-              <h3 className='text-blue-fmrp'>
-                {formatNumber(
-                  dataChoose.reduce((acc, obj) => {
-                    return (
-                      acc +
-                      obj.child?.reduce((acc2, obj2) => {
-                        return acc2 + obj2.quantity;
-                      }, 0)
-                    );
-                  }, 0)
-                )}
-              </h3>
-            </div>
-            <div className='flex justify-between '>
-              <h3 className='text-base'>Tổng số lượng thực : </h3>
-              <h3 className='text-blue-fmrp'>
-                {formatNumber(
-                  dataChoose.reduce((acc, obj) => {
-                    return (
-                      acc +
-                      obj.child?.reduce((acc2, obj2) => {
-                        return acc2 + obj2.amount;
-                      }, 0)
-                    );
-                  }, 0)
-                )}
-              </h3>
-            </div>
-            <div className='flex justify-between '>
-              <h3 className='text-base'>Tổng số lượng chênh lệch : </h3>
-              <h3 className='text-blue-fmrp'>
-                {formatNumber(
-                  dataChoose.reduce((acc, obj) => {
-                    return (
-                      acc +
-                      obj.child?.reduce((acc2, obj2) => {
-                        return acc2 + (obj2.amount - obj2.quantity);
-                      }, 0)
-                    );
-                  }, 0)
-                )}
-              </h3>
-            </div>
-            <div className='flex justify-between '>
-              <h3 className='text-base'>Thành tiền : </h3>
-              <h3 className='text-blue-fmrp'>
-                {formatMoney(
-                  dataChoose.reduce((acc, obj) => {
-                    return (
-                      acc +
-                      obj.child?.reduce((acc2, obj2) => {
-                        return acc2 + obj2.amount * obj2.price;
-                      }, 0)
-                    );
-                  }, 0)
-                )}
-              </h3>
-            </div>
-          </div>
-        }
-      />
+        </div>
+      </Container>
       <PopupStatus
         dataErr={dataErr}
         sDataErr={sDataErr}

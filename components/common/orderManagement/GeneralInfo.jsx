@@ -34,7 +34,9 @@ export const DocumentDate = ({
   isRequired = true,
   label,
   showTime = true,
-  format = showTime ? "DD/MM/YYYY HH:mm" : "DD/MM/YYYY"
+  format = showTime ? "DD/MM/YYYY HH:mm" : "DD/MM/YYYY",
+  disabled = false,
+  height = ''
 }) => (
   <div className="flex flex-col flex-wrap items-center gap-y-3">
     <InfoFormLabel 
@@ -48,7 +50,7 @@ export const DocumentDate = ({
       </span>
       <ConfigProvider locale={viVN}>
         <DatePicker
-          className="sales-product-date pl-9 placeholder:text-secondary-color-text-disabled cursor-pointer"
+          className={`sales-product-date pl-9 placeholder:text-secondary-color-text-disabled cursor-pointer ${height}`}
           status={errDate ? 'error' : ''}
           allowClear={false}
           placeholder="Chọn ngày"
@@ -64,6 +66,7 @@ export const DocumentDate = ({
               onChange(date.toDate())
             }
           }}
+          disabled={disabled}
         />
       </ConfigProvider>
     </div>

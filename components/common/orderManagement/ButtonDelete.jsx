@@ -1,8 +1,8 @@
 import { MdClear } from 'react-icons/md'
 
-const ButtonDelete = ({ onDelete }) => {
+const ButtonDelete = ({ onDelete, className = '' }) => {
   return (
-    <div className="flex items-center">
+    <div className={`flex items-center ${className}`}>
       <button
         title="Xóa"
         onClick={onDelete}

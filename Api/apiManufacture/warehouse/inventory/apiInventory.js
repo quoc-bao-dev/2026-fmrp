@@ -27,6 +27,10 @@ const apiInventory = {
     const response = await axiosCustom('POST', `/api_web/api_inventory/GetVariantInventory?csrf_protection=true`, param);
     return response.data;
   },
+  async apiGetVariantInventoryVariation(param) {
+    const response = await axiosCustom('POST', `/api_web/api_inventory/GetVariantInventoryVariation?csrf_protection=true`, param);
+    return response.data;
+  },
   /**
    * Get Date Excel API
    * @description Retrieves Excel template data for inventory import

@@ -294,11 +294,9 @@ const InventoryForm = props => {
     warehouse !== null && sErrWareHouse(false);
   }, [warehouse]);
 
-  const [selectedItem, setSelectedItem] = useState(null);
-
-  // Xử lý khi chọn item từ SelectSearch
+  // Xử lý khi chọn item từ SelectSearch - thêm trực tiếp vào dataChoose
   const _HandleAddParent = useCallback(
-    async value => {
+    value => {
       if (!value) return;
 
       // Kiểm tra xem item đã tồn tại chưa
@@ -319,100 +317,134 @@ const InventoryForm = props => {
         return;
       }
 
-      setSelectedItem(value);
+      // Tạo item mới từ dữ liệu SelectSearch
+      const itemData = value?.e;
+      if (!itemData) return;
+
+      const newItem = {
+        id: itemData.id || value.value,
+        code: itemData.code || '',
+        name: itemData.name || '',
+        img: itemData.images || null,
+        variant: itemData.product_variation || '',
+        type: itemData.text_type || '',
+        checkExpiry: itemData.expiry ? '1' : '0',
+        checkSerial: itemData.serial ? '1' : '0',
+        show: true,
+        dataLot: [],
+        dataSerial: [],
+        dataWarehouse: [],
+        child: [
+          {
+            id: Date.now(),
+            locate: null,
+            amount: null,
+            lot: null,
+            date: null,
+            serial: null,
+            quantity: null,
+            price: null,
+            dataWarehouse: [],
+          },
+        ],
+        checkChild: [],
+      };
+
+      // Thêm vào dataChoose
+      sDataChoose(prev => [...prev, newItem]);
     },
     [dataChoose, warehouse, isShow, sErrWareHouse]
   );
 
-  // Gọi API để lấy thông tin chi tiết của item
-  const { isFetching: isFetchingItem } = useQuery({
-    queryKey: ['api_inventory_variation_by_id', selectedItem?.value, warehouse?.value],
-    queryFn: async () => {
-      if (!selectedItem || !warehouse) return null;
+  // Comment lại API - không dùng nữa
+  // const [selectedItem, setSelectedItem] = useState(null);
+  // const { isFetching: isFetchingItem } = useQuery({
+  //   queryKey: ['api_inventory_variation_by_id', selectedItem?.value, warehouse?.value],
+  //   queryFn: async () => {
+  //     if (!selectedItem || !warehouse) return null;
 
-      const { isSuccess } = await apiInventory.apiGetVariantInventoryVariation({
-        data: {
-          id: selectedItem?.value,
-          warehouse_id: warehouse?.value,
-        },
-      });
+  //     const { isSuccess } = await apiInventory.apiGetVariantInventoryVariation({
+  //       data: {
+  //         id: selectedItem?.value,
+  //         warehouse_id: warehouse?.value,
+  //       },
+  //     });
 
-      if (isSuccess?.result) {
-        const mappedItems = isSuccess.result.map(e => ({
-          id: e.id,
-          code: e.code,
-          name: e.name,
-          img: e.images,
-          variant: e.product_variation,
-          type: e.text_type,
-          checkExpiry: e.expiry ? '1' : '0',
-          // e.serial là chuỗi "0" hoặc "1" => cần so sánh giá trị, không dùng truthy
-          checkSerial: e.serial === '1' ? '1' : '0',
-          show: true,
-          dataLot:
-            e.lot_array?.map(lot => ({
-              label: lot,
-              value: lot,
-            })) || [],
-          dataSerial:
-            e.serial_array?.length > 0
-              ? e.serial_array.map(serial => ({
-                  label: serial,
-                  value: serial,
-                }))
-              : [],
-          dataWarehouse:
-            e?.warehouse?.map(wh => ({
-              label: wh?.location_name,
-              value: wh?.id,
-              warehouse_name: wh?.warehouse_name,
-              qty: wh?.quantity,
-            })) || [],
-          child: [
-            {
-              id: Date.now(),
-              locate: null,
-              amount: null,
-              lot: null,
-              date: null,
-              serial: null,
-              quantity: null,
-              price: null,
-              dataWarehouse:
-                e?.warehouse?.map(wh => ({
-                  label: wh?.location_name,
-                  value: wh?.id,
-                  warehouse_name: wh?.warehouse_name,
-                  qty: wh?.quantity,
-                })) || [],
-            },
-          ],
-          checkChild:
-            e?.warehouse?.map(ce => ({
-              amount: null,
-              quantity: Number(ce.quantity),
-              serial: ce.serial,
-              lot: ce.lot,
-              date: ce.expiration_date ? moment(ce.expiration_date).format('DD/MM/yyyy') : null,
-              locate: ce.location_id,
-            })) || [],
-        }));
+  //     if (isSuccess?.result) {
+  //       const mappedItems = isSuccess.result.map(e => ({
+  //         id: e.id,
+  //         code: e.code,
+  //         name: e.name,
+  //         img: e.images,
+  //         variant: e.product_variation,
+  //         type: e.text_type,
+  //         checkExpiry: e.expiry ? '1' : '0',
+  //         checkSerial: e.serial ? '1' : '0',
+  //         show: true,
+  //         dataLot:
+  //           e.lot_array?.map(lot => ({
+  //             label: lot,
+  //             value: lot,
+  //           })) || [],
+  //         dataSerial:
+  //           e.serial_array?.length > 0
+  //             ? e.serial_array.map(serial => ({
+  //                 label: serial,
+  //                 value: serial,
+  //               }))
+  //             : [],
+  //         dataWarehouse:
+  //           e?.warehouse?.map(wh => ({
+  //             label: wh?.location_name,
+  //             value: wh?.id,
+  //             warehouse_name: wh?.warehouse_name,
+  //             qty: wh?.quantity,
+  //           })) || [],
+  //         child: [
+  //           {
+  //             id: Date.now(),
+  //             locate: null,
+  //             amount: null,
+  //             lot: null,
+  //             date: null,
+  //             serial: null,
+  //             quantity: null,
+  //             price: null,
+  //             dataWarehouse:
+  //               e?.warehouse?.map(wh => ({
+  //                 label: wh?.location_name,
+  //                 value: wh?.id,
+  //                 warehouse_name: wh?.warehouse_name,
+  //                 qty: wh?.quantity,
+  //               })) || [],
+  //           },
+  //         ],
+  //         checkChild:
+  //           e?.warehouse?.map(ce => ({
+  //             amount: null,
+  //             quantity: Number(ce.quantity),
+  //             serial: ce.serial,
+  //             lot: ce.lot,
+  //             date: ce.expiration_date ? moment(ce.expiration_date).format('DD/MM/yyyy') : null,
+  //             locate: ce.location_id,
+  //           })) || [],
+  //       }));
 
-        // Lọc các item chưa có trong dataChoose
-        const newItems = mappedItems.filter(item => !dataChoose.some(existing => existing.id === item.id));
+  //       // Lọc các item chưa có trong dataChoose
+  //       const newItems = mappedItems.filter(item => !dataChoose.some(existing => existing.id === item.id));
 
-        if (newItems.length > 0) {
-          sDataChoose(prev => [...prev, ...newItems]);
-        }
+  //       if (newItems.length > 0) {
+  //         sDataChoose(prev => [...prev, ...newItems]);
+  //       }
 
-        setSelectedItem(null);
-      }
+  //       setSelectedItem(null);
+  //     }
 
-      return isSuccess;
-    },
-    enabled: !!selectedItem && !!warehouse,
-    ...optionsQuery,
-  });
+  //     return isSuccess;
+  //   },
+  //   enabled: !!selectedItem && !!warehouse,
+  //   ...optionsQuery,
+  // });
 
   const _HandleActionItem = (id, type) => {
     if (type === 'add') {
@@ -811,6 +843,7 @@ const InventoryForm = props => {
               </div>
             </div>
           </div>
+          {/* [Import] [step 4] Hiển thị banner cảnh báo lỗi import Excel */}
           {importErrorBanner?.items?.length > 0 && (
             <div className='px-4 mt-3'>
               <div className='py-3 px-4 flex flex-col gap-3 bg-[#FFEEF0] border border-[#991B1B] rounded-lg shadow-sm'>
@@ -859,6 +892,7 @@ const InventoryForm = props => {
               <>
                 <div className='grid grid-cols-6 pt-3 pb-2 shadow'>
                   <h5 className='font-[300] text-slate-600 col-span-1 px-1.5'>Tên mặt hàng</h5>
+                  {/* <div className={`${(dataMaterialExpiry.is_enable == "0" && dataProductSerial.is_enable == "0") ? "grid-cols-7" : (dataProductExpiry.checkExpiry == "1" ? "grid-cols-9" : "grid-cols-8") } col-span-5 grid`}> */}
                   <div
                     className={`${
                       dataProductSerial.is_enable == '1'
@@ -875,6 +909,9 @@ const InventoryForm = props => {
                     } grid col-span-5 `}
                   >
                     <h5 className='font-[300] text-slate-600  px-1.5'>Vị trí kho</h5>
+                    {/* {dataMaterialExpiry?.is_enable == "1" && <h5 className='font-[300] text-slate-600 text-center px-1.5'>LOT</h5>}
+                                        {dataProductExpiry?.is_enable == "1" && <h5 className='font-[300] text-slate-600 text-center px-1.5'>Date</h5>}
+                                        {dataProductSerial?.is_enable == "1" && <h5 className='font-[300] text-slate-600 text-center px-1.5'>Serial</h5>} */}
                     {dataProductSerial.is_enable === '1' && <h4 className='font-[300] text-slate-600 text-center px-1.5'>{'Serial'}</h4>}
                     {dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' ? (
                       <>
@@ -915,6 +952,7 @@ const InventoryForm = props => {
                           </button>
                         </div>
                       </div>
+                      {/* <div className={`${(e?.checkExpiry == "0" && e?.checkSerial == "0") ? "grid-cols-7" : (e?.checkExpiry == "1" ? "grid-cols-9" : "grid-cols-8") } col-span-5 grid`}> */}
                       <div
                         className={`${
                           dataProductSerial.is_enable == '1'
@@ -930,6 +968,8 @@ const InventoryForm = props => {
                             : 'grid-cols-7'
                         } grid col-span-5  h-full items-center`}
                       >
+                        {/* {loadingData ? <h1 className='text-4xl font-bold'>Loading</h1> */}
+                        {/* : */}
                         <>
                           {e.child?.map(ce => (
                             <React.Fragment key={ce?.id}>
@@ -1108,6 +1148,7 @@ const InventoryForm = props => {
                             </React.Fragment>
                           ))}
                         </>
+                        {/* } */}
                       </div>
                     </div>
                   ))}
@@ -1189,9 +1230,7 @@ const InventoryForm = props => {
                 <h4 className='col-span-1 text-center'></h4>
               </div>
               <Customscrollbar className='flex-1 min-h-0 h-0'>
-                {isFetchingItem ? (
-                  <Loading className='w-full h-10' color='#0f4f9e' />
-                ) : dataChoose?.length === 0 ? (
+                {dataChoose?.length === 0 ? (
                   <NoData type='report' titleText='Chưa có mặt hàng. Bắt đầu thêm mặt hàng tại khung tìm kiếm ngay!' className='h-[50vh]' />
                 ) : (
                   dataChoose?.map(e => (
@@ -1241,57 +1280,18 @@ const InventoryForm = props => {
                               </div>
                               {dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' ? (
                                 <div className='col-span-3 flex flex-col justify-center h-fit'>
-                                  <CreatableSelectCore
-                                    isDisabled={e?.checkExpiry == '0'}
-                                    placeholder={'Lot'}
-                                    options={e?.dataLot}
+                                  <SelectComponent
+                                    options={e?.dataLot || []}
                                     value={ce?.lot}
-                                    onChange={_HandleChangeChild.bind(this, e?.id, ce?.id, 'lot')}
+                                    onChange={value => _HandleChangeChild(e?.id, ce?.id, 'lot', value)}
+                                    placeholder='Lot'
                                     isClearable={true}
-                                    classNamePrefix='Select'
-                                    className={`${
-                                      e?.checkExpiry == '0' ? 'border-transparent' : errNullLot && ce.lot == null ? 'border-red-500 border' : 'border-transparent'
-                                    } Select__custom removeDivide placeholder:text-slate-300 w-full bg-[#ffffff] rounded-lg text-[#52575E] font-normal outline-none border text-[13px]`}
-                                    isSearchable={true}
+                                    isDisabled={e?.checkExpiry == '0'}
+                                    className='w-full'
+                                    classParent={`${e?.checkExpiry == '0' ? '' : errNullLot && ce.lot == null ? 'border-red-500 border rounded-lg' : ''}`}
+                                    noOptionsMessage={() => `Chưa có gợi ý`}
                                     menuPortalTarget={document.body}
                                     onMenuOpen={handleMenuOpen}
-                                    noOptionsMessage={() => `Chưa có gợi ý`}
-                                    formatCreateLabel={value => `Tạo "${value}"`}
-                                    style={{
-                                      border: 'none',
-                                      boxShadow: 'none',
-                                      outline: 'none',
-                                      borderRadius: '8px',
-                                    }}
-                                    theme={theme => ({
-                                      ...theme,
-                                      colors: {
-                                        ...theme.colors,
-                                        primary25: '#EBF5FF',
-                                        primary50: '#92BFF7',
-                                        primary: '#0F4F9E',
-                                      },
-                                    })}
-                                    styles={{
-                                      placeholder: base => ({
-                                        ...base,
-                                        color: '#cbd5e1',
-                                        borderRadius: '8px',
-                                      }),
-                                      menuPortal: base => ({
-                                        ...base,
-                                        zIndex: 9999,
-                                        position: 'absolute',
-                                      }),
-                                      control: (base, state) => ({
-                                        ...base,
-                                        boxShadow: 'none',
-                                        ...(state.isFocused && {
-                                          border: '0 0 0 1px #92BFF7',
-                                        }),
-                                        borderRadius: '8px',
-                                      }),
-                                    }}
                                   />
                                 </div>
                               ) : null}
