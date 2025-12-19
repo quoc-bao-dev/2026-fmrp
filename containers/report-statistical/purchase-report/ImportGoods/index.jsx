@@ -305,7 +305,9 @@ const ImportGoods = props => {
             <>
               <RowItemTable className='flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-40 flex-shrink-0'>{item.name_supplier}</RowItemTable>
               <RowItemTable className='flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-32 flex-shrink-0'>
-                {item.item_code}
+                <span className="break-words w-full">
+                  {item.item_code}
+                </span>
               </RowItemTable>
               <RowItemTable className='flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-60 flex-shrink-0'>
                 <div className='flex flex-col gap-2 justify-start'>

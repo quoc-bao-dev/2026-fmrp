@@ -781,7 +781,8 @@ const Popup_Detail = React.memo(props => {
                 ) : (
                   <React.Fragment>
                     {dataStage?.length > 0 ? (
-                      <div className='space-y-0.5 min-h-[384px]'>
+                      <>
+                        <div className='space-y-0.5 min-h-[384px]'>
                         <HeaderTablePopup gridCols={10}>
                           <ColumnTablePopup>{props.dataLang?.no || 'no'}</ColumnTablePopup>
                           <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_finishedProduct}</ColumnTablePopup>
@@ -818,6 +819,7 @@ const Popup_Detail = React.memo(props => {
                             ))}
                           </div>
                         </Customscrollbar>
+                        </div>
                         <div className='flex items-center justify-end space-x-3'>
                           <Popup_GiaiDoan
                             dataLang={props.dataLang}
@@ -825,11 +827,31 @@ const Popup_Detail = React.memo(props => {
                             name={list?.name}
                             onRefresh={refetchStage.bind(this)}
                             code={list?.code}
-                            typeOpen='edit'
-                            className='px-4 py-2 text-base transition rounded-lg bg-slate-200 hover:opacity-90 hover:scale-105'
+                            type='edit'
+                            className='px-4 py-2 text-base transition rounded-lg bg-blue-fmrp hover:opacity-90 hover:scale-105'
                           />
                         </div>
-                      </div>
+                        <div className='space-y-0.5 min-h-[384px]'>
+                          <HeaderTablePopup gridCols={8}>
+                            <ColumnTablePopup>{props.dataLang?.no || 'no'}</ColumnTablePopup>
+                            <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_finishedProduct}</ColumnTablePopup>
+                            <ColumnTablePopup colSpan={3}>{props.dataLang?.check_first_stage_finishedProduct}</ColumnTablePopup>
+                            <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_last_finishedProduct}</ColumnTablePopup>
+                          </HeaderTablePopup>
+                          <Customscrollbar className='min-h-[250px] max-h-[450px]'>
+                            <div className='divide-y divide-slate-200'>
+                              {dataStage?.map((e, index) => (
+                                <div key={e?.id ? e?.id.toString() : ''} className={`grid-cols-8 grid gap-2 px-2 py-2.5 hover:bg-slate-50 items-center`}>
+                                  <h6 className='px-2 text-xs text-center xl:text-base'>{index + 1}</h6>
+                                  <h6 className='col-span-2 px-2 text-xs xl:text-base'>{e?.stage_name}</h6>
+                                  <h6 className='flex justify-center col-span-3 px-2 text-xs text-green-600 xl:text-base'>{e?.type == '2' && <IconTick />}</h6>
+                                  <h6 className='flex justify-center col-span-2 px-2 text-xs text-green-600 xl:text-base'>{e?.final_stage == '1' && <IconTick />}</h6>
+                                </div>
+                              ))}
+                            </div>
+                          </Customscrollbar>
+                        </div>
+                      </>
                     ) : (
                       <NoData />
                     )}

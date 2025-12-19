@@ -59,6 +59,7 @@ const SelectSearchReport = ({
   icon,
   className,
   mode = 'single', // 'single' or 'multiple'
+  showCode = true, // hiển thị dòng code bên dưới label
 }) => {
   const [searchValue, setSearchValue] = useState('')
   const [open, setOpen] = useState(false)
@@ -182,7 +183,9 @@ const SelectSearchReport = ({
                     )}
                     <div className="flex flex-col gap-1">
                       <span className="responsive-text-sm font-normal text-neutral-07">{opt.label}</span>
-                      <span className="text-blue-fmrp flex flex-wrap responsive-text-xs">{opt.code}</span>
+                      {showCode && (
+                        <span className="text-blue-fmrp flex flex-wrap responsive-text-xs">{opt.code}</span>
+                      )}
                     </div>
                   </div>
                 </div>
