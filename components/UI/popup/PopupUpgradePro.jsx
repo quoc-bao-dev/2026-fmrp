@@ -3,19 +3,61 @@ import PopupCustom from '@/components/UI/popup';
 import { Lexend_Deca } from '@next/font/google';
 import Image from 'next/image';
 import { SparkleIcon, ChatIcon } from '@/components/icons';
+import useSetingServer from '@/hooks/useConfigNumber';
+import { useMemo } from 'react';
 
 const deca = Lexend_Deca({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700', '800', '900'],
 });
 
+/**
+ * Parse HTML string và extract text từ các thẻ <li>
+ * Bỏ qua tất cả style, màu sắc, font chữ, chỉ lấy nội dung text
+ */
+const parseHtmlToList = (htmlString) => {
+  if (!htmlString) return [];
+
+  try {
+    // Tạo DOM parser để parse HTML
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
+    
+    // Tìm tất cả thẻ <li>
+    const listItems = doc.querySelectorAll('li');
+    
+    // Extract text content từ mỗi <li> (bỏ qua HTML tags và style)
+    const items = Array.from(listItems).map(li => {
+      return li.textContent?.trim() || '';
+    }).filter(item => item.length > 0);
+
+    return items;
+  } catch (error) {
+    console.error('Error parsing HTML:', error);
+    return [];
+  }
+};
+
 const PopupUpgradePro = ({ open, onClose, onUpgrade, onContact }) => {
-  const improvements = [
-    'Tăng tốc hiệu suất, giúp thao tác nhanh và mượt hơn.',
-    'Giao diện tối ưu, trực quan và dễ sử dụng hơn.',
-    'Bổ sung tính năng mới: [Mô tả ngắn về tính năng mới].',
-    'Sửa lỗi & nâng cấp bảo mật, đảm bảo hệ thống ổn định và an toàn hơn',
-  ];
+  const dataSeting = useSetingServer();
+  
+  // Parse HTML từ description_extend và fallback về mảng mặc định
+  const improvements = useMemo(() => {
+    if (dataSeting?.description_extend) {
+      const parsed = parseHtmlToList(dataSeting.description_extend);
+      if (parsed.length > 0) {
+        return parsed;
+      }
+    }
+    // Fallback về mảng mặc định nếu không có dữ liệu
+    // return [
+    //   'Tăng tốc hiệu suất, giúp thao tác nhanh và mượt hơn.',
+    //   'Giao diện tối ưu, trực quan và dễ sử dụng hơn.',
+    //   'Bổ sung tính năng mới: [Mô tả ngắn về tính năng mới].',
+    //   'Sửa lỗi & nâng cấp bảo mật, đảm bảo hệ thống ổn định và an toàn hơn',
+    // ];
+    return [];
+  }, [dataSeting?.description_extend]);
 
   return (
     <PopupCustom 
@@ -52,7 +94,7 @@ const PopupUpgradePro = ({ open, onClose, onUpgrade, onContact }) => {
             className='text-[22px] xl:text-[24px] 2xl:text-[28px] font-semibold leading-[20px] text-center capitalize mb-2 xl:mb-10 2xl:mb-6'
             style={{ color: '#0375F3', fontFamily: 'Lexend Deca', fontWeight: 600 }}
           >
-            Nâng cấp gói để chuyển đổi
+            {dataSeting?.title_extend || 'Nâng cấp gói để chuyển đổi'}
           </h2>
 
           {/* Subtitle */}
