@@ -21,6 +21,7 @@ const LayoutForm = ({
   infoTitle = 'Thông tin',
   totalTitle = 'Tổng cộng',
   buttonAction,
+  error,
 }) => {
   return (
     <div className='min-h-screen bg-gray-50 flex flex-col gap-5'>
@@ -36,7 +37,7 @@ const LayoutForm = ({
           </div>
           {buttonAction}
         </div>
-
+        {error && <div >{error}</div>}
         <div className='flex flex-col lg:flex-row gap-4 2xl:gap-6 h-fit flex-1 min-h-0'>
           <LeftContent>{leftContent}</LeftContent>
           <RightContent>

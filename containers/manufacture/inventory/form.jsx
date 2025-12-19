@@ -782,7 +782,7 @@ const InventoryForm = props => {
 
   return (
     <>
-      <Container className={'!h-auto'}>
+      {/* <Container className={'!h-auto'}>
         <div className='space-y-5'>
           <div className='flex items-center justify-between px-4 py-2 rounded bg-slate-100'>
             <h2 className=''>Mặt hàng cần kiểm kê</h2>
@@ -811,47 +811,6 @@ const InventoryForm = props => {
               </div>
             </div>
           </div>
-          {importErrorBanner?.items?.length > 0 && (
-            <div className='px-4 mt-3'>
-              <div className='py-3 px-4 flex flex-col gap-3 bg-[#FFEEF0] border border-[#991B1B] rounded-lg shadow-sm'>
-                <div className='flex items-start justify-between gap-3'>
-                  <div className='flex items-start gap-2'>
-                    <WarningIcon className='size-5 text-[#C81E1E]' />
-                    <div className='flex flex-col gap-1'>
-                      <h3 className='text-sm font-semibold text-[#EE1E1E]'>{importErrorBanner?.totalErrors || importErrorBanner?.items?.length} lỗi khi đọc file Excel</h3>
-                      {importErrorBanner?.message && <p className='text-xs font-normal text-neutral-07'>{importErrorBanner.message}</p>}
-                    </div>
-                  </div>
-                  <button
-                    type='button'
-                    onClick={() => setImportErrorBanner({ message: '', totalErrors: 0, items: [] })}
-                    className='p-1 rounded-full hover:bg-[#F8D7DA] transition'
-                    aria-label='Đóng cảnh báo lỗi import'
-                  >
-                    <CloseXIcon className='size-4 text-[#991B1B]' />
-                  </button>
-                </div>
-                <div className='flex flex-col gap-2 max-h-60 overflow-auto pr-1 scrollbar-thin scrollbar-thumb-[#F4B4B8] scrollbar-track-[#FFE3E6]'>
-                  {importErrorBanner.items.map((errorItem, index) => (
-                    <div key={`${errorItem.row || index}-${errorItem.code_items || 'code'}-${index}`} className='px-3 py-2 bg-white rounded-md border border-[#F4B4B8] flex flex-col gap-1'>
-                      <p className='text-sm font-medium text-[#991B1B]'>{errorItem.message || 'Dòng dữ liệu không hợp lệ'}</p>
-                      <div className='flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-neutral-06'>
-                        <span>
-                          Mã hàng: <span className='font-semibold text-neutral-07'>{errorItem.code_items || '—'}</span>
-                        </span>
-                        <span>
-                          Tên hàng: <span className='font-semibold text-neutral-07'>{errorItem.name_items || '—'}</span>
-                        </span>
-                        <span>
-                          Vị trí kho: <span className='font-semibold text-neutral-07'>{errorItem.location_code || '—'}</span>
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className=''>
             <h2 className='px-4 py-2 rounded bg-slate-100'>Thông tin mặt hàng</h2>
@@ -1116,7 +1075,7 @@ const InventoryForm = props => {
             )}
           </div>
         </div>
-      </Container>
+      </Container> */}
       <LayoutForm
         title='Thêm phiếu kiểm kê kho'
         breadcrumbItems={breadcrumbItems}
@@ -1136,6 +1095,47 @@ const InventoryForm = props => {
             // [Import] [step 3] Đăng ký callback nhận dữ liệu import từ popup
             onImportResult={_HandleImportExcelResult}
           />
+        }
+        error={
+          importErrorBanner?.items?.length > 0 && (
+            <div className='py-3 px-4 flex flex-col gap-3 bg-[#FFEEF0] border border-[#991B1B] rounded-lg shadow-sm'>
+              <div className='flex items-start justify-between gap-3'>
+                <div className='flex items-start gap-2'>
+                  <WarningIcon className='size-5 text-[#C81E1E]' />
+                  <div className='flex flex-col gap-1'>
+                    <h3 className='text-sm font-semibold text-[#EE1E1E]'>{importErrorBanner?.totalErrors || importErrorBanner?.items?.length} lỗi khi đọc file Excel</h3>
+                    {importErrorBanner?.message && <p className='text-xs font-normal text-neutral-07'>{importErrorBanner.message}</p>}
+                  </div>
+                </div>
+                <button
+                  type='button'
+                  onClick={() => setImportErrorBanner({ message: '', totalErrors: 0, items: [] })}
+                  className='p-1 rounded-full hover:bg-[#F8D7DA] transition'
+                  aria-label='Đóng cảnh báo lỗi import'
+                >
+                  <CloseXIcon className='size-4 text-[#991B1B]' />
+                </button>
+              </div>
+              <div className='flex flex-col gap-2 max-h-60 overflow-auto pr-1 scrollbar-thin scrollbar-thumb-[#F4B4B8] scrollbar-track-[#FFE3E6]'>
+                {importErrorBanner.items.map((errorItem, index) => (
+                  <div key={`${errorItem.row || index}-${errorItem.code_items || 'code'}-${index}`} className='px-3 py-2 bg-white rounded-md border border-[#F4B4B8] flex flex-col gap-1'>
+                    <p className='text-sm font-medium text-[#991B1B]'>{errorItem.message || 'Dòng dữ liệu không hợp lệ'}</p>
+                    <div className='flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-neutral-06'>
+                      <span>
+                        Mã hàng: <span className='font-semibold text-neutral-07'>{errorItem.code_items || '—'}</span>
+                      </span>
+                      <span>
+                        Tên hàng: <span className='font-semibold text-neutral-07'>{errorItem.name_items || '—'}</span>
+                      </span>
+                      <span>
+                        Vị trí kho: <span className='font-semibold text-neutral-07'>{errorItem.location_code || '—'}</span>
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
         }
         leftContent={
           <div className='flex flex-col h-full min-h-0'>
@@ -1373,7 +1373,7 @@ const InventoryForm = props => {
                   }}
                   // errDate={errDate}
                   isRequired={true}
-                  disabled={true}
+                  // disabled={true}
                 />
 
                 <SelectWithRadio
@@ -1484,19 +1484,19 @@ const InventoryForm = props => {
                 )}
               </h3>
             </div>
+            <PopupStatus
+              dataErr={dataErr}
+              sDataErr={sDataErr}
+              isSubmitted={isSubmitted}
+              sIsSubmitted={sIsSubmitted}
+              db={sDataChoose}
+              dataChoose={dataChoose}
+              dataLang={dataLang}
+              errData={errData}
+              setOpen={true}
+            />
           </div>
         }
-      />
-      <PopupStatus
-        dataErr={dataErr}
-        sDataErr={sDataErr}
-        isSubmitted={isSubmitted}
-        sIsSubmitted={sIsSubmitted}
-        db={sDataChoose}
-        dataChoose={dataChoose}
-        dataLang={dataLang}
-        errData={errData}
-        setOpen={true}
       />
     </>
   );
