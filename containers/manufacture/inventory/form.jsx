@@ -1341,8 +1341,8 @@ const InventoryForm = props => {
                                     }
                                   }}
                                 />
-                                <h3 className='mt-1 text-[8px]'>SL phần mềm: {formatNumber(ce?.quantity || 0)}</h3>
-                                <h3 className='text-[8px] text-blue-fmrp'>Chênh lệch: {(ce?.amount != null && formatNumber(ce?.amount - (ce?.quantity || 0))) || 0}</h3>
+                                <h3 className='mt-1 responsive-text-xxs'>SL phần mềm: {formatNumber(ce?.quantity || 0)}</h3>
+                                <h3 className='responsive-text-xxs text-blue-fmrp'>Chênh lệch: {(ce?.amount != null && formatNumber(ce?.amount - (ce?.quantity || 0))) || 0}</h3>
                               </div>
                               <div className='col-span-2 flex justify-center pt-2 h-full'>{(ce?.amount != null && formatNumber(ce?.amount * (ce?.price || 0))) || 0}</div>
                               <div className='flex pt-2 justify-center h-full'>
