@@ -625,6 +625,43 @@ const Header = () => {
     // },
   ];
 
+  const ListLuongSanLuong = [
+    {
+      // title: "Lương sản lượng",
+      sub: [
+        {
+          title: 'Lương sản lượng',
+          items: [
+            {
+              viewOwn: auth?.piecework_wage_group?.is_view_own,
+              view: auth?.piecework_wage_group?.is_view,
+              name: 'Danh sách tổ / nhóm',
+              link: '/piecework-wage',
+            },
+            {
+              viewOwn: auth?.piecework_wage_shift_setting?.is_view_own,
+              view: auth?.piecework_wage_shift_setting?.is_view,
+              name: 'Thiết lập ca làm việc',
+              link: '/piecework-wage/shift-setting',
+            },
+            {
+              viewOwn: auth?.piecework_wage_shift_schedule?.is_view_own,
+              view: auth?.piecework_wage_shift_schedule?.is_view,
+              name: 'Bảng xếp ca',
+              link: '/piecework-wage/shift-schedule',
+            },
+            {
+              viewOwn: auth?.piecework_wage_summary?.is_view_own,
+              view: auth?.piecework_wage_summary?.is_view,
+              name: 'Tổng hợp lương sản lượng',
+              link: '/piecework-wage/summary',
+            },
+          ],
+        },
+      ],
+    },
+  ];
+
   const ListKhac = [
     {
       // title: "Tiện ích",
@@ -993,6 +1030,14 @@ const Header = () => {
       link: ['/warehouses', '/manufacture'],
     },
     {
+      data: ListLuongSanLuong,
+      position: 'bottom left',
+      className: 'popover-luongsanluong',
+      title: 'Lương sản lượng',
+      text: 'Quản lý lương sản lượng, tổ nhóm, ca làm việc',
+      link: ['/piecework-wage'],
+    },
+    {
       data: ListKeToan,
       position: 'bottom left',
       className: '',
@@ -1004,7 +1049,7 @@ const Header = () => {
       data: ListBaoCao,
       position: 'bottom left',
       className: '',
-      title: 'Báo cáo & Thống kê',
+      title: 'Báo cáo',
       text: 'Quản lý các báo cáo, thống kê',
       link: ['/report-statistical'],
     },

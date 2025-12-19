@@ -24,7 +24,7 @@ import TabMaterialIssueHistory from '../tab/TabMaterialIssueHistory';
 import TabMaterialOutputTab from '../tab/TabMaterialOutput';
 import TabMaterialReturn from '../tab/TabMaterialReturn';
 import CostCard from '../ui/CostCard';
-import AvatarStack from '../popup/AvatarStack';
+import { AvatarStack } from '@/components/UI/common/user';
 
 const initialState = {
   isTab: 1,

@@ -781,7 +781,8 @@ const Popup_Detail = React.memo(props => {
                 ) : (
                   <React.Fragment>
                     {dataStage?.length > 0 ? (
-                      <div className='space-y-0.5 min-h-[384px]'>
+                      <>
+                        <div className='space-y-0.5 min-h-[384px]'>
                         <HeaderTablePopup gridCols={10}>
                           <ColumnTablePopup>{props.dataLang?.no || 'no'}</ColumnTablePopup>
                           <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_finishedProduct}</ColumnTablePopup>
@@ -818,6 +819,7 @@ const Popup_Detail = React.memo(props => {
                             ))}
                           </div>
                         </Customscrollbar>
+                        </div>
                         <div className='flex items-center justify-end space-x-3'>
                           <Popup_GiaiDoan
                             dataLang={props.dataLang}

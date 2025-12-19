@@ -8,7 +8,7 @@ import ProgressStageBar from '@/components/common/progress/ProgressStageBar';
 import { AnimatePresence, motion } from 'framer-motion';
 import { StateContext } from '@/context/_state/productions-orders/StateContext';
 import { CaretDownIcon, NoteIcon, UserPlusIcon } from '@/components/icons';
-import AvatarStack from '../popup/AvatarStack';
+import { AvatarStack } from '@/components/UI/common/user';
 import ResponsiblePersonComboBox from '../popup/ResponsiblePersonComboBox';
 import { useProductionOrderManagerDetail } from '@/managers/api/productions-order/useProductionOrderManagerDetail';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
