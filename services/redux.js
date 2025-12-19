@@ -166,6 +166,9 @@ const adminState = {
   statePopupUpgradeProfessional: {
     open: false,
   },
+  statePopupUpgradePro: {
+    open: false,
+  },
   statePopupSuccessfulPayment: {
     open: false,
   },
@@ -278,6 +281,8 @@ function adminReducer(state = adminState, action) {
       return { ...state, statePopupChangePassword: action.payload };
     case 'statePopupUpgradeProfessional':
       return { ...state, statePopupUpgradeProfessional: action.payload };
+    case 'statePopupUpgradePro':
+      return { ...state, statePopupUpgradePro: action.payload };
     case 'statePopupSuccessfulPayment':
       return { ...state, statePopupSuccessfulPayment: action.payload };
     case 'statePopupSuccessfulBuyMoreUser':

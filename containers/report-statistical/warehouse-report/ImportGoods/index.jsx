@@ -289,7 +289,7 @@ const ImportGoods = (props) => {
               <RowItemTable className="flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] !text-new-blue !responsive-text-sm font-semibold w-32 flex-shrink-0">
                 <PopupDetail
                   dataLang={dataLang}
-                  className="responsive-text-sm font-semibold text-center text-[#003DA0] hover:text-blue-600 transition-all ease-linear cursor-pointer"
+                  className="responsive-text-sm break-words font-semibold text-center text-[#003DA0] hover:text-blue-600 transition-all ease-linear cursor-pointer"
                   name={item.code}
                   id={item.id}
                 />
@@ -301,7 +301,7 @@ const ImportGoods = (props) => {
               <RowItemTable className="flex items-center py-2 px-3 border-r border-[#E0E0E1] !text-new-blue !responsive-text-sm font-normal w-40 flex-shrink-0">
                 {item.reference_no_detail}
               </RowItemTable>
-              <RowItemTable className="flex justify-start items-center text-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-32 flex-shrink-0">
+              <RowItemTable className="flex justify-start break-words items-center text-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-32 flex-shrink-0">
                 {item.item_code}
               </RowItemTable>
               <RowItemTable className="flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 !responsive-text-sm font-normal w-60 flex-shrink-0">

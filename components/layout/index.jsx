@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { useRouter } from 'next/router';
 import React, { useContext, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import useSettingExpiration from '@/hooks/useSettingExpiration';
 import PopupGlobal from '../common/popup/PopupGlobal';
 import PopupUpdateNewVersion from '../common/popup/PopupUpdateNewVersion';
 import ChatBubbleAI from '../UI/chat/ChatAiBubble';
@@ -19,6 +20,7 @@ import PopupSuccessfulPayment from '../UI/popup/PopupSuccessfulPayment';
 import PopupSuccessfulBuyMoreUser from '../UI/popup/PopupSuccessfulBuyMoreUser';
 import PopupUpdateVersion from '../UI/popup/PopupUpdateVersion';
 import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
+import PopupUpgradePro from '../UI/popup/PopupUpgradePro';
 import Header from './header';
 
 const queryClient = new QueryClient({
@@ -45,9 +47,12 @@ const Index = ({ children, ...props }) => {
   const statePopupRecommendation = useSelector(state => state.statePopupRecommendation);
   const statePopupUpdateVersion = useSelector(state => state.statePopupUpdateVersion);
   const statePopupUpgradeProfessional = useSelector(state => state.statePopupUpgradeProfessional);
+  const statePopupUpgradePro = useSelector(state => state.statePopupUpgradePro);
   const statePopupSuccessfulPayment = useSelector(state => state.statePopupSuccessfulPayment);
   const statePopupSuccessfulBuyMoreUser = useSelector(state => state.statePopupSuccessfulBuyMoreUser);
   const statePopupGlobal = useSelector(state => state.statePopupGlobal);
+
+  const { isExpired } = useSettingExpiration();
 
   useEffect(() => {
     if (!router?.route?.startsWith('/manufacture/productions-orders')) {
@@ -85,6 +90,88 @@ const Index = ({ children, ...props }) => {
   }, [hasNewVersion, version]);
   const queryClient = useQueryClient();
 
+  // Auto open Pro upgrade popup when system is expired - block UI
+  useEffect(() => {
+    if (isExpired && !statePopupUpgradePro?.open) {
+      dispatch({
+        type: 'statePopupUpgradePro',
+        payload: { open: true },
+      });
+    }
+  }, [isExpired, statePopupUpgradePro?.open, dispatch]);
+
+  // Block other popups when expired (except UpgradePro and PopupGlobal for upgrade flow)
+  useEffect(() => {
+    if (isExpired) {
+      // Close other popups when expired
+      if (statePopupUpdateVersion?.open) {
+        dispatch({
+          type: 'statePopupUpdateVersion',
+          payload: { open: false },
+        });
+      }
+      if (statePopupAccountInformation?.open) {
+        dispatch({
+          type: 'statePopupAccountInformation',
+          payload: { open: false },
+        });
+      }
+      if (statePopupChangePassword?.open) {
+        dispatch({
+          type: 'statePopupChangePassword',
+          payload: { open: false },
+        });
+      }
+      if (statePopupRecommendation?.open) {
+        dispatch({
+          type: 'statePopupRecommendation',
+          payload: { open: false },
+        });
+      }
+      if (statePopupUpgradeProfessional?.open) {
+        dispatch({
+          type: 'statePopupUpgradeProfessional',
+          payload: { open: false },
+        });
+      }
+      if (statePopupSuccessfulPayment?.open) {
+        dispatch({
+          type: 'statePopupSuccessfulPayment',
+          payload: { open: false },
+        });
+      }
+      if (statePopupSuccessfulBuyMoreUser?.open) {
+        dispatch({
+          type: 'statePopupSuccessfulBuyMoreUser',
+          payload: { open: false },
+        });
+      }
+      if (statePopupPreviewImage?.open) {
+        dispatch({
+          type: 'statePopupPreviewImage',
+          payload: { open: false },
+        });
+      }
+      // Only allow PopupGlobal if it's for upgrade flow (contains PopupUpgradeProfessional)
+      // Close PopupGlobal if it contains PopupUpdateNewVersion
+      if (statePopupGlobal?.open) {
+        // Check if PopupGlobal contains PopupUpdateNewVersion by checking for version prop
+        const isUpdateNewVersion = statePopupGlobal?.children?.props?.version !== undefined;
+        
+        // Close if it's PopupUpdateNewVersion, otherwise allow it (assumed to be from upgrade flow)
+        if (isUpdateNewVersion) {
+          dispatch({
+            type: 'statePopupGlobal',
+            payload: { open: false },
+          });
+        }
+      }
+    }
+  }, [isExpired, dispatch, statePopupUpdateVersion?.open, statePopupAccountInformation?.open, 
+      statePopupChangePassword?.open, statePopupRecommendation?.open, statePopupUpgradeProfessional?.open,
+      statePopupSuccessfulPayment?.open, statePopupSuccessfulBuyMoreUser?.open, statePopupPreviewImage?.open,
+      statePopupGlobal?.open]);
+
   useEffect(() => {
     if (!socket) return;
     const topic = `update_version`;
@@ -109,20 +196,69 @@ const Index = ({ children, ...props }) => {
         <React.Fragment>
           <Header />
           {children}
-          {stateBoxChatAi.isShowAi && <ChatBubbleAI {...props} />}
+          {stateBoxChatAi.isShowAi && !isExpired && <ChatBubbleAI {...props} />}
           {/* {stateBoxChatAi.isShowAi} */}
-          {statePopupPreviewImage.open && <ImagesModal {...props} />}
+          {statePopupPreviewImage.open && !isExpired && <ImagesModal {...props} />}
           {statePopupGlobal.open && <PopupGlobal {...props} />}
 
-          <PopupAppTrial {...props} />
-          <PopupAppRenewal {...props} />
-          {statePopupUpdateVersion?.open && <PopupUpdateVersion {...props} />}
-          {statePopupAccountInformation?.open && <PopupAccountInformation {...props} />}
-          {statePopupChangePassword?.open && <PopupChangePassword {...props} />}
-          {statePopupRecommendation?.open && <PopupRecommendation {...props} />}
-          {statePopupUpgradeProfessional?.open && <PopupUpgradeProfessional {...props} />}
-          {statePopupSuccessfulPayment?.open && <PopupSuccessfulPayment {...props} />}
-          {statePopupSuccessfulBuyMoreUser?.open && <PopupSuccessfulBuyMoreUser {...props} />}
+          {!isExpired && <PopupAppTrial {...props} />}
+          {/* <PopupAppRenewal {...props} /> */}
+          {statePopupUpdateVersion?.open && !isExpired && <PopupUpdateVersion {...props} />}
+          {statePopupAccountInformation?.open && !isExpired && <PopupAccountInformation {...props} />}
+          {statePopupChangePassword?.open && !isExpired && <PopupChangePassword {...props} />}
+          {statePopupRecommendation?.open && !isExpired && <PopupRecommendation {...props} />}
+          {statePopupUpgradeProfessional?.open && !isExpired && <PopupUpgradeProfessional {...props} />}
+          {statePopupUpgradePro?.open && (
+            <PopupUpgradePro
+              open={statePopupUpgradePro.open}
+              onClose={() => {
+                // Không cho phép đóng khi hết hạn
+                if (!isExpired) {
+                  dispatch({
+                    type: 'statePopupUpgradePro',
+                    payload: { open: false },
+                  });
+                }
+              }}
+              onUpgrade={() => {
+                // Đóng popup Pro upgrade hiện tại
+                dispatch({
+                  type: 'statePopupUpgradePro',
+                  payload: { open: false },
+                });
+
+                // Mở popup nâng cấp Professional giống ở header
+                dispatch({
+                  type: 'statePopupGlobal',
+                  payload: {
+                    open: true,
+                    allowOutsideClick: false,
+                    allowEscape: false,
+                    children: (
+                      <PopupUpgradeProfessional
+                        {...props}
+                        onClose={() => {
+                          // Khi đóng PopupUpgradeProfessional, nếu vẫn hết hạn thì mở lại PopupUpgradePro
+                          dispatch({
+                            type: 'statePopupGlobal',
+                            payload: { open: false },
+                          });
+                          if (isExpired) {
+                            dispatch({
+                              type: 'statePopupUpgradePro',
+                              payload: { open: true },
+                            });
+                          }
+                        }}
+                      />
+                    ),
+                  },
+                });
+              }}
+            />
+          )}
+          {statePopupSuccessfulPayment?.open && !isExpired && <PopupSuccessfulPayment {...props} />}
+          {statePopupSuccessfulBuyMoreUser?.open && !isExpired && <PopupSuccessfulBuyMoreUser {...props} />}
         </React.Fragment>
       )}
 

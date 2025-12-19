@@ -373,7 +373,7 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
   const handleImageUpload = useCallback(
     e => {
       const files = Array.from(e.target.files || []);
-      const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+      const MAX_SIZE = 1 * 1024 * 1024; // 1MB
       let hasOversize = false;
 
       files.forEach(file => {
@@ -388,7 +388,7 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
         }
       });
 
-      setImageError(hasOversize ? 'Kích thước ảnh không được vượt quá 5MB' : '');
+      setImageError(hasOversize ? 'Kích thước ảnh không được vượt quá 1MB' : '');
       // Reset input để có thể chọn lại file giống nhau
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -478,29 +478,29 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
                           <span ref={measureRef} className='absolute invisible whitespace-pre text-xs leading-[20px] px-0' style={{ font: 'inherit' }}>
                             {newTagInput || 'Nhập lỗi'}
                           </span>
-                          <div className="relative">
-                          <input
-                            type='text'
-                            value={newTagInput}
-                            onChange={e => {
-                              const value = e.target.value;
-                              setNewTagInput(value);
-                              debouncedGetQcErrorDetails({
-                                item_id: product?.item_id ?? product?.id ?? '',
-                                item_variation_id: product?.item_variation_id ?? product?.item_variation_option_value_id ?? '',
-                                search: value || '',
-                              });
-                            }}
-                            onKeyDown={handleKeyDown}
-                            onFocus={() => setIsInputFocused(true)}
-                            onBlur={() => {
-                              setIsInputFocused(false);
-                            }}
-                            placeholder='Nhập lỗi'
-                            style={{ width: '100%' }}
-                            className='leading-[20px] bg-transparent outline-none text-xs'
-                          />
-                          {isInputFocused && <div className='absolute -bottom-1.5 left-[125%] text-[10px] text-gray-400 truncate'>(Nhấn Enter để nhập tag)</div>}
+                          <div className='relative'>
+                            <input
+                              type='text'
+                              value={newTagInput}
+                              onChange={e => {
+                                const value = e.target.value;
+                                setNewTagInput(value);
+                                debouncedGetQcErrorDetails({
+                                  item_id: product?.item_id ?? product?.id ?? '',
+                                  item_variation_id: product?.item_variation_id ?? product?.item_variation_option_value_id ?? '',
+                                  search: value || '',
+                                });
+                              }}
+                              onKeyDown={handleKeyDown}
+                              onFocus={() => setIsInputFocused(true)}
+                              onBlur={() => {
+                                setIsInputFocused(false);
+                              }}
+                              placeholder='Nhập lỗi'
+                              style={{ width: '100%' }}
+                              className='leading-[20px] bg-transparent outline-none text-xs'
+                            />
+                            {isInputFocused && <div className='absolute -bottom-1.5 left-[125%] text-[10px] text-gray-400 truncate'>(Nhấn Enter để nhập tag)</div>}
                           </div>
                           {showSuggestions && (
                             <div className='absolute -left-2 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-[60px] overflow-auto min-w-[80px]'>
@@ -607,7 +607,11 @@ export const PopupProductionOrderStatus = ({ onClose, className, title, descript
         </motion.div>
       </div>
       <div className='flex justify-center'>
-        <Image width={267} height={200} src={'/popup/commandCompleted.webp'} alt='commandCompleted' className='object-cover size-full w-[384px]' unoptimized />
+        {isError ? (
+          <Image src='/bot-ai/userFail.png' alt='Error' width={600} height={600} className='w-[300px] h-[230px]' loading='eager' priority />
+        ) : (
+          <Image width={267} height={200} src={'/popup/commandCompleted.webp'} alt='commandCompleted' className='object-cover size-full w-[384px]' unoptimized />
+        )}
       </div>
       <p className='text-base text-typo-black-4 text-center'>{displayDescription}</p>
     </div>

@@ -4,6 +4,7 @@ import { useGetUpgradePackage } from '@/hooks/useAuth';
 import useSetingServer from '@/hooks/useConfigNumber';
 import { useGetCheckNotiRead } from '@/hooks/useNotifications';
 import useToast from '@/hooks/useToast';
+import useSettingExpiration from '@/hooks/useSettingExpiration';
 import { getColorByParam } from '@/utils/helpers/radomcolor';
 import { CookieCore } from '@/utils/lib/cookie';
 import { Lexend_Deca } from '@next/font/google';
@@ -41,6 +42,7 @@ const Header = () => {
   const dataPstWH = useSelector(state => state.statusUser);
 
   const dataSeting = useSetingServer();
+  const { isNearlyExpired, daysLeft } = useSettingExpiration();
   // Khai báo biến state
   const [currentDropdownIndex, setCurrentDropdownIndex] = useState(0);
 
@@ -745,6 +747,12 @@ const Header = () => {
               link: '/report-statistical/purchase-report/import-goods',
               // forceDisableForAdmin: true,
             },
+            {
+              viewOwn: 1,
+              view: 1,
+              name: 'Báo cáo quỹ',
+              link: '/report-statistical/fund-balance/income-expenses',
+            },
           ],
         },
       ],
@@ -1085,132 +1093,133 @@ const Header = () => {
   const currentDropdown = dropdowns[currentDropdownIndex];
 
   return (
-    <header className='fixed z-[990] w-full bg-[#003DA0] top-0 xl:h-[72px] h-[62px] flex items-center justify-between 3xl:px-6 2xl:px-4 px-5 py-4'>
-      <div className='flex items-center flex-row gap-x-4'>
-        <Link href='/' className='relative '>
-          <Image
-            alt=''
-            src='/LOGO_HEADER.png'
-            width={100}
-            height={45}
-            quality={100}
-            className='3xl:w-[110px] 2xl:w-[100px] xl:w-[90px] w-[90px] h-auto object-contain'
-            loading='lazy'
-            crossOrigin='anonymous'
-            placeholder='blur'
-            blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
-          />
-        </Link>
+    <>
+      <header className='fixed z-[990] w-full bg-[#003DA0] top-0 xl:h-[72px] h-[62px] flex items-center justify-between 3xl:px-6 2xl:px-4 px-5 py-4'>
+        <div className='flex items-center flex-row gap-x-4'>
+          <Link href='/' className='relative '>
+            <Image
+              alt=''
+              src='/LOGO_HEADER.png'
+              width={100}
+              height={45}
+              quality={100}
+              className='3xl:w-[110px] 2xl:w-[100px] xl:w-[90px] w-[90px] h-auto object-contain'
+              loading='lazy'
+              crossOrigin='anonymous'
+              placeholder='blur'
+              blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+            />
+          </Link>
 
-        <div className='flex flex-row items-center xl:gap-1 gap-0.5'>
-          {dropdowns.map((dropdown, index) => {
-            return (
-              <React.Fragment key={index}>
-                <Tooltip
-                  titleClassName='custom-title-class'
-                  trigger='manual'
-                  html={
-                    <div className='w-auto h-auto rounded-lg '>
-                      <div className='flex items-center justify-center rounded-lg'>
-                        <ArrowUp size='32' color='green' className='rotate-45 animate-pulse ' />
-                        <h2 className='px-3 py-2 font-semibold text-justify text-black '>{dropdown.text}</h2>
+          <div className='flex flex-row items-center xl:gap-1 gap-0.5'>
+            {dropdowns.map((dropdown, index) => {
+              return (
+                <React.Fragment key={index}>
+                  <Tooltip
+                    titleClassName='custom-title-class'
+                    trigger='manual'
+                    html={
+                      <div className='w-auto h-auto rounded-lg '>
+                        <div className='flex items-center justify-center rounded-lg'>
+                          <ArrowUp size='32' color='green' className='rotate-45 animate-pulse ' />
+                          <h2 className='px-3 py-2 font-semibold text-justify text-black '>{dropdown.text}</h2>
+                        </div>
                       </div>
-                    </div>
-                  }
-                  title={dropdown.text}
-                  open={dataPstWH && index === currentDropdownIndex}
-                  position='bottom'
-                  animation='perspective'
-                  size='regular'
-                  theme='light'
-                  arrow={true}
-                >
-                  <Dropdown data={dropdown.data} position={dropdown.position} className={dropdown.className} link={dropdown.link} style={dataPstWH} icon={true} wFit={true}>
-                    {dropdown.title}
-                  </Dropdown>
-                </Tooltip>
-              </React.Fragment>
-            );
-          })}
+                    }
+                    title={dropdown.text}
+                    open={dataPstWH && index === currentDropdownIndex}
+                    position='bottom'
+                    animation='perspective'
+                    size='regular'
+                    theme='light'
+                    arrow={true}
+                  >
+                    <Dropdown data={dropdown.data} position={dropdown.position} className={dropdown.className} link={dropdown.link} style={dataPstWH} icon={true} wFit={true}>
+                      {dropdown.title}
+                    </Dropdown>
+                  </Tooltip>
+                </React.Fragment>
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      <div className='flex items-center gap-2 xl:gap-4 2xl:gap-6'>
-        {authState?.is_upgrade && (
-          <button
-            className='py-1 px-2 rounded-full bg-blue-fmrp flex items-center gap-2'
-            onClick={() => {
-              dispatch({
-                type: 'statePopupGlobal',
-                payload: {
-                  open: true,
-                  children: (
-                    <PopupUpgradeProfessional
-                      upgradePackageData={upgradePackageData}
-                      onClose={() =>
-                        dispatch({
-                          type: 'statePopupGlobal',
-                          payload: { open: false },
-                        })
-                      }
-                    />
-                  ),
-                },
-              });
-            }}
-          >
-            <SparkleIcon className='text-white' size={16} />
-            <span className='3xl:text-base xxl:text-sm xl:text-xs text-[11px] font-normal text-white whitespace-nowrap'>Nâng cấp Pro</span>
-          </button>
-        )}
-        <div className='flex items-center gap-3'>
-          <Tooltip
-            key={showQRHint ? 'qr-hint' : 'qr-normal'}
-            title={'Quét QR để đăng nhập app'}
-            arrow
-            theme='dark'
-            trigger={showQRHint ? 'manual' : 'mouseenter'}
-            open={showQRHint ? true : undefined}
-            distance={20}
-            shown={tip => {
-              if (showQRHint) {
-                tip?.popper?.querySelector('.tippy-tooltip')?.classList?.add('qr-tooltip-bounce');
-              }
-            }}
-            hidden={tip => {
-              tip?.popper?.querySelector('.tippy-tooltip')?.classList?.remove('qr-tooltip-bounce');
-            }}
-            html={showQRHint ? <div className='text-sm font-medium text-white'>Quét QR để đăng nhập app</div> : undefined}
-          >
+        <div className='flex items-center gap-2 xl:gap-4 2xl:gap-6'>
+          {authState?.is_upgrade && (
             <button
-              type='button'
-              onClick={() =>
+              className='py-1 px-2 rounded-full bg-blue-fmrp flex items-center gap-2'
+              onClick={() => {
                 dispatch({
                   type: 'statePopupGlobal',
                   payload: {
                     open: true,
-                    children: <PopupQRCodeHeader />,
-                    allowOutsideClick: true,
-                    allowEscape: true,
+                    children: (
+                      <PopupUpgradeProfessional
+                        upgradePackageData={upgradePackageData}
+                        onClose={() =>
+                          dispatch({
+                            type: 'statePopupGlobal',
+                            payload: { open: false },
+                          })
+                        }
+                      />
+                    ),
                   },
-                })
-              }
-              className='2xl:size-6 xl:size-5 size-3 shink-0 cursor-pointer flex items-center justify-center rounded-full opacity-80'
+                });
+              }}
             >
-              <Image
-                alt='qr-code'
-                src='/icon/icon-qr.png'
-                width={24}
-                height={24}
-                quality={100}
-                className='object-contain transition size-6'
-                priority
-                crossOrigin='anonymous'
-                blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
-              />
+              <SparkleIcon className='text-white' size={16} />
+              <span className='3xl:text-base xxl:text-sm xl:text-xs text-[11px] font-normal text-white whitespace-nowrap'>Nâng cấp Pro</span>
             </button>
-          </Tooltip>
-          {/* <Dropdown data={ListQuyTrinh} type='procedure' className='popover-quytrinh' position={'bottom'} classNameTrigger={'2xl:!p-0 !p-0'}>
+          )}
+          <div className='flex items-center gap-3'>
+            <Tooltip
+              key={showQRHint ? 'qr-hint' : 'qr-normal'}
+              title={'Quét QR để đăng nhập app'}
+              arrow
+              theme='dark'
+              trigger={showQRHint ? 'manual' : 'mouseenter'}
+              open={showQRHint ? true : undefined}
+              distance={20}
+              shown={tip => {
+                if (showQRHint) {
+                  tip?.popper?.querySelector('.tippy-tooltip')?.classList?.add('qr-tooltip-bounce');
+                }
+              }}
+              hidden={tip => {
+                tip?.popper?.querySelector('.tippy-tooltip')?.classList?.remove('qr-tooltip-bounce');
+              }}
+              html={showQRHint ? <div className='text-sm font-medium text-white'>Quét QR để đăng nhập app</div> : undefined}
+            >
+              <button
+                type='button'
+                onClick={() =>
+                  dispatch({
+                    type: 'statePopupGlobal',
+                    payload: {
+                      open: true,
+                      children: <PopupQRCodeHeader />,
+                      allowOutsideClick: true,
+                      allowEscape: true,
+                    },
+                  })
+                }
+                className='2xl:size-6 xl:size-5 size-3 shink-0 cursor-pointer flex items-center justify-center rounded-full opacity-80'
+              >
+                <Image
+                  alt='qr-code'
+                  src='/icon/icon-qr.png'
+                  width={24}
+                  height={24}
+                  quality={100}
+                  className='object-contain transition size-6'
+                  priority
+                  crossOrigin='anonymous'
+                  blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+                />
+              </button>
+            </Tooltip>
+            {/* <Dropdown data={ListQuyTrinh} type='procedure' className='popover-quytrinh' position={'bottom'} classNameTrigger={'2xl:!p-0 !p-0'}>
             <div className='2xl:size-5 xl:size-4 size-3 shink-0'>
               <Image
                 alt=''
@@ -1226,95 +1235,145 @@ const Header = () => {
             </div>
           </Dropdown> */}
 
-          <DropdownThongBao notiRead={checkNotiRead} position={'bottom center'}>
-            <div className='2xl:size-5 xl:size-4 size-3 shink-0'>
-              <Image
-                alt=''
-                src='/icon/header/right/thongbao.png'
-                width={18}
-                height={18}
-                quality={100}
-                className='object-contain w-full h-full transition'
-                // loading='lazy'
-                priority
-                crossOrigin='anonymous'
-                blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
-              />
-            </div>
-          </DropdownThongBao>
+            <DropdownThongBao notiRead={checkNotiRead} position={'bottom center'}>
+              <div className='2xl:size-5 xl:size-4 size-3 shink-0'>
+                <Image
+                  alt=''
+                  src='/icon/header/right/thongbao.png'
+                  width={18}
+                  height={18}
+                  quality={100}
+                  className='object-contain w-full h-full transition'
+                  // loading='lazy'
+                  priority
+                  crossOrigin='anonymous'
+                  blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+                />
+              </div>
+            </DropdownThongBao>
 
-          <Tooltip title={'Hướng dẫn phần mềm'} className='cursor-pointer' arrow theme='dark'>
-            <motion.div
-              className='cursor-pointer 2xl:size-6 xl:size-5 size-4 shink-0'
-              onClick={() => window.open('https://help.fmrp.vn')}
-              initial={{ rotate: 0 }}
-              animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
-              transition={{
-                duration: 0.6,
-                repeat: Infinity,
-                repeatDelay: 2,
-                ease: 'easeInOut',
+            <Tooltip title={'Hướng dẫn phần mềm'} className='cursor-pointer' arrow theme='dark'>
+              <motion.div
+                className='cursor-pointer 2xl:size-6 xl:size-5 size-4 shink-0'
+                onClick={() => window.open('https://help.fmrp.vn')}
+                initial={{ rotate: 0 }}
+                animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
+                transition={{
+                  duration: 0.6,
+                  repeat: Infinity,
+                  repeatDelay: 2,
+                  ease: 'easeInOut',
+                }}
+              >
+                <Image
+                  alt=''
+                  src='/icon/header/right/question.png'
+                  width={18}
+                  height={18}
+                  quality={100}
+                  className='object-contain w-full h-full transition'
+                  // loading='lazy'
+                  priority
+                  crossOrigin='anonymous'
+                  blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+                />
+              </motion.div>
+            </Tooltip>
+            <Tooltip title={'Cài đặt'} arrow className='cursor-pointer' theme='dark'>
+              <div className='2xl:size-6 xl:size-5 size-4 shink-0'>
+                <Image
+                  alt=''
+                  onClick={() => {
+                    if (role) {
+                      router.push('/settings');
+                    } else {
+                      isShow('error', WARNING_STATUS_ROLE_ADMIN);
+                    }
+                  }}
+                  src='/icon/header/right/seting.png'
+                  width={20}
+                  height={20}
+                  quality={100}
+                  className='object-contain w-full h-full transition'
+                  // loading='lazy'
+                  priority
+                  crossOrigin='anonymous'
+                  blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+                />
+              </div>
+            </Tooltip>
+          </div>
+
+          <DropdownAvatar />
+        </div>
+        <style jsx global>{`
+          /* Bounce only the tooltip bubble so placement transform from Tippy stays intact */
+          .tippy-tooltip.qr-tooltip-bounce {
+            animation: qr-bounce 0.9s ease-in-out infinite;
+            animation-delay: 0.2s;
+          }
+          @keyframes qr-bounce {
+            0%,
+            100% {
+              transform: translateY(0);
+            }
+            50% {
+              transform: translateY(-8px);
+            }
+          }
+        `}</style>
+      </header>
+      {isNearlyExpired && (
+        <div className='fixed left-0 w-full h-[38px] z-[980] xl:top-[72px] top-[62px] bg-[#FFE9D5] flex items-center justify-between px-4'>
+          <div className='flex gap-3 items-center'>
+            <svg width='24' height='24' viewBox='0 0 28 28' fill='none' xmlns='http://www.w3.org/2000/svg'>
+              <path
+                d='M24.862 8.77516L19.2248 3.13797C18.8957 2.81078 18.4508 2.62647 17.9867 2.625H10.0133C9.54917 2.62647 9.10432 2.81078 8.77516 3.13797L3.13797 8.77516C2.81078 9.10432 2.62647 9.54917 2.625 10.0133V17.9867C2.62647 18.4508 2.81078 18.8957 3.13797 19.2248L8.77516 24.862C9.10432 25.1892 9.54917 25.3735 10.0133 25.375H17.9867C18.4508 25.3735 18.8957 25.1892 19.2248 24.862L24.862 19.2248C25.1892 18.8957 25.3735 18.4508 25.375 17.9867V10.0133C25.3735 9.54917 25.1892 9.10432 24.862 8.77516ZM13.125 8.75C13.125 8.51794 13.2172 8.29538 13.3813 8.13128C13.5454 7.96719 13.7679 7.875 14 7.875C14.2321 7.875 14.4546 7.96719 14.6187 8.13128C14.7828 8.29538 14.875 8.51794 14.875 8.75V14.875C14.875 15.1071 14.7828 15.3296 14.6187 15.4937C14.4546 15.6578 14.2321 15.75 14 15.75C13.7679 15.75 13.5454 15.6578 13.3813 15.4937C13.2172 15.3296 13.125 15.1071 13.125 14.875V8.75ZM14 20.125C13.7404 20.125 13.4867 20.048 13.2708 19.9038C13.055 19.7596 12.8867 19.5546 12.7874 19.3148C12.6881 19.0749 12.6621 18.811 12.7127 18.5564C12.7634 18.3018 12.8884 18.068 13.0719 17.8844C13.2555 17.7009 13.4893 17.5759 13.7439 17.5252C13.9985 17.4746 14.2624 17.5006 14.5023 17.5999C14.7421 17.6992 14.9471 17.8675 15.0913 18.0833C15.2355 18.2992 15.3125 18.5529 15.3125 18.8125C15.3125 19.1606 15.1742 19.4944 14.9281 19.7406C14.6819 19.9867 14.3481 20.125 14 20.125Z'
+                fill='#FF5630'
+              />
+            </svg>
+
+            <p className='text-[#7A0916] font-medium text-sm'>
+              Phiên bản dùng thử sẽ kết thúc sau{' '}
+              <span className='text-[#F3032B]'>
+                {typeof daysLeft === 'number' ? daysLeft  : 7} ngày.
+              </span>{' '}
+              Nâng cấp để tiếp tục sử dụng đầy đủ tính năng hoặc liên hệ{' '}
+              <a href='https://zalo.me/fososoft' target='_blank' className='text-[#137EF4] underline cursor-pointer font-bold'>
+                Zalo{' '}
+              </a>
+              để được tư vấn ngay.
+            </p>
+          </div>
+          <div className='flex items-center'>
+            <button
+              className='bg-[#B71D18] rounded-lg px-2 py-1 text-xs text-white cursor-pointer hover:bg-[#B71D18]/80 transition-all duration-300 truncate'
+              onClick={() => {
+                dispatch({
+                  type: 'statePopupGlobal',
+                  payload: {
+                    open: true,
+                    children: (
+                      <PopupUpgradeProfessional
+                        upgradePackageData={upgradePackageData}
+                        onClose={() =>
+                          dispatch({
+                            type: 'statePopupGlobal',
+                            payload: { open: false },
+                          })
+                        }
+                      />
+                    ),
+                  },
+                });
               }}
             >
-              <Image
-                alt=''
-                src='/icon/header/right/question.png'
-                width={18}
-                height={18}
-                quality={100}
-                className='object-contain w-full h-full transition'
-                // loading='lazy'
-                priority
-                crossOrigin='anonymous'
-                blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
-              />
-            </motion.div>
-          </Tooltip>
-          <Tooltip title={'Cài đặt'} arrow className='cursor-pointer' theme='dark'>
-            <div className='2xl:size-6 xl:size-5 size-4 shink-0'>
-              <Image
-                alt=''
-                onClick={() => {
-                  if (role) {
-                    router.push('/settings');
-                  } else {
-                    isShow('error', WARNING_STATUS_ROLE_ADMIN);
-                  }
-                }}
-                src='/icon/header/right/seting.png'
-                width={20}
-                height={20}
-                quality={100}
-                className='object-contain w-full h-full transition'
-                // loading='lazy'
-                priority
-                crossOrigin='anonymous'
-                blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
-              />
-            </div>
-          </Tooltip>
+              Nâng cấp ngay
+            </button>
+          </div>
         </div>
-
-        <DropdownAvatar />
-      </div>
-
-      <style jsx global>{`
-        /* Bounce only the tooltip bubble so placement transform from Tippy stays intact */
-        .tippy-tooltip.qr-tooltip-bounce {
-          animation: qr-bounce 0.9s ease-in-out infinite;
-          animation-delay: 0.2s;
-        }
-        @keyframes qr-bounce {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-8px);
-          }
-        }
-      `}</style>
-    </header>
+      )}
+    </>
   );
 };
 

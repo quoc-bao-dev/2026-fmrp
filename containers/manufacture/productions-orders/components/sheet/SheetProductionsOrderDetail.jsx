@@ -9,6 +9,7 @@ import TabSwitcherWithUnderlineSkeleton from '@/containers/manufacture/productio
 import { StateContext } from '@/context/_state/productions-orders/StateContext';
 import { useSheet } from '@/context/ui/SheetContext';
 import useSetingServer from '@/hooks/useConfigNumber';
+import useSettingExpiration from '@/hooks/useSettingExpiration';
 import useToast from '@/hooks/useToast';
 import { useItemOrderDetail } from '@/managers/api/productions-order/useItemOrderDetail';
 import formatMoneyConfig from '@/utils/helpers/formatMoney';
@@ -174,8 +175,12 @@ const SheetProductionsOrderDetail = memo(({ dataLang, ...props }) => {
 
   // if (!poiId && isMounted) return <Loading className='3xl:h-full 2xl:h-full xl:h-full h-full col-span-16' />
 
+  const { isNearlyExpired } = useSettingExpiration();
+  const hasAlert = isNearlyExpired;
+  const classNameSpace =  hasAlert ? "pt-[28px] " : "pt-[0px]"
+
   return (
-    <div className='flex flex-col overflow-hidden !bg-white h-full'>
+    <div className={`flex flex-col overflow-hidden !bg-white h-full ${classNameSpace}`}>
       <div
         className='3xl:pl-6 pl-4 3xl:pr-4 pr-2 3xl:py-3 py-1 flex items-center justify-between bg-white'
         style={{
@@ -233,7 +238,7 @@ const SheetProductionsOrderDetail = memo(({ dataLang, ...props }) => {
           <div className='flex flex-col 3xl:gap-6 gap-4 w-full border border-[#D0D5DD] rounded-2xl bg-white 3xl:px-8 px-6 3xl:py-6 py-4'>
             <div className='flex items-center justify-between w-full'>
               <h2 className='text-title-small text-[#11315B] font-medium capitalize'>Thông tin chung</h2>
-              <div className='w-fit'>{managerAvatars.length > 0 ? <AvatarStack people={managerAvatars} /> : <span className='text-sm text-[#9295A4]'>Chưa có người phụ trách</span>}</div>
+              <div className='w-fit'>{managerAvatars.length > 0 ? <AvatarStack people={managerAvatars} size={32} /> : <span className='text-sm text-[#9295A4]'>Chưa có người phụ trách</span>}</div>
             </div>
             <div className='grid grid-cols-2'>
               <div className='flex flex-col gap-1 col-span-1 w-full'>
