@@ -47,9 +47,9 @@ const PopupGroupPiecework = ({ dataLang, className, onRefresh, trigger, buttonCl
         trigger ? (
           trigger
         ) : (
-          <p className='flex flex-row justify-center items-center gap-x-1 responsive-text-sm text-sm font-normal'>
-            <PlusIcon className='size-4' /> {dataLang?.branch_popup_create_new || '+ Tạo mới'}
-          </p>
+        <p className='flex flex-row justify-center items-center gap-x-1 responsive-text-sm text-sm font-normal'>
+          <PlusIcon className='size-4' /> {dataLang?.branch_popup_create_new || '+ Tạo mới'}
+        </p>
         )
       }
       onClickOpen={() => setIsOpen(true)}
@@ -57,13 +57,13 @@ const PopupGroupPiecework = ({ dataLang, className, onRefresh, trigger, buttonCl
       onClose={() => setIsOpen(false)}
       type='popupGroupPiecework'
       classNameBtn={buttonClassName || className}
-      classNameModeltime={`max-w-[654px] w-[654px] p-6 rounded-[24px]`}
+      classNameModeltime={`max-w-[654px]- !w-[654px] p-6 rounded-[24px]`}
       classNameTittle='items-start'
     >
-      <div className={`${deca.className} flex flex-col gap-6`}>
+      <div className={`${deca.className} w-full flex flex-col gap-6`}>
         {/* Header */}
         <div className='flex items-center justify-between gap-4'>
-          <h2 className='text-[24px] leading-[20px] font-bold text-[#141522] capitalize'>{title}</h2>
+            <h2 className='text-[24px] leading-[20px] font-bold text-[#141522] capitalize'>{title}</h2>
           <motion.button
             whileHover={{ scale: 1.1, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
@@ -105,14 +105,14 @@ const PopupGroupPiecework = ({ dataLang, className, onRefresh, trigger, buttonCl
               data={mockStaffs}
               hideSelected={false}
             >
-              <button
-                type='button'
+            <button
+              type='button'
                 onClick={() => setOpenCombo(true)}
                 className='inline-flex items-center gap-2 px-3 py-3 rounded-lg bg-[#E2EFFF] text-[#25387A] text-sm font-medium hover:bg-[#D4E4FF] hover:shadow-sm transition-colors w-fit'
-              >
-                <UserPlusIcon className='size-5 text-[#25387A]' />
-                <span>{dataLang?.piecework_wage_group_add_staff || 'Thêm nhân viên'}</span>
-              </button>
+            >
+              <UserPlusIcon className='size-5 text-[#25387A]' />
+              <span>{dataLang?.piecework_wage_group_add_staff || 'Thêm nhân viên'}</span>
+            </button>
             </ResponsiblePersonComboBox>
 
             {/* Table header */}
@@ -155,7 +155,7 @@ const PopupGroupPiecework = ({ dataLang, className, onRefresh, trigger, buttonCl
                     </div>
                   ))}
                 </div>
-              </div>
+            </div>
             )}
           </div>
 
