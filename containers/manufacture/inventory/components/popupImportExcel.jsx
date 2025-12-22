@@ -147,7 +147,7 @@ const PopupImportExcel = React.memo(props => {
         open={open}
         onClose={_HandleClose}
         button={
-          <button onClick={_CheckWareHouse} className='!py-3 3xl:py-3 3xl:px-4 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded border border-blue-fmrp transition'>
+          <button onClick={_CheckWareHouse} className='!py-3 3xl:py-3 3xl:px-4 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded-lg border border-blue-fmrp transition'>
             <ExcelIcon className='3xl:size-5 size-4 text-blue-fmrp' />
             <span className='text-blue-fmrp responsive-text-sm font-medium whitespace-nowrap'>Kiểm kê bằng excel</span>
           </button>
