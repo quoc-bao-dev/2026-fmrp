@@ -475,9 +475,20 @@ const PieceworkWage = props => {
                               {index + 1}
                             </RowItemTable>
                             <RowItemTable colSpan={1} textAlign={'left'}>
-                              {/* {e.code || ""} */}
-
-                              <span className='text-blue-fmrp'>{e.code || 0}</span>
+                              {role == true || checkEdit ? (
+                                <PopupGroupPiecework
+                                  dataLang={dataLang}
+                                  onRefresh={refetch}
+                                  listBranch={listBranch}
+                                  editData={e}
+                                  trigger={
+                                    <span className='text-blue-fmrp cursor-pointer hover:underline'>{e.code || ''}</span>
+                                  }
+                                  buttonClassName='inline-flex'
+                                />
+                              ) : (
+                                <span className='text-blue-fmrp'>{e.code || ''}</span>
+                              )}
                             </RowItemTable>
                             <RowItemTable colSpan={2.5} textAlign={'left'}>
                               {e.name}
