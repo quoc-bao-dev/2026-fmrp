@@ -319,44 +319,106 @@ const PieceworkWage = (props) => {
         {
             columns: [
                 {
-                    title: "ID",
-                    width: { wch: 4 },
+                    // STT
+                    title: `${dataLang?.stt || "STT"}`,
+                    width: { wch: 6 },
                     style: {
-                        fill: { fgColor: { rgb: "C7DFFB" } },
-                        font: { bold: true },
+                        fill: { fgColor: { rgb: "EFF6FF" } }, // nền xanh nhạt
+                        font: {
+                            bold: true,
+                            name: "Lexend Deca",
+                            color: { rgb: "111827" }, // text đậm
+                        },
                     },
                 },
                 {
+                    // Tên tổ nhóm
                     title: `${dataLang?.piecework_wage_group_name || "Tên tổ nhóm"}`,
-                    width: { wpx: 100 },
+                    width: { wpx: 160 },
                     style: {
-                        fill: { fgColor: { rgb: "C7DFFB" } },
-                        font: { bold: true },
+                        fill: { fgColor: { rgb: "EFF6FF" } }, // nền xanh nhạt
+                        font: {
+                            bold: true,
+                            name: "Lexend Deca",
+                            color: { rgb: "111827" }, // text đậm
+                        },
                     },
                 },
                 {
+                    // Số lượng
                     title: `${dataLang?.piecework_wage_group_quantity || "Số lượng"}`,
-                    width: { wch: 40 },
+                    width: { wch: 10 },
                     style: {
-                        fill: { fgColor: { rgb: "C7DFFB" } },
-                        font: { bold: true },
+                        fill: { fgColor: { rgb: "EFF6FF" } },
+                        font: {
+                            bold: true,
+                            name: "Lexend Deca",
+                            color: { rgb: "111827" },
+                        },
                     },
                 },
                 {
-                    title: `${dataLang?.piecework_wage_group_branch || "Chi nhánh"}`,
-                    width: { wch: 40 },
+                    // Nhân viên
+                    title: `${dataLang?.piecework_wage_group_employees || "Nhân viên"}`,
+                    width: { wpx: 320 },
                     style: {
-                        fill: { fgColor: { rgb: "C7DFFB" } },
-                        font: { bold: true },
+                        fill: { fgColor: { rgb: "EFF6FF" } },
+                        font: {
+                            bold: true,
+                            name: "Lexend Deca",
+                            color: { rgb: "111827" },
+                        },
+                    },
+                },
+                {
+                    // Chi nhánh
+                    title: `${dataLang?.piecework_wage_group_branch || "Chi nhánh"}`,
+                    width: { wch: 24 },
+                    style: {
+                        fill: { fgColor: { rgb: "EFF6FF" } },
+                        font: {
+                            bold: true,
+                            name: "Lexend Deca",
+                            color: { rgb: "111827" },
+                        },
                     },
                 },
             ],
-            data: data?.rResult?.map((e) => [
-                { value: `${e.id}`, style: { numFmt: "0" } },
-                { value: `${e.name ? e.name : ""}` },
-                { value: `${e.quantity ? e.quantity : ""}` },
-                { value: `${e.branch_name ? e.branch_name : ""}` },
-            ]),
+            data:
+                data?.rResult?.map((e, index) => {
+                    const employeesNames = Array.isArray(e.employees)
+                        ? e.employees
+                              .map((emp) => emp?.full_name || emp?.name)
+                              .filter(Boolean)
+                              .join(", ")
+                        : "";
+
+                    return [
+                        {
+                            value: index + 1,
+                            style: {
+                                numFmt: "0",
+                                font: { name: "Lexend Deca" },
+                            },
+                        }, // STT
+                        {
+                            value: `${e.name ? e.name : ""}`,
+                            style: { font: { name: "Lexend Deca" } },
+                        },
+                        {
+                            value: `${e.quantity ? e.quantity : ""}`,
+                            style: { font: { name: "Lexend Deca" } },
+                        },
+                        {
+                            value: employeesNames,
+                            style: { font: { name: "Lexend Deca" } },
+                        },
+                        {
+                            value: `${e.branch_name ? e.branch_name : ""}`,
+                            style: { font: { name: "Lexend Deca" } },
+                        },
+                    ];
+                }) || [],
         },
     ];
 
