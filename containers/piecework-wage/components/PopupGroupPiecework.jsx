@@ -144,7 +144,6 @@ const PopupGroupPiecework = ({ dataLang, className, onRefresh, trigger, buttonCl
       id_staff: idStaffArray,
       branch_id: branchId,
     };
-    console.log('Payload Object:', payload);
 
     // Gửi dữ liệu qua hook tương ứng với mode
     if (isEditMode && editData?.id) {
@@ -161,8 +160,22 @@ const PopupGroupPiecework = ({ dataLang, className, onRefresh, trigger, buttonCl
   const handleChangeBranch = (newBranch, fieldOnChange) => {
     const currentBranch = form.getValues('branch');
 
-    // Nếu bấm clear (newBranch = null) -> hỏi xác nhận, chưa clear ngay
+    // Nếu bấm clear (newBranch = null)
     if (!newBranch) {
+      // Nếu chưa chọn nhân viên nào thì clear luôn, không cần xác nhận
+      if (!selectedPeople.length) {
+        fieldOnChange(null);
+        form.clearErrors('branch');
+        setPendingBranch(null);
+        setIsPendingClearBranch(false);
+        setIsConfirmBranchChangeOpen(false);
+        setShouldFilterAfterBranchChange(false);
+        setSelectedPeople([]);
+        setErrorStaff('');
+        return;
+      }
+
+      // Nếu đã chọn nhân viên thì hỏi xác nhận trước khi clear
       setPendingBranch(null);
       setIsPendingClearBranch(true);
       setIsConfirmBranchChangeOpen(true);

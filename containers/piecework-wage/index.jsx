@@ -136,11 +136,11 @@ const PieceworkWage = (props) => {
 
     const branchOptions = useMemo(
         () => [
-            {
-                value: "",
-                label: dataLang?.price_quote_branch || "Chi nhánh",
-                isDisabled: true,
-            },
+            // {
+            //     value: "",
+            //     label: dataLang?.price_quote_branch || "Chi nhánh",
+            //     isDisabled: true,
+            // },
             ...listBranch,
         ],
         [dataLang?.price_quote_branch, listBranch]
@@ -154,11 +154,11 @@ const PieceworkWage = (props) => {
             })) || [];
 
         return [
-            {
-                value: "",
-                label: dataLang?.piecework_wage_group || "Tổ nhóm",
-                isDisabled: true,
-            },
+            // {
+            //     value: "",
+            //     label: dataLang?.piecework_wage_group || "Tổ nhóm",
+            //     isDisabled: true,
+            // },
             ...options,
         ];
     }, [dataLang?.piecework_wage_group, fullGroupMembersData]);
@@ -224,11 +224,14 @@ const PieceworkWage = (props) => {
     // Nếu đổi limit làm trang hiện tại vượt quá tổng trang, tự điều chỉnh về trang 1
     useEffect(() => {
         if (!effectiveLimit || effectiveLimit <= 0) return;
+        // Chờ fetch xong rồi mới xét redirect để tránh chuyển trang sớm khi dữ liệu chưa về
+        if (isFetching) return;
+
         const totalPages = Math.max(1, Math.ceil(totalRecords / effectiveLimit));
         if (currentPage > totalPages) {
             paginate(1);
         }
-    }, [effectiveLimit, totalRecords, currentPage, paginate]);
+    }, [effectiveLimit, totalRecords, currentPage, paginate, isFetching]);
 
     // Hàm tìm kiếm
     const _HandleOnChangeKeySearch = debounce(({ target: { value } }) => {
