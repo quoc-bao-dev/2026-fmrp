@@ -4,18 +4,19 @@ import PopupCustom from '@/components/UI/popup';
 import NoData from '@/components/UI/noData/nodata';
 import ResponsiblePersonComboBox from '@/components/UI/popup/ResponsiblePersonComboBox';
 import ResponsibleAvatar from '@/components/UI/common/user/ResponsibleAvatar';
+import SelectComponent from '@/components/UI/filterComponents/selectComponent';
 import { Lexend_Deca } from '@next/font/google';
 import { motion } from 'framer-motion';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
 
 const deca = Lexend_Deca({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
 });
 
-const PopupGroupPiecework = ({ dataLang, className, onRefresh, trigger, buttonClassName }) => {
+const PopupGroupPiecework = ({ dataLang, className, onRefresh, trigger, buttonClassName, listBranch = [], defaultBranch = null }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [groupName, setGroupName] = useState('');
   const [openCombo, setOpenCombo] = useState(false);
   const [selectedPeople, setSelectedPeople] = useState([]);
   const mockStaffs = [
@@ -27,18 +28,43 @@ const PopupGroupPiecework = ({ dataLang, className, onRefresh, trigger, buttonCl
     { id: 6, name: 'Hoàng Thị F', avatarUrl: null },
   ];
 
-  const handleSubmit = e => {
-    e.preventDefault();
-    // TODO: call API tạo tổ/nhóm
-    if (onRefresh) onRefresh();
-    setIsOpen(false);
-  };
+  const form = useForm({
+    defaultValues: {
+      groupName: '',
+      branch: defaultBranch,
+    },
+  });
 
   const title = dataLang?.piecework_wage_group_create || 'Tạo tổ/ nhóm';
 
   const handleRemovePerson = id => {
     setSelectedPeople(prev => prev.filter(p => p.id !== id));
   };
+
+  const handleSubmit = form.handleSubmit((data) => {
+    // TODO: call API tạo tổ/nhóm với data.groupName và data.branch
+    console.log('Form data:', data);
+    if (onRefresh) onRefresh();
+    setIsOpen(false);
+  });
+
+  // Set default branch when popup opens for creating new
+  useEffect(() => {
+    if (isOpen && defaultBranch) {
+      form.setValue('branch', defaultBranch);
+    }
+  }, [isOpen, defaultBranch, form]);
+
+  // Reset form when popup closes
+  useEffect(() => {
+    if (!isOpen) {
+      form.reset({
+        groupName: '',
+        branch: defaultBranch,
+      });
+      setSelectedPeople([]);
+    }
+  }, [isOpen, defaultBranch, form]);
 
   return (
     <PopupCustom
@@ -77,19 +103,102 @@ const PopupGroupPiecework = ({ dataLang, className, onRefresh, trigger, buttonCl
 
         {/* Form */}
         <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
-          {/* Tên tổ/nhóm */}
-          <div className='flex flex-col gap-2'>
-            <label className='text-[16px] leading-5 font-semibold text-[#141522] flex items-center gap-1'>
-              {dataLang?.piecework_wage_group_name || 'Tên tổ/ nhóm'}
-              <span className='text-[#EE1E1E]'>*</span>
-            </label>
-            <input
-              type='text'
-              value={groupName}
-              onChange={e => setGroupName(e.target.value)}
-              placeholder={dataLang?.piecework_wage_group_name_placeholder || 'Nhập tên tổ/ nhóm'}
-              className='w-full rounded-xl border border-[#D0D5DD] bg-white px-3 py-2.5 text-sm text-[#141522] outline-none focus:border-[#3276FA] focus:ring-1 focus:ring-[#3276FA]'
-            />
+          {/* Tên tổ/nhóm và Chi nhánh */}
+          <div className='flex flex-col gap-4'>
+            <div className='flex items-start gap-4'>
+              {/* Tên tổ/nhóm */}
+              <div className='flex flex-col gap-2 flex-1'>
+                <label className='text-[16px] leading-5 font-semibold text-[#141522] flex items-center gap-1'>
+                  {dataLang?.piecework_wage_group_name || 'Tên tổ/ nhóm'}
+                  <span className='text-[#EE1E1E]'>*</span>
+                </label>
+                <Controller
+                  name='groupName'
+                  control={form.control}
+                  rules={{
+                    required: {
+                      value: true,
+                      message: dataLang?.piecework_wage_group_name_required || 'Vui lòng nhập tên tổ/ nhóm',
+                    },
+                  }}
+                  render={({ field, fieldState }) => (
+                    <div className='flex flex-col gap-1'>
+                      <input
+                        type='text'
+                        {...field}
+                        placeholder={dataLang?.piecework_wage_group_name_placeholder || 'Nhập tên tổ/ nhóm'}
+                        className={`w-full rounded-lg border bg-white px-3 py-2 text-sm text-[#141522] outline-none hover:border-[#003DA0] focus:shadow-[0_0_0_1px_#003DA0] ${
+                          fieldState.error
+                            ? 'border-[#EE1E1E] focus:border-[#EE1E1E]'
+                            : 'border-[#D0D5DD] focus:border-[#003DA0]'
+                        }`}
+                      />
+                      {fieldState.error && (
+                        <span className='text-xs text-[#EE1E1E]'>{fieldState.error.message}</span>
+                      )}
+                    </div>
+                  )}
+                />
+              </div>
+              {/* Chi nhánh */}
+              <div className='flex flex-col gap-2 flex-1'>
+                <label className='text-[16px] leading-5 font-semibold text-[#141522] flex items-center gap-1'>
+                  {dataLang?.price_quote_branch || 'Chi nhánh'}
+                  <span className='text-[#EE1E1E]'>*</span>
+                </label>
+                <Controller
+                  name='branch'
+                  control={form.control}
+                  rules={{
+                    required: {
+                      value: true,
+                      message: dataLang?.price_quote_branch_required || 'Vui lòng chọn chi nhánh',
+                    },
+                  }}
+                  render={({ field, fieldState }) => (
+                    <div className='flex flex-col gap-1'>
+                      <SelectComponent
+                        options={[
+                          {
+                            value: "",
+                            label: dataLang?.price_quote_branch || "Chi nhánh",
+                            isDisabled: true,
+                          },
+                          ...listBranch,
+                        ]}
+                        {...field}
+                        className="!rounded-lg"
+                        onChange={(e) => field.onChange(e)}
+                        placeholder={dataLang?.price_quote_branch || "Chọn chi nhánh"}
+                        isClearable={true}
+                        styles={{
+                          control: (provided, state) => ({
+                            ...provided,
+                            borderRadius: '8px',
+                            borderColor: fieldState.error
+                              ? '#EE1E1E'
+                              : state.isFocused
+                              ? '#003DA0'
+                              : '#D0D5DD',
+                            boxShadow: fieldState.error
+                              ? 'none'
+                              : state.isFocused
+                              ? '0 0 0 1px #003DA0'
+                              : 'none',
+                            '&:hover': {
+                              borderColor: fieldState.error ? '#EE1E1E' : '#003DA0',
+                            },
+                          }),
+                        }}
+                      />
+                      {fieldState.error && (
+                        <span className='text-xs text-[#EE1E1E]'>{fieldState.error.message}</span>
+                      )}
+                    </div>
+                  )}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Thêm nhân viên */}
@@ -132,11 +241,11 @@ const PopupGroupPiecework = ({ dataLang, className, onRefresh, trigger, buttonCl
 
             {/* Body */}
             {selectedPeople.length === 0 ? (
-              <div className='mx-4 min-h-[240px] max-h-[280px] flex items-center justify-center'>
+              <div className='mx-4 h-[240px] flex items-center justify-center'>
                 <NoData type='report' classNameImage='w-[245px]' titleText={dataLang?.nodata || 'Chưa có dữ liệu'} />
               </div>
             ) : (
-              <div className='mx-4 max-h-[280px] overflow-y-auto'>
+              <div className='mx-4 h-[240px] max-h-[240px] overflow-y-auto'>
                 <div className='divide-y divide-[#E7EAEE]'>
                   {selectedPeople.map(person => (
                     <div key={person.id} className='flex items-center justify-between py-4'>

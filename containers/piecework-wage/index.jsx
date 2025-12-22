@@ -16,9 +16,12 @@ import ExcelFileComponent from "@/components/UI/filterComponents/excelFilecompon
 import SearchComponent from "@/components/UI/filterComponents/searchComponent";
 import SelectComponent from "@/components/UI/filterComponents/selectComponent";
 import Loading from "@/components/UI/loading/loading";
+import LoadingButton from "@/components/UI/loading/loadingButton";
 import NoData from "@/components/UI/noData/nodata";
 import Pagination from "@/components/UI/pagination";
+import PopupConfim from "@/components/UI/popupConfim/popupConfim";
 import { WARNING_STATUS_ROLE } from "@/constants/warningStatus/warningStatus";
+import { CONFIRM_DELETION, TITLE_DELETE } from "@/constants/delete/deleteTable";
 import { useBranchList } from "@/hooks/common/useBranch";
 import { useLimitAndTotalItems } from "@/hooks/useLimitAndTotalItems";
 import usePagination from "@/hooks/usePagination";
@@ -227,6 +230,8 @@ const PieceworkWage = (props) => {
     const { limit, updateLimit: sLimit } = useLimitAndTotalItems();
 
     const [isState, sIsState] = useState(initialState);
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const queryState = (key) => sIsState((prev) => ({ ...prev, ...key }));
 
     const { is_admin: role, permissions_current: auth } = useSelector(
@@ -369,9 +374,38 @@ const PieceworkWage = (props) => {
         console.log("Edit", id);
     };
 
-    const handleDelete = (id) => {
-        console.log("Delete", id);
+    const handleOpenDeletePopup = (id) => {
+        if (isDeleting) return;
+        setDeleteTarget(id);
     };
+
+    const handleDelete = async () => {
+        if (!deleteTarget || isDeleting) return;
+        setIsDeleting(true);
+
+        try {
+            // TODO: Call API xóa tổ/nhóm
+            console.log("Delete", deleteTarget);
+            // await deletePieceworkWageGroup(deleteTarget);
+            isShow("success", dataLang?.deleted_successfully || "Xóa thành công");
+            refetch();
+            setDeleteTarget(null);
+        } catch (error) {
+            console.error("Delete error:", error);
+            isShow("error", dataLang?.delete_failed || "Xóa thất bại");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const popupSubtitle = isDeleting ? (
+        <span className="inline-flex items-center gap-2 text-[#003DA0]">
+            <LoadingButton hiddenTitle className="w-4 h-4 text-[#003DA0]" />
+            <span>{dataLang?.processing || "Đang xử lý..."}</span>
+        </span>
+    ) : (
+        CONFIRM_DELETION
+    );
 
     return (
         <div className="min-h-screen relative">
@@ -409,6 +443,8 @@ const PieceworkWage = (props) => {
                                 <PopupGroupPiecework
                                     dataLang={dataLang}
                                     onRefresh={refetch}
+                                    listBranch={listBranch}
+                                    defaultBranch={isState.idBranch}
                                     className="responsive-text-sm 3xl:py-3 3xl:px-4 py-2 px-3 text-sm font-normal rounded-md bg-blue-fmrp text-white btn-animation hover:scale-105"
                                 />
                             ) : (
@@ -588,6 +624,8 @@ const PieceworkWage = (props) => {
                                                                 <PopupGroupPiecework
                                                                     dataLang={dataLang}
                                                                     onRefresh={refetch}
+                                                                    listBranch={listBranch}
+                                                                    defaultBranch={isState.idBranch}
                                                                     trigger={
                                                                         <div className="inline-flex cursor-pointer">
                                                                             <AvatarStack
@@ -618,6 +656,8 @@ const PieceworkWage = (props) => {
                                                                 <PopupGroupPiecework
                                                                     dataLang={dataLang}
                                                                     onRefresh={refetch}
+                                                                    listBranch={listBranch}
+                                                                    defaultBranch={isState.idBranch}
                                                                     trigger={
                                                                         <button
                                                                             type="button"
@@ -645,7 +685,7 @@ const PieceworkWage = (props) => {
                                                             {role == true || checkDelete ? (
                                                                 <button
                                                                     onClick={() =>
-                                                                        handleDelete(e.id)
+                                                                        handleOpenDeletePopup(e.id)
                                                                     }
                                                                     className="group hover:border-red-01 hover:bg-red-02 rounded-lg w-fit p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer"
                                                                     title="Xóa"
@@ -699,6 +739,31 @@ const PieceworkWage = (props) => {
                     </div>
                 }
             />
+            {deleteTarget && (
+                <PopupConfim
+                    dataLang={dataLang}
+                    type="warning"
+                    nameModel="piecework_wage_group"
+                    title={TITLE_DELETE}
+                    subtitle={popupSubtitle}
+                    isOpen={!!deleteTarget}
+                    save={() => {
+                        if (!isDeleting) {
+                            handleDelete();
+                        }
+                    }}
+                    cancel={() => {
+                        if (!isDeleting) {
+                            setDeleteTarget(null);
+                        }
+                    }}
+                    onClose={() => {
+                        if (!isDeleting) {
+                            setDeleteTarget(null);
+                        }
+                    }}
+                />
+            )}
         </div>
     );
 };
