@@ -16,9 +16,12 @@ import ExcelFileComponent from "@/components/UI/filterComponents/excelFilecompon
 import SearchComponent from "@/components/UI/filterComponents/searchComponent";
 import SelectComponent from "@/components/UI/filterComponents/selectComponent";
 import Loading from "@/components/UI/loading/loading";
+import LoadingButton from "@/components/UI/loading/loadingButton";
 import NoData from "@/components/UI/noData/nodata";
 import Pagination from "@/components/UI/pagination";
+import PopupConfim from "@/components/UI/popupConfim/popupConfim";
 import { WARNING_STATUS_ROLE } from "@/constants/warningStatus/warningStatus";
+import { CONFIRM_DELETION, TITLE_DELETE } from "@/constants/delete/deleteTable";
 import { useBranchList } from "@/hooks/common/useBranch";
 import { useLimitAndTotalItems } from "@/hooks/useLimitAndTotalItems";
 import usePagination from "@/hooks/usePagination";
@@ -29,193 +32,18 @@ import { TrashIcon } from "@/components/icons";
 import EditIcon from "@/components/icons/common/EditIcon";
 import PopupGroupPiecework from "./components/PopupGroupPiecework";
 import { Grid6 } from "iconsax-react";
+import MultiValue from "@/components/UI/mutiValue/multiValue";
 import { debounce } from "lodash";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-
-const MOCK_DATA = [
-    {
-        id: 1,
-        name: "Nhóm Gia Công",
-        quantity: 3,
-        employees: [
-            {
-                id: 1,
-                name: "Thành",
-                full_name: "Nguyễn Văn Thành",
-                avatar: null,
-                profile_image: null,
-            },
-        ],
-        branch_name: "Hồ Chí Minh",
-        branch_id: 1,
-    },
-    {
-        id: 2,
-        name: "Nhóm Gia Công",
-        quantity: 3,
-        employees: [
-            {
-                id: 2,
-                name: "Mai",
-                full_name: "Trần Thị Mai",
-                avatar: null,
-                profile_image: null,
-            },
-            {
-                id: 3,
-                name: "Hùng",
-                full_name: "Lê Văn Hùng",
-                avatar: null,
-                profile_image: null,
-            },
-        ],
-        branch_name: "Hồ Chí Minh",
-        branch_id: 1,
-    },
-    {
-        id: 3,
-        name: "Nhóm Gia Công",
-        quantity: 3,
-        employees: [
-            {
-                id: 4,
-                name: "Lan",
-                full_name: "Phạm Thị Lan",
-                avatar: null,
-                profile_image: null,
-            },
-            {
-                id: 5,
-                name: "Dũng",
-                full_name: "Hoàng Văn Dũng",
-                avatar: null,
-                profile_image: null,
-            },
-            {
-                id: 6,
-                name: "Hoa",
-                full_name: "Võ Thị Hoa",
-                avatar: null,
-                profile_image: null,
-            },
-        ],
-        branch_name: "Hồ Chí Minh",
-        branch_id: 1,
-    },
-    {
-        id: 4,
-        name: "Nhóm Gia Công",
-        quantity: 3,
-        employees: [
-            {
-                id: 7,
-                name: "Nam",
-                full_name: "Đỗ Văn Nam",
-                avatar: null,
-                profile_image: null,
-            },
-            {
-                id: 8,
-                name: "Linh",
-                full_name: "Bùi Thị Linh",
-                avatar: null,
-                profile_image: null,
-            },
-            {
-                id: 9,
-                name: "Tuấn",
-                full_name: "Ngô Văn Tuấn",
-                avatar: null,
-                profile_image: null,
-            },
-            // {
-            //     id: 10,
-            //     name: "Hương",
-            //     full_name: "Đinh Thị Hương",
-            //     avatar: null,
-            //     profile_image: null,
-            // },
-            // {
-            //     id: 11,
-            //     name: "Khoa",
-            //     full_name: "Lý Văn Khoa",
-            //     avatar: null,
-            //     profile_image: null,
-            // },
-        ],
-        branch_name: "Hồ Chí Minh",
-        branch_id: 1,
-    },
-    {
-        id: 5,
-        name: "Nhóm Gia Công",
-        quantity: 0,
-        employees: [],
-        branch_name: "Hồ Chí Minh",
-        branch_id: 1,
-    },
-    {
-        id: 6,
-        name: "Nhóm Gia Công",
-        quantity: 3,
-        employees: [
-            {
-                id: 12,
-                name: "Anh",
-                full_name: "Vũ Văn Anh",
-                avatar: null,
-                profile_image: null,
-            },
-            {
-                id: 13,
-                name: "Bình",
-                full_name: "Trương Văn Bình",
-                avatar: null,
-                profile_image: null,
-            },
-            {
-                id: 14,
-                name: "Cường",
-                full_name: "Phan Văn Cường",
-                avatar: null,
-                profile_image: null,
-            },
-            // {
-            //     id: 15,
-            //     name: "Dương",
-            //     full_name: "Lâm Văn Dương",
-            //     avatar: null,
-            //     profile_image: null,
-            // },
-        ],
-        branch_name: "Hồ Chí Minh",
-        branch_id: 1,
-    },
-    {
-        id: 7,
-        name: "Nhóm Gia Công",
-        quantity: 3,
-        employees: [
-            {
-                id: 16,
-                name: "Thành",
-                full_name: "Nguyễn Văn Thành",
-                avatar: null,
-                profile_image: null,
-            },
-        ],
-        branch_name: "Hồ Chí Minh",
-        branch_id: 1,
-    },
-];
+import { useGroupMembers, useDeleteGroupMember } from "@/hooks/common/useStaffs";
 
 const initialState = {
     keySearch: "",
-    idBranch: null,
-    idGroup: null,
+    idBranch: [],
+    idGroup: [],
 };
 
 const PieceworkWage = (props) => {
@@ -227,7 +55,24 @@ const PieceworkWage = (props) => {
     const { limit, updateLimit: sLimit } = useLimitAndTotalItems();
 
     const [isState, sIsState] = useState(initialState);
+    const [deleteTarget, setDeleteTarget] = useState(null);
     const queryState = (key) => sIsState((prev) => ({ ...prev, ...key }));
+
+    // Hook để xóa tổ/nhóm
+    const { mutate: deleteGroupMember, isLoading: isDeleting } = useDeleteGroupMember({
+        onSuccess: (data) => {
+            // Lấy message từ response và map với dataLang
+            const messageKey = data?.message || 'deleted_successfully';
+            // Kiểm tra isSuccess để quyết định toast type
+            const toastType = data?.isSuccess === true || data?.isSuccess === 1 ? 'success' : 'error';
+            isShow(toastType, dataLang?.[messageKey] || messageKey);
+        },
+        onError: (error) => {
+            // Lấy message từ error hoặc response nếu có
+            const messageKey = error?.response?.data?.message || error?.message || 'delete_failed';
+            isShow('error', dataLang?.[messageKey] || messageKey);
+        },
+    });
 
     const { is_admin: role, permissions_current: auth } = useSelector(
         (state) => state.auth
@@ -241,67 +86,152 @@ const PieceworkWage = (props) => {
     // Danh sách chi nhánh
     const { data: listBranch = [] } = useBranchList();
 
-    // Bộ lọc
-    const params = {
-        search: isState.keySearch,
-        limit: limit,
-        page: router.query?.page || 1,
-        "filter[branch_id]": isState.idBranch?.value ?? null,
-        "filter[group_id]": isState.idGroup?.value ?? null,
-    };
+    const branchIds = useMemo(
+        () =>
+            (isState.idBranch || [])
+                .map((item) => item?.value)
+                .filter((v) => v !== "" && v !== null && v !== undefined),
+        [isState.idBranch]
+    );
 
-    // Hook useMemo để return danh sách table
+    const groupIds = useMemo(
+        () =>
+            (isState.idGroup || [])
+                .map((item) => item?.value)
+                .filter((v) => v !== "" && v !== null && v !== undefined),
+        [isState.idGroup]
+    );
+
+    const effectiveLimit = useMemo(
+        () => (limit && Number(limit) > 0 ? Number(limit) : 15),
+        [limit]
+    );
+
+    const currentPage = useMemo(
+        () => Number(router.query?.page) || 1,
+        [router.query?.page]
+    );
+
+    const filterParams = useMemo(
+        () => ({
+            branch_id: branchIds,
+            id_group_members: groupIds,
+            search: isState.keySearch || "",
+            limit: effectiveLimit,
+            page: currentPage,
+        }),
+        [branchIds, groupIds, isState.keySearch, effectiveLimit, currentPage]
+    );
+
+    // Dữ liệu tổ nhóm theo bộ lọc (server pagination)
+    const {
+        data: groupMembersData,
+        isLoading: isLoadingGroups,
+        isFetching: isFetchingGroups,
+        refetch: refetchGroupMembers,
+    } = useGroupMembers({ params: filterParams });
+
+    // Danh sách tổ nhóm đầy đủ phục vụ combobox (không filter)
+    const { data: fullGroupMembersData } = useGroupMembers();
+
+    const branchOptions = useMemo(
+        () => [
+            // {
+            //     value: "",
+            //     label: dataLang?.price_quote_branch || "Chi nhánh",
+            //     isDisabled: true,
+            // },
+            ...listBranch,
+        ],
+        [dataLang?.price_quote_branch, listBranch]
+    );
+
+    const groupOptions = useMemo(() => {
+        const options =
+            fullGroupMembersData?.rResult?.map((group) => ({
+                value: parseInt(group.id) || group.id,
+                label: group.name,
+            })) || [];
+
+        return [
+            // {
+            //     value: "",
+            //     label: dataLang?.piecework_wage_group || "Tổ nhóm",
+            //     isDisabled: true,
+            // },
+            ...options,
+        ];
+    }, [dataLang?.piecework_wage_group, fullGroupMembersData]);
+
+    const totalRecords = useMemo(
+        () =>
+            Number(groupMembersData?.output?.iTotalDisplayRecords) ||
+            Number(groupMembersData?.output?.iTotalRecords) ||
+            0,
+        [groupMembersData]
+    );
+
+    // Hook useMemo để map dữ liệu từ API (không phân trang client)
     const tableData = useMemo(() => {
-        let filteredData = [...MOCK_DATA];
+        // Map dữ liệu từ API response sang format của table
+        const mappedData = (groupMembersData?.rResult || []).map((group) => {
+            // Lấy branch đầu tiên (hoặc có thể xử lý nhiều branch)
+            const firstBranch = group.branch?.[0] || {};
+            
+            // Map staff sang format employees
+            const employees = (group.staff || []).map((staff) => ({
+                id: parseInt(staff.id) || staff.id,
+                name: staff.full_name?.split(' ').pop() || staff.full_name,
+                full_name: staff.full_name,
+                avatar: staff.profile_image,
+                profile_image: staff.profile_image,
+            }));
 
-        // Filter theo search
-        if (params.search) {
-            const searchLower = params.search.toLowerCase();
-            filteredData = filteredData.filter(
-                (item) =>
-                    item.name?.toLowerCase().includes(searchLower) ||
-                    item.branch_name?.toLowerCase().includes(searchLower)
-            );
-        }
-
-        // Filter theo branch_id
-        if (params["filter[branch_id]"]) {
-            filteredData = filteredData.filter(
-                (item) => item.branch_id === params["filter[branch_id]"]
-            );
-        }
-
-        // Filter theo group_id (nếu có)
-        if (params["filter[group_id]"]) {
-            filteredData = filteredData.filter(
-                (item) => item.id === params["filter[group_id]"]
-            );
-        }
-
-        // Pagination
-        const startIndex = (params.page - 1) * params.limit;
-        const endIndex = startIndex + params.limit;
-        const paginatedData = filteredData.slice(startIndex, endIndex);
+            return {
+                id: parseInt(group.id) || group.id,
+                name: group.name,
+                code: group.code,
+                quantity: group.staff?.length || 0,
+                employees: employees,
+                branch_name: firstBranch.name || '',
+                branch_id: parseInt(firstBranch.id) || firstBranch.id,
+                // Giữ nguyên dữ liệu gốc từ API để dùng cho edit
+                branch: group.branch, // Giữ nguyên branch array từ API
+                staff: group.staff, // Giữ nguyên staff array từ API
+            };
+        });
 
         return {
-            rResult: paginatedData,
+            rResult: mappedData,
             output: {
-                iTotalDisplayRecords: filteredData.length,
+                iTotalDisplayRecords:
+                    groupMembersData?.output?.iTotalDisplayRecords ??
+                    mappedData.length,
             },
         };
     }, [
-        params.search,
-        params["filter[branch_id]"],
-        params["filter[group_id]"],
-        params.page,
-        params.limit,
+        groupMembersData,
     ]);
 
-    // TODO: Thay thế bằng hook thực tế khi có API
-    // const { data, isFetching, refetch } = usePieceworkWageGroupList(params);
+    // Sử dụng dữ liệu từ API
     const data = tableData;
-    const isFetching = false;
-    const refetch = () => {};
+    const isFetching = isLoadingGroups || isFetchingGroups;
+    const refetch = () => {
+        // Gọi refetch từ react-query để tải lại dữ liệu
+        refetchGroupMembers();
+    };
+
+    // Nếu đổi limit làm trang hiện tại vượt quá tổng trang, tự điều chỉnh về trang 1
+    useEffect(() => {
+        if (!effectiveLimit || effectiveLimit <= 0) return;
+        // Chờ fetch xong rồi mới xét redirect để tránh chuyển trang sớm khi dữ liệu chưa về
+        if (isFetching) return;
+
+        const totalPages = Math.max(1, Math.ceil(totalRecords / effectiveLimit));
+        if (currentPage > totalPages) {
+            paginate(1);
+        }
+    }, [effectiveLimit, totalRecords, currentPage, paginate, isFetching]);
 
     // Hàm tìm kiếm
     const _HandleOnChangeKeySearch = debounce(({ target: { value } }) => {
@@ -314,44 +244,106 @@ const PieceworkWage = (props) => {
         {
             columns: [
                 {
-                    title: "ID",
-                    width: { wch: 4 },
+                    // STT
+                    title: `${dataLang?.stt || "STT"}`,
+                    width: { wch: 6 },
                     style: {
-                        fill: { fgColor: { rgb: "C7DFFB" } },
-                        font: { bold: true },
+                        fill: { fgColor: { rgb: "EFF6FF" } }, // nền xanh nhạt
+                        font: {
+                            bold: true,
+                            name: "Lexend Deca",
+                            color: { rgb: "111827" }, // text đậm
+                        },
                     },
                 },
                 {
+                    // Tên tổ nhóm
                     title: `${dataLang?.piecework_wage_group_name || "Tên tổ nhóm"}`,
-                    width: { wpx: 100 },
+                    width: { wpx: 160 },
                     style: {
-                        fill: { fgColor: { rgb: "C7DFFB" } },
-                        font: { bold: true },
+                        fill: { fgColor: { rgb: "EFF6FF" } }, // nền xanh nhạt
+                        font: {
+                            bold: true,
+                            name: "Lexend Deca",
+                            color: { rgb: "111827" }, // text đậm
+                        },
                     },
                 },
                 {
+                    // Số lượng
                     title: `${dataLang?.piecework_wage_group_quantity || "Số lượng"}`,
-                    width: { wch: 40 },
+                    width: { wch: 10 },
                     style: {
-                        fill: { fgColor: { rgb: "C7DFFB" } },
-                        font: { bold: true },
+                        fill: { fgColor: { rgb: "EFF6FF" } },
+                        font: {
+                            bold: true,
+                            name: "Lexend Deca",
+                            color: { rgb: "111827" },
+                        },
                     },
                 },
                 {
-                    title: `${dataLang?.piecework_wage_group_branch || "Chi nhánh"}`,
-                    width: { wch: 40 },
+                    // Nhân viên
+                    title: `${dataLang?.piecework_wage_group_employees || "Nhân viên"}`,
+                    width: { wpx: 320 },
                     style: {
-                        fill: { fgColor: { rgb: "C7DFFB" } },
-                        font: { bold: true },
+                        fill: { fgColor: { rgb: "EFF6FF" } },
+                        font: {
+                            bold: true,
+                            name: "Lexend Deca",
+                            color: { rgb: "111827" },
+                        },
+                    },
+                },
+                {
+                    // Chi nhánh
+                    title: `${dataLang?.piecework_wage_group_branch || "Chi nhánh"}`,
+                    width: { wch: 24 },
+                    style: {
+                        fill: { fgColor: { rgb: "EFF6FF" } },
+                        font: {
+                            bold: true,
+                            name: "Lexend Deca",
+                            color: { rgb: "111827" },
+                        },
                     },
                 },
             ],
-            data: data?.rResult?.map((e) => [
-                { value: `${e.id}`, style: { numFmt: "0" } },
-                { value: `${e.name ? e.name : ""}` },
-                { value: `${e.quantity ? e.quantity : ""}` },
-                { value: `${e.branch_name ? e.branch_name : ""}` },
-            ]),
+            data:
+                data?.rResult?.map((e, index) => {
+                    const employeesNames = Array.isArray(e.employees)
+                        ? e.employees
+                              .map((emp) => emp?.full_name || emp?.name)
+                              .filter(Boolean)
+                              .join(", ")
+                        : "";
+
+                    return [
+                        {
+                            value: index + 1,
+                            style: {
+                                numFmt: "0",
+                                font: { name: "Lexend Deca" },
+                            },
+                        }, // STT
+                        {
+                            value: `${e.name ? e.name : ""}`,
+                            style: { font: { name: "Lexend Deca" } },
+                        },
+                        {
+                            value: `${e.quantity ? e.quantity : ""}`,
+                            style: { font: { name: "Lexend Deca" } },
+                        },
+                        {
+                            value: employeesNames,
+                            style: { font: { name: "Lexend Deca" } },
+                        },
+                        {
+                            value: `${e.branch_name ? e.branch_name : ""}`,
+                            style: { font: { name: "Lexend Deca" } },
+                        },
+                    ];
+                }) || [],
         },
     ];
 
@@ -369,9 +361,28 @@ const PieceworkWage = (props) => {
         console.log("Edit", id);
     };
 
-    const handleDelete = (id) => {
-        console.log("Delete", id);
+    const handleOpenDeletePopup = (id) => {
+        if (isDeleting) return;
+        setDeleteTarget(id);
     };
+
+    const handleDelete = () => {
+        if (!deleteTarget || isDeleting) return;
+        // Đóng modal ngay khi bấm xác nhận
+        const targetId = deleteTarget;
+        setDeleteTarget(null);
+        // Gọi mutation để xóa tổ/nhóm
+        deleteGroupMember(targetId);
+    };
+
+    const popupSubtitle = isDeleting ? (
+        <span className="inline-flex items-center gap-2 text-[#003DA0]">
+            <LoadingButton hiddenTitle className="w-4 h-4 text-[#003DA0]" />
+            <span>{dataLang?.processing || "Đang xử lý..."}</span>
+        </span>
+    ) : (
+        CONFIRM_DELETION
+    );
 
     return (
         <div className="min-h-screen relative">
@@ -409,6 +420,7 @@ const PieceworkWage = (props) => {
                                 <PopupGroupPiecework
                                     dataLang={dataLang}
                                     onRefresh={refetch}
+                                    listBranch={listBranch}
                                     className="responsive-text-sm 3xl:py-3 3xl:px-4 py-2 px-3 text-sm font-normal rounded-md bg-blue-fmrp text-white btn-animation hover:scale-105"
                                 />
                             ) : (
@@ -435,43 +447,34 @@ const PieceworkWage = (props) => {
                                     colSpan={1}
                                 />
                                 <SelectComponent
-                                    options={[
-                                        {
-                                            value: "",
-                                            label:
-                                                dataLang?.price_quote_branch ||
-                                                "Chi nhánh",
-                                            isDisabled: true,
-                                        },
-                                        ...listBranch,
-                                    ]}
+                                    options={branchOptions}
                                     colSpan={1}
-                                    onChange={(e) => queryState({ idBranch: e })}
+                                    onChange={(selected) =>
+                                        queryState({ idBranch: selected || [] })
+                                    }
                                     value={isState.idBranch}
                                     placeholder={
                                         dataLang?.price_quote_branch || "Chi nhánh"
                                     }
                                     isClearable={true}
+                                    isMulti={true}
+                                    closeMenuOnSelect={false}
+                                    components={{ MultiValue }}
                                 />
                                 <SelectComponent
-                                    options={[
-                                        {
-                                            value: "",
-                                            label:
-                                                dataLang?.piecework_wage_group ||
-                                                "Tổ nhóm",
-                                            isDisabled: true,
-                                        },
-                                        // TODO: Thay thế bằng danh sách tổ nhóm thực tế
-                                        [],
-                                    ]}
+                                    options={groupOptions}
                                     colSpan={1}
-                                    onChange={(e) => queryState({ idGroup: e })}
+                                    onChange={(selected) =>
+                                        queryState({ idGroup: selected || [] })
+                                    }
                                     value={isState.idGroup}
                                     placeholder={
                                         dataLang?.piecework_wage_group || "Tổ nhóm"
                                     }
                                     isClearable={true}
+                                    isMulti={true}
+                                    closeMenuOnSelect={false}
+                                    components={{ MultiValue }}
                                 />
                             </div>
 
@@ -547,7 +550,7 @@ const PieceworkWage = (props) => {
                                                 const employeesData =
                                                     e?.employees?.map((emp) => ({
                                                         id: emp?.id,
-                                                        name: emp?.name || emp?.full_name,
+                                                        name: emp?.full_name || emp?.full_name,
                                                         avatarUrl: emp?.avatar || emp?.profile_image,
                                                     })) || [];
 
@@ -588,6 +591,8 @@ const PieceworkWage = (props) => {
                                                                 <PopupGroupPiecework
                                                                     dataLang={dataLang}
                                                                     onRefresh={refetch}
+                                                                    listBranch={listBranch}
+                                                                    editData={e}
                                                                     trigger={
                                                                         <div className="inline-flex cursor-pointer">
                                                                             <AvatarStack
@@ -618,6 +623,8 @@ const PieceworkWage = (props) => {
                                                                 <PopupGroupPiecework
                                                                     dataLang={dataLang}
                                                                     onRefresh={refetch}
+                                                                    listBranch={listBranch}
+                                                                    editData={e}
                                                                     trigger={
                                                                         <button
                                                                             type="button"
@@ -645,7 +652,7 @@ const PieceworkWage = (props) => {
                                                             {role == true || checkDelete ? (
                                                                 <button
                                                                     onClick={() =>
-                                                                        handleDelete(e.id)
+                                                                        handleOpenDeletePopup(e.id)
                                                                     }
                                                                     className="group hover:border-red-01 hover:bg-red-02 rounded-lg w-fit p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer"
                                                                     title="Xóa"
@@ -678,27 +685,50 @@ const PieceworkWage = (props) => {
                 }
                 pagination={
                     <div className="flex items-center justify-between gap-2">
-                        {data?.rResult?.length != 0 && (
-                            <ContainerPagination>
-                                <Pagination
-                                    postsPerPage={limit}
-                                    totalPosts={Number(
-                                        data?.output?.iTotalDisplayRecords
-                                    )}
-                                    paginate={paginate}
-                                    currentPage={router.query?.page || 1}
-                                />
-                            </ContainerPagination>
-                        )}
+                        <ContainerPagination>
+                            <Pagination
+                                postsPerPage={effectiveLimit}
+                                totalPosts={Number(
+                        data?.output?.iTotalDisplayRecords
+                                )}
+                                paginate={paginate}
+                                currentPage={currentPage}
+                            />
+                        </ContainerPagination>
 
                         <DropdowLimit
                             sLimit={sLimit}
-                            limit={limit}
+                            limit={effectiveLimit}
                             dataLang={dataLang}
                         />
                     </div>
                 }
             />
+            {deleteTarget && (
+                <PopupConfim
+                    dataLang={dataLang}
+                    type="warning"
+                    nameModel="piecework_wage_group"
+                    title={TITLE_DELETE}
+                    subtitle={popupSubtitle}
+                    isOpen={!!deleteTarget}
+                    save={() => {
+                        if (!isDeleting) {
+                            handleDelete();
+                        }
+                    }}
+                    cancel={() => {
+                        if (!isDeleting) {
+                            setDeleteTarget(null);
+                        }
+                    }}
+                    onClose={() => {
+                        if (!isDeleting) {
+                            setDeleteTarget(null);
+                        }
+                    }}
+                />
+            )}
         </div>
     );
 };

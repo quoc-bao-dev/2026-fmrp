@@ -19,7 +19,17 @@ const areArraysEqual = (arr1, arr2) => {
   return true;
 };
 
-const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], data = [], className, children, hideSelected = true }) => {
+const ResponsiblePersonComboBox = ({
+  open,
+  onClose,
+  onConfirm,
+  selected = [],
+  data = [],
+  className,
+  children,
+  hideSelected = true,
+  emptyMessage,
+}) => {
   const [search, setSearch] = useState('');
   const [localSelected, setLocalSelected] = useState(selected);
   const dropdownRef = useRef(null);
@@ -312,7 +322,9 @@ const ResponsiblePersonComboBox = ({ open, onClose, onConfirm, selected = [], da
                     })}
                   {filtered.length === 0 && (
                     <div className='text-center text-sm text-[#9295A4] py-4'>
-                      {hideSelected && selectedIds.size > 0 && Array.isArray(data) && data.length === selectedIds.size
+                      {emptyMessage
+                        ? emptyMessage
+                        : hideSelected && selectedIds.size > 0 && Array.isArray(data) && data.length === selectedIds.size
                         ? 'Tất cả người phụ trách đã được chọn'
                         : 'Không tìm thấy người phù hợp'}
                     </div>

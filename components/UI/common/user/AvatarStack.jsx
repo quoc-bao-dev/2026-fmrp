@@ -50,10 +50,10 @@ const AvatarStack = ({ people = [], size = 40 }) => {
 
   return (
     <>
-      <div className='inline-flex items-center px-1.5 py-1.5 bg-[#EBF5FF] rounded-full overflow-visible relative z-0'
-      style={{
-        paddingRight: Number(remaining) > 0 ? -24 : null,
-      }}
+      <div
+        className={`inline-flex items-center pl-1.5 py-1.5 bg-[#EBF5FF] rounded-full overflow-visible relative z-0 ${
+          Number(remaining) > 0 ? '' : 'pr-1.5'
+        }`}
       >
         {visible.map((person, idx) => {
           return (
