@@ -2,22 +2,34 @@ import CheckboxDefault from '@/components/common/checkbox/CheckboxDefault';
 import SearchActionInput from '@/components/common/input/SearchActionInput';
 import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
 import { WarehouseSelectDropdown } from '@/components/UI/filterComponents/WarehouseSelectDropdown';
+import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
 import PopupCustom from '@/components/UI/popup';
+import useToast from '@/hooks/useToast';
+import { useListRecallKeepStock, useProductionOrderKeepStok, useSaveRecoveryKeepStock } from '@/managers/api/productions-order/useRecallKeepStock';
+import { useLookupWarehouses } from '@/managers/api/productions-order/useRecallMaterials';
+import formatNumber from '@/utils/helpers/formatnumber';
 import { Edit2 } from 'iconsax-react';
+import moment from 'moment';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { IoIosAlert } from 'react-icons/io';
 import { Tooltip } from 'react-tippy';
 import 'react-tippy/dist/tippy.css';
 import InputNumberCustom from './shared/InputNumberCustom';
-import { CustomDropdownRadioGroup } from './shared/WarehouseDropdown';
+import { convertWarehousesToDropdownData, CustomDropdownRadioGroup } from './shared/WarehouseDropdown';
 
-const PopupRecallStock = ({ className, forceOpen = false, onForceClose }) => {
+const tabs = [
+  { id: 'material', name: 'Nguyên vật liệu' },
+  { id: 'product', name: 'Bán thành phẩm' },
+];
+
+const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, codeLSX, branchId, ppId }) => {
+  const showToast = useToast();
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState({ id: 'material', name: 'Nguyên vật liệu' });
   const [searchTerm, setSearchTerm] = useState('');
   const [warehouseSelections, setWarehouseSelections] = useState({});
-  const [locationsByItem, setLocationsByItem] = useState({});
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showQuickSelectHint, setShowQuickSelectHint] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -25,165 +37,248 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose }) => {
   const [isQuickSelectMode, setIsQuickSelectMode] = useState(false);
   const [selectedWarehouseForQuickSelect, setSelectedWarehouseForQuickSelect] = useState(null);
 
-  const mockTabs = [
-    { id: 'material', name: 'Nguyên vật liệu' },
-    { id: 'product', name: 'Bán thành phẩm' },
-  ];
-
-  const mockItems = [
+  const { data: dataListRecallKeepStock, isLoading: isLoadingListRecallKeepStock } = useListRecallKeepStock(
     {
-      id: 'mock-1',
-      item: { name: 'Nguyên vật liệu A', item_code: 'MK-001', variation: 'Loại A', image: '/icon/noimagelogo.png' },
-      unit: 'pcs',
-      quantityNeed: '10',
-      quantityNeedAi: '8',
-      quantityKeepp: '2',
-      quantityInventory: '50',
+      po_id: poId,
+      type: 1,
     },
+    !!poId && open
+  );
+  const { data: dataProductionOrderKeepStok, isLoading: isLoadingProductionOrder } = useProductionOrderKeepStok({ pPlan_id: ppId, is_recovery: 1 }, activeTab.id === 'product' && open);
+  const { data: warehousesLookup, isLoading: isLoadingWarehouses } = useLookupWarehouses(
     {
-      id: 'mock-2',
-      item: { name: 'Nguyên vật liệu B', item_code: 'MK-002', variation: 'Loại B', image: '/icon/noimagelogo.png' },
-      unit: 'kg',
-      quantityNeed: '25',
-      quantityNeedAi: '22',
-      quantityKeepp: '5',
-      quantityInventory: '120',
+      is_system: 0,
+      is_location: 1,
+      branch_ids: [branchId],
+      is_system_location: 0,
     },
-  ];
+    !!open
+  );
 
-  const mockItemsProduct = [
-    {
-      id: 'mock-p1',
-      item: { name: 'Bán thành phẩm A', item_code: 'BP-101', variation: 'Quy cách A', image: '/icon/noimagelogo.png' },
-      unit: 'pcs',
-      quantityNeed: '15',
-      quantityNeedAi: '12',
-      quantityKeepp: '4',
-      quantityInventory: '70',
-    },
-    {
-      id: 'mock-p2',
-      item: { name: 'Bán thành phẩm B', item_code: 'BP-202', variation: 'Quy cách B', image: '/icon/noimagelogo.png' },
-      unit: 'box',
-      quantityNeed: '8',
-      quantityNeedAi: '7',
-      quantityKeepp: '1',
-      quantityInventory: '35',
-    },
-  ];
-
-  const mockProductOptions = mockItemsProduct.map(p => ({
-    value: p.id,
-    label: `${p.item.name} (${p.item.item_code})`,
-    images: p.item.image,
-    variation: p.item.variation,
-  }));
-
-  const mockWarehouses = [
-    { id: 'wh-1', id_warehouse_custom: 'wh-1', label: 'Vị trí A', name_location: 'Vị trí A', value: 'wh-1' },
-    { id: 'wh-2', id_warehouse_custom: 'wh-2', label: 'Vị trí B', name_location: 'Vị trí B', value: 'wh-2' },
-    { id: 'wh-3', id_warehouse_custom: 'wh-3', label: 'Vị trí C', name_location: 'Vị trí C', value: 'wh-3' },
-  ];
-
-  const warehouseDropdownData = [
-    {
-      label: 'Kho SG',
-      options: mockWarehouses,
-    },
-    {
-      label: 'Kho ĐN',
-      options: mockWarehouses,
-    },
-  ];
-
-  const mockLocations = {
-    'wh-1': [
-      { id: 'loc-a1', label: 'Kệ A1', qty: '120' },
-      { id: 'loc-a2', label: 'Kệ A2', qty: '80' },
-    ],
-    'wh-2': [
-      { id: 'loc-b1', label: 'Dãy B1', qty: '60' },
-      { id: 'loc-b2', label: 'Dãy B2', qty: '40' },
-    ],
-    'wh-3': [{ id: 'loc-c1', label: 'Tầng C1', qty: '200' }],
+  const handleClose = () => {
+    setOpen(false);
+    setSearchTerm('');
+    setWarehouseSelections({});
+    setSelectedProduct(null);
+    setSelectedItems([]);
+    setQuantityByItem({});
+    setIsQuickSelectMode(false);
+    setSelectedWarehouseForQuickSelect(null);
+    setShowQuickSelectHint(true);
+    onForceClose?.();
   };
 
-  const sourceItems = activeTab.id === 'product' ? mockItemsProduct : mockItems;
-  let filteredItems = sourceItems;
+  const { mutate: saveRecoveryKeepStock, isPending: isLoadingSubmit } = useSaveRecoveryKeepStock(handleClose);
+
+  const rawItems = dataListRecallKeepStock?.isSuccess ? dataListRecallKeepStock?.data?.items || [] : [];
+
+  const getItemId = item => `${item?.item_variation_id || item?.id_items || 'item'}-${item?.lot || 'lot'}-${item?.expiration_date || ''}`;
+  const getMaxRecoverable = item => Math.max(0, Number(item?.quantity_keep ?? 0) - Number(item?.quantity_exported ?? 0) - Number(item?.quantity_recovered ?? 0));
+  const selectIfSelectable = (item, itemId) => {
+    if (!item || getMaxRecoverable(item) <= 0) return;
+    setSelectedItems(prev => (prev.includes(itemId) ? prev : [...prev, itemId]));
+  };
+
+  const items = useMemo(() => {
+    if (!Array.isArray(rawItems)) return [];
+    return rawItems;
+  }, [rawItems]);
+
+  const transformedWarehouses = useMemo(() => {
+    if (!warehousesLookup?.warehouses || !Array.isArray(warehousesLookup.warehouses)) return [];
+
+    return warehousesLookup.warehouses.map(warehouse => ({
+      name_warehouse: warehouse.name || warehouse.code || '',
+      warehouse_id: warehouse.id || '',
+      items: (warehouse.locations?.rows || []).map(location => ({
+        id_warehouse_custom: `${warehouse.id}-${location.id}`,
+        name_location: location.name || location.code || '',
+        location_id: location.id || '',
+        warehouse_id: warehouse.id || '',
+        lot: '',
+        expiration_date: '',
+        total_quantity: 0,
+        quantity_warehouse: 0,
+      })),
+    }));
+  }, [warehousesLookup]);
+
+  const warehouseDropdownData = useMemo(() => convertWarehousesToDropdownData(transformedWarehouses), [transformedWarehouses]);
+
+  const productOptions = useMemo(() => {
+    if (activeTab.id !== 'product') return [];
+    // items_poi đã được hook map sẵn value/label giống popupKeepStock
+    return dataProductionOrderKeepStok?.data?.items_poi || [];
+  }, [activeTab.id, dataProductionOrderKeepStok]);
+
+  const handleSelectProduct = option => {
+    if (!option) {
+      setSelectedProduct(null);
+      return;
+    }
+    if (!option.selectedLevel && Array.isArray(option.level_bom) && option.level_bom.length > 0) {
+      setSelectedProduct({
+        ...option,
+        selectedLevel: option.level_bom[0],
+      });
+    } else {
+      setSelectedProduct(option);
+    }
+  };
+  const renderProductOption = (option, { context } = {}) => {
+    if (!option) return null;
+
+    const hasMultiLevel = Array.isArray(option?.level_bom) && option.level_bom.length > 0;
+    const selectedLevelId = selectedProduct?.ppi_id === option?.ppi_id ? selectedProduct?.selectedLevel?.id : null;
+    const displayLevelName = option?.selectedLevel?.name || (selectedLevelId && option.level_bom?.find(lv => lv.id === selectedLevelId)?.name) || (hasMultiLevel ? option.level_bom[0]?.name : null);
+
+    // Hiển thị value đã chọn
+    if (context === 'value') {
+      return (
+        <div className='flex items-center gap-2 py-1'>
+          <div className='size-[40px] shrink-0'>
+            <img src={option.images ? option.images : '/icon/noimagelogo.png'} alt='Product Image' className='object-cover w-full h-full rounded' />
+          </div>
+          <div className='flex flex-col items-start gap-1 min-w-0'>
+            <h3 className='font-medium responsive-text-sm truncate'>{option?.label}</h3>
+            <div className='flex flex-col items-start gap-2 text-left'>
+              <span className='responsive-text-xs text-[#667085]'>
+                {option?.item_code} - {option?.item_variation}
+              </span>
+              <h5 className='responsive-text-xs'>{option?.reference_no_detail}</h5>
+              {hasMultiLevel && displayLevelName && <span className='px-1 py-[1px] rounded bg-blue-fmrp/10 text-blue-600 text-[9px] font-semibold'>{`BOM ${displayLevelName}`}</span>}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Hiển thị trong menu dropdown
+    return (
+      <div className='flex flex-col gap-2 py-1'>
+        <div className='flex items-center gap-2 w-full'>
+          <div className='size-[60px] shrink-0 z-[2]'>
+            <img src={option.images ? option.images : '/icon/noimagelogo.png'} alt='Product Image' className='object-cover w-full h-full rounded' />
+          </div>
+          <div className='flex flex-col gap-1 text-left'>
+            <h3 className='font-medium responsive-text-sm'>{option?.label}</h3>
+            <h5 className='responsive-text-xs'>
+              {option?.item_code} - {option?.item_variation}
+            </h5>
+            <h5 className='responsive-text-xs'>{option?.reference_no_detail}</h5>
+          </div>
+        </div>
+        {hasMultiLevel && (
+          <div className='flex flex-col gap-2 pl-12 relative z-1'>
+            {option.level_bom.map((level, levelIndex) => {
+              const isActive = selectedLevelId === level.id;
+              return (
+                <label
+                  key={`${option.ppi_id}_${level.id}`}
+                  className='relative flex items-center gap-2 cursor-pointer'
+                  onMouseDown={event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                  }}
+                  onClick={event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    // Cập nhật selectedProduct với level BOM được chọn
+                    setSelectedProduct(prev => (prev && prev.ppi_id === option.ppi_id ? { ...prev, selectedLevel: level } : { ...option, selectedLevel: level }));
+                  }}
+                >
+                  {levelIndex > 0 && <div className='absolute -left-4 -top-8 w-[1px] h-8 bg-gray-200 z-0' />}
+                  <div className='absolute -left-4 -top-4 w-3 h-7 border-l-2 border-b-2 border-gray-200 rounded-bl-lg z-0' />
+                  <button
+                    type='button'
+                    className={`w-4 h-4 rounded-full border transition-all duration-200 flex items-center justify-center relative z-10 ${isActive ? 'border-blue-600' : 'border-gray-300'}`}
+                    onMouseDown={event => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }}
+                    onClick={event => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setSelectedProduct(prev => (prev && prev.ppi_id === option.ppi_id ? { ...prev, selectedLevel: level } : { ...option, selectedLevel: level }));
+                    }}
+                  >
+                    {isActive && <span className='w-2 h-2 rounded-full bg-blue-600' />}
+                  </button>
+                  <span
+                    className={`px-1.5 py-1 rounded responsive-text-xs font-semibold relative z-10 transition-all duration-300 ${
+                      isActive ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-100' : 'bg-blue-fmrp/10 text-gray-600 hover:text-blue-600'
+                    }`}
+                  >
+                    BOM {level.name}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  let filteredItems = activeTab.id === 'product' ? items.filter(item => item?.type === 'product') : items.filter(item => item?.type !== 'product');
   if (activeTab.id === 'product') {
     const productKey = selectedProduct?.value || selectedProduct?.id_warehouse_custom;
-    if (!productKey) {
-      filteredItems = [];
-    } else {
-      filteredItems = filteredItems.filter(item => item.id === productKey);
+    if (productKey) {
+      filteredItems = filteredItems.filter(item => {
+        const idMatch = getItemId(item) === productKey;
+        const poiMatch = `${item?.poi_id || ''}` === `${productKey || ''}`;
+        const ppiMatch = `${item?.ppi_id || ''}` === `${productKey || ''}`;
+        return idMatch || poiMatch || ppiMatch;
+      });
     }
   }
   if (searchTerm.trim()) {
     const keyword = searchTerm.toLowerCase().trim();
     filteredItems = filteredItems.filter(item => {
-      const name = (item?.item?.name || '').toLowerCase();
-      const code = (item?.item?.item_code || '').toLowerCase();
-      const variation = (item?.item?.variation || '').toLowerCase();
+      const name = (item?.item_name || '').toLowerCase();
+      const code = (item?.item_code || '').toLowerCase();
+      const variation = (item?.variant_name || '').toLowerCase();
       return name.includes(keyword) || code.includes(keyword) || variation.includes(keyword);
     });
   }
 
   // Sắp xếp: các item đã chọn lên đầu
   filteredItems = [...filteredItems].sort((a, b) => {
-    const aIsSelected = selectedItems.includes(a.id);
-    const bIsSelected = selectedItems.includes(b.id);
-    if (aIsSelected && !bIsSelected) return -1;
-    if (!aIsSelected && bIsSelected) return 1;
+    const aIsSelected = selectedItems.includes(getItemId(a));
+    const bIsSelected = selectedItems.includes(getItemId(b));
+    const aNoRemaining = getMaxRecoverable(a) <= 0;
+    const bNoRemaining = getMaxRecoverable(b) <= 0;
+
+    // Ưu tiên: còn số lượng -> đã hết; trong cùng nhóm, ưu tiên item đang được chọn
+    if (aNoRemaining !== bNoRemaining) return aNoRemaining ? 1 : -1;
+    if (aIsSelected !== bIsSelected) return aIsSelected ? -1 : 1;
     return 0; // Giữ nguyên thứ tự nếu cùng trạng thái
   });
 
-  const handleSelectWarehouse = (itemId, warehouse) => {
+  const selectableIds = useMemo(() => filteredItems.filter(item => getMaxRecoverable(item) > 0).map(item => getItemId(item)), [filteredItems]);
+  const allSelectableSelected = useMemo(() => selectableIds.length > 0 && selectableIds.every(id => selectedItems.includes(id)), [selectableIds, selectedItems]);
+
+  const handleSelectWarehouse = (itemId, warehouse, item) => {
     setWarehouseSelections(prev => ({
       ...prev,
       [itemId]: warehouse?.id_warehouse_custom || '',
     }));
-
-    // Gán danh sách vị trí theo kho
-    const key = warehouse?.value || warehouse?.id || warehouse?.id_warehouse_custom;
-    const locations = key ? mockLocations[key] || [] : [];
-    setLocationsByItem(prev => ({
-      ...prev,
-      [itemId]: locations.map(loc => ({
-        ...loc,
-        show: true,
-        newValue: '',
-      })),
-    }));
+    selectIfSelectable(item, itemId);
   };
 
-  const handleToggleLocation = (itemId, locId) => {
-    setLocationsByItem(prev => {
-      const list = prev[itemId] || [];
-      return {
-        ...prev,
-        [itemId]: list.map(loc => (loc.id === locId ? { ...loc, show: !loc.show } : loc)),
-      };
-    });
-  };
-
-  const handleChangeLocationValue = (itemId, locId, value) => {
-    setLocationsByItem(prev => {
-      const list = prev[itemId] || [];
-      return {
-        ...prev,
-        [itemId]: list.map(loc => (loc.id === locId ? { ...loc, newValue: value } : loc)),
-      };
-    });
-  };
-
-  const handleChangeQuantity = (itemId, value) => {
+  const handleChangeQuantity = (itemId, value, item) => {
     setQuantityByItem(prev => ({
       ...prev,
       [itemId]: value,
     }));
+    selectIfSelectable(item, itemId);
   };
 
-  const handleToggleItemSelection = itemId => {
+  const handleToggleItemSelection = (item, itemId) => {
+    if (getMaxRecoverable(item) <= 0) {
+      showToast('error', 'Không còn nguyên liệu để thu hồi');
+      return;
+    }
     setSelectedItems(prev => {
       if (prev.includes(itemId)) {
         return prev.filter(id => id !== itemId);
@@ -195,8 +290,11 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose }) => {
 
   const handleSelectAllItems = checked => {
     if (checked) {
-      const allItemIds = filteredItems.map(item => item.id);
-      setSelectedItems(allItemIds);
+      if (selectableIds.length === 0) {
+        showToast('error', 'Không còn nguyên liệu nào để thu hồi');
+        return;
+      }
+      setSelectedItems(selectableIds);
     } else {
       setSelectedItems([]);
     }
@@ -220,13 +318,13 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose }) => {
   // Lấy danh sách kho từ các mặt hàng đã chọn (trả về warehouseDropdownData format)
   const getAvailableWarehouses = () => {
     if (selectedItems.length === 0) return [];
-    // Trả về toàn bộ warehouseDropdownData vì tất cả mặt hàng đều có thể chọn các kho này
-    return warehouseDropdownData;
+    return warehouseDropdownData || [];
   };
 
   // Xử lý khi chọn kho trong chế độ chọn nhanh
   const handleQuickSelectWarehouse = warehouse => {
     if (!warehouse || selectedItems.length === 0) return;
+    setSelectedWarehouseForQuickSelect(warehouse?.id_warehouse_custom || '');
 
     // Cập nhật warehouse cho tất cả các mặt hàng đã chọn
     selectedItems.forEach(itemId => {
@@ -236,6 +334,53 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose }) => {
     // Reset selected warehouse và tắt chế độ chọn nhanh
     setSelectedWarehouseForQuickSelect(null);
     handleCancelQuickSelectMode();
+  };
+
+  const handleSubmit = () => {
+    if (!selectedItems.length) {
+      showToast('error', 'Vui lòng chọn ít nhất 1 dòng để thu hồi.');
+      return;
+    }
+
+    const ppId = dataListRecallKeepStock?.data?.pp_id;
+    const itemsPayload =
+      rawItems
+        // Chỉ lấy những dòng đang được chọn
+        .filter(item => selectedItems.includes(getItemId(item)))
+        .map(item => {
+          const id = getItemId(item);
+          const quantity_enter = Number(quantityByItem[id] || 0);
+          const selectedWarehouse = warehouseSelections[id] || '';
+          const [warehouse_id_enter = null, location_id_enter = null] = selectedWarehouse ? selectedWarehouse.split('-') : [];
+
+          return {
+            ...item,
+            quantity_enter,
+            warehouse_id_enter,
+            location_id_enter,
+          };
+        }) || [];
+
+    if (!itemsPayload.length) {
+      showToast('error', 'Vui lòng nhập thông tin cho các dòng đã chọn.');
+      return;
+    }
+
+    // Cảnh báo nếu còn dòng chưa nhập số lượng hoặc chưa chọn kho/vị trí
+    const invalidItems = itemsPayload.filter(it => !(Number(it.quantity_enter) > 0 && it.warehouse_id_enter && it.location_id_enter));
+    if (invalidItems.length) {
+      showToast('error', 'Vui lòng nhập số lượng > 0 và chọn kho/vị trí cho tất cả dòng đã chọn.');
+      return;
+    }
+
+    const payload = {
+      po_id: poId,
+      type: 1,
+      pp_id: ppId,
+      items: itemsPayload,
+    };
+
+    saveRecoveryKeepStock(payload);
   };
 
   useEffect(() => {
@@ -260,35 +405,24 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose }) => {
       return () => clearTimeout(timer);
     }
   }, [showQuickSelectHint]);
+
   return (
     <PopupCustom
       title={
         <div className='flex flex-col gap-1'>
           <h2 className='text-2xl font-bold capitalize'>Thu hồi giữ kho nguyên vật liệu</h2>
-          <p className='text-base text-blue-fmrp'>{'LSX-12122578' || dataTable?.listDataRight?.title || dataTable?.listDataRight?.referenceNoPo || ''}</p>
+          <p className='text-base text-blue-fmrp'>{codeLSX || ''}</p>
         </div>
       }
       open={open}
-      onClose={() => {
-        setOpen(false);
-        setSearchTerm('');
-        setWarehouseSelections({});
-        setLocationsByItem({});
-        setSelectedProduct(null);
-        setSelectedItems([]);
-        setQuantityByItem({});
-        setIsQuickSelectMode(false);
-        setSelectedWarehouseForQuickSelect(null);
-        setShowQuickSelectHint(true);
-        onForceClose?.();
-      }}
+      onClose={handleClose}
       classNameBtn={className}
-      classNameModeltime='max-w-[1200px]'
+      classNameModeltime='!w-[1200px] max-w-[95vw] xl:max-w-[1200px]'
     >
       <div className='mt-4'>
         <div className='flex items-center justify-between gap-4 mb-4'>
           <TabSwitcherWithSlidingBackground
-            tabs={mockTabs}
+            tabs={tabs}
             activeTab={activeTab}
             onChange={tab => {
               setActiveTab(tab);
@@ -324,6 +458,7 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose }) => {
                       className='w-[300px]'
                       allowClear={false}
                       minDropdownWidth={300}
+                      showOnlyWarehouseLocation
                     />
                   ) : (
                     <span className='text-sm text-orange-500 font-medium'>Vui lòng chọn ít nhất 1 mặt hàng</span>
@@ -343,36 +478,28 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose }) => {
             <WarehouseSelectDropdown
               className='w-[360px]'
               dropdownClassName='!w-[360px]'
-              options={mockProductOptions}
+              options={productOptions}
               value={selectedProduct}
-              onChange={setSelectedProduct}
-              allowClear
+              onChange={handleSelectProduct}
               placeholder='Chọn bán thành phẩm'
-              formatOptionLabel={option => (
-                <div className='flex items-center gap-2'>
-                  <div className='size-[36px] shrink-0'>
-                    <Image src={option?.images || '/icon/noimagelogo.png'} alt='product' width={36} height={36} className='object-cover rounded' />
-                  </div>
-                  <div className='flex flex-col items-start gap-1'>
-                    <span className='responsive-text-sm'>{option?.label}</span>
-                    <span className='responsive-text-xs text-[#667085]'>{option?.variation}</span>
-                  </div>
-                </div>
-              )}
+              allowClear
+              isLoading={isLoadingProductionOrder}
+              formatOptionLabel={renderProductOption}
+              hiddenDropdown={true}
             />
           </div>
         )}
 
         <div className='flex-1 min-h-[60vh] max-h-[80vh] flex flex-col gap-4'>
-          <div className='overflow-hidden flex-1'>
+          <div className='overflow-hidden flex-1 relative'>
             <div className='max-h-[60vh] overflow-y-auto pr-2'>
               <table className='w-full border-separate' style={{ borderSpacing: '0 4px' }}>
-                <thead className='bg-white sticky top-0 z-[2] shadow-sm'>
+                <thead className='bg-white sticky top-[-1px] z-[2] shadow-sm'>
                   <tr>
                     <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>
                       <Tooltip title='Bấm vào để chọn tất cả' trigger='manual' open={showQuickSelectHint && isQuickSelectMode} position='bottom' theme='dark' distance={12} animation='perspective'>
                         <div className='flex justify-center'>
-                          <CheckboxDefault checked={filteredItems.length > 0 && selectedItems.length === filteredItems.length} onChange={handleSelectAllItems} />
+                          <CheckboxDefault checked={allSelectableSelected} onChange={handleSelectAllItems} />
                         </div>
                       </Tooltip>
                     </th>
@@ -386,23 +513,32 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose }) => {
                   </tr>
                 </thead>
                 <tbody className='[&>tr]:mb-1' style={{ gap: '4px' }}>
-                  {filteredItems.length === 0 ? (
+                  {isLoadingListRecallKeepStock ? (
+                    <tr>
+                      <td colSpan={9} className='py-8 text-center text-sm text-[#667085]'>
+                        <Loading />
+                      </td>
+                    </tr>
+                  ) : !filteredItems.length ? (
                     <tr>
                       <td colSpan={9} className='py-8'>
-                        <NoData type='report' titleText={activeTab.id === 'product' && !selectedProduct ? 'Vui lòng chọn bán thành phẩm' : 'Không có dữ liệu'} />
+                        <NoData type='report' titleText={activeTab.id === 'product' && !selectedProduct ? 'Vui lòng chọn bán thành phẩm' : dataListRecallKeepStock?.message || 'Không có dữ liệu'} />
                       </td>
                     </tr>
                   ) : (
                     filteredItems.map((e, index) => {
-                      const isSelected = selectedItems.includes(e.id);
+                      const itemId = getItemId(e);
+                      const maxRecoverable = Math.max(0, Number(e?.quantity_keep ?? 0) - Number(e?.quantity_exported ?? 0) - Number(e?.quantity_recovered ?? 0));
+                      const isSelected = selectedItems.includes(itemId);
+                      const isSelectable = maxRecoverable > 0;
                       return (
                         <tr
-                          key={e.id}
-                          className={`relative border-b border-[#E5E7EB]/20 ${
-                            isQuickSelectMode ? `cursor-pointer ${isSelected ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'}` : 'hover:bg-gray-50'
+                          key={itemId}
+                          className={`relative cursor-pointer border-b border-[#E5E7EB]/20 ${
+                            isQuickSelectMode ? `${isSelectable && isSelected ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'}` : 'hover:bg-gray-50'
                           }`}
                           onClick={() => {
-                            handleToggleItemSelection(e.id);
+                            handleToggleItemSelection(e, itemId);
                           }}
                         >
                           <td className='py-2 px-3 text-center' onClick={ev => ev.stopPropagation()}>
@@ -410,7 +546,7 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose }) => {
                               checked={isSelected}
                               onChange={event => {
                                 event?.stopPropagation?.();
-                                handleToggleItemSelection(e.id);
+                                handleToggleItemSelection(e, itemId);
                               }}
                             />
                           </td>
@@ -418,56 +554,72 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose }) => {
                           <td className='py-2 px-3 text-left min-w-[290px]'>
                             <div className='flex gap-2 min-w-0 '>
                               <div className='w-16 h-16 rounded flex items-center justify-center flex-shrink-0'>
-                                <Image src={e?.item?.image || '/icon/default/default.png'} alt={e?.item?.name || 'default'} width={64} height={64} className='object-cover rounded' />
+                                <Image src={e?.image || '/icon/default/default.png'} alt={e?.item_name || 'default'} width={64} height={64} className='object-cover rounded' />
                               </div>
-                              <div className='flex flex-col gap-1 flex-1 min-w-0 overflow-hidden'>
-                                <h3 className='text-sm font-semibold text-[#141522]'>{e?.item?.name}</h3>
-                                <div className='flex flex-col gap-0.5'>
-                                  <p className='text-[10px] font-normal text-[#667085]'>{e?.item?.variation}</p>
-                                  <p className='text-xs font-normal text-typo-blue-2'>{e?.item?.item_code}</p>
-                                </div>
+                              <div className='flex flex-col'>
+                                <h3 className='text-sm font-semibold text-[#141522]'>{e?.item_name}</h3>
+                                <p className='text-[10px] font-normal text-[#667085]'>{e?.variant_name}</p>
+                                <p className='text-xs font-normal text-typo-blue-2'>{e?.item_code}</p>
+                                {e?.serial && <p className='text-[10px] font-normal text-[#667085]'>Serial: {e?.serial}</p>}
+                                <p className='text-[10px] font-normal text-[#667085]'>
+                                  Lot - date: {e?.lot} - {e?.expiration_date ? moment(e?.expiration_date).format('DD/MM/YYYY') : ''}
+                                </p>
                               </div>
                             </div>
                           </td>
-                          <td className='py-2 px-3 text-center'>
+                          <td className='py-2 px-3 text-center whitespace-nowrap'>
                             <span className='text-sm font-medium text-[#141522]'>
-                              {`${e?.quantityNeed} / `} <span className='text-[11px] text-[#667085]'>{e?.unit || ''}</span>
+                              {`${formatNumber(+(e?.quantity_keep ?? 0))} / `} <span className='text-[11px] text-[#667085]'>{e?.unit_name || ''}</span>
                             </span>
                           </td>
-                          <td className='py-2 px-3 text-center'>
+                          <td className='py-2 px-3 text-center whitespace-nowrap'>
                             <span className='text-sm font-medium text-[#141522]'>
-                              {`${e?.quantityNeedAi} / `} <span className='text-[11px] text-[#667085]'>{e?.unit || ''}</span>
+                              {`${formatNumber(+(e?.quantity_exported ?? 0))} / `} <span className='text-[11px] text-[#667085]'>{e?.unit_name || ''}</span>
                             </span>
                           </td>
-                          <td className='py-2 px-3 text-center'>
+                          <td className='py-2 px-3 text-center whitespace-nowrap'>
                             <span className='text-sm font-medium text-[#141522]'>
-                              {`${e?.quantityKeepp} / `} <span className='text-[11px] text-[#667085]'>{e?.unit || ''}</span>
+                              {`${formatNumber(+(e?.quantity_recovered ?? 0))} / `} <span className='text-[11px] text-[#667085]'>{e?.unit_name || ''}</span>
                             </span>
                           </td>
-                          <td className='py-2 px-3 text-center' onClick={ev => ev.stopPropagation()}>
-                            <CustomDropdownRadioGroup
-                              data={warehouseDropdownData}
-                              value={warehouseSelections[e.id] || ''}
-                              onChange={option => handleSelectWarehouse(e.id, option)}
-                              placeholder='Chọn kho'
-                              className='w-full'
-                              allowClear
-                              minDropdownWidth={250}
-                              disabled={isQuickSelectMode}
-                            />
-                          </td>
-                          <td className='py-2 px-3' onClick={ev => ev.stopPropagation()}>
-                            <InputNumberCustom
-                              state={+(quantityByItem[e.id] || 0)}
-                              setState={value => handleChangeQuantity(e.id, value)}
-                              min={0}
-                              className='w-full justify-between'
-                              classNameInput='w-16 text-sm'
-                              useConfigFormat={false}
-                              exceedMessage='Số lượng vượt quá tồn kho vị trí'
-                              underflowMessage='Số lượng phải lớn hơn hoặc bằng 0'
-                            />
-                          </td>
+                          {maxRecoverable <= 0 ? (
+                            <td className='py-2 px-3 text-center text-[#991B1B] text-xs font-medium' colSpan={2}>
+                              <div className='flex items-center justify-center gap-1 py-2'>
+                                <IoIosAlert className='text-[#991B1B]' size={17} />
+                                Không còn nguyên liệu để thu hồi
+                              </div>
+                            </td>
+                          ) : (
+                            <>
+                              <td className='py-2 px-3 text-center max-w-[250px]' onClick={ev => ev.stopPropagation()}>
+                                <CustomDropdownRadioGroup
+                                  data={warehouseDropdownData}
+                                  value={warehouseSelections[itemId] || ''}
+                                  onChange={option => handleSelectWarehouse(itemId, option, e)}
+                                  placeholder='Chọn kho'
+                                  className='w-full'
+                                  allowClear
+                                  minDropdownWidth={250}
+                                  disabled={isQuickSelectMode}
+                                  showOnlyWarehouseLocation
+                                  isSearchable
+                                  isLoading={isLoadingWarehouses}
+                                />
+                              </td>
+                              <td className='py-2 px-3' onClick={ev => ev.stopPropagation()}>
+                                <InputNumberCustom
+                                  state={+(quantityByItem[itemId] || 0)}
+                                  setState={value => handleChangeQuantity(itemId, value, e)}
+                                  min={0}
+                                  max={maxRecoverable}
+                                  className='w-full justify-between'
+                                  classNameInput='w-16 text-sm'
+                                  useConfigFormat={false}
+                                  underflowMessage='Số lượng phải lớn hơn hoặc bằng 0'
+                                />
+                              </td>
+                            </>
+                          )}
                         </tr>
                       );
                     })
@@ -475,6 +627,18 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose }) => {
                 </tbody>
               </table>
             </div>
+          </div>
+          <div className='flex gap-2 justify-end pt-2'>
+            <div onClick={handleClose} className='px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300 text-sm font-medium'>
+              Thoát
+            </div>
+            <button
+              onClick={handleSubmit}
+              disabled={isLoadingSubmit}
+              className='px-4 py-2 bg-blue-fmrp text-white rounded-lg hover:bg-blue-fmrp/80 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300 text-sm font-medium'
+            >
+              Thu hồi
+            </button>
           </div>
         </div>
       </div>

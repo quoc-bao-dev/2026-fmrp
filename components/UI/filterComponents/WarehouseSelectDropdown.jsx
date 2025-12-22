@@ -156,11 +156,17 @@ export const WarehouseSelectDropdown = ({
               type='button'
               onClick={e => {
                 e.stopPropagation();
-                setSearchValue('');
+                if (searchValue) {
+                  setSearchValue('');
+                }
               }}
-              className={`rounded-lg p-1 transition-colors ${searchValue ? 'bg-[#0375F3]' : 'bg-transparent'}`}
+              className={`rounded-lg p-1 transition-colors ${searchValue ? 'bg-[#FEE2E2]' : 'bg-transparent'}`}
             >
-              <MagnifyingGlassIcon className={`size-3 ${searchValue ? 'text-white' : 'text-[#9295A4]'}`} />
+              {searchValue ? (
+                <MdClose className='size-3 text-[#DC2626]' />
+              ) : (
+                <MagnifyingGlassIcon className='size-3 text-[#9295A4]' />
+              )}
             </button>
           </div>
         </div>

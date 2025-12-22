@@ -2062,6 +2062,10 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
       <PopupRecallStock
         forceOpen={isOpenRecallStock}
         onForceClose={() => setIsOpenRecallStock(false)}
+        poId={isStateProvider?.productionsOrders?.idDetailProductionOrder}
+        codeLSX={isStateProvider?.productionsOrders?.dataProductionOrderDetail?.title}
+        branchId={dataProductionOrderDetail?.productionOrder?.branch_id}
+        ppId={isStateProvider?.productionsOrders?.dataProductionOrderDetail?.pp_id}
       />
       <PopupConfim
         dataLang={dataLang}

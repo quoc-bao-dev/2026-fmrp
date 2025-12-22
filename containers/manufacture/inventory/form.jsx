@@ -338,7 +338,7 @@ const InventoryForm = props => {
           img: e.images,
           variant: e.product_variation,
           type: e.text_type,
-          checkExpiry: e.expiry ? '1' : '0',
+          checkExpiry: e.expiry === '1' ? '1' : '0',
           // e.serial là chuỗi "0" hoặc "1" => cần so sánh giá trị, không dùng truthy
           checkSerial: e.serial === '1' ? '1' : '0',
           show: true,
@@ -453,6 +453,23 @@ const InventoryForm = props => {
               return { ...ce };
             } else if (type === 'locate') {
               ce.locate = value;
+              // Nếu bỏ chọn vị trí kho, reset quantity về 0
+              if (value === null || value === undefined) {
+                ce.quantity = 0;
+              } else if (ce?.locate !== null && ce.locate?.value != null) {
+                // Lấy quantity từ checkChild dựa trên locate khi chỉ chọn locate (chưa có lot/date/serial)
+                const locateValue = ce.locate.value;
+                const checkByLocate = e.checkChild?.find(item => {
+                  // So sánh với cả string và number để đảm bảo khớp
+                  return String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue);
+                });
+                if (checkByLocate && checkByLocate.quantity != null) {
+                  ce.quantity = Number(checkByLocate.quantity);
+                } else {
+                  ce.quantity = 0;
+                }
+              }
+              // Gọi các hàm kiểm tra trùng lặp khi có đủ điều kiện
               e?.checkExpiry == '1' && ce?.locate !== null && ce?.lot !== null && ce.date !== null && _HandleCheckSameLot(parentId, id, ce?.locate, ce?.lot, ce?.date);
               e?.checkSerial == '1' && ce?.locate !== null && ce?.serial !== null && _HandleCheckSameSerial(parentId, id, ce?.locate, ce?.serial);
               e?.checkExpiry == '0' && e?.checkSerial == '0' && _HandleCheckSameLoca(parentId, id, ce?.locate);
@@ -466,13 +483,25 @@ const InventoryForm = props => {
               ce?.locate !== null && ce?.lot !== null && ce.date !== null && _HandleCheckSameLot(parentId, id, ce?.locate, ce?.lot, ce?.date);
               return { ...ce };
             } else if (type === 'serial') {
-              ce.serial = value?.target.value;
+              ce.serial = value?.target?.value || value || '';
+              // Lấy quantity từ checkChild dựa trên locate và serial khi nhập serial
+              if (ce?.locate !== null && ce?.serial !== null && ce.serial !== '') {
+                const locateValue = ce.locate.value;
+                const serialValue = ce.serial;
+                const checkByLocateAndSerial = e.checkChild?.find(item => {
+                  return (
+                    (String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue)) &&
+                    item.serial === serialValue
+                  );
+                });
+                if (checkByLocateAndSerial && checkByLocateAndSerial.quantity != null) {
+                  ce.quantity = Number(checkByLocateAndSerial.quantity);
+                }
+              }
               setTimeout(() => {
-                e?.checkSerial == '1' && ce?.locate !== null && ce?.serial !== null && _HandleCheckSameSerial(parentId, id, ce?.locate, ce?.serial);
+                e?.checkSerial == '1' && ce?.locate !== null && ce?.serial !== null && ce.serial !== '' && _HandleCheckSameSerial(parentId, id, ce?.locate, ce?.serial);
               }, 1000);
-              setTimeout(() => {
-                return { ...ce };
-              }, 3000);
+              return { ...ce };
             } else if (type === 'price') {
               return { ...ce, price: Number(value?.value) };
             }
@@ -689,13 +718,9 @@ const InventoryForm = props => {
 
     const checkErrNullLocate = dataChoose.some(item => item.child.some(itemChild => itemChild.locate === null));
 
-    const checkErrNullLot = dataChoose.some(
-      item => isExpiryEnabled && item.checkExpiry === '1' && item.child.some(itemChild => itemChild.lot === null)
-    );
+    const checkErrNullLot = dataChoose.some(item => isExpiryEnabled && item.checkExpiry === '1' && item.child.some(itemChild => itemChild.lot === null));
 
-    const checkErrNullDate = dataChoose.some(
-      item => isExpiryEnabled && item.checkExpiry === '1' && item.child.some(itemChild => itemChild.date === null)
-    );
+    const checkErrNullDate = dataChoose.some(item => isExpiryEnabled && item.checkExpiry === '1' && item.child.some(itemChild => itemChild.date === null));
 
     const checkErrNullSerial = dataChoose.some(item => dataProductSerial?.is_enable === '1' && item.checkSerial === '1' && item.child.some(itemChild => itemChild.serial === null));
 
@@ -770,7 +795,7 @@ const InventoryForm = props => {
       label: `Thêm Phiếu Kiểm Kê Kho`,
     },
   ];
-
+console.log(dataChoose)
   return (
     <LayoutForm
       title='Thêm phiếu kiểm kê kho'
@@ -862,9 +887,7 @@ const InventoryForm = props => {
                         ĐVT: {option.e?.unit_name} - {dataLang[option.e?.text_type]} - {dataLang?.purchase_survive || 'purchase_survive'}:{' '}
                         {option.e?.qty_warehouse ? formatNumber(option.e?.qty_warehouse) : '0'}
                       </div>
-                      {option.e?.text_type && (
-                          <TagColorProduct dataLang={dataLang} dataKey={getTypeDataKey(option.e?.text_type)} name={option.e?.text_type} className='!px-1' textSize='text-[11px]' />
-                        )}
+                      {option.e?.text_type && <TagColorProduct dataLang={dataLang} dataKey={getTypeDataKey(option.e?.text_type)} name={option.e?.text_type} className='!px-1' textSize='text-[11px]' />}
                     </div>
                   </div>
                 </div>
@@ -872,15 +895,27 @@ const InventoryForm = props => {
             />
           </div>
           <div className='flex flex-col flex-1 min-h-0 overflow-hidden'>
-            <div className={`${isExpiryEnabled ? 'grid-cols-22' : 'grid-cols-16'} grid gap-2 items-center responsive-text-base text-neutral-02 font-semibold py-2 z-10 border-b border-b-[#F3F3F4] flex-shrink-0`}>
+            <div
+              className={`${
+                dataProductSerial?.is_enable === '1'
+                  ? isExpiryEnabled
+                    ? 'grid-cols-25'
+                    : 'grid-cols-19'
+                  : isExpiryEnabled
+                  ? 'grid-cols-22'
+                  : 'grid-cols-16'
+              } grid gap-2 items-center responsive-text-base text-neutral-02 font-semibold py-2 z-10 border-b border-b-[#F3F3F4] flex-shrink-0`}
+            >
               <h4 className='col-span-4'>{dataLang?.import_from_items || 'import_from_items'}</h4>
               <h4 className='col-span-3 text-center'>Vị trí kho</h4>
+              {dataProductSerial?.is_enable === '1' ? <h4 className='col-span-3 text-center'>Serial</h4> : null}
               {isExpiryEnabled ? (
-                <h4 className='col-span-3 text-center'>Lot</h4>
+                <>
+                  <h4 className='col-span-3 text-center'>Lot</h4>
+                  <h4 className='col-span-3 text-center'>Date</h4>
+                </>
               ) : null}
-              {isExpiryEnabled ? (
-                <h4 className='col-span-3 text-center'>Date</h4>
-              ) : null}
+
               <h4 className='col-span-3 text-center'>Đơn giá</h4>
               <h4 className='col-span-3 text-center'>SL thực</h4>
               <h4 className='col-span-2 text-right whitespace-nowrap'>Thành tiền</h4>
@@ -893,7 +928,18 @@ const InventoryForm = props => {
                 <NoData type='report' titleText='Chưa có mặt hàng. Bắt đầu thêm mặt hàng tại khung tìm kiếm ngay!' className='min-h-[50vh]' />
               ) : (
                 dataChoose?.map(e => (
-                  <div key={e?.id?.toString()} className={`${isExpiryEnabled ? 'grid-cols-22' : 'grid-cols-16'} grid items-start gap-2 py-2 border-b border-b-[#F3F3F4]`}>
+                  <div
+                    key={e?.id?.toString()}
+                    className={`${
+                      dataProductSerial?.is_enable === '1'
+                        ? isExpiryEnabled
+                          ? 'grid-cols-25'
+                          : 'grid-cols-19'
+                        : isExpiryEnabled
+                        ? 'grid-cols-22'
+                        : 'grid-cols-16'
+                    } grid items-start gap-2 py-2 border-b border-b-[#F3F3F4]`}
+                  >
                     <div className='h-full col-span-4'>
                       <div className='flex items-center justify-between gap-2'>
                         <div className='flex items-center gap-2'>
@@ -920,10 +966,41 @@ const InventoryForm = props => {
                         </button>
                       </div>
                     </div>
-                    <div className={`${isExpiryEnabled ? 'col-span-18' : 'col-span-12'}`}>
-                      <div className={`${isExpiryEnabled ? 'grid-cols-18' : 'grid-cols-12'} grid gap-2`}>
+                    <div
+                      className={`${
+                        dataProductSerial?.is_enable === '1'
+                          ? isExpiryEnabled
+                            ? 'col-span-21'
+                            : 'col-span-15'
+                          : isExpiryEnabled
+                          ? 'col-span-18'
+                          : 'col-span-12'
+                      }`}
+                    >
+                      <div
+                        className={`${
+                          dataProductSerial?.is_enable === '1'
+                            ? isExpiryEnabled
+                              ? 'grid-cols-21'
+                              : 'grid-cols-15'
+                            : isExpiryEnabled
+                            ? 'grid-cols-18'
+                            : 'grid-cols-12'
+                        } grid gap-2`}
+                      >
                         {e?.child?.map((ce, index) => (
-                          <div key={ce?.id?.toString()} className={`${isExpiryEnabled ? 'col-span-18 grid grid-cols-18' : 'col-span-12 grid grid-cols-12'} gap-1`}>
+                          <div
+                            key={ce?.id?.toString()}
+                            className={`${
+                              dataProductSerial?.is_enable === '1'
+                                ? isExpiryEnabled
+                                  ? 'col-span-21 grid grid-cols-21'
+                                  : 'col-span-15 grid grid-cols-15'
+                                : isExpiryEnabled
+                                ? 'col-span-18 grid grid-cols-18'
+                                : 'col-span-12 grid grid-cols-12'
+                            } gap-1`}
+                          >
                             <div className='col-span-3 flex flex-col justify-center h-fit'>
                               <SelectComponent
                                 options={dataPstWH || []}
@@ -937,6 +1014,26 @@ const InventoryForm = props => {
                                 menuPortalTarget={document.body}
                               />
                             </div>
+                            {dataProductSerial?.is_enable === '1' ? (
+                              <div className='col-span-3 flex flex-col justify-center h-fit'>
+                                <input
+                                  disabled={e?.checkSerial == '0'}
+                                  value={ce?.serial || ''}
+                                  onChange={event => _HandleChangeChild(e?.id, ce?.id, 'serial', event)}
+                                  className={`${
+                                    e?.checkSerial == '0'
+                                      ? 'bg-gray-100'
+                                      : errNullSerial && (ce.serial === null || ce.serial === '')
+                                      ? 'border-red-500'
+                                      : 'border-gray-200'
+                                  } h-[38px] rounded-lg appearance-none text-center p-2 text-neutral-07 responsive-text-base font-medium placeholder:font-normal w-full focus:outline-none focus:border-brand-color hover:border-brand-color border border-neutral-N400`}
+                                  placeholder='Nhập serial'
+                                />
+                                {isSubmitted && duplicateIds.includes(ce.id) && (
+                                  <span className='text-red-500 text-[10px] mt-1'>Serial đã tồn tại trong phần mềm</span>
+                                )}
+                              </div>
+                            ) : null}
                             {isExpiryEnabled ? (
                               <div className='col-span-3 flex flex-col justify-center h-fit'>
                                 <CreatableSelectCore
