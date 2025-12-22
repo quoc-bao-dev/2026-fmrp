@@ -347,225 +347,215 @@ const PopupGroupPiecework = ({ dataLang, className, onRefresh, trigger, buttonCl
         classNameModeltime={`max-w-[654px]- !w-[654px] p-6 rounded-[24px]`}
         classNameTittle='items-start'
       >
-      <div className={`${deca.className} w-full flex flex-col gap-6`}>
-        {/* Header */}
-        <div className='flex items-center justify-between gap-4'>
-          <h2 className='text-[24px] leading-[20px] font-bold text-[#141522] capitalize'>{title}</h2>
-          <motion.button
-            whileHover={{ scale: 1.1, rotate: 90 }}
-            whileTap={{ scale: 0.9 }}
-            transition={{ type: 'spring', stiffness: 300 }}
-            onClick={() => setIsOpen(false)}
-            className='flex items-center justify-center w-7 h-7 rounded-full hover:opacity-80 transition-opacity'
-          >
-            <CloseXIcon className='size-full' />
-          </motion.button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
-          {/* Tên tổ/nhóm và Mã nhóm */}
-          <div className='flex flex-col gap-4'>
-            <div className='flex items-start gap-4'>
-              {/* Tên tổ/nhóm */}
-              <div className='flex flex-col gap-2 flex-1'>
-                <label className='text-[16px] leading-5 font-semibold text-[#141522] flex items-center gap-1'>
-                  {dataLang?.piecework_wage_group_name || 'Tên tổ/ nhóm'}
-                  <span className='text-[#EE1E1E]'>*</span>
-                </label>
-                <Controller
-                  name='groupName'
-                  control={form.control}
-                  rules={{
-                    required: {
-                      value: true,
-                      message: dataLang?.piecework_wage_group_name_required || 'Vui lòng nhập tên tổ/ nhóm',
-                    },
-                  }}
-                  render={({ field, fieldState }) => (
-                    <div className='flex flex-col gap-1'>
-                      <InputClearable
-                        type='text'
-                        {...field}
-                        placeholder={dataLang?.piecework_wage_group_name_placeholder || 'Nhập tên tổ/ nhóm'}
-                        error={fieldState.error}
-                      />
-                      {fieldState.error && <span className='text-xs text-[#EE1E1E]'>{fieldState.error.message}</span>}
-                    </div>
-                  )}
-                />
-              </div>
-              {/* Mã nhóm */}
-              <div className='flex flex-col gap-2 flex-1'>
-                <label className='text-[16px] leading-5 font-semibold text-[#141522] flex items-center gap-1'>
-                  {dataLang?.piecework_wage_group_code || 'Mã tổ/ nhóm'}
-                  <span className='text-[#EE1E1E]'>*</span>
-                </label>
-                <Controller
-                  name='code'
-                  control={form.control}
-                  rules={{
-                    required: {
-                      value: true,
-                      message: dataLang?.piecework_wage_group_code_required || 'Vui lòng nhập mã tổ/ nhóm',
-                    },
-                  }}
-                  render={({ field, fieldState }) => (
-                    <div className='flex flex-col gap-1'>
-                      <InputClearable
-                        type='text'
-                        {...field}
-                        placeholder={dataLang?.piecework_wage_group_code_placeholder || 'Nhập mã tổ/ nhóm'}
-                        error={fieldState.error}
-                      />
-                      {fieldState.error && <span className='text-xs text-[#EE1E1E]'>{fieldState.error.message}</span>}
-                    </div>
-                  )}
-                />
-              </div>
-            </div>
-            {/* Chi nhánh */}
-            <div className='grid grid-cols-2 gap-4 items-end-'>
-              <div className='flex flex-col gap-2 '>
-                <label className='text-[16px] leading-5 font-semibold text-[#141522] flex items-center gap-1'>
-                  {dataLang?.price_quote_branch || 'Chi nhánh'}
-                  <span className='text-[#EE1E1E]'>*</span>
-                </label>
-                <Controller
-                  name='branch'
-                  control={form.control}
-                  rules={{
-                    required: {
-                      value: true,
-                      message: dataLang?.price_quote_branch_required || 'Vui lòng chọn chi nhánh',
-                    },
-                  }}
-                  render={({ field, fieldState }) => (
-                    <div className='flex flex-col gap-1'>
-                      <SelectComponent
-                        options={[...listBranch]}
-                        className='!rounded-lg'
-                        value={field.value}
-                        onChange={option => handleChangeBranch(option, field.onChange)}
-                        placeholder={dataLang?.price_quote_branch || 'Chọn chi nhánh'}
-                        isClearable={true}
-                        styles={{
-                          control: (provided, state) => ({
-                            ...provided,
-                            borderRadius: '8px',
-                            borderColor: fieldState.error ? '#EE1E1E' : state.isFocused ? '#003DA0' : '#D0D5DD',
-                            boxShadow: fieldState.error ? 'none' : state.isFocused ? '0 0 0 1px #003DA0' : 'none',
-                            '&:hover': {
-                              borderColor: fieldState.error ? '#EE1E1E' : '#003DA0',
-                            },
-                          }),
-                        }}
-                      />
-                      {fieldState.error && <span className='text-xs text-[#EE1E1E]'>{fieldState.error.message}</span>}
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div className='flex flex-col gap-2'>
-                <div className="h-[20px]"></div>
-
-                <ResponsiblePersonComboBox
-                  open={openCombo}
-                  onClose={() => setOpenCombo(false)}
-                  onConfirm={newSelected => {
-                    setSelectedPeople(newSelected || []);
-                    setOpenCombo(false);
-                    // Clear lỗi khi chọn nhân viên
-                    if (newSelected && newSelected.length > 0) {
-                      setErrorStaff('');
-                    }
-                  }}
-                  selected={selectedPeople}
-                  data={listStaffs}
-                  hideSelected={false}
-                  emptyMessage={dataLang?.piecework_wage_group_no_staff_in_branch || 'Không có nhân viên thuộc chi nhánh này'}
-                >
-                  <button
-                    type='button'
-                    onClick={() => setOpenCombo(true)}
-                    className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-lg bg-[#E2EFFF] text-[#25387A] text-sm font-medium hover:bg-[#D4E4FF] hover:shadow-sm transition-colors w-fit ${
-                      errorStaff ? 'border border-[#EE1E1E]' : ''
-                    }`}
-                  >
-                    <UserPlusIcon className='size-5 text-[#25387A]' />
-                    <span>{dataLang?.piecework_wage_group_add_staff || 'Thêm nhân viên'}</span>
-                  </button>
-                </ResponsiblePersonComboBox>
-                {errorStaff && <span className='text-xs text-[#EE1E1E]'>{errorStaff}</span>}
-              </div>
-            </div>
+        <div className={`${deca.className} w-full flex flex-col gap-6`}>
+          {/* Header */}
+          <div className='flex items-center justify-between gap-4'>
+            <h2 className='text-[24px] leading-[20px] font-bold text-[#141522] capitalize'>{title}</h2>
+            <motion.button
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 300 }}
+              onClick={() => setIsOpen(false)}
+              className='flex items-center justify-center w-7 h-7 rounded-full hover:opacity-80 transition-opacity'
+            >
+              <CloseXIcon className='size-full' />
+            </motion.button>
           </div>
 
-          {/* Thêm nhân viên */}
-          <div className='flex flex-col gap-3'>
-            {/* Table header */}
-            <div className='flex items-center px-4 py-3'>
-              <div className='flex-1'>
-                <span className='text-[14px] font-semibold leading-[20px] text-[#9295A4]'>{dataLang?.piecework_wage_group_employees || 'Nhân viên'}</span>
-              </div>
-              <div className='flex-1 text-end'>
-                <span className='text-[14px] font-semibold leading-[20px] text-[#9295A4]'>{dataLang?.branch_popup_properties || 'Tác vụ'}</span>
-              </div>
-            </div>
-            <div className='border-b border-[#E7EAEE] mx-4' />
-
-            {/* Body */}
-            {selectedPeople.length === 0 ? (
-              <div className='mx-4 h-[200px] flex items-center justify-center'>
-                <NoData type='report' classNameImage='w-[245px]' titleText={dataLang?.nodata || 'Chưa có dữ liệu'} />
-              </div>
-            ) : (
-              <div className='mx-4 h-[200px] max-h-[200px] overflow-y-auto'>
-                <div className='divide-y divide-[#E7EAEE]'>
-                  {selectedPeople.map(person => (
-                    <div key={person.id} className='flex items-center justify-between py-4'>
-                      <div className='flex items-center gap-3'>
-                        <ResponsibleAvatar avatarUrl={person.avatarUrl} fullName={person.name} size={32} />
-                        <span className='text-sm font-medium text-[#101828]'>{person.name}</span>
+          {/* Form */}
+          <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
+            {/* Tên tổ/nhóm và Mã nhóm */}
+            <div className='flex flex-col gap-4'>
+              <div className='flex items-start gap-4'>
+                {/* Mã nhóm */}
+                <div className='flex flex-col gap-2 flex-1'>
+                  <label className='text-[16px] leading-5 font-semibold text-[#141522] flex items-center gap-1'>
+                    {dataLang?.piecework_wage_group_code || 'Mã tổ/ nhóm'}
+                    <span className='text-[#EE1E1E]'>*</span>
+                  </label>
+                  <Controller
+                    name='code'
+                    control={form.control}
+                    rules={{
+                      required: {
+                        value: true,
+                        message: dataLang?.piecework_wage_group_code_required || 'Vui lòng nhập mã tổ/ nhóm',
+                      },
+                    }}
+                    render={({ field, fieldState }) => (
+                      <div className='flex flex-col gap-1'>
+                        <InputClearable type='text' {...field} placeholder={dataLang?.piecework_wage_group_code_placeholder || 'Nhập mã tổ/ nhóm'} error={fieldState.error} />
+                        {fieldState.error && <span className='text-xs text-[#EE1E1E]'>{fieldState.error.message}</span>}
                       </div>
-                      <button
-                        type='button'
-                        onClick={() => handleRemovePerson(person.id)}
-                        className='inline-flex items-center justify-center p-2 rounded-full hover:bg-red-50 transition-colors'
-                        title={dataLang?.delete || 'Xoá'}
-                      >
-                        <TrashIcon className='size-5 text-[#EE1E1E]' />
-                      </button>
-                    </div>
-                  ))}
+                    )}
+                  />
+                </div>
+                {/* Tên tổ/nhóm */}
+                <div className='flex flex-col gap-2 flex-1'>
+                  <label className='text-[16px] leading-5 font-semibold text-[#141522] flex items-center gap-1'>
+                    {dataLang?.piecework_wage_group_name || 'Tên tổ/ nhóm'}
+                    <span className='text-[#EE1E1E]'>*</span>
+                  </label>
+                  <Controller
+                    name='groupName'
+                    control={form.control}
+                    rules={{
+                      required: {
+                        value: true,
+                        message: dataLang?.piecework_wage_group_name_required || 'Vui lòng nhập tên tổ/ nhóm',
+                      },
+                    }}
+                    render={({ field, fieldState }) => (
+                      <div className='flex flex-col gap-1'>
+                        <InputClearable type='text' {...field} placeholder={dataLang?.piecework_wage_group_name_placeholder || 'Nhập tên tổ/ nhóm'} error={fieldState.error} />
+                        {fieldState.error && <span className='text-xs text-[#EE1E1E]'>{fieldState.error.message}</span>}
+                      </div>
+                    )}
+                  />
                 </div>
               </div>
-            )}
-          </div>
+              {/* Chi nhánh */}
+              <div className='grid grid-cols-2 gap-4 items-end-'>
+                <div className='flex flex-col gap-2 '>
+                  <label className='text-[16px] leading-5 font-semibold text-[#141522] flex items-center gap-1'>
+                    {dataLang?.price_quote_branch || 'Chi nhánh'}
+                    <span className='text-[#EE1E1E]'>*</span>
+                  </label>
+                  <Controller
+                    name='branch'
+                    control={form.control}
+                    rules={{
+                      required: {
+                        value: true,
+                        message: dataLang?.price_quote_branch_required || 'Vui lòng chọn chi nhánh',
+                      },
+                    }}
+                    render={({ field, fieldState }) => (
+                      <div className='flex flex-col gap-1'>
+                        <SelectComponent
+                          options={[...listBranch]}
+                          className='!rounded-lg'
+                          value={field.value}
+                          onChange={option => handleChangeBranch(option, field.onChange)}
+                          placeholder={dataLang?.price_quote_branch || 'Chọn chi nhánh'}
+                          isClearable={true}
+                          styles={{
+                            control: (provided, state) => ({
+                              ...provided,
+                              borderRadius: '8px',
+                              borderColor: fieldState.error ? '#EE1E1E' : state.isFocused ? '#003DA0' : '#D0D5DD',
+                              boxShadow: fieldState.error ? 'none' : state.isFocused ? '0 0 0 1px #003DA0' : 'none',
+                              '&:hover': {
+                                borderColor: fieldState.error ? '#EE1E1E' : '#003DA0',
+                              },
+                            }),
+                          }}
+                        />
+                        {fieldState.error && <span className='text-xs text-[#EE1E1E]'>{fieldState.error.message}</span>}
+                      </div>
+                    )}
+                  />
+                </div>
 
-          {/* Footer buttons */}
-          <div className='flex items-center justify-center pt-2'>
-            <button
-              type='submit'
-              disabled={isLoading}
-              className='flex items-center gap-4 bg-[#0375F3] text-white px-7 py-3 rounded-[8px] font-medium transition-colors hover:bg-[#0375F3]/90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
-            >
-              {isLoading ? (
-                <>
-                  <LoadingButton hiddenTitle className='w-4 h-4 text-white' />
-                  <span>{dataLang?.processing || 'Đang xử lý...'}</span>
-                </>
+                <div className='flex flex-col gap-2'>
+                  <div className='h-[20px]'></div>
+
+                  <ResponsiblePersonComboBox
+                    open={openCombo}
+                    onClose={() => setOpenCombo(false)}
+                    onConfirm={newSelected => {
+                      setSelectedPeople(newSelected || []);
+                      setOpenCombo(false);
+                      // Clear lỗi khi chọn nhân viên
+                      if (newSelected && newSelected.length > 0) {
+                        setErrorStaff('');
+                      }
+                    }}
+                    selected={selectedPeople}
+                    data={listStaffs}
+                    hideSelected={false}
+                    emptyMessage={dataLang?.piecework_wage_group_no_staff_in_branch || 'Không có nhân viên thuộc chi nhánh này'}
+                  >
+                    <button
+                      type='button'
+                      onClick={() => setOpenCombo(true)}
+                      className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-lg bg-[#E2EFFF] text-[#25387A] text-sm font-medium hover:bg-[#D4E4FF] hover:shadow-sm transition-colors w-fit ${
+                        errorStaff ? 'border border-[#EE1E1E]' : ''
+                      }`}
+                    >
+                      <UserPlusIcon className='size-5 text-[#25387A]' />
+                      <span>{dataLang?.piecework_wage_group_add_staff || 'Thêm nhân viên'}</span>
+                    </button>
+                  </ResponsiblePersonComboBox>
+                  {errorStaff && <span className='text-xs text-[#EE1E1E]'>{errorStaff}</span>}
+                </div>
+              </div>
+            </div>
+
+            {/* Thêm nhân viên */}
+            <div className='flex flex-col gap-3'>
+              {/* Table header */}
+              <div className='flex items-center px-4 py-3'>
+                <div className='flex-1'>
+                  <span className='text-[14px] font-semibold leading-[20px] text-[#9295A4]'>{dataLang?.piecework_wage_group_employees || 'Nhân viên'}</span>
+                </div>
+                <div className='flex-1 text-end'>
+                  <span className='text-[14px] font-semibold leading-[20px] text-[#9295A4]'>{dataLang?.branch_popup_properties || 'Tác vụ'}</span>
+                </div>
+              </div>
+              <div className='border-b border-[#E7EAEE] mx-4' />
+
+              {/* Body */}
+              {selectedPeople.length === 0 ? (
+                <div className='mx-4 h-[200px] flex items-center justify-center'>
+                  <NoData type='report' classNameImage='w-[245px]' titleText={dataLang?.nodata || 'Chưa có dữ liệu'} />
+                </div>
               ) : (
-                <>
-                  <CheckIcon className='size-4' />
-                  <span>{dataLang?.branch_popup_save || 'Lưu'}</span>
-                </>
+                <div className='mx-4 h-[200px] max-h-[200px] overflow-y-auto'>
+                  <div className='divide-y divide-[#E7EAEE]'>
+                    {selectedPeople.map(person => (
+                      <div key={person.id} className='flex items-center justify-between py-4'>
+                        <div className='flex items-center gap-3'>
+                          <ResponsibleAvatar avatarUrl={person.avatarUrl} fullName={person.name} size={32} />
+                          <span className='text-sm font-medium text-[#101828]'>{person.name}</span>
+                        </div>
+                        <button
+                          type='button'
+                          onClick={() => handleRemovePerson(person.id)}
+                          className='inline-flex items-center justify-center p-2 rounded-full hover:bg-red-50 transition-colors'
+                          title={dataLang?.delete || 'Xoá'}
+                        >
+                          <TrashIcon className='size-5 text-[#EE1E1E]' />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
-            </button>
-          </div>
-        </form>
-      </div>
+            </div>
+
+            {/* Footer buttons */}
+            <div className='flex items-center justify-end w-full pt-2'>
+              <button
+                type='submit'
+                disabled={isLoading}
+                className='flex items-center gap-4 bg-[#0375F3] text-white px-7 py-3 rounded-[8px] font-medium transition-colors hover:bg-[#0375F3]/90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+              >
+                {isLoading ? (
+                  <>
+                    <LoadingButton hiddenTitle className='w-4 h-4 text-white' />
+                    <span>{dataLang?.processing || 'Đang xử lý...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckIcon className='size-4' />
+                    <span>{dataLang?.branch_popup_save || 'Lưu'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </PopupCustom>
 
       <PopupConfim
@@ -573,10 +563,7 @@ const PopupGroupPiecework = ({ dataLang, className, onRefresh, trigger, buttonCl
         nameModel='piecework_wage_group'
         isOpen={isConfirmBranchChangeOpen}
         title={dataLang?.piecework_wage_group_change_branch_title || 'Thay đổi chi nhánh?'}
-        subtitle={
-          dataLang?.piecework_wage_group_change_branch_subtitle ||
-          'Danh sách nhân viên đã chọn có thể không thuộc chi nhánh mới. Bạn có muốn tiếp tục không?'
-        }
+        subtitle={dataLang?.piecework_wage_group_change_branch_subtitle || 'Danh sách nhân viên đã chọn có thể không thuộc chi nhánh mới. Bạn có muốn tiếp tục không?'}
         forceConfirm
         save={handleConfirmBranchChange}
         cancel={() => {
