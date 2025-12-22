@@ -425,7 +425,7 @@ const PopupGroupPiecework = ({ dataLang, className, onRefresh, trigger, buttonCl
               </div>
             </div>
             {/* Chi nhánh */}
-            <div className='grid grid-cols-2 gap-4 items-end'>
+            <div className='grid grid-cols-2 gap-4 items-end-'>
               <div className='flex flex-col gap-2 '>
                 <label className='text-[16px] leading-5 font-semibold text-[#141522] flex items-center gap-1'>
                   {dataLang?.price_quote_branch || 'Chi nhánh'}
@@ -467,7 +467,9 @@ const PopupGroupPiecework = ({ dataLang, className, onRefresh, trigger, buttonCl
                 />
               </div>
 
-              <div className='flex flex-col gap-1'>
+              <div className='flex flex-col gap-2'>
+                <div className="h-[20px]"></div>
+
                 <ResponsiblePersonComboBox
                   open={openCombo}
                   onClose={() => setOpenCombo(false)}
@@ -482,6 +484,7 @@ const PopupGroupPiecework = ({ dataLang, className, onRefresh, trigger, buttonCl
                   selected={selectedPeople}
                   data={listStaffs}
                   hideSelected={false}
+                  emptyMessage={dataLang?.piecework_wage_group_no_staff_in_branch || 'Không có nhân viên thuộc chi nhánh này'}
                 >
                   <button
                     type='button'
