@@ -197,17 +197,17 @@ const TabKeepStock = ({ dataTable, handShowItem, handDeleteItem, isFetching, dat
                                 <h1 className="text-[#9295A4] font-normal text-[11px]">
                                   {i.code} - {i.itemVariation}
                                 </h1>
-                                <div className="flex flex-wrap items-center font-oblique">
-                                  {dataProductSerial.is_enable === '1' && (
+                                <div className="flex flex-col flex-wrap font-oblique">
+                                  {dataProductSerial.is_enable === '1' && i?.serial && (
                                     <div className="flex gap-0.5">
                                       <h6 className="text-[12px]">Serial:</h6>
-                                      <h6 className="text-[10px]  px-2   w-[full] text-left ">
-                                        {i?.serial == null || i?.serial == '' ? '-' : i?.serial}
+                                      <h6 className="text-[10px] px-2 w-[full] text-left ">
+                                        {i.serial}
                                       </h6>
                                     </div>
                                   )}
                                   {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1') && (
-                                    <>
+                                    <div className="flex gap-0.5">
                                       <div className="flex gap-0.5">
                                         <h6 className="text-[10px]">Lot:</h6>{' '}
                                         <h6 className="text-[10px]  px-2   w-[full] text-left ">
@@ -222,7 +222,7 @@ const TabKeepStock = ({ dataTable, handShowItem, handDeleteItem, isFetching, dat
                                             : '-'}
                                         </h6>
                                       </div>
-                                    </>
+                                    </div>
                                   )}
                                 </div>
                               </div>

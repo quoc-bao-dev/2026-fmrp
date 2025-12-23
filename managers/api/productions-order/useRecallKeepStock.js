@@ -57,8 +57,11 @@ export const useSaveRecoveryKeepStock = (onClose, ppId = null, onErrorCallback =
           queryClient.invalidateQueries({
             queryKey: ['apiListBomProductPlan', ppId],
           });
+          queryClient.invalidateQueries({
+            queryKey: ['apiDetailProductionOrders'],
+          });
         }
-        
+
         onClose?.();
       } else {
         // Nếu errors là array → hiển thị banner chi tiết

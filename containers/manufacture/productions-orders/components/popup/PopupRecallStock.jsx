@@ -115,6 +115,19 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
 
   const getItemId = item => `${item?.item_variation_id || item?.id_items || 'item'}-${item?.lot || 'lot'}-${item?.expiration_date || ''}`;
   const getMaxRecoverable = item => Math.max(0, Number(item?.quantity_keep ?? 0) - Number(item?.quantity_exported ?? 0) - Number(item?.quantity_recovered ?? 0));
+  const setDefaultQuantityIfMissing = (itemId, item) => {
+    setQuantityByItemByTab(prev => {
+      const currentTabQuantities = prev[activeTab.id] || {};
+      if (currentTabQuantities[itemId] !== undefined) return prev; // giữ nguyên nếu đã có giá trị
+      return {
+        ...prev,
+        [activeTab.id]: {
+          ...currentTabQuantities,
+          [itemId]: getMaxRecoverable(item),
+        },
+      };
+    });
+  };
   const selectIfSelectable = (item, itemId) => {
     if (!item || getMaxRecoverable(item) <= 0) return;
     setSelectedItemsByTab(prev => ({
@@ -326,6 +339,7 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
           [activeTab.id]: currentTabItems.filter(id => id !== itemId),
         };
       } else {
+        setDefaultQuantityIfMissing(itemId, item);
         return {
           ...prev,
           [activeTab.id]: [...currentTabItems, itemId],
@@ -340,6 +354,18 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
         showToast('error', 'Không còn nguyên liệu nào để thu hồi');
         return;
       }
+      // Gán giá trị mặc định = maxRecoverable cho những dòng chưa có số lượng
+      setQuantityByItemByTab(prev => {
+        const currentTabQuantities = prev[activeTab.id] || {};
+        const updatedQuantities = { ...currentTabQuantities };
+        filteredItems.forEach(item => {
+          const itemId = getItemId(item);
+          if (selectableIds.includes(itemId) && updatedQuantities[itemId] === undefined) {
+            updatedQuantities[itemId] = getMaxRecoverable(item);
+          }
+        });
+        return { ...prev, [activeTab.id]: updatedQuantities };
+      });
       setSelectedItemsByTab(prev => ({
         ...prev,
         [activeTab.id]: selectableIds,
@@ -700,12 +726,28 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
                           </td>
                           <td className='py-2 px-3 text-center whitespace-nowrap'>
                             <span className='text-sm font-medium text-[#141522]'>
-                              {`${formatNumber(+(e?.quantity_exported ?? 0))} / `} <span className='text-[11px] text-[#667085]'>{e?.unit_name || ''}</span>
+                              {+(e?.quantity_exported ?? 0) === 0
+                                ? '-'
+                                : (
+                                  <>
+                                    {`${formatNumber(+(e?.quantity_exported ?? 0))} / `}
+                                    <span className='text-[11px] text-[#667085]'>{e?.unit_name || ''}</span>
+                                  </>
+                                )
+                              }
                             </span>
                           </td>
                           <td className='py-2 px-3 text-center whitespace-nowrap'>
                             <span className='text-sm font-medium text-[#141522]'>
-                              {`${formatNumber(+(e?.quantity_recovered ?? 0))} / `} <span className='text-[11px] text-[#667085]'>{e?.unit_name || ''}</span>
+                              {+(e?.quantity_recovered ?? 0) === 0
+                                ? '-'
+                                : (
+                                  <>
+                                    {`${formatNumber(+(e?.quantity_recovered ?? 0))} / `}
+                                    <span className='text-[11px] text-[#667085]'>{e?.unit_name || ''}</span>
+                                  </>
+                                )
+                              }
                             </span>
                           </td>
                           {maxRecoverable <= 0 ? (
