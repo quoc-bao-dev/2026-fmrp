@@ -64,6 +64,19 @@ const InventoryForm = props => {
   const [dataErr, sDataErr] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [debouncedInputValue] = useDebounce(inputValue, 500);
+
+  const handleSearchInput = useCallback(
+    value => {
+      if (!warehouse) {
+        sErrWareHouse(true);
+        isShow('error', 'Vui lòng chọn kho hàng trước khi tìm kiếm mặt hàng');
+        return;
+      }
+      setInputValue(value);
+    },
+    [warehouse, isShow]
+  );
+  
   // [Import] [step 1] Khởi tạo state hiển thị banner lỗi khi import Excel
   const [importErrorBanner, setImportErrorBanner] = useState({
     message: '',
@@ -863,13 +876,13 @@ console.log(dataChoose)
           <div className='flex items-center justify-between flex-shrink-0 mb-4'>
             <h2 className='responsive-text-xl font-medium text-brand-color w-full'>Thông tin mặt hàng</h2>
             <SelectSearch
-              options={options}
+              options={warehouse ? options : []}
               placeholder='Tìm kiếm mặt hàng'
               value={null}
               multiple={false}
               showCheckbox={false}
               showSelectedCount={false}
-              setSearch={setInputValue}
+              setSearch={handleSearchInput}
               noDataMessage={!branch ? <span className='text-new-blue'>Vui lòng chọn chi nhánh</span> : !warehouse ? <span className='text-new-blue'>Vui lòng chọn kho hàng</span> : 'Không có dữ liệu'}
               onChange={_HandleAddParent}
               formatOptionLabel={option => (
@@ -915,7 +928,6 @@ console.log(dataChoose)
                   <h4 className='col-span-3 text-center'>Date</h4>
                 </>
               ) : null}
-
               <h4 className='col-span-3 text-center'>Đơn giá</h4>
               <h4 className='col-span-3 text-center'>SL thực</h4>
               <h4 className='col-span-2 text-right whitespace-nowrap'>Thành tiền</h4>
@@ -1026,7 +1038,7 @@ console.log(dataChoose)
                                       : errNullSerial && (ce.serial === null || ce.serial === '')
                                       ? 'border-red-500'
                                       : 'border-gray-200'
-                                  } h-[38px] rounded-lg appearance-none text-center p-2 text-neutral-07 responsive-text-base font-medium placeholder:font-normal w-full focus:outline-none focus:border-brand-color hover:border-brand-color border border-neutral-N400`}
+                                  } !h-[38px] rounded-lg appearance-none text-center p-2 text-neutral-07 responsive-text-base font-medium placeholder:font-normal w-full focus:outline-none focus:border-brand-color hover:border-brand-color border border-neutral-N400`}
                                   placeholder='Nhập serial'
                                 />
                                 {isSubmitted && duplicateIds.includes(ce.id) && (
