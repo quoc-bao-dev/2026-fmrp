@@ -1,15 +1,16 @@
 import apiRoles from '@/Api/apiPersonnel/apiRoles';
 import { PlusIcon } from '@/components/icons';
 import EditIcon from '@/components/icons/common/EditIcon';
+import RolePermissionLayout from '@/components/common/permissions/RolePermissionLayout';
+import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
+import useRolePermissionLayoutState from '@/hooks/common/useRolePermissionLayoutState';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';
 import Loading from '@/components/UI/loading/loading';
 import PopupCustom from '@/components/UI/popup';
 import SelectOptionLever from '@/components/UI/selectOptionLever/selectOptionLever';
 import useToast from '@/hooks/useToast';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { SearchNormal1 } from 'iconsax-react';
-import React, { useEffect, useState } from 'react';
-import { MdClear } from 'react-icons/md';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 const initalState = {
@@ -23,7 +24,7 @@ const initalState = {
   errBranch: false,
   errName: false,
   errDepartment: false,
-  tab: 0,
+  activeTab: { id: 'info', name: '' },
   dataPower: [],
   valueSearch: '',
 };
@@ -225,10 +226,19 @@ const PopupRoles = React.memo(props => {
     enabled: isState.open && !!props?.id,
   });
 
+  // Hàm normalize hỗ trợ search tiếng Việt (bỏ dấu, unicode-safe)
+  const normalizeText = text =>
+    (text || '')
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
   // change modlue
   const handleChange = (parent, child = null, permissions = null) => {
     const newData = isState.dataPower?.map(e => {
       if (child == null && e?.key == parent?.key) {
+        // Click vào group (mục cha)
         return {
           ...e,
           child: e?.child?.map(x => {
@@ -244,9 +254,14 @@ const PopupRoles = React.memo(props => {
           }),
           is_check: parent.is_check == 0 ? 1 : 0,
         };
-      } else if (child != null && e?.key == parent && e?.is_check == 1) {
+      } else if (child != null && e?.key == parent) {
+        // Click vào permission (mục con)
+        // Nếu group chưa được tick, tự động tick group
+        const shouldCheckGroup = e?.is_check != 1;
+        
         return {
           ...e,
+          is_check: shouldCheckGroup ? 1 : e?.is_check, // Tự động tick group nếu chưa tick
           child: e?.child?.map(x => {
             if (x?.key == child) {
               return {
@@ -272,9 +287,21 @@ const PopupRoles = React.memo(props => {
     queryState({ dataPower: newData });
   };
 
-  // ẩn hiện module khi tìm kiếm
+  // ẩn hiện module khi tìm kiếm (hỗ trợ tiếng Việt, bỏ dấu)
   useEffect(() => {
-    const filteredData = isState.dataPower.filter(item => item.name.toLowerCase().includes(isState.valueSearch.toLowerCase()));
+    const searchValue = normalizeText(isState.valueSearch);
+
+    // Nếu không có từ khóa tìm kiếm thì hiện toàn bộ
+    if (!searchValue) {
+      const resetData = isState.dataPower.map(item => ({
+        ...item,
+        hidden: false,
+      }));
+      queryState({ dataPower: resetData });
+      return;
+    }
+
+    const filteredData = isState.dataPower.filter(item => normalizeText(item.name).includes(searchValue));
     const newdb = isState.dataPower.map(item => {
       const itemChecked = filteredData.find(x => item.key == x.key);
       if (itemChecked) {
@@ -291,6 +318,35 @@ const PopupRoles = React.memo(props => {
     });
     queryState({ dataPower: newdb });
   }, [isState.valueSearch]);
+
+  // Khi clear input (value rỗng), active lại tab đầu tiên và scroll đến group đầu tiên
+  // useEffect(() => {
+  //   if (isState.activeTab?.id !== 'power') return;
+    
+  //   // Chỉ chạy khi valueSearch rỗng hoặc chỉ có khoảng trắng
+  //   if (isState.valueSearch && isState.valueSearch.trim() !== '') return;
+
+  //   // Tìm group đầu tiên không bị hidden
+  //   const firstVisibleGroup = isState.dataPower?.find(e => !e?.hidden);
+    
+  //   if (firstVisibleGroup && scrollContainerRef.current) {
+  //     // Set activeGroupKey về group đầu tiên
+  //     setActiveGroupKey(firstVisibleGroup.key);
+      
+  //     // Scroll đến group đầu tiên (cách mép trên 200px như logic handleScrollToSection)
+  //     const section = sectionRefs.current[firstVisibleGroup.key];
+  //     if (section) {
+  //       const container = scrollContainerRef.current;
+  //       const sectionTop = section.offsetTop;
+  //       const targetScrollTop = sectionTop - 200;
+        
+  //       container.scrollTo({
+  //         top: targetScrollTop,
+  //         behavior: 'smooth',
+  //       });
+  //     }
+  //   }
+  // }, [isState.valueSearch, isState.activeTab?.id, isState.dataPower]);
 
   const styleSelect = {
     theme: theme => ({
@@ -309,6 +365,33 @@ const PopupRoles = React.memo(props => {
       }),
     },
   };
+
+  const tabList = useMemo(
+    () => [
+      { id: 'info', name: props.dataLang?.personnels_staff_popup_info || 'Thông tin' },
+      { id: 'power', name: props.dataLang?.personnels_staff_popup_power || 'Quyền hạn' },
+    ],
+    [props.dataLang?.personnels_staff_popup_info, props.dataLang?.personnels_staff_popup_power]
+  );
+
+  // Initialize activeTab when popup opens
+  useEffect(() => {
+    if (isState.open && (!isState.activeTab?.id || isState.activeTab?.id === 'info' && !isState.activeTab?.name)) {
+      queryState({ activeTab: tabList[0] });
+    }
+  }, [isState.open, tabList]);
+
+  const {
+    activeGroupKey,
+    scrollContainerRef,
+    sidebarRef,
+    sidebarButtonRefs,
+    sectionRefs,
+    handleScrollToSection,
+  } = useRolePermissionLayoutState({
+    dataPower: isState.dataPower,
+    isActivePowerTab: isState.activeTab?.id === 'power',
+  });
 
   return (
     <PopupCustom
@@ -334,26 +417,22 @@ const PopupRoles = React.memo(props => {
       onClose={() => queryState({ open: false })}
       classNameBtn={props.className}
     >
-      <div className='flex items-center space-x-4 my-3 border-[#E7EAEE] border-opacity-70 border-b-[1px]'>
-        <button
-          onClick={() => queryState({ tab: 0 })}
-          className={`${isState.tab === 0 ? 'text-[#0F4F9E]  border-b-2 border-[#0F4F9E]' : 'hover:text-[#0F4F9E] '}  px-4 py-2 outline-none font-semibold`}
-        >
-          {props.dataLang?.personnels_staff_popup_info}
-        </button>
-        <button
-          onClick={() => queryState({ tab: 1 })}
-          className={`${isState.tab === 1 ? 'text-[#0F4F9E]  border-b-2 border-[#0F4F9E]' : 'hover:text-[#0F4F9E] '}  px-4 py-2 outline-none font-semibold`}
-        >
-          {props.dataLang?.personnels_staff_popup_power}
-        </button>
+      <div className='my-3'>
+        <TabSwitcherWithSlidingBackground
+          tabs={tabList}
+          activeTab={isState.activeTab}
+          onChange={tab => queryState({ activeTab: tab })}
+          className='!p-1 flex-shrink-0 !overflow-visible'
+          buttonClassName='!py-1.5 !px-3 !responsive-text-sm'
+          buttonActiveClassName='!top-1 !bottom-1'
+        />
       </div>
-      <div className='py-4 w-[600px]  space-y-4'>
+      <div className={`py-4 space-y-4 ${isState.activeTab?.id === 'info' ? 'w-[600px]' : 'w-[900px]'}`}>
         {isFetching ? (
           <Loading className='h-80' color='#0f4f9e' />
         ) : (
           <React.Fragment>
-            {isState.tab == 0 && (
+            {isState.activeTab?.id === 'info' && (
               <div className='space-y-2'>
                 <div className='space-y-1'>
                   <label className='text-[#344054] font-normal text-base'>
@@ -432,111 +511,21 @@ const PopupRoles = React.memo(props => {
                 </div>
               </div>
             )}
-            {isState.tab == 1 && (
-              <>
-                <div className='w-full'>
-                  <label>Tìm kiếm</label>
-                  <div className='relative flex items-center'>
-                    <SearchNormal1 size={20} className='absolute 2xl:left-3 z-10 text-[#cccccc] xl:left-[4%] left-[1%]' />
-                    <input
-                      onChange={e => queryState({ valueSearch: e?.target?.value })}
-                      dataLang={props.dataLang}
-                      value={isState.valueSearch}
-                      className={
-                        'border py-1.5 rounded border-gray-300 2xl:text-left 2xl:pl-10 xl:!text-left xl:pl-16 relative bg-white outline-[#D0D5DD] focus:outline-[#0F4F9E] 2xl:text-base text-xs  text-center 2xl:w-full xl:w-full w-[100%]'
-                      }
-                    />
-                    {isState.valueSearch != '' && (
-                      <MdClear
-                        size={32}
-                        onClick={() => queryState({ valueSearch: '' })}
-                        className='absolute cursor-pointer hover:bg-gray-300 p-2 right-5 bottom-0.5 rounded-full transition-all duration-200 ease-linear'
-                      />
-                    )}
-                  </div>
-                </div>
-                <div className='space-y-2 max-h-[280px] h-auto overflow-y-auo scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100'>
-                  <div className={`grid grid-cols-1`}>
-                    {isState.dataPower?.map(e => {
-                      return (
-                        <div className={e?.hidden ? 'hidden' : ''} key={e?.key}>
-                          <div className='flex items-center w-max'>
-                            <div className='inline-flex items-center'>
-                              <label className='relative flex items-center p-3 rounded-full cursor-pointer' htmlFor={e?.key} data-ripple-dark='true'>
-                                <input
-                                  type='checkbox'
-                                  className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-indigo-500 checked:bg-indigo-500 checked:before:bg-indigo-500 hover:before:opacity-10"
-                                  id={e?.key}
-                                  value={e?.name}
-                                  checked={e?.is_check == 1 ? true : false}
-                                  onChange={value => handleChange(e)}
-                                />
-                                <div className='absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100'>
-                                  <svg xmlns='http://www.w3.org/2000/svg' className='h-3.5 w-3.5' viewBox='0 0 20 20' fill='currentColor' stroke='currentColor' strokeWidth='1'>
-                                    <path
-                                      fillRule='evenodd'
-                                      d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
-                                      clipRule='evenodd'
-                                    ></path>
-                                  </svg>
-                                </div>
-                              </label>
-                            </div>
-                            <label htmlFor={e?.key} className='text-[#344054] font-medium text-base cursor-pointer'>
-                              {e?.name}
-                            </label>
-                          </div>
-                          {e?.is_check == 1 && (
-                            <div className=''>
-                              {e?.child?.map((i, index) => {
-                                return (
-                                  <div key={i?.key} className={`${e?.child?.length - 1 == index && 'border-b'} ml-10 border-t border-x`}>
-                                    <div className='p-2 text-sm border-b'>{i?.name}</div>
-                                    <div className='grid grid-cols-3 gap-1 '>
-                                      {i?.permissions?.map(s => {
-                                        return (
-                                          <div key={s?.key} className='flex items-center w-full'>
-                                            <div className='inline-flex items-center'>
-                                              <label className='relative flex items-center p-3 rounded-full cursor-pointer' htmlFor={s?.key + '' + i?.key} data-ripple-dark='true'>
-                                                <input
-                                                  type='checkbox'
-                                                  className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-indigo-500 checked:bg-indigo-500 checked:before:bg-indigo-500 hover:before:opacity-10"
-                                                  id={s?.key + '' + i?.key}
-                                                  value={s?.name}
-                                                  checked={s?.is_check == 1 ? true : false}
-                                                  onChange={value => {
-                                                    handleChange(e?.key, i?.key, s);
-                                                  }}
-                                                />
-                                                <div className='absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100'>
-                                                  <svg xmlns='http://www.w3.org/2000/svg' className='h-3.5 w-3.5' viewBox='0 0 20 20' fill='currentColor' stroke='currentColor' strokeWidth='1'>
-                                                    <path
-                                                      fillRule='evenodd'
-                                                      d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
-                                                      clipRule='evenodd'
-                                                    ></path>
-                                                  </svg>
-                                                </div>
-                                              </label>
-                                            </div>
-                                            <label htmlFor={s?.key + '' + i?.key} className='text-[#344054] font-medium text-sm cursor-pointer'>
-                                              {s?.name}
-                                            </label>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
+            {isState.activeTab?.id === 'power' && (
+              <RolePermissionLayout
+                dataPower={isState.dataPower}
+                activeGroupKey={activeGroupKey}
+                valueSearch={isState.valueSearch}
+                onChangeSearch={value => queryState({ valueSearch: value })}
+                searchPlaceholder={props.dataLang?.search_placeholder || 'Tìm kiếm'}
+                sidebarRef={sidebarRef}
+                sidebarButtonRefs={sidebarButtonRefs}
+                scrollContainerRef={scrollContainerRef}
+                sectionRefs={sectionRefs}
+                onScrollToSection={handleScrollToSection}
+                onToggleGroup={handleChange}
+                onTogglePermission={(parentKey, childKey, permission) => handleChange(parentKey, childKey, permission)}
+              />
             )}
             <div className='flex justify-end space-x-2'>
               <button onClick={() => queryState({ open: false })} className='px-4 py-2 text-base transition rounded-lg bg-slate-200 hover:opacity-90 hover:scale-105'>
