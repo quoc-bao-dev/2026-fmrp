@@ -142,12 +142,17 @@ const PopupImportExcel = React.memo(props => {
   };
 
   return (
-    <>
-      <button onClick={_CheckWareHouse} className='!py-3 3xl:py-3 3xl:px-4 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded border border-blue-fmrp transition'>
-        <ExcelIcon className='3xl:size-5 size-4 text-blue-fmrp' />
-        <span className='text-blue-fmrp responsive-text-sm font-medium whitespace-nowrap'>Kiểm kê bằng excel</span>
-      </button>
-      <PopupCustom title={'Nhập excel để kiểm kê mặt hàng'} open={open} onClose={_HandleClose}>
+      <PopupCustom
+        title={'Nhập excel để kiểm kê mặt hàng'}
+        open={open}
+        onClose={_HandleClose}
+        button={
+          <button onClick={_CheckWareHouse} className='!py-3 3xl:py-3 3xl:px-4 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded-lg border border-blue-fmrp transition'>
+            <ExcelIcon className='3xl:size-5 size-4 text-blue-fmrp' />
+            <span className='text-blue-fmrp responsive-text-sm font-medium whitespace-nowrap'>Kiểm kê bằng excel</span>
+          </button>
+        }
+      >
         <div className='py-4 w-[600px] 2xl:space-y-5 space-y-4'>
           {/* Middle section with 2 buttons */}
 
@@ -195,7 +200,6 @@ const PopupImportExcel = React.memo(props => {
           </div>
         </div>
       </PopupCustom>
-    </>
   );
 });
 

@@ -123,7 +123,7 @@ const SyntheticFund = () => {
           },
           footer: rTotal => {
             const value = Number(rTotal?.opening_total || 0);
-            return value > 0 ? formatNumber(value) : '-';
+            return value > 0 ? formatNumber(value) : '0';
           },
         },
         {
@@ -135,10 +135,10 @@ const SyntheticFund = () => {
             const value = Number(row?.opening_total);
             return value < 0 ? formatNumber(Math.abs(value)) : '-';
           },
-          // footer: rTotal => {
-          //   const value = Number(rTotal?.opening_total || 0);
-          //   return value < 0 ? formatNumber(Math.abs(value)) : '-';
-          // },
+          footer: rTotal => {
+            const value = Number(rTotal?.closing_coupons || 0);
+            return value < 0 ? formatNumber(Math.abs(value)) : '0';
+          },
         },
       ],
     },
@@ -153,7 +153,7 @@ const SyntheticFund = () => {
           thClass: 'min-w-28 h-2 p-0 text-center font-semibold text-gray-700',
           tdClass: 'p-0 h-2 text-center text-neutral-07',
           render: row => (Number(row?.coupons_period) !== 0 ? formatNumber(Number(row?.coupons_period)) : '-'),
-          footer: rTotal => (Number(rTotal?.coupons_period) !== 0 ? formatNumber(Number(rTotal?.coupons_period) || 0) : '-'),
+          footer: rTotal => (Number(rTotal?.coupons_period) !== 0 ? formatNumber(Number(rTotal?.coupons_period) || 0) : '0'),
         },
         {
           key: 'payslips_period',
@@ -161,6 +161,8 @@ const SyntheticFund = () => {
           thClass: 'min-w-28 h-2 p-0 text-center font-semibold text-gray-700',
           tdClass: 'p-0 h-2 text-center text-neutral-07',
           render: row => (Number(row?.payslips_period) !== 0 ? formatNumber(Number(row?.payslips_period)) : '-'),
+          footer: rTotal => (Number(rTotal?.payslips_period) !== 0 ? formatNumber(Number(rTotal?.payslips_period) || 0) : '0'),
+
         },
       ],
     },
@@ -180,7 +182,7 @@ const SyntheticFund = () => {
           },
           footer: rTotal => {
             const value = Number(rTotal?.closing_total || 0);
-            return value > 0 ? formatNumber(value) : '-';
+            return value > 0 ? formatNumber(value) : '0';
           },
         },
         {
@@ -192,10 +194,10 @@ const SyntheticFund = () => {
             const value = Number(row?.closing_total);
             return value < 0 ? formatNumber(Math.abs(value)) : '-';
           },
-          // footer: rTotal => {
-          //   const value = Number(rTotal?.closing_total || 0);
-          //   return value < 0 ? formatNumber(Math.abs(value)) : '-';
-          // },
+          footer: rTotal => {
+            const value = Number(rTotal?.closing_payslips || 0);
+            return value < 0 ? formatNumber(Math.abs(value)) : '0';
+          },
         },
       ],
     },

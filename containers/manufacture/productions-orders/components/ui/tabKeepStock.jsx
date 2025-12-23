@@ -8,13 +8,13 @@ import useFeature from '@/hooks/useConfigFeature'
 import useSetingServer from '@/hooks/useConfigNumber'
 import { formatMoment } from '@/utils/helpers/formatMoment'
 import formatNumberConfig from '@/utils/helpers/formatnumber'
-import { useState } from 'react'
-import ModalImage from 'react-modal-image'
 import { AnimatePresence, motion } from 'framer-motion'
+import Image from 'next/image'
+import { useState } from 'react'
 
 const TabKeepStock = ({ dataTable, handShowItem, handDeleteItem, isFetching, dataLang }) => {
   const dataSeting = useSetingServer()
-  const formatNumber = (num) => formatNumberConfig(+num, dataSeting)
+  const formatNumber = num => formatNumberConfig(+num, dataSeting)
   const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature()
   const [isTab, setIsTab] = useState('dataKeepStock')
   
@@ -48,6 +48,18 @@ const TabKeepStock = ({ dataTable, handShowItem, handDeleteItem, isFetching, dat
             {'Đơn mua'}
             <span className="bg-[#EE1E1E] text-white 3xl:px-[8.5px] px-[7px] py-0.5 rounded-full">
               {dataTable?.listDataRight?.dataPurchases?.length ?? 0}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsTab('dataTransferRecovery')}
+            className={`${
+              isTab === 'dataTransferRecovery' ? 'border-blue-fmrp' : 'border-blue-fmrp/10'
+            } bg-blue-fmrp/10 border text-blue-fmrp py-1 px-[10px] font-normal text-xs w-fit rounded-md  flex gap-1 items-center`}
+          >
+            Thu hồi giữ kho
+            <span className="bg-blue-fmrp text-white 3xl:px-[8.5px] px-[7px] py-0.5 rounded-full">
+              {dataTable?.listDataRight?.dataTransferRecovery?.length ?? 0}
             </span>
           </button>
         </div>
@@ -97,9 +109,11 @@ const TabKeepStock = ({ dataTable, handShowItem, handDeleteItem, isFetching, dat
                       </span>
                       <span className="capitalize">{e.user}</span>
                     </h5>
-                    {isTab === 'dataKeepStock' && <TagWarehouse data={{ warehouseman_id: e?.warehousemanId }} />}
+                    {(isTab === 'dataKeepStock' || isTab === 'dataTransferRecovery') && (
+                      <TagWarehouse data={{ warehouseman_id: e?.warehousemanId }} />
+                    )}
                   </div>
-                  {isTab === 'dataKeepStock' && (
+                  {(isTab === 'dataKeepStock' || isTab === 'dataTransferRecovery') && (
                     <div className="flex items-center gap-5 my-2">
                       <h5 className="text-[#3A3E4C] font-normal xl:text-sm text-xs">
                         <span className="pr-2 text-[#9295A4] font-normal xl:text-sm text-xs">
@@ -139,18 +153,21 @@ const TabKeepStock = ({ dataTable, handShowItem, handDeleteItem, isFetching, dat
                         <h4 className="col-span-2 flex items-center gap-2 justify-center text-[#344054] font-normal text-xs ">
                           {isTab === 'dataKeepStock' &&
                             (dataLang?.materials_planning_quantity_kept || 'materials_planning_quantity_kept')}
-                          {isTab === 'dataPurchases' && 'Số lượng đã mua'}
+                          {isTab === 'dataPurchases' && 'Số lượng đã đặt hàng'}
+                          {isTab === 'dataTransferRecovery' && 'Số lượng đã thu hồi'}
                         </h4>
                         <h4
                           className={`${
-                            isTab === 'dataKeepStock' ? 'col-span-2 text-center px-4' : 'col-span-2 text-center px-0'
+                            isTab === 'dataKeepStock' || isTab === 'dataTransferRecovery'
+                              ? 'col-span-2 text-center px-4'
+                              : 'col-span-2 text-center px-0'
                           }   text-[#344054] font-normal text-xs`}
                         >
-                          {isTab === 'dataKeepStock' &&
+                          {(isTab === 'dataKeepStock' || isTab === 'dataTransferRecovery') &&
                             (dataLang?.warehouseTransfer_rransferPosition || 'warehouseTransfer_rransferPosition')}
                           {isTab === 'dataPurchases' && 'Số lượng đã nhập'}
                         </h4>
-                        {isTab === 'dataKeepStock' && (
+                        {(isTab === 'dataKeepStock' || isTab === 'dataTransferRecovery') && (
                           <h4 className={`col-span-2 px-4 text-center text-[#344054] font-normal text-xs`}>
                             {dataLang?.warehouseTransfer_receivingLocation || 'warehouseTransfer_receivingLocation'}
                           </h4>
@@ -168,12 +185,11 @@ const TabKeepStock = ({ dataTable, handShowItem, handDeleteItem, isFetching, dat
                             }  items-center ${e.arrListData?.length - 1 == index ? '' : 'border-b'} `}
                           >
                             <h4 className="flex items-center col-span-4 gap-2 px-4 py-2">
-                              <ModalImage
-                                small={i.image}
-                                large={i.image}
+                              <Image
+                                src={i.image}
+                                alt={i.name}
                                 width={36}
                                 height={36}
-                                alt={i.name}
                                 className="object-cover rounded-md min-w-[36px] min-h-[36px] w-[36px] h-[36px] max-w-[36px] max-h-[36px]"
                               />
                               <div className="flex flex-col gap-0.5">
@@ -181,17 +197,17 @@ const TabKeepStock = ({ dataTable, handShowItem, handDeleteItem, isFetching, dat
                                 <h1 className="text-[#9295A4] font-normal text-[11px]">
                                   {i.code} - {i.itemVariation}
                                 </h1>
-                                <div className="flex flex-wrap items-center font-oblique">
-                                  {dataProductSerial.is_enable === '1' && (
+                                <div className="flex flex-col flex-wrap font-oblique">
+                                  {dataProductSerial.is_enable === '1' && i?.serial && (
                                     <div className="flex gap-0.5">
                                       <h6 className="text-[12px]">Serial:</h6>
-                                      <h6 className="text-[10px]  px-2   w-[full] text-left ">
-                                        {i?.serial == null || i?.serial == '' ? '-' : i?.serial}
+                                      <h6 className="text-[10px] px-2 w-[full] text-left ">
+                                        {i.serial}
                                       </h6>
                                     </div>
                                   )}
                                   {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1') && (
-                                    <>
+                                    <div className="flex gap-0.5">
                                       <div className="flex gap-0.5">
                                         <h6 className="text-[10px]">Lot:</h6>{' '}
                                         <h6 className="text-[10px]  px-2   w-[full] text-left ">
@@ -206,7 +222,7 @@ const TabKeepStock = ({ dataTable, handShowItem, handDeleteItem, isFetching, dat
                                             : '-'}
                                         </h6>
                                       </div>
-                                    </>
+                                    </div>
                                   )}
                                 </div>
                               </div>
@@ -217,7 +233,7 @@ const TabKeepStock = ({ dataTable, handShowItem, handDeleteItem, isFetching, dat
                             <h4 className="col-span-2 text-center text-[#141522] font-semibold xl:text-sm text-xs">
                               {i.quantity > 0 ? formatNumber(i.quantity) : '-'}
                             </h4>
-                            {isTab === 'dataKeepStock' && (
+                            {(isTab === 'dataKeepStock' || isTab === 'dataTransferRecovery') && (
                               <>
                                 <h4 className="col-span-2 text-center text-[#52575E] font-normal xl:text-sm text-xs">
                                   {i.locationFrom}

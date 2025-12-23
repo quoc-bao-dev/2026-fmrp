@@ -158,18 +158,18 @@ const ProductRow = memo(({ product, index, displayIndex, handleSelectProduct, cl
             {/* {product.unit_name !== product.unit_name_primary && ( */}
             {/* <> */}
             <div className='text-start whitespace-nowrap'>
-              <p className='text-[#EE1E1E] font-medium text-lg'>
+              <p className='text-blue-fmrp font-medium text-base'>
                 {formatNumber(Number(product.quantity_total_quota))} <span className='text-[#141522] font-medium text-xs'>/</span>
               </p>
               <span className='text-[#141522] text-xs font-medium'>{product.unit_name}</span>
             </div>
             <span className='text-[#141522] text-base font-medium'>
-              <ApproximateEqualsIcon className='size-4' />
+              <ApproximateEqualsIcon className='size-3' />
             </span>
             {/* </> */}
             {/* )} */}
             <div className='text-start whitespace-nowrap'>
-              <p className='text-[#EE1E1E] font-medium text-lg'>
+              <p className='text-blue-fmrp font-medium text-base'>
                 {formatNumber(Number(product.quantity_quota_primary))} <span className='text-[#141522] font-medium text-xs'>/</span>
               </p>
               <span className='text-[#141522] text-xs font-medium'>{product.unit_name_primary}</span>

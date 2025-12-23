@@ -639,7 +639,7 @@ export const BtnAction = React.memo(props => {
 
     // Trường hợp đặc biệt cho products
     if (props.type === 'products') {
-      return 5; // Stage + Bom + Products(edit) + Copy + FilePDF + Delete
+      return 5; // Stage + Bom + Products(edit) + Copy + Delete
     }
 
     // Count edit button
@@ -807,17 +807,17 @@ export const BtnAction = React.memo(props => {
       );
 
       // Copy thành phẩm (nằm dưới nút sửa và trên nút xóa)
-      // allButtons.push(
-      //   <Popup_Products
-      //     key='copy'
-      //     onRefresh={props.onRefresh}
-      //     dataProductExpiry={props.dataProductExpiry}
-      //     dataLang={props.dataLang}
-      //     copyId={props?.id}
-      //     type={props?.typeOpen}
-      //     className='text-sm hover:bg-slate-50 text-left cursor-pointer whitespace-nowrap w-full'
-      //   />
-      // );
+      allButtons.push(
+        <Popup_Products
+          key='copy'
+          onRefresh={props.onRefresh}
+          dataProductExpiry={props.dataProductExpiry}
+          dataLang={props.dataLang}
+          copyId={props?.id}
+          type={props?.typeOpen}
+          className='text-sm hover:bg-slate-50 text-left cursor-pointer whitespace-nowrap w-full'
+        />
+      );
     } else if (props.type == 'receipts') {
       allButtons.push(
         <Popup_dspt key='receipts' onRefresh={props.onRefresh} dataLang={props.dataLang} id={props?.id} className='text-sm hover:bg-slate-50 text-left cursor-pointer'>
