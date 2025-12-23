@@ -76,7 +76,7 @@ const InventoryForm = props => {
     },
     [warehouse, isShow]
   );
-  
+
   // [Import] [step 1] Khởi tạo state hiển thị banner lỗi khi import Excel
   const [importErrorBanner, setImportErrorBanner] = useState({
     message: '',
@@ -130,6 +130,76 @@ const InventoryForm = props => {
     }
   }, [dataAuth]);
 
+  // Khi đổi kho, cần lấy lại dữ liệu tồn kho để hiển thị đúng SL phần mềm cho từng vị trí
+  useEffect(() => {
+    if (!warehouse?.value || dataChoose.length === 0) return;
+
+    const refreshInventoryByWarehouse = async () => {
+      try {
+        const updatedItems = await Promise.all(
+          dataChoose.map(async item => {
+            const { isSuccess } = await apiInventory.apiGetVariantInventoryVariation({
+              data: {
+                id: item.id,
+                warehouse_id: warehouse.value,
+              },
+            });
+
+            if (!isSuccess?.result || isSuccess.result.length === 0) return item;
+
+            const variant = isSuccess.result[0];
+            const mappedWarehouse =
+              variant?.warehouse?.map(wh => ({
+                label: wh?.location_name,
+                value: wh?.id,
+                warehouse_name: wh?.warehouse_name,
+                qty: wh?.quantity,
+              })) || [];
+
+            return {
+              ...item,
+              checkExpiry: variant?.expiry === '1' ? '1' : '0',
+              checkSerial: variant?.serial === '1' ? '1' : '0',
+              dataLot:
+                variant?.lot_array?.map(lot => ({
+                  label: lot,
+                  value: lot,
+                })) || [],
+              dataSerial:
+                variant?.serial_array?.length > 0
+                  ? variant.serial_array.map(serial => ({
+                      label: serial,
+                      value: serial,
+                    }))
+                  : [],
+              dataWarehouse: mappedWarehouse,
+              checkChild:
+                variant?.warehouse?.map(ce => ({
+                  amount: null,
+                  quantity: Number(ce.quantity),
+                  serial: ce.serial,
+                  lot: ce.lot,
+                  date: ce.expiration_date ? moment(ce.expiration_date).format('DD/MM/yyyy') : null,
+                  locate: ce.location_id,
+                })) || [],
+              child: item.child.map(child => ({
+                ...child,
+                dataWarehouse: mappedWarehouse,
+                // Reset quantity để lấy lại SL phần mềm đúng khi người dùng chọn vị trí/serial mới
+                quantity: null,
+              })),
+            };
+          })
+        );
+        sDataChoose(updatedItems);
+      } catch (error) {
+        console.error('Failed to refresh inventory by warehouse', error);
+      }
+    };
+
+    refreshInventoryByWarehouse();
+  }, [warehouse?.value]);
+
   // Cố định ngày kiểm kê là ngày hôm nay
   useEffect(() => {
     const today = new Date();
@@ -142,6 +212,31 @@ const InventoryForm = props => {
       sCode(value?.target.value);
     } else if (type === 'warehouse') {
       sWarehouse(value);
+      // Khi đổi kho hàng, chỉ reset dữ liệu đã nhập (giữ lại danh sách mặt hàng)
+      sDataChoose(prev =>
+        prev.map(item => ({
+          ...item,
+          child: item.child.map(child => ({
+            ...child,
+            locate: null,
+            amount: null,
+            lot: null,
+            date: null,
+            serial: null,
+            quantity: null,
+            price: null,
+          })),
+        }))
+      );
+      setSelectedItem(null);
+      setImportErrorBanner({ message: '', totalErrors: 0, items: [] });
+      setInputValue('');
+      sErrProduct(false);
+      sErrNullLocate(false);
+      sErrNullLot(false);
+      sErrNullDate(false);
+      sErrNullSerial(false);
+      sErrNullQty(false);
     } else if (type === 'branch') {
       sBranch(value);
       sWarehouse(null);
@@ -502,10 +597,7 @@ const InventoryForm = props => {
                 const locateValue = ce.locate.value;
                 const serialValue = ce.serial;
                 const checkByLocateAndSerial = e.checkChild?.find(item => {
-                  return (
-                    (String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue)) &&
-                    item.serial === serialValue
-                  );
+                  return (String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue)) && item.serial === serialValue;
                 });
                 if (checkByLocateAndSerial && checkByLocateAndSerial.quantity != null) {
                   ce.quantity = Number(checkByLocateAndSerial.quantity);
@@ -808,7 +900,7 @@ const InventoryForm = props => {
       label: `Thêm Phiếu Kiểm Kê Kho`,
     },
   ];
-console.log(dataChoose)
+  console.log(dataChoose);
   return (
     <LayoutForm
       title='Thêm phiếu kiểm kê kho'
@@ -886,9 +978,9 @@ console.log(dataChoose)
               noDataMessage={!branch ? <span className='text-new-blue'>Vui lòng chọn chi nhánh</span> : !warehouse ? <span className='text-new-blue'>Vui lòng chọn kho hàng</span> : 'Không có dữ liệu'}
               onChange={_HandleAddParent}
               formatOptionLabel={option => (
-                <div className='flex items-start p-1 cursor-pointer font-deca'>
-                  <div className='flex items-center gap-2'>
-                    <img src={option.e?.images ?? '/icon/noimagelogo.png'} alt={option?.e?.name} className='size-16 object-cover rounded-md' />
+                <div className='flex items-start cursor-pointer font-deca'>
+                  <div className='flex items-center gap-1 xl:gap-2'>
+                    <Image src={option.e?.images ?? '/icon/noimagelogo.png'} alt={option?.e?.name} width={64} height={64} className='size-16 object-cover rounded-md flex-shrink-0' />
                     <div className='flex flex-col gap-1 3xl:text-[10px] text-[9px] font-normal overflow-hidden w-full'>
                       <h3 className='font-semibold responsive-text-sm truncate text-black'>{option.e?.name}</h3>
 
@@ -910,13 +1002,7 @@ console.log(dataChoose)
           <div className='flex flex-col flex-1 min-h-0 overflow-hidden'>
             <div
               className={`${
-                dataProductSerial?.is_enable === '1'
-                  ? isExpiryEnabled
-                    ? 'grid-cols-25'
-                    : 'grid-cols-19'
-                  : isExpiryEnabled
-                  ? 'grid-cols-22'
-                  : 'grid-cols-16'
+                dataProductSerial?.is_enable === '1' ? (isExpiryEnabled ? 'grid-cols-25' : 'grid-cols-19') : isExpiryEnabled ? 'grid-cols-22' : 'grid-cols-16'
               } grid gap-2 items-center responsive-text-base text-neutral-02 font-semibold py-2 z-10 border-b border-b-[#F3F3F4] flex-shrink-0`}
             >
               <h4 className='col-span-4'>{dataLang?.import_from_items || 'import_from_items'}</h4>
@@ -943,24 +1029,14 @@ console.log(dataChoose)
                   <div
                     key={e?.id?.toString()}
                     className={`${
-                      dataProductSerial?.is_enable === '1'
-                        ? isExpiryEnabled
-                          ? 'grid-cols-25'
-                          : 'grid-cols-19'
-                        : isExpiryEnabled
-                        ? 'grid-cols-22'
-                        : 'grid-cols-16'
+                      dataProductSerial?.is_enable === '1' ? (isExpiryEnabled ? 'grid-cols-25' : 'grid-cols-19') : isExpiryEnabled ? 'grid-cols-22' : 'grid-cols-16'
                     } grid items-start gap-2 py-2 border-b border-b-[#F3F3F4]`}
                   >
                     <div className='h-full col-span-4'>
-                      <div className='flex items-center justify-between gap-2'>
+                      <div className='flex items-center justify-between gap-1 xl:gap-2'>
                         <div className='flex items-center gap-2'>
-                          <div className='size-12 flex-shrink-0 rounded-md overflow-hidden'>
-                            {e?.img != null ? (
-                              <Image src={e?.img} alt='Product Image' className='size-full object-cover' width={64} height={64} />
-                            ) : (
-                              <Image src='/icon/noimagelogo.png' alt='Product Image' className='size-full object-cover' width={64} height={64} />
-                            )}
+                          <div className='size-10 xl:size-12 flex-shrink-0 rounded-md overflow-hidden'>
+                            <Image src={e?.img ?? '/icon/noimagelogo.png'} alt='Product Image' className='size-full object-cover' width={64} height={64} />
                           </div>
                           <div className='flex flex-col gap-1'>
                             <h3 className='text-neutral-07 font-medium responsive-text-sm'>{e?.name}</h3>
@@ -972,34 +1048,14 @@ console.log(dataChoose)
                         </div>
                         <button
                           onClick={_HandleActionItem.bind(this, e?.id, 'add')}
-                          className='p-1 transition ease-in-out rounded bg-primary-05 hover:rotate-45 hover:bg-slate-200 hover:scale-105 hover:text-red-500'
+                          className='p-0.5 xl:p-1 transition ease-in-out rounded bg-primary-05 hover:rotate-45 hover:bg-slate-200 hover:scale-105 hover:text-red-500'
                         >
                           <Add className='size-4' />
                         </button>
                       </div>
                     </div>
-                    <div
-                      className={`${
-                        dataProductSerial?.is_enable === '1'
-                          ? isExpiryEnabled
-                            ? 'col-span-21'
-                            : 'col-span-15'
-                          : isExpiryEnabled
-                          ? 'col-span-18'
-                          : 'col-span-12'
-                      }`}
-                    >
-                      <div
-                        className={`${
-                          dataProductSerial?.is_enable === '1'
-                            ? isExpiryEnabled
-                              ? 'grid-cols-21'
-                              : 'grid-cols-15'
-                            : isExpiryEnabled
-                            ? 'grid-cols-18'
-                            : 'grid-cols-12'
-                        } grid gap-2`}
-                      >
+                    <div className={`${dataProductSerial?.is_enable === '1' ? (isExpiryEnabled ? 'col-span-21' : 'col-span-15') : isExpiryEnabled ? 'col-span-18' : 'col-span-12'}`}>
+                      <div className={`${dataProductSerial?.is_enable === '1' ? (isExpiryEnabled ? 'grid-cols-21' : 'grid-cols-15') : isExpiryEnabled ? 'grid-cols-18' : 'grid-cols-12'} grid gap-2`}>
                         {e?.child?.map((ce, index) => (
                           <div
                             key={ce?.id?.toString()}
@@ -1033,17 +1089,11 @@ console.log(dataChoose)
                                   value={ce?.serial || ''}
                                   onChange={event => _HandleChangeChild(e?.id, ce?.id, 'serial', event)}
                                   className={`${
-                                    e?.checkSerial == '0'
-                                      ? 'bg-gray-100'
-                                      : errNullSerial && (ce.serial === null || ce.serial === '')
-                                      ? 'border-red-500'
-                                      : 'border-gray-200'
+                                    e?.checkSerial == '0' ? 'bg-gray-100' : errNullSerial && (ce.serial === null || ce.serial === '') ? 'border-red-500' : 'border-gray-200'
                                   } !h-[38px] rounded-lg appearance-none text-center p-2 text-neutral-07 responsive-text-base font-medium placeholder:font-normal w-full focus:outline-none focus:border-brand-color hover:border-brand-color border border-neutral-N400`}
                                   placeholder='Nhập serial'
                                 />
-                                {isSubmitted && duplicateIds.includes(ce.id) && (
-                                  <span className='text-red-500 text-[10px] mt-1'>Serial đã tồn tại trong phần mềm</span>
-                                )}
+                                {isSubmitted && duplicateIds.includes(ce.id) && <span className='text-red-500 text-[10px] mt-1'>Serial đã tồn tại trong phần mềm</span>}
                               </div>
                             ) : null}
                             {isExpiryEnabled ? (
@@ -1264,8 +1314,8 @@ console.log(dataChoose)
               )}
             </h3>
           </div>
-          <div className='flex justify-between '>
-            <h3 className='text-base'>Tổng số lượng chênh lệch : </h3>
+          <div className='flex gap-2 justify-between '>
+            <h3 className='text-base text-left'>Tổng số lượng chênh lệch : </h3>
             <h3 className='text-blue-fmrp'>
               {formatNumber(
                 dataChoose.reduce((acc, obj) => {
