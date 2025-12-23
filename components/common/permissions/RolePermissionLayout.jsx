@@ -85,7 +85,7 @@ const RolePermissionLayout = ({
                       </div>
                     </label>
                   </div>
-                  <label htmlFor={e?.key} className='text-[#344054] font-medium text-base cursor-pointer'>
+                  <label htmlFor={e?.key} className='text-[#344054] font-medium text-base cursor-pointer min-w-[100px] py-3 pr-3'>
                     {e?.name}
                   </label>
                 </div>
@@ -119,7 +119,7 @@ const RolePermissionLayout = ({
                                     </div>
                                   </label>
                                 </div>
-                                <label htmlFor={s?.key + '' + i?.key} className='text-[#344054]/80 font-medium- text-sm cursor-pointer'>
+                                <label htmlFor={s?.key + '' + i?.key} className='text-[#344054]/80 font-medium- text-sm cursor-pointer py-2 pr-2 min-w-[100px]'>
                                   {s?.name}
                                 </label>
                               </div>
