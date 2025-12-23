@@ -1,4 +1,5 @@
 import SearchActionInput from '@/components/common/input/SearchActionInput';
+import { twMerge } from 'tailwind-merge';
 
 const RolePermissionLayout = ({
   dataPower,
@@ -13,10 +14,11 @@ const RolePermissionLayout = ({
   onScrollToSection,
   onToggleGroup,
   onTogglePermission,
+  className
 }) => {
   return (
     <>
-      <div className='flex gap-2 h-[500px]'>
+      <div className={twMerge('flex gap-2 h-[500px]', className)}>
         {/* Cột trái - Sidebar với danh sách group */}
         <div className='w-3/12 flex-shrink-0 flex flex-col'>
           <div className='w-full mb-4'>
@@ -43,6 +45,7 @@ const RolePermissionLayout = ({
                         ? 'text-blue-fmrp hover:bg-gray-50 font-normal'
                         : 'text-[#344054] hover:bg-gray-50 font-normal'
                     }`}
+                    type='button'
                   >
                     <span>{e?.name}</span>
                   </button>

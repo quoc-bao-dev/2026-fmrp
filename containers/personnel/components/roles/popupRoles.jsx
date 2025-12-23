@@ -3,13 +3,14 @@ import { PlusIcon } from '@/components/icons';
 import EditIcon from '@/components/icons/common/EditIcon';
 import RolePermissionLayout from '@/components/common/permissions/RolePermissionLayout';
 import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
+import useRolePermissionLayoutState from '@/hooks/common/useRolePermissionLayoutState';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';
 import Loading from '@/components/UI/loading/loading';
 import PopupCustom from '@/components/UI/popup';
 import SelectOptionLever from '@/components/UI/selectOptionLever/selectOptionLever';
 import useToast from '@/hooks/useToast';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 const initalState = {
@@ -39,12 +40,6 @@ const PopupRoles = React.memo(props => {
   const dataOptPosition = useSelector(state => state.position_staff);
 
   const [isState, setIsState] = useState(initalState);
-  const [activeGroupKey, setActiveGroupKey] = useState(null);
-  const isProgrammaticScrollRef = useRef(false);
-  const scrollContainerRef = useRef(null);
-  const sidebarRef = useRef(null);
-  const sidebarButtonRefs = useRef({});
-  const sectionRefs = useRef({});
 
   const queryState = key => setIsState(prev => ({ ...prev, ...key }));
 
@@ -386,153 +381,17 @@ const PopupRoles = React.memo(props => {
     }
   }, [isState.open, tabList]);
 
-  // Scroll spy effect - check khoảng cách từ mép trên container
-  useEffect(() => {
-    if (isState.activeTab?.id !== 'power' || !scrollContainerRef.current) return;
-
-    const container = scrollContainerRef.current;
-    const sections = Object.values(sectionRefs.current).filter(Boolean);
-
-    const handleScroll = () => {
-      // Nếu đang scroll programmatically (từ click), không check active
-      if (isProgrammaticScrollRef.current) {
-        return;
-      }
-
-      const containerTop = container.scrollTop;
-      const containerRect = container.getBoundingClientRect();
-
-      let activeSection = null;
-      let minDistance = Infinity;
-
-      sections.forEach(section => {
-        if (!section) return;
-        
-        // Tính khoảng cách từ mép trên container đến section
-        // Tất cả group đều lấy mép trên container làm mốc
-        const sectionTop = section.offsetTop;
-        const distanceFromTop = sectionTop - containerTop;
-
-        // Check xem section có ít nhất một phần nằm trong viewport không
-        const sectionRect = section.getBoundingClientRect();
-        const isInViewport = 
-          sectionRect.bottom > containerRect.top && 
-          sectionRect.top < containerRect.bottom;
-
-        // Nếu khoảng cách từ mép trên < 100px và section nằm trong viewport
-        if (distanceFromTop >= 0 && distanceFromTop < 100 && isInViewport) {
-          if (distanceFromTop < minDistance) {
-            minDistance = distanceFromTop;
-            activeSection = section;
-          }
-        }
-      });
-
-      // Nếu không tìm thấy section nào thỏa mãn điều kiện trên, 
-      // tìm section gần nhất với mép trên container (trong viewport)
-      if (!activeSection && sections.length > 0) {
-        minDistance = Infinity;
-        sections.forEach(section => {
-          if (!section) return;
-          const sectionTop = section.offsetTop;
-          const distanceFromTop = sectionTop - containerTop;
-          const sectionRect = section.getBoundingClientRect();
-          const isInViewport = 
-            sectionRect.bottom > containerRect.top && 
-            sectionRect.top < containerRect.bottom;
-          
-          // Chỉ xét các section trong viewport và gần mép trên nhất
-          if (isInViewport && distanceFromTop >= -50) {
-            const absDistance = Math.abs(distanceFromTop);
-            if (absDistance < minDistance) {
-              minDistance = absDistance;
-              activeSection = section;
-            }
-          }
-        });
-      }
-
-      if (activeSection) {
-        setActiveGroupKey(activeSection.dataset.groupKey);
-      }
-    };
-
-    container.addEventListener('scroll', handleScroll);
-    handleScroll(); // Initial check
-
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-    };
-  }, [isState.activeTab?.id, isState.dataPower]);
-
-  // Auto-scroll sidebar khi tab active nằm ngoài view
-  useEffect(() => {
-    if (!activeGroupKey || !sidebarRef.current) return;
-
-    const activeButton = sidebarButtonRefs.current[activeGroupKey];
-    if (!activeButton) return;
-
-    const sidebar = sidebarRef.current;
-    const buttonRect = activeButton.getBoundingClientRect();
-    const sidebarRect = sidebar.getBoundingClientRect();
-
-    // Check xem button có nằm ngoài view không
-    const isAboveView = buttonRect.top < sidebarRect.top;
-    const isBelowView = buttonRect.bottom > sidebarRect.bottom;
-
-    if (isAboveView || isBelowView) {
-      // Scroll button vào view
-      activeButton.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
-    }
-  }, [activeGroupKey]);
-
-  // Scroll to section when clicking on sidebar item
-  const handleScrollToSection = groupKey => {
-    const section = sectionRefs.current[groupKey];
-    if (section && scrollContainerRef.current) {
-      const container = scrollContainerRef.current;
-      
-      // Active tab ngay lập tức
-      setActiveGroupKey(groupKey);
-      
-      // Set flag để ngắt scroll spy trong khi scroll
-      isProgrammaticScrollRef.current = true;
-      
-      // Tính toán vị trí scroll chính xác
-      // offsetTop là relative to offsetParent (container trong trường hợp này)
-      const sectionTop = section.offsetTop;
-      
-      // Scroll đến vị trí section cách mép trên container 100px
-      const targetScrollTop = sectionTop - 120;
-      
-      // Event listener để detect khi scroll xong
-      let scrollTimeout;
-      const handleScrollEnd = () => {
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-          // Scroll đã dừng, cho phép check active lại
-          isProgrammaticScrollRef.current = false;
-          container.removeEventListener('scroll', handleScrollEnd);
-        }, 150); // Đợi 150ms sau khi scroll dừng
-      };
-      
-      container.addEventListener('scroll', handleScrollEnd);
-      
-      container.scrollTo({
-        top: targetScrollTop,
-        behavior: 'smooth',
-      });
-      
-      // Fallback: nếu sau 1s vẫn chưa scroll xong, cho phép check active lại
-      setTimeout(() => {
-        isProgrammaticScrollRef.current = false;
-        container.removeEventListener('scroll', handleScrollEnd);
-      }, 1000);
-    }
-  };
+  const {
+    activeGroupKey,
+    scrollContainerRef,
+    sidebarRef,
+    sidebarButtonRefs,
+    sectionRefs,
+    handleScrollToSection,
+  } = useRolePermissionLayoutState({
+    dataPower: isState.dataPower,
+    isActivePowerTab: isState.activeTab?.id === 'power',
+  });
 
   return (
     <PopupCustom
