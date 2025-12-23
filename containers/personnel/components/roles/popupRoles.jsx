@@ -1,15 +1,15 @@
 import apiRoles from '@/Api/apiPersonnel/apiRoles';
 import { PlusIcon } from '@/components/icons';
 import EditIcon from '@/components/icons/common/EditIcon';
+import SearchActionInput from '@/components/common/input/SearchActionInput';
+import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';
 import Loading from '@/components/UI/loading/loading';
 import PopupCustom from '@/components/UI/popup';
 import SelectOptionLever from '@/components/UI/selectOptionLever/selectOptionLever';
 import useToast from '@/hooks/useToast';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { SearchNormal1 } from 'iconsax-react';
-import React, { useEffect, useState } from 'react';
-import { MdClear } from 'react-icons/md';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 const initalState = {
@@ -23,7 +23,7 @@ const initalState = {
   errBranch: false,
   errName: false,
   errDepartment: false,
-  tab: 0,
+  activeTab: { id: 'info', name: '' },
   dataPower: [],
   valueSearch: '',
 };
@@ -39,6 +39,12 @@ const PopupRoles = React.memo(props => {
   const dataOptPosition = useSelector(state => state.position_staff);
 
   const [isState, setIsState] = useState(initalState);
+  const [activeGroupKey, setActiveGroupKey] = useState(null);
+  const isProgrammaticScrollRef = useRef(false);
+  const scrollContainerRef = useRef(null);
+  const sidebarRef = useRef(null);
+  const sidebarButtonRefs = useRef({});
+  const sectionRefs = useRef({});
 
   const queryState = key => setIsState(prev => ({ ...prev, ...key }));
 
@@ -292,6 +298,35 @@ const PopupRoles = React.memo(props => {
     queryState({ dataPower: newdb });
   }, [isState.valueSearch]);
 
+  // Khi clear input (value rỗng), active lại tab đầu tiên và scroll đến group đầu tiên
+  // useEffect(() => {
+  //   if (isState.activeTab?.id !== 'power') return;
+    
+  //   // Chỉ chạy khi valueSearch rỗng hoặc chỉ có khoảng trắng
+  //   if (isState.valueSearch && isState.valueSearch.trim() !== '') return;
+
+  //   // Tìm group đầu tiên không bị hidden
+  //   const firstVisibleGroup = isState.dataPower?.find(e => !e?.hidden);
+    
+  //   if (firstVisibleGroup && scrollContainerRef.current) {
+  //     // Set activeGroupKey về group đầu tiên
+  //     setActiveGroupKey(firstVisibleGroup.key);
+      
+  //     // Scroll đến group đầu tiên (cách mép trên 200px như logic handleScrollToSection)
+  //     const section = sectionRefs.current[firstVisibleGroup.key];
+  //     if (section) {
+  //       const container = scrollContainerRef.current;
+  //       const sectionTop = section.offsetTop;
+  //       const targetScrollTop = sectionTop - 200;
+        
+  //       container.scrollTo({
+  //         top: targetScrollTop,
+  //         behavior: 'smooth',
+  //       });
+  //     }
+  //   }
+  // }, [isState.valueSearch, isState.activeTab?.id, isState.dataPower]);
+
   const styleSelect = {
     theme: theme => ({
       ...theme,
@@ -308,6 +343,169 @@ const PopupRoles = React.memo(props => {
         color: '#cbd5e1',
       }),
     },
+  };
+
+  const tabList = useMemo(
+    () => [
+      { id: 'info', name: props.dataLang?.personnels_staff_popup_info || 'Thông tin' },
+      { id: 'power', name: props.dataLang?.personnels_staff_popup_power || 'Quyền hạn' },
+    ],
+    [props.dataLang?.personnels_staff_popup_info, props.dataLang?.personnels_staff_popup_power]
+  );
+
+  // Initialize activeTab when popup opens
+  useEffect(() => {
+    if (isState.open && (!isState.activeTab?.id || isState.activeTab?.id === 'info' && !isState.activeTab?.name)) {
+      queryState({ activeTab: tabList[0] });
+    }
+  }, [isState.open, tabList]);
+
+  // Scroll spy effect - check khoảng cách từ mép trên container
+  useEffect(() => {
+    if (isState.activeTab?.id !== 'power' || !scrollContainerRef.current) return;
+
+    const container = scrollContainerRef.current;
+    const sections = Object.values(sectionRefs.current).filter(Boolean);
+
+    const handleScroll = () => {
+      // Nếu đang scroll programmatically (từ click), không check active
+      if (isProgrammaticScrollRef.current) {
+        return;
+      }
+
+      const containerTop = container.scrollTop;
+      const containerRect = container.getBoundingClientRect();
+
+      let activeSection = null;
+      let minDistance = Infinity;
+
+      sections.forEach(section => {
+        if (!section) return;
+        
+        // Tính khoảng cách từ mép trên container đến section
+        // Tất cả group đều lấy mép trên container làm mốc
+        const sectionTop = section.offsetTop;
+        const distanceFromTop = sectionTop - containerTop;
+
+        // Check xem section có ít nhất một phần nằm trong viewport không
+        const sectionRect = section.getBoundingClientRect();
+        const isInViewport = 
+          sectionRect.bottom > containerRect.top && 
+          sectionRect.top < containerRect.bottom;
+
+        // Nếu khoảng cách từ mép trên < 100px và section nằm trong viewport
+        if (distanceFromTop >= 0 && distanceFromTop < 100 && isInViewport) {
+          if (distanceFromTop < minDistance) {
+            minDistance = distanceFromTop;
+            activeSection = section;
+          }
+        }
+      });
+
+      // Nếu không tìm thấy section nào thỏa mãn điều kiện trên, 
+      // tìm section gần nhất với mép trên container (trong viewport)
+      if (!activeSection && sections.length > 0) {
+        minDistance = Infinity;
+        sections.forEach(section => {
+          if (!section) return;
+          const sectionTop = section.offsetTop;
+          const distanceFromTop = sectionTop - containerTop;
+          const sectionRect = section.getBoundingClientRect();
+          const isInViewport = 
+            sectionRect.bottom > containerRect.top && 
+            sectionRect.top < containerRect.bottom;
+          
+          // Chỉ xét các section trong viewport và gần mép trên nhất
+          if (isInViewport && distanceFromTop >= -50) {
+            const absDistance = Math.abs(distanceFromTop);
+            if (absDistance < minDistance) {
+              minDistance = absDistance;
+              activeSection = section;
+            }
+          }
+        });
+      }
+
+      if (activeSection) {
+        setActiveGroupKey(activeSection.dataset.groupKey);
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial check
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+    };
+  }, [isState.activeTab?.id, isState.dataPower]);
+
+  // Auto-scroll sidebar khi tab active nằm ngoài view
+  useEffect(() => {
+    if (!activeGroupKey || !sidebarRef.current) return;
+
+    const activeButton = sidebarButtonRefs.current[activeGroupKey];
+    if (!activeButton) return;
+
+    const sidebar = sidebarRef.current;
+    const buttonRect = activeButton.getBoundingClientRect();
+    const sidebarRect = sidebar.getBoundingClientRect();
+
+    // Check xem button có nằm ngoài view không
+    const isAboveView = buttonRect.top < sidebarRect.top;
+    const isBelowView = buttonRect.bottom > sidebarRect.bottom;
+
+    if (isAboveView || isBelowView) {
+      // Scroll button vào view
+      activeButton.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  }, [activeGroupKey]);
+
+  // Scroll to section when clicking on sidebar item
+  const handleScrollToSection = groupKey => {
+    const section = sectionRefs.current[groupKey];
+    if (section && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      
+      // Active tab ngay lập tức
+      setActiveGroupKey(groupKey);
+      
+      // Set flag để ngắt scroll spy trong khi scroll
+      isProgrammaticScrollRef.current = true;
+      
+      // Tính toán vị trí scroll chính xác
+      // offsetTop là relative to offsetParent (container trong trường hợp này)
+      const sectionTop = section.offsetTop;
+      
+      // Scroll đến vị trí section cách mép trên container 100px
+      const targetScrollTop = sectionTop - 200;
+      
+      // Event listener để detect khi scroll xong
+      let scrollTimeout;
+      const handleScrollEnd = () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          // Scroll đã dừng, cho phép check active lại
+          isProgrammaticScrollRef.current = false;
+          container.removeEventListener('scroll', handleScrollEnd);
+        }, 150); // Đợi 150ms sau khi scroll dừng
+      };
+      
+      container.addEventListener('scroll', handleScrollEnd);
+      
+      container.scrollTo({
+        top: targetScrollTop,
+        behavior: 'smooth',
+      });
+      
+      // Fallback: nếu sau 1s vẫn chưa scroll xong, cho phép check active lại
+      setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+        container.removeEventListener('scroll', handleScrollEnd);
+      }, 1000);
+    }
   };
 
   return (
@@ -334,26 +532,22 @@ const PopupRoles = React.memo(props => {
       onClose={() => queryState({ open: false })}
       classNameBtn={props.className}
     >
-      <div className='flex items-center space-x-4 my-3 border-[#E7EAEE] border-opacity-70 border-b-[1px]'>
-        <button
-          onClick={() => queryState({ tab: 0 })}
-          className={`${isState.tab === 0 ? 'text-[#0F4F9E]  border-b-2 border-[#0F4F9E]' : 'hover:text-[#0F4F9E] '}  px-4 py-2 outline-none font-semibold`}
-        >
-          {props.dataLang?.personnels_staff_popup_info}
-        </button>
-        <button
-          onClick={() => queryState({ tab: 1 })}
-          className={`${isState.tab === 1 ? 'text-[#0F4F9E]  border-b-2 border-[#0F4F9E]' : 'hover:text-[#0F4F9E] '}  px-4 py-2 outline-none font-semibold`}
-        >
-          {props.dataLang?.personnels_staff_popup_power}
-        </button>
+      <div className='my-3'>
+        <TabSwitcherWithSlidingBackground
+          tabs={tabList}
+          activeTab={isState.activeTab}
+          onChange={tab => queryState({ activeTab: tab })}
+          className='!p-1 flex-shrink-0 !overflow-visible'
+          buttonClassName='!py-1.5 !px-3 !responsive-text-sm'
+          buttonActiveClassName='!top-1 !bottom-1'
+        />
       </div>
-      <div className='py-4 w-[600px]  space-y-4'>
+      <div className={`py-4 space-y-4 ${isState.activeTab?.id === 'info' ? 'w-[600px]' : 'w-[900px]'}`}>
         {isFetching ? (
           <Loading className='h-80' color='#0f4f9e' />
         ) : (
           <React.Fragment>
-            {isState.tab == 0 && (
+            {isState.activeTab?.id === 'info' && (
               <div className='space-y-2'>
                 <div className='space-y-1'>
                   <label className='text-[#344054] font-normal text-base'>
@@ -432,40 +626,70 @@ const PopupRoles = React.memo(props => {
                 </div>
               </div>
             )}
-            {isState.tab == 1 && (
+            {isState.activeTab?.id === 'power' && (
               <>
-                <div className='w-full'>
-                  <label>Tìm kiếm</label>
-                  <div className='relative flex items-center'>
-                    <SearchNormal1 size={20} className='absolute 2xl:left-3 z-10 text-[#cccccc] xl:left-[4%] left-[1%]' />
-                    <input
-                      onChange={e => queryState({ valueSearch: e?.target?.value })}
-                      dataLang={props.dataLang}
-                      value={isState.valueSearch}
-                      className={
-                        'border py-1.5 rounded border-gray-300 2xl:text-left 2xl:pl-10 xl:!text-left xl:pl-16 relative bg-white outline-[#D0D5DD] focus:outline-[#0F4F9E] 2xl:text-base text-xs  text-center 2xl:w-full xl:w-full w-[100%]'
-                      }
-                    />
-                    {isState.valueSearch != '' && (
-                      <MdClear
-                        size={32}
-                        onClick={() => queryState({ valueSearch: '' })}
-                        className='absolute cursor-pointer hover:bg-gray-300 p-2 right-5 bottom-0.5 rounded-full transition-all duration-200 ease-linear'
-                      />
-                    )}
-                  </div>
+                <div className='w-full mb-4'>
+                  {/* <label className='mb-2 block'>Tìm kiếm</label> */}
+                  <SearchActionInput
+                    value={isState.valueSearch}
+                    onChange={value => queryState({ valueSearch: value })}
+                    placeholder={props.dataLang?.search_placeholder || 'Tìm kiếm'}
+                    className='w-[270px]'
+                  />
                 </div>
-                <div className='space-y-2 max-h-[280px] h-auto overflow-y-auo scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100'>
-                  <div className={`grid grid-cols-1`}>
+                <div className='flex gap-4 h-[400px]'>
+                  {/* Cột trái - Sidebar với danh sách group */}
+                  <div className='w-3/12 flex-shrink-0'>
+                    <div
+                      ref={sidebarRef}
+                      className='space-y-1 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 pr-2'
+                    >
+                      {isState.dataPower
+                        ?.filter(e => !e?.hidden)
+                        ?.map(e => {
+                          const isActive = activeGroupKey === e?.key;
+                          return (
+                            <button
+                              key={e?.key}
+                              ref={el => {
+                                if (el) sidebarButtonRefs.current[e?.key] = el;
+                              }}
+                              onClick={() => handleScrollToSection(e?.key)}
+                              className={`w-full text-left px-3 py-2 rounded-r-lg transition-all duration-200 ${
+                                isActive
+                                  ? 'text-blue-fmrp bg-primary-07 font-medium border-l-4 border-blue-fmrp'
+                                  : 'text-[#344054] hover:bg-gray-50 font-normal'
+                              }`}
+                            >
+                              {e?.name}
+                            </button>
+                          );
+                        })}
+                    </div>
+                  </div>
+
+                  {/* Cột phải - Nội dung đầy đủ */}
+                  <div
+                    ref={scrollContainerRef}
+                    className='flex-1 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 pr-2'
+                  >
                     {isState.dataPower?.map(e => {
+                      if (e?.hidden) return null;
                       return (
-                        <div className={e?.hidden ? 'hidden' : ''} key={e?.key}>
-                          <div className='flex items-center w-max'>
+                        <div
+                          key={e?.key}
+                          ref={el => {
+                            if (el) sectionRefs.current[e?.key] = el;
+                          }}
+                          data-group-key={e?.key}
+                          className='scroll-mt-2'
+                        >
+                          <div className='flex items-center w-max mb-2'>
                             <div className='inline-flex items-center'>
                               <label className='relative flex items-center p-3 rounded-full cursor-pointer' htmlFor={e?.key} data-ripple-dark='true'>
                                 <input
                                   type='checkbox'
-                                  className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-indigo-500 checked:bg-indigo-500 checked:before:bg-indigo-500 hover:before:opacity-10"
+                                  className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-blue-fmrp checked:bg-blue-fmrp checked:before:bg-blue-fmrp hover:before:opacity-10"
                                   id={e?.key}
                                   value={e?.name}
                                   checked={e?.is_check == 1 ? true : false}
@@ -486,7 +710,8 @@ const PopupRoles = React.memo(props => {
                               {e?.name}
                             </label>
                           </div>
-                          {e?.is_check == 1 && (
+                          {/* {e?.is_check == 1 && ( */}
+                          {true && (
                             <div className=''>
                               {e?.child?.map((i, index) => {
                                 return (
@@ -500,7 +725,7 @@ const PopupRoles = React.memo(props => {
                                               <label className='relative flex items-center p-3 rounded-full cursor-pointer' htmlFor={s?.key + '' + i?.key} data-ripple-dark='true'>
                                                 <input
                                                   type='checkbox'
-                                                  className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-indigo-500 checked:bg-indigo-500 checked:before:bg-indigo-500 hover:before:opacity-10"
+                                                  className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-blue-fmrp checked:bg-blue-fmrp checked:before:bg-blue-fmrp hover:before:opacity-10"
                                                   id={s?.key + '' + i?.key}
                                                   value={s?.name}
                                                   checked={s?.is_check == 1 ? true : false}
@@ -519,7 +744,7 @@ const PopupRoles = React.memo(props => {
                                                 </div>
                                               </label>
                                             </div>
-                                            <label htmlFor={s?.key + '' + i?.key} className='text-[#344054] font-medium text-sm cursor-pointer'>
+                                            <label htmlFor={s?.key + '' + i?.key} className='text-[#344054]/80 font-medium- text-sm cursor-pointer'>
                                               {s?.name}
                                             </label>
                                           </div>
