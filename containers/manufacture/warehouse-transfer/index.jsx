@@ -619,7 +619,7 @@ const WarehouseTransfer = props => {
         total={
           <>
             <ContainerTotal className='!grid-cols-24'>
-              <RowItemTable colSpan={3.5} textAlign={'right'} className='p-2'></RowItemTable>
+              <RowItemTable colSpan={4.5} textAlign={'right'} className='p-2'></RowItemTable>
               <RowItemTable colSpan={1} textAlign={'left'} className='p-2'>
                 {dataLang?.import_total || 'import_total'}
               </RowItemTable>

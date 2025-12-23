@@ -115,19 +115,6 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
 
   const getItemId = item => `${item?.item_variation_id || item?.id_items || 'item'}-${item?.lot || 'lot'}-${item?.expiration_date || ''}`;
   const getMaxRecoverable = item => Math.max(0, Number(item?.quantity_keep ?? 0) - Number(item?.quantity_exported ?? 0) - Number(item?.quantity_recovered ?? 0));
-  const setDefaultQuantityIfMissing = (itemId, item) => {
-    setQuantityByItemByTab(prev => {
-      const currentTabQuantities = prev[activeTab.id] || {};
-      if (currentTabQuantities[itemId] !== undefined) return prev; // giữ nguyên nếu đã có giá trị
-      return {
-        ...prev,
-        [activeTab.id]: {
-          ...currentTabQuantities,
-          [itemId]: getMaxRecoverable(item),
-        },
-      };
-    });
-  };
   const selectIfSelectable = (item, itemId) => {
     if (!item || getMaxRecoverable(item) <= 0) return;
     setSelectedItemsByTab(prev => ({
@@ -166,6 +153,28 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
     if (activeTab.id !== 'product') return [];
     return dataProductionOrderKeepStok?.data?.items_poi || [];
   }, [activeTab.id, dataProductionOrderKeepStok]);
+
+  // Gán sẵn số lượng mặc định = tối đa có thể thu hồi cho mọi dòng ngay khi dữ liệu thay đổi
+  useEffect(() => {
+    if (!open || !Array.isArray(rawItems) || rawItems.length === 0) return;
+
+    setQuantityByItemByTab(prev => {
+      const currentTabQuantities = prev[activeTab.id] || {};
+      let hasChange = false;
+      const updatedQuantities = { ...currentTabQuantities };
+
+      rawItems.forEach(item => {
+        const itemId = getItemId(item);
+        if (updatedQuantities[itemId] === undefined) {
+          updatedQuantities[itemId] = getMaxRecoverable(item);
+          hasChange = true;
+        }
+      });
+
+      if (!hasChange) return prev;
+      return { ...prev, [activeTab.id]: updatedQuantities };
+    });
+  }, [rawItems, activeTab.id, open]);
 
   const handleSelectProduct = option => {
     if (!option) {
@@ -339,7 +348,6 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
           [activeTab.id]: currentTabItems.filter(id => id !== itemId),
         };
       } else {
-        setDefaultQuantityIfMissing(itemId, item);
         return {
           ...prev,
           [activeTab.id]: [...currentTabItems, itemId],
@@ -354,18 +362,6 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
         showToast('error', 'Không còn nguyên liệu nào để thu hồi');
         return;
       }
-      // Gán giá trị mặc định = maxRecoverable cho những dòng chưa có số lượng
-      setQuantityByItemByTab(prev => {
-        const currentTabQuantities = prev[activeTab.id] || {};
-        const updatedQuantities = { ...currentTabQuantities };
-        filteredItems.forEach(item => {
-          const itemId = getItemId(item);
-          if (selectableIds.includes(itemId) && updatedQuantities[itemId] === undefined) {
-            updatedQuantities[itemId] = getMaxRecoverable(item);
-          }
-        });
-        return { ...prev, [activeTab.id]: updatedQuantities };
-      });
       setSelectedItemsByTab(prev => ({
         ...prev,
         [activeTab.id]: selectableIds,
