@@ -1,7 +1,7 @@
 import apiRoles from '@/Api/apiPersonnel/apiRoles';
 import { PlusIcon } from '@/components/icons';
 import EditIcon from '@/components/icons/common/EditIcon';
-import SearchActionInput from '@/components/common/input/SearchActionInput';
+import RolePermissionLayout from '@/components/common/permissions/RolePermissionLayout';
 import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';
 import Loading from '@/components/UI/loading/loading';
@@ -231,10 +231,19 @@ const PopupRoles = React.memo(props => {
     enabled: isState.open && !!props?.id,
   });
 
+  // Hàm normalize hỗ trợ search tiếng Việt (bỏ dấu, unicode-safe)
+  const normalizeText = text =>
+    (text || '')
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
   // change modlue
   const handleChange = (parent, child = null, permissions = null) => {
     const newData = isState.dataPower?.map(e => {
       if (child == null && e?.key == parent?.key) {
+        // Click vào group (mục cha)
         return {
           ...e,
           child: e?.child?.map(x => {
@@ -250,9 +259,14 @@ const PopupRoles = React.memo(props => {
           }),
           is_check: parent.is_check == 0 ? 1 : 0,
         };
-      } else if (child != null && e?.key == parent && e?.is_check == 1) {
+      } else if (child != null && e?.key == parent) {
+        // Click vào permission (mục con)
+        // Nếu group chưa được tick, tự động tick group
+        const shouldCheckGroup = e?.is_check != 1;
+        
         return {
           ...e,
+          is_check: shouldCheckGroup ? 1 : e?.is_check, // Tự động tick group nếu chưa tick
           child: e?.child?.map(x => {
             if (x?.key == child) {
               return {
@@ -278,9 +292,21 @@ const PopupRoles = React.memo(props => {
     queryState({ dataPower: newData });
   };
 
-  // ẩn hiện module khi tìm kiếm
+  // ẩn hiện module khi tìm kiếm (hỗ trợ tiếng Việt, bỏ dấu)
   useEffect(() => {
-    const filteredData = isState.dataPower.filter(item => item.name.toLowerCase().includes(isState.valueSearch.toLowerCase()));
+    const searchValue = normalizeText(isState.valueSearch);
+
+    // Nếu không có từ khóa tìm kiếm thì hiện toàn bộ
+    if (!searchValue) {
+      const resetData = isState.dataPower.map(item => ({
+        ...item,
+        hidden: false,
+      }));
+      queryState({ dataPower: resetData });
+      return;
+    }
+
+    const filteredData = isState.dataPower.filter(item => normalizeText(item.name).includes(searchValue));
     const newdb = isState.dataPower.map(item => {
       const itemChecked = filteredData.find(x => item.key == x.key);
       if (itemChecked) {
@@ -480,7 +506,7 @@ const PopupRoles = React.memo(props => {
       const sectionTop = section.offsetTop;
       
       // Scroll đến vị trí section cách mép trên container 100px
-      const targetScrollTop = sectionTop - 200;
+      const targetScrollTop = sectionTop - 120;
       
       // Event listener để detect khi scroll xong
       let scrollTimeout;
@@ -627,141 +653,20 @@ const PopupRoles = React.memo(props => {
               </div>
             )}
             {isState.activeTab?.id === 'power' && (
-              <>
-                <div className='w-full mb-4'>
-                  {/* <label className='mb-2 block'>Tìm kiếm</label> */}
-                  <SearchActionInput
-                    value={isState.valueSearch}
-                    onChange={value => queryState({ valueSearch: value })}
-                    placeholder={props.dataLang?.search_placeholder || 'Tìm kiếm'}
-                    className='w-[270px]'
-                  />
-                </div>
-                <div className='flex gap-4 h-[400px]'>
-                  {/* Cột trái - Sidebar với danh sách group */}
-                  <div className='w-3/12 flex-shrink-0'>
-                    <div
-                      ref={sidebarRef}
-                      className='space-y-1 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 pr-2'
-                    >
-                      {isState.dataPower
-                        ?.filter(e => !e?.hidden)
-                        ?.map(e => {
-                          const isActive = activeGroupKey === e?.key;
-                          return (
-                            <button
-                              key={e?.key}
-                              ref={el => {
-                                if (el) sidebarButtonRefs.current[e?.key] = el;
-                              }}
-                              onClick={() => handleScrollToSection(e?.key)}
-                              className={`w-full text-left px-3 py-2 rounded-r-lg transition-all duration-200 ${
-                                isActive
-                                  ? 'text-blue-fmrp bg-primary-07 font-medium border-l-4 border-blue-fmrp'
-                                  : 'text-[#344054] hover:bg-gray-50 font-normal'
-                              }`}
-                            >
-                              {e?.name}
-                            </button>
-                          );
-                        })}
-                    </div>
-                  </div>
-
-                  {/* Cột phải - Nội dung đầy đủ */}
-                  <div
-                    ref={scrollContainerRef}
-                    className='flex-1 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 pr-2'
-                  >
-                    {isState.dataPower?.map(e => {
-                      if (e?.hidden) return null;
-                      return (
-                        <div
-                          key={e?.key}
-                          ref={el => {
-                            if (el) sectionRefs.current[e?.key] = el;
-                          }}
-                          data-group-key={e?.key}
-                          className='scroll-mt-2'
-                        >
-                          <div className='flex items-center w-max mb-2'>
-                            <div className='inline-flex items-center'>
-                              <label className='relative flex items-center p-3 rounded-full cursor-pointer' htmlFor={e?.key} data-ripple-dark='true'>
-                                <input
-                                  type='checkbox'
-                                  className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-blue-fmrp checked:bg-blue-fmrp checked:before:bg-blue-fmrp hover:before:opacity-10"
-                                  id={e?.key}
-                                  value={e?.name}
-                                  checked={e?.is_check == 1 ? true : false}
-                                  onChange={value => handleChange(e)}
-                                />
-                                <div className='absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100'>
-                                  <svg xmlns='http://www.w3.org/2000/svg' className='h-3.5 w-3.5' viewBox='0 0 20 20' fill='currentColor' stroke='currentColor' strokeWidth='1'>
-                                    <path
-                                      fillRule='evenodd'
-                                      d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
-                                      clipRule='evenodd'
-                                    ></path>
-                                  </svg>
-                                </div>
-                              </label>
-                            </div>
-                            <label htmlFor={e?.key} className='text-[#344054] font-medium text-base cursor-pointer'>
-                              {e?.name}
-                            </label>
-                          </div>
-                          {/* {e?.is_check == 1 && ( */}
-                          {true && (
-                            <div className=''>
-                              {e?.child?.map((i, index) => {
-                                return (
-                                  <div key={i?.key} className={`${e?.child?.length - 1 == index && 'border-b'} ml-10 border-t border-x`}>
-                                    <div className='p-2 text-sm border-b'>{i?.name}</div>
-                                    <div className='grid grid-cols-3 gap-1 '>
-                                      {i?.permissions?.map(s => {
-                                        return (
-                                          <div key={s?.key} className='flex items-center w-full'>
-                                            <div className='inline-flex items-center'>
-                                              <label className='relative flex items-center p-3 rounded-full cursor-pointer' htmlFor={s?.key + '' + i?.key} data-ripple-dark='true'>
-                                                <input
-                                                  type='checkbox'
-                                                  className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-blue-fmrp checked:bg-blue-fmrp checked:before:bg-blue-fmrp hover:before:opacity-10"
-                                                  id={s?.key + '' + i?.key}
-                                                  value={s?.name}
-                                                  checked={s?.is_check == 1 ? true : false}
-                                                  onChange={value => {
-                                                    handleChange(e?.key, i?.key, s);
-                                                  }}
-                                                />
-                                                <div className='absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100'>
-                                                  <svg xmlns='http://www.w3.org/2000/svg' className='h-3.5 w-3.5' viewBox='0 0 20 20' fill='currentColor' stroke='currentColor' strokeWidth='1'>
-                                                    <path
-                                                      fillRule='evenodd'
-                                                      d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
-                                                      clipRule='evenodd'
-                                                    ></path>
-                                                  </svg>
-                                                </div>
-                                              </label>
-                                            </div>
-                                            <label htmlFor={s?.key + '' + i?.key} className='text-[#344054]/80 font-medium- text-sm cursor-pointer'>
-                                              {s?.name}
-                                            </label>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
+              <RolePermissionLayout
+                dataPower={isState.dataPower}
+                activeGroupKey={activeGroupKey}
+                valueSearch={isState.valueSearch}
+                onChangeSearch={value => queryState({ valueSearch: value })}
+                searchPlaceholder={props.dataLang?.search_placeholder || 'Tìm kiếm'}
+                sidebarRef={sidebarRef}
+                sidebarButtonRefs={sidebarButtonRefs}
+                scrollContainerRef={scrollContainerRef}
+                sectionRefs={sectionRefs}
+                onScrollToSection={handleScrollToSection}
+                onToggleGroup={handleChange}
+                onTogglePermission={(parentKey, childKey, permission) => handleChange(parentKey, childKey, permission)}
+              />
             )}
             <div className='flex justify-end space-x-2'>
               <button onClick={() => queryState({ open: false })} className='px-4 py-2 text-base transition rounded-lg bg-slate-200 hover:opacity-90 hover:scale-105'>
