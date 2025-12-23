@@ -1010,7 +1010,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
                                 {/* {material.unit_name !== material.unit_name_primary && ( */}
                                   {/* <> */}
                                     <div className='text-start whitespace-nowrap'>
-                                      <p className='text-blue-fmrp font-medium text-lg'>
+                                      <p className='text-blue-fmrp font-medium text-base'>
                                         {formatNumber(quantityTotal)} <span className='text-[#141522] font-medium text-xs'>/</span>
                                       </p>
                                       <span className='text-[#141522] text-xs font-medium'>{material.unit_name}</span>
@@ -1021,7 +1021,7 @@ const PopupExportMaterialsTabReexport = forwardRef(
                                   {/* </> */}
                                 {/* )} */}
                                 <div className='text-start whitespace-nowrap'>
-                                  <p className='text-blue-fmrp font-medium text-lg'>
+                                  <p className='text-blue-fmrp font-medium text-base'>
                                     {formatNumber(quantityQuotaPrimary)} <span className='text-[#141522] font-medium text-xs'>/</span>
                                   </p>
                                   <span className='text-[#141522] text-xs font-medium'>{material.unit_name_primary}</span>

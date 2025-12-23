@@ -2,13 +2,14 @@ import apiProductionsOrders from '@/Api/apiManufacture/manufacture/productionsOr
 import useToast from '@/hooks/useToast';
 import { useMutation, useQuery } from '@tanstack/react-query';
 
-export const useLookupWarehouses = (params = null) => {
+export const useLookupWarehouses = (params = null, enabled = true) => {
   return useQuery({
     queryKey: ['api_lookup_warehouses', params],
     queryFn: async () => {
       const response = await apiProductionsOrders.apiLookupWarehouses({ params });
       return response.data;
     },
+    enabled: enabled,
   });
 };
 

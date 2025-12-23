@@ -188,6 +188,9 @@ const Popup_Products = React.memo(props => {
     enabled: open && !!props?.id,
   });
 
+  // Xác định danh sách options để hiển thị: khi sửa và có branch thì dùng dataOption, ngược lại dùng dataOptAll
+  const currentOptions = props?.id && branch?.length != 0 && dataOption?.length > 0 ? dataOption : dataOptAll;
+
   return (
     <PopupCustom
       title={
@@ -281,16 +284,21 @@ const Popup_Products = React.memo(props => {
         <div className='space-y-1'>
           <label className='text-[#344054] font-normal text-base'>{props.dataLang?.category_material_group_level || 'category_material_group_level'}</label>
           <Select
-            options={branch?.length != 0 ? dataOption : dataOptAll}
+            options={currentOptions}
             formatOptionLabel={SelectOptionLever}
             value={
               group == '0' || !group
                 ? { label: 'Nhóm cha', code: 'nhóm cha' }
-                : {
-                    label: dataOptAll.find(x => x?.value == group)?.label,
-                    code: dataOptAll.find(x => x?.value == group)?.code,
-                    value: group,
-                  }
+                : (() => {
+                    const foundOption = currentOptions.find(x => x?.value == group);
+                    return foundOption
+                      ? {
+                          label: foundOption.label,
+                          code: foundOption.code,
+                          value: group,
+                        }
+                      : null;
+                  })()
             }
             onChange={_HandleChangeInput.bind(this, 'group')}
             isClearable={true}

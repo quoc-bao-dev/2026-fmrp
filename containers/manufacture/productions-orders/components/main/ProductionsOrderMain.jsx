@@ -94,6 +94,7 @@ const initialState = {
     },
     dataKeepStock: [],
     dataPurchase: [],
+    dataTransferRecovery: [],
   },
   next: null,
 };
@@ -223,8 +224,9 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
   const keepStockPurchaseCount = useMemo(() => {
     const keepCount = dataProductionOrderDetail?.keepWarehouses?.length || 0;
     const purchaseCount = dataProductionOrderDetail?.purchase_order?.length || 0;
-    return keepCount + purchaseCount;
-  }, [dataProductionOrderDetail?.keepWarehouses, dataProductionOrderDetail?.purchase_order]);
+    const transferRecoveryCount = dataProductionOrderDetail?.transfer_recovery?.length || 0;
+    return keepCount + purchaseCount + transferRecoveryCount;
+  }, [dataProductionOrderDetail?.keepWarehouses, dataProductionOrderDetail?.purchase_order, dataProductionOrderDetail?.transfer_recovery]);
 
   // Lấy process steps từ dataProductionOrderDetail
   const processSteps = useMemo(() => {
@@ -834,7 +836,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
             warehousemanId: e?.warehouseman_id,
             warehouseFrom: e?.name_w_from,
             warehouseTo: e?.name_w_to,
-            showChild: false,
+            showChild: true,
             arrListData: e?.items?.map(i => {
               return {
                 id: i?.id_transfer,
@@ -861,7 +863,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
             time: formatMoment(e?.date, FORMAT_MOMENT.DATE_SLASH_LONG),
             user: e?.created_by_name,
             status: e?.status,
-            showChild: false,
+            showChild: true,
             arrListData: e?.items?.map(i => {
               return {
                 id: i?.id_transfer,
@@ -875,6 +877,35 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                 serial: i?.serial,
                 code: i?.item_code,
                 itemVariation: i?.item_variation,
+              };
+            }),
+          };
+        }),
+        dataTransferRecovery: dataProductionOrderDetail?.transfer_recovery?.map(e => {
+          return {
+            ...e,
+            id: e?.id,
+            title: e?.code,
+            time: formatMoment(e?.date, FORMAT_MOMENT.DATE_SLASH_LONG),
+            user: e?.created_by_name,
+            warehousemanId: e?.warehouseman_id,
+            warehouseFrom: e?.name_w_from,
+            warehouseTo: e?.name_w_to,
+            showChild: true,
+            arrListData: e?.items?.map(i => {
+              return {
+                id: i?.id_transfer,
+                image: i?.images ? i?.images : '/icon/noimagelogo.png',
+                name: i?.item_name,
+                quantity: i?.quantity_net,
+                unit: i?.unit_name,
+                lot: i?.lot,
+                expiration_date: i?.expiration_date,
+                serial: i?.serial,
+                code: i?.item_code,
+                itemVariation: i?.item_variation,
+                locationFrom: i?.name_location_from,
+                locationTo: i?.name_location_to,
               };
             }),
           };
@@ -2062,6 +2093,10 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
       <PopupRecallStock
         forceOpen={isOpenRecallStock}
         onForceClose={() => setIsOpenRecallStock(false)}
+        poId={isStateProvider?.productionsOrders?.idDetailProductionOrder}
+        codeLSX={isStateProvider?.productionsOrders?.dataProductionOrderDetail?.title}
+        branchId={dataProductionOrderDetail?.productionOrder?.branch_id}
+        ppId={isStateProvider?.productionsOrders?.dataProductionOrderDetail?.pp_id}
       />
       <PopupConfim
         dataLang={dataLang}

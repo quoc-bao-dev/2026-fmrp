@@ -455,6 +455,18 @@ const apiProductionsOrders = {
         const response = await axiosCustom('POST', `/api_web/purchase-internal/save`, data);
         return response.data;
     },
+
+    // danh sách NVL thu hồi giữ kho
+    async apiListRecallKeepStock(data) {
+        const response = await axiosCustom('POST', `/api_web/transfer-warehouse/recovery-items`, data);
+        return response.data;
+    },
+
+    // Lưu thu hồi giữ kho
+    async apiSaveRecoveryKeepStock(data) {
+        const response = await axiosCustom('POST', `/api_web/transfer-warehouse/save-recovery`, data);
+        return response.data;
+    },
     
     /**
      * Save Production Order Managers API
