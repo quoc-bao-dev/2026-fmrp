@@ -24,7 +24,10 @@ const RolePermissionLayout = ({
           <div className='w-full mb-4'>
             <SearchActionInput value={valueSearch} onChange={onChangeSearch} placeholder={searchPlaceholder} className='w-full' inputClassName="w-[100px]" />
           </div>
-          <div ref={sidebarRef} className='flex-1 space-y-1 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 pr-2'>
+          <div
+            ref={sidebarRef}
+            className='flex-1 space-y-1 h-full overflow-y-auto pr-2 scrollbar scrollbar-thumb-slate-300 scrollbar-track-slate-100'
+          >
             {dataPower
               ?.filter(e => !e?.hidden)
               ?.map(e => {
