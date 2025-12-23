@@ -91,6 +91,11 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
 
     resetErrors();
     setActiveStep({ type, item: e });
+    // Clear ngay dữ liệu cũ để tránh hiển thị lặp khi API trả mảng rỗng
+    queryState({
+      dataTableProducts: { data: { items: [] } },
+      arrayMoveBom: [],
+    });
 
     const payload = {
       id: dataRight?.idDetailProductionOrder,
@@ -99,8 +104,26 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
     };
 
     const r = await onGetData(payload);
+    // Chuẩn hoá lại items để tránh giữ state cũ (quantityEnterClient, quantityError, serial...) giữa các step
+    const normalizedItems = r?.data?.items?.map(item => ({
+      ...item,
+      // Reset các field client-side mỗi khi đổi công đoạn
+      quantityEnterClient: item?.quantityEnterClient ?? 0,
+      quantityError: item?.quantityError ?? 0,
+      serial: Array.isArray(item?.serial) ? [...item.serial] : [],
+      serialError: Array.isArray(item?.serialError) ? [...item.serialError] : [],
+    }));
 
-    queryState({ dataTableProducts: r, arrayMoveBom: [] });
+    queryState({
+      dataTableProducts: {
+        ...r,
+        data: {
+          ...r?.data,
+          items: normalizedItems || [],
+        },
+      },
+      arrayMoveBom: [],
+    });
 
     onGetBom(
       {
@@ -639,7 +662,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
       return next;
     });
   }, []);
-
+console.log(isState.dataTableProducts?.data?.items)
   return (
     <>
       {isOrderCompleted ? (
@@ -934,7 +957,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                         ) : isState.dataTableProducts?.data?.items?.length > 0 ? (
                           isState.dataTableProducts?.data?.items?.map((row, index) => (
                             <ProductRow
-                              key={index}
+                              key={getItemKey(row, 'product')}
                               row={row}
                               index={index}
                               showExpiryColumns={showExpiryColumns}

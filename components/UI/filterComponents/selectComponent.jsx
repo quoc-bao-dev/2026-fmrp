@@ -58,7 +58,7 @@ const ClearIndicator = (props) => (
 )
 
 export const CustomMenuList = (props) => {
-  return <Customscrollbar className="max-h-[300px]">{props.children}</Customscrollbar>
+  return <Customscrollbar className="max-h-[300px] rounded-lg overflow-hidden">{props.children}</Customscrollbar>
 }
 
 // Custom Control với Icon tùy chỉnh
@@ -99,6 +99,7 @@ const SelectComponent = ({
   type = 'header',
   icon = null,
   dropdownIcon = null,
+  isDisabled = false,
 }) => {
   // const styles = {
   //     menuList: (base) => ({
@@ -186,6 +187,7 @@ const SelectComponent = ({
         defaultValue={defaultValue}
         className={`${configSelectFillter.className} ${className || 'min-w-[200px]'}`}
         isMulti={isMulti ? isMulti : false}
+        isDisabled={isDisabled}
         components={{
           ...(components || {}),
           Option: CustomOption,

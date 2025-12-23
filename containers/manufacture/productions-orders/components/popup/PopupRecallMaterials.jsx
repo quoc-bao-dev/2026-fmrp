@@ -85,6 +85,7 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
     is_system_location: 0,
     ...(debouncedWarehouseSearch && { search: debouncedWarehouseSearch }),
   });
+  console.log(warehouses)
   const { data: materialsRecall, isLoading: isLoadingMaterialsRecall } = useMaterialsRecall(
     {
       po_id: id,
@@ -239,7 +240,7 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
   // Transform dữ liệu từ API sang format phù hợp với convertWarehousesToDropdownData
   const transformedWarehouses = useMemo(() => {
     if (!warehouses?.warehouses || !Array.isArray(warehouses.warehouses)) return [];
-
+    console.log(warehouses.warehouses)
     return warehouses.warehouses.map(warehouse => ({
       name_warehouse: warehouse.name || warehouse.code || '',
       warehouse_id: warehouse.id || '',
@@ -255,12 +256,12 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
       })),
     }));
   }, [warehouses]);
-
+console.log(transformedWarehouses)
   // Format dữ liệu kho hàng để hiển thị trong dropdown
   const warehouseDropdownData = useMemo(() => {
     return convertWarehousesToDropdownData(transformedWarehouses);
   }, [transformedWarehouses]);
-
+console.log(warehouseDropdownData)
   // Sắp xếp materials: ưu tiên các material đã chọn lên đầu, giữ nguyên thứ tự gốc
   const sortedMaterials = useMemo(() => {
     if (!materials || materials.length === 0) return [];
