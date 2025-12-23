@@ -1,6 +1,7 @@
 import CheckboxDefault from '@/components/common/checkbox/CheckboxDefault';
 import SearchActionInput from '@/components/common/input/SearchActionInput';
 import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
+import { CloseXIcon, WarningIcon } from '@/components/icons';
 import { WarehouseSelectDropdown } from '@/components/UI/filterComponents/WarehouseSelectDropdown';
 import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
@@ -9,6 +10,7 @@ import useToast from '@/hooks/useToast';
 import { useListRecallKeepStock, useProductionOrderKeepStok, useSaveRecoveryKeepStock } from '@/managers/api/productions-order/useRecallKeepStock';
 import { useLookupWarehouses } from '@/managers/api/productions-order/useRecallMaterials';
 import formatNumber from '@/utils/helpers/formatnumber';
+import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import { Edit2 } from 'iconsax-react';
 import moment from 'moment';
 import Image from 'next/image';
@@ -29,21 +31,52 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState({ id: 'material', name: 'Nguyên vật liệu' });
   const [searchTerm, setSearchTerm] = useState('');
-  const [warehouseSelections, setWarehouseSelections] = useState({});
+  // Lưu state riêng cho từng tab
+  const [warehouseSelectionsByTab, setWarehouseSelectionsByTab] = useState({ material: {}, product: {} });
+  const [selectedItemsByTab, setSelectedItemsByTab] = useState({ material: [], product: [] });
+  const [quantityByItemByTab, setQuantityByItemByTab] = useState({ material: {}, product: {} });
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showQuickSelectHint, setShowQuickSelectHint] = useState(true);
-  const [selectedItems, setSelectedItems] = useState([]);
-  const [quantityByItem, setQuantityByItem] = useState({});
   const [isQuickSelectMode, setIsQuickSelectMode] = useState(false);
   const [selectedWarehouseForQuickSelect, setSelectedWarehouseForQuickSelect] = useState(null);
+  const [errorBanner, setErrorBanner] = useState({ message: '', errors: [] });
 
-  const { data: dataListRecallKeepStock, isLoading: isLoadingListRecallKeepStock } = useListRecallKeepStock(
-    {
-      po_id: poId,
-      type: 1,
-    },
-    !!poId && open
-  );
+  // Lấy state của tab hiện tại
+  const selectedItems = selectedItemsByTab[activeTab.id] || [];
+  const warehouseSelections = warehouseSelectionsByTab[activeTab.id] || {};
+  const quantityByItem = quantityByItemByTab[activeTab.id] || {};
+
+  // Tính toán params cho useListRecallKeepStock dựa trên tab và selectedProduct
+  const recallKeepStockParams = useMemo(() => {
+    if (activeTab.id === 'product') {
+      // Tab product: cần ppi_id và level
+      if (!selectedProduct?.ppi_id) return null;
+      return {
+        po_id: poId,
+        type: 2,
+        ppi_id: selectedProduct.ppi_id,
+        level: selectedProduct?.selectedLevel?.id ?? 0,
+      };
+    } else {
+      // Tab material: chỉ cần type = 1
+      return {
+        po_id: poId,
+        type: 1,
+      };
+    }
+  }, [activeTab.id, poId, selectedProduct]);
+
+  const shouldFetchRecallKeepStock = useMemo(() => {
+    if (!poId || !open) return false;
+    if (activeTab.id === 'product') {
+      // Tab product: chỉ fetch khi đã chọn sản phẩm
+      return !!selectedProduct?.ppi_id;
+    }
+    // Tab material: fetch ngay khi mở
+    return true;
+  }, [poId, open, activeTab.id, selectedProduct]);
+
+  const { data: dataListRecallKeepStock, isLoading: isLoadingListRecallKeepStock } = useListRecallKeepStock(recallKeepStockParams, shouldFetchRecallKeepStock);
   const { data: dataProductionOrderKeepStok, isLoading: isLoadingProductionOrder } = useProductionOrderKeepStok({ pPlan_id: ppId, is_recovery: 1 }, activeTab.id === 'product' && open);
   const { data: warehousesLookup, isLoading: isLoadingWarehouses } = useLookupWarehouses(
     {
@@ -58,17 +91,25 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
   const handleClose = () => {
     setOpen(false);
     setSearchTerm('');
-    setWarehouseSelections({});
+    setWarehouseSelectionsByTab({ material: {}, product: {} });
     setSelectedProduct(null);
-    setSelectedItems([]);
-    setQuantityByItem({});
+    setSelectedItemsByTab({ material: [], product: [] });
+    setQuantityByItemByTab({ material: {}, product: {} });
     setIsQuickSelectMode(false);
     setSelectedWarehouseForQuickSelect(null);
     setShowQuickSelectHint(true);
+    setErrorBanner({ message: '', errors: [] });
     onForceClose?.();
   };
 
-  const { mutate: saveRecoveryKeepStock, isPending: isLoadingSubmit } = useSaveRecoveryKeepStock(handleClose);
+  const handleSaveError = errorData => {
+    setErrorBanner({
+      message: errorData.message || 'Thu hồi nguyên liệu thất bại',
+      errors: errorData.errors || [],
+    });
+  };
+
+  const { mutate: saveRecoveryKeepStock, isPending: isLoadingSubmit } = useSaveRecoveryKeepStock(handleClose, ppId, handleSaveError);
 
   const rawItems = dataListRecallKeepStock?.isSuccess ? dataListRecallKeepStock?.data?.items || [] : [];
 
@@ -76,7 +117,10 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
   const getMaxRecoverable = item => Math.max(0, Number(item?.quantity_keep ?? 0) - Number(item?.quantity_exported ?? 0) - Number(item?.quantity_recovered ?? 0));
   const selectIfSelectable = (item, itemId) => {
     if (!item || getMaxRecoverable(item) <= 0) return;
-    setSelectedItems(prev => (prev.includes(itemId) ? prev : [...prev, itemId]));
+    setSelectedItemsByTab(prev => ({
+      ...prev,
+      [activeTab.id]: prev[activeTab.id]?.includes(itemId) ? prev[activeTab.id] : [...(prev[activeTab.id] || []), itemId],
+    }));
   };
 
   const items = useMemo(() => {
@@ -107,7 +151,6 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
 
   const productOptions = useMemo(() => {
     if (activeTab.id !== 'product') return [];
-    // items_poi đã được hook map sẵn value/label giống popupKeepStock
     return dataProductionOrderKeepStok?.data?.items_poi || [];
   }, [activeTab.id, dataProductionOrderKeepStok]);
 
@@ -125,6 +168,7 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
       setSelectedProduct(option);
     }
   };
+
   const renderProductOption = (option, { context } = {}) => {
     if (!option) return null;
 
@@ -135,18 +179,18 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
     // Hiển thị value đã chọn
     if (context === 'value') {
       return (
-        <div className='flex items-center gap-2 py-1'>
-          <div className='size-[40px] shrink-0'>
-            <img src={option.images ? option.images : '/icon/noimagelogo.png'} alt='Product Image' className='object-cover w-full h-full rounded' />
+        <div className='flex items-center gap-2'>
+          <div className='size-[60px] shrink-0'>
+            <img src={option.images ? option.images : '/icon/noimagelogo.png'} alt='Product Image' className='object-cover w-full h-full rounded-md' />
           </div>
           <div className='flex flex-col items-start gap-1 min-w-0'>
             <h3 className='font-medium responsive-text-sm truncate'>{option?.label}</h3>
-            <div className='flex flex-col items-start gap-2 text-left'>
+            <div className='flex flex-col gap-0.5 items-start text-left'>
               <span className='responsive-text-xs text-[#667085]'>
                 {option?.item_code} - {option?.item_variation}
               </span>
               <h5 className='responsive-text-xs'>{option?.reference_no_detail}</h5>
-              {hasMultiLevel && displayLevelName && <span className='px-1 py-[1px] rounded bg-blue-fmrp/10 text-blue-600 text-[9px] font-semibold'>{`BOM ${displayLevelName}`}</span>}
+              {hasMultiLevel && displayLevelName && <span className='px-1 py-[1px] rounded bg-blue-fmrp/10 text-blue-600 text-[9px]/[150%] font-semibold'>{`BOM ${displayLevelName}`}</span>}
             </div>
           </div>
         </div>
@@ -220,25 +264,14 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
     );
   };
 
-  let filteredItems = activeTab.id === 'product' ? items.filter(item => item?.type === 'product') : items.filter(item => item?.type !== 'product');
-  if (activeTab.id === 'product') {
-    const productKey = selectedProduct?.value || selectedProduct?.id_warehouse_custom;
-    if (productKey) {
-      filteredItems = filteredItems.filter(item => {
-        const idMatch = getItemId(item) === productKey;
-        const poiMatch = `${item?.poi_id || ''}` === `${productKey || ''}`;
-        const ppiMatch = `${item?.ppi_id || ''}` === `${productKey || ''}`;
-        return idMatch || poiMatch || ppiMatch;
-      });
-    }
-  }
+  let filteredItems = items;
+
   if (searchTerm.trim()) {
-    const keyword = searchTerm.toLowerCase().trim();
     filteredItems = filteredItems.filter(item => {
-      const name = (item?.item_name || '').toLowerCase();
-      const code = (item?.item_code || '').toLowerCase();
-      const variation = (item?.variant_name || '').toLowerCase();
-      return name.includes(keyword) || code.includes(keyword) || variation.includes(keyword);
+      const name = item?.item_name || '';
+      const code = item?.item_code || '';
+      const variation = item?.variant_name || '';
+      return searchWithoutDiacritics(name, searchTerm) || searchWithoutDiacritics(code, searchTerm) || searchWithoutDiacritics(variation, searchTerm);
     });
   }
 
@@ -259,17 +292,23 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
   const allSelectableSelected = useMemo(() => selectableIds.length > 0 && selectableIds.every(id => selectedItems.includes(id)), [selectableIds, selectedItems]);
 
   const handleSelectWarehouse = (itemId, warehouse, item) => {
-    setWarehouseSelections(prev => ({
+    setWarehouseSelectionsByTab(prev => ({
       ...prev,
-      [itemId]: warehouse?.id_warehouse_custom || '',
+      [activeTab.id]: {
+        ...prev[activeTab.id],
+        [itemId]: warehouse?.id_warehouse_custom || '',
+      },
     }));
     selectIfSelectable(item, itemId);
   };
 
   const handleChangeQuantity = (itemId, value, item) => {
-    setQuantityByItem(prev => ({
+    setQuantityByItemByTab(prev => ({
       ...prev,
-      [itemId]: value,
+      [activeTab.id]: {
+        ...prev[activeTab.id],
+        [itemId]: value,
+      },
     }));
     selectIfSelectable(item, itemId);
   };
@@ -279,11 +318,18 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
       showToast('error', 'Không còn nguyên liệu để thu hồi');
       return;
     }
-    setSelectedItems(prev => {
-      if (prev.includes(itemId)) {
-        return prev.filter(id => id !== itemId);
+    setSelectedItemsByTab(prev => {
+      const currentTabItems = prev[activeTab.id] || [];
+      if (currentTabItems.includes(itemId)) {
+        return {
+          ...prev,
+          [activeTab.id]: currentTabItems.filter(id => id !== itemId),
+        };
       } else {
-        return [...prev, itemId];
+        return {
+          ...prev,
+          [activeTab.id]: [...currentTabItems, itemId],
+        };
       }
     });
   };
@@ -294,23 +340,35 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
         showToast('error', 'Không còn nguyên liệu nào để thu hồi');
         return;
       }
-      setSelectedItems(selectableIds);
+      setSelectedItemsByTab(prev => ({
+        ...prev,
+        [activeTab.id]: selectableIds,
+      }));
     } else {
-      setSelectedItems([]);
+      setSelectedItemsByTab(prev => ({
+        ...prev,
+        [activeTab.id]: [],
+      }));
     }
   };
 
   // Xử lý chọn nhanh kho
   const handleToggleQuickSelectMode = () => {
     setIsQuickSelectMode(true);
-    setSelectedItems([]);
+    setSelectedItemsByTab(prev => ({
+      ...prev,
+      [activeTab.id]: [],
+    }));
     setSelectedWarehouseForQuickSelect(null);
     setShowQuickSelectHint(true);
   };
 
   const handleCancelQuickSelectMode = () => {
     setIsQuickSelectMode(false);
-    setSelectedItems([]);
+    setSelectedItemsByTab(prev => ({
+      ...prev,
+      [activeTab.id]: [],
+    }));
     setSelectedWarehouseForQuickSelect(null);
     setShowQuickSelectHint(false);
   };
@@ -337,8 +395,11 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
   };
 
   const handleSubmit = () => {
+    // Reset error banner khi submit lại
+    setErrorBanner({ message: '', errors: [] });
+
     if (!selectedItems.length) {
-      showToast('error', 'Vui lòng chọn ít nhất 1 dòng để thu hồi.');
+      showToast('error', 'Vui lòng chọn ít nhất 1 nguyên liệu hoặc bán thành phẩm để thu hồi.');
       return;
     }
 
@@ -375,8 +436,14 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
 
     const payload = {
       po_id: poId,
-      type: 1,
+      type: activeTab.id === 'product' ? 2 : 1,
       pp_id: ppId,
+      ...(activeTab.id === 'product' && selectedProduct?.ppi_id
+        ? {
+            ppi_id: selectedProduct.ppi_id,
+            level: selectedProduct?.selectedLevel?.id ?? 0,
+          }
+        : {}),
       items: itemsPayload,
     };
 
@@ -392,7 +459,7 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
 
   useEffect(() => {
     if (open) {
-      setSelectedItems([]);
+      setSelectedItemsByTab({ material: [], product: [] });
       setShowQuickSelectHint(true);
       setIsQuickSelectMode(false);
       setSelectedWarehouseForQuickSelect(null);
@@ -417,10 +484,61 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
       open={open}
       onClose={handleClose}
       classNameBtn={className}
-      classNameModeltime='!w-[1200px] max-w-[95vw] xl:max-w-[1200px]'
+      classNameModeltime='!w-[1200px] max-w-[95vw] xl:max-w-[1200px] max-h-[95vh]'
     >
       <div className='mt-4'>
-        <div className='flex items-center justify-between gap-4 mb-4'>
+        {errorBanner.errors.length > 0 && (
+          <div className='py-3 px-4 flex flex-col gap-3 bg-[#FFEEF0] border border-[#991B1B] rounded-lg shadow-sm mb-4'>
+            <div className='flex items-start justify-between gap-3'>
+              <div className='flex items-start gap-2'>
+                <WarningIcon className='size-5 text-[#C81E1E]' />
+                <div className='flex flex-col gap-1'>
+                  <h3 className='text-sm font-semibold text-[#EE1E1E]'>{errorBanner.errors.length} lỗi khi thu hồi</h3>
+                  {errorBanner.message && <p className='text-xs font-normal text-neutral-07'>{errorBanner.message}</p>}
+                </div>
+              </div>
+              <button type='button' onClick={() => setErrorBanner({ message: '', errors: [] })} className='p-1 rounded-full hover:bg-[#F8D7DA] transition' aria-label='Đóng cảnh báo lỗi'>
+                <CloseXIcon className='size-4 text-[#991B1B]' />
+              </button>
+            </div>
+            <div className='flex flex-col gap-2 max-h-60 overflow-auto pr-2.5 scrollbar-thin scrollbar-thumb-[#F4B4B8] scrollbar-track-[#FFE3E6]'>
+              {errorBanner.errors.map((errorItem, index) => (
+                <div
+                  key={`${errorItem.item_code || index}-${errorItem.lot || 'lot'}-${errorItem.expiration_date || ''}-${index}`}
+                  className='px-3 py-2 bg-white rounded-md border border-[#F4B4B8] flex flex-col gap-1'
+                >
+                  <p className='text-sm font-medium text-[#991B1B]'>
+                    Số lượng thu hồi không đủ: {formatNumber(errorItem.quantity_enter || 0)} (thiếu {formatNumber(errorItem.quantity_missing || 0)})
+                  </p>
+                  <div className='flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-neutral-06'>
+                    <span>
+                      Mã hàng: <span className='font-semibold text-neutral-07'>{errorItem.item_code || '—'}</span>
+                    </span>
+                    <span>
+                      Tên hàng: <span className='font-semibold text-neutral-07'>{errorItem.item_name || '—'}</span>
+                    </span>
+                    {errorItem.item_variation && (
+                      <span>
+                        Biến thể: <span className='font-semibold text-neutral-07'>{errorItem.item_variation}</span>
+                      </span>
+                    )}
+                    {errorItem.lot && (
+                      <span>
+                        Lot: <span className='font-semibold text-neutral-07'>{errorItem.lot}</span>
+                      </span>
+                    )}
+                    {errorItem.expiration_date && (
+                      <span>
+                        Date: <span className='font-semibold text-neutral-07'>{moment(errorItem.expiration_date).format('DD/MM/YYYY')}</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className='flex items-center justify-between gap-4 my-4'>
           <TabSwitcherWithSlidingBackground
             tabs={tabs}
             activeTab={activeTab}
@@ -486,13 +604,14 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
               isLoading={isLoadingProductionOrder}
               formatOptionLabel={renderProductOption}
               hiddenDropdown={true}
+              buttonClassName='px-2'
             />
           </div>
         )}
 
-        <div className='flex-1 min-h-[60vh] max-h-[80vh] flex flex-col gap-4'>
+        <div className='flex-1 max-h-[60vh] flex flex-col gap-4'>
           <div className='overflow-hidden flex-1 relative'>
-            <div className='max-h-[60vh] overflow-y-auto pr-2'>
+            <div className={`min-h-[40vh] overflow-y-auto pr-2 ${errorBanner.errors.length > 0 ? 'max-h-[40vh]' : 'max-h-[60vh]'}`}>
               <table className='w-full border-separate' style={{ borderSpacing: '0 4px' }}>
                 <thead className='bg-white sticky top-[-1px] z-[2] shadow-sm'>
                   <tr>
@@ -522,7 +641,11 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
                   ) : !filteredItems.length ? (
                     <tr>
                       <td colSpan={9} className='py-8'>
-                        <NoData type='report' titleText={activeTab.id === 'product' && !selectedProduct ? 'Vui lòng chọn bán thành phẩm' : dataListRecallKeepStock?.message || 'Không có dữ liệu'} />
+                        <NoData
+                          type='report'
+                          className='min-h-[400px]'
+                          titleText={activeTab.id === 'product' && !selectedProduct ? 'Vui lòng chọn bán thành phẩm' : dataListRecallKeepStock?.message || 'Không có dữ liệu'}
+                        />
                       </td>
                     </tr>
                   ) : (
@@ -561,9 +684,12 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
                                 <p className='text-[10px] font-normal text-[#667085]'>{e?.variant_name}</p>
                                 <p className='text-xs font-normal text-typo-blue-2'>{e?.item_code}</p>
                                 {e?.serial && <p className='text-[10px] font-normal text-[#667085]'>Serial: {e?.serial}</p>}
-                                <p className='text-[10px] font-normal text-[#667085]'>
-                                  Lot - date: {e?.lot} - {e?.expiration_date ? moment(e?.expiration_date).format('DD/MM/YYYY') : ''}
-                                </p>
+                                {(e?.lot || e?.expiration_date) && (
+                                  <p className='text-[10px] font-normal text-[#667085]'>
+                                    Lot{e?.lot ? `: ${e.lot}` : ''}{e?.lot && e?.expiration_date ? ' - ' : ''}
+                                    {e?.expiration_date ? `Date: ${moment(e.expiration_date).format('DD/MM/YYYY')}` : ''}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </td>
@@ -628,7 +754,7 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
               </table>
             </div>
           </div>
-          <div className='flex gap-2 justify-end pt-2'>
+          <div className='flex gap-2 justify-end'>
             <div onClick={handleClose} className='px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300 text-sm font-medium'>
               Thoát
             </div>

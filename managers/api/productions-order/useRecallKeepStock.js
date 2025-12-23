@@ -1,7 +1,7 @@
 import apiProductionsOrders from '@/Api/apiManufacture/manufacture/productionsOrders/apiProductionsOrders';
 import apiMaterialsPlanning from '@/Api/apiManufacture/manufacture/materialsPlanning/apiMaterialsPlanning';
 import useToast from '@/hooks/useToast';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const useListRecallKeepStock = (params = null, enabled = false) => {
   return useQuery({
@@ -37,8 +37,9 @@ export const useProductionOrderKeepStok = (params = null, enabled = false) => {
   });
 };
 
-export const useSaveRecoveryKeepStock = onClose => {
+export const useSaveRecoveryKeepStock = (onClose, ppId = null, onErrorCallback = null) => {
   const showToast = useToast();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationKey: ['api_save_recovery_keep_stock'],
@@ -50,9 +51,27 @@ export const useSaveRecoveryKeepStock = onClose => {
       const response = data?.data || data;
       if (response?.isSuccess) {
         showToast('success', response?.message || 'Thu hồi nguyên liệu thành công');
+        
+        // Invalidate query useListBomProductPlan để cập nhật lại dữ liệu
+        if (ppId) {
+          queryClient.invalidateQueries({
+            queryKey: ['apiListBomProductPlan', ppId],
+          });
+        }
+        
         onClose?.();
       } else {
-        showToast('error', response?.message || 'Thu hồi nguyên liệu thất bại');
+        // Nếu errors là array → hiển thị banner chi tiết
+        // Nếu errors là object → chỉ showToast message
+        if (onErrorCallback && response?.errors && Array.isArray(response.errors)) {
+          onErrorCallback({
+            message: response?.message || 'Thu hồi nguyên liệu thất bại',
+            errors: response.errors,
+          });
+        } else {
+          // errors là object hoặc không có errors → chỉ showToast
+          showToast('error', response?.message || 'Thu hồi nguyên liệu thất bại');
+        }
       }
     },
     onError: error => {
