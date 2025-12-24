@@ -7,6 +7,7 @@ import { useRouter } from 'next/router';
 import React, { useContext, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import useSettingExpiration from '@/hooks/useSettingExpiration';
+import { useGetUpgradePackage } from '@/hooks/useAuth';
 import PopupGlobal from '../common/popup/PopupGlobal';
 import PopupUpdateNewVersion from '../common/popup/PopupUpdateNewVersion';
 import ChatBubbleAI from '../UI/chat/ChatAiBubble';
@@ -74,6 +75,7 @@ const Index = ({ children, ...props }) => {
   const { hasNewVersion, version, setHasNewVersion, refetchVersion } = useAppContext();
   const dispatch = useDispatch();
   const { socket } = useSocketContext();
+  const { data: upgradePackageData } = useGetUpgradePackage();
 
   useEffect(() => {
     if (hasNewVersion) {
@@ -207,7 +209,12 @@ const Index = ({ children, ...props }) => {
           {statePopupAccountInformation?.open && !isExpired && <PopupAccountInformation {...props} />}
           {statePopupChangePassword?.open && !isExpired && <PopupChangePassword {...props} />}
           {statePopupRecommendation?.open && !isExpired && <PopupRecommendation {...props} />}
-          {statePopupUpgradeProfessional?.open && !isExpired && <PopupUpgradeProfessional {...props} />}
+          {statePopupUpgradeProfessional?.open && !isExpired && (
+            <PopupUpgradeProfessional
+              {...props}
+              upgradePackageData={upgradePackageData}
+            />
+          )}
           {statePopupUpgradePro?.open && (
             <PopupUpgradePro
               open={statePopupUpgradePro.open}
@@ -237,6 +244,7 @@ const Index = ({ children, ...props }) => {
                     children: (
                       <PopupUpgradeProfessional
                         {...props}
+                        upgradePackageData={upgradePackageData}
                         onClose={() => {
                           // Khi đóng PopupUpgradeProfessional, nếu vẫn hết hạn thì mở lại PopupUpgradePro
                           dispatch({

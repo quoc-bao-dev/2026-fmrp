@@ -1421,12 +1421,12 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
             style={{
               boxShadow: '0px 20px 24px -4px #10182814, 0px 4px 4px 0px #00000040',
             }}
-            className='z-[999] flex flex-col gap-4 border-[#D8DAE5] rounded-lg 3xl:!min-w-[1820px] 2xl:min-w-[1500px] xxl:min-w-[1400px] xl:min-w-[1250px] lg:min-w-[1000px]'
+            className='z-[999] flex flex-col gap-4 border-[#D8DAE5] rounded-lg 2xl:min-w-[700px] min-w-[550px]'
             dropdownId='dropdownFilterMain'
           >
             <div className='3xl:text-xl text-lg text-[#344054] font-medium'>{dataLang?.productions_orders_filter || 'productions_orders_filter'}</div>
 
-            <div className='grid w-full grid-cols-4 gap-3 3xl:grid-cols-7'>
+            <div className='grid w-full grid-cols-2 gap-3 3xl:grid-cols-7'>
               <div className='col-span-1 space-y-1'>
                 <h3 className='text-xs text-[#051B44] font-normal'>{dataLang?.productions_orders_details_branch || 'productions_orders_details_branch'}</h3>
                 <SelectComponentNew

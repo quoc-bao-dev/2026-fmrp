@@ -1137,6 +1137,11 @@ const Header = () => {
 
   const currentDropdown = dropdowns[currentDropdownIndex];
 
+  // Thông tin gói dịch vụ hiện tại
+  // Gói free: id_package_service == 1 (theo /Api_Authentication/authentication)
+  const isTrialPackage = authState?.id_package_service == '1';
+  const currentPackageName = authState?.name_package_service;
+
   return (
     <>
       <header className='fixed z-[990] w-full bg-[#003DA0] top-0 xl:h-[72px] h-[62px] flex items-center justify-between 3xl:px-6 2xl:px-4 px-5 py-4'>
@@ -1379,15 +1384,35 @@ const Header = () => {
             </svg>
 
             <p className='text-[#7A0916] font-medium text-sm'>
-              Phiên bản dùng thử sẽ kết thúc sau{' '}
-              <span className='text-[#F3032B]'>
-                {typeof daysLeft === 'number' ? daysLeft  : 7} ngày.
-              </span>{' '}
-              Nâng cấp để tiếp tục sử dụng đầy đủ tính năng hoặc liên hệ{' '}
-              <a href='https://zalo.me/fososoft' target='_blank' className='text-[#137EF4] underline cursor-pointer font-bold'>
-                Zalo{' '}
-              </a>
-              để được tư vấn ngay.
+              {isTrialPackage ? (
+                <>
+                  Phiên bản dùng thử sẽ kết thúc sau{' '}
+                  <span className='text-[#F3032B]'>
+                    {typeof daysLeft === 'number' ? daysLeft : 7} ngày.
+                  </span>{' '}
+                  Nâng cấp để tiếp tục sử dụng đầy đủ tính năng hoặc liên hệ{' '}
+                  <a href='https://zalo.me/fososoft' target='_blank' className='text-[#137EF4] underline cursor-pointer font-bold'>
+                    Zalo{' '}
+                  </a>
+                  để được tư vấn ngay.
+                </>
+              ) : (
+                <>
+                  Gói{' '}
+                  <span className='font-semibold'>
+                    {currentPackageName || 'Pro'}
+                  </span>{' '}
+                  của bạn sẽ hết hạn sau{' '}
+                  <span className='text-[#F3032B]'>
+                    {typeof daysLeft === 'number' ? daysLeft : 7} ngày.
+                  </span>{' '}
+                  Gia hạn ngay để không bị gián đoạn sử dụng đầy đủ tính năng hoặc liên hệ{' '}
+                  <a href='https://zalo.me/fososoft' target='_blank' className='text-[#137EF4] underline cursor-pointer font-bold'>
+                    Zalo{' '}
+                  </a>
+                  để được hỗ trợ nhanh.
+                </>
+              )}
             </p>
           </div>
           <div className='flex items-center'>
@@ -1413,7 +1438,7 @@ const Header = () => {
                 });
               }}
             >
-              Nâng cấp ngay
+              {isTrialPackage ? 'Nâng cấp ngay' : 'Gia hạn ngay'}
             </button>
           </div>
         </div>

@@ -405,7 +405,7 @@ const SalesOrder = (props) => {
                     active={e?.id}
                     className={'text-[#0F4F9E]'}
                   >
-                    {dataLang[e?.name]}
+                    {dataLang[e?.name] ?? e?.name}
                   </TabFilter>
                 )
               })}
