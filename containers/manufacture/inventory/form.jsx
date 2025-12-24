@@ -1367,7 +1367,7 @@ const InventoryForm = props => {
                                   showTime={false}
                                   format='DD/MM/YYYY'
                                   disabled={e?.checkExpiry == '0'}
-                                  height='h-[38px]'
+                                  height='!h-[38px]'
                                 />
                               </div>
                             ) : null}

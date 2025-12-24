@@ -120,7 +120,7 @@ const TabFilter = React.memo((props) => {
         onClick={handleClick}
         className={`${
           props.className
-        } whitespace-nowrap font-medium justify-center responsive-text-base flex gap-2 items-center px-4 py-2.5 outline-none transition-colors duration-200
+        } whitespace-nowrap font-medium justify-center responsive-text-base flex gap-2 items-center px-3 py-2.5 outline-none transition-colors duration-200
         ${
           isActive
             ? "text-blue-fmrp"
