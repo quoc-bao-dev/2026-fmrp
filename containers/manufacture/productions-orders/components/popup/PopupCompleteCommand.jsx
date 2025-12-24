@@ -1,6 +1,6 @@
 import CheckboxDefault from '@/components/common/checkbox/CheckboxDefault';
 import Loading from '@/components/common/loading/loading/LoadingComponent';
-import { PlusIcon, WarningIcon } from '@/components/icons';
+import { PlusIcon, WarningIcon, MagnifyingGlassIcon } from '@/components/icons';
 import CheckIcon from '@/components/icons/common/CheckIcon';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
@@ -618,6 +618,14 @@ export const PopupProductionOrderStatus = ({ onClose, className, title, descript
   );
 };
 
+// Hàm normalize text để xử lý unicode tiếng Việt
+const normalizeText = text =>
+  (text || '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
 const PopupCompleteCommand = ({ onClose }) => {
   const [selectAll, setSelectAll] = useState(false);
   const { isStateProvider } = useContext(StateContext);
@@ -625,6 +633,7 @@ const PopupCompleteCommand = ({ onClose }) => {
   const warehouses = productCompleted?.data?.warehouses;
   // console.log(productCompleted)
   const [products, setProducts] = useState([]);
+  const [searchProducts, setSearchProducts] = useState('');
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
   const [showAutoTooltip, setShowAutoTooltip] = useState(false);
   const [autoTooltipText, setAutoTooltipText] = useState('');
@@ -959,6 +968,19 @@ const PopupCompleteCommand = ({ onClose }) => {
   }, []);
 
   const selectedCount = useMemo(() => products.filter(product => product.selected).length, [products]);
+
+  // Filter products dựa trên search (theo tên và mã)
+  const filteredProducts = useMemo(() => {
+    if (!searchProducts.trim()) {
+      return products;
+    }
+    const normalizedSearch = normalizeText(searchProducts);
+    return products.filter(product => {
+      const normalizedName = normalizeText(product.item_name || '');
+      const normalizedCode = normalizeText(product.item_code || '');
+      return normalizedName.includes(normalizedSearch) || normalizedCode.includes(normalizedSearch);
+    });
+  }, [products, searchProducts]);
   const dataSeting = useSetingServer();
 
   const formatNumber = number => {
@@ -1018,6 +1040,23 @@ const PopupCompleteCommand = ({ onClose }) => {
             <div className='flex flex-col gap-1'>
               <h2 className='text-2xl font-bold capitalize'>Hoàn thành tổng lệnh</h2>
               <p className='text-base text-blue-fmrp'>{QRCode?.data?.reference_no}</p>
+              <div className='flex gap-x-2 items-center w-full rounded-lg border border-[#D0D5DD] px-4 py-2 focus-within:border-transparent focus-within:ring-2 focus-within:ring-blue-500'>
+                <input
+                  type='text'
+                  placeholder='Tìm kiếm theo tên và mã sản phẩm'
+                  className='flex-1 border-none outline-none text-[#3A3E4C] placeholder-gray-200'
+                  value={searchProducts}
+                  onChange={e => setSearchProducts(e.target.value)}
+                />
+                {searchProducts && (
+                  <button type='button' className='rounded-full bg-gray-100 hover:bg-gray-200 text-[#3A3E4C] p-1 transition' aria-label='Xóa tìm kiếm' onClick={() => setSearchProducts('')}>
+                    <CloseXIcon className='size-3' />
+                  </button>
+                )}
+                <button type='button' className='rounded-lg bg-[#1760B9] p-1'>
+                  <MagnifyingGlassIcon className='size-4 text-white' />
+                </button>
+              </div>
             </div>
             <div className='flex gap-2 items-center'>
               <SelectComponent
@@ -1122,7 +1161,7 @@ const PopupCompleteCommand = ({ onClose }) => {
                 </tr>
               </thead>
               <tbody>
-                {products.map((product, index) => (
+                {filteredProducts.map((product, index) => (
                   <ProductRow
                     key={product.uniqueId || `product-row-${product.originalIndex !== undefined ? product.originalIndex : index}`}
                     product={product}
