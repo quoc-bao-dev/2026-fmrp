@@ -1,0 +1,46 @@
+.sidebarScroll {
+  /* 1. Ép buộc cơ chế cuộn luôn bật, kể cả khi nội dung ngắn */
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+
+  /* Giữ chỗ để layout không bị nhảy */
+  scrollbar-gutter: stable !important;
+
+  /* 2. Cấu hình cho Firefox */
+  /* Cú pháp: <màu-thumb> <màu-track> */
+  /* Đặt màu track là transparent theo yêu cầu */
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e1 transparent !important;
+}
+
+/* 3. Cấu hình cho WebKit (Chrome, Safari, Edge) */
+/* Việc khai báo các pseudo-element này sẽ KÍCH HOẠT chế độ custom scrollbar,
+   giúp ghi đè hành vi tự ẩn của macOS */
+
+.sidebarScroll::-webkit-scrollbar {
+  width: 4px !important;
+  height: 4px !important; /* Đề phòng trường hợp có scroll ngang */
+  background-color: transparent !important; /* Đảm bảo nền vùng chứa scroll trong suốt */
+  display: block !important; /* Ép hiển thị */
+}
+
+/* TRACK (Nền): Đổi sang trong suốt */
+.sidebarScroll::-webkit-scrollbar-track {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-radius: 0 !important; /* Reset bo góc của track để tránh lỗi hiển thị */
+}
+
+/* THUMB (Con lăn): Giữ nguyên màu và style cũ */
+.sidebarScroll::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1 !important;
+  border-radius: 999px !important;
+
+  /* Thêm border trong suốt để tránh bị dính viền nếu có global style */
+  border: none !important;
+}
+
+/* Bổ sung: Hover vào thanh lăn (tùy chọn, để trải nghiệm tốt hơn) */
+.sidebarScroll::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8 !important; /* Đậm hơn chút khi di chuột, có thể bỏ nếu không thích */
+}
