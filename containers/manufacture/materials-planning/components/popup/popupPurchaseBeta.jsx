@@ -348,7 +348,7 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
         onClose={_ToggleModal.bind(this, false)}
         classNameBtn={className}
       >
-        <div className='mt-4'>
+        <div className='mt-4 '>
           <div className='flex items-center space-x-4 my-2 border-[#E7EAEE] border-opacity-70 border-b-[1px]'></div>
           <div className='flex justify-between items-end pb-4'>
             <div className=''>
@@ -369,11 +369,11 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
                 control={form.control}
                 render={({ field, fieldState }) => {
                   return (
-                    <div className=' relative w-[400px]'>
+                    <div className=' relative w-[320px]'>
                       <SelectComponent
                         className={`${
                           fieldState.error ? 'border-red-500' : 'border-transparent'
-                        } w-full placeholder:text-slate-300 bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
+                        } w-full placeholder:text-slate-300 bg-[#ffffff] rounded-lg text-[#52575E] font-normal outline-none border `}
                         isClearable={true}
                         placeholder={dataLang?.purchase_order_supplier ?? 'purchase_order_supplier'}
                         options={dataSupplier}
@@ -392,6 +392,10 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
                             zIndex: 9999999,
                             position: 'absolute',
                           }),
+                          control: (base, state) => ({
+                            ...base,
+                            borderRadius: '0.5rem',
+                          }),
                         }}
                         value={field.value}
                         maxMenuHeight={150}
@@ -407,7 +411,7 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
             </div>
           </div>
 
-          <div className='flex-1 min-h-[60vh] max-h-[80vh] w-[1200px] flex flex-col gap-4'>
+          <div className='flex-1 min-h-[60vh] max-h-[80vh] w-[850px] flex flex-col gap-4'>
             {isState.onFetching ? (
               <div className='flex-1 flex justify-center items-center h-full'>
                 <Loading className='max-h-40 2xl:h-[160px]' color='#0f4f9e' />
@@ -418,21 +422,21 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
                   <table className='w-full border-separate' style={{ borderSpacing: '0 4px' }}>
                     <thead className='bg-white sticky top-0 z-[9999] shadow-sm'>
                       <tr>
-                        <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>
+                        <th className='py-2 px-3 border-b border-gray-200 text-center text-base font-normal text-[#9295A4] w-[62px]'>
                           <div onClick={e => e.stopPropagation()}>
                             <CheckboxDefault checked={selectAll} onChange={handleSelectAll} className='!space-x-0' />
                           </div>
                         </th>
-                        <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>STT</th>
-                        <th className='py-2 px-3 border-b border-gray-200 text-left text-sm font-normal text-[#9295A4] w-auto'>{dataLang?.price_quote_item || 'price_quote_item'}</th>
-                        <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[100px]'>{dataLang?.materials_planning_dvt || 'materials_planning_dvt'}</th>
-                        <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[140px]'>
+                        <th className='py-2 px-3 border-b border-gray-200 text-center text-base font-normal text-[#9295A4] w-[62px]'>STT</th>
+                        <th className='py-2 px-3 border-b border-gray-200 text-left text-base font-normal text-[#9295A4] w-auto'>{dataLang?.price_quote_item || 'price_quote_item'}</th>
+                        <th className='py-2 px-3 border-b border-gray-200 text-center text-base font-normal text-[#9295A4] w-[100px]'>{dataLang?.materials_planning_dvt || 'materials_planning_dvt'}</th>
+                        <th className='py-2 px-3 border-b border-gray-200 text-center text-base font-normal text-[#9295A4] w-[140px]'>
                           {dataLang?.materials_planning_qty_need_by || 'materials_planning_qty_need_by'}
                         </th>
-                        <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[140px]'>
+                        <th className='py-2 px-3 border-b border-gray-200 text-center text-base font-normal text-[#9295A4] w-[140px]'>
                           {dataLang?.materials_planning_qty_requested || 'materials_planning_qty_requested'}
                         </th>
-                        <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[140px] relative'>
+                        <th className='py-2 px-3 border-b border-gray-200 text-center text-base font-normal text-[#9295A4] w-[140px] relative'>
                           {dataLang?.materials_planning_qty_buys || 'materials_planning_qty_buys'}
                           <span className='normal-case whitespace-nowrap flex items-center justify-center gap-1 responsive-text-xxs text-blue-600 font-medium ai-shine-badge'>
                             <Image src='/icon/SparkleYellow.png' alt='logo' width={10} height={10} />
@@ -508,15 +512,15 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
                                   </div>
                                 </div>
                               </td>
-                              <td className='py-2 px-3 text-center text-sm font-medium text-[#141522]'>{e?.unit || '-'}</td>
+                              <td className='py-2 px-3 text-center text-base font-medium text-[#141522]'>{e?.unit || '-'}</td>
                               <td className='py-2 px-3 text-center'>
-                                <span className='text-sm font-medium text-[#141522]'>
+                                <span className='text-base font-medium text-[#141522]'>
                                   {e?.quantityRest == 0 ? '-' : `${e?.quantityRest} / `}
                                   {e?.quantityRest == 0 ? '' : <span className='text-[11px] text-[#667085]'>{e?.unit || ''}</span>}
                                 </span>
                               </td>
                               <td className='py-2 px-3 text-center'>
-                                <span className='text-sm font-medium text-[#141522]'>
+                                <span className='text-base font-medium text-[#141522]'>
                                   {e?.quantityPurchased == 0 ? '-' : `${e?.quantityPurchased} / `}
                                   {e?.quantityPurchased == 0 ? '' : <span className='text-[11px] text-[#667085]'>{e?.unit || ''}</span>}
                                 </span>
@@ -555,7 +559,7 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
                                         <InPutNumericFormat
                                           className={`${
                                             fieldState.error ? 'border-red-500' : 'border-gray-200'
-                                          } cursor-default appearance-none text-center 3xl:text-[13px] 2xl:text-[12px] xl:text-[11px] text-[10px] py-1 px-0.5 font-normal w-[80px] focus:outline-none border-b-2`}
+                                          } cursor-default appearance-none text-center 3xl:text-[16px] 2xl:text-[16px] xl:text-[16px] -text-[10px] py-1 px-0.5 font-normal w-[80px] focus:outline-none border-b-2`}
                                           {...field}
                                           onValueChange={event => {
                                             const newValue = event.value == '' ? null : +event.value;

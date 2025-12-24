@@ -46,7 +46,7 @@ export const ContainerFilterTab = forwardRef(({ children, className }, ref) => {
           forceVisible="x"
           ref={ref}
           className={`${className} overflow-x-auto h-fit demo4 simplebar-scrollable-x relative`}
-          scrollableNodePropsClassName="[&>div]:flex [&>div]:items-center [&>div]:justify-start [&>div]:space-x-4 [&>div]:xl:space-x-4 h-fit"
+          scrollableNodePropsClassName="[&>div]:flex [&>div]:items-center [&>div]:justify-start h-fit"
         >
           {children}
           <hr className="!ml-0 absolute bottom-0 left-0 right-0 border-b border-t-0 border-border-gray-1 z-[-1]" />

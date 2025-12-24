@@ -1,4 +1,5 @@
 import apiInventory from '@/Api/apiManufacture/warehouse/inventory/apiInventory';
+import apiDashboard from '@/Api/apiDashboard/apiDashboard';
 import ButtonDelete from '@/components/common/orderManagement/ButtonDelete';
 import { DocumentDate, DocumentNumber } from '@/components/common/orderManagement/GeneralInfo';
 import OrderFormTabs from '@/components/common/orderManagement/OrderFormTabs';
@@ -33,6 +34,7 @@ import moment from 'moment';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { PiMapPinLight } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
 import PopupImportExcel from './components/popupImportExcel';
@@ -41,6 +43,7 @@ const InventoryForm = props => {
   const isShow = useToast();
   const dataLang = props.dataLang;
   const router = useRouter();
+  const dispatch = useDispatch();
   const statusExprired = useStatusExprired();
   const scrollAreaRef = useRef(null);
   const dataSeting = useSetingServer();
@@ -90,7 +93,7 @@ const InventoryForm = props => {
   const { data: dataPstWH } = useLocationByWarehouseInventory(warehouse?.value);
   const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature();
   const isExpiryEnabled = dataMaterialExpiry?.is_enable === '1' || dataProductExpiry?.is_enable === '1';
-  const { data: dataItems = [] } = useImportItemByOrder(null, null, branch, null, debouncedInputValue);
+  const { data: dataItems = [] } = useImportItemByOrder(null, null, branch, null, debouncedInputValue, warehouse);
 
   const options = dataItems?.map(e => ({
     label: `${e.name}`,
@@ -119,6 +122,24 @@ const InventoryForm = props => {
     const menuPortalTarget = scrollAreaRef.current;
     return { menuPortalTarget };
   };
+
+  // Refetch dữ liệu feature mỗi khi vào component để đảm bảo có dữ liệu mới nhất
+  useEffect(() => {
+    const fetchFeature = async () => {
+      try {
+        const fature = await apiDashboard.apiFeature();
+        const newData = {
+          dataMaterialExpiry: fature.find((x) => x.code == "material_expiry"),
+          dataProductExpiry: fature.find((x) => x.code == "product_expiry"),
+          dataProductSerial: fature.find((x) => x.code == "product_serial"),
+        };
+        dispatch({ type: "setings/feature", payload: newData });
+      } catch (error) {
+        console.error('Failed to fetch feature data:', error);
+      }
+    };
+    fetchFeature();
+  }, [dispatch]);
 
   useEffect(() => {
     const branch = dataAuth?.branch[0];
@@ -275,6 +296,27 @@ const InventoryForm = props => {
           rows.forEach((row, index) => {
             const baseKey = row?.id || `${row?.item_id || 'item'}__${row?.item_variation_id || 0}__${row?.type || 'product'}`;
             if (!groupedMap.has(baseKey)) {
+              // Response đã có đầy đủ expiry và serial, sử dụng trực tiếp
+              const checkExpiryValue = row?.expiry !== undefined 
+                ? (row?.expiry === '1' || row?.expiry === 1 ? '1' : '0')
+                : (row?.lot || row?.date ? '1' : '0'); // Fallback: nếu không có expiry, dựa vào lot/date
+              
+              // serial có thể là '1', '0', null, hoặc string (serial number)
+              // Nếu serial là '1' hoặc '0' => checkSerial
+              // Nếu serial là string (serial number) => checkSerial = '1'
+              // Nếu serial là null => checkSerial = '0'
+              let checkSerialValue = '0';
+              if (row?.serial !== undefined && row?.serial !== null) {
+                if (row?.serial === '1' || row?.serial === 1) {
+                  checkSerialValue = '1';
+                } else if (row?.serial === '0' || row?.serial === 0) {
+                  checkSerialValue = '0';
+                } else if (typeof row?.serial === 'string' && row?.serial !== '') {
+                  // Nếu serial là string không rỗng (serial number), có nghĩa là item có serial
+                  checkSerialValue = '1';
+                }
+              }
+
               groupedMap.set(baseKey, {
                 id: baseKey,
                 code: row?.code || '',
@@ -282,8 +324,8 @@ const InventoryForm = props => {
                 img: row?.image || null,
                 variant: row?.product_variation || '',
                 type: row?.type || '',
-                checkExpiry: row?.lot || row?.date ? '1' : '0',
-                checkSerial: row?.serial ? '1' : '0',
+                checkExpiry: checkExpiryValue,
+                checkSerial: checkSerialValue,
                 show: true,
                 dataLot: [],
                 dataSerial: [],
@@ -299,11 +341,24 @@ const InventoryForm = props => {
             parent.variant = row?.product_variation ?? parent.variant;
             parent.type = row?.type ?? parent.type;
 
-            if (row?.lot || row?.date) {
+            // Cập nhật checkExpiry từ response (response đã có đầy đủ thông tin)
+            if (row?.expiry !== undefined) {
+              parent.checkExpiry = row?.expiry === '1' || row?.expiry === 1 ? '1' : '0';
+            } else if (row?.lot || row?.date) {
+              // Fallback: nếu không có expiry trong response nhưng có lot/date, set checkExpiry = '1'
               parent.checkExpiry = '1';
             }
-            if (row?.serial) {
-              parent.checkSerial = '1';
+            
+            // Cập nhật checkSerial từ response (response đã có đầy đủ thông tin)
+            if (row?.serial !== undefined && row?.serial !== null) {
+              if (row?.serial === '1' || row?.serial === 1) {
+                parent.checkSerial = '1';
+              } else if (row?.serial === '0' || row?.serial === 0) {
+                parent.checkSerial = '0';
+              } else if (typeof row?.serial === 'string' && row?.serial !== '') {
+                // Nếu serial là string không rỗng (serial number), có nghĩa là item có serial
+                parent.checkSerial = '1';
+              }
             }
 
             if (row?.lot) {
@@ -381,9 +436,93 @@ const InventoryForm = props => {
 
         sDataChoose(prev => {
           const merged = new Map(prev.map(item => [item.id, item]));
+          const newItemsToFetch = [];
+          
           mappedInventoryItems.forEach(item => {
-            merged.set(item.id, item);
+            const existingItem = merged.get(item.id);
+            if (existingItem) {
+              // Nếu item đã tồn tại, giữ nguyên checkExpiry và checkSerial từ dữ liệu thực tế (từ API)
+              merged.set(item.id, {
+                ...item,
+                checkExpiry: existingItem.checkExpiry,
+                checkSerial: existingItem.checkSerial,
+                dataWarehouse: existingItem.dataWarehouse || item.dataWarehouse,
+              });
+            } else {
+              // Vì response đã có đầy đủ expiry và serial, chỉ cần gọi API nếu thiếu thông tin này
+              // Hoặc cần lấy thêm dataLot, dataSerial, dataWarehouse, checkChild
+              if (item.checkExpiry === undefined || item.checkSerial === undefined) {
+                newItemsToFetch.push(item);
+              }
+              merged.set(item.id, item);
+            }
           });
+          
+          // Chỉ gọi API nếu thiếu thông tin checkExpiry/checkSerial (backward compatibility)
+          // Hoặc cần lấy thêm dataLot, dataSerial, dataWarehouse, checkChild cho item mới
+          if (newItemsToFetch.length > 0 && warehouse?.value) {
+            Promise.all(
+              newItemsToFetch.map(async item => {
+                try {
+                  const { isSuccess } = await apiInventory.apiGetVariantInventoryVariation({
+                    data: {
+                      id: item.id,
+                      warehouse_id: warehouse.value,
+                    },
+                  });
+                  
+                  if (isSuccess?.result && isSuccess.result.length > 0) {
+                    const variant = isSuccess.result[0];
+                    return {
+                      itemId: item.id,
+                      checkExpiry: variant?.expiry === '1' ? '1' : '0',
+                      checkSerial: variant?.serial === '1' ? '1' : '0',
+                      dataLot: variant?.lot_array?.map(lot => ({ label: lot, value: lot })) || [],
+                      dataSerial: variant?.serial_array?.map(serial => ({ label: serial, value: serial })) || [],
+                      dataWarehouse: variant?.warehouse?.map(wh => ({
+                        label: wh?.location_name,
+                        value: wh?.id,
+                        warehouse_name: wh?.warehouse_name,
+                        qty: wh?.quantity,
+                      })) || [],
+                      checkChild: variant?.warehouse?.map(ce => ({
+                        amount: null,
+                        quantity: Number(ce.quantity),
+                        serial: ce.serial,
+                        lot: ce.lot,
+                        date: ce.expiration_date ? moment(ce.expiration_date).format('DD/MM/yyyy') : null,
+                        locate: ce.location_id,
+                      })) || [],
+                    };
+                  }
+                } catch (error) {
+                  console.error(`Failed to fetch variant info for item ${item.id}:`, error);
+                  return null;
+                }
+              })
+            ).then(results => {
+              // Cập nhật lại state sau khi fetch xong
+              sDataChoose(prev => {
+                const updated = prev.map(item => {
+                  const fetchedData = results.find(r => r && r.itemId === item.id);
+                  if (fetchedData) {
+                    return {
+                      ...item,
+                      checkExpiry: fetchedData.checkExpiry || item.checkExpiry,
+                      checkSerial: fetchedData.checkSerial || item.checkSerial,
+                      dataLot: fetchedData.dataLot.length > 0 ? fetchedData.dataLot : item.dataLot,
+                      dataSerial: fetchedData.dataSerial.length > 0 ? fetchedData.dataSerial : item.dataSerial,
+                      dataWarehouse: fetchedData.dataWarehouse.length > 0 ? fetchedData.dataWarehouse : item.dataWarehouse,
+                      checkChild: fetchedData.checkChild.length > 0 ? fetchedData.checkChild : item.checkChild,
+                    };
+                  }
+                  return item;
+                });
+                return updated;
+              });
+            });
+          }
+          
           return Array.from(merged.values());
         });
       }
@@ -554,6 +693,7 @@ const InventoryForm = props => {
   const _HandleChangeChild = (parentId, id, type, value) => {
     const newData = dataChoose.map(e => {
       if (e.id === parentId) {
+        let updatedDataLot = e.dataLot || [];
         const newChild = e.child?.map(ce => {
           if (ce.id === id) {
             if (type === 'amount') {
@@ -578,12 +718,62 @@ const InventoryForm = props => {
                 }
               }
               // Gọi các hàm kiểm tra trùng lặp khi có đủ điều kiện
-              e?.checkExpiry == '1' && ce?.locate !== null && ce?.lot !== null && ce.date !== null && _HandleCheckSameLot(parentId, id, ce?.locate, ce?.lot, ce?.date);
-              e?.checkSerial == '1' && ce?.locate !== null && ce?.serial !== null && _HandleCheckSameSerial(parentId, id, ce?.locate, ce?.serial);
-              e?.checkExpiry == '0' && e?.checkSerial == '0' && _HandleCheckSameLoca(parentId, id, ce?.locate);
+              e?.checkExpiry === '1' && ce?.locate !== null && ce?.lot !== null && ce.date !== null && _HandleCheckSameLot(parentId, id, ce?.locate, ce?.lot, ce?.date);
+              e?.checkSerial === '1' && ce?.locate !== null && ce?.serial !== null && _HandleCheckSameSerial(parentId, id, ce?.locate, ce?.serial);
+              e?.checkExpiry === '0' && e?.checkSerial == '0' && _HandleCheckSameLoca(parentId, id, ce?.locate);
               return { ...ce };
             } else if (type === 'lot') {
               ce.lot = value;
+              
+              // Nếu bỏ chọn lot, reset lot về null và tìm quantity với lot = null trong checkChild
+              if (value === null || value === undefined) {
+                ce.lot = null;
+                // Tìm trong checkChild với locate và lot = null để lấy quantity ban đầu
+                if (ce?.locate !== null) {
+                  const locateValue = ce.locate.value;
+                  // Tìm trong checkChild dựa trên locate và lot = null
+                  const checkByLocateAndNullLot = e.checkChild?.find(item => {
+                    return (
+                      (String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue)) &&
+                      (item.lot === null || item.lot === undefined || item.lot === '')
+                    );
+                  });
+                  if (checkByLocateAndNullLot && checkByLocateAndNullLot.quantity != null) {
+                    ce.quantity = Number(checkByLocateAndNullLot.quantity);
+                  } else {
+                    // Nếu không tìm thấy, set quantity về 0
+                    ce.quantity = 0;
+                  }
+                } else {
+                  ce.quantity = 0;
+                }
+              } else {
+                // Nếu tạo lot mới (value có label và value), thêm vào dataLot nếu chưa tồn tại
+                if (value && typeof value === 'object' && value.label && value.value) {
+                  const lotExists = updatedDataLot.some(lot => lot.value === value.value);
+                  if (!lotExists) {
+                    updatedDataLot = [...updatedDataLot, { label: value.label, value: value.value }];
+                  }
+                }
+                // Kiểm tra lot có khớp với dữ liệu trong checkChild không
+                if (ce?.locate !== null && ce?.lot !== null) {
+                  const locateValue = ce.locate.value;
+                  const lotValue = ce.lot.value;
+                  // Tìm trong checkChild dựa trên locate và lot (chưa cần date)
+                  const checkByLocateAndLot = e.checkChild?.find(item => {
+                    return (
+                      (String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue)) &&
+                      item.lot === lotValue
+                    );
+                  });
+                  if (checkByLocateAndLot && checkByLocateAndLot.quantity != null) {
+                    ce.quantity = Number(checkByLocateAndLot.quantity);
+                  } else {
+                    // Nếu không tìm thấy lot trùng với dữ liệu, set quantity về 0
+                    ce.quantity = 0;
+                  }
+                }
+              }
               ce?.locate !== null && ce?.lot !== null && ce.date !== null && _HandleCheckSameLot(parentId, id, ce?.locate, ce?.lot, ce?.date);
               return { ...ce };
             } else if (type === 'date') {
@@ -591,7 +781,19 @@ const InventoryForm = props => {
               ce?.locate !== null && ce?.lot !== null && ce.date !== null && _HandleCheckSameLot(parentId, id, ce?.locate, ce?.lot, ce?.date);
               return { ...ce };
             } else if (type === 'serial') {
-              ce.serial = value?.target?.value || value || '';
+              // Xử lý serial: ưu tiên value?.target?.value (từ input event), sau đó là value nếu là string
+              let serialValue = '';
+              if (value?.target !== undefined) {
+                // Nếu có target, lấy giá trị từ input (kể cả chuỗi rỗng)
+                serialValue = value.target.value || '';
+              } else if (typeof value === 'string') {
+                // Nếu value là string, sử dụng trực tiếp
+                serialValue = value;
+              } else {
+                // Mặc định là chuỗi rỗng
+                serialValue = '';
+              }
+              ce.serial = serialValue;
               // Lấy quantity từ checkChild dựa trên locate và serial khi nhập serial
               if (ce?.locate !== null && ce?.serial !== null && ce.serial !== '') {
                 const locateValue = ce.locate.value;
@@ -613,7 +815,7 @@ const InventoryForm = props => {
           }
           return ce;
         });
-        return { ...e, child: newChild };
+        return { ...e, child: newChild, dataLot: updatedDataLot };
       }
       return e;
     });
@@ -975,6 +1177,7 @@ const InventoryForm = props => {
               showCheckbox={false}
               showSelectedCount={false}
               setSearch={handleSearchInput}
+              keepSearchOnSelect={true}
               noDataMessage={!branch ? <span className='text-new-blue'>Vui lòng chọn chi nhánh</span> : !warehouse ? <span className='text-new-blue'>Vui lòng chọn kho hàng</span> : 'Không có dữ liệu'}
               onChange={_HandleAddParent}
               formatOptionLabel={option => (
@@ -1164,7 +1367,7 @@ const InventoryForm = props => {
                                   showTime={false}
                                   format='DD/MM/YYYY'
                                   disabled={e?.checkExpiry == '0'}
-                                  height='h-[38px]'
+                                  height='!h-[38px]'
                                 />
                               </div>
                             ) : null}

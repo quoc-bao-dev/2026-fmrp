@@ -735,6 +735,29 @@ const Header = () => {
     // },
   ];
 
+  // Xác định default link cho nhóm "Báo cáo quỹ" theo quyền của user
+  const fundBalanceDefaultLink = (() => {
+    // Nếu không có cấu hình quyền chi tiết, mặc định về trang đầu tiên
+    if (!auth) return '/report-statistical/fund-balance/income-expenses';
+
+    // Ưu tiên theo thứ tự:
+    // 1. Nhật ký thu - chi (diary_of_revenue_and_expenditure)
+    // 2. Tổng hợp tồn quỹ (aggregate_fund_balance)
+    // 3. Báo cáo chi phí (report_financial)
+    if (Number(auth?.diary_of_revenue_and_expenditure?.is_view) === 1) {
+      return '/report-statistical/fund-balance/income-expenses';
+    }
+    if (Number(auth?.aggregate_fund_balance?.is_view) === 1) {
+      return '/report-statistical/fund-balance/synthetic-fund';
+    }
+    if (Number(auth?.report_financial?.is_view) === 1) {
+      return '/report-statistical/fund-balance/expense';
+    }
+
+    // Fallback: giữ link mặc định nếu không có quyền nào (trường hợp hiếm)
+    return '/report-statistical/fund-balance/income-expenses';
+  })();
+
   const ListBaoCao = [
     {
       sub: [
@@ -785,10 +808,17 @@ const Header = () => {
               // forceDisableForAdmin: true,
             },
             {
-              viewOwn: 1,
-              view: 1,
+              // Báo cáo quỹ: hiển thị nếu user có ít nhất 1 trong các quyền:
+              viewOwn:
+                !!Number(auth?.diary_of_revenue_and_expenditure?.is_view) ||
+                !!Number(auth?.aggregate_fund_balance?.is_view) ||
+                !!Number(auth?.report_financial?.is_view),
+              view:
+                !!Number(auth?.diary_of_revenue_and_expenditure?.is_view) ||
+                !!Number(auth?.aggregate_fund_balance?.is_view) ||
+                !!Number(auth?.report_financial?.is_view),
               name: 'Báo cáo quỹ',
-              link: '/report-statistical/fund-balance/income-expenses',
+              link: fundBalanceDefaultLink,
             },
           ],
         },
@@ -1137,6 +1167,11 @@ const Header = () => {
 
   const currentDropdown = dropdowns[currentDropdownIndex];
 
+  // Thông tin gói dịch vụ hiện tại
+  // Gói free: id_package_service == 1 (theo /Api_Authentication/authentication)
+  const isTrialPackage = authState?.id_package_service == '1';
+  const currentPackageName = authState?.name_package_service;
+
   return (
     <>
       <header className='fixed z-[990] w-full bg-[#003DA0] top-0 xl:h-[72px] h-[62px] flex items-center justify-between 3xl:px-6 2xl:px-4 px-5 py-4'>
@@ -1379,15 +1414,35 @@ const Header = () => {
             </svg>
 
             <p className='text-[#7A0916] font-medium text-sm'>
-              Phiên bản dùng thử sẽ kết thúc sau{' '}
-              <span className='text-[#F3032B]'>
-                {typeof daysLeft === 'number' ? daysLeft  : 7} ngày.
-              </span>{' '}
-              Nâng cấp để tiếp tục sử dụng đầy đủ tính năng hoặc liên hệ{' '}
-              <a href='https://zalo.me/fososoft' target='_blank' className='text-[#137EF4] underline cursor-pointer font-bold'>
-                Zalo{' '}
-              </a>
-              để được tư vấn ngay.
+              {isTrialPackage ? (
+                <>
+                  Phiên bản dùng thử sẽ kết thúc sau{' '}
+                  <span className='text-[#F3032B]'>
+                    {typeof daysLeft === 'number' ? daysLeft : 7} ngày.
+                  </span>{' '}
+                  Nâng cấp để tiếp tục sử dụng đầy đủ tính năng hoặc liên hệ{' '}
+                  <a href='https://zalo.me/fososoft' target='_blank' className='text-[#137EF4] underline cursor-pointer font-bold'>
+                    Zalo{' '}
+                  </a>
+                  để được tư vấn ngay.
+                </>
+              ) : (
+                <>
+                  Gói{' '}
+                  <span className='font-semibold'>
+                    {currentPackageName || 'Pro'}
+                  </span>{' '}
+                  của bạn sẽ hết hạn sau{' '}
+                  <span className='text-[#F3032B]'>
+                    {typeof daysLeft === 'number' ? daysLeft : 7} ngày.
+                  </span>{' '}
+                  Gia hạn ngay để không bị gián đoạn sử dụng đầy đủ tính năng hoặc liên hệ{' '}
+                  <a href='https://zalo.me/fososoft' target='_blank' className='text-[#137EF4] underline cursor-pointer font-bold'>
+                    Zalo{' '}
+                  </a>
+                  để được hỗ trợ nhanh.
+                </>
+              )}
             </p>
           </div>
           <div className='flex items-center'>
@@ -1413,7 +1468,7 @@ const Header = () => {
                 });
               }}
             >
-              Nâng cấp ngay
+              {isTrialPackage ? 'Nâng cấp ngay' : 'Gia hạn ngay'}
             </button>
           </div>
         </div>
