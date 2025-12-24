@@ -21,6 +21,7 @@ const SelectSearch = ({
   onDuplicateSelect,
   preventDeselectOnClick = false,
   noDataMessage = 'Không có dữ liệu', // Prop mới: thông báo khi không có dữ liệu
+  keepSearchOnSelect = false, // Prop mới: giữ lại giá trị tìm kiếm sau khi chọn (mặc định false để backward compatible)
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
@@ -71,7 +72,11 @@ const SelectSearch = ({
     if (!multiple) {
       onChange(option) // Trả về object đơn, không phải array
       setIsOpen(false) // Đóng dropdown sau khi chọn
-      setSearchText('') // Reset search text
+      // Chỉ reset search text nếu keepSearchOnSelect = false
+      if (!keepSearchOnSelect) {
+        setSearchText('') // Reset search text
+        setSearch && setSearch('')
+      }
       return
     }
 
