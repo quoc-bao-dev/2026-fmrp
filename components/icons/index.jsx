@@ -36,25 +36,26 @@ import CaretDownIcon from './source/caret-down.svg';
 import CaretDropDownThinIcon from './source/caret-drop-down-thin.svg';
 import ChartDonutIcon from './source/chart-donut.svg';
 import ChatIcon from './source/chat.svg';
-import CheckCircleIcon from './source/check-circle.svg';
 import CheckCircleOutlineIcon from './source/check-circle-outline.svg';
-import CheckIcon from './source/check.svg';
+import CheckCircleIcon from './source/check-circle.svg';
 import CheckThinIcon from './source/check-thin.svg';
-import CloseXIcon from './source/close-x.svg';
+import CheckIcon from './source/check.svg';
 import ClockIcon from './source/clock.svg';
+import CloseXIcon from './source/close-x.svg';
 import CompleteKHIcon from './source/complete-k-h.svg';
 import DocumentTemplateIcon from './source/document-template-icon.svg';
 import DownloadIcon from './source/download-icon.svg';
 import DropdownFilledIcon from './source/dropdown-filled-icon.svg';
 import DropdownIcon from './source/dropdown-icon.svg';
 import EditIcon from './source/edit.svg';
+import EyeIcon from './source/eye.svg';
+import EndProductionOrderIcon from './source/end-product.svg';
 import ErrorAlertIcon from './source/error-alert-icon.svg';
 import ErrorChatBotIcon from './source/error-chat-bot.svg';
 import ErrorIconMessengerIcon from './source/error-icon-messenger.svg';
 import ErrorQCIcon from './source/error-q-c.svg';
 import ExcelIcon from './source/excel.svg';
 import ExportMaterialsIcon from './source/export-materials-icon-1.svg';
-import EndProductionOrderIcon from './source/end-product.svg';
 import RecallMaterialsIcon from './source/export-materials-icon-2.svg';
 import FileIcon from './source/file-icon.svg';
 import FunnelIcon from './source/funnel.svg';
@@ -73,8 +74,8 @@ import PrintTemplateIcon from './source/print-template-icon.svg';
 import PrinterIcon from './source/printer-icon.svg';
 import PrinterIcon2 from './source/printer-icon2.svg';
 import PrinterTemIcon from './source/printer-tem.svg';
-import RefreshIcon from './source/refresh.svg';
 import RecallStockIcon from './source/recall-stock.svg';
+import RefreshIcon from './source/refresh.svg';
 import SaleIcon from './source/sale-icon.svg';
 import SaveIcon from './source/save-icon.svg';
 import SealCheckIcon from './source/seal-check.svg';
@@ -87,6 +88,7 @@ import StickerIcon from './source/sticker-icon.svg';
 import SuccessAlertIcon from './source/success-alert-icon.svg';
 import SuccessChatIcon from './source/success-chat-icon.svg';
 import TemplateChecklistIcon from './source/template-checklist-icon.svg';
+import ThreeDotIcon from './source/three-dot.svg';
 import TrashIcon from './source/trash.svg';
 import UpgradeIcon from './source/upgrade-icon.svg';
 import UserCircleIcon from './source/user-circle-icon.svg';
@@ -114,24 +116,23 @@ export {
   CheckCircleIcon,
   CheckCircleOutlineIcon,
   CheckIcon,
-  CheckThinIcon,
+  CheckThinIcon, 
+  ClockIcon, 
   CloseXIcon,
-  CompleteKHIcon,
-  ClockIcon,
+  CompleteKHIcon, 
   DocumentTemplateIcon,
   DownloadIcon,
   DropdownFilledIcon,
   DropdownIcon,
   EditIcon,
+  EyeIcon, 
+  EndProductionOrderIcon, 
   ErrorAlertIcon,
   ErrorChatBotIcon,
   ErrorIconMessengerIcon,
   ErrorQCIcon,
   ExcelIcon,
-  ExportMaterialsIcon,
-  EndProductionOrderIcon,
-  RecallMaterialsIcon,
-  FileIcon,
+  ExportMaterialsIcon, FileIcon,
   FunnelIcon,
   IconStarIcon,
   KanbanIcon,
@@ -143,13 +144,13 @@ export {
   MobileIcon,
   NoteIcon,
   PasswordIcon,
-  PlusIcon,
-  PrintTemplateIcon,
-  PrinterIcon,
+  PlusIcon, PrinterIcon,
   PrinterIcon2,
-  PrinterTemIcon,
-  RefreshIcon,
-  RecallStockIcon,
+  PrinterTemIcon, 
+  PrintTemplateIcon, 
+  RecallMaterialsIcon, 
+  RecallStockIcon, 
+  RefreshIcon, 
   SaleIcon,
   SaveIcon,
   SealCheckIcon,
@@ -162,11 +163,12 @@ export {
   SuccessAlertIcon,
   SuccessChatIcon,
   TemplateChecklistIcon,
+  ThreeDotIcon,
   TrashIcon,
   UpgradeIcon,
   UserCircleIcon,
   UserPlusIcon,
   WarningAlertIcon,
   WarningIcon,
-  ZaloIcon,
+  ZaloIcon
 };
