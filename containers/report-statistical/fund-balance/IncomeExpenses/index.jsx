@@ -22,6 +22,7 @@ import formatNumber from '@/utils/helpers/formatnumber';
 import moment from 'moment';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { PiPackage } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
 import { useGetDiaryOfRevenueAndExpenditure } from './hook';
@@ -34,6 +35,10 @@ const IncomeExpenses = () => {
   const { paginate } = usePagination();
   const dataLang = useLanguageContext();
   const statusExprired = useStatusExprired();
+  const auth = useSelector(state => state.auth);
+  const canViewFundReport =
+    !auth?.permissions_current || // trường hợp không cấu hình quyền chi tiết
+    !!Number(auth?.permissions_current?.diary_of_revenue_and_expenditure?.is_view);
   const currentPage = Number(router.query.page) || 1;
 
   const [dateRange, setDateRange] = useState({
@@ -69,6 +74,7 @@ const IncomeExpenses = () => {
       ...(dateRange?.startDate !== undefined && { start_date: dateRange.startDate }),
       ...(dateRange?.endDate !== undefined && { end_date: dateRange.endDate }),
     },
+    canView: canViewFundReport,
   });
 
   const handleDateChange = newValue => {
@@ -329,7 +335,9 @@ const IncomeExpenses = () => {
         </div>
       }
       tableSection={
-        isFetchingDiary ? (
+        !canViewFundReport ? (
+          <NoData type='report' titleText='Bạn không có quyền xem báo cáo này' classNameImage='w-[245px]' />
+        ) : isFetchingDiary ? (
           <Loading color='#0f4f9e' />
         ) : diaryData?.data?.length > 0 ? (
           <Customscrollbar alwaysShowScrollbar={true} className='h-full flex-1 overflow-auto'>

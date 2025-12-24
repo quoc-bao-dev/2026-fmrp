@@ -9,6 +9,7 @@ export const useGetDiaryOfRevenueAndExpenditure = data => {
   return useQuery({
     queryKey: ['api_get_diary_of_revenue_and_expenditure', data],
     queryFn: fetchDiaryOfRevenueAndExpenditure,
-    enabled: !!data?.filter?.branch_ids
+    // Chỉ gọi API khi đã chọn chi nhánh và user có quyền xem báo cáo quỹ (nếu truyền canView)
+    enabled: !!data?.filter?.branch_ids && (data?.canView ?? true),
   });
 };

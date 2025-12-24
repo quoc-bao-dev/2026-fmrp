@@ -735,6 +735,29 @@ const Header = () => {
     // },
   ];
 
+  // Xác định default link cho nhóm "Báo cáo quỹ" theo quyền của user
+  const fundBalanceDefaultLink = (() => {
+    // Nếu không có cấu hình quyền chi tiết, mặc định về trang đầu tiên
+    if (!auth) return '/report-statistical/fund-balance/income-expenses';
+
+    // Ưu tiên theo thứ tự:
+    // 1. Nhật ký thu - chi (diary_of_revenue_and_expenditure)
+    // 2. Tổng hợp tồn quỹ (aggregate_fund_balance)
+    // 3. Báo cáo chi phí (report_financial)
+    if (Number(auth?.diary_of_revenue_and_expenditure?.is_view) === 1) {
+      return '/report-statistical/fund-balance/income-expenses';
+    }
+    if (Number(auth?.aggregate_fund_balance?.is_view) === 1) {
+      return '/report-statistical/fund-balance/synthetic-fund';
+    }
+    if (Number(auth?.report_financial?.is_view) === 1) {
+      return '/report-statistical/fund-balance/expense';
+    }
+
+    // Fallback: giữ link mặc định nếu không có quyền nào (trường hợp hiếm)
+    return '/report-statistical/fund-balance/income-expenses';
+  })();
+
   const ListBaoCao = [
     {
       sub: [
@@ -785,10 +808,17 @@ const Header = () => {
               // forceDisableForAdmin: true,
             },
             {
-              viewOwn: 1,
-              view: 1,
+              // Báo cáo quỹ: hiển thị nếu user có ít nhất 1 trong các quyền:
+              viewOwn:
+                !!Number(auth?.diary_of_revenue_and_expenditure?.is_view) ||
+                !!Number(auth?.aggregate_fund_balance?.is_view) ||
+                !!Number(auth?.report_financial?.is_view),
+              view:
+                !!Number(auth?.diary_of_revenue_and_expenditure?.is_view) ||
+                !!Number(auth?.aggregate_fund_balance?.is_view) ||
+                !!Number(auth?.report_financial?.is_view),
               name: 'Báo cáo quỹ',
-              link: '/report-statistical/fund-balance/income-expenses',
+              link: fundBalanceDefaultLink,
             },
           ],
         },
