@@ -1,5 +1,5 @@
 import PackageUpgradeButton from '@/components/common/button/PackageUpgradeButton';
-import { KanbanIcon, WarningIcon } from '@/components/icons';
+import { KanbanIcon, WarningIcon, MagnifyingGlassIcon } from '@/components/icons';
 import CheckIcon from '@/components/icons/common/CheckIcon';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import ButtonSubmit from '@/components/UI/button/buttonSubmit';
@@ -24,6 +24,16 @@ import { useLoadOutOfStock } from '../../hooks/useLoadOutOfStock';
 import { PopupProductionOrderStatus } from './PopupCompleteCommand';
 import ProductRow from './ProductRow';
 
+// Hàm normalize text để xử lý unicode tiếng Việt
+const normalizeText = text =>
+  (text || '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Bỏ dấu
+    .replace(/đ/g, 'd') // Chuyển đ thành d
+    .replace(/Đ/g, 'd'); // Chuyển Đ thành d (phòng trường hợp có chữ hoa)
+
 const initialState = {
   open: false,
   objectWareHouse: null,
@@ -47,6 +57,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
   const [isState, setState] = useState(initialState);
   const [isWarehouseMissing, setIsWarehouseMissing] = useState(false);
   const [isOrderCompleted, setIsOrderCompleted] = useState(false);
+  const [searchProducts, setSearchProducts] = useState('');
   // UI lỗi khi xác nhận hoàn thành công đoạn
   const [confirmErrorTags, setConfirmErrorTags] = useState([]);
   const [confirmNewTagInput, setConfirmNewTagInput] = useState('');
@@ -241,6 +252,20 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
     table.addEventListener('scroll', handleScroll);
     return () => table.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Filter items dựa trên search (theo tên và mã)
+  const filteredItems = useMemo(() => {
+    const items = isState.dataTableProducts?.data?.items || [];
+    if (!searchProducts.trim()) {
+      return items;
+    }
+    const normalizedSearch = normalizeText(searchProducts);
+    return items.filter(item => {
+      const normalizedName = normalizeText(item.item_name || '');
+      const normalizedCode = normalizeText(item.item_code || '');
+      return normalizedName.includes(normalizedSearch) || normalizedCode.includes(normalizedSearch);
+    });
+  }, [isState.dataTableProducts?.data?.items, searchProducts]);
 
   const { totalQuantity, totalQuantityError, totalQuantityEntered, totalQuantityEnter } = useMemo(() => {
     if (!isState.dataTableProducts?.data?.items?.length) {
@@ -662,7 +687,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
       return next;
     });
   }, []);
-console.log(isState.dataTableProducts?.data?.items)
+  console.log(isState.dataTableProducts?.data?.items);
   return (
     <>
       {isOrderCompleted ? (
@@ -696,13 +721,45 @@ console.log(isState.dataTableProducts?.data?.items)
               </div>
               <div className='mr-8'>
                 {isProPackage ? (
-                  <ButtonSubmit
-                    loading={isLoadingSubmit}
-                    title='Xác nhận'
-                    onClick={handleSubmit}
-                    icon={<CheckIcon className='size-4' />}
-                    className={`py-2.5 2xl:py-3 px-3 2xl:px-4 text-white rounded-lg !responsive-text-base flex items-center gap-2 bg-blue-fmrp hover:opacity-80`}
-                  />
+                  <div className='flex gap-2'>
+                    <SelectComponent
+                      options={data?.warehouses || []}
+                      onChange={e => {
+                        setIsWarehouseMissing(false);
+                        queryState({ objectWareHouse: e });
+                      }}
+                      value={isState.objectWareHouse}
+                      isClearable={true}
+                      icon={<PiWarehouseLight color='#9295A4' className='size-4' />}
+                      closeMenuOnSelect={true}
+                      hideSelectedOptions={false}
+                      placeholder='Chọn kho hàng'
+                      styles={{
+                        control: (base, state) => ({
+                          ...base,
+                          width: '240px',
+                          borderColor: state.isFocused ? '#0F4F9E' : isWarehouseMissing ? '#ef4444' : base.borderColor,
+                          borderRadius: '8px',
+                          '&:hover': {
+                            borderColor: state.isFocused ? '#0F4F9E' : isWarehouseMissing ? '#ef4444' : base.borderColor,
+                          },
+
+                        }),
+                        placeholder: base => ({
+                          ...base,
+                          color: '#cbd5e1',
+                        }),
+                      }}
+                      isSearchable={true}
+                    />
+                    <ButtonSubmit
+                      loading={isLoadingSubmit}
+                      title='Xác nhận'
+                      onClick={handleSubmit}
+                      icon={<CheckIcon className='size-4' />}
+                      className={`py-2.5 2xl:py-3 px-3 2xl:px-4 text-white rounded-lg !responsive-text-base flex items-center gap-2 bg-blue-fmrp hover:opacity-80`}
+                    />
+                  </div>
                 ) : (
                   <PackageUpgradeButton />
                 )}
@@ -873,35 +930,24 @@ console.log(isState.dataTableProducts?.data?.items)
                     {/* Nhập thành phẩm */}
                     <div className='flex items-center justify-between flex-shrink-0'>
                       <div className='responsive-text-xl font-normal'>Nhập thành phẩm</div>
-                      <div className='w-1/3 m-0.5'>
-                        <SelectComponent
-                          options={data?.warehouses || []}
-                          onChange={e => {
-                            setIsWarehouseMissing(false);
-                            queryState({ objectWareHouse: e });
-                          }}
-                          value={isState.objectWareHouse}
-                          isClearable={true}
-                          icon={<PiWarehouseLight color='#9295A4' className='size-4' />}
-                          closeMenuOnSelect={true}
-                          hideSelectedOptions={false}
-                          placeholder='Chọn kho hàng'
-                          styles={{
-                            control: (base, state) => ({
-                              ...base,
-                              borderColor: state.isFocused ? '#0F4F9E' : isWarehouseMissing ? '#ef4444' : base.borderColor,
-                              borderRadius: '8px',
-                              '&:hover': {
-                                borderColor: state.isFocused ? '#0F4F9E' : isWarehouseMissing ? '#ef4444' : base.borderColor,
-                              },
-                            }),
-                            placeholder: base => ({
-                              ...base,
-                              color: '#cbd5e1',
-                            }),
-                          }}
-                          isSearchable={true}
-                        />
+                      <div className='w-[423px] m-0.5'>
+                        <div className='flex gap-x-2 items-center w-full rounded-lg border border-[#D0D5DD] px-4 py-2 focus-within:border-transparent focus-within:ring-2 focus-within:ring-blue-500'>
+                          <input
+                            type='text'
+                            placeholder='Tìm kiếm theo tên và mã sản phẩm'
+                            className='flex-1 border-none outline-none text-[#3A3E4C] placeholder-gray-200'
+                            value={searchProducts}
+                            onChange={e => setSearchProducts(e.target.value)}
+                          />
+                          {searchProducts && (
+                            <button type='button' className='rounded-full bg-gray-100 hover:bg-gray-200 text-[#3A3E4C] p-1 transition' aria-label='Xóa tìm kiếm' onClick={() => setSearchProducts('')}>
+                              <CloseXIcon className='size-3' />
+                            </button>
+                          )}
+                          <button type='button' className='rounded-lg bg-[#1760B9] p-1'>
+                            <MagnifyingGlassIcon className='size-4 text-white' />
+                          </button>
+                        </div>
                         {/* {isWarehouseMissing && <p className='mt-1 text-xs text-[#EE1E1E]'>Chưa chọn kho</p>} */}
                       </div>
                     </div>
@@ -954,8 +1000,8 @@ console.log(isState.dataTableProducts?.data?.items)
                           <div className='flex justify-center items-center h-40'>
                             <Loading className='!h-[100px] w-full mx-auto' />
                           </div>
-                        ) : isState.dataTableProducts?.data?.items?.length > 0 ? (
-                          isState.dataTableProducts?.data?.items?.map((row, index) => (
+                        ) : filteredItems.length > 0 ? (
+                          filteredItems.map((row, index) => (
                             <ProductRow
                               key={getItemKey(row, 'product')}
                               row={row}
@@ -968,9 +1014,13 @@ console.log(isState.dataTableProducts?.data?.items)
                               handleRemove={handleRemove}
                               dataProductExpiry={dataProductExpiry}
                               dataLang={dataLang}
-                              itemsLength={isState.dataTableProducts?.data?.items?.length}
+                              itemsLength={filteredItems.length}
                             />
                           ))
+                        ) : searchProducts.trim() ? (
+                          <div className='col-span-25 p-2 my-auto flex justify-center items-center h-full'>
+                            <NoData type='table' titleText='Không tìm thấy sản phẩm' />
+                          </div>
                         ) : (
                           <div className='col-span-25 p-2 text-center text-red-500 h-40 my-auto flex justify-center items-center'>Không có mặt hàng để hoàn thành</div>
                         )}

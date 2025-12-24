@@ -5,6 +5,7 @@ import CheckIcon from '@/components/icons/common/CheckIcon';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';
+import NoData from '@/components/UI/noData/nodata';
 import { StateContext } from '@/context/_state/productions-orders/StateContext';
 import useSetingServer from '@/hooks/useConfigNumber';
 import useToast from '@/hooks/useToast';
@@ -624,7 +625,9 @@ const normalizeText = text =>
     .toString()
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+    .replace(/[\u0300-\u036f]/g, '') // Bỏ dấu
+    .replace(/đ/g, 'd') // Chuyển đ thành d
+    .replace(/Đ/g, 'd'); // Chuyển Đ thành d (phòng trường hợp có chữ hoa)
 
 const PopupCompleteCommand = ({ onClose }) => {
   const [selectAll, setSelectAll] = useState(false);
@@ -1036,68 +1039,72 @@ const PopupCompleteCommand = ({ onClose }) => {
         <PopupProductionOrderStatus onClose={onClose} />
       ) : (
         <div className={`p-6 flex flex-col gap-6 rounded-3xl w-[90vw] xl:w-[1085px] max-h-[90vh] bg-neutral-00 ${deca.className}`}>
-          <div className='flex gap-2 justify-between'>
+          <div className='flex gap-2 justify-between items-start'>
             <div className='flex flex-col gap-1'>
               <h2 className='text-2xl font-bold capitalize'>Hoàn thành tổng lệnh</h2>
               <p className='text-base text-blue-fmrp'>{QRCode?.data?.reference_no}</p>
-              <div className='flex gap-x-2 items-center w-full rounded-lg border border-[#D0D5DD] px-4 py-2 focus-within:border-transparent focus-within:ring-2 focus-within:ring-blue-500'>
-                <input
-                  type='text'
-                  placeholder='Tìm kiếm theo tên và mã sản phẩm'
-                  className='flex-1 border-none outline-none text-[#3A3E4C] placeholder-gray-200'
-                  value={searchProducts}
-                  onChange={e => setSearchProducts(e.target.value)}
-                />
-                {searchProducts && (
-                  <button type='button' className='rounded-full bg-gray-100 hover:bg-gray-200 text-[#3A3E4C] p-1 transition' aria-label='Xóa tìm kiếm' onClick={() => setSearchProducts('')}>
-                    <CloseXIcon className='size-3' />
-                  </button>
-                )}
-                <button type='button' className='rounded-lg bg-[#1760B9] p-1'>
-                  <MagnifyingGlassIcon className='size-4 text-white' />
-                </button>
-              </div>
             </div>
-            <div className='flex gap-2 items-center'>
-              <SelectComponent
-                options={warehouseOptions}
-                value={selectedWarehouse}
-                onChange={handleWarehouseChange}
-                isClearable={true}
-                icon={<PiWarehouseLight color='#9295A4' className='size-4' />}
-                closeMenuOnSelect={true}
-                hideSelectedOptions={false}
-                placeholder='Chọn kho hàng'
-                styles={{
-                  control: (base, state) => ({
-                    ...base,
-                    borderRadius: '8px',
-                    borderColor: isWarehouseMissing ? '#ef4444' : state.isFocused ? '#0F4F9E' : base.borderColor,
-                    boxShadow: 'none',
-                    '&:hover': {
+            <div className='flex flex-col gap-2'>
+              <div className='flex gap-2 items-center'>
+                <SelectComponent
+                  options={warehouseOptions}
+                  value={selectedWarehouse}
+                  onChange={handleWarehouseChange}
+                  isClearable={true}
+                  icon={<PiWarehouseLight color='#9295A4' className='size-4' />}
+                  closeMenuOnSelect={true}
+                  hideSelectedOptions={false}
+                  placeholder='Chọn kho hàng'
+                  styles={{
+                    control: (base, state) => ({
+                      ...base,
+                      borderRadius: '8px',
                       borderColor: isWarehouseMissing ? '#ef4444' : state.isFocused ? '#0F4F9E' : base.borderColor,
-                    },
-                  }),
-                }}
-                isSearchable={true}
-              />
-              <Tooltip title='Quét QR để hoàn thành công đoạn trên app FMRP' position='left' arrow={true}>
-                <Image src={QRCode?.data?.qr || '/qrCode/QR.png'} alt='complete-command' width={50} height={50} className='rounded-[4px]' />
-              </Tooltip>
+                      boxShadow: 'none',
+                      '&:hover': {
+                        borderColor: isWarehouseMissing ? '#ef4444' : state.isFocused ? '#0F4F9E' : base.borderColor,
+                      },
+                    }),
+                  }}
+                  isSearchable={true}
+                />
+                <Tooltip title='Quét QR để hoàn thành công đoạn trên app FMRP' position='left' arrow={true}>
+                  <Image src={QRCode?.data?.qr || '/qrCode/QR.png'} alt='complete-command' width={50} height={50} className='rounded-[4px]' />
+                </Tooltip>
 
-              <button onClick={handleConfirm} disabled={isLoadingSubmit} className='flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-blue-fmrp hover:opacity-80'>
-                {isLoadingSubmit ? <span className='animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white'></span> : <CheckIcon className='size-4' />}
-                {isLoadingSubmit ? 'Đang xử lý...' : `Xác nhận${selectedCount > 0 ? ` (${selectedCount})` : ''}`}
-              </button>
-              <motion.div
-                whileHover={{ scale: 1.2, rotate: 90 }}
-                whileTap={{ scale: 0.9, rotate: -90 }}
-                transition={{ type: 'spring', stiffness: 300 }}
-                className='size-6 shrink-0 text-neutral-02 cursor-pointer'
-                onClick={onClose}
-              >
-                <CloseXIcon className='size-full' />
-              </motion.div>
+                <button onClick={handleConfirm} disabled={isLoadingSubmit} className='flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-blue-fmrp hover:opacity-80'>
+                  {isLoadingSubmit ? <span className='animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white'></span> : <CheckIcon className='size-4' />}
+                  {isLoadingSubmit ? 'Đang xử lý...' : `Xác nhận${selectedCount > 0 ? ` (${selectedCount})` : ''}`}
+                </button>
+                <motion.div
+                  whileHover={{ scale: 1.2, rotate: 90 }}
+                  whileTap={{ scale: 0.9, rotate: -90 }}
+                  transition={{ type: 'spring', stiffness: 300 }}
+                  className='size-6 shrink-0 text-neutral-02 cursor-pointer'
+                  onClick={onClose}
+                >
+                  <CloseXIcon className='size-full' />
+                </motion.div>
+              </div>
+              <div className='pr-7'>
+                <div className='flex gap-x-2 items-center w-full rounded-lg border border-[#D0D5DD] px-4 py-2 focus-within:border-transparent focus-within:ring-2 focus-within:ring-blue-500'>
+                  <input
+                    type='text'
+                    placeholder='Tìm kiếm theo tên và mã sản phẩm'
+                    className='flex-1 border-none outline-none text-[#3A3E4C] placeholder-gray-200'
+                    value={searchProducts}
+                    onChange={e => setSearchProducts(e.target.value)}
+                  />
+                  {searchProducts && (
+                    <button type='button' className='rounded-full bg-gray-100 hover:bg-gray-200 text-[#3A3E4C] p-1 transition' aria-label='Xóa tìm kiếm' onClick={() => setSearchProducts('')}>
+                      <CloseXIcon className='size-3' />
+                    </button>
+                  )}
+                  <button type='button' className='rounded-lg bg-[#1760B9] p-1'>
+                    <MagnifyingGlassIcon className='size-4 text-white' />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           <Customscrollbar className='max-h-[60vh] pr-2'>
@@ -1161,22 +1168,30 @@ const PopupCompleteCommand = ({ onClose }) => {
                 </tr>
               </thead>
               <tbody>
-                {filteredProducts.map((product, index) => (
-                  <ProductRow
-                    key={product.uniqueId || `product-row-${product.originalIndex !== undefined ? product.originalIndex : index}`}
-                    product={product}
-                    index={index}
-                    updateProductQuantity={updateProductQuantity}
-                    updateProductError={updateProductError}
-                    handleSelectProduct={handleSelectProduct}
-                    errorTags={errorTags}
-                    errorImages={errorImages}
-                    onAddTag={handleAddTag}
-                    onRemoveTag={handleRemoveTag}
-                    onAddImage={handleAddImage}
-                    onRemoveImage={handleRemoveImage}
-                  />
-                ))}
+                {filteredProducts.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className='py-8'>
+                      <NoData type='table' titleText='Không tìm thấy sản phẩm' />
+                    </td>
+                  </tr>
+                ) : (
+                  filteredProducts.map((product, index) => (
+                    <ProductRow
+                      key={product.uniqueId || `product-row-${product.originalIndex !== undefined ? product.originalIndex : index}`}
+                      product={product}
+                      index={index}
+                      updateProductQuantity={updateProductQuantity}
+                      updateProductError={updateProductError}
+                      handleSelectProduct={handleSelectProduct}
+                      errorTags={errorTags}
+                      errorImages={errorImages}
+                      onAddTag={handleAddTag}
+                      onRemoveTag={handleRemoveTag}
+                      onAddImage={handleAddImage}
+                      onRemoveImage={handleRemoveImage}
+                    />
+                  ))
+                )}
               </tbody>
             </table>
           </Customscrollbar>
