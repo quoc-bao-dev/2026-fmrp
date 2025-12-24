@@ -1,0 +1,24 @@
+.sidebarScroll {
+  /* Luôn cho phép scroll dọc và giữ chỗ cho scrollbar */
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  scrollbar-gutter: stable !important;
+
+  /* Firefox: luôn hiển thị scrollbar mảnh với màu tùy chỉnh */
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e1 #f1f5f9; /* thumb, track */
+}
+
+/* WebKit (Chrome, Edge, Safari, kể cả trên macOS) */
+.sidebarScroll::-webkit-scrollbar {
+  width: 4px !important;
+}
+
+.sidebarScroll::-webkit-scrollbar-track {
+  background: #f1f5f9 !important; /* gần với scrollbar-track-slate-100 */
+}
+
+.sidebarScroll::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1; /* gần với scrollbar-thumb-slate-300 */
+  border-radius: 999px;
+}

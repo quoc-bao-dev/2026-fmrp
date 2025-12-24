@@ -1,5 +1,6 @@
 import SearchActionInput from '@/components/common/input/SearchActionInput';
 import { twMerge } from 'tailwind-merge';
+import styles from './RolePermissionLayout.module.scss';
 
 const RolePermissionLayout = ({
   dataPower,
@@ -26,7 +27,7 @@ const RolePermissionLayout = ({
           </div>
           <div
             ref={sidebarRef}
-            className='flex-1 space-y-1 h-full overflow-y-auto pr-2 scrollbar scrollbar-thumb-slate-300 scrollbar-track-slate-100'
+            className={twMerge('flex-1 space-y-1 h-full overflow-y-auto pr-2', styles.sidebarScroll)}
           >
             {dataPower
               ?.filter(e => !e?.hidden)
