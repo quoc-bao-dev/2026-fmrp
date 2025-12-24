@@ -191,7 +191,7 @@ const ShiftCell = ({ type }) => {
   // Ô trống: chỉ hiển thị nút PlusIcon ở giữa
   if (type === 'empty') {
     return (
-      <button type='button' className={`w-full h-full rounded border flex items-center justify-center ${config.bgClass} ${config.borderClass}`}>
+      <button type='button' className={`w-full min-h-[50px] h-fit rounded border flex items-center justify-center ${config.bgClass} ${config.borderClass}`}>
         <PlusIcon className='size-4 text-[#CCCCCC]' />
       </button>
     );
@@ -248,9 +248,9 @@ const ShiftCell = ({ type }) => {
   // Các ca còn lại: hiển thị label + time + icon
   return (
     <>
-      <div className={`group relative px-2 py-0.5 w-full h-full rounded border overflow-hidden ${config.bgClass} ${config.borderClass} hover:border-transparent`}>
+      <div className={`group relative px-2 py-0.5 w-full min-h-[50px] h-fit rounded border overflow-hidden ${config.bgClass} ${config.borderClass} hover:border-transparent`}>
         {/* Nội dung ca */}
-        <div className='flex h-full flex-col gap-0.5'>
+        <div className='flex h-full flex-col justify-center gap-0.5'>
           <p className='responsive-text-sm font-medium text-neutral-05'>{config.label}</p>
           <p className='responsive-text-xs text-neutral-02'>{config.time}</p>
         </div>
@@ -354,7 +354,7 @@ const ShiftSchedule = () => {
 
             {/* Các cột ca theo ngày */}
             {row.days.map((dayShifts, index) => (
-              <div key={`${row.id}-day-${index}`} className='p-2 flex flex-col gap-2 items-center justify-center border-r border-[#E5E7EB]'>
+              <div key={`${row.id}-day-${index}`} className='p-2 flex flex-col gap-2 items-center border-r border-[#E5E7EB]'>
                 {dayShifts.map((type, idx) => (
                   <ShiftCell key={`${row.id}-day-${index}-shift-${idx}`} type={type} />
                 ))}
