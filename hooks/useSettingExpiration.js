@@ -14,7 +14,6 @@ const useSettingExpiration = () => {
 
   const daysLeft = useMemo(() => {
     const exp = settings?.expiration_date;
-    // const exp = '2025-12-16';
 
     if (!exp) return null;
 
@@ -22,15 +21,17 @@ const useSettingExpiration = () => {
     if (Number.isNaN(expDate.getTime())) return null;
 
     const now = new Date();
-    // Compare by date only (strip time) and count expiration day as 1 remaining day
+    // Compare by date only (strip time)
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfExp = new Date(expDate.getFullYear(), expDate.getMonth(), expDate.getDate());
 
     const MS_PER_DAY = 1000 * 60 * 60 * 24;
     const diffDays = Math.floor((startOfExp.getTime() - startOfToday.getTime()) / MS_PER_DAY);
 
-    // Inclusive of expiration date: if today == expiration_date => 1 day left
-    return diffDays + 1;
+    // Return the exact number of days remaining
+    // If today == expiration_date => 0 days left (expired)
+    // If today is before expiration_date => positive number of days
+    return diffDays;
   }, [settings?.expiration_date]);
 
   return {
