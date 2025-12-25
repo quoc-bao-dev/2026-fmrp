@@ -116,7 +116,7 @@ const PopupUpgradePro = ({ open, onClose, onUpgrade, onContact }) => {
               ))}
             </div>
           </div>
-
+          <span tabIndex="0" className="sr-only" aria-hidden="true"></span>
           {/* Buttons */}
           <div className='flex items-center gap-3 w-[380px] xl:w-[400px] mx-auto justify-center'>
             <a href='https://zalo.me/fososoft' target='_blank' className='flex-1'>
