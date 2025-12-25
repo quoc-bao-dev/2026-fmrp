@@ -1426,7 +1426,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
           >
             <div className='3xl:text-xl text-lg text-[#344054] font-medium'>{dataLang?.productions_orders_filter || 'productions_orders_filter'}</div>
 
-            <div className='grid w-full grid-cols-2 gap-3 3xl:grid-cols-7'>
+            <div className='grid w-full grid-cols-2 gap-3'>
               <div className='col-span-1 space-y-1'>
                 <h3 className='text-xs text-[#051B44] font-normal'>{dataLang?.productions_orders_details_branch || 'productions_orders_details_branch'}</h3>
                 <SelectComponentNew
