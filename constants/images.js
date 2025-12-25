@@ -20,6 +20,7 @@ export const IMAGES = {
   // m
   mess: "/dashboard/mess.png",
   // n
+  nodataShift: "/nodata/nodata-shift.png",
   // o
   // p
   // q
