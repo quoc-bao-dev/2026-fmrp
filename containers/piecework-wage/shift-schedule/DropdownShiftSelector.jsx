@@ -1,6 +1,6 @@
 import { CloseXIcon, SearchIcon } from '@/components/icons';
 import { useEffect, useRef, useState } from 'react';
-import { useFloating, offset, flip, shift, size } from '@floating-ui/react';
+import { useFloating, offset, flip, shift, size, useDismiss, useInteractions } from '@floating-ui/react';
 
 // Danh sách các ca có sẵn
 const AVAILABLE_SHIFTS = [
@@ -46,7 +46,7 @@ const DropdownShiftSelector = ({
   };
 
   // Sử dụng Floating UI để tự động tính toán vị trí
-  const { refs, floatingStyles, placement, update } = useFloating({
+  const { refs, floatingStyles, placement, update, context } = useFloating({
     open,
     onOpenChange: onClose,
     placement: 'bottom-start',
@@ -116,49 +116,28 @@ const DropdownShiftSelector = ({
     };
   }, [open, update, triggerRef]);
 
-  // Xử lý click outside thủ công để tránh lỗi với useDismiss
-  useEffect(() => {
-    if (!open) return;
-
-    const handleClickOutside = event => {
-      // Nếu đang xử lý action từ menu, không làm gì cả
+  // Sử dụng useDismiss để tự động xử lý click outside
+  const dismiss = useDismiss(context, {
+    enabled: open,
+    outsidePress: (event) => {
+      // Nếu đang xử lý action từ menu, không đóng
       if (isHandlingMenuActionRef.current) {
-        return;
+        return false;
       }
-
       const target = event.target;
-      const dropdown = refs.floating.current;
-
-      // Kiểm tra xem có phải click vào dropdown không
-      if (dropdown?.contains(target)) {
-        return;
-      }
-
-      // Kiểm tra xem có phải click vào trigger không
-      if (triggerRef?.current?.contains(target)) {
-        return;
-      }
-
-      // Kiểm tra xem có phải click vào menu actions không (nếu có)
+      // Bỏ qua click vào menu actions
       const menu = target.closest('[data-shift-menu="true"]');
       if (menu) {
-        return;
+        return false;
       }
+      return true;
+    },
+    outsidePressEvent: 'mousedown',
+    // Bỏ qua click vào trigger (vì chúng ta tự quản lý open/close)
+    referencePress: false,
+  });
 
-      // Nếu không phải click vào dropdown hoặc trigger, đóng dropdown
-      onClose();
-    };
-
-    // Delay việc đăng ký click outside handler để tránh đóng ngay sau khi mở từ menu
-    const timeoutId = setTimeout(() => {
-      document.addEventListener('mousedown', handleClickOutside, true);
-    }, 150);
-
-    return () => {
-      clearTimeout(timeoutId);
-      document.removeEventListener('mousedown', handleClickOutside, true);
-    };
-  }, [open, onClose, triggerRef, refs.floating]);
+  const { getFloatingProps } = useInteractions([dismiss]);
 
   // Reset flag khi dropdown mở
   useEffect(() => {
@@ -185,6 +164,7 @@ const DropdownShiftSelector = ({
     <div
       ref={refs.setFloating}
       style={floatingStyles}
+      {...getFloatingProps()}
       className={`py-4 px-3 z-[1000] bg-white rounded-lg shadow-[0px_4px_20px_0px_#00000033] max-h-[400px] overflow-hidden flex flex-col gap-4 border border-[#E5E7EB] min-w-[220px]`}
       onMouseDown={e => e.stopPropagation()}
     >
