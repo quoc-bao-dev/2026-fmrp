@@ -1,39 +1,39 @@
+import { TrashIcon } from '@/components/icons';
+import EditIcon from '@/components/icons/common/EditIcon';
 import BreadcrumbCustom from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import OnResetData from '@/components/UI/btnResetData/btnReset';
 import ContainerPagination from '@/components/UI/common/ContainerPagination/ContainerPagination';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { EmptyExprired } from '@/components/UI/common/EmptyExprired';
+import { LayOutTableDynamic } from '@/components/UI/common/layout';
 import { ColumnTable, HeaderTable, RowItemTable, RowTable } from '@/components/UI/common/Table';
 import { AvatarStack } from '@/components/UI/common/user';
-import { LayOutTableDynamic } from '@/components/UI/common/layout';
 import DropdowLimit from '@/components/UI/dropdowLimit/dropdowLimit';
 import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet';
 import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';
 import Loading from '@/components/UI/loading/loading';
 import LoadingButton from '@/components/UI/loading/loadingButton';
+import MultiValue from '@/components/UI/mutiValue/multiValue';
 import NoData from '@/components/UI/noData/nodata';
 import Pagination from '@/components/UI/pagination';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
-import { WARNING_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 import { CONFIRM_DELETION, TITLE_DELETE } from '@/constants/delete/deleteTable';
+import { WARNING_ACTION_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 import { useBranchList } from '@/hooks/common/useBranch';
+import { useDeleteGroupMember, useGroupMembers } from '@/hooks/common/useStaffs';
 import { useLimitAndTotalItems } from '@/hooks/useLimitAndTotalItems';
 import usePagination from '@/hooks/usePagination';
 import useActionRole from '@/hooks/useRole';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import useToast from '@/hooks/useToast';
-import { TrashIcon } from '@/components/icons';
-import EditIcon from '@/components/icons/common/EditIcon';
-import PopupGroupPiecework from './components/PopupGroupPiecework';
 import { Grid6 } from 'iconsax-react';
-import MultiValue from '@/components/UI/mutiValue/multiValue';
 import { debounce } from 'lodash';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useGroupMembers, useDeleteGroupMember } from '@/hooks/common/useStaffs';
+import PopupGroupPiecework from './components/PopupGroupPiecework';
 
 const initialState = {
   keySearch: '',
@@ -71,7 +71,7 @@ const PieceworkWage = props => {
 
   const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
 
-  const { checkExport, checkEdit, checkAdd, checkDelete } = useActionRole(auth, 'piecework_wage_group');
+  const { checkExport, checkEdit, checkAdd, checkDelete } = useActionRole(auth, 'group_member');
 
   // Danh sách chi nhánh
   const { data: listBranch = [] } = useBranchList();
@@ -375,7 +375,7 @@ const PieceworkWage = props => {
                 <button
                   type='button'
                   onClick={() => {
-                    isShow('error', WARNING_STATUS_ROLE);
+                    isShow('error', WARNING_ACTION_STATUS_ROLE);
                   }}
                   className='responsive-text-sm 3xl:py-3 3xl:px-4 py-2 px-3 text-sm font-normal bg-blue-fmrp text-white rounded-lg btn-animation hover:scale-105'
                 >
@@ -420,7 +420,7 @@ const PieceworkWage = props => {
                   <div className={``}>{data?.rResult?.length > 0 && <ExcelFileComponent multiDataSet={multiDataSet} filename='Danh sách tổ/ nhóm' title='DSTN' dataLang={dataLang} />}</div>
                 ) : (
                   <button
-                    onClick={() => isShow('error', WARNING_STATUS_ROLE)}
+                    onClick={() => isShow('error', WARNING_ACTION_STATUS_ROLE)}
                     className={`xl:px-4 px-3 xl:py-2.5 py-1.5 2xl:text-xs xl:text-xs text-[7px] flex items-center space-x-2 bg-[#C7DFFB] rounded hover:scale-105 transition`}
                   >
                     <Grid6 className='scale-75 2xl:scale-100 xl:scale-100' size={18} />
@@ -481,13 +481,13 @@ const PieceworkWage = props => {
                                   onRefresh={refetch}
                                   listBranch={listBranch}
                                   editData={e}
-                                  trigger={
-                                    <span className='text-blue-fmrp cursor-pointer hover:underline'>{e.code || ''}</span>
-                                  }
+                                  trigger={<span className='text-blue-fmrp cursor-pointer hover:underline'>{e.code || ''}</span>}
                                   buttonClassName='inline-flex'
                                 />
                               ) : (
-                                <span className='text-blue-fmrp'>{e.code || ''}</span>
+                                <span className='text-blue-fmrp cursor-pointer' onClick={() => isShow('error', WARNING_ACTION_STATUS_ROLE)}>
+                                  {e.code || ''}
+                                </span>
                               )}
                             </RowItemTable>
                             <RowItemTable colSpan={2.5} textAlign={'left'}>
@@ -498,18 +498,24 @@ const PieceworkWage = props => {
                             </RowItemTable>
                             <RowItemTable colSpan={2.5} textAlign={'left'}>
                               {employeesData.length > 0 ? (
-                                <PopupGroupPiecework
-                                  dataLang={dataLang}
-                                  onRefresh={refetch}
-                                  listBranch={listBranch}
-                                  editData={e}
-                                  trigger={
-                                    <div className='inline-flex cursor-pointer'>
-                                      <AvatarStack people={employeesData} size={32} />
-                                    </div>
-                                  }
-                                  buttonClassName='inline-flex'
-                                />
+                                role == true || checkEdit ? (
+                                  <PopupGroupPiecework
+                                    dataLang={dataLang}
+                                    onRefresh={refetch}
+                                    listBranch={listBranch}
+                                    editData={e}
+                                    trigger={
+                                      <div className='inline-flex cursor-pointer'>
+                                        <AvatarStack people={employeesData} size={32} />
+                                      </div>
+                                    }
+                                    buttonClassName='inline-flex'
+                                  />
+                                ) : (
+                                  <div className='inline-flex cursor-pointer' onClick={() => isShow('error', WARNING_ACTION_STATUS_ROLE)}>
+                                    <AvatarStack people={employeesData} size={32} />
+                                  </div>
+                                )
                               ) : (
                                 <span className='text-sm text-[#9295A4]'>Chưa có nhân viên</span>
                               )}
@@ -536,7 +542,13 @@ const PieceworkWage = props => {
                                   buttonClassName='inline-flex'
                                 />
                               ) : (
-                                <EditIcon className='cursor-pointer size-5 text-gray-400' onClick={() => isShow('error', WARNING_STATUS_ROLE)} />
+                                <div
+                                  onClick={() => {
+                                    isShow('error', WARNING_ACTION_STATUS_ROLE);
+                                  }}
+                                >
+                                  <EditIcon className='cursor-pointer size-5 text-[#003DA0]' />
+                                </div>
                               )}
                               {role == true || checkDelete ? (
                                 <button
@@ -547,7 +559,7 @@ const PieceworkWage = props => {
                                   <TrashIcon className='size-5 text-[#EE1E1E]' />
                                 </button>
                               ) : (
-                                <TrashIcon className='cursor-pointer size-5 text-gray-400' onClick={() => isShow('error', WARNING_STATUS_ROLE)} />
+                                <TrashIcon className='cursor-pointer size-5 text-[#EE1E1E]' onClick={() => isShow('error', WARNING_ACTION_STATUS_ROLE)} />
                               )}
                             </RowItemTable>
                           </RowTable>
