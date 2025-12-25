@@ -1,6 +1,6 @@
 import { CheckIcon } from '@/components/icons'
 import CloseXIcon from '@/components/icons/common/CloseXIcon'
-import InputClearable from '@/components/UI/common/input/ClearableInput'
+import CustomInput from '@/components/UI/common/input/CustomInput'
 import SelectComponent from '@/components/UI/filterComponents/selectComponent'
 import TimeSelect from '@/components/UI/common/TimeSelect'
 import LoadingButton from '@/components/UI/loading/loadingButton'
@@ -241,7 +241,7 @@ const PopupShiftSetting = ({ dataLang, className, onRefresh, trigger, buttonClas
               }}
               render={({ field, fieldState }) => (
                 <div className='flex flex-col gap-1'>
-                  <InputClearable
+                  <CustomInput
                     type='text'
                     {...field}
                     placeholder={dataLang?.shift_name_placeholder || 'Ví dụ: Ca hành chính'}

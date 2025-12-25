@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useState } from 'react'
-import DropdownFilledIcon from '@/components/icons/common/DropdownFilledIcon'
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar'
 import { FaCheck } from 'react-icons/fa'
 
@@ -194,22 +193,17 @@ const TimeSelect = ({ value, onChange, type = 'hour', placeholder, disabled = fa
   }, [isOpen])
 
   const displayValue = isFocused ? inputValue : (selectedValue || placeholder || (type === 'hour' ? '00' : '00'))
-  const borderColor = error ? '#EE1E1E' : isOpen || isFocused ? '#003DA0' : '#D0D5DD'
-  const boxShadow = error ? 'none' : isOpen || isFocused ? '0 0 0 1px #003DA0' : 'none'
+  const hasValue = selectedValue || isFocused
 
   return (
     <div className={`flex-1 flex flex-col gap-1 ${className}`}>
       <div className='flex items-center gap-2 relative' ref={containerRef}>
         {/* Input field */}
-        <div className='flex-1 relative w-[90px]'>
+        <div className='flex-1 relative w-[50px]'>
           <div
-            className={`w-full px-3 py-2 rounded-lg border transition-all flex items-center justify-between ${
-              disabled ? 'bg-gray-100 cursor-not-allowed opacity-50' : 'bg-white hover:border-[#003DA0]'
-            }`}
-            style={{
-              borderColor: borderColor,
-              boxShadow: boxShadow,
-            }}
+            className={`w-full px-3 py-2 rounded-[10px] border-none transition-all flex items-center ${
+              disabled ? 'bg-gray-100 cursor-not-allowed opacity-50' : 'bg-[#F6F8FA]'
+            } ${error ? 'ring-1 ring-[#EE1E1E]' : ''}`}
           >
             <input
               ref={inputRef}
@@ -221,8 +215,8 @@ const TimeSelect = ({ value, onChange, type = 'hour', placeholder, disabled = fa
               placeholder={placeholder || (type === 'hour' ? '00' : '00')}
               disabled={disabled}
               maxLength={2}
-              className={`flex-1 w-[20px] text-sm bg-transparent border-none outline-none ${
-                selectedValue || isFocused ? 'text-[#141522]' : 'text-gray-400'
+              className={`flex-1 !w-[20px] text-sm bg-transparent border-none outline-none ${
+                hasValue ? 'text-[#141522] font-medium' : 'text-[#9295A4]'
               }`}
               onClick={e => {
                 e.stopPropagation()
@@ -231,20 +225,7 @@ const TimeSelect = ({ value, onChange, type = 'hour', placeholder, disabled = fa
                 }
               }}
             />
-            <div
-              onClick={e => {
-                e.stopPropagation()
-                if (!disabled) {
-                  setIsOpen(!isOpen)
-                  inputRef.current?.blur()
-                }
-              }}
-              className='cursor-pointer flex items-center'
-            >
-              <DropdownFilledIcon
-                className={`w-3 h-3 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#003DA0]' : 'text-neutral-02'}`}
-              />
-            </div>
+             {label && <span className='text-sm text-[#9295A4] whitespace-nowrap'>{label}</span>}
           </div>
 
           {/* Dropdown menu */}
@@ -293,7 +274,7 @@ const TimeSelect = ({ value, onChange, type = 'hour', placeholder, disabled = fa
             </div>
           )}
         </div>
-        {label && <span className='text-sm text-gray-600 whitespace-nowrap '>{label}</span>}
+       
       </div>
       {error && <span className='text-xs text-[#EE1E1E]'>{error.message}</span>}
     </div>
