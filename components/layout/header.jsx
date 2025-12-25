@@ -633,8 +633,8 @@ const Header = () => {
           title: 'Lương sản lượng',
           items: [
             {
-              viewOwn: auth?.piecework_wage_group?.is_view_own,
-              view: auth?.piecework_wage_group?.is_view,
+              viewOwn: auth?.group_member?.is_view_own,
+              view: auth?.group_member?.is_view,
               name: 'Danh sách tổ / nhóm',
               link: '/piecework-wage',
             },
