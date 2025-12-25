@@ -27,6 +27,7 @@ import FunnelIcon from '@/components/icons/common/FunnelIcon';
 import UnionStepIcon from '@/components/icons/common/UnionStepIcon';
 import BreadcrumbCustom from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import { AvatarStack } from '@/components/UI/common/user';
 import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComponent';
 import Loading from '@/components/UI/loading/loading';
 import MultiValue from '@/components/UI/mutiValue/multiValue';
@@ -67,7 +68,6 @@ import { v4 as uddid } from 'uuid';
 import { useProductionOrdersCombobox } from '../../hooks/useProductionOrdersCombobox';
 import { useProductionOrdersComboboxDetail } from '../../hooks/useProductionOrdersComboboxDetail';
 import ModalDetail from '../modal/modalDetail';
-import AvatarStack from '../popup/AvatarStack';
 import PopupCompleteCommand from '../popup/PopupCompleteCommand';
 import PopupConfimStage from '../popup/PopupConfimStage';
 import PopupPrintTemProduct from '../popup/PopupPrintTemProduct';
@@ -1426,7 +1426,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
           >
             <div className='3xl:text-xl text-lg text-[#344054] font-medium'>{dataLang?.productions_orders_filter || 'productions_orders_filter'}</div>
 
-            <div className='grid w-full grid-cols-2 gap-3 3xl:grid-cols-7'>
+            <div className='grid w-full grid-cols-2 gap-3'>
               <div className='col-span-1 space-y-1'>
                 <h3 className='text-xs text-[#051B44] font-normal'>{dataLang?.productions_orders_details_branch || 'productions_orders_details_branch'}</h3>
                 <SelectComponentNew
@@ -1787,7 +1787,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
               </div>
 
               <div ref={groupButtonRef} className='flex items-center justify-end gap-2 p-0.5 mb-2'>
-                {/* <div
+                <div
                   onClick={() => {
                     dispatch({ type: 'statePopupListResponsiblePerson', payload: { open: true } });
                   }}
@@ -1806,7 +1806,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                       className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] bg-white border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
                     />
                   )}
-                </div> */}
+                </div>
 
                 <FilterDropdown
                   trigger={triggerCompleteStage}
