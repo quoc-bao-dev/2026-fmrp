@@ -199,9 +199,9 @@ const TimeSelect = ({ value, onChange, type = 'hour', placeholder, disabled = fa
     <div className={`flex-1 flex flex-col gap-1 ${className}`}>
       <div className='flex items-center gap-2 relative' ref={containerRef}>
         {/* Input field */}
-        <div className='flex-1 relative w-[50px]'>
+        <div className='flex-1 relative w-[86px]-'>
           <div
-            className={`w-full px-3 py-2 rounded-[10px] border-none transition-all flex items-center ${
+            className={`w-full px-3 py-[10px] !h-[42px] rounded-[10px] border-none transition-all flex items-center ${
               disabled ? 'bg-gray-100 cursor-not-allowed opacity-50' : 'bg-[#F6F8FA]'
             } ${error ? 'ring-1 ring-[#EE1E1E]' : ''}`}
           >
@@ -215,8 +215,8 @@ const TimeSelect = ({ value, onChange, type = 'hour', placeholder, disabled = fa
               placeholder={placeholder || (type === 'hour' ? '00' : '00')}
               disabled={disabled}
               maxLength={2}
-              className={`flex-1 !w-[20px] text-sm bg-transparent border-none outline-none ${
-                hasValue ? 'text-[#141522] font-medium' : 'text-[#9295A4]'
+              className={`flex-1 !w-[40px] text-sm bg-transparent border-none outline-none text-center ${
+                hasValue ? 'text-[#141522]' : 'text-[#9295A4]'
               }`}
               onClick={e => {
                 e.stopPropagation()
