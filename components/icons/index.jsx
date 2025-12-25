@@ -38,6 +38,7 @@ import ChartDonutIcon from './source/chart-donut.svg';
 import ChatIcon from './source/chat.svg';
 import CheckCircleOutlineIcon from './source/check-circle-outline.svg';
 import CheckCircleIcon from './source/check-circle.svg';
+import CheckDoubleIcon from './source/check-double.svg';
 import CheckThinIcon from './source/check-thin.svg';
 import CheckIcon from './source/check.svg';
 import ClockIcon from './source/clock.svg';
@@ -93,6 +94,7 @@ import TrashIcon from './source/trash.svg';
 import UpgradeIcon from './source/upgrade-icon.svg';
 import UserCircleIcon from './source/user-circle-icon.svg';
 import UserPlusIcon from './source/user-plus-icon.svg';
+import UsersIcon from './source/users.svg';
 import WarningAlertIcon from './source/warning-alert-icon.svg';
 import WarningIcon from './source/warning-icon.svg';
 import ZaloIcon from './source/zalo.svg';
@@ -114,6 +116,7 @@ export {
   ChartDonutIcon,
   ChatIcon,
   CheckCircleIcon,
+  CheckDoubleIcon,
   CheckCircleOutlineIcon,
   CheckIcon,
   CheckThinIcon, 
@@ -168,6 +171,7 @@ export {
   UpgradeIcon,
   UserCircleIcon,
   UserPlusIcon,
+  UsersIcon,
   WarningAlertIcon,
   WarningIcon,
   ZaloIcon
