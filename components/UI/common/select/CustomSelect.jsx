@@ -151,7 +151,7 @@ const CustomSelect = ({
         onMenuOpen={onMenuOpen}
         {...configSelectFillter}
         defaultValue={defaultValue}
-        className={`${configSelectFillter.className} ${className || 'min-w-[200px] h-[42px] '}`}
+        className={`${configSelectFillter.className} ${className || 'min-w-[215px] h-[42px] '}`}
         isMulti={isMulti ? isMulti : false}
         isDisabled={isDisabled}
         components={{
