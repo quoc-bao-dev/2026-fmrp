@@ -402,7 +402,6 @@ const ShiftSetting = props => {
                                 dataLang={dataLang}
                                 onRefresh={() => {
                                   refetch()
-                                  setEditData(null)
                                 }}
                                 listBranch={listBranch}
                                 editData={e}

@@ -121,6 +121,7 @@ const CustomSelect = ({
     menu: (provided) => ({
       ...provided,
       position: 'absolute',
+      borderRadius: '10px',
       zIndex: 50,
       ...(styles?.menu ? styles.menu(provided) : {}),
     }),

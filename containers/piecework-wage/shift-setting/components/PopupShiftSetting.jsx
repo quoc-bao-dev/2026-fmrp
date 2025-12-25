@@ -289,7 +289,7 @@ const PopupShiftSetting = ({ dataLang, className, onRefresh, trigger, buttonClas
               </div>
               <div className='flex gap-[13px] items-center'>
                 <label className='text-[14px] leading-5 font-semibold- text-[#141522]'>{dataLang?.shift_end || 'Kết thúc'}</label>
-                <div className='flex items-center gap-2'>
+                <div className='flex items-center gap-[13px]'>
                   <Controller
                     name='endHour'
                     control={form.control}
