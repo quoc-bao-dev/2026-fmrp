@@ -144,7 +144,7 @@ const SHIFT_ROWS = [
     name: 'Danh',
     avatar: '/shift-schedule.png',
     days: [
-      ['noon'], // T2
+      ['empty'], // T2
       ['night'], // T3
       ['afternoon'], // T4
       ['morning'], // T5
@@ -398,7 +398,10 @@ const ShiftSchedule = () => {
         {/* Các dòng nhân sự */}
         {SHIFT_ROWS.map(row => (
           <div key={row.id} className='grid grid-cols-8 border-b border-[#E5E7EB]'>
-            <div className='pl-4 flex gap-3 items-center border-x border-[#E5E7EB]'>
+            <div
+              className={`pl-4 py-2 flex gap-3 items-center border-x border-[#E5E7EB] ${showSelectMode ? 'cursor-pointer hover:bg-[#F9FAFB] transition-colors' : ''}`}
+              onClick={showSelectMode ? () => handleToggleEmployee(row.id) : undefined}
+            >
               {showSelectMode && (
                 <input
                   type='checkbox'
@@ -408,7 +411,7 @@ const ShiftSchedule = () => {
                   onClick={e => e.stopPropagation()}
                 />
               )}
-              <div className='size-8 rounded-full overflow-hidden flex items-center justify-center bg-[#DBF3FF]'>
+              <div className='flex-shrink-0 size-8 rounded-full overflow-hidden flex items-center justify-center bg-[#DBF3FF]'>
                 <Image src={row.avatar} alt={row.name} width={32} height={32} className='size-full object-cover' />
               </div>
               <p className='responsive-text-sm font-medium text-neutral-05'>{row.name}</p>

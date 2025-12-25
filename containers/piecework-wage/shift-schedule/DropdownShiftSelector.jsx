@@ -1,6 +1,6 @@
 import { CloseXIcon, SearchIcon } from '@/components/icons';
 import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useFloating, offset, flip, shift, size } from '@floating-ui/react';
 
 // Danh sách các ca có sẵn
 const AVAILABLE_SHIFTS = [
@@ -22,7 +22,6 @@ const DropdownShiftSelector = ({
 }) => {
   const [selectedShift, setSelectedShift] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const dropdownRef = useRef(null);
   const isHandlingMenuActionRef = useRef(false);
 
   // Khởi tạo selectedShift khi mở dropdown ở chế độ edit
@@ -46,103 +45,78 @@ const DropdownShiftSelector = ({
     onSelect?.(shiftId, dayIndex, mode);
   };
 
-  // Tính toán vị trí dropdown
-  const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
-  const [usePortal, setUsePortal] = useState(false);
+  // Sử dụng Floating UI để tự động tính toán vị trí
+  const { refs, floatingStyles, placement, update } = useFloating({
+    open,
+    onOpenChange: onClose,
+    placement: 'bottom-start',
+    middleware: [
+      // Khoảng cách từ trigger
+      offset(4),
+      // Tự động flip lên trên nếu không đủ chỗ bên dưới
+      flip({
+        fallbackAxisSideDirection: 'start',
+      }),
+      // Tự động shift để không bị tràn ra ngoài viewport
+      shift({
+        padding: 8,
+      }),
+      // Giới hạn chiều rộng và chiều cao
+      size({
+        apply({ availableWidth, availableHeight, elements }) {
+          // Đặt chiều rộng tối thiểu và tối đa
+          elements.floating.style.width = `${Math.max(220, Math.min(availableWidth, 220))}px`;
+          elements.floating.style.maxHeight = `${Math.min(availableHeight - 16, 400)}px`;
+        },
+        padding: 8,
+      }),
+    ],
+  });
 
+  // Cập nhật reference ngay khi component mount và khi triggerRef thay đổi
+  // Sử dụng useEffect với dependency array rỗng để chạy ngay sau khi mount
+  useEffect(() => {
+    if (triggerRef?.current) {
+      refs.setReference(triggerRef.current);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Chỉ chạy một lần khi mount
+
+  // Cập nhật lại khi triggerRef thay đổi
+  useEffect(() => {
+    if (triggerRef?.current) {
+      refs.setReference(triggerRef.current);
+    }
+  }, [triggerRef, refs]);
+
+  // Tự động cập nhật vị trí khi scroll, resize hoặc khi open thay đổi
   useEffect(() => {
     if (!open || !triggerRef?.current) return;
 
-    const updatePosition = () => {
-      const trigger = triggerRef.current;
-      if (!trigger) return;
-
-      const rect = trigger.getBoundingClientRect();
-
-      // Kiểm tra xem trigger có nằm trong container có overflow không
-      let hasOverflowParent = false;
-      let currentParent = trigger.parentElement;
-      while (currentParent && currentParent !== document.body) {
-        const style = window.getComputedStyle(currentParent);
-        const overflow = style.overflow;
-        const overflowY = style.overflowY;
-        if (overflow === 'auto' || overflow === 'hidden' || overflowY === 'auto' || overflowY === 'hidden') {
-          hasOverflowParent = true;
-          break;
-        }
-        currentParent = currentParent.parentElement;
-      }
-
-      // Nếu có parent với overflow, dùng portal với fixed positioning
-      if (hasOverflowParent) {
-        setUsePortal(true);
-        const dropdownWidth = Math.max(rect.width, 220);
-        setPosition({
-          top: rect.bottom + window.scrollY + 4,
-          left: rect.left + window.scrollX - 8,
-          width: dropdownWidth,
-        });
-        return;
-      }
-
-      // Nếu không có overflow, dùng absolute positioning
-      setUsePortal(false);
-
-      // Tìm parent container có class 'p-2' (container trong index.jsx)
-      let parentForPosition = trigger.closest('.p-2');
-
-      // Nếu không tìm thấy, tìm parent có position relative/absolute/fixed
-      if (!parentForPosition) {
-        let currentParent = trigger.parentElement;
-        while (currentParent && currentParent !== document.body) {
-          const style = window.getComputedStyle(currentParent);
-          const position = style.position;
-          if (position === 'relative' || position === 'absolute' || position === 'fixed') {
-            parentForPosition = currentParent;
-            break;
-          }
-          currentParent = currentParent.parentElement;
-        }
-      }
-
-      // Fallback cuối cùng
-      if (!parentForPosition || parentForPosition === document.body) {
-        parentForPosition = trigger.offsetParent || document.body;
-      }
-
-      const parentRect = parentForPosition ? parentForPosition.getBoundingClientRect() : { left: 0, top: 0, width: 0 };
-
-      // Chiều ngang = width của trigger, tối thiểu 220px
-      const dropdownWidth = Math.max(rect.width, 220);
-
-      // Tính vị trí relative với parent
-      // Top: từ bottom của trigger đến top của parent + khoảng cách 4px
-      const relativeTop = rect.bottom - parentRect.top + 4;
-
-      // Left: từ left của trigger đến left của parent, trừ đi 8px để căn chỉnh
-      const relativeLeft = rect.left - parentRect.left - 8;
-
-      setPosition({
-        top: relativeTop,
-        left: relativeLeft,
-        width: dropdownWidth,
-      });
-    };
-
-    // Cập nhật ngay lập tức
-    updatePosition();
+    // Delay một chút để đảm bảo floating element đã được render
+    const timeoutId = setTimeout(() => {
+      update();
+    }, 0);
 
     // Cập nhật khi scroll hoặc resize
-    window.addEventListener('scroll', updatePosition, true);
-    window.addEventListener('resize', updatePosition);
+    const handleScroll = () => {
+      update();
+    };
+    const handleResize = () => {
+      update();
+    };
+
+    window.addEventListener('scroll', handleScroll, true);
+    window.addEventListener('resize', handleResize);
 
     return () => {
-      window.removeEventListener('scroll', updatePosition, true);
-      window.removeEventListener('resize', updatePosition);
+      clearTimeout(timeoutId);
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleResize);
     };
-  }, [open, triggerRef]);
+  }, [open, update, triggerRef]);
 
-  // Đóng dropdown khi click outside
+  // Xử lý click outside thủ công để tránh lỗi với useDismiss
   useEffect(() => {
     if (!open) return;
 
@@ -153,7 +127,7 @@ const DropdownShiftSelector = ({
       }
 
       const target = event.target;
-      const dropdown = dropdownRef.current;
+      const dropdown = refs.floating.current;
 
       // Kiểm tra xem có phải click vào dropdown không
       if (dropdown?.contains(target)) {
@@ -184,12 +158,11 @@ const DropdownShiftSelector = ({
       clearTimeout(timeoutId);
       document.removeEventListener('mousedown', handleClickOutside, true);
     };
-  }, [open, onClose, triggerRef]);
+  }, [open, onClose, triggerRef, refs.floating]);
 
   // Reset flag khi dropdown mở
   useEffect(() => {
     if (open) {
-      // Set flag để tránh đóng dropdown ngay sau khi mở từ menu
       isHandlingMenuActionRef.current = true;
       const timeout = setTimeout(() => {
         isHandlingMenuActionRef.current = false;
@@ -205,20 +178,14 @@ const DropdownShiftSelector = ({
     onClose();
   };
 
-  if (!open) return null;
+  // Chỉ render khi open và có reference element
+  if (!open || !triggerRef?.current) return null;
 
-  const dropdownContent = (
+  return (
     <div
-      ref={dropdownRef}
-      className={`${
-        usePortal ? 'fixed' : 'absolute'
-      } py-4 px-3 z-[1000] bg-white rounded-lg shadow-[0px_4px_20px_0px_#00000033] max-h-[400px] overflow-hidden flex flex-col gap-4 border border-[#E5E7EB]`}
-      style={{
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-        width: `${position.width}px`,
-        minWidth: '220px',
-      }}
+      ref={refs.setFloating}
+      style={floatingStyles}
+      className={`py-4 px-3 z-[1000] bg-white rounded-lg shadow-[0px_4px_20px_0px_#00000033] max-h-[400px] overflow-hidden flex flex-col gap-4 border border-[#E5E7EB] min-w-[220px]`}
       onMouseDown={e => e.stopPropagation()}
     >
       {/* Ô tìm kiếm */}
@@ -251,7 +218,7 @@ const DropdownShiftSelector = ({
       </div>
 
       {/* Danh sách các ca */}
-      <div className='flex flex-col'>
+      <div className='flex flex-col overflow-y-auto'>
         {filteredShifts.map(shift => (
           <button
             key={shift.id}
@@ -290,13 +257,6 @@ const DropdownShiftSelector = ({
       </button>
     </div>
   );
-
-  // Render bằng portal nếu cần (khi có overflow parent)
-  if (usePortal && typeof document !== 'undefined') {
-    return createPortal(dropdownContent, document.body);
-  }
-
-  return dropdownContent;
 };
 
 export default DropdownShiftSelector;
