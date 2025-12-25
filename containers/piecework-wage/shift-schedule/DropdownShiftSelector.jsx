@@ -1,5 +1,6 @@
 import { CloseXIcon, SearchIcon } from '@/components/icons';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useFloating, offset, flip, shift, size, useDismiss, useInteractions } from '@floating-ui/react';
 
 // Danh sách các ca có sẵn
@@ -50,6 +51,8 @@ const DropdownShiftSelector = ({
     open,
     onOpenChange: onClose,
     placement: 'bottom-start',
+    // Sử dụng fixed positioning vì render bằng portal
+    strategy: 'fixed',
     middleware: [
       // Khoảng cách từ trigger
       offset(4),
@@ -160,12 +163,12 @@ const DropdownShiftSelector = ({
   // Chỉ render khi open và có reference element
   if (!open || !triggerRef?.current) return null;
 
-  return (
+  const dropdownContent = (
     <div
       ref={refs.setFloating}
       style={floatingStyles}
       {...getFloatingProps()}
-      className={`py-4 px-3 z-[1000] bg-white rounded-lg shadow-[0px_4px_20px_0px_#00000033] max-h-[400px] overflow-hidden flex flex-col gap-4 border border-[#E5E7EB] min-w-[220px]`}
+      className={`py-4 px-3 z-[10000] bg-white rounded-lg shadow-[0px_4px_20px_0px_#00000033] max-h-[400px] overflow-hidden flex flex-col gap-4 border border-[#E5E7EB] min-w-[220px]`}
       onMouseDown={e => e.stopPropagation()}
     >
       {/* Ô tìm kiếm */}
@@ -237,6 +240,13 @@ const DropdownShiftSelector = ({
       </button>
     </div>
   );
+
+  // Render bằng portal để đảm bảo nó luôn ở trên cùng, đặc biệt khi nằm trong dropdown "Xem thêm"
+  if (typeof document !== 'undefined') {
+    return createPortal(dropdownContent, document.body);
+  }
+
+  return null;
 };
 
 export default DropdownShiftSelector;
