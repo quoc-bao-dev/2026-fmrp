@@ -1,6 +1,7 @@
 import { EditIcon, EyeIcon, PlusIcon, ThreeDotIcon, TrashIcon } from '@/components/icons';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useFloating, offset, flip, shift, useDismiss, useInteractions, autoUpdate } from '@floating-ui/react';
 import DropdownShiftSelector from './DropdownShiftSelector';
 
 const SHIFT_CONFIG = {
@@ -44,14 +45,37 @@ const SHIFT_CONFIG = {
 
 const ShiftCell = ({ type, onAddShift, onEditShift, onSelectShift, dayIndex, rowId }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [isShiftDropdownOpen, setIsShiftDropdownOpen] = useState(false);
   const [shiftDropdownMode, setShiftDropdownMode] = useState('add');
   const actionBtnRef = useRef(null);
-  const menuRef = useRef(null);
   const addShiftBtnRef = useRef(null);
   const editShiftBtnRef = useRef(null);
   const cellRef = useRef(null); // Ref cho cell div để tính toán vị trí dropdown
+
+  // Sử dụng Floating UI cho menu
+  const { refs: menuRefs, floatingStyles: menuFloatingStyles, context: menuContext } = useFloating({
+    open: isMenuOpen,
+    onOpenChange: setIsMenuOpen,
+    placement: 'bottom-start',
+    // Tự động cập nhật vị trí khi scroll hoặc resize
+    whileElementsMounted: autoUpdate,
+    middleware: [
+      offset(4),
+      flip(),
+      shift({ padding: 8 }),
+    ],
+  });
+
+  // Tự động xử lý click outside cho menu
+  const dismiss = useDismiss(menuContext);
+  const { getFloatingProps: getMenuFloatingProps } = useInteractions([dismiss]);
+
+  // Gắn reference cho menu
+  useEffect(() => {
+    if (actionBtnRef.current) {
+      menuRefs.setReference(actionBtnRef.current);
+    }
+  }, [menuRefs]);
 
   const config = SHIFT_CONFIG[type];
   if (!config) return null;
@@ -107,39 +131,18 @@ const ShiftCell = ({ type, onAddShift, onEditShift, onSelectShift, dayIndex, row
 
   const handleToggleMenu = e => {
     e.stopPropagation();
-    if (!actionBtnRef.current) {
-      setIsMenuOpen(prev => !prev);
-      return;
-    }
-    const rect = actionBtnRef.current.getBoundingClientRect();
-    const menuWidth = 48;
-    setMenuPosition({
-      top: rect.bottom + window.scrollY + 4,
-      // Đặt menu lệch sang bên trái của nút ThreeDotIcon
-      left: rect.left + window.scrollX - menuWidth + rect.width,
-    });
     setIsMenuOpen(prev => !prev);
   };
-
-  useEffect(() => {
-    if (!isMenuOpen) return undefined;
-    const handleClickOutside = event => {
-      if (actionBtnRef.current && actionBtnRef.current.contains(event.target)) return;
-      if (menuRef.current && menuRef.current.contains(event.target)) return;
-      setIsMenuOpen(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isMenuOpen]);
 
   const menuPortal =
     isMenuOpen && typeof document !== 'undefined'
       ? createPortal(
           <div
-            ref={menuRef}
+            ref={menuRefs.setFloating}
+            style={menuFloatingStyles}
+            {...getMenuFloatingProps()}
             data-shift-menu='true'
             className='fixed z-[9999] w-32 rounded-lg overflow-hidden border border-[#D8DAE5] bg-white shadow-md'
-            style={{ top: menuPosition.top, left: menuPosition.left }}
           >
             <button
               ref={addShiftBtnRef}
