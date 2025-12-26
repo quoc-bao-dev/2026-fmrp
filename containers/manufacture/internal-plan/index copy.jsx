@@ -50,8 +50,6 @@ import React, { useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useSelector } from "react-redux";
 import { useInternalPlanList } from "./hooks/useInternalPlanList";
-import InfoTooltip from "@/components/UI/common/InfoTooltip";
-import ProcessStepIcon from "@/components/icons/common/ProcessStepIcon";
 
 const PopupDetail = dynamic(() => import("./components/PopupDetail"), {
     ssr: false,
@@ -284,11 +282,7 @@ const InternalPlan = (props) => {
                 titleButton={
                     <>
                         <h2 className="text-title-section text-[#52575E] capitalize font-medium">
-                            {dataLang?.internal_plan || "internal_plan"}{" "}
-                            <InfoTooltip
-                                content="Kế hoạch nội bộ là kế hoạch sản xuất của công ty, được lập dựa trên nhu cầu sản xuất của khách hàng và các yếu tố khác."
-                                iconSize={18}
-                            />
+                            {dataLang?.internal_plan || "internal_plan"}
                         </h2>
                         <div className="flex items-center justify-end gap-2">
                             <ButtonAddNew
@@ -371,11 +365,11 @@ const InternalPlan = (props) => {
                         </div>
                         <Customscrollbar className="h-full overflow-y-auto">
                             <div className="w-full">
-                                <HeaderTable gridCols={20}>
-                                    <ColumnTable colSpan={0.5} textAlign={"center"} className="px-0">
+                                <HeaderTable gridCols={10}>
+                                    <ColumnTable colSpan={0.5} textAlign={"center"}>
                                         STT
                                     </ColumnTable>
-                                    <ColumnTable colSpan={1.5} textAlign={"center"} className="px-0">
+                                    <ColumnTable colSpan={1} textAlign={"center"}>
                                         {dataLang?.import_day_vouchers || "import_day_vouchers"}
                                     </ColumnTable>
                                     <ColumnTable colSpan={1.5} textAlign={"center"}>
@@ -384,23 +378,20 @@ const InternalPlan = (props) => {
                                     <ColumnTable colSpan={2} textAlign={"left "}>
                                         {dataLang?.internal_plan_name || "internal_plan_name"}
                                     </ColumnTable>
-                                    <ColumnTable colSpan={2} textAlign={"right"}>
+                                    <ColumnTable colSpan={1} textAlign={"center"}>
                                         {dataLang?.internal_plan_status || "internal_plan_status"}
                                     </ColumnTable>
-                                    <ColumnTable colSpan={2} textAlign={"left"}>
+                                    <ColumnTable colSpan={1} textAlign={"left"}>
                                         {dataLang?.internal_plan_creators ||
                                             "internal_plan_creators"}
                                     </ColumnTable>
-                                    <ColumnTable colSpan={2} textAlign={"left"}>
+                                    <ColumnTable colSpan={1} textAlign={"left"}>
                                         {dataLang?.import_branch || "import_branch"}
                                     </ColumnTable>
-                                    <ColumnTable colSpan={2} textAlign={"left"}>
+                                    <ColumnTable colSpan={1} textAlign={"left"}>
                                         {dataLang?.recall_noteChild || "recall_noteChild"}
                                     </ColumnTable>
-                                    <ColumnTable colSpan={5} textAlign={"center"}>
-                                        Tiến độ
-                                    </ColumnTable>
-                                    <ColumnTable colSpan={1.5} textAlign={"center"}>
+                                    <ColumnTable colSpan={1} textAlign={"center"}>
                                         {dataLang?.import_action || "import_action"}
                                     </ColumnTable>
                                 </HeaderTable>
@@ -410,11 +401,11 @@ const InternalPlan = (props) => {
                                     <>
                                         <div className="divide-y divide-slate-200 h-[100%]">
                                             {data?.rResult?.map((e, index) => (
-                                                <RowTable key={e.id.toString()} gridCols={20}>
+                                                <RowTable key={e.id.toString()} gridCols={10}>
                                                     <RowItemTable colSpan={0.5} textAlign={"center"}>
                                                         {index + 1}
                                                     </RowItemTable>
-                                                    <RowItemTable colSpan={1.5} textAlign={"center"}>
+                                                    <RowItemTable colSpan={1} textAlign={"center"}>
                                                         {e?.date != null
                                                             ? formatMoment(
                                                                 e?.date,
@@ -433,7 +424,7 @@ const InternalPlan = (props) => {
                                                     <RowItemTable colSpan={2} textAlign={"left"}>
                                                         {e.plan_name}
                                                     </RowItemTable>
-                                                    <RowItemTable colSpan={2} className="ml-auto">
+                                                    <RowItemTable colSpan={1} className="mx-auto">
                                                         {/* <BtnStatusApproved
                                                             onClick={() =>
                                                                 handleQueryId({
@@ -457,7 +448,7 @@ const InternalPlan = (props) => {
                                                         />
                                                     </RowItemTable>
                                                     <RowItemTable
-                                                        colSpan={2}
+                                                        colSpan={1}
                                                         textAlign={"left"}
                                                         className="flex items-center space-x-1"
                                                     >
@@ -467,7 +458,7 @@ const InternalPlan = (props) => {
                                                             fullName={e?.created_by_full_name}
                                                         />
                                                     </RowItemTable>
-                                                    <RowItemTable colSpan={2}>
+                                                    <RowItemTable colSpan={1}>
                                                         {/* <TagBranch className="w-fit">
                                                             {e?.name_branch}
                                                         </TagBranch> */}
@@ -476,51 +467,15 @@ const InternalPlan = (props) => {
                                                         </span>
                                                     </RowItemTable>
                                                     <RowItemTable
-                                                        colSpan={2}
+                                                        colSpan={1}
                                                         textAlign={"left"}
                                                         className="truncate"
                                                     >
                                                         {e.note}
                                                     </RowItemTable>
                                                     <RowItemTable
-                                                        colSpan={5}
-                                                        textAlign={"left"}
-                                                        className="py-3 pl-0 pr-5"
-                                                    >
-                                                        <div className='grid grid-cols-3 flex-1 items-end gap-0 py-2'>
-                                                            {e?.process?.map((step, i, filteredArray) => {
-                                                                const isProducing = step.code === "produced_at_company" && step.active === true;
-                                                                const isLast = step.code === "import_warehouse";
-                                                                const nextStepActive = i < filteredArray.length - 1 ? filteredArray[i + 1]?.active : false;
-                                                                
-                                                                return (
-                                                                    <div
-                                                                        key={`process-${i}`}
-                                                                        className={`relative flex-1 h-[37px] overflow-hidden ${i === 0 ? 'ml-0' : 'ml-[-15px] 2xl:ml-[-20px]'}`}
-                                                                        style={{
-                                                                            zIndex: filteredArray.length - i,
-                                                                        }}
-                                                                    >
-                                                                        <ProcessStepIcon
-                                                                            active={step.active}
-                                                                            isLast={isLast}
-                                                                            isProducing={isProducing}
-                                                                            nextStepActive={nextStepActive}
-                                                                            className="w-full h-full object-cover"
-                                                                        />
-                                                                        <div className={`absolute py-0.5 px-2 inset-0 flex flex-col items-center justify-center pointer-events-none ${step?.active ? 'text-white' : 'text-gray-600'}`}>
-                                                                            <h6 className='responsive-text-xs font-medium leading-tight text-center whitespace-nowrap'>
-                                                                                {dataLang[step?.name] || step?.name}
-                                                                            </h6>
-                                                                        </div>
-                                                                    </div>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    </RowItemTable>
-                                                    <RowItemTable
-                                                        colSpan={1.5}
-                                                        className="flex justify-center text-center"
+                                                        colSpan={1}
+                                                        className="flex justify-center"
                                                     >
                                                         <BtnAction
                                                             onRefresh={refetch.bind(this)}
