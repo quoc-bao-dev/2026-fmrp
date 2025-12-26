@@ -330,7 +330,7 @@ const ProductsWarehouse = (props) => {
                         <h2 className="text-title-section text-[#52575E] capitalize font-medium">
                             {dataLang?.productsWarehouse_title || "productsWarehouse_title"}
                         </h2>
-                        <ButtonAddNew
+                        {/* <ButtonAddNew
                             onClick={() => {
                                 if (role) {
                                     router.push(routerProductsWarehouse.form);
@@ -341,7 +341,7 @@ const ProductsWarehouse = (props) => {
                                 }
                             }}
                             dataLang={dataLang}
-                        />
+                        /> */}
                     </>
                 }
                 fillterTab={
@@ -600,7 +600,7 @@ const ProductsWarehouse = (props) => {
                     <div className="flex items-center justify-between gap-2">
                         {data?.rResult?.length != 0 && (
                             <ContainerPagination>
-                                <TitlePagination dataLang={dataLang} totalItems={data?.output?.iTotalDisplayRecords} />
+                                {/* <TitlePagination dataLang={dataLang} totalItems={data?.output?.iTotalDisplayRecords} /> */}
                                 <Pagination
                                     postsPerPage={limit}
                                     totalPosts={Number(data?.output?.iTotalDisplayRecords)}

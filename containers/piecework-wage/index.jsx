@@ -50,6 +50,7 @@ const PieceworkWage = props => {
   const { limit, updateLimit: sLimit } = useLimitAndTotalItems();
 
   const [isState, sIsState] = useState(initialState);
+  const [isRefetching, setIsRefetching] = useState(false); // State để track refetch từ nút reset
   const [deleteTarget, setDeleteTarget] = useState(null);
   const queryState = key => sIsState(prev => ({ ...prev, ...key }));
 
@@ -173,9 +174,15 @@ const PieceworkWage = props => {
   // Sử dụng dữ liệu từ API
   const data = tableData;
   const isFetching = isLoadingGroups || isFetchingGroups;
-  const refetch = () => {
-    // Gọi refetch từ react-query để tải lại dữ liệu
-    refetchGroupMembers();
+  const refetch = (showLoading = false) => {
+    if (showLoading) {
+      setIsRefetching(true);
+    }
+    refetchGroupMembers().finally(() => {
+      if (showLoading) {
+        setIsRefetching(false);
+      }
+    });
   };
 
   // Nếu đổi limit làm trang hiện tại vượt quá tổng trang, tự điều chỉnh về trang 1
@@ -415,7 +422,7 @@ const PieceworkWage = props => {
               </div>
 
               <div className='flex items-center justify-end space-x-2'>
-                <OnResetData sOnFetching={e => {}} onClick={() => refetch()} />
+                <OnResetData sOnFetching={e => {}} onClick={() => refetch(true)} />
                 {role == true || checkExport ? (
                   <div className={``}>{data?.rResult?.length > 0 && <ExcelFileComponent multiDataSet={multiDataSet} filename='Danh sách tổ/ nhóm' title='DSTN' dataLang={dataLang} />}</div>
                 ) : (
@@ -455,7 +462,7 @@ const PieceworkWage = props => {
                   </ColumnTable>
                 </HeaderTable>
 
-                {isFetching ? (
+                {isRefetching || (isLoadingGroups && !data?.rResult) ? (
                   <Loading className='h-80' color='#0f4f9e' />
                 ) : data?.rResult?.length > 0 ? (
                   <>

@@ -14,6 +14,7 @@ const TabSwitcherWithSlidingBackground = ({ buttonClassName = '', className = ''
       {tabs.map((tab, index) => {
         const tagLabel = typeof tab.tag === 'string' ? tab.tag : tab.tag?.label;
         const tagClassName = typeof tab.tag === 'object' ? tab.tag?.className || '' : '';
+        const hasData = tab.hasData;
 
         return (
           <button
@@ -34,6 +35,15 @@ const TabSwitcherWithSlidingBackground = ({ buttonClassName = '', className = ''
               >
                 {tagLabel}
               </span>
+            )}
+
+            {hasData && !tagLabel && (
+              <span
+                className='pointer-events-none absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-[#f97a4c]'
+                style={{
+                  boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
+                }}
+              />
             )}
           </button>
         );
