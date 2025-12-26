@@ -402,14 +402,13 @@ const ShiftSetting = props => {
                                 dataLang={dataLang}
                                 onRefresh={() => {
                                   refetch()
-                                  setEditData(null)
                                 }}
                                 listBranch={listBranch}
                                 editData={e}
                                 trigger={
                                   <button
                                     type='button'
-                                    className='group hover:border-blue-500 hover:bg-blue-50 rounded-lg w-fit p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer'
+                                    className='group hover:border-blue-500 hover:bg-blue-50 rounded-lg p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer'
                                     title='Sửa'
                                   >
                                     <EditIcon className='size-5 text-[#003DA0]' />

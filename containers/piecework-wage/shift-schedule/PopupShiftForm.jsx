@@ -39,7 +39,9 @@ const PopupShiftForm = ({
         setSelectedShift(null);
       }
       setSearchQuery('');
-      setSelectedDays(new Set());
+      // Mặc định chọn tất cả các thứ trong tuần (T2-T7), trừ Chủ nhật (CN)
+      // 0 = T2, 1 = T3, 2 = T4, 3 = T5, 4 = T6, 5 = T7, 6 = CN
+      setSelectedDays(new Set([0, 1, 2, 3, 4, 5]));
       setEmployees(selectedEmployees);
       // Lock scroll khi modal mở
       document.body.style.overflow = 'hidden';
@@ -100,7 +102,7 @@ const PopupShiftForm = ({
 
   const modalContent = (
     <div className='fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-[2px] font-deca'>
-      <div className='py-3 bg-white rounded-[14px] shadow-[0px_25px_50px_-12px_#00000040] w-[800px] overflow-hidden flex flex-col' onClick={e => e.stopPropagation()}>
+      <div className='py-3 bg-white rounded-[14px] shadow-[0px_25px_50px_-12px_#00000040] w-[600px] 2xl:w-[800px] overflow-hidden flex flex-col' onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className='flex items-center justify-between p-4 2xl:p-8'>
           <h3 className='text-neutral-07 font-bold responsive-text-2xl capitalize'>{getTitle()}</h3>
@@ -117,16 +119,9 @@ const PopupShiftForm = ({
             <div className='flex flex-wrap w-full gap-2.5 px-2 py-1.5 bg-[#F8F9FB] rounded-lg'>
               {employees.length > 0 ? (
                 employees.map(employee => (
-                  <div
-                    key={employee.id}
-                    className='inline-flex items-center gap-2 px-3 py-1 bg-[#EAECEF] rounded-lg'
-                  >
+                  <div key={employee.id} className='inline-flex items-center gap-2 px-3 py-1 bg-[#EAECEF] rounded-lg'>
                     <span className='responsive-text-sm text-[#4A5565]'>{employee.name}</span>
-                    <button
-                      type='button'
-                      onClick={() => handleRemoveEmployee(employee.id)}
-                      className='flex items-center justify-center hover:bg-blue-fmrp/10 rounded-full p-0.5 transition-colors'
-                    >
+                    <button type='button' onClick={() => handleRemoveEmployee(employee.id)} className='flex items-center justify-center hover:bg-blue-fmrp/10 rounded-full p-0.5 transition-colors'>
                       <CloseXIcon className='size-3.5 text-[#4A5565]' />
                     </button>
                   </div>
@@ -142,13 +137,7 @@ const PopupShiftForm = ({
             <label className='responsive-text-base font-medium text-neutral-05'>Chọn ca</label>
             <div className='flex flex-col'>
               {filteredShifts.map(shift => (
-                <label
-                  key={shift.id}
-                  className='flex items-center justify-between py-4 px-2 border-b border-[#F3F4F6] hover:bg-[#F9FAFB] cursor-pointer transition-colors last:border-b-0'
-                >
-                  <span className='responsive-text-sm font-medium text-neutral-05'>
-                    {shift.label} <span className='text-neutral-02 font-normal'>({shift.time})</span>
-                  </span>
+                <label key={shift.id} className='flex items-center gap-3 py-4 px-2 border-b border-[#F3F4F6] hover:bg-[#F9FAFB] cursor-pointer transition-colors last:border-b-0'>
                   <input
                     type='radio'
                     name='shift'
@@ -157,11 +146,12 @@ const PopupShiftForm = ({
                     onChange={() => setSelectedShift(shift.id)}
                     className='size-5 text-blue-fmrp cursor-pointer outline-none focus:outline-none focus:ring-0'
                   />
+                  <span className='responsive-text-sm font-medium text-neutral-05'>
+                    {shift.label} <span className='text-neutral-02 font-normal'>({shift.time})</span>
+                  </span>
                 </label>
               ))}
-              {filteredShifts.length === 0 && (
-                <div className='text-center py-4 text-neutral-02 responsive-text-sm'>Không tìm thấy ca nào</div>
-              )}
+              {filteredShifts.length === 0 && <div className='text-center py-4 text-neutral-02 responsive-text-sm'>Không tìm thấy ca nào</div>}
             </div>
           </div>
 
@@ -170,10 +160,7 @@ const PopupShiftForm = ({
             <label className='responsive-text-base font-medium text-neutral-05'>Chọn thứ trong tuần</label>
             <div className='flex items-center justify-between gap-3'>
               {DAY_NAMES_FULL.map((dayName, index) => (
-                <label
-                  key={index}
-                  className='flex items-center gap-2 cursor-pointer'
-                >
+                <label key={index} className='flex items-center gap-2 cursor-pointer'>
                   <input
                     type='checkbox'
                     checked={selectedDays.has(index)}
@@ -187,11 +174,7 @@ const PopupShiftForm = ({
           </div>
 
           {/* Nút Lưu */}
-          <button
-            type='button'
-            onClick={handleSave}
-            className='mx-auto w-[126px] py-3 px-4 rounded-lg text-white font-medium responsive-text-sm transition-colors bg-blue-fmrp hover:bg-blue-600'
-          >
+          <button type='button' onClick={handleSave} className='mx-auto w-[126px] py-3 px-4 rounded-lg text-white font-medium responsive-text-sm transition-colors bg-blue-fmrp hover:bg-blue-600'>
             Lưu
           </button>
         </div>

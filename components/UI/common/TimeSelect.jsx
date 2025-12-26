@@ -1,6 +1,6 @@
-import React, { useRef, useEffect, useState } from 'react'
-import { Customscrollbar } from '@/components/UI/common/Customscrollbar'
-import { FaCheck } from 'react-icons/fa'
+import React, { useRef, useEffect, useState } from 'react';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import { FaCheck } from 'react-icons/fa';
 
 /**
  * Component dropdown chọn giờ hoặc phút (Custom UI)
@@ -15,14 +15,15 @@ import { FaCheck } from 'react-icons/fa'
  * @param {string} props.label - Label text (ví dụ: "giờ", "phút")
  */
 const TimeSelect = ({ value, onChange, type = 'hour', placeholder, disabled = false, className = '', error, label }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [inputValue, setInputValue] = useState('')
-  const [isFocused, setIsFocused] = useState(false)
-  const containerRef = useRef(null)
-  const dropdownRef = useRef(null)
-  const selectedOptionRef = useRef(null)
-  const inputRef = useRef(null)
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [inputValue, setInputValue] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
+
+  const containerRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const selectedOptionRef = useRef(null);
+  const inputRef = useRef(null);
 
   // Tạo options dựa trên type
   const options = React.useMemo(() => {
@@ -31,138 +32,138 @@ const TimeSelect = ({ value, onChange, type = 'hour', placeholder, disabled = fa
       return Array.from({ length: 24 }, (_, i) => ({
         value: String(i).padStart(2, '0'),
         label: String(i).padStart(2, '0'),
-      }))
+      }));
     } else {
       // Phút: 0-59
       return Array.from({ length: 60 }, (_, i) => ({
         value: String(i).padStart(2, '0'),
         label: String(i).padStart(2, '0'),
-      }))
+      }));
     }
-  }, [type])
+  }, [type]);
 
   // Filter options dựa trên search term
   const filteredOptions = React.useMemo(() => {
-    if (!searchTerm) return options
-    return options.filter(option => option.label.includes(searchTerm))
-  }, [options, searchTerm])
+    if (!searchTerm) return options;
+    return options.filter(option => option.label.includes(searchTerm));
+  }, [options, searchTerm]);
 
   // Convert value sang format string (padStart 2 digits)
   const selectedValue = React.useMemo(() => {
-    if (value === null || value === undefined || value === '') return null
-    const numValue = typeof value === 'string' ? parseInt(value, 10) : value
-    if (isNaN(numValue)) return null
-    return String(numValue).padStart(2, '0')
-  }, [value])
+    if (value === null || value === undefined || value === '') return null;
+    const numValue = typeof value === 'string' ? parseInt(value, 10) : value;
+    if (isNaN(numValue)) return null;
+    return String(numValue).padStart(2, '0');
+  }, [value]);
 
   // Tìm option đang được chọn
   const selectedOption = React.useMemo(() => {
-    if (!selectedValue) return null
-    return options.find(opt => opt.value === selectedValue)
-  }, [options, selectedValue])
+    if (!selectedValue) return null;
+    return options.find(opt => opt.value === selectedValue);
+  }, [options, selectedValue]);
 
   // Sync inputValue với selectedValue khi không focus
   useEffect(() => {
     if (!isFocused) {
-      setInputValue(selectedValue || '')
+      setInputValue(selectedValue || '');
     }
-  }, [selectedValue, isFocused])
+  }, [selectedValue, isFocused]);
 
   // Validate và format input
-  const validateAndFormat = (inputVal) => {
+  const validateAndFormat = inputVal => {
     // Chỉ cho phép số
-    const numericValue = inputVal.replace(/[^0-9]/g, '')
-    
-    if (!numericValue) return ''
+    const numericValue = inputVal.replace(/[^0-9]/g, '');
 
-    const num = parseInt(numericValue, 10)
-    const maxValue = type === 'hour' ? 23 : 59
+    if (!numericValue) return '';
+
+    const num = parseInt(numericValue, 10);
+    const maxValue = type === 'hour' ? 23 : 59;
 
     // Giới hạn giá trị
     if (num > maxValue) {
-      return String(maxValue).padStart(2, '0')
+      return String(maxValue).padStart(2, '0');
     }
 
-    return numericValue
-  }
+    return numericValue;
+  };
 
   // Handle input change
-  const handleInputChange = (e) => {
-    const newValue = e.target.value
-    const formatted = validateAndFormat(newValue)
-    setInputValue(formatted)
-    
+  const handleInputChange = e => {
+    const newValue = e.target.value;
+    const formatted = validateAndFormat(newValue);
+    setInputValue(formatted);
+
     // Update value ngay khi nhập (nếu hợp lệ)
     if (formatted && onChange) {
-      const numValue = parseInt(formatted, 10)
+      const numValue = parseInt(formatted, 10);
       if (!isNaN(numValue)) {
-        const maxValue = type === 'hour' ? 23 : 59
+        const maxValue = type === 'hour' ? 23 : 59;
         if (numValue <= maxValue) {
-          onChange(String(numValue).padStart(2, '0'))
+          onChange(String(numValue).padStart(2, '0'));
         }
       }
     } else if (!formatted && onChange) {
       // Nếu xóa hết, set về empty
-      onChange('')
+      onChange('');
     }
-  }
+  };
 
   // Handle input blur - format lại giá trị
   const handleInputBlur = () => {
-    setIsFocused(false)
+    setIsFocused(false);
     if (inputValue) {
-      const numValue = parseInt(inputValue, 10)
+      const numValue = parseInt(inputValue, 10);
       if (!isNaN(numValue)) {
-        const maxValue = type === 'hour' ? 23 : 59
-        const finalValue = numValue > maxValue ? maxValue : numValue
-        const formatted = String(finalValue).padStart(2, '0')
-        setInputValue(formatted)
+        const maxValue = type === 'hour' ? 23 : 59;
+        const finalValue = numValue > maxValue ? maxValue : numValue;
+        const formatted = String(finalValue).padStart(2, '0');
+        setInputValue(formatted);
         if (onChange) {
-          onChange(formatted)
+          onChange(formatted);
         }
       }
     } else {
       // Nếu empty, giữ nguyên giá trị cũ hoặc set về placeholder
-      setInputValue(selectedValue || '')
+      setInputValue(selectedValue || '');
     }
-  }
+  };
 
   // Handle input focus
   const handleInputFocus = () => {
-    setIsFocused(true)
-    setIsOpen(true)
+    setIsFocused(true);
+    setIsOpen(true);
     // Select all text khi focus
     if (inputRef.current) {
-      inputRef.current.select()
+      inputRef.current.select();
     }
-  }
+  };
 
   // Handle change - trả về string value để tương thích với react-hook-form
   const handleSelect = option => {
     if (onChange && !disabled) {
-      onChange(option.value)
-      setIsOpen(false)
-      setSearchTerm('')
+      onChange(option.value);
+      setIsOpen(false);
+      setSearchTerm('');
     }
-  }
+  };
 
   // Click outside để đóng dropdown
   useEffect(() => {
     const handleClickOutside = event => {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false)
-        setSearchTerm('')
+        setIsOpen(false);
+        setSearchTerm('');
       }
-    }
+    };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isOpen])
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   // Scroll đến option đang được chọn khi mở dropdown
   useEffect(() => {
@@ -172,38 +173,41 @@ const TimeSelect = ({ value, onChange, type = 'hour', placeholder, disabled = fa
           selectedOptionRef.current.scrollIntoView({
             behavior: 'instant',
             block: 'center',
-          })
+          });
         }
-      }, 50)
+      }, 50);
     }
-  }, [isOpen, selectedOption])
+  }, [isOpen, selectedOption]);
 
   // Tính toán vị trí dropdown
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 })
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
   useEffect(() => {
     if (isOpen && containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect()
+      const rect = containerRef.current.getBoundingClientRect();
       setDropdownPosition({
         top: rect.bottom + window.scrollY,
         left: rect.left + window.scrollX,
         width: rect.width,
-      })
+      });
     }
-  }, [isOpen])
+  }, [isOpen]);
 
-  const displayValue = isFocused ? inputValue : (selectedValue || placeholder || (type === 'hour' ? '00' : '00'))
-  const hasValue = selectedValue || isFocused
+  const displayValue = isFocused ? inputValue : selectedValue || placeholder || (type === 'hour' ? '00' : '00');
+  const hasValue = selectedValue || isFocused;
 
   return (
     <div className={`flex-1 flex flex-col gap-1 ${className}`}>
       <div className='flex items-center gap-2 relative' ref={containerRef}>
         {/* Input field */}
-        <div className='flex-1 relative w-[50px]'>
+        <div className='flex-1 relative'>
           <div
-            className={`w-full px-3 py-2 rounded-[10px] border-none transition-all flex items-center ${
-              disabled ? 'bg-gray-100 cursor-not-allowed opacity-50' : 'bg-[#F6F8FA]'
-            } ${error ? 'ring-1 ring-[#EE1E1E]' : ''}`}
+            onClick={() => {
+              setIsOpen(true);
+            }}
+            className={`w-full px-3 py-[10px] !h-[42px] rounded-[10px] border-none transition-all flex items-center ${disabled ? 'bg-gray-100 cursor-not-allowed opacity-50' : 'bg-[#F6F8FA] cursor-pointer'} ${
+              error ? 'ring-1 ring-[#EE1E1E]' : ''
+            }`}
           >
             <input
               ref={inputRef}
@@ -215,17 +219,15 @@ const TimeSelect = ({ value, onChange, type = 'hour', placeholder, disabled = fa
               placeholder={placeholder || (type === 'hour' ? '00' : '00')}
               disabled={disabled}
               maxLength={2}
-              className={`flex-1 !w-[20px] text-sm bg-transparent border-none outline-none ${
-                hasValue ? 'text-[#141522] font-medium' : 'text-[#9295A4]'
-              }`}
+              className={`flex-1 !w-[40px] text-sm bg-transparent border-none outline-none text-center ${hasValue ? 'text-[#141522]' : 'text-[#9295A4]'}`}
               onClick={e => {
-                e.stopPropagation()
+                e.stopPropagation();
                 if (!disabled) {
-                  inputRef.current?.focus()
+                  inputRef.current?.focus();
                 }
               }}
             />
-             {label && <span className='text-sm text-[#9295A4] whitespace-nowrap'>{label}</span>}
+            {label && <span className='text-sm text-[#9295A4] whitespace-nowrap'>{label}</span>}
           </div>
 
           {/* Dropdown menu */}
@@ -246,25 +248,23 @@ const TimeSelect = ({ value, onChange, type = 'hour', placeholder, disabled = fa
                 <div className='py-1'>
                   {filteredOptions.length > 0 ? (
                     filteredOptions.map(option => {
-                      const isSelected = selectedOption && selectedOption.value === option.value
+                      const isSelected = selectedOption && selectedOption.value === option.value;
                       return (
                         <div
                           key={option.value}
                           ref={isSelected ? selectedOptionRef : null}
                           onClick={e => {
-                            e.stopPropagation()
-                            handleSelect(option)
+                            e.stopPropagation();
+                            handleSelect(option);
                           }}
                           className={`px-3 py-2 text-sm cursor-pointer flex items-center justify-between transition-colors ${
-                            isSelected
-                              ? 'bg-blue-50 text-[#003DA0] font-medium'
-                              : 'text-[#141522] hover:bg-gray-50'
+                            isSelected ? 'bg-blue-50 text-[#003DA0] font-medium' : 'text-[#141522] hover:bg-gray-50'
                           }`}
                         >
                           <span>{option.label}</span>
                           {isSelected && <FaCheck className='w-3 h-3 text-[#003DA0]' />}
                         </div>
-                      )
+                      );
                     })
                   ) : (
                     <div className='px-3 py-2 text-sm text-gray-400 text-center'>Không tìm thấy</div>
@@ -274,11 +274,10 @@ const TimeSelect = ({ value, onChange, type = 'hour', placeholder, disabled = fa
             </div>
           )}
         </div>
-       
       </div>
       {error && <span className='text-xs text-[#EE1E1E]'>{error.message}</span>}
     </div>
-  )
-}
+  );
+};
 
-export default TimeSelect
+export default TimeSelect;
