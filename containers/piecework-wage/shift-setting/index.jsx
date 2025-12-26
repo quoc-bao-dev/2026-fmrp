@@ -111,6 +111,7 @@ const ShiftSetting = props => {
 
   const [isState, sIsState] = useState(initialState)
   const [isLoading, setIsLoading] = useState(false)
+  const [isRefetching, setIsRefetching] = useState(false) // State để track refetch từ nút reset
   const [deleteTarget, setDeleteTarget] = useState(null)
   const queryState = key => sIsState(prev => ({ ...prev, ...key }))
 
@@ -288,9 +289,16 @@ const ShiftSetting = props => {
   }, 500)
 
   // Hàm refetch từ API
-  const refetch = () => {
-    refetchSetupShift()
-      // isShow('success', dataLang?.reloaded_successfully || 'Tải lại thành công')
+  const refetch = (showLoading = false) => {
+    if (showLoading) {
+      setIsRefetching(true)
+    }
+    refetchSetupShift().finally(() => {
+      if (showLoading) {
+        setIsRefetching(false)
+      }
+    })
+    // isShow('success', dataLang?.reloaded_successfully || 'Tải lại thành công')
   }
 
   // Xuất Excel từ dữ liệu đã map
@@ -431,7 +439,7 @@ const ShiftSetting = props => {
               </div>
 
               <div className='flex items-center justify-end space-x-2'>
-                <OnResetData sOnFetching={e => {}} onClick={() => refetch()} />
+                <OnResetData sOnFetching={e => {}} onClick={() => refetch(true)} />
                 <div className={``}>
                   {filteredData?.length > 0 && (
                     <ExcelFileComponent multiDataSet={multiDataSet} filename='Danh sách ca làm việc' title='DSCLV' dataLang={dataLang} />
@@ -462,7 +470,7 @@ const ShiftSetting = props => {
                   </ColumnTable>
                 </HeaderTable>
 
-                {isLoadingSetupShift || isLoading ? (
+                {(isLoadingSetupShift && !isRefetching) || isLoading || isRefetching ? (
                   <Loading className='h-80' color='#0f4f9e' />
                 ) : paginatedData?.length > 0 ? (
                   <>
