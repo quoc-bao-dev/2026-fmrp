@@ -33,7 +33,7 @@ const ProcessStepIcon = ({
       gradientStartColor = "white";
     } else {
       // Chưa giao - màu trắng/xám
-      fillColor = "#F3F3F3";
+      fillColor = "#E4E4E4";
       gradientStopColor = "#888888";
       gradientStartColor = "#D8D8D8";
     }
@@ -55,7 +55,7 @@ const ProcessStepIcon = ({
         gradientStartColor = "white";
       }
     } else {
-      fillColor = "#F3F3F3";
+      fillColor = "#E4E4E4";
       gradientStopColor = "#888888";
       gradientStartColor = "#D8D8D8";
     }
