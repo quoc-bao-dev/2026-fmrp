@@ -13,6 +13,7 @@ import SearchComponent from '@/components/UI/filterComponents/searchComponent'
 import SelectComponent from '@/components/UI/filterComponents/selectComponent'
 import Loading from '@/components/UI/loading/loading'
 import LoadingButton from '@/components/UI/loading/loadingButton'
+import MultiValue from '@/components/UI/mutiValue/multiValue'
 import NoData from '@/components/UI/noData/nodata'
 import Pagination from '@/components/UI/pagination'
 import PopupConfim from '@/components/UI/popupConfim/popupConfim'
@@ -23,6 +24,7 @@ import { useLimitAndTotalItems } from '@/hooks/useLimitAndTotalItems'
 import usePagination from '@/hooks/usePagination'
 import useStatusExprired from '@/hooks/useStatusExprired'
 import useToast from '@/hooks/useToast'
+import { useSetupShift, useDeleteSetupShift } from '@/managers/api/piecework-wage/useSetupShift'
 import { Grid6 } from 'iconsax-react'
 import { debounce } from 'lodash'
 import Head from 'next/head'
@@ -96,8 +98,7 @@ const mockShiftData = [
 
 const initialState = {
   keySearch: '',
-  idShift: null,
-  idTimeFrame: null,
+  idBranch: [], // Array để hỗ trợ multi-select
 }
 
 const ShiftSetting = props => {
@@ -111,89 +112,189 @@ const ShiftSetting = props => {
   const [isState, sIsState] = useState(initialState)
   const [isLoading, setIsLoading] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null)
-  const [isDeleting, setIsDeleting] = useState(false)
   const queryState = key => sIsState(prev => ({ ...prev, ...key }))
+
+  // Hook để xóa setup shift
+  const { mutate: deleteSetupShift, isPending: isDeleting } = useDeleteSetupShift({
+    onSuccess: data => {
+      const messageKey = data?.message || 'deleted_successfully'
+      const toastType = data?.isSuccess === true || data?.isSuccess === 1 ? 'success' : 'error'
+      isShow(toastType, dataLang?.[messageKey] || messageKey)
+      setDeleteTarget(null)
+      refetch()
+    },
+    onError: error => {
+      const messageKey = error?.response?.data?.message || error?.message || 'delete_failed'
+      isShow('error', dataLang?.[messageKey] || messageKey)
+      setDeleteTarget(null)
+    },
+  })
 
   // Danh sách chi nhánh
   const { data: listBranch = [] } = useBranchList()
 
-  // Mock data với pagination
-  const effectiveLimit = useMemo(() => (limit && Number(limit) > 0 ? Number(limit) : 8), [limit])
+  // Options cho filter chi nhánh
+  const branchOptions = useMemo(() => {
+    return listBranch || []
+  }, [listBranch])
+
+  // Pagination config
+  const effectiveLimit = useMemo(() => (limit && Number(limit) > 0 ? Number(limit) : 15), [limit])
   const currentPage = useMemo(() => Number(router.query?.page) || 1, [router.query?.page])
 
-  // Filter và search mock data
+  // Hàm format time từ "HH:mm:ss" sang "HH:mmh" (định nghĩa trước để dùng ở các useMemo khác)
+  const formatTime = timeString => {
+    if (!timeString) return ''
+    const [hours, minutes] = timeString.split(':')
+    return `${hours}:${minutes}h`
+  }
+
+  // Tạo params cho API với pagination, search và branch filter
+  const filterParams = useMemo(() => {
+    const params = {
+      page: currentPage,
+      limit: effectiveLimit,
+      search: isState.keySearch || undefined,
+    }
+    
+    // Thêm filter[branch_id][0], filter[branch_id][1], ... nếu có chọn branch
+    if (isState.idBranch && Array.isArray(isState.idBranch) && isState.idBranch.length > 0) {
+      const branchIds = isState.idBranch.map(item => item?.value || item).filter(Boolean)
+      if (branchIds.length > 0) {
+        params['filter[branch_id]'] = branchIds
+      }
+    }
+
+    return params
+  }, [currentPage, effectiveLimit, isState.keySearch, isState.idBranch])
+
+  // API: Lấy danh sách ca làm việc với pagination
+  const { data: setupShiftData, isLoading: isLoadingSetupShift, refetch: refetchSetupShift } = useSetupShift(filterParams)
+
+  // Hàm map day code sang tên tiếng Việt
+  const mapDayToVietnamese = dayCode => {
+    const dayMap = {
+      Mon: 'Thứ 2',
+      Tue: 'Thứ 3',
+      Wed: 'Thứ 4',
+      Thu: 'Thứ 5',
+      Fri: 'Thứ 6',
+      Sat: 'Thứ 7',
+      Sun: 'Chủ nhật',
+    }
+    return dayMap[dayCode] || dayCode
+  }
+
+  // Sắp xếp days theo đúng thứ tự từ Thứ 2 -> Chủ nhật
+  const sortDaysByWeekOrder = dayCodes => {
+    if (!Array.isArray(dayCodes)) return []
+    const order = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    return [...dayCodes].sort((a, b) => {
+      const indexA = order.indexOf(a) === -1 ? Number.MAX_SAFE_INTEGER : order.indexOf(a)
+      const indexB = order.indexOf(b) === -1 ? Number.MAX_SAFE_INTEGER : order.indexOf(b)
+      return indexA - indexB
+    })
+  }
+
+  // Hook useMemo để map dữ liệu từ API ra format table
+  const mappedShiftData = useMemo(() => {
+    if (!setupShiftData?.rResult || !Array.isArray(setupShiftData.rResult)) {
+      return []
+    }
+
+    return setupShiftData.rResult.map(item => {
+      // Map khung giờ từ time_start và time_end
+      const frameHour = `${formatTime(item.time_start)} - ${formatTime(item.time_end)}`
+
+      // Map days từ string "Mon,Tue,Wed" sang array, và sắp xếp từ Thứ 2 -> Chủ nhật
+      const days = item.days
+        ? sortDaysByWeekOrder(
+            item.days
+              .split(',')
+              .map(day => day.trim())
+              .filter(Boolean)
+          ).map(day => mapDayToVietnamese(day))
+        : []
+
+      return {
+        id: item.id,
+        name: item.name || '',
+        frameHour,
+        days,
+        // Giữ lại dữ liệu gốc để dùng cho edit
+        time_start: item.time_start,
+        time_end: item.time_end,
+        branch_id: item.branch_id,
+        branch_name: item.branch_name,
+        daysRaw: item.days, // Giữ nguyên format gốc
+      }
+    })
+  }, [setupShiftData])
+
+  // Log dữ liệu từ API
+  useEffect(() => {
+    if (setupShiftData) {
+      console.log('Setup Shift Data:', setupShiftData)
+    }
+  }, [setupShiftData])
+
+  // Log dữ liệu đã map
+  useEffect(() => {
+    if (mappedShiftData.length > 0) {
+      console.log('Mapped Shift Data:', mappedShiftData)
+    }
+  }, [mappedShiftData])
+
+
+  // Filter dữ liệu từ API (server-side pagination, search, time và shift đã được xử lý)
   const filteredData = useMemo(() => {
-    let result = [...mockShiftData]
+    // Tất cả filter đã được xử lý ở server-side, không cần filter client-side
+    return mappedShiftData
+  }, [mappedShiftData])
 
-    // Filter by search
-    if (isState.keySearch) {
-      const searchLower = isState.keySearch.toLowerCase()
-      result = result.filter(item => item.name.toLowerCase().includes(searchLower))
-    }
+  // Pagination từ output của API
+  const totalRecords = useMemo(() => {
+    // Ưu tiên dùng iTotalDisplayRecords, nếu không có thì dùng iTotalRecords
+    return Number(setupShiftData?.output?.iTotalDisplayRecords) || Number(setupShiftData?.output?.iTotalRecords) || filteredData.length
+  }, [setupShiftData?.output, filteredData.length])
 
-    // Filter by shift name
-    if (isState.idShift?.value) {
-      result = result.filter(item => item.id === isState.idShift.value)
-    }
+  // Dữ liệu hiển thị trên table (API đã paginate server-side)
+  const paginatedData = useMemo(() => {
+    // API đã paginate server-side, dùng trực tiếp filteredData (đã được filter client-side nếu cần)
+    return filteredData
+  }, [filteredData])
 
-    // Filter by time frame
-    if (isState.idTimeFrame?.value) {
-      result = result.filter(item => item.timeFrame === isState.idTimeFrame.value)
-    }
 
-    return result
-  }, [isState.keySearch, isState.idShift, isState.idTimeFrame])
+ 
 
-  // Pagination
-  const totalRecords = filteredData.length
-  const startIndex = (currentPage - 1) * effectiveLimit
-  const endIndex = startIndex + effectiveLimit
-  const paginatedData = filteredData.slice(startIndex, endIndex)
-
-  // Options cho filter
-  const shiftOptions = useMemo(() => {
-    const uniqueShifts = [...new Set(mockShiftData.map(item => item.name))]
-    return uniqueShifts.map(name => ({
-      value: mockShiftData.find(item => item.name === name)?.id,
-      label: name,
-    }))
-  }, [])
-
-  const timeFrameOptions = useMemo(() => {
-    const uniqueTimeFrames = [...new Set(mockShiftData.map(item => item.timeFrame))]
-    return uniqueTimeFrames.map(timeFrame => ({
-      value: timeFrame,
-      label: timeFrame,
-    }))
-  }, [])
-
-  // Tự điều chỉnh về trang 1 nếu limit thay đổi
+  // Tự điều chỉnh về trang 1 nếu limit thay đổi hoặc khi refetch data
   useEffect(() => {
     if (!effectiveLimit || effectiveLimit <= 0) return
 
     const totalPages = Math.max(1, Math.ceil(totalRecords / effectiveLimit))
-    if (currentPage > totalPages) {
+    if (currentPage > totalPages && totalPages > 0) {
       paginate(1)
     }
   }, [effectiveLimit, totalRecords, currentPage, paginate])
 
-  // Hàm tìm kiếm
+  // Hàm tìm kiếm - reset về trang 1 khi search thay đổi
   const _HandleOnChangeKeySearch = debounce(({ target: { value } }) => {
     queryState({ keySearch: value })
+    // Reset về trang 1 khi search thay đổi
+    if (currentPage !== 1) {
+      paginate(1)
+    }
     router.replace('/piecework-wage/shift-setting')
   }, 500)
 
-  // Hàm refetch (mock)
+  // Hàm refetch từ API
   const refetch = () => {
-    setIsLoading(true)
-    setTimeout(() => {
-      setIsLoading(false)
+    refetchSetupShift()
       // isShow('success', dataLang?.reloaded_successfully || 'Tải lại thành công')
-    }, 500)
   }
 
-  // Xuất Excel
-  const multiDataSet = [
+  // Xuất Excel từ dữ liệu đã map
+  const multiDataSet = useMemo(() => [
     {
       columns: [
         {
@@ -233,11 +334,11 @@ const ShiftSetting = props => {
         filteredData?.map((e, index) => [
           { value: index + 1, style: { numFmt: '0', font: { name: 'Lexend Deca' } } },
           { value: `${e.name ? e.name : ''}`, style: { font: { name: 'Lexend Deca' } } },
-          { value: `${e.timeFrame ? e.timeFrame : ''}`, style: { font: { name: 'Lexend Deca' } } },
-          { value: `${e.daysOfWeek ? e.daysOfWeek.join(', ') : ''}`, style: { font: { name: 'Lexend Deca' } } },
+          { value: `${e.frameHour ? e.frameHour : ''}`, style: { font: { name: 'Lexend Deca' } } },
+          { value: `${e.days ? e.days.join(', ') : ''}`, style: { font: { name: 'Lexend Deca' } } },
         ]) || [],
     },
-  ]
+  ], [filteredData, dataLang])
 
   const breadcrumbItems = [
     {
@@ -259,15 +360,9 @@ const ShiftSetting = props => {
     // Đóng modal ngay khi bấm xác nhận
     const targetId = deleteTarget
     setDeleteTarget(null)
-    setIsDeleting(true)
     
-    // TODO: Gọi API xóa ca làm việc ở đây
-    // Mock delete - sau này thay bằng API call thực tế
-    setTimeout(() => {
-      setIsDeleting(false)
-      isShow('success', dataLang?.deleted_successfully || 'Xóa thành công')
-      refetch()
-    }, 1000)
+    // Gọi API xóa ca làm việc
+    deleteSetupShift(targetId)
   }
 
   const popupSubtitle = isDeleting ? (
@@ -315,36 +410,23 @@ const ShiftSetting = props => {
           <div className='flex flex-col h-full'>
             <div className='w-full items-center flex justify-between gap-2'>
               <div className='flex gap-3 items-center w-full'>
-                <SearchComponent dataLang={dataLang} onChange={_HandleOnChangeKeySearch.bind(this)} colSpan={1} />
+                <SearchComponent dataLang={dataLang} onChange={_HandleOnChangeKeySearch.bind(this)} colSpan={1} alwaysOpen={true} />
                 <SelectComponent
-                  options={[
-                    {
-                      value: '',
-                      label: dataLang?.shift || 'Ca',
-                      isDisabled: true,
-                    },
-                    ...shiftOptions,
-                  ]}
+                  options={branchOptions}
                   colSpan={1}
-                  onChange={selected => queryState({ idShift: selected })}
-                  value={isState.idShift}
-                  placeholder={dataLang?.shift || 'Ca'}
+                  onChange={selected => {
+                    queryState({ idBranch: selected || [] })
+                    // Reset về trang 1 khi filter thay đổi
+                    if (currentPage !== 1) {
+                      paginate(1)
+                    }
+                  }}
+                  value={isState.idBranch}
+                  placeholder={dataLang?.price_quote_branch || 'Chi nhánh'}
                   isClearable={true}
-                />
-                <SelectComponent
-                  options={[
-                    {
-                      value: '',
-                      label: dataLang?.time_frame || 'Khung giờ',
-                      isDisabled: true,
-                    },
-                    ...timeFrameOptions,
-                  ]}
-                  colSpan={1}
-                  onChange={selected => queryState({ idTimeFrame: selected })}
-                  value={isState.idTimeFrame}
-                  placeholder={dataLang?.time_frame || 'Khung giờ'}
-                  isClearable={true}
+                  isMulti={true}
+                  closeMenuOnSelect={false}
+                  components={{ MultiValue }}
                 />
               </div>
 
@@ -359,7 +441,7 @@ const ShiftSetting = props => {
             </div>
             <Customscrollbar className='h-full overflow-y-auto'>
               <div className='w-full'>
-                <HeaderTable gridCols={12}>
+                <HeaderTable gridCols={15}>
                   <ColumnTable colSpan={0.5} textAlign={'center'}>
                     {dataLang?.stt || 'STT'}
                   </ColumnTable>
@@ -372,30 +454,38 @@ const ShiftSetting = props => {
                   <ColumnTable colSpan={4} textAlign={'left'}>
                     {dataLang?.days_of_week || 'Thứ trong tuần'}
                   </ColumnTable>
+                  <ColumnTable colSpan={3} textAlign={'left'}>
+                    {dataLang?.branch_name || 'Chi nhánh'}
+                  </ColumnTable>
                   <ColumnTable colSpan={1.5} textAlign={'center'}>
                     {dataLang?.branch_popup_properties || 'Tác vụ'}
                   </ColumnTable>
                 </HeaderTable>
 
-                {isLoading ? (
+                {isLoadingSetupShift || isLoading ? (
                   <Loading className='h-80' color='#0f4f9e' />
                 ) : paginatedData?.length > 0 ? (
                   <>
                     <div className='divide-y divide-slate-200 h-[100%]'>
                       {paginatedData.map((e, index) => {
+                        // Tính STT dựa trên currentPage và effectiveLimit
+                        const stt = (currentPage - 1) * effectiveLimit + index + 1
                         return (
-                          <RowTable gridCols={12} key={e.id.toString()}>
+                          <RowTable gridCols={15} key={e.id?.toString() || index}>
                             <RowItemTable colSpan={0.5} textAlign={'center'}>
-                              {startIndex + index + 1}
+                              {stt}
                             </RowItemTable>
                             <RowItemTable colSpan={3} textAlign={'left'}>
                               {e.name}
                             </RowItemTable>
                             <RowItemTable colSpan={3} textAlign={'left'}>
-                              <span className='text-blue-fmrp'>{e.timeFrame}</span>
+                              <span className='text-blue-fmrp'>{e.frameHour}</span>
                             </RowItemTable>
                             <RowItemTable colSpan={4} textAlign={'left'}>
-                              {e.daysOfWeek.join(', ')}
+                              {e.days?.join(', ') || ''}
+                            </RowItemTable>
+                            <RowItemTable colSpan={3} textAlign={'left'}>
+                              {e.branch_name || ''}
                             </RowItemTable>
                             <RowItemTable colSpan={1.5} className='flex items-center justify-center space-x-2 text-center'>
                               <PopupShiftSetting

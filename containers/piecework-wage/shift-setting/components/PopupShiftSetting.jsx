@@ -7,6 +7,7 @@ import LoadingButton from '@/components/UI/loading/loadingButton';
 import PopupCustom from '@/components/UI/popup';
 import CheckboxDefault from '@/components/common/checkbox/CheckboxDefault';
 import { useBranchList } from '@/hooks/common/useBranch';
+import { useSaveSetupShift, useUpdateSetupShift } from '@/managers/api/piecework-wage/useSetupShift';
 import useToast from '@/hooks/useToast';
 import { Lexend_Deca } from '@next/font/google';
 import { motion } from 'framer-motion';
@@ -20,13 +21,13 @@ const deca = Lexend_Deca({
 });
 
 const daysOfWeek = [
-  { id: 1, label: 'Thứ hai', value: 'monday' },
-  { id: 2, label: 'Thứ ba', value: 'tuesday' },
-  { id: 3, label: 'Thứ tư', value: 'wednesday' },
-  { id: 4, label: 'Thứ năm', value: 'thursday' },
-  { id: 5, label: 'Thứ sáu', value: 'friday' },
-  { id: 6, label: 'Thứ bảy', value: 'saturday' },
-  { id: 7, label: 'Chủ nhật', value: 'sunday' },
+  { id: 1, label: 'Thứ hai', value: 'monday', apiValue: 'Mon' },
+  { id: 2, label: 'Thứ ba', value: 'tuesday', apiValue: 'Tue' },
+  { id: 3, label: 'Thứ tư', value: 'wednesday', apiValue: 'Wed' },
+  { id: 4, label: 'Thứ năm', value: 'thursday', apiValue: 'Thu' },
+  { id: 5, label: 'Thứ sáu', value: 'friday', apiValue: 'Fri' },
+  { id: 6, label: 'Thứ bảy', value: 'saturday', apiValue: 'Sat' },
+  { id: 7, label: 'Chủ nhật', value: 'sunday', apiValue: 'Sun' },
 ];
 
 const PopupShiftSetting = ({ dataLang, className, onRefresh, trigger, buttonClassName, editData = null, listBranch = [] }) => {
@@ -41,6 +42,54 @@ const PopupShiftSetting = ({ dataLang, className, onRefresh, trigger, buttonClas
 
   // Lấy auth state để tự động bắt branch
   const authState = useSelector(state => state.auth);
+
+  // Hook để create setup shift
+  const { mutate: saveSetupShift, isPending: isCreating } = useSaveSetupShift({
+    onSuccess: data => {
+      const messageKey = data?.message || 'created_successfully';
+      const toastType = data?.isSuccess === true || data?.isSuccess === 1 ? 'success' : 'error';
+      isShow(toastType, dataLang?.[messageKey] || messageKey);
+      setIsOpen(false);
+      form.reset({
+        shiftName: '',
+        startHour: '08',
+        startMinute: '00',
+        endHour: '17',
+        endMinute: '30',
+        branch: null,
+      });
+      setSelectedDays([]);
+      if (onRefresh) onRefresh();
+    },
+    onError: error => {
+      const messageKey = error?.response?.data?.message || error?.message || 'create_failed';
+      isShow('error', dataLang?.[messageKey] || messageKey);
+    },
+  });
+
+  // Hook để update setup shift
+  const { mutate: updateSetupShift, isPending: isUpdating } = useUpdateSetupShift({
+    onSuccess: data => {
+      const messageKey = data?.message || 'updated_successfully';
+      const toastType = data?.isSuccess === true || data?.isSuccess === 1 ? 'success' : 'error';
+      isShow(toastType, dataLang?.[messageKey] || messageKey);
+      setIsOpen(false);
+      form.reset({
+        shiftName: '',
+        startHour: '08',
+        startMinute: '00',
+        endHour: '17',
+        endMinute: '30',
+        branch: null,
+      });
+      setSelectedDays([]);
+      if (onRefresh) onRefresh();
+    },
+    onError: error => {
+      const messageKey = error?.response?.data?.message || error?.message || 'update_failed';
+      isShow('error', dataLang?.[messageKey] || messageKey);
+    },
+  });
 
   const form = useForm({
     defaultValues: {
@@ -61,9 +110,23 @@ const PopupShiftSetting = ({ dataLang, className, onRefresh, trigger, buttonClas
       // Mode edit: Điền dữ liệu từ editData
       form.setValue('shiftName', editData.name || '');
 
-      // Parse timeFrame (ví dụ: "7:00h - 11:00")
-      if (editData.timeFrame) {
-        const [startTime, endTime] = editData.timeFrame.split(' - ');
+      // Parse time từ time_start và time_end (format "HH:mm:ss") hoặc từ timeFrame
+      if (editData.time_start && editData.time_end) {
+        // Parse từ time_start và time_end (format "08:00:00")
+        const [startHour, startMinute] = editData.time_start.split(':');
+        const [endHour, endMinute] = editData.time_end.split(':');
+        if (startHour && startMinute) {
+          form.setValue('startHour', startHour.padStart(2, '0'));
+          form.setValue('startMinute', startMinute.padStart(2, '0'));
+        }
+        if (endHour && endMinute) {
+          form.setValue('endHour', endHour.padStart(2, '0'));
+          form.setValue('endMinute', endMinute.padStart(2, '0'));
+        }
+      } else if (editData.timeFrame || editData.frameHour) {
+        // Fallback: Parse từ timeFrame hoặc frameHour (ví dụ: "7:00h - 11:00h")
+        const timeStr = editData.frameHour || editData.timeFrame;
+        const [startTime, endTime] = timeStr.split(' - ');
         if (startTime) {
           const startMatch = startTime.match(/(\d+):(\d+)/);
           if (startMatch) {
@@ -88,16 +151,29 @@ const PopupShiftSetting = ({ dataLang, className, onRefresh, trigger, buttonClas
         }
       }
 
-      // Điền days of week
-      if (editData.daysOfWeek && Array.isArray(editData.daysOfWeek)) {
-        // Map từ label sang value (ví dụ: "Thứ 2" -> "monday")
-        const mappedDays = editData.daysOfWeek
+      // Điền days of week - ưu tiên parse từ daysRaw (format "Mon,Tue,Wed")
+      if (editData.daysRaw) {
+        // Nếu có daysRaw (format "Mon,Tue,Wed"), parse và map
+        const daysArray = editData.daysRaw.split(',').map(d => d.trim());
+        const mappedDays = daysArray
+          .map(dayCode => {
+            const day = daysOfWeek.find(d => d.apiValue === dayCode);
+            return day?.value;
+          })
+          .filter(Boolean);
+        setSelectedDays(mappedDays);
+      } else if (editData.days && Array.isArray(editData.days)) {
+        // Fallback: Map từ label tiếng Việt sang value (ví dụ: "Thứ 2" -> "monday")
+        const mappedDays = editData.days
           .map(dayLabel => {
             const day = daysOfWeek.find(d => d.label === dayLabel);
             return day?.value;
           })
           .filter(Boolean);
         setSelectedDays(mappedDays);
+      } else {
+        // Nếu không có dữ liệu days, reset về empty
+        setSelectedDays([]);
       }
     } else {
       // Mode create: Tự động set branch từ auth khi popup mở
@@ -121,9 +197,9 @@ const PopupShiftSetting = ({ dataLang, className, onRefresh, trigger, buttonClas
     }
   }, [isOpen, isEditMode, editData, authState, branchOptions, form]);
 
-  // Reset form when popup closes
+  // Reset form when popup closes (chỉ reset khi không phải edit mode)
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen && !isEditMode) {
       form.reset({
         shiftName: '',
         startHour: '08',
@@ -134,7 +210,7 @@ const PopupShiftSetting = ({ dataLang, className, onRefresh, trigger, buttonClas
       });
       setSelectedDays([]);
     }
-  }, [isOpen, form]);
+  }, [isOpen, isEditMode, form]);
 
   const handleToggleDay = dayValue => {
     setSelectedDays(prev => {
@@ -153,38 +229,42 @@ const PopupShiftSetting = ({ dataLang, className, onRefresh, trigger, buttonClas
       return;
     }
 
-    // Format time
-    const startTime = `${data.startHour}:${data.startMinute}`;
-    const endTime = `${data.endHour}:${data.endMinute}`;
-    const timeFrame = `${startTime}h - ${endTime}`;
+    // Format time to "HH:mm:ss" format
+    const startTime = `${String(data.startHour).padStart(2, '0')}:${String(data.startMinute).padStart(2, '0')}:00`;
+    const endTime = `${String(data.endHour).padStart(2, '0')}:${String(data.endMinute).padStart(2, '0')}:00`;
 
-    // Map selected days back to labels
-    const daysLabels = selectedDays
+    // Map selected days to API format (Mon, Tue, Wed, etc.)
+    const daysApiFormat = selectedDays
       .map(dayValue => {
         const day = daysOfWeek.find(d => d.value === dayValue);
-        return day?.label;
+        return day?.apiValue;
       })
       .filter(Boolean);
 
-    // Create payload
+    // Create payload for API
     const payload = {
       name: data.shiftName,
-      timeFrame: timeFrame,
-      daysOfWeek: daysLabels,
+      time_start: startTime,
+      time_end: endTime,
       branch_id: data.branch?.value,
+      days: daysApiFormat,
     };
 
-    // TODO: Gọi API create/update ở đây
-    console.log('Payload:', payload);
-
-    // Mock success
-    isShow('success', isEditMode ? dataLang?.updated_successfully || 'Cập nhật thành công' : dataLang?.created_successfully || 'Tạo thành công');
-    setIsOpen(false);
-    if (onRefresh) onRefresh();
+    // Call API based on mode
+    if (isEditMode && editData?.id) {
+      // Update mode: use update hook
+      updateSetupShift({
+        id: editData.id,
+        payload: payload,
+      });
+    } else {
+      // Create mode: use save hook
+      saveSetupShift(payload);
+    }
   });
 
   const title = isEditMode ? dataLang?.shift_edit || 'Sửa ca làm' : dataLang?.shift_create || 'Tạo Ca Làm';
-  const isLoading = false; // TODO: Set từ API call
+  const isLoading = isCreating || isUpdating;
 
   return (
     <PopupCustom
@@ -200,7 +280,11 @@ const PopupShiftSetting = ({ dataLang, className, onRefresh, trigger, buttonClas
       }
       onClickOpen={() => setIsOpen(true)}
       open={isOpen}
-      onClose={() => setIsOpen(false)}
+      onClose={() => {
+        if (!isLoading) {
+          setIsOpen(false);
+        }
+      }}
       type='popupGroupPiecework'
       classNameBtn={buttonClassName || className}
       classNameModeltime={`max-w-[800px]- !w-[800px] 2xl:!w-[850px] p-8 rounded-[16px]`}

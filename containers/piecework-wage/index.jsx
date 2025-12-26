@@ -389,7 +389,7 @@ const PieceworkWage = props => {
           <div className='flex flex-col h-full'>
             <div className='w-full items-center flex justify-between gap-2'>
               <div className='flex gap-3 items-center w-full'>
-                <SearchComponent dataLang={dataLang} onChange={_HandleOnChangeKeySearch.bind(this)} colSpan={1} />
+                <SearchComponent dataLang={dataLang} onChange={_HandleOnChangeKeySearch.bind(this)} colSpan={1} alwaysOpen={true} />
                 <SelectComponent
                   options={branchOptions}
                   colSpan={1}
@@ -401,7 +401,7 @@ const PieceworkWage = props => {
                   closeMenuOnSelect={false}
                   components={{ MultiValue }}
                 />
-                <SelectComponent
+                {/* <SelectComponent
                   options={groupOptions}
                   colSpan={1}
                   onChange={selected => queryState({ idGroup: selected || [] })}
@@ -411,7 +411,7 @@ const PieceworkWage = props => {
                   isMulti={true}
                   closeMenuOnSelect={false}
                   components={{ MultiValue }}
-                />
+                /> */}
               </div>
 
               <div className='flex items-center justify-end space-x-2'>

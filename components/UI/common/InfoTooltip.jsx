@@ -14,6 +14,7 @@ const InfoTooltip = ({
     content, 
     className = '', 
     iconProps = {},
+    iconSize = 14, // Default giữ nguyên như cũ để không ảnh hưởng nơi khác
     position = 'bottom-center', // 'bottom', 'bottom-center', 'top', 'left', 'right'
     icon: IconComponent = null, // Custom icon component
 }) => {
@@ -132,7 +133,7 @@ const InfoTooltip = ({
                     IconComponent
                 ) : (
                     <InfoCircle 
-                        size={14} 
+                        size={iconSize} 
                         variant="Outline" 
                         className={`text-blue-fmrp transition-colors ${isOpen ? 'text-blue-600' : ''}`}
                         {...iconProps}
