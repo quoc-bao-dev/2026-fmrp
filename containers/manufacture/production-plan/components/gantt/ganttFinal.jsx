@@ -1,6 +1,6 @@
 'use client';
 
-import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
+import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import Loading from '@/components/UI/loading/loading';
 import LoadingButton from '@/components/UI/loading/loadingButton';
@@ -89,8 +89,11 @@ const GanttChart = ({
   const nextRouter = useRouter();
 
   // Tabs cấu hình cho tiêu đề
-  const tabsHeader = useMemo(
-    () => [
+  const tabsHeader = useMemo(() => {
+    // Kiểm tra dữ liệu cho tab 'plan' (có thể có logic khác, tạm thời dùng cùng logic)
+    const hasPlanData = orders?.length > 0;
+
+    return [
       {
         id: 'order',
         name: dataLang?.production_plan_gantt_order || 'production_plan_gantt_order',
@@ -100,10 +103,10 @@ const GanttChart = ({
         id: 'plan',
         name: dataLang?.production_plan_gantt_internal || 'production_plan_gantt_internal',
         tab: 'plan',
+        hasData: hasPlanData,
       },
-    ],
-    [dataLang?.production_plan_gantt_order, dataLang?.production_plan_gantt_internal]
-  );
+    ];
+  }, [dataLang?.production_plan_gantt_order, dataLang?.production_plan_gantt_internal, orders]);
 
   const [activeTabKey, setActiveTabKey] = useState('order');
 
@@ -633,8 +636,15 @@ const GanttChart = ({
     <div className='flex flex-col lg:h-[82vh] h-[80vh] overflow-hidden border'>
       <div className='sticky top-0 flex border-b border-b-[#e5e7eb]'>
         <div className='w-[45%] border-r border-[#e5e7eb] h-full'>
-          <div className='h-[30px] flex items-center justify-between gap-2 w-full'>
-            <TabSwitcherWithUnderline tabs={tabsHeader} activeTab={activeTabObj} onChange={handleChangeTabHeader} className='justify-center items-center h-[30px]' />
+          <div className='flex items-center justify-between gap-2 w-full p-1 border-b border-b-[#e5e7eb]'>
+            <TabSwitcherWithSlidingBackground
+              tabs={tabsHeader}
+              activeTab={activeTabObj}
+              onChange={handleChangeTabHeader}
+              className='justify-center items-center !p-1 overflow-visible !rounded-md'
+              buttonClassName='!py-1.5 !px-3 !responsive-text-sm'
+              buttonActiveClassName='!top-1 !bottom-1 rounded-md'
+            />
           </div>
           <div className='flex items-center gap-2 px-1 h-[30px]'>
             <div className='w-[35%] flex items-center gap-1'>
