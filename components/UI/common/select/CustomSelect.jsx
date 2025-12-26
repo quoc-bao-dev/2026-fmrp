@@ -139,7 +139,7 @@ const CustomSelect = ({
   }
 
   return (
-    <div className={`${classParent ? classParent : ''} relative`}>
+    <div className={`${classParent ? classParent : ''} relative !cursor-pointer`}>
       <SelectCore
         id={id ?? 'parentSelect'}
         menuPortalTarget={menuPortalTarget ?? null}

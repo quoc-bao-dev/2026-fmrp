@@ -1,4 +1,4 @@
-import { CheckIcon } from '@/components/icons';
+import { CheckIcon, PlusIcon } from '@/components/icons';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import CustomInput from '@/components/UI/common/input/CustomInput';
 import CustomSelect from '@/components/UI/common/select/CustomSelect';
@@ -194,7 +194,7 @@ const PopupShiftSetting = ({ dataLang, className, onRefresh, trigger, buttonClas
           trigger
         ) : (
           <button type='button' className='flex flex-row justify-center items-center gap-x-1 responsive-text-sm text-sm font-normal'>
-            {dataLang?.branch_popup_create_new || '+ Tạo mới'}
+            <PlusIcon className='size-4' /> {dataLang?.branch_popup_create_new || '+ Tạo mới'}
           </button>
         )
       }
@@ -203,7 +203,7 @@ const PopupShiftSetting = ({ dataLang, className, onRefresh, trigger, buttonClas
       onClose={() => setIsOpen(false)}
       type='popupGroupPiecework'
       classNameBtn={buttonClassName || className}
-      classNameModeltime={`max-w-[800px] !w-[800px] p-8 rounded-[16px]`}
+      classNameModeltime={`max-w-[800px]- !w-[800px] 2xl:!w-[850px] p-8 rounded-[16px]`}
       classNameTittle='items-start'
     >
       <div className={`${deca.className} w-full flex flex-col gap-6`}>
@@ -357,7 +357,7 @@ const PopupShiftSetting = ({ dataLang, className, onRefresh, trigger, buttonClas
                         setSelectedDays(prev => prev.filter(d => d !== day.value));
                       }
                     }}
-                    className='flex items-center py-2'
+                    className='flex items-center py-2 truncate'
                   />
                 );
               })}
