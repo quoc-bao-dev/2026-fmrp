@@ -639,8 +639,8 @@ const Header = () => {
               link: '/piecework-wage',
             },
             {
-              viewOwn: auth?.piecework_wage_shift_setting?.is_view_own,
-              view: auth?.piecework_wage_shift_setting?.is_view,
+              viewOwn: auth?.setup_shift?.is_view_own,
+              view: auth?.setup_shift?.is_view,
               name: 'Thiết lập ca làm việc',
               link: '/piecework-wage/shift-setting',
             },

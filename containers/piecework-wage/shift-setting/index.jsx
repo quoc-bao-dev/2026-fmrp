@@ -16,20 +16,23 @@ import LoadingButton from '@/components/UI/loading/loadingButton'
 import MultiValue from '@/components/UI/mutiValue/multiValue'
 import NoData from '@/components/UI/noData/nodata'
 import Pagination from '@/components/UI/pagination'
-import PopupConfim from '@/components/UI/popupConfim/popupConfim'
+import PopupConfirmSimple from '@/components/UI/popupConfim/popupConfirmSimple'
 import { CONFIRM_DELETION, TITLE_DELETE } from '@/constants/delete/deleteTable'
 import { WARNING_ACTION_STATUS_ROLE } from '@/constants/warningStatus/warningStatus'
 import { useBranchList } from '@/hooks/common/useBranch'
 import { useLimitAndTotalItems } from '@/hooks/useLimitAndTotalItems'
 import usePagination from '@/hooks/usePagination'
+import useActionRole from '@/hooks/useRole'
 import useStatusExprired from '@/hooks/useStatusExprired'
 import useToast from '@/hooks/useToast'
 import { useSetupShift, useDeleteSetupShift } from '@/managers/api/piecework-wage/useSetupShift'
+import ExcelIcon from '@/components/icons/common/Excel'
 import { Grid6 } from 'iconsax-react'
 import { debounce } from 'lodash'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import React, { useEffect, useMemo, useState } from 'react'
+import { useSelector } from 'react-redux'
 import PopupShiftSetting from './components/PopupShiftSetting'
 
 // Mock data cho ca làm việc
@@ -114,6 +117,10 @@ const ShiftSetting = props => {
   const [isRefetching, setIsRefetching] = useState(false) // State để track refetch từ nút reset
   const [deleteTarget, setDeleteTarget] = useState(null)
   const queryState = key => sIsState(prev => ({ ...prev, ...key }))
+
+  // Lấy thông tin quyền từ Redux store
+  const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth)
+  const { checkAdd, checkEdit, checkDelete, checkExport } = useActionRole(auth, 'setup_shift')
 
   // Hook để xóa setup shift
   const { mutate: deleteSetupShift, isPending: isDeleting } = useDeleteSetupShift({
@@ -298,7 +305,7 @@ const ShiftSetting = props => {
         setIsRefetching(false)
       }
     })
-    // isShow('success', dataLang?.reloaded_successfully || 'Tải lại thành công')
+      // isShow('success', dataLang?.reloaded_successfully || 'Tải lại thành công')
   }
 
   // Xuất Excel từ dữ liệu đã map
@@ -331,6 +338,14 @@ const ShiftSetting = props => {
         },
         {
           title: `${dataLang?.days_of_week || 'Thứ trong tuần'}`,
+          width: { wpx: 300 },
+          style: {
+            fill: { fgColor: { rgb: 'EFF6FF' } },
+            font: { bold: true, name: 'Lexend Deca', color: { rgb: '111827' } },
+          },
+        },
+        {
+          title: `${dataLang?.branch_name || 'Chi nhánh'}`,
           width: { wpx: 200 },
           style: {
             fill: { fgColor: { rgb: 'EFF6FF' } },
@@ -344,6 +359,7 @@ const ShiftSetting = props => {
           { value: `${e.name ? e.name : ''}`, style: { font: { name: 'Lexend Deca' } } },
           { value: `${e.frameHour ? e.frameHour : ''}`, style: { font: { name: 'Lexend Deca' } } },
           { value: `${e.days ? e.days.join(', ') : ''}`, style: { font: { name: 'Lexend Deca' } } },
+          { value: `${e.branch_name ? e.branch_name : ''}`, style: { font: { name: 'Lexend Deca' } } },
         ]) || [],
     },
   ], [filteredData, dataLang])
@@ -367,6 +383,7 @@ const ShiftSetting = props => {
     if (!deleteTarget || isDeleting) return
     // Đóng modal ngay khi bấm xác nhận
     const targetId = deleteTarget
+    
     setDeleteTarget(null)
     
     // Gọi API xóa ca làm việc
@@ -405,12 +422,24 @@ const ShiftSetting = props => {
           <>
             <h2 className='text-title-section text-[#52575E] capitalize font-medium'>{dataLang?.shift_setting || 'Thiết lập ca làm việc'}</h2>
             <div className='flex items-center justify-end gap-2'>
+              {role == true || checkAdd ? (
               <PopupShiftSetting
                 dataLang={dataLang}
                 onRefresh={refetch}
                 listBranch={listBranch}
                 className='responsive-text-sm 3xl:py-3 3xl:px-4 py-2 px-3 text-sm font-normal rounded-md bg-blue-fmrp text-white btn-animation hover:scale-105'
               />
+              ) : (
+                <button
+                  type='button'
+                  onClick={() => {
+                    isShow('error', WARNING_ACTION_STATUS_ROLE)
+                  }}
+                  className='responsive-text-sm 3xl:py-3 3xl:px-4 py-2 px-3 text-sm font-normal bg-blue-fmrp text-white rounded-lg btn-animation hover:scale-105'
+                >
+                  {dataLang?.branch_popup_create_new || '+ Tạo mới'}
+                </button>
+              )}
             </div>
           </>
         }
@@ -440,11 +469,23 @@ const ShiftSetting = props => {
 
               <div className='flex items-center justify-end space-x-2'>
                 <OnResetData sOnFetching={e => {}} onClick={() => refetch(true)} />
+                {role == true || checkExport ? (
                 <div className={``}>
                   {filteredData?.length > 0 && (
                     <ExcelFileComponent multiDataSet={multiDataSet} filename='Danh sách ca làm việc' title='DSCLV' dataLang={dataLang} />
                   )}
                 </div>
+                ) : (
+                  <button
+                    onClick={() => isShow('error', WARNING_ACTION_STATUS_ROLE)}
+                    className='3xl:py-3 3xl:px-4 py-2 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded-lg border border-blue-fmrp transition'
+                  >
+                    <ExcelIcon className='3xl:size-5 size-4 text-blue-fmrp' />
+                    <span className='text-blue-fmrp responsive-text-sm font-medium whitespace-nowrap'>
+                      {dataLang?.client_list_exportexcel || 'Xuất Excel'}
+                    </span>
+                  </button>
+                )}
               </div>
             </div>
             <Customscrollbar className='h-full overflow-y-auto'>
@@ -462,10 +503,10 @@ const ShiftSetting = props => {
                   <ColumnTable colSpan={4} textAlign={'left'}>
                     {dataLang?.days_of_week || 'Thứ trong tuần'}
                   </ColumnTable>
-                  <ColumnTable colSpan={3} textAlign={'left'}>
+                  <ColumnTable colSpan={2.5} textAlign={'left'}>
                     {dataLang?.branch_name || 'Chi nhánh'}
                   </ColumnTable>
-                  <ColumnTable colSpan={1.5} textAlign={'center'}>
+                  <ColumnTable colSpan={2} textAlign={'center'}>
                     {dataLang?.branch_popup_properties || 'Tác vụ'}
                   </ColumnTable>
                 </HeaderTable>
@@ -492,10 +533,11 @@ const ShiftSetting = props => {
                             <RowItemTable colSpan={4} textAlign={'left'}>
                               {e.days?.join(', ') || ''}
                             </RowItemTable>
-                            <RowItemTable colSpan={3} textAlign={'left'}>
+                            <RowItemTable colSpan={2.5} textAlign={'left'}>
                               {e.branch_name || ''}
                             </RowItemTable>
-                            <RowItemTable colSpan={1.5} className='flex items-center justify-center space-x-2 text-center'>
+                            <RowItemTable colSpan={2} className='flex items-center justify-center space-x-2 text-center'>
+                              {role == true || checkEdit ? (
                               <PopupShiftSetting
                                 dataLang={dataLang}
                                 onRefresh={() => {
@@ -514,6 +556,12 @@ const ShiftSetting = props => {
                                 }
                                 buttonClassName='inline-flex'
                               />
+                              ) : (
+                               <div onClick={() => isShow('error', WARNING_ACTION_STATUS_ROLE)}>
+                                 <EditIcon className='cursor-pointer size-5 text-[#003DA0]'  />
+                               </div>
+                              )}
+                              {role == true || checkDelete ? (
                               <button
                                 onClick={() => handleOpenDeletePopup(e.id)}
                                 className='group hover:border-red-01 hover:bg-red-02 rounded-lg w-fit p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer'
@@ -521,6 +569,9 @@ const ShiftSetting = props => {
                               >
                                 <TrashIcon className='size-5 text-[#EE1E1E]' />
                               </button>
+                              ) : (
+                                <TrashIcon className='cursor-pointer size-5 text-[#EE1E1E]' onClick={() => isShow('error', WARNING_ACTION_STATUS_ROLE)} />
+                              )}
                             </RowItemTable>
                           </RowTable>
                         )
@@ -545,10 +596,8 @@ const ShiftSetting = props => {
         }
       />
       {deleteTarget && (
-        <PopupConfim
-          dataLang={dataLang}
+        <PopupConfirmSimple
           type='warning'
-          nameModel='shift_setting'
           title={TITLE_DELETE}
           subtitle={popupSubtitle}
           isOpen={!!deleteTarget}
