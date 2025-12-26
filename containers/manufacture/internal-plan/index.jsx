@@ -50,6 +50,7 @@ import React, { useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useSelector } from "react-redux";
 import { useInternalPlanList } from "./hooks/useInternalPlanList";
+import InfoTooltip from "@/components/UI/common/InfoTooltip";
 
 const PopupDetail = dynamic(() => import("./components/PopupDetail"), {
     ssr: false,
@@ -282,7 +283,11 @@ const InternalPlan = (props) => {
                 titleButton={
                     <>
                         <h2 className="text-title-section text-[#52575E] capitalize font-medium">
-                            {dataLang?.internal_plan || "internal_plan"}
+                            {dataLang?.internal_plan || "internal_plan"}{" "}
+                            <InfoTooltip
+                                content="Kế hoạch nội bộ là kế hoạch sản xuất của công ty, được lập dựa trên nhu cầu sản xuất của khách hàng và các yếu tố khác."
+                                iconSize={18}
+                            />
                         </h2>
                         <div className="flex items-center justify-end gap-2">
                             <ButtonAddNew
