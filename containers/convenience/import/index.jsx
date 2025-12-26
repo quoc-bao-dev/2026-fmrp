@@ -148,36 +148,47 @@ const Import = (props) => {
 
         const apiUrls = apiDataFields[tabPage] || "";
         Axios("GET", `${apiUrls}`, {}, (err, response) => {
-            if (!err) {
+            if (!err && response.data) {
                 var db = response.data;
                 if (tabPage == 1) {
-                    sDataClient(
-                        db?.clients?.map((e) => ({
-                            label: dataLang[e?.label],
-                            value: e?.value,
-                            note: e?.note,
-                        }))
-                    );
-
-                    sDataConTact(db?.contacts);
-                    sDataDelivery(db?.address);
+                    if (db?.clients && Array.isArray(db.clients)) {
+                        sDataClient(
+                            db.clients.map((e) => ({
+                                label: dataLang?.[e?.label] ?? e?.label,
+                                value: e?.value,
+                                note: e?.note,
+                            }))
+                        );
+                    }
+                    if (db?.contacts && Array.isArray(db.contacts)) {
+                        sDataConTact(db.contacts);
+                    }
+                    if (db?.address && Array.isArray(db.address)) {
+                        sDataDelivery(db.address);
+                    }
                 } else if (tabPage == 2) {
-                    sDataClient(
-                        db?.suppliers?.map((e) => ({
-                            label: dataLang[e?.label],
-                            value: e?.value,
-                            note: e?.note,
-                        }))
-                    );
-                    sDataConTact(db?.contacts);
+                    if (db?.suppliers && Array.isArray(db.suppliers)) {
+                        sDataClient(
+                            db.suppliers.map((e) => ({
+                                label: dataLang?.[e?.label] ?? e?.label,
+                                value: e?.value,
+                                note: e?.note,
+                            }))
+                        );
+                    }
+                    if (db?.contacts && Array.isArray(db.contacts)) {
+                        sDataConTact(db.contacts);
+                    }
                 } else {
-                    sDataClient(
-                        db?.map((e) => ({
-                            label: dataLang[e?.label],
-                            value: e?.value,
-                            note: e?.note,
-                        }))
-                    );
+                    if (Array.isArray(db)) {
+                        sDataClient(
+                            db.map((e) => ({
+                                label: dataLang?.[e?.label] ?? e?.label,
+                                value: e?.value,
+                                note: e?.note,
+                            }))
+                        );
+                    }
                 }
             }
             sOnLoading(false);
@@ -193,10 +204,9 @@ const Import = (props) => {
 
         const apiUrlComLumn = apiDataComlumn[tabPage] || "";
         Axios("GET", `${apiUrlComLumn}`, {}, (err, response) => {
-            if (!err) {
+            if (!err && response.data && Array.isArray(response.data)) {
                 var db = response.data;
-                
-                sDataColumn(db?.map((e) => ({ label: e, value: e })));
+                sDataColumn(db.map((e) => ({ label: e, value: e })));
             }
             sOnLoading(false);
         });
@@ -211,11 +221,11 @@ const Import = (props) => {
 
         const apiUrlConditionColumn = apiDataConditionColumn[tabPage] || "";
         Axios("GET", `${apiUrlConditionColumn}`, {}, (err, response) => {
-            if (!err) {
+            if (!err && response.data && Array.isArray(response.data)) {
                 var db = response.data;
                 sDataConditionColumn(
-                    db?.map((e) => ({
-                        label: dataLang[e?.label] || e?.label,
+                    db.map((e) => ({
+                        label: dataLang?.[e?.label] ?? e?.label,
                         value: e?.value,
                     }))
                 );
@@ -242,11 +252,11 @@ const Import = (props) => {
                 },
             },
             (err, response) => {
-                if (!err) {
+                if (!err && response.data && Array.isArray(response.data)) {
                     var db = response.data;
                     //   contact_full_name
                     sDataSampleImport(
-                        db?.map((e) => ({
+                        db.map((e) => ({
                             label: e?.code,
                             value: e?.id,
                             date: formatMoment(e?.date_create, FORMAT_MOMENT.DATE_SLASH_LONG),
@@ -1240,19 +1250,19 @@ const Import = (props) => {
                                 if (success == 0) {
                                     isShow(
                                         "success",
-                                        `${dataLang[lang_message?.success]}`
+                                        `${dataLang?.[lang_message?.success] || lang_message?.success}`
                                     );
                                 } else {
                                     isShow(
                                         "success",
-                                        `${dataLang[lang_message?.success]}`
+                                        `${dataLang?.[lang_message?.success] || lang_message?.success}`
                                     );
                                 }
                             }
                             if (fail > 0) {
                                 isShow(
                                     "error",
-                                    `${dataLang[lang_message?.fail]}`
+                                    `${dataLang?.[lang_message?.fail] || lang_message?.fail}`
                                 );
                             }
                         }
@@ -1300,7 +1310,7 @@ const Import = (props) => {
                     var { isSuccess, message, alert_type } = response.data;
                     isShow(
                         alert_type === "success" ? "success" : "error",
-                        `${dataLang[message]}`
+                        `${dataLang?.[message] || message}`
                     );
                 }
                 sOnLoadingDataBack(true);
@@ -1509,7 +1519,7 @@ const Import = (props) => {
                                                 }),
                                             }}
                                             className={`${errValueCheck ? "border-red-500" : "border-transparent"
-                                                } 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] font-normal outline-none border `}
+                                                } 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
                                         />
                                         {errValueCheck && (
                                             <label className="text-sm text-red-500">
@@ -1793,7 +1803,7 @@ const Import = (props) => {
                                                                 className={`${errColumn && e?.column == null
                                                                     ? "border-red-500"
                                                                     : "border-transparent"
-                                                                    } 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] 2xl:text-[12px] xl:text-[13px] text-[12px] font-normal outline-none border `}
+                                                                    } 2xl:text-[12px] xl:text-[13px] text-[12px] placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
                                                             />
                                                         </div>
                                                         <div className="col-span-1 mx-auto">

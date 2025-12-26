@@ -338,7 +338,7 @@ const ProductionWarehouse = (props) => {
                         <h2 className="text-title-section text-[#52575E] capitalize font-medium">
                             {dataLang?.production_warehouse || "production_warehouse"}
                         </h2>
-                        <ButtonAddNew
+                        {/* <ButtonAddNew
                             onClick={() => {
                                 if (role) {
                                     router.push(routerProductionWarehouse.form);
@@ -349,7 +349,7 @@ const ProductionWarehouse = (props) => {
                                 }
                             }}
                             dataLang={dataLang}
-                        />
+                        /> */}
                     </>
                 }
                 pagination={
