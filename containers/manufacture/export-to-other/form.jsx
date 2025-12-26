@@ -345,6 +345,10 @@ const ExportToOtherForm = props => {
           if (type === 'toOtherQuantity') {
             const qtyExport = typeof value === 'object' && value?.value !== undefined ? Number(value?.value) : Number(value);
             updatedChild.toOtherQuantity = qtyExport;
+            // Reset lỗi số lượng khi người dùng nhập số lượng hợp lệ
+            if (qtyExport > 0 && qtyExport !== null && qtyExport !== undefined) {
+              sErrQty(false);
+            }
           } else if (type === 'location') {
             const checkKho = newData[parentIndex].child.map(house => house).some(i => i?.location?.value === value?.value);
             if (checkKho) {
@@ -672,8 +676,9 @@ const ExportToOtherForm = props => {
                                     step={1}
                                     allowDecimal={false}
                                     className='p-1 w-full'
-                                    classNameInput={`w-full text-center ${errQty && (!ce?.toOtherQuantity || ce?.toOtherQuantity == 0) ? 'border-red-500' : 'border-gray-200'}`}
+                                    classNameInput='w-full text-center'
                                     classNameButton='size-7'
+                                    isError={errQty && (ce?.toOtherQuantity == null || ce?.toOtherQuantity === '' || ce?.toOtherQuantity == 0)}
                                   />
                                 </div>
                                 <div className='col-span-3 flex gap-1 items-center justify-center h-full'>
