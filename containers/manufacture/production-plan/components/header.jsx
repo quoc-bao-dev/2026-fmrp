@@ -10,6 +10,7 @@ import { useRouter } from "next/router";
 import { useSelector } from "react-redux";
 import FilterHeader from "./fillter/filterHeader";
 import { CaretDownIcon, PlusIcon } from "@/components/icons";
+import InfoTooltip from "@/components/UI/common/InfoTooltip";
 
 const Zoom = dynamic(() => import("@/components/UI/zoomElement/zoomElement"), {
     ssr: false,
@@ -125,7 +126,11 @@ const Header = (props) => {
             </div>
             <div className="flex items-center justify-between">
                 <h2 className="text-title-section text-[#52575E] capitalize font-medium">
-                    Kế hoạch sản xuất
+                    Kế hoạch sản xuất{" "}
+                    <InfoTooltip
+                        content="Kế hoạch sản xuất là bảng kế hoạch chi tiết về thời gian và quy trình sản xuất các sản phẩm, giúp quản lý và theo dõi tiến độ sản xuất một cách hiệu quả."
+                        iconSize={18}
+                    />
                 </h2>
                 <div className="flex items-stretch gap-4">
                     <button

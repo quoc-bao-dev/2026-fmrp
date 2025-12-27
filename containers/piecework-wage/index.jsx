@@ -17,7 +17,7 @@ import LoadingButton from '@/components/UI/loading/loadingButton';
 import MultiValue from '@/components/UI/mutiValue/multiValue';
 import NoData from '@/components/UI/noData/nodata';
 import Pagination from '@/components/UI/pagination';
-import PopupConfim from '@/components/UI/popupConfim/popupConfim';
+import PopupConfirmSimple from '@/components/UI/popupConfim/popupConfirmSimple';
 import { CONFIRM_DELETION, TITLE_DELETE } from '@/constants/delete/deleteTable';
 import { WARNING_ACTION_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 import { useBranchList } from '@/hooks/common/useBranch';
@@ -27,6 +27,7 @@ import usePagination from '@/hooks/usePagination';
 import useActionRole from '@/hooks/useRole';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import useToast from '@/hooks/useToast';
+import ExcelIcon from '@/components/icons/common/Excel';
 import { Grid6 } from 'iconsax-react';
 import { debounce } from 'lodash';
 import Head from 'next/head';
@@ -428,10 +429,12 @@ const PieceworkWage = props => {
                 ) : (
                   <button
                     onClick={() => isShow('error', WARNING_ACTION_STATUS_ROLE)}
-                    className={`xl:px-4 px-3 xl:py-2.5 py-1.5 2xl:text-xs xl:text-xs text-[7px] flex items-center space-x-2 bg-[#C7DFFB] rounded hover:scale-105 transition`}
+                    className='3xl:py-3 3xl:px-4 py-2 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded-lg border border-blue-fmrp transition'
                   >
-                    <Grid6 className='scale-75 2xl:scale-100 xl:scale-100' size={18} />
-                    <span>{dataLang?.client_list_exportexcel || 'Xuất Excel'}</span>
+                    <ExcelIcon className='3xl:size-5 size-4 text-blue-fmrp' />
+                    <span className='text-blue-fmrp responsive-text-sm font-medium whitespace-nowrap'>
+                      {dataLang?.client_list_exportexcel || 'Xuất Excel'}
+                    </span>
                   </button>
                 )}
               </div>
@@ -592,10 +595,8 @@ const PieceworkWage = props => {
         }
       />
       {deleteTarget && (
-        <PopupConfim
-          dataLang={dataLang}
+        <PopupConfirmSimple
           type='warning'
-          nameModel='piecework_wage_group'
           title={TITLE_DELETE}
           subtitle={popupSubtitle}
           isOpen={!!deleteTarget}

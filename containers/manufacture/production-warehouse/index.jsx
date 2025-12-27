@@ -8,6 +8,7 @@ import ButtonAddNew from "@/components/UI/button/buttonAddNew";
 import ContainerPagination from "@/components/UI/common/ContainerPagination/ContainerPagination";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { EmptyExprired } from "@/components/UI/common/EmptyExprired";
+import InfoTooltip from "@/components/UI/common/InfoTooltip";
 import { ColumnTable, HeaderTable, RowItemTable, RowTable } from "@/components/UI/common/Table";
 import { ContainerTotal, LayOutTableDynamic } from "@/components/UI/common/layout";
 import CustomAvatar from "@/components/UI/common/user/CustomAvatar";
@@ -336,7 +337,11 @@ const ProductionWarehouse = (props) => {
                 titleButton={
                     <>
                         <h2 className="text-title-section text-[#52575E] capitalize font-medium">
-                            {dataLang?.production_warehouse || "production_warehouse"}
+                            {dataLang?.production_warehouse || "production_warehouse"}{" "}
+                            <InfoTooltip
+                                content="Kho sản xuất là nơi quản lý và theo dõi các nguyên vật liệu, bán thành phẩm và thành phẩm phục vụ cho quá trình sản xuất, giúp kiểm soát tồn kho và đảm bảo đủ nguyên liệu cho sản xuất."
+                                iconSize={18}
+                            />
                         </h2>
                         {/* <ButtonAddNew
                             onClick={() => {

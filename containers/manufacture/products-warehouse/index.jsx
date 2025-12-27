@@ -9,6 +9,7 @@ import ContainerPagination from "@/components/UI/common/ContainerPagination/Cont
 import TitlePagination from "@/components/UI/common/ContainerPagination/TitlePagination";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { EmptyExprired } from "@/components/UI/common/EmptyExprired";
+import InfoTooltip from "@/components/UI/common/InfoTooltip";
 import { ColumnTable, HeaderTable, RowItemTable, RowTable } from "@/components/UI/common/Table";
 import { ContainerTotal, LayOutTableDynamic } from "@/components/UI/common/layout";
 import CustomAvatar from "@/components/UI/common/user/CustomAvatar";
@@ -328,7 +329,11 @@ const ProductsWarehouse = (props) => {
                 titleButton={
                     <>
                         <h2 className="text-title-section text-[#52575E] capitalize font-medium">
-                            {dataLang?.productsWarehouse_title || "productsWarehouse_title"}
+                            {dataLang?.productsWarehouse_title || "productsWarehouse_title"}{" "}
+                            <InfoTooltip
+                                content="Kho thành phẩm là nơi quản lý và theo dõi các sản phẩm đã hoàn thành sau quá trình sản xuất, giúp kiểm soát số lượng tồn kho thành phẩm và chuẩn bị cho việc xuất bán hoặc phân phối."
+                                iconSize={18}
+                            />
                         </h2>
                         {/* <ButtonAddNew
                             onClick={() => {

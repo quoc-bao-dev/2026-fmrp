@@ -1,5 +1,6 @@
 import BreadcrumbCustom from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 import { Container } from '@/components/UI/common/layout';
 import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport';
 import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet';
@@ -525,7 +526,13 @@ const SummaryBtpNvl = () => {
     <Container className='flex flex-col gap-2 !space-y-0 pb-4'>
       <BreadcrumbCustom items={breadcrumbItems} className='3xl:text-sm 2xl:text-xs xl:text-[10px] lg:text-[10px]' />
       <div className='flex items-center justify-between w-full'>
-        <h2 className='text-title-section text-[#52575E] capitalize font-medium'>Tổng hợp kế hoạch BTP & NVL</h2>
+        <h2 className='text-title-section text-[#52575E] capitalize font-medium'>
+          Tổng hợp kế hoạch BTP & NVL{" "}
+          <InfoTooltip
+            content="Tổng hợp kế hoạch BTP (Bán thành phẩm) & NVL (Nguyên vật liệu) là báo cáo tổng hợp về nhu cầu và kế hoạch sử dụng bán thành phẩm và nguyên vật liệu cho các lệnh sản xuất."
+            iconSize={18}
+          />
+        </h2>
         <div className='flex items-center gap-2'>
           {/* <ButtonAnimationNew
             icon={
