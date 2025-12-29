@@ -51,12 +51,16 @@ export const Dropdown = props => {
     // Nếu pathname bắt đầu bằng link (link là prefix của pathname)
     if (currentPathWithoutQuery.startsWith(linkPath + '/')) return true;
     
-    // Nếu cả hai có cùng prefix (cùng loại báo cáo)
-    const linkPrefix = getPathPrefix(linkPath);
-    const currentPrefix = getPathPrefix(currentPathWithoutQuery);
-    
-    // Nếu cả hai có cùng prefix và prefix không rỗng, thì active
-    if (linkPrefix && currentPrefix && linkPrefix === currentPrefix) return true;
+    // Chỉ áp dụng logic "cùng prefix thì active" cho report-statistical
+    // Để tránh bị trùng ở các module khác như manufacture
+    if (linkPath.startsWith('/report-statistical') && currentPathWithoutQuery.startsWith('/report-statistical')) {
+      // Nếu cả hai có cùng prefix (cùng loại báo cáo)
+      const linkPrefix = getPathPrefix(linkPath);
+      const currentPrefix = getPathPrefix(currentPathWithoutQuery);
+      
+      // Nếu cả hai có cùng prefix và prefix không rỗng, thì active
+      if (linkPrefix && currentPrefix && linkPrefix === currentPrefix) return true;
+    }
     
     return false;
   };
