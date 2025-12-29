@@ -131,31 +131,31 @@ const SummaryBtpNvl = () => {
   }, []);
 
   // Hiển thị popup sau 15 giây nếu không phải gói pro, nếu bấm đóng thì chuyển về trang chủ
-  useEffect(() => {
-    if (!isProPackage) {
-      const timer = setTimeout(() => {
-        dispatch({
-          type: 'statePopupGlobal',
-          payload: {
-            open: true,
-            children: (
-              <PopupRequestUpdateVersion
-                onClose={() => {
-                  router.push('/');
-                }}
-              >
-                <p className='text-start xlg:text-2xl text-xl leading-[32px] font-semibold text-[#141522]'>
-                  Theo dõi chặt <span className='text-[#0375F3]'>Tổng hợp nhu cầu nguyên vật liệu & BTP</span> rõ ràng hiệu quả nhất !
-                </p>
-              </PopupRequestUpdateVersion>
-            ),
-          },
-        });
-      }, 2000); // 2 giây = 2000 milliseconds
+  // useEffect(() => {
+  //   if (!isProPackage) {
+  //     const timer = setTimeout(() => {
+  //       dispatch({
+  //         type: 'statePopupGlobal',
+  //         payload: {
+  //           open: true,
+  //           children: (
+  //             <PopupRequestUpdateVersion
+  //               onClose={() => {
+  //                 router.push('/');
+  //               }}
+  //             >
+  //               <p className='text-start xlg:text-2xl text-xl leading-[32px] font-semibold text-[#141522]'>
+  //                 Theo dõi chặt <span className='text-[#0375F3]'>Tổng hợp nhu cầu nguyên vật liệu & BTP</span> rõ ràng hiệu quả nhất !
+  //               </p>
+  //             </PopupRequestUpdateVersion>
+  //           ),
+  //         },
+  //       });
+  //     }, 2000); // 2 giây = 2000 milliseconds
 
-      return () => clearTimeout(timer);
-    }
-  }, [isProPackage, router, dispatch]);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [isProPackage, router, dispatch]);
 
   // Hàm toggle chọn trạng thái lọc lệnh sản xuất
   const toggleStatus = value => {

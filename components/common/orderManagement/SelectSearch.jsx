@@ -31,6 +31,11 @@ const SelectSearch = ({
   const inputRef = useRef(null)
 
   const filteredOptions = React.useMemo(() => {
+    // Nếu có setSearch (server-side search), không filter client-side vì API đã filter rồi
+    if (setSearch) {
+      return options;
+    }
+    // Client-side filtering khi không có server-side search
     if (!searchText?.trim()) return options;
     const keyword = normalizeText(searchText);
     return options?.filter(opt => {
@@ -41,7 +46,7 @@ const SelectSearch = ({
       const textType = opt?.e?.text_type || '';
       return [label, name, code, variation, textType].some(v => normalizeText(v).includes(keyword));
     });
-  }, [options, searchText, normalizeText]);
+  }, [options, searchText, normalizeText, setSearch]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
