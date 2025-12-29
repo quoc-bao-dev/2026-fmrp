@@ -28,12 +28,37 @@ export const Dropdown = props => {
 
   const showToat = useToast();
 
+  // Helper function để lấy prefix (loại báo cáo) từ một path
+  const getPathPrefix = (path) => {
+    if (!path || path === '#') return '';
+    const pathWithoutQuery = path.split('?')[0];
+    const segments = pathWithoutQuery.split('/').filter(s => s.length > 0);
+    // Lấy tất cả segments trừ segment cuối cùng
+    if (segments.length <= 1) return pathWithoutQuery;
+    return '/' + segments.slice(0, -1).join('/');
+  };
+
   // Helper function để check xem pathname có match với link không
   const isActiveLink = (link) => {
     if (!link || link === '#') return false;
     const currentPath = router.pathname;
     const linkPath = link.split('?')[0]; // Loại bỏ query params
-    return currentPath === linkPath || currentPath.startsWith(linkPath + '/');
+    const currentPathWithoutQuery = currentPath.split('?')[0];
+    
+    // Match chính xác
+    if (currentPathWithoutQuery === linkPath) return true;
+    
+    // Nếu pathname bắt đầu bằng link (link là prefix của pathname)
+    if (currentPathWithoutQuery.startsWith(linkPath + '/')) return true;
+    
+    // Nếu cả hai có cùng prefix (cùng loại báo cáo)
+    const linkPrefix = getPathPrefix(linkPath);
+    const currentPrefix = getPathPrefix(currentPathWithoutQuery);
+    
+    // Nếu cả hai có cùng prefix và prefix không rỗng, thì active
+    if (linkPrefix && currentPrefix && linkPrefix === currentPrefix) return true;
+    
+    return false;
   };
 
   // Component wrapper cho Link để check quyền và redirect nếu cần
