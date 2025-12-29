@@ -88,13 +88,13 @@ const _ServerInstance = async (method, url, dataObject = {}, callback) => {
         const message = error.response.data?.message || 'An error occurred';
 
         if (status === 500) {
-          // window.location.href = '/error/500';
+          window.location.href = '/error/500';
         } else if (status === 403) {
           showToat('error', message);
-          // setTimeout(() => (window.location.href = '/error/403'), 1500);
+          setTimeout(() => (window.location.href = '/error/403'), 1500);
         } else if (status === 404) {
           showToat('error', message);
-          // window.location.href = '/error/404';
+          window.location.href = '/error/404';
         }
       } else {
         console.log('error', error);

@@ -1864,7 +1864,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                                   </div>
                                 )}
                               </div>
-                              {authState?.is_upgrade && <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs shrink-0'>pro</span>}
+                              {/* {authState?.is_upgrade && <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs shrink-0'>pro</span>} */}
                             </div>
                           ) : (
                             <div className='flex items-center gap-2 cursor-pointer'>

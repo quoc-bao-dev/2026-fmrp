@@ -369,7 +369,7 @@ console.log(warehouseDropdownData)
             buttonClassName={`${warehouseError && !selectedWarehouseLocation?.warehouse_id ? 'border-red-500' : ''}`}
           />
           <div className='flex gap-3 items-center'>
-            {isProPackage ? (
+            {/* {isProPackage ? ( */}
               <button
                 onClick={handleConfirmRecall}
                 disabled={isSavingRecall}
@@ -377,9 +377,9 @@ console.log(warehouseDropdownData)
               >
                 <CheckIcon className='size-4' /> {isSavingRecall ? 'Đang lưu...' : 'Thu hồi'}
               </button>
-            ) : (
+            {/* ) : (
               <PackageUpgradeButton />
-            )}
+            )} */}
             <motion.div
               whileHover={{ scale: 1.2, rotate: 90 }}
               whileTap={{ scale: 0.9, rotate: -90 }}
