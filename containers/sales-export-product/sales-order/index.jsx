@@ -600,8 +600,8 @@ const SalesOrder = (props) => {
                           </RowItemTable>
                           <RowItemTable colSpan={1}>{e?.branch_name}</RowItemTable>
 
-                          <RowItemTable colSpan={4}>
-                            <div className="flex items-start py-2 gap-0 w-full">
+                          <RowItemTable colSpan={4} className="overflow-visible pr-6 2xl:pr-7">
+                            <div className="flex items-start py-2 gap-0 w-full overflow-visible">
                               {e?.process
                                 .filter((item) => !['keep_stock', 'import_outsourcing'].includes(item?.code))
                                 .map((item, i, filteredArray) => {
@@ -632,7 +632,7 @@ const SalesOrder = (props) => {
                                   return (
                                     <div
                                       key={`process-${i}`}
-                                      className={`relative flex-1 h-[37px] overflow-hidden ${i === 0 ? 'ml-0' : 'ml-[-15px] 2xl:ml-[-20px]'}`}
+                                      className={`relative flex-1 h-[42px] ${i === 0 ? 'ml-0' : 'ml-[-15px] 2xl:ml-[-20px]'}`}
                                       style={{
                                         zIndex: filteredArray.length - i,
                                       }}

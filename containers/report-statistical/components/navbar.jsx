@@ -148,7 +148,7 @@ const Navbar = props => {
       name: 'Theo dõi đơn đặt hàng',
       path: '/report-statistical/purchase-report/order-tracking',
       disabled: !canView(auth?.report_purchase_orders),
-      isPro: true,
+      // isPro: true,
     },
     {
       id: uuidv4(),

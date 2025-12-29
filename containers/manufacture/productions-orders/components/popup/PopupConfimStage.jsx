@@ -720,7 +720,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                 <span className='text-blue-fmrp responsive-text-base'>(Số lệnh sản xuất: {data?.po?.reference_no})</span>
               </div>
               <div className='mr-8'>
-                {isProPackage ? (
+                {/* {isProPackage ? ( */}
                   <div className='flex gap-2'>
                     <SelectComponent
                       options={data?.warehouses || []}
@@ -760,9 +760,9 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                       className={`py-2.5 2xl:py-3 px-3 2xl:px-4 text-white rounded-lg !responsive-text-base flex items-center gap-2 bg-blue-fmrp hover:opacity-80`}
                     />
                   </div>
-                ) : (
+                {/* ) : (
                   <PackageUpgradeButton />
-                )}
+                )} */}
               </div>
             </div>
           }

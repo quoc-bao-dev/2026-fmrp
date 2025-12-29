@@ -353,8 +353,8 @@ const Header = () => {
               view: auth?.purchase_order?.is_view,
               name: 'Đơn hàng mua',
               link: '/purchase-order/order',
-              role: dataSeting?.package,
-              isPro: authState?.is_upgrade,
+              // role: dataSeting?.package,
+              // isPro: authState?.is_upgrade,
             },
             {
               viewOwn: auth?.import?.is_view_own,
@@ -523,7 +523,7 @@ const Header = () => {
               name: 'Tổng hợp kế hoạch BTP & NVL',
               link: '/manufacture/summary-btp-nvl',
               role: dataSeting?.package,
-              isPro: authState?.is_upgrade,
+              // isPro: authState?.is_upgrade,
             },
             // {
             //   viewOwn: auth?.production_plans_fmrp?.is_view_own,

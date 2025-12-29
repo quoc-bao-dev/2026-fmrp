@@ -485,9 +485,9 @@ const InternalPlan = (props) => {
                                                     <RowItemTable
                                                         colSpan={5}
                                                         textAlign={"left"}
-                                                        className="py-3 pl-0 pr-5"
+                                                        className="py-3 pl-0 pr-6 2xl:pr-7 overflow-visible"
                                                     >
-                                                        <div className='grid grid-cols-3 flex-1 items-end gap-0 py-2'>
+                                                        <div className='grid grid-cols-3 flex-1 items-end gap-0 py-2 overflow-visible'>
                                                             {e?.process?.map((step, i, filteredArray) => {
                                                                 const isProducing = step.code === "produced_at_company" && step.active === true;
                                                                 const isLast = step.code === "import_warehouse";
@@ -496,7 +496,7 @@ const InternalPlan = (props) => {
                                                                 return (
                                                                     <div
                                                                         key={`process-${i}`}
-                                                                        className={`relative flex-1 h-[37px] overflow-hidden ${i === 0 ? 'ml-0' : 'ml-[-15px] 2xl:ml-[-20px]'}`}
+                                                                        className={`relative flex-1 h-[42px] ${i === 0 ? 'ml-0' : 'ml-[-15px] 2xl:ml-[-20px]'}`}
                                                                         style={{
                                                                             zIndex: filteredArray.length - i,
                                                                         }}
@@ -506,7 +506,7 @@ const InternalPlan = (props) => {
                                                                             isLast={isLast}
                                                                             isProducing={isProducing}
                                                                             nextStepActive={nextStepActive}
-                                                                            className="w-full h-full object-cover"
+                                                                            className="w-full h-full"
                                                                         />
                                                                         <div className={`absolute py-0.5 px-2 inset-0 flex flex-col items-center justify-center pointer-events-none ${step?.active ? 'text-white' : 'text-gray-600'}`}>
                                                                             <h6 className='responsive-text-xs font-medium leading-tight text-center whitespace-nowrap'>

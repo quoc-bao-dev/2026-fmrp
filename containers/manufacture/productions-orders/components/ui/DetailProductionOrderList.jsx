@@ -3,16 +3,24 @@ import NoData from '@/components/UI/noData/nodata';
 import useSetingServer from '@/hooks/useConfigNumber';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
 import Image from 'next/image';
-import React, { memo, useContext, useState, useCallback, useEffect, useMemo } from 'react';
+import React, { memo, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import ProgressStageBar from '@/components/common/progress/ProgressStageBar';
 import { AnimatePresence, motion } from 'framer-motion';
 import { StateContext } from '@/context/_state/productions-orders/StateContext';
 import { CaretDownIcon, NoteIcon, UserPlusIcon } from '@/components/icons';
 import { AvatarStack } from '@/components/UI/common/user';
+import { CaretDownIcon, NoteIcon, UserPlusIcon, ArrowCounterClockWiseIcon, TrashIcon, CheckThinIcon, CaretDropDownThinIcon, KanbanIcon } from '@/components/icons';
+import AvatarStack from '../popup/AvatarStack';
 import ResponsiblePersonComboBox from '../popup/ResponsiblePersonComboBox';
 import { useProductionOrderManagerDetail } from '@/managers/api/productions-order/useProductionOrderManagerDetail';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import { useSaveProductionOrderManagerDetail } from '@/managers/api/productions-order/useSaveProductionOrderManagerDetail';
+import { useDispatch } from 'react-redux';
+import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew';
+import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
+import PopupConfimStage from '../popup/PopupConfimStage';
+import UnionStepIcon from '@/components/icons/common/UnionStepIcon';
+import { listDropdownCompleteStage } from '../main/constants/listData';
 
 // Sub-component for ProductRow to use hooks
 const ProductRow = memo(
@@ -192,7 +200,27 @@ const ProductRow = memo(
 
 ProductRow.displayName = 'ProductRow';
 
-const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRight, dataLang, handleToggleSheetDetail, canManageManagers = true }) => {
+const DetailProductionOrderList = memo(({ 
+  handleToggleAccordionList, 
+  isLoadingRight, 
+  dataLang, 
+  handleToggleSheetDetail, 
+  canManageManagers = true,
+  // Props cho toolbar
+  processSteps,
+  managerAvatars,
+  typePageMoblie,
+  hasPoPermission,
+  authState,
+  isShow,
+  handClickDropdownCompleteStage,
+  listPrintTask,
+  refreshData,
+  handleQueryId,
+  refetchProductionOrderList,
+  groupButtonRef,
+}) => {
+  const dispatch = useDispatch();
   const dataSeting = useSetingServer();
   const formatNumber = useCallback(num => formatNumberConfig(+num, dataSeting), [dataSeting]);
   const { isStateProvider } = useContext(StateContext);
@@ -201,6 +229,24 @@ const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRi
 
   // Lấy branch_id từ production order
   const branchId = isStateProvider?.productionsOrders?.dataProductionOrderDetail?.productionOrder?.branch_id;
+
+  // Trigger buttons cho dropdown
+  const triggerCompleteStage = (
+    <div className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center xl:gap-4 gap-2 font-medium text-white border-[#0375F3] bg-[#0375F3] hover:bg-[#0375F3] hover:opacity-80 cursor-pointer hover:shadow-hover-button rounded-lg custom-transition'>
+      <span className='flex items-center gap-1 xl:gap-2'>
+        <CheckThinIcon className='xl:size-4 size-3.5 shrink-0' />
+        <span className='responsive-text-base'>Tác vụ</span>
+      </span>
+      <CaretDropDownThinIcon className='xl:size-4 size-3.5 shrink-0' />
+    </div>
+  );
+
+  const triggerPrintTask = (
+    <div className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 border border-[#D0D5DD] hover:border-[#3276FA] bg-white hover:bg-[#EBF5FF] cursor-pointer hover:shadow-hover-button rounded-lg custom-transition'>
+      <span className='responsive-text-base font-medium text-[#3A3E4C]'>Tác vụ in</span>
+      <CaretDownIcon className='text-[#9295A4] size-4' />
+    </div>
+  );
 
   const handleShowMoreProducts = useCallback((itemId, total) => {
     setVisibleProducts(prev => ({ ...prev, [itemId]: total }));
@@ -244,6 +290,182 @@ const DetailProductionOrderList = memo(({ handleToggleAccordionList, isLoadingRi
 
   return (
     <div className='flex flex-col gap-4 h-full'>
+      {/* Toolbar - Process Steps và Action Buttons */}
+      <div className='flex items-center justify-between mb-4'>
+        {/* Process Steps */}
+        <div className='flex items-center gap-0'>
+          <div className='relative z-[3] flex items-center justify-center min-w-[140px]'>
+            <UnionStepIcon active={processSteps?.materials_plan?.is_active || false} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
+            <span
+              className={`absolute inset-0 flex items-center justify-center font-medium text-xs whitespace-nowrap px-4 ${
+                processSteps?.materials_plan?.is_active ? 'text-white' : 'text-[#9295A4]'
+              }`}
+            >
+              1. Kế hoạch NVL
+            </span>
+          </div>
+
+          <div className='relative z-[2] flex items-center justify-center min-w-[160px] -ml-[23px]'>
+            <UnionStepIcon active={processSteps?.export_production?.is_active || false} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
+            <span
+              className={`absolute inset-0 flex items-center justify-center font-medium text-xs whitespace-nowrap px-4 ml-3 ${
+                processSteps?.export_production?.is_active ? 'text-white' : 'text-[#9295A4]'
+              }`}
+            >
+              2. Xuất kho sản xuất
+            </span>
+          </div>
+
+          <div className='relative z-[1] flex items-center justify-center min-w-[120px] -ml-[23px]'>
+            <UnionStepIcon active={processSteps?.import_finished_goods?.is_active || false} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
+            <span
+              className={`absolute inset-0 flex items-center justify-center font-medium text-xs whitespace-nowrap px-4 ${
+                processSteps?.import_finished_goods?.is_active ? 'text-white' : 'text-[#9295A4]'
+              }`}
+            >
+              3. Nhập kho TP
+            </span>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div ref={groupButtonRef} className='flex items-center justify-end gap-2 p-0.5 mb-2'>
+          {/* <div
+            onClick={() => {
+              dispatch({ type: 'statePopupListResponsiblePerson', payload: { open: true } });
+            }}
+            className='cursor-pointer'
+          >
+            {managerAvatars?.length > 0 ? (
+              <AvatarStack people={managerAvatars} size={32} className='mr-2' />
+            ) : (
+              <ButtonAnimationNew
+                icon={
+                  <div className='size-4'>
+                    <UserPlusIcon className='size-full text-[#11315B]' />
+                  </div>
+                }
+                title='Thêm người phụ trách'
+                className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] bg-white border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
+              />
+            )}
+          </div> */}
+
+          <FilterDropdown
+            trigger={triggerCompleteStage}
+            style={{
+              boxShadow: '0px 5px 35px 0px #00000012',
+            }}
+            className='flex flex-col !p-0 border-[#D8DAE5] rounded-lg shrink-0 w-fit'
+            classNameContainer='!w-fit'
+            dropdownId='dropdownCompleteStage'
+            placement='bottom-right'
+          >
+            {listDropdownCompleteStage?.map((tab, index) => {
+              const isFirst = index === 0;
+              const isLast = index === listDropdownCompleteStage.length - 1;
+              const borderClass = isLast ? 'border-transparent rounded-b-lg border-t-transparent' : isFirst ? 'rounded-t-lg border-t-transparent' : 'border-t-transparent';
+              const hasTabPermission = tab?.permission && hasPoPermission ? hasPoPermission(tab.permission) : true;
+
+              return (
+                <div
+                  key={tab.id}
+                  className={`hover:bg-[#F3F4F6] border-b border-[#F7F8F9] border-t flex items-center gap-3 cursor-pointer px-4 py-3 custom-transition whitespace-nowrap ${borderClass} select-none`}
+                  onClick={() => {
+                    if (!hasTabPermission) {
+                      isShow('error', dataLang?.no_permission || 'Bạn không có quyền thực hiện thao tác này');
+                      return;
+                    }
+                    handClickDropdownCompleteStage(tab.type);
+                  }}
+                >
+                  {tab.type === 'complete_stage' ? (
+                    <div className='flex items-center gap-2 w-full' onClick={e => !!hasTabPermission ? e.stopPropagation() : null}>
+                      <div className='flex-1'>
+                        {hasTabPermission ? (
+                          <PopupConfimStage
+                            dataLang={dataLang}
+                            dataRight={isStateProvider?.productionsOrders}
+                            typePageMoblie={typePageMoblie}
+                            refetch={() => {
+                              refetchProductionOrderList();
+                            }}
+                          />
+                        ) : (
+                          <div className='flex items-center gap-2'>
+                            <span className='3xl:size-5 size-4 text-[#0375F3] shrink-0'>
+                              <KanbanIcon className='size-full' />
+                            </span>
+                            <span className='3xl:text-base text-sm font-normal text-[#101828] text-left'>Hoàn thành chi tiết công đoạn</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className='flex items-center gap-2 cursor-pointer'>
+                      <span className='3xl:size-5 size-4 text-[#0375F3] shrink-0'>{tab.icon}</span>
+                      <span className={`3xl:text-base text-sm font-normal text-[#101828] ${tab.color}`}>{tab.label}</span>
+                      {authState?.is_upgrade && tab.isPremium && <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-xs shrink-0'>pro</span>}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </FilterDropdown>
+
+          <FilterDropdown
+            trigger={triggerPrintTask}
+            style={{
+              boxShadow: '0px 5px 35px 0px #00000012',
+            }}
+            className='flex flex-col !p-0 border-[#D8DAE5] rounded-lg shrink-0 w-fit'
+            classNameContainer='!w-fit'
+            dropdownId='dropdownPrintTask'
+            placement='bottom-left'
+          >
+            {listPrintTask?.map((tab, index) => {
+              const isFirst = index === 0;
+              const isLast = index === listPrintTask.length - 1;
+              const borderClass = isLast ? 'border-transparent rounded-b-lg border-t-transparent' : isFirst ? 'rounded-t-lg border-t-transparent' : 'border-t-transparent';
+
+              return (
+                <div
+                  key={tab.id}
+                  className={`group hover:bg-[#F3F4F6] border-b border-[#F7F8F9] border-t flex items-center gap-3 cursor-pointer px-4 py-3 custom-transition whitespace-nowrap ${borderClass} select-none`}
+                  onClick={() => tab.action()}
+                >
+                  {tab.icon}
+                  <span className='responsive-text-base text-[#101828] group-hover:text-[#0375F3]'>{tab.label}</span>
+                </div>
+              );
+            })}
+          </FilterDropdown>
+
+          <ButtonAnimationNew
+            icon={<ArrowCounterClockWiseIcon className='size-4' />}
+            title='Tải lại'
+            className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#0BAA2E] border border-[#0BAA2E] hover:bg-[#ebfff2] hover:shadow-hover-button rounded-lg'
+            onClick={refreshData}
+          />
+          <ButtonAnimationNew
+            icon={
+              <div className='3xl:size-5 size-4'>
+                <TrashIcon className='size-full' />
+              </div>
+            }
+            onClick={() => {
+              handleQueryId({
+                status: true,
+                id: isStateProvider?.productionsOrders.idDetailProductionOrder,
+              });
+            }}
+            title='Xoá'
+            className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#EE1E1E] border border-[#EE1E1E] hover:bg-[#FFEEF0] hover:shadow-hover-button rounded-lg'
+          />
+        </div>
+      </div>
+
+      {/* Nội dung danh sách */}
       {list.map(item => (
         <div key={`product-${item.id}`} className='grid grid-cols-12 items-start select-none'>
           <div

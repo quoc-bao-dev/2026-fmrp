@@ -788,7 +788,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
             </button>
           )}
           {activeTab?.id === 'reexport' &&
-            (isProPackage ? (
+            // (isProPackage ? (
               <button
                 onClick={handleConfirmReexport}
                 disabled={isSavingReexport}
@@ -798,9 +798,10 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
               >
                 <CheckIcon className='size-4' /> {isSavingReexport ? 'Đang xử lý...' : `Xuất bổ sung${reexportSelectedCount > 0 ? ` (${reexportSelectedCount})` : ''}`}
               </button>
-            ) : (
-              <PackageUpgradeButton />
-            ))}
+            // ) : (
+            //   <PackageUpgradeButton />
+            // ))
+            }
           <motion.div
             whileHover={{ scale: 1.2, rotate: 90 }}
             whileTap={{ scale: 0.9, rotate: -90 }}
