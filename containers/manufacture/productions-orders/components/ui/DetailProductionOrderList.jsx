@@ -328,7 +328,10 @@ const DetailProductionOrderList = memo(({
 
         {/* Action Buttons */}
         <div ref={groupButtonRef} className='flex items-center justify-end gap-2 p-0.5 mb-2'>
-          {/* <div
+          {/* <div className='flex items-center gap-2 p-3 bg-[#FFF1D0] border border-[#F5BF40] rounded-lg'>
+
+          </div> */}
+          <div
             onClick={() => {
               dispatch({ type: 'statePopupListResponsiblePerson', payload: { open: true } });
             }}
@@ -347,7 +350,7 @@ const DetailProductionOrderList = memo(({
                 className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] bg-white border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
               />
             )}
-          </div> */}
+          </div>
 
           <FilterDropdown
             trigger={triggerCompleteStage}

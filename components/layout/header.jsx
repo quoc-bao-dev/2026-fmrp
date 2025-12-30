@@ -656,6 +656,12 @@ const Header = () => {
               name: 'Tổng hợp lương sản lượng',
               link: '/piecework-wage/summary',
             },
+            {
+              // viewOwn: auth?.piecework_wage_complete?.is_view_own,
+              // view: auth?.piecework_wage_complete?.is_view,
+              name: 'Nhập sản lượng',
+              link: '/piecework-wage/import-output',
+            }
           ],
         },
       ],
@@ -1482,7 +1488,7 @@ const deca = Lexend_Deca({
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
 });
 
-const DropdownAvatar = React.memo(() => {
+export const DropdownAvatar = React.memo(() => {
   const auth = useSelector(state => state.auth);
   const dataSetting = useSelector(state => state.setings);
   const randomColors = getColorByParam(auth?.user_full_name);

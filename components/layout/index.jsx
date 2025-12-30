@@ -196,7 +196,7 @@ const Index = ({ children, ...props }) => {
         children
       ) : (
         <React.Fragment>
-          <Header />
+          {router.pathname !== '/piecework-wage/import-output' &&  <Header />}
           {children}
           {stateBoxChatAi.isShowAi && !isExpired && <ChatBubbleAI {...props} />}
           {/* {stateBoxChatAi.isShowAi} */}

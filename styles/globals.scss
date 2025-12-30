@@ -173,8 +173,11 @@ body {
   }
 }
 .popup-overlay {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
 }
+
 [data-popup='tooltip'].popup-overlay {
   background: transparent;
 }
@@ -1277,14 +1280,73 @@ body {
 }
 
 .custom-select-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
-  background-color: transparent !important;
+  background-color: #EBF5FF !important;
   color: inherit !important;
   font-weight: normal !important;
 }
 
-/* Màu xám khi hover */
+/* Màu khi active trong dropdown select (áp dụng cho SelectSearchableRadio) */
+.select-with-radio .ant-select-item-option-active:not(.ant-select-item-option-disabled),
 .custom-select-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
-  background-color: #f5f5f5 !important;
+  background-color: #EBF5FF !important;
+}
+
+.select-searchable-scrollbar .rc-virtual-list-scrollbar {
+  width: 5px !important;
+}
+.select-searchable-scrollbar .rc-virtual-list-scrollbar-thumb {
+  background: #D0D5DD !important;
+  border-radius: 5px !important;
+  opacity: 0.6 !important;
+}
+.select-searchable-scrollbar .rc-virtual-list-scrollbar-thumb:hover {
+  background: #98A2B3 !important;
+  opacity: 0.8 !important;
+}
+.select-searchable-scrollbar .rc-virtual-list-scrollbar-vertical {
+  right: 2px !important;
+}
+
+/* Thêm đường phân cách giữa các option trong SelectSearchableRadio */
+.select-searchable-scrollbar .ant-select-item-option:not(:first-child) {
+  border-top: 1px solid #F7F8F9 !important;
+}
+
+/* Đảm bảo border hiển thị đúng trong SelectSearchableRadio */
+.select-searchable-scrollbar .ant-select-item-option-content > div[class*='border-t'] {
+  border-top-color: #F7F8F9 !important;
+  border-top-width: 1px !important;
+}
+
+/* Mỗi phần tử có chiều cao tối thiểu 50px trong SelectSearchableRadio */
+.select-searchable-scrollbar .ant-select-item-option {
+  min-height: 40px !important;
+}
+
+.select-searchable-scrollbar .ant-select-item-option-content {
+  min-height: 40px !important;
+}
+
+.select-searchable-scrollbar .ant-select-item-option-content > div {
+  min-height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Style cho ProcessStatusDropdown */
+.process-status-dropdown {
+  .ant-popover-inner {
+    padding: 0 !important;
+  }
+  .ant-popover-inner-content {
+    padding: 0 !important;
+  }
+  .ant-popover-arrow {
+    display: none !important;
+  }
+  .ant-popover-content {
+    margin-top: -8px !important;
+  }
 }
 
 // .ant-select-dropdown .ant-select-item-option-selected {
