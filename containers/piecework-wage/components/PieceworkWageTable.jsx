@@ -90,7 +90,7 @@ const PieceworkWageTable = memo(() => {
           <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-4 px-1'>Tác vụ</h4>
         </div>
 
-        <div className='max-h-[390px] overflow-y-auto'>
+        <div className='max-h-[calc(100svh-290px)] overflow-y-auto'>
           {/* Rows */}
           {mockData.length === 0 ? (
             <div className='h-full flex items-center justify-center py-6'>
@@ -138,7 +138,9 @@ const PieceworkWageTable = memo(() => {
           )}
         </div>
       </div>
-      <PieceworkWageDetailModal open={openDetail} onClose={handleCloseDetail} worker={selectedWorker} />
+      <div className='hidden'>
+        <PieceworkWageDetailModal open={openDetail} onClose={handleCloseDetail} worker={selectedWorker} />
+      </div>
     </>
   );
 });

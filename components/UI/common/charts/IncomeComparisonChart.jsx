@@ -1,4 +1,5 @@
 import { memo, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import NoData from '@/components/UI/noData/nodata';
 
 const IncomeComparisonChart = memo(({ data = [] }) => {
@@ -68,7 +69,7 @@ const IncomeComparisonChart = memo(({ data = [] }) => {
           <NoData type='chart' classNameImage='w-[150px]' />
         </div>
       ) : (
-        <div className='relative'>
+        <motion.div className='relative' initial='hidden' whileInView='visible' viewport={{ once: true, margin: '-50px' }}>
           {/* Y-axis labels and bars */}
           <div className='flex flex-col' style={{ gap: '8px' }}>
             {data.map((item, index) => {
@@ -85,18 +86,27 @@ const IncomeComparisonChart = memo(({ data = [] }) => {
                   {/* Bar container */}
                   <div className='flex-1 relative'>
                     {/* Bar */}
-                    <div
+                    <motion.div
                       className='relative h-[28px] 2xl:h-[32px]'
+                      variants={{
+                        hidden: { width: '0%' },
+                        visible: { width: `${widthPercent}%` },
+                      }}
+                      transition={{ duration: 0.8, ease: 'easeOut' }}
                       style={{
-                        width: `${widthPercent}%`,
                         backgroundColor: barColor,
                         minWidth: '0%',
                       }}
                     >
                       {/* Label on the right end of bar */}
                       {item.income > 0 && (
-                        <div
+                        <motion.div
                           className='absolute right-3 top-1/2 -translate-y-1/2 whitespace-nowrap'
+                          variants={{
+                            hidden: { opacity: 0 },
+                            visible: { opacity: 1 },
+                          }}
+                          transition={{ duration: 0.3, ease: 'easeOut' }}
                           style={{
                             fontFamily: 'Lexend Deca, sans-serif',
                             fontWeight: 500,
@@ -108,9 +118,9 @@ const IncomeComparisonChart = memo(({ data = [] }) => {
                           }}
                         >
                           {formatIncome(item.income)}
-                        </div>
+                        </motion.div>
                       )}
-                    </div>
+                    </motion.div>
                   </div>
                 </div>
               );
@@ -130,7 +140,7 @@ const IncomeComparisonChart = memo(({ data = [] }) => {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );
