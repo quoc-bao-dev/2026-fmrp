@@ -1720,7 +1720,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
 
         <div className='relative z-50 flex-1 min-w-0 size-full space-y-4 border-none border-[#D0D5DD] border overflow-y-hidden'>
           <Customscrollbar
-            className='h-full pr-2 relative -z-10 pt-0'
+            className='h-fit pr-2 relative -z-10 pt-0'
             style={{
               height: calcAvailableHeight('submain'),
               maxHeight: calcAvailableHeight('submain'),
