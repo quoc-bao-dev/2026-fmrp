@@ -286,7 +286,7 @@ const InternalPlan = (props) => {
                         <h2 className="text-title-section text-[#52575E] capitalize font-medium">
                             {dataLang?.internal_plan || "internal_plan"}{" "}
                             <InfoTooltip
-                                content="Kế hoạch nội bộ là kế hoạch sản xuất của công ty, được lập dựa trên nhu cầu sản xuất của khách hàng và các yếu tố khác."
+                                content="Kế hoạch nội bộ là kế hoạch sản xuất của công ty, được lập dựa trên nhu cầu khách hàng và các yếu tố khác."
                                 iconSize={18}
                             />
                         </h2>
