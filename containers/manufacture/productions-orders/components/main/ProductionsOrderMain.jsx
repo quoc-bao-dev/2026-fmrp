@@ -19,7 +19,6 @@ import {
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
 import BreadcrumbCustom from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
-import { AvatarStack } from '@/components/UI/common/user';
 import InfoTooltip from '@/components/UI/common/InfoTooltip';
 import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComponent';
 import Loading from '@/components/UI/loading/loading';
