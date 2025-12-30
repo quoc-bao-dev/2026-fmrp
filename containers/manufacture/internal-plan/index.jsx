@@ -287,7 +287,9 @@ const InternalPlan = (props) => {
                             {dataLang?.internal_plan || "internal_plan"}{" "}
                             <InfoTooltip
                                 content="Kế hoạch nội bộ là kế hoạch sản xuất của công ty, được lập dựa trên nhu cầu khách hàng và các yếu tố khác."
-                                iconSize={18}
+                                iconProps={{
+                                    className: "2xl:size-[21px] xl:size-[18px] size-[16px]"
+                                }}
                             />
                         </h2>
                         <div className="flex items-center justify-end gap-2">

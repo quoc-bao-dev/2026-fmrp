@@ -332,7 +332,9 @@ const ProductsWarehouse = (props) => {
                             {dataLang?.productsWarehouse_title || "productsWarehouse_title"}{" "}
                             <InfoTooltip
                                 content="Kho thành phẩm là nơi quản lý và theo dõi các sản phẩm đã hoàn thành sau quá trình sản xuất, giúp kiểm soát số lượng tồn kho thành phẩm và chuẩn bị cho việc xuất bán hoặc phân phối."
-                                iconSize={18}
+                                iconProps={{
+                                    className: "2xl:size-[21px] xl:size-[18px] size-[16px]"
+                                }}
                             />
                         </h2>
                         {/* <ButtonAddNew

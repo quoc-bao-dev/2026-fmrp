@@ -340,7 +340,9 @@ const ProductionWarehouse = (props) => {
                             {dataLang?.production_warehouse || "production_warehouse"}{" "}
                             <InfoTooltip
                                 content="Kho sản xuất là nơi quản lý và theo dõi các nguyên vật liệu, bán thành phẩm và thành phẩm phục vụ cho quá trình sản xuất, giúp kiểm soát tồn kho và đảm bảo đủ nguyên liệu cho sản xuất."
-                                iconSize={18}
+                                iconProps={{
+                                    className: "2xl:size-[21px] xl:size-[18px] size-[16px]"
+                                }}
                             />
                         </h2>
                         {/* <ButtonAddNew
