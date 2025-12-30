@@ -71,7 +71,7 @@ export const listDropdownCompleteStage = [
     id: 2,
     label: 'Thu hồi nguyên liệu',
     icon: <RecallMaterialsIcon className="size-full" />,
-    isPremium: true,
+    isPremium: false,
     type: 'recall_materials',
     permission: ['is_manager', 'is_btp_nvl'], // Nhóm quyền 1: Xuất kho & Thu hồi nguyên liệu
   },
@@ -87,7 +87,7 @@ export const listDropdownCompleteStage = [
     id: 4,
     label: 'Hoàn thành chi tiết công đoạn',
     icon: <KanbanIcon className="size-full" />,
-    isPremium: true,
+    isPremium: false,
     type: 'complete_stage',
     permission: ['is_manager', 'is_manufacture'], // Nhóm quyền 2: Hoàn thành lệnh & công đoạn
   },
