@@ -33,7 +33,7 @@ const CustomInput = React.forwardRef(
                     value={value}
                     onChange={onChange}
                     placeholder={placeholder}
-                    className={`w-full rounded-[10px] h-[42px] border-none bg-[#F6F8FA] px-4 py-2 text-sm text-[#141522] outline-none placeholder:text-[#9295A4] ${
+                    className={`w-full rounded-[10px] h-[42px] border-none bg-[#F6F8FA] px-4 py-2 text-sm text-[#141522] outline-none placeholder:text-[#9295A4]  focus:placeholder:text-transparent ${
                         error ? "ring-1 ring-[#EE1E1E]" : ""
                     } ${className}`}
                     {...rest}
