@@ -90,6 +90,8 @@ import SuccessAlertIcon from './source/success-alert-icon.svg';
 import SuccessChatIcon from './source/success-chat-icon.svg';
 import TemplateChecklistIcon from './source/template-checklist-icon.svg';
 import ThreeDotIcon from './source/three-dot.svg';
+import TaskActionIcon from './common/TaskActionIcon';
+import TimerIcon from './common/TimerIcon';
 import TrashIcon from './source/trash.svg';
 import UpgradeIcon from './source/upgrade-icon.svg';
 import UserCircleIcon from './source/user-circle-icon.svg';
@@ -119,23 +121,24 @@ export {
   CheckDoubleIcon,
   CheckCircleOutlineIcon,
   CheckIcon,
-  CheckThinIcon, 
-  ClockIcon, 
+  CheckThinIcon,
+  ClockIcon,
   CloseXIcon,
-  CompleteKHIcon, 
+  CompleteKHIcon,
   DocumentTemplateIcon,
   DownloadIcon,
   DropdownFilledIcon,
   DropdownIcon,
   EditIcon,
-  EyeIcon, 
-  EndProductionOrderIcon, 
+  EyeIcon,
+  EndProductionOrderIcon,
   ErrorAlertIcon,
   ErrorChatBotIcon,
   ErrorIconMessengerIcon,
   ErrorQCIcon,
   ExcelIcon,
-  ExportMaterialsIcon, FileIcon,
+  ExportMaterialsIcon,
+  FileIcon,
   FunnelIcon,
   IconStarIcon,
   KanbanIcon,
@@ -147,13 +150,14 @@ export {
   MobileIcon,
   NoteIcon,
   PasswordIcon,
-  PlusIcon, PrinterIcon,
+  PlusIcon,
+  PrinterIcon,
   PrinterIcon2,
-  PrinterTemIcon, 
-  PrintTemplateIcon, 
-  RecallMaterialsIcon, 
-  RecallStockIcon, 
-  RefreshIcon, 
+  PrinterTemIcon,
+  PrintTemplateIcon,
+  RecallMaterialsIcon,
+  RecallStockIcon,
+  RefreshIcon,
   SaleIcon,
   SaveIcon,
   SealCheckIcon,
@@ -165,8 +169,10 @@ export {
   StickerIcon,
   SuccessAlertIcon,
   SuccessChatIcon,
+  TaskActionIcon,
   TemplateChecklistIcon,
   ThreeDotIcon,
+  TimerIcon,
   TrashIcon,
   UpgradeIcon,
   UserCircleIcon,
@@ -174,5 +180,5 @@ export {
   UsersIcon,
   WarningAlertIcon,
   WarningIcon,
-  ZaloIcon
+  ZaloIcon,
 };
