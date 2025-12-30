@@ -247,6 +247,7 @@ const InputCustom = ({
       className={twMerge(
         'p-2 flex items-center border rounded-full shadow-sm border-[#D0D5DD] focus:border-brand-color hover:border-brand-color w-fit h-fit overflow-hidden',
         disabled ? 'opacity-50 cursor-not-allowed' : '',
+        isError ? 'border-red-500' : '',
         className
       )}
       onMouseDown={(e) => e.preventDefault()}

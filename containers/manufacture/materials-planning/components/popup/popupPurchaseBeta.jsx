@@ -311,22 +311,22 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
               if (!hasPermission) {
                 return isShow('error', dataLang?.no_permission || 'Bạn không có quyền thực hiện thao tác này');
               }
-              if (dataSeting?.package == '1') {
-                dispatch({
-                  type: 'statePopupGlobal',
-                  payload: {
-                    open: true,
-                    children: (
-                      <PopupRequestUpdateVersion>
-                        <p className='text-start xlg:text-2xl text-xl leading-[32px] font-semibold text-[#141522]'>
-                          Theo dõi đơn hàng theo nhà cung cấp để nguyên vật liệu luôn <span className='text-[#0375F3]'>đúng và đủ</span>.
-                        </p>
-                      </PopupRequestUpdateVersion>
-                    ),
-                  },
-                });
-                return;
-              }
+              // if (dataSeting?.package == '1') {
+              //   dispatch({
+              //     type: 'statePopupGlobal',
+              //     payload: {
+              //       open: true,
+              //       children: (
+              //         <PopupRequestUpdateVersion>
+              //           <p className='text-start xlg:text-2xl text-xl leading-[32px] font-semibold text-[#141522]'>
+              //             Theo dõi đơn hàng theo nhà cung cấp để nguyên vật liệu luôn <span className='text-[#0375F3]'>đúng và đủ</span>.
+              //           </p>
+              //         </PopupRequestUpdateVersion>
+              //       ),
+              //     },
+              //   });
+              //   return;
+              // }
               if (+dataTable?.countAll == 0) {
                 return isShow('error', dataLang?.materials_planning_please_add || 'materials_planning_please_add');
               }
