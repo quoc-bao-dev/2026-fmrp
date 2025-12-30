@@ -42,6 +42,7 @@ import CheckDoubleIcon from './source/check-double.svg';
 import CheckThinIcon from './source/check-thin.svg';
 import CheckIcon from './source/check.svg';
 import ClockIcon from './source/clock.svg';
+import Clock2Icon from './source/clock2.svg';
 import CloseXIcon from './source/close-x.svg';
 import CompleteKHIcon from './source/complete-k-h.svg';
 import DocumentTemplateIcon from './source/document-template-icon.svg';
@@ -51,6 +52,7 @@ import DropdownIcon from './source/dropdown-icon.svg';
 import EditIcon from './source/edit.svg';
 import EyeIcon from './source/eye.svg';
 import EndProductionOrderIcon from './source/end-product.svg';
+import EqualizerIcon from './source/equalizer.svg';
 import ErrorAlertIcon from './source/error-alert-icon.svg';
 import ErrorChatBotIcon from './source/error-chat-bot.svg';
 import ErrorIconMessengerIcon from './source/error-icon-messenger.svg';
@@ -71,10 +73,12 @@ import MobileIcon from './source/mobile-icon.svg';
 import NoteIcon from './source/note-icon.svg';
 import PasswordIcon from './source/password-icon.svg';
 import PlusIcon from './source/plus.svg';
+import PresentationChartIcon from './source/presention-chart.svg';
 import PrintTemplateIcon from './source/print-template-icon.svg';
 import PrinterIcon from './source/printer-icon.svg';
 import PrinterIcon2 from './source/printer-icon2.svg';
 import PrinterTemIcon from './source/printer-tem.svg';
+import ProgressIcon from './source/progress.svg';
 import RecallStockIcon from './source/recall-stock.svg';
 import RefreshIcon from './source/refresh.svg';
 import SaleIcon from './source/sale-icon.svg';
@@ -121,6 +125,7 @@ export {
   CheckIcon,
   CheckThinIcon, 
   ClockIcon, 
+  Clock2Icon,
   CloseXIcon,
   CompleteKHIcon, 
   DocumentTemplateIcon,
@@ -130,6 +135,7 @@ export {
   EditIcon,
   EyeIcon, 
   EndProductionOrderIcon, 
+  EqualizerIcon,
   ErrorAlertIcon,
   ErrorChatBotIcon,
   ErrorIconMessengerIcon,
@@ -147,11 +153,14 @@ export {
   MobileIcon,
   NoteIcon,
   PasswordIcon,
-  PlusIcon, PrinterIcon,
+  PlusIcon, 
+  PresentationChartIcon,
+  PrinterIcon,
   PrinterIcon2,
   PrinterTemIcon, 
   PrintTemplateIcon, 
   RecallMaterialsIcon, 
+  ProgressIcon,
   RecallStockIcon, 
   RefreshIcon, 
   SaleIcon,

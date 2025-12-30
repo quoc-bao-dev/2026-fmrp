@@ -21,6 +21,7 @@ export const IMAGES = {
   mess: "/dashboard/mess.png",
   // n
   nodataShift: "/nodata/nodata-shift.png",
+  noImage: "/nodata/noimagelogo.png",
   // o
   // p
   // q

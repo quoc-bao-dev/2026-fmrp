@@ -1,26 +1,24 @@
-import Loading from '@/components/UI/loading/loading';
-import NoData from '@/components/UI/noData/nodata';
-import useSetingServer from '@/hooks/useConfigNumber';
-import formatNumberConfig from '@/utils/helpers/formatnumber';
-import Image from 'next/image';
-import React, { memo, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import ProgressStageBar from '@/components/common/progress/ProgressStageBar';
-import { AnimatePresence, motion } from 'framer-motion';
-import { StateContext } from '@/context/_state/productions-orders/StateContext';
-import { CaretDownIcon, NoteIcon, UserPlusIcon } from '@/components/icons';
-import { AvatarStack } from '@/components/UI/common/user';
-import { CaretDownIcon, NoteIcon, UserPlusIcon, ArrowCounterClockWiseIcon, TrashIcon, CheckThinIcon, CaretDropDownThinIcon, KanbanIcon } from '@/components/icons';
-import AvatarStack from '../popup/AvatarStack';
-import ResponsiblePersonComboBox from '../popup/ResponsiblePersonComboBox';
-import { useProductionOrderManagerDetail } from '@/managers/api/productions-order/useProductionOrderManagerDetail';
-import { useSearchStaffs } from '@/hooks/common/useStaffs';
-import { useSaveProductionOrderManagerDetail } from '@/managers/api/productions-order/useSaveProductionOrderManagerDetail';
-import { useDispatch } from 'react-redux';
 import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew';
 import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
-import PopupConfimStage from '../popup/PopupConfimStage';
+import ProgressStageBar from '@/components/common/progress/ProgressStageBar';
+import { ArrowCounterClockWiseIcon, CaretDownIcon, CaretDropDownThinIcon, CheckThinIcon, KanbanIcon, NoteIcon, TrashIcon, UserPlusIcon } from '@/components/icons';
 import UnionStepIcon from '@/components/icons/common/UnionStepIcon';
+import { AvatarStack } from '@/components/UI/common/user';
+import Loading from '@/components/UI/loading/loading';
+import NoData from '@/components/UI/noData/nodata';
+import { StateContext } from '@/context/_state/productions-orders/StateContext';
+import { useSearchStaffs } from '@/hooks/common/useStaffs';
+import useSetingServer from '@/hooks/useConfigNumber';
+import { useProductionOrderManagerDetail } from '@/managers/api/productions-order/useProductionOrderManagerDetail';
+import { useSaveProductionOrderManagerDetail } from '@/managers/api/productions-order/useSaveProductionOrderManagerDetail';
+import formatNumberConfig from '@/utils/helpers/formatnumber';
+import { AnimatePresence, motion } from 'framer-motion';
+import Image from 'next/image';
+import { memo, useCallback, useContext, useMemo, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { listDropdownCompleteStage } from '../main/constants/listData';
+import PopupConfimStage from '../popup/PopupConfimStage';
+import ResponsiblePersonComboBox from '../popup/ResponsiblePersonComboBox';
 
 // Sub-component for ProductRow to use hooks
 const ProductRow = memo(
@@ -330,7 +328,10 @@ const DetailProductionOrderList = memo(({
 
         {/* Action Buttons */}
         <div ref={groupButtonRef} className='flex items-center justify-end gap-2 p-0.5 mb-2'>
-          {/* <div
+          {/* <div className='flex items-center gap-2 p-3 bg-[#FFF1D0] border border-[#F5BF40] rounded-lg'>
+
+          </div> */}
+          <div
             onClick={() => {
               dispatch({ type: 'statePopupListResponsiblePerson', payload: { open: true } });
             }}
@@ -349,7 +350,7 @@ const DetailProductionOrderList = memo(({
                 className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] bg-white border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
               />
             )}
-          </div> */}
+          </div>
 
           <FilterDropdown
             trigger={triggerCompleteStage}
