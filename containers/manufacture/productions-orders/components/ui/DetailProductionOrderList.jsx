@@ -325,63 +325,33 @@ const DetailProductionOrderList = memo(
               </span>
             </div>
           </div>
-
-          <div className='relative z-[2] flex items-center justify-center min-w-[160px] -ml-[23px]'>
-            <UnionStepIcon active={processSteps?.export_production?.is_active || false} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
-            <span
-              className={`absolute inset-0 flex items-center justify-center font-medium text-xs whitespace-nowrap px-4 ml-3 ${
-                processSteps?.export_production?.is_active ? 'text-white' : 'text-[#9295A4]'
-              }`}
-            >
-              2. Xuất kho sản xuất
-            </span>
-          </div>
-
-          <div className='relative z-[1] flex items-center justify-center min-w-[120px] -ml-[23px]'>
-            <UnionStepIcon active={processSteps?.import_finished_goods?.is_active || false} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
-            <span
-              className={`absolute inset-0 flex items-center justify-center font-medium text-xs whitespace-nowrap px-4 ${
-                processSteps?.import_finished_goods?.is_active ? 'text-white' : 'text-[#9295A4]'
-              }`}
-            >
-              3. Nhập kho TP
-            </span>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div ref={groupButtonRef} className='flex items-center justify-end gap-2 p-0.5 mb-2'>
-          {/* <div className='flex items-center gap-2 p-3 bg-[#FFF1D0] border border-[#F5BF40] rounded-lg'>
-
-          </div> */}
-          <div
-            onClick={() => {
-              dispatch({ type: 'statePopupListResponsiblePerson', payload: { open: true } });
-            }}
-            className='cursor-pointer'
-          >
-            {managerAvatars?.length > 0 ? (
-              <AvatarStack people={managerAvatars} size={32} className='mr-2' />
-            ) : (
-              <ButtonAnimationNew
-                icon={
-                  <div className='size-4'>
-                    <UserPlusIcon className='size-full text-[#11315B]' />
-                  </div>
-                }
-                title='Thêm người phụ trách'
-                className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] bg-white border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
-              />
-            )}
-          </div>
-
-          <div className=''>
+          {/* Action Buttons */}
+          <div ref={groupButtonRef} className='flex items-center justify-end gap-2 p-0.5 mb-2'>
             <button className='w-[134px] h-10 flex items-center gap-2 px-2 rounded-2xl bg-[#DFF3E2] text-[#4E4E4E] hover:opacity-80 transition-opacity'>
               <TimerIcon size={24} color='#4E4E4E' />
               <span className='text-base font-normal'>08 : 27 : 00</span>
             </button>
-          </div>
-          <div>
+            <div
+              onClick={() => {
+                dispatch({ type: 'statePopupListResponsiblePerson', payload: { open: true } });
+              }}
+              className='cursor-pointer'
+            >
+              {managerAvatars?.length > 0 ? (
+                <AvatarStack people={managerAvatars} size={32} className='mr-2' />
+              ) : (
+                <ButtonAnimationNew
+                  icon={
+                    <div className='size-4'>
+                      <UserPlusIcon className='size-full text-[#11315B]' />
+                    </div>
+                  }
+                  title='Thêm người phụ trách'
+                  className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] bg-white border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
+                />
+              )}
+            </div>
+
             <FilterDropdown
               trigger={triggerCompleteStage}
               style={{
