@@ -527,10 +527,12 @@ const SummaryBtpNvl = () => {
       <BreadcrumbCustom items={breadcrumbItems} className='3xl:text-sm 2xl:text-xs xl:text-[10px] lg:text-[10px]' />
       <div className='flex items-center justify-between w-full'>
         <h2 className='text-title-section text-[#52575E] capitalize font-medium'>
-          Tổng hợp kế hoạch BTP & NVL{" "}
+          Tổng hợp kế hoạch BTP & NVL{' '}
           <InfoTooltip
-            content="Tổng hợp kế hoạch BTP (Bán thành phẩm) & NVL (Nguyên vật liệu) là báo cáo tổng hợp về nhu cầu và kế hoạch sử dụng bán thành phẩm và nguyên vật liệu cho các lệnh sản xuất."
-            iconSize={18}
+            content='Tổng hợp kế hoạch BTP (Bán thành phẩm) & NVL (Nguyên vật liệu) là báo cáo tổng hợp về nhu cầu và kế hoạch sử dụng bán thành phẩm và nguyên vật liệu cho các lệnh sản xuất.'
+            iconProps={{
+              className: '2xl:size-[21px] xl:size-[18px] size-[16px]',
+            }}
           />
         </h2>
         <div className='flex items-center gap-2'>
@@ -749,14 +751,14 @@ const SummaryBtpNvl = () => {
               />
             </div>
             {/* <div className='w-full'> */}
-              <SearchComponent
-                onChange={e => setSearchMaterial(e?.target?.value || '')}
-                value={searchMaterial}
-                classNameBox='!py-2 2xl:!p-2.5 w-1/2'
-                placeholder='Tìm kiếm mã/tên ...'
-                classInput='w-full'
-                alwaysOpen={true}
-              />
+            <SearchComponent
+              onChange={e => setSearchMaterial(e?.target?.value || '')}
+              value={searchMaterial}
+              classNameBox='!py-2 2xl:!p-2.5 w-1/2'
+              placeholder='Tìm kiếm mã/tên ...'
+              classInput='w-full'
+              alwaysOpen={true}
+            />
             {/* </div> */}
           </div>
 

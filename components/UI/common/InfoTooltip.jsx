@@ -117,6 +117,9 @@ const InfoTooltip = ({
         }
     };
 
+    // Tách className từ iconProps để xử lý riêng
+    const { className: iconClassName, ...restIconProps } = iconProps || {};
+
     return (
         <div className={`relative inline-flex items-center justify-center !w-fit ${className}`}>
             <button
@@ -132,12 +135,17 @@ const InfoTooltip = ({
                 {IconComponent ? (
                     IconComponent
                 ) : (
-                    <InfoCircle 
-                        size={iconSize} 
-                        variant="Outline" 
-                        className={`text-blue-fmrp transition-colors ${isOpen ? 'text-blue-600' : ''}`}
-                        {...iconProps}
-                    />
+                    <div 
+                        className={`flex items-center justify-center ${iconClassName || ''}`}
+                        // style={{ width: iconSize, height: iconSize }}
+                    >
+                        <InfoCircle 
+                            variant="Outline" 
+                            
+                            className={`w-full h-full  text-blue-fmrp transition-colors ${isOpen ? 'text-blue-600' : ''}`}
+                            {...restIconProps}
+                        />
+                    </div>
                 )}
             </button>
 

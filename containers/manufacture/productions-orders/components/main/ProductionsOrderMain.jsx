@@ -1321,7 +1321,9 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
           {dataLang?.productions_orders || 'productions_orders'}{" "}
           <InfoTooltip
             content="Lệnh sản xuất là các đơn hàng sản xuất được tạo ra để thực hiện việc sản xuất sản phẩm theo yêu cầu, bao gồm thông tin về số lượng, thời gian và quy trình sản xuất."
-            iconSize={18}
+            iconProps={{
+              className: "2xl:size-[21px] xl:size-[18px] size-[16px]"
+          }}
           />
         </h2>
 

@@ -129,7 +129,9 @@ const Header = (props) => {
                     Kế hoạch sản xuất{" "}
                     <InfoTooltip
                         content="Kế hoạch sản xuất là bảng kế hoạch chi tiết về thời gian và quy trình sản xuất các sản phẩm, giúp quản lý và theo dõi tiến độ sản xuất một cách hiệu quả."
-                        iconSize={18}
+                        iconProps={{
+                            className: "2xl:size-[21px] xl:size-[18px] size-[16px]"
+                        }}
                     />
                 </h2>
                 <div className="flex items-stretch gap-4">
