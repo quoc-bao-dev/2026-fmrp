@@ -97,6 +97,7 @@ import ThreeDotIcon from './source/three-dot.svg';
 import TrashIcon from './source/trash.svg';
 import UpgradeIcon from './source/upgrade-icon.svg';
 import UserCircleIcon from './source/user-circle-icon.svg';
+import UserGroupIcon from './source/user-group.svg';
 import UserPlusIcon from './source/user-plus-icon.svg';
 import UsersIcon from './source/users.svg';
 import WarningAlertIcon from './source/warning-alert-icon.svg';
@@ -179,6 +180,7 @@ export {
   TrashIcon,
   UpgradeIcon,
   UserCircleIcon,
+  UserGroupIcon,
   UserPlusIcon,
   UsersIcon,
   WarningAlertIcon,
