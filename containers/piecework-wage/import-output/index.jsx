@@ -18,7 +18,6 @@ import { DropdownAvatar } from '@/components/layout/header';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import InfoTooltip from '@/components/UI/common/InfoTooltip';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
-import PopupCompleteOrder from './components/PopupCompleteOrder';
 import { IMAGES } from '@/constants/images';
 import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import { Popover } from 'antd';
@@ -27,6 +26,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FaPause, FaPlay, FaStop } from 'react-icons/fa';
+import PopupCompleteOrder from './components/PopupCompleteOrder';
 
 const ProductItem = () => {
   return (
@@ -139,9 +139,9 @@ const TimerControl = ({ time = '00 : 00 : 00', status = 'idle', onStart, onPause
 
   return (
     <div className={`w-full flex justify-between items-center gap-2 rounded-2xl p-2 ${containerBg}`}>
-      <div className='flex items-center gap-2'>
+      <div className='flex items-center gap-1'>
         <Clock2Icon className='size-6 text-[#4E4E4E]' />
-        <p className='responsive-text-base font-semibold text-[#4E4E4E]'>{time}</p>
+        <p className='responsive-text-base font-semibold text-[#4E4E4E] whitespace-nowrap'>{time}</p>
       </div>
       <div className='flex items-center gap-1'>{renderButtons()}</div>
     </div>
@@ -268,6 +268,7 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
   const [elapsedSeconds, setElapsedSeconds] = useState(parseTimeString(time));
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [showCompletePopup, setShowCompletePopup] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const intervalRef = useRef(null);
 
   const clearTimer = () => {
@@ -300,10 +301,6 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
     clearTimer();
     setStatusState('completed');
     setShowConfirmPopup(false);
-    // Mở popup hoàn thành sau khi kết thúc timer
-    setTimeout(() => {
-      setShowCompletePopup(true);
-    }, 300);
   };
 
   const cancelStopTimer = () => {
@@ -321,6 +318,11 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
     setShowCompletePopup(true);
   };
 
+  // Tổng số sản phẩm hiển thị trong card (demo UI)
+  const totalItems = 5;
+  const visibleItemsCount = isExpanded ? totalItems : 3;
+  const remainingItems = Math.max(totalItems - visibleItemsCount, 0);
+
   return (
     <div className='flex flex-col items-start gap-3 p-4 rounded-xl bg-white border border-[#F3F4F680] cursor-pointer' onClick={handleCardClick}>
       <div className='w-full flex items-center justify-between gap-2'>
@@ -336,14 +338,7 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
         </div>
       </div>
       <div onClick={e => e.stopPropagation()} className='w-full'>
-        <TimerControl
-          time={displayTime}
-          status={statusState}
-          onStart={startTimer}
-          onPause={pauseTimer}
-          onStop={handleStopClick}
-          onComplete={() => setShowCompletePopup(true)}
-        />
+        <TimerControl time={displayTime} status={statusState} onStart={startTimer} onPause={pauseTimer} onStop={handleStopClick} onComplete={() => setShowCompletePopup(true)} />
       </div>
       <PopupConfim
         isOpen={showConfirmPopup}
@@ -369,11 +364,20 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
         </div>
       </div>
       <div className='flex flex-col gap-1 w-full'>
-        <ProductItem />
-        <ProductItem />
-        <ProductItem />
+        {Array.from({ length: visibleItemsCount }).map((_, index) => (
+          <ProductItem key={index} />
+        ))}
       </div>
-      <span className='px-1 responsive-text-sm font-normal text-[#667085]'>Xem thêm (2)</span>
+      <button
+        type='button'
+        className='px-1 text-left responsive-text-sm font-normal text-[#1760B9] hover:underline'
+        onClick={e => {
+          e.stopPropagation();
+          setIsExpanded(prev => !prev);
+        }}
+      >
+        {isExpanded ? 'Thu gọn' : remainingItems > 0 ? `Xem thêm (${remainingItems})` : 'Xem thêm'}
+      </button>
     </div>
   );
 };
@@ -611,7 +615,12 @@ const ImportOutput = () => {
         <div className='flex items-center justify-between px-6'>
           <div className='flex items-center gap-2'>
             <h2 className='responsive-text-4xl font-medium text-neutral-07 capitalize'>Nhập sản lượng</h2>
-            <InfoTooltip content='' iconSize={18} />
+            <InfoTooltip
+              content=''
+              iconProps={{
+                className: '2xl:size-[21px] xl:size-[18px] size-[16px]',
+              }}
+            />
           </div>
           <div className='flex items-center gap-2'>
             <SelectSearchableRadio
