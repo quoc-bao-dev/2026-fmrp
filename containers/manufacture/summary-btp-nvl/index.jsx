@@ -531,7 +531,6 @@ const SummaryBtpNvl = () => {
           <InfoTooltip
             content={
               <p>
-                {' '}
                 <span className='font-bold'>Tổng hợp kế hoạch BTP & NVL</span> là bảng tổng hợp về nhu cầu NVL/BTP của tất cả các lệnh sản xuất hoặc theo tổng mặt hàng NVL/ BTP.
               </p>
             }
