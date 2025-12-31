@@ -1648,7 +1648,8 @@ export const DropdownAvatar = React.memo(() => {
       }
       closeOnDocumentClick
       position='bottom right'
-      className={`popover-edit`}
+      className={`popover-edit popup-avatar-content`}
+      overlayStyle={{ backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
       data-popup='true'
     >
       <div className={`w-[300px] bg-white rounded-lg border border-[#F2F4F7] shadow-[0px_4px_40px_0px_#2F416E1F] ${deca.className}`}>
