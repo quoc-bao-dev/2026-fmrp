@@ -61,7 +61,8 @@ const InternalPlan = props => {
 
   const { paginate } = usePagination();
 
-  const statusExprired = useStatusExprired();
+    const statusExprired = useStatusExprired();
+    const { handleTab: _HandleSelectTab } = useTab()
 
   const [idFillter, sIdFillter] = useState(initsId);
 
@@ -77,14 +78,46 @@ const InternalPlan = props => {
 
   const { checkAdd, checkEdit, checkExport } = useActionRole(auth, 'internal_plan');
 
-  const params = {
-    search: keySearch,
-    limit: limit,
-    page: router.query?.page || 1,
-    branch_id: idFillter.idBranch != null ? idFillter.idBranch.value : null,
-    start_date: idFillter?.valueDate?.startDate != null ? formatMoment(idFillter?.valueDate?.startDate, FORMAT_MOMENT.DATE_SLASH_LONG) : null,
-    end_date: idFillter?.valueDate?.endDate != null ? formatMoment(idFillter?.valueDate?.endDate, FORMAT_MOMENT.DATE_SLASH_LONG) : null,
-  };
+    const params = {
+        search: keySearch,
+        limit: limit,
+        page: router.query?.page || 1,
+        branch_id: idFillter.idBranch != null ? idFillter.idBranch.value : null,
+        status: router.query?.tab ?? null,
+        start_date:
+            idFillter?.valueDate?.startDate != null
+                ? formatMoment(
+                    idFillter?.valueDate?.startDate,
+                    FORMAT_MOMENT.DATE_SLASH_LONG
+                )
+                : null,
+        end_date:
+            idFillter?.valueDate?.endDate != null
+                ? formatMoment(
+                    idFillter?.valueDate?.endDate,
+                    FORMAT_MOMENT.DATE_SLASH_LONG
+                )
+                : null,
+    };
+
+    const paramsStatus = {
+        search: keySearch,
+        branch_id: idFillter.idBranch != null ? idFillter.idBranch.value : null,
+        start_date:
+            idFillter?.valueDate?.startDate != null
+                ? formatMoment(
+                    idFillter?.valueDate?.startDate,
+                    FORMAT_MOMENT.DATE_SLASH_LONG
+                )
+                : null,
+        end_date:
+            idFillter?.valueDate?.endDate != null
+                ? formatMoment(
+                    idFillter?.valueDate?.endDate,
+                    FORMAT_MOMENT.DATE_SLASH_LONG
+                )
+                : null,
+    };
 
   const { data: dataBranch = [] } = useBranchList();
 
