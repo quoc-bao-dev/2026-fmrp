@@ -6,62 +6,62 @@ import PieceworkWageDetailModal from './PieceworkWageDetailModal';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 
 // Mock data dựa trên hình ảnh
-const mockData = [
+export const mockData = [
   {
     id: 1,
-    workers: [{ id: 1, name: 'Thành', avatarUrl: '/icon/default/default.png' }],
+    workers: [{ id: 1, name: 'Nam', avatarUrl: '/icon/default/default.png' }],
     workingHours: '4h',
     quantity: '4 cái',
-    pieceworkWage: '1.250.000',
+    pieceworkWage: '1.050.000',
   },
   {
     id: 2,
     workers: [{ id: 1, name: 'Thành', avatarUrl: '/icon/default/default.png' }],
     workingHours: '16h',
     quantity: '4 cái',
-    pieceworkWage: '1.250.000',
+    pieceworkWage: '1.150.000',
   },
   {
     id: 3,
-    workers: [{ id: 1, name: 'Thành', avatarUrl: '/icon/default/default.png' }],
+    workers: [{ id: 1, name: 'Văn', avatarUrl: '/icon/default/default.png' }],
     workingHours: '4h',
     quantity: '4 cái',
-    pieceworkWage: '1.250.000',
+    pieceworkWage: '1.350.000',
   },
   {
     id: 4,
-    workers: [{ id: 1, name: 'Thành', avatarUrl: '/icon/default/default.png' }],
+    workers: [{ id: 1, name: 'Huy', avatarUrl: '/icon/default/default.png' }],
     workingHours: '8h',
     quantity: '4 cái',
-    pieceworkWage: '1.250.000',
+    pieceworkWage: '1.050.000',
   },
   {
     id: 5,
-    workers: [{ id: 1, name: 'Thành', avatarUrl: '/icon/default/default.png' }],
+    workers: [{ id: 1, name: 'Hùng', avatarUrl: '/icon/default/default.png' }],
     workingHours: '8h',
     quantity: '4 cái',
-    pieceworkWage: '1.250.000',
+    pieceworkWage: '1.550.000',
   },
   {
     id: 6,
-    workers: [{ id: 1, name: 'Thành', avatarUrl: '/icon/default/default.png' }],
+    workers: [{ id: 1, name: 'Quang', avatarUrl: '/icon/default/default.png' }],
     workingHours: '8h',
     quantity: '4 cái',
-    pieceworkWage: '1.250.000',
+    pieceworkWage: '750.000',
   },
   {
     id: 7,
-    workers: [{ id: 1, name: 'Thành', avatarUrl: '/icon/default/default.png' }],
+    workers: [{ id: 1, name: 'Nguyễn', avatarUrl: '/icon/default/default.png' }],
     workingHours: '8h',
     quantity: '4 cái',
-    pieceworkWage: '1.250.000',
+    pieceworkWage: '850.000',
   },
   {
     id: 8,
-    workers: [{ id: 1, name: 'Thành', avatarUrl: '/icon/default/default.png' }],
+    workers: [{ id: 1, name: 'Lan', avatarUrl: '/icon/default/default.png' }],
     workingHours: '8h',
     quantity: '4 cái',
-    pieceworkWage: '1.250.000',
+    pieceworkWage: '750.000',
   },
 ];
 
