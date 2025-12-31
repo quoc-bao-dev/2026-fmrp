@@ -19,6 +19,8 @@ import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
 import Pagination from '@/components/UI/pagination';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
+import ProcessStepTooltip from '@/components/common/tooltip/ProcessStepTooltip';
+import ProcessStepIcon from '@/components/icons/common/ProcessStepIcon';
 import { CONFIRMATION_OF_CHANGES, TITLE_STATUS } from '@/constants/changeStatus/changeStatus';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import { WARNING_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
@@ -27,6 +29,7 @@ import { useLimitAndTotalItems } from '@/hooks/useLimitAndTotalItems';
 import usePagination from '@/hooks/usePagination';
 import useActionRole from '@/hooks/useRole';
 import useStatusExprired from '@/hooks/useStatusExprired';
+import useTab from '@/hooks/useTab';
 import useToast from '@/hooks/useToast';
 import { useToggle } from '@/hooks/useToggle';
 import { routerInternalPlan } from '@/routers/manufacture';
@@ -42,6 +45,8 @@ import { useSelector } from 'react-redux';
 import { useInternalPlanList } from './hooks/useInternalPlanList';
 import InfoTooltip from '@/components/UI/common/InfoTooltip';
 import ProcessStepIcon from '@/components/icons/common/ProcessStepIcon';
+import { useStatusInternalPlan } from './hooks/useStatusInternalPlan';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 
 const PopupDetail = dynamic(() => import('./components/PopupDetail'), {
   ssr: false,
@@ -61,8 +66,8 @@ const InternalPlan = props => {
 
   const { paginate } = usePagination();
 
-    const statusExprired = useStatusExprired();
-    const { handleTab: _HandleSelectTab } = useTab()
+  const statusExprired = useStatusExprired();
+  const { handleTab: _HandleSelectTab } = useTab();
 
   const [idFillter, sIdFillter] = useState(initsId);
 
@@ -78,46 +83,22 @@ const InternalPlan = props => {
 
   const { checkAdd, checkEdit, checkExport } = useActionRole(auth, 'internal_plan');
 
-    const params = {
-        search: keySearch,
-        limit: limit,
-        page: router.query?.page || 1,
-        branch_id: idFillter.idBranch != null ? idFillter.idBranch.value : null,
-        status: router.query?.tab ?? null,
-        start_date:
-            idFillter?.valueDate?.startDate != null
-                ? formatMoment(
-                    idFillter?.valueDate?.startDate,
-                    FORMAT_MOMENT.DATE_SLASH_LONG
-                )
-                : null,
-        end_date:
-            idFillter?.valueDate?.endDate != null
-                ? formatMoment(
-                    idFillter?.valueDate?.endDate,
-                    FORMAT_MOMENT.DATE_SLASH_LONG
-                )
-                : null,
-    };
+  const params = {
+    search: keySearch,
+    limit: limit,
+    page: router.query?.page || 1,
+    branch_id: idFillter.idBranch != null ? idFillter.idBranch.value : null,
+    status: router.query?.tab ?? null,
+    start_date: idFillter?.valueDate?.startDate != null ? formatMoment(idFillter?.valueDate?.startDate, FORMAT_MOMENT.DATE_SLASH_LONG) : null,
+    end_date: idFillter?.valueDate?.endDate != null ? formatMoment(idFillter?.valueDate?.endDate, FORMAT_MOMENT.DATE_SLASH_LONG) : null,
+  };
 
-    const paramsStatus = {
-        search: keySearch,
-        branch_id: idFillter.idBranch != null ? idFillter.idBranch.value : null,
-        start_date:
-            idFillter?.valueDate?.startDate != null
-                ? formatMoment(
-                    idFillter?.valueDate?.startDate,
-                    FORMAT_MOMENT.DATE_SLASH_LONG
-                )
-                : null,
-        end_date:
-            idFillter?.valueDate?.endDate != null
-                ? formatMoment(
-                    idFillter?.valueDate?.endDate,
-                    FORMAT_MOMENT.DATE_SLASH_LONG
-                )
-                : null,
-    };
+  const paramsStatus = {
+    search: keySearch,
+    branch_id: idFillter.idBranch != null ? idFillter.idBranch.value : null,
+    start_date: idFillter?.valueDate?.startDate != null ? formatMoment(idFillter?.valueDate?.startDate, FORMAT_MOMENT.DATE_SLASH_LONG) : null,
+    end_date: idFillter?.valueDate?.endDate != null ? formatMoment(idFillter?.valueDate?.endDate, FORMAT_MOMENT.DATE_SLASH_LONG) : null,
+  };
 
   const { data: dataBranch = [] } = useBranchList();
 
@@ -303,6 +284,28 @@ const InternalPlan = props => {
             </div>
           </>
         }
+        fillterTab={
+          <>
+            {dataStatus?.statuses &&
+              dataStatus.statuses?.map(e => {
+                return (
+                  <TabFilter
+                    style={{
+                      backgroundColor: '#e2f0fe',
+                    }}
+                    dataLang={dataLang}
+                    key={e?.id}
+                    onClick={_HandleSelectTab.bind(this, `${e?.id}`)}
+                    total={e?.count}
+                    active={e?.id}
+                    className={'text-[#0F4F9E]'}
+                  >
+                    {dataLang[e?.name] ?? e?.name}
+                  </TabFilter>
+                );
+              })}
+          </>
+        }
         table={
           <div className='flex flex-col h-full'>
             <div className='w-full items-center flex justify-between gap-2'>
@@ -438,11 +441,12 @@ const InternalPlan = props => {
                             {e.note}
                           </RowItemTable>
                           <RowItemTable colSpan={5} textAlign={'left'} className='py-3 pl-0 pr-6 2xl:pr-7 overflow-visible'>
-                            <div className='grid grid-cols-3 flex-1 items-end gap-0 py-2 overflow-visible'>
+                            <div className='grid grid-cols-3 flex-1 items-end gap-0 py-2 overflow-visible relative'>
                               {e?.process?.map((step, i, filteredArray) => {
                                 const isProducing = step.code === 'produced_at_company' && step.active === true;
                                 const isLast = step.code === 'import_warehouse';
                                 const nextStepActive = i < filteredArray.length - 1 ? filteredArray[i + 1]?.active : false;
+                                const hasReference = step?.reference && Array.isArray(step.reference) && step.reference.length > 0;
 
                                 return (
                                   <div
@@ -452,10 +456,21 @@ const InternalPlan = props => {
                                       zIndex: filteredArray.length - i,
                                     }}
                                   >
-                                    <ProcessStepIcon active={step.active} isLast={isLast} isProducing={isProducing} nextStepActive={nextStepActive} className='w-full h-full' />
-                                    <div className={`absolute py-0.5 px-2 inset-0 flex flex-col items-center justify-center pointer-events-none ${step?.active ? 'text-white' : 'text-gray-600'}`}>
-                                      <h6 className='responsive-text-xs font-medium leading-tight text-center whitespace-nowrap'>{dataLang[step?.name] || step?.name}</h6>
-                                    </div>
+                                    {hasReference ? (
+                                      <ProcessStepTooltip references={step.reference} dataLang={dataLang}>
+                                        <ProcessStepIcon active={step.active} isLast={isLast} isProducing={isProducing} nextStepActive={nextStepActive} className='w-full h-full' />
+                                        <div className={`absolute py-0.5 px-2 inset-0 flex flex-col items-center justify-center pointer-events-none ${step?.active ? 'text-white' : 'text-gray-600'}`}>
+                                          <h6 className='responsive-text-xs font-medium leading-tight text-center whitespace-nowrap'>{dataLang[step?.name] || step?.name}</h6>
+                                        </div>
+                                      </ProcessStepTooltip>
+                                    ) : (
+                                      <>
+                                        <ProcessStepIcon active={step.active} isLast={isLast} isProducing={isProducing} nextStepActive={nextStepActive} className='w-full h-full' />
+                                        <div className={`absolute py-0.5 px-2 inset-0 flex flex-col items-center justify-center pointer-events-none ${step?.active ? 'text-white' : 'text-gray-600'}`}>
+                                          <h6 className='responsive-text-xs font-medium leading-tight text-center whitespace-nowrap'>{dataLang[step?.name] || step?.name}</h6>
+                                        </div>
+                                      </>
+                                    )}
                                   </div>
                                 );
                               })}
