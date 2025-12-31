@@ -1,5 +1,6 @@
 import apiInternalPlan from '@/Api/apiManufacture/manufacture/internalPlan/apiInternalPlan';
 import { BtnAction } from '@/components/UI/BtnAction';
+import TabFilter from '@/components/UI/TabFilter';
 import Breadcrumb from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import OnResetData from '@/components/UI/btnResetData/btnReset';
 import ButtonWarehouse from '@/components/UI/btnWarehouse/btnWarehouse';
@@ -103,7 +104,7 @@ const InternalPlan = props => {
   const { data: dataBranch = [] } = useBranchList();
 
   const { data, isFetching, refetch } = useInternalPlanList(params);
-
+  const { data: dataStatus = [] } = useStatusInternalPlan(paramsStatus);
   const handlePostStatus = async (id, newStatus) => {
     try {
       const { isSuccess, message } = await apiInternalPlan.apiPostStatus(id, newStatus);
