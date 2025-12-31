@@ -586,23 +586,21 @@ const ImportOutput = () => {
         <title>Nhập sản lượng</title>
       </Head>
       <header className='sticky top-0 z-10 pr-4 pl-8 py-5 bg-new-blue flex gap-10 items-center justify-between'>
-        <div className='flex items-center gap-5'>
-          <Link href='/' className='relative '>
-            <Image
-              alt=''
-              src='/LOGO_HEADER.png'
-              width={100}
-              height={45}
-              quality={100}
-              className='3xl:w-[110px] 2xl:w-[100px] xl:w-[90px] w-[90px] h-auto object-contain'
-              loading='lazy'
-              crossOrigin='anonymous'
-              placeholder='blur'
-              blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
-            />
-          </Link>
+        <Link href='/' className='relative flex items-center gap-5'>
+          <Image
+            alt=''
+            src='/LOGO_HEADER.png'
+            width={100}
+            height={45}
+            quality={100}
+            className='3xl:w-[110px] 2xl:w-[100px] xl:w-[90px] w-[90px] h-auto object-contain'
+            loading='lazy'
+            crossOrigin='anonymous'
+            placeholder='blur'
+            blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+          />
           <h2 className='p-2 rounded-full bg-[#E2F0FE] responsive-text-base font-medium text-new-blue capitalize'>Trang quản lý</h2>
-        </div>
+        </Link>
         <div className='flex items-center gap-3'>
           <button className='h-10 bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-[#D0D5DD]'>
             <ClockIcon className='size-5 text-black' />
@@ -623,6 +621,12 @@ const ImportOutput = () => {
             />
           </div>
           <div className='flex items-center gap-2'>
+            <button className='h-10 w-[340px] bg-white px-3 py-2 rounded-lg flex items-center justify-between gap-2 border border-[#D0D5DD]'>
+              <input className='w-full border-none outline-none responsive-text-base text[#3A3E4C]' placeholder='Tìm kiếm mã lệnh sản xuất' />
+              <div className='p-1 rounded-lg bg-[#1760B9]'>
+                <SearchIcon className='size-4 text-white' />
+              </div>
+            </button>
             <SelectSearchableRadio
               placeholder='Lọc nhân viên'
               label='Lọc nhân viên'
@@ -652,16 +656,10 @@ const ImportOutput = () => {
               <span className='responsive-text-base font-normal text[#3A3E4C]'>Lọc</span>
               <CaretDownIcon className='size-3 text-[#9295A4]' />
             </button>
-            <button className='h-10 w-[340px] bg-white px-3 py-2 rounded-lg flex items-center justify-between gap-2 border border-[#D0D5DD]'>
-              <input className='w-full border-none outline-none responsive-text-base text[#3A3E4C]' placeholder='Tìm kiếm mã lệnh sản xuất' />
-              <div className='p-1 rounded-lg bg-[#1760B9]'>
-                <SearchIcon className='size-4 text-white' />
-              </div>
-            </button>
           </div>
         </div>
 
-        <div className='flex gap-6 w-full h-full flex-1 min-h-0 overflow-y-hidden'>
+        <div className='w-full h-full flex-1 min-h-0 overflow-y-hidden'>
           <Customscrollbar horizontalOnly={true} showOnHover={true} className='flex-1 min-h-0 h-full overflow-y-hidden'>
             <div className='px-6 flex gap-6 w-full h-full min-w-max overflow-y-hidden'>
               <div className='w-[394px] flex-shrink-0 rounded-t-2xl pt-1 flex flex-col gap-1 bg-[#EBEBEB]/50 h-full'>
@@ -779,6 +777,14 @@ const ImportOutput = () => {
               </div>
             </div>
           </Customscrollbar>
+          {/* nodata */}
+          {/* <div className='flex flex-col gap-4 h-full w-full items-center justify-center'>
+            <Image src={IMAGES.nodataStage} alt='nodata' width={165} height={165} className='object-contain' />
+            <p className='responsive-text-sm font-normal text-[#637381]'>Chưa có công đoạn, vui lòng thiết kế ngay.</p>
+            <Link href='/settings/category?tab=stages&page=1' className='px-3 py-2 rounded-lg responsive-text-lg font-medium text-white bg-blue-fmrp'>
+              Thiết kế công đoạn
+            </Link>
+          </div> */}
         </div>
       </div>
     </div>

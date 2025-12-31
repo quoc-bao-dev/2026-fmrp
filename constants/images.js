@@ -22,6 +22,7 @@ export const IMAGES = {
   // n
   nodataShift: "/nodata/nodata-shift.png",
   noImage: "/nodata/noimagelogo.png",
+  nodataStage: "/nodata/nodata-stage.png",
   // o
   // p
   // q
