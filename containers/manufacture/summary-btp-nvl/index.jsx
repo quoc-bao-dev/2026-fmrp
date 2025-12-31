@@ -529,7 +529,12 @@ const SummaryBtpNvl = () => {
         <h2 className='text-title-section text-[#52575E] capitalize font-medium'>
           Tổng hợp kế hoạch BTP & NVL{' '}
           <InfoTooltip
-            content='Tổng hợp kế hoạch BTP (Bán thành phẩm) & NVL (Nguyên vật liệu) là báo cáo tổng hợp về nhu cầu và kế hoạch sử dụng bán thành phẩm và nguyên vật liệu cho các lệnh sản xuất.'
+            content={
+              <p>
+                {' '}
+                <span className='font-bold'>Tổng hợp kế hoạch BTP & NVL</span> là bảng tổng hợp về nhu cầu NVL/BTP của tất cả các lệnh sản xuất hoặc theo tổng mặt hàng NVL/ BTP.
+              </p>
+            }
             iconProps={{
               className: '2xl:size-[21px] xl:size-[18px] size-[16px]',
             }}
