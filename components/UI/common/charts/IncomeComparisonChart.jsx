@@ -106,7 +106,7 @@ const IncomeComparisonChart = memo(({ data = [] }) => {
                             hidden: { opacity: 0 },
                             visible: { opacity: 1 },
                           }}
-                          transition={{ duration: 0.8, ease: 'easeOut' }}
+                          transition={{ duration: 0.3, ease: 'easeOut' }}
                           style={{
                             fontFamily: 'Lexend Deca, sans-serif',
                             fontWeight: 500,
