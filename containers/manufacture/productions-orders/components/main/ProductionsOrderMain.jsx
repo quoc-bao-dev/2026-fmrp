@@ -8,14 +8,7 @@ import RadioDropdown from '@/components/common/dropdown/RadioDropdown';
 import LoadingComponent from '@/components/common/loading/loading/LoadingComponent';
 import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
-import {
-  CaretDownIcon,
-  ChartDonutIcon,
-  MagnifyingGlassIcon,
-  PlusIcon,
-  PrinterIcon,
-  StickerIcon
-} from '@/components/icons';
+import { CaretDownIcon, ChartDonutIcon, MagnifyingGlassIcon, PlusIcon, PrinterIcon, StickerIcon } from '@/components/icons';
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
 import BreadcrumbCustom from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
@@ -67,6 +60,7 @@ import DetailProductionOrderList from '../ui/DetailProductionOrderList';
 import PlaningProductionOrder from '../ui/PlaningProductionOrder';
 import TabKeepStock from '../ui/tabKeepStock';
 import { listDropdownCompleteStage, listLsxStatus } from './constants/listData';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 
 const initialState = {
   isTab: 'item',
@@ -1020,7 +1014,6 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     </button>
   );
 
-
   // toggle click vào ra ô search
   const toggleSearch = () => {
     setIsOpenSearch(!isOpenSearch);
@@ -1316,7 +1309,16 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
       </div>
 
       <div ref={titleRef} className='flex items-center justify-between w-full'>
-        <h2 className='text-title-section text-[#52575E] capitalize font-medium'>{dataLang?.productions_orders || 'productions_orders'}</h2>
+        <h2 className='text-title-section text-[#52575E] capitalize font-medium'>
+          {' '}
+          {dataLang?.productions_orders || 'productions_orders'}{' '}
+          <InfoTooltip
+            content='Lệnh sản xuất là các đơn hàng sản xuất được tạo ra để thực hiện việc sản xuất sản phẩm theo yêu cầu, bao gồm thông tin về số lượng, thời gian và quy trình sản xuất.'
+            iconProps={{
+              className: '2xl:size-[21px] xl:size-[18px] size-[16px]',
+            }}
+          />
+        </h2>
 
         <div className='flex items-center gap-2 xl:max-w-[70%]'>
           <div className='relative flex items-center justify-end'>

@@ -35,6 +35,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { listLsxStatus } from '../productions-orders/components/main/constants/listData';
 import { useProductionOrdersCombobox } from '../productions-orders/hooks/useProductionOrdersCombobox';
 import { useSummaryBtpNvl } from './hook';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 
 const breadcrumbItems = [
   {
@@ -525,7 +526,19 @@ const SummaryBtpNvl = () => {
     <Container className='flex flex-col gap-2 !space-y-0 pb-4'>
       <BreadcrumbCustom items={breadcrumbItems} className='3xl:text-sm 2xl:text-xs xl:text-[10px] lg:text-[10px]' />
       <div className='flex items-center justify-between w-full'>
-        <h2 className='text-title-section text-[#52575E] capitalize font-medium'>Tổng hợp kế hoạch BTP & NVL</h2>
+        <h2 className='text-title-section text-[#52575E] capitalize font-medium'>
+          Tổng hợp kế hoạch BTP & NVL{' '}
+          <InfoTooltip
+            content={
+              <p>
+                <span className='font-bold'>Tổng hợp kế hoạch BTP & NVL</span> là bảng tổng hợp về nhu cầu NVL/BTP của tất cả các lệnh sản xuất hoặc theo tổng mặt hàng NVL/ BTP.
+              </p>
+            }
+            iconProps={{
+              className: '2xl:size-[21px] xl:size-[18px] size-[16px]',
+            }}
+          />
+        </h2>
         <div className='flex items-center gap-2'>
           {/* <ButtonAnimationNew
             icon={
@@ -742,14 +755,14 @@ const SummaryBtpNvl = () => {
               />
             </div>
             {/* <div className='w-full'> */}
-              <SearchComponent
-                onChange={e => setSearchMaterial(e?.target?.value || '')}
-                value={searchMaterial}
-                classNameBox='!py-2 2xl:!p-2.5 w-1/2'
-                placeholder='Tìm kiếm mã/tên ...'
-                classInput='w-full'
-                alwaysOpen={true}
-              />
+            <SearchComponent
+              onChange={e => setSearchMaterial(e?.target?.value || '')}
+              value={searchMaterial}
+              classNameBox='!py-2 2xl:!p-2.5 w-1/2'
+              placeholder='Tìm kiếm mã/tên ...'
+              classInput='w-full'
+              alwaysOpen={true}
+            />
             {/* </div> */}
           </div>
 
