@@ -2,6 +2,7 @@ import { CloseXIcon, SearchIcon } from '@/components/icons';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFloating, offset, flip, shift, size, useDismiss, useInteractions } from '@floating-ui/react';
+import { useGetShiftsByBranch } from '@/managers/api/shift-schedule/useGetShiftsByBranch';
 
 // Danh sách các ca có sẵn
 const AVAILABLE_SHIFTS = [
@@ -24,6 +25,9 @@ const DropdownShiftSelector = ({
   const [selectedShift, setSelectedShift] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const isHandlingMenuActionRef = useRef(false);
+
+  const { data: shifts = [] } = useGetShiftsByBranch({});
+  console.log({ shifts });
 
   // Khởi tạo selectedShift khi mở dropdown ở chế độ edit
   useEffect(() => {
@@ -122,7 +126,7 @@ const DropdownShiftSelector = ({
   // Sử dụng useDismiss để tự động xử lý click outside
   const dismiss = useDismiss(context, {
     enabled: open,
-    outsidePress: (event) => {
+    outsidePress: event => {
       // Nếu đang xử lý action từ menu, không đóng
       if (isHandlingMenuActionRef.current) {
         return false;

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 /**
  * Component InfoTooltip - Hiển thị tooltip khi click vào icon
- * @param {string} content - Nội dung tooltip cần hiển thị
+ * @param {string | React.ReactNode} content - Nội dung tooltip cần hiển thị
  * @param {string} className - Class name cho icon wrapper
  * @param {object} iconProps - Props cho icon (size, className, etc.)
  * @param {string} position - Vị trí tooltip: 'bottom', 'bottom-center', 'top', 'left', 'right'
@@ -168,7 +168,11 @@ const InfoTooltip = ({
                 />
 
                 {/* Content */}
-                <p className='!text-sm !text-blue-900 leading-relaxed whitespace-normal !text-start !font-normal normal-case'>{content}</p>
+                {typeof content === 'string' ? (
+                  <p className='!text-sm !text-blue-900 leading-relaxed whitespace-normal !text-start !font-normal normal-case'>{content}</p>
+                ) : (
+                  <div className='text-sm text-blue-900 leading-relaxed whitespace-normal text-start font-normal normal-case'>{content}</div>
+                )}
               </div>
             </div>
           </motion.div>
