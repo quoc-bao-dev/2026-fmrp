@@ -1,49 +1,55 @@
 import { EditIcon, EyeIcon, PlusIcon, ThreeDotIcon, TrashIcon } from '@/components/icons';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useFloating, offset, flip, shift, useDismiss, useInteractions, autoUpdate } from '@floating-ui/react';
+import { useFloating, offset, flip, shift as shiftMiddleware, useDismiss, useInteractions, autoUpdate } from '@floating-ui/react';
 import DropdownShiftSelector from './DropdownShiftSelector';
 
-const SHIFT_CONFIG = {
-  morning: {
-    label: 'Ca sáng',
-    time: '09:37 - 11:30',
-    bgClass: 'bg-[#FFF7E6]',
-    borderClass: 'border-[#FFD591]',
-  },
-  noon: {
-    label: 'Ca trưa',
-    time: '09:37 - 11:30',
-    bgClass: 'bg-[#F6FFED]',
-    borderClass: 'border-[#B7EB8F]',
-  },
-  afternoon: {
-    label: 'Ca chiều',
-    time: '09:37 - 11:30',
-    bgClass: 'bg-[#FFF1F0]',
-    borderClass: 'border-[#FFCCC7]',
-  },
-  night: {
-    label: 'Ca tối',
-    time: '18:00 - 21:30',
-    bgClass: 'bg-[#E6F7FF]',
-    borderClass: 'border-[#91D5FF]',
-  },
-  training: {
-    label: 'Training',
-    time: '09:37 - 11:30',
-    bgClass: 'bg-[#F2F2FF]',
-    borderClass: 'border-[#E3B3FF]',
-  },
-  empty: {
-    label: '',
-    time: '',
-    bgClass: 'bg-[#FAFAFA]',
-    borderClass: 'border-[#E5E7EB] hover:border-blue-fmrp',
-  },
+// Helper function để format time từ "08:00:00" thành "08:00"
+const formatTime = timeString => {
+  if (!timeString) return '';
+  return timeString.substring(0, 5); // Lấy "HH:mm" từ "HH:mm:ss"
 };
 
-const ShiftCell = ({ type, onAddShift, onEditShift, onSelectShift, dayIndex, rowId }) => {
+// Helper function để lấy màu sắc dựa trên tên ca
+const getShiftStyles = shiftName => {
+  if (!shiftName) {
+    return {
+      bgClass: 'bg-[#FAFAFA]',
+      borderClass: 'border-[#E5E7EB] hover:border-blue-fmrp',
+    };
+  }
+
+  const name = shiftName.toLowerCase();
+  if (name.includes('sáng')) {
+    return {
+      bgClass: 'bg-[#FFF7E6]',
+      borderClass: 'border-[#FFD591]',
+    };
+  } else if (name.includes('trưa')) {
+    return {
+      bgClass: 'bg-[#F6FFED]',
+      borderClass: 'border-[#B7EB8F]',
+    };
+  } else if (name.includes('chiều')) {
+    return {
+      bgClass: 'bg-[#FFF1F0]',
+      borderClass: 'border-[#FFCCC7]',
+    };
+  } else if (name.includes('tối')) {
+    return {
+      bgClass: 'bg-[#E6F7FF]',
+      borderClass: 'border-[#91D5FF]',
+    };
+  } else {
+    // Màu mặc định cho các ca khác
+    return {
+      bgClass: 'bg-[#F2F2FF]',
+      borderClass: 'border-[#E3B3FF]',
+    };
+  }
+};
+
+const ShiftCell = ({ shift, onAddShift, onEditShift, onSelectShift, dayIndex, rowId }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShiftDropdownOpen, setIsShiftDropdownOpen] = useState(false);
   const [shiftDropdownMode, setShiftDropdownMode] = useState('add');
@@ -53,17 +59,17 @@ const ShiftCell = ({ type, onAddShift, onEditShift, onSelectShift, dayIndex, row
   const cellRef = useRef(null); // Ref cho cell div để tính toán vị trí dropdown
 
   // Sử dụng Floating UI cho menu
-  const { refs: menuRefs, floatingStyles: menuFloatingStyles, context: menuContext } = useFloating({
+  const {
+    refs: menuRefs,
+    floatingStyles: menuFloatingStyles,
+    context: menuContext,
+  } = useFloating({
     open: isMenuOpen,
     onOpenChange: setIsMenuOpen,
     placement: 'bottom-start',
     // Tự động cập nhật vị trí khi scroll hoặc resize
     whileElementsMounted: autoUpdate,
-    middleware: [
-      offset(4),
-      flip(),
-      shift({ padding: 8 }),
-    ],
+    middleware: [offset(4), flip(), shiftMiddleware({ padding: 8 })],
   });
 
   // Tự động xử lý click outside cho menu
@@ -77,8 +83,13 @@ const ShiftCell = ({ type, onAddShift, onEditShift, onSelectShift, dayIndex, row
     }
   }, [menuRefs]);
 
-  const config = SHIFT_CONFIG[type];
-  if (!config) return null;
+  // Xử lý trường hợp empty (không có shift)
+  const isEmpty = !shift || shift === 'empty';
+
+  // Lấy styles và thông tin từ shift object
+  const shiftStyles = isEmpty ? getShiftStyles(null) : getShiftStyles(shift.name);
+  const shiftLabel = isEmpty ? '' : shift.name || '';
+  const shiftTime = isEmpty ? '' : `${formatTime(shift.time_start)} - ${formatTime(shift.time_end)}`;
 
   // Xử lý mở dropdown thêm ca
   const handleOpenAddShiftDropdown = () => {
@@ -102,18 +113,18 @@ const ShiftCell = ({ type, onAddShift, onEditShift, onSelectShift, dayIndex, row
 
   // Xử lý chọn ca từ dropdown
   const handleSelectShift = (shiftId, dayIndex, mode) => {
-    onSelectShift?.(shiftId, dayIndex, mode, type);
+    onSelectShift?.(shiftId, dayIndex, mode, shift);
   };
 
   // Ô trống: chỉ hiển thị nút PlusIcon ở giữa
-  if (type === 'empty') {
+  if (isEmpty) {
     return (
       <>
         <button
           ref={addShiftBtnRef}
           type='button'
           onClick={handleOpenAddShiftDropdown}
-          className={`relative group w-full min-h-[50px] h-fit rounded border flex items-center justify-center ${config.bgClass} ${config.borderClass}`}
+          className={`relative group w-full min-h-[50px] h-fit rounded border flex items-center justify-center ${shiftStyles.bgClass} ${shiftStyles.borderClass}`}
         >
           <PlusIcon className='size-4 text-[#CCCCCC] group-hover:text-blue-fmrp' />
         </button>
@@ -182,11 +193,11 @@ const ShiftCell = ({ type, onAddShift, onEditShift, onSelectShift, dayIndex, row
   // Các ca còn lại: hiển thị label + time + icon
   return (
     <>
-      <div ref={cellRef} className={`group relative px-2 py-0.5 w-full min-h-[50px] h-fit rounded border overflow-hidden ${config.bgClass} ${config.borderClass} hover:border-transparent`}>
+      <div ref={cellRef} className={`group relative px-2 py-0.5 w-full min-h-[50px] h-fit rounded border overflow-hidden ${shiftStyles.bgClass} ${shiftStyles.borderClass} hover:border-transparent`}>
         {/* Nội dung ca */}
         <div className='flex h-full min-h-11 flex-col justify-center gap-0.5'>
-          <p className='responsive-text-sm font-medium text-neutral-05'>{config.label}</p>
-          <p className='responsive-text-xs text-neutral-02'>{config.time}</p>
+          <p className='responsive-text-sm font-medium text-neutral-05'>{shiftLabel}</p>
+          <p className='responsive-text-xs text-neutral-02'>{shiftTime}</p>
         </div>
 
         {/* Layer blur + action: luôn hiển thị khi menu mở, hoặc khi hover */}
@@ -213,7 +224,7 @@ const ShiftCell = ({ type, onAddShift, onEditShift, onSelectShift, dayIndex, row
         onClose={() => setIsShiftDropdownOpen(false)}
         triggerRef={cellRef}
         mode={shiftDropdownMode}
-        initialShift={shiftDropdownMode === 'edit' ? type : null}
+        initialShift={shiftDropdownMode === 'edit' ? shift : null}
         onSelect={handleSelectShift}
         dayIndex={dayIndex}
       />

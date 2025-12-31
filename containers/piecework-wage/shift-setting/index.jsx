@@ -1,161 +1,97 @@
-import { TrashIcon } from '@/components/icons'
-import EditIcon from '@/components/icons/common/EditIcon'
-import BreadcrumbCustom from '@/components/UI/breadcrumb/BreadcrumbCustom'
-import OnResetData from '@/components/UI/btnResetData/btnReset'
-import ContainerPagination from '@/components/UI/common/ContainerPagination/ContainerPagination'
-import { Customscrollbar } from '@/components/UI/common/Customscrollbar'
-import { EmptyExprired } from '@/components/UI/common/EmptyExprired'
-import { LayOutTableDynamic } from '@/components/UI/common/layout'
-import { ColumnTable, HeaderTable, RowItemTable, RowTable } from '@/components/UI/common/Table'
-import DropdowLimit from '@/components/UI/dropdowLimit/dropdowLimit'
-import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet'
-import SearchComponent from '@/components/UI/filterComponents/searchComponent'
-import SelectComponent from '@/components/UI/filterComponents/selectComponent'
-import Loading from '@/components/UI/loading/loading'
-import LoadingButton from '@/components/UI/loading/loadingButton'
-import MultiValue from '@/components/UI/mutiValue/multiValue'
-import NoData from '@/components/UI/noData/nodata'
-import Pagination from '@/components/UI/pagination'
-import PopupConfirmSimple from '@/components/UI/popupConfim/popupConfirmSimple'
-import { CONFIRM_DELETION, TITLE_DELETE } from '@/constants/delete/deleteTable'
-import { WARNING_ACTION_STATUS_ROLE } from '@/constants/warningStatus/warningStatus'
-import { useBranchList } from '@/hooks/common/useBranch'
-import { useLimitAndTotalItems } from '@/hooks/useLimitAndTotalItems'
-import usePagination from '@/hooks/usePagination'
-import useActionRole from '@/hooks/useRole'
-import useStatusExprired from '@/hooks/useStatusExprired'
-import useToast from '@/hooks/useToast'
-import { useSetupShift, useDeleteSetupShift } from '@/managers/api/piecework-wage/useSetupShift'
-import ExcelIcon from '@/components/icons/common/Excel'
-import { Grid6 } from 'iconsax-react'
-import { debounce } from 'lodash'
-import Head from 'next/head'
-import { useRouter } from 'next/router'
-import React, { useEffect, useMemo, useState } from 'react'
-import { useSelector } from 'react-redux'
-import PopupShiftSetting from './components/PopupShiftSetting'
-
-// Mock data cho ca làm việc
-const mockShiftData = [
-  {
-    id: 1,
-    name: 'Ca sáng',
-    timeFrame: '7:00h - 11:00',
-    daysOfWeek: ['Thứ 2', 'Thứ 3'],
-  },
-  {
-    id: 2,
-    name: 'Ca tối',
-    timeFrame: '7:00h - 11:00',
-    daysOfWeek: ['Thứ 2', 'Thứ 3'],
-  },
-  {
-    id: 3,
-    name: 'Tăng ca',
-    timeFrame: '7:00h - 11:00',
-    daysOfWeek: ['Thứ 2', 'Thứ 3'],
-  },
-  {
-    id: 4,
-    name: 'Ca sáng',
-    timeFrame: '7:00h - 11:00',
-    daysOfWeek: ['Thứ 4', 'Thứ 5'],
-  },
-  {
-    id: 5,
-    name: 'Ca chiều',
-    timeFrame: '13:00h - 17:00',
-    daysOfWeek: ['Thứ 2', 'Thứ 3'],
-  },
-  {
-    id: 6,
-    name: 'Ca đêm',
-    timeFrame: '19:00h - 23:00',
-    daysOfWeek: ['Thứ 6', 'Thứ 7'],
-  },
-  {
-    id: 7,
-    name: 'Ca sáng',
-    timeFrame: '7:00h - 11:00',
-    daysOfWeek: ['Chủ nhật'],
-  },
-  {
-    id: 8,
-    name: 'Ca tối',
-    timeFrame: '18:00h - 22:00',
-    daysOfWeek: ['Thứ 2', 'Thứ 3', 'Thứ 4'],
-  },
-  {
-    id: 9,
-    name: 'Ca sáng',
-    timeFrame: '6:00h - 10:00',
-    daysOfWeek: ['Thứ 5', 'Thứ 6'],
-  },
-  {
-    id: 10,
-    name: 'Ca chiều',
-    timeFrame: '14:00h - 18:00',
-    daysOfWeek: ['Thứ 7', 'Chủ nhật'],
-  },
-]
+import { TrashIcon } from '@/components/icons';
+import EditIcon from '@/components/icons/common/EditIcon';
+import BreadcrumbCustom from '@/components/UI/breadcrumb/BreadcrumbCustom';
+import OnResetData from '@/components/UI/btnResetData/btnReset';
+import ContainerPagination from '@/components/UI/common/ContainerPagination/ContainerPagination';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import { EmptyExprired } from '@/components/UI/common/EmptyExprired';
+import { LayOutTableDynamic } from '@/components/UI/common/layout';
+import { ColumnTable, HeaderTable, RowItemTable, RowTable } from '@/components/UI/common/Table';
+import DropdowLimit from '@/components/UI/dropdowLimit/dropdowLimit';
+import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet';
+import SearchComponent from '@/components/UI/filterComponents/searchComponent';
+import SelectComponent from '@/components/UI/filterComponents/selectComponent';
+import Loading from '@/components/UI/loading/loading';
+import LoadingButton from '@/components/UI/loading/loadingButton';
+import MultiValue from '@/components/UI/mutiValue/multiValue';
+import NoData from '@/components/UI/noData/nodata';
+import Pagination from '@/components/UI/pagination';
+import PopupConfirmSimple from '@/components/UI/popupConfim/popupConfirmSimple';
+import { CONFIRM_DELETION, TITLE_DELETE } from '@/constants/delete/deleteTable';
+import { WARNING_ACTION_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
+import { useBranchList } from '@/hooks/common/useBranch';
+import { useLimitAndTotalItems } from '@/hooks/useLimitAndTotalItems';
+import usePagination from '@/hooks/usePagination';
+import useActionRole from '@/hooks/useRole';
+import useStatusExprired from '@/hooks/useStatusExprired';
+import useToast from '@/hooks/useToast';
+import { useSetupShift, useDeleteSetupShift } from '@/managers/api/piecework-wage/useSetupShift';
+import ExcelIcon from '@/components/icons/common/Excel';
+import { Grid6 } from 'iconsax-react';
+import { debounce } from 'lodash';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
+import PopupShiftSetting from './components/PopupShiftSetting';
 
 const initialState = {
   keySearch: '',
   idBranch: [], // Array để hỗ trợ multi-select
-}
+};
 
 const ShiftSetting = props => {
-  const dataLang = props.dataLang
-  const isShow = useToast()
-  const router = useRouter()
-  const statusExprired = useStatusExprired()
-  const { paginate } = usePagination()
-  const { limit, updateLimit: sLimit } = useLimitAndTotalItems()
+  const dataLang = props.dataLang;
+  const isShow = useToast();
+  const router = useRouter();
+  const statusExprired = useStatusExprired();
+  const { paginate } = usePagination();
+  const { limit, updateLimit: sLimit } = useLimitAndTotalItems();
 
-  const [isState, sIsState] = useState(initialState)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isRefetching, setIsRefetching] = useState(false) // State để track refetch từ nút reset
-  const [deleteTarget, setDeleteTarget] = useState(null)
-  const queryState = key => sIsState(prev => ({ ...prev, ...key }))
+  const [isState, sIsState] = useState(initialState);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRefetching, setIsRefetching] = useState(false); // State để track refetch từ nút reset
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const queryState = key => sIsState(prev => ({ ...prev, ...key }));
 
   // Lấy thông tin quyền từ Redux store
-  const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth)
-  const { checkAdd, checkEdit, checkDelete, checkExport } = useActionRole(auth, 'setup_shift')
+  const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
+  const { checkAdd, checkEdit, checkDelete, checkExport } = useActionRole(auth, 'setup_shift');
 
   // Hook để xóa setup shift
   const { mutate: deleteSetupShift, isPending: isDeleting } = useDeleteSetupShift({
     onSuccess: data => {
-      const messageKey = data?.message || 'deleted_successfully'
-      const toastType = data?.isSuccess === true || data?.isSuccess === 1 ? 'success' : 'error'
-      isShow(toastType, dataLang?.[messageKey] || messageKey)
-      setDeleteTarget(null)
-      refetch()
+      const messageKey = data?.message || 'deleted_successfully';
+      const toastType = data?.isSuccess === true || data?.isSuccess === 1 ? 'success' : 'error';
+      isShow(toastType, dataLang?.[messageKey] || messageKey);
+      setDeleteTarget(null);
+      refetch();
     },
     onError: error => {
-      const messageKey = error?.response?.data?.message || error?.message || 'delete_failed'
-      isShow('error', dataLang?.[messageKey] || messageKey)
-      setDeleteTarget(null)
+      const messageKey = error?.response?.data?.message || error?.message || 'delete_failed';
+      isShow('error', dataLang?.[messageKey] || messageKey);
+      setDeleteTarget(null);
     },
-  })
+  });
 
   // Danh sách chi nhánh
-  const { data: listBranch = [] } = useBranchList()
+  const { data: listBranch = [] } = useBranchList();
 
   // Options cho filter chi nhánh
   const branchOptions = useMemo(() => {
-    return listBranch || []
-  }, [listBranch])
+    return listBranch || [];
+  }, [listBranch]);
 
   // Pagination config
-  const effectiveLimit = useMemo(() => (limit && Number(limit) > 0 ? Number(limit) : 15), [limit])
-  const currentPage = useMemo(() => Number(router.query?.page) || 1, [router.query?.page])
+  const effectiveLimit = useMemo(() => (limit && Number(limit) > 0 ? Number(limit) : 15), [limit]);
+  const currentPage = useMemo(() => Number(router.query?.page) || 1, [router.query?.page]);
 
   // Hàm format time từ "HH:mm:ss" sang "HH:mmh" (định nghĩa trước để dùng ở các useMemo khác)
   const formatTime = timeString => {
-    if (!timeString) return ''
-    const [hours, minutes] = timeString.split(':')
-    return `${hours}:${minutes}h`
-  }
+    if (!timeString) return '';
+    const [hours, minutes] = timeString.split(':');
+    return `${hours}:${minutes}h`;
+  };
 
   // Tạo params cho API với pagination, search và branch filter
   const filterParams = useMemo(() => {
@@ -163,21 +99,21 @@ const ShiftSetting = props => {
       page: currentPage,
       limit: effectiveLimit,
       search: isState.keySearch || undefined,
-    }
-    
+    };
+
     // Thêm filter[branch_id][0], filter[branch_id][1], ... nếu có chọn branch
     if (isState.idBranch && Array.isArray(isState.idBranch) && isState.idBranch.length > 0) {
-      const branchIds = isState.idBranch.map(item => item?.value || item).filter(Boolean)
+      const branchIds = isState.idBranch.map(item => item?.value || item).filter(Boolean);
       if (branchIds.length > 0) {
-        params['filter[branch_id]'] = branchIds
+        params['filter[branch_id]'] = branchIds;
       }
     }
 
-    return params
-  }, [currentPage, effectiveLimit, isState.keySearch, isState.idBranch])
+    return params;
+  }, [currentPage, effectiveLimit, isState.keySearch, isState.idBranch]);
 
   // API: Lấy danh sách ca làm việc với pagination
-  const { data: setupShiftData, isLoading: isLoadingSetupShift, refetch: refetchSetupShift } = useSetupShift(filterParams)
+  const { data: setupShiftData, isLoading: isLoadingSetupShift, refetch: refetchSetupShift } = useSetupShift(filterParams);
 
   // Hàm map day code sang tên tiếng Việt
   const mapDayToVietnamese = dayCode => {
@@ -189,30 +125,30 @@ const ShiftSetting = props => {
       Fri: 'Thứ 6',
       Sat: 'Thứ 7',
       Sun: 'Chủ nhật',
-    }
-    return dayMap[dayCode] || dayCode
-  }
+    };
+    return dayMap[dayCode] || dayCode;
+  };
 
   // Sắp xếp days theo đúng thứ tự từ Thứ 2 -> Chủ nhật
   const sortDaysByWeekOrder = dayCodes => {
-    if (!Array.isArray(dayCodes)) return []
-    const order = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    if (!Array.isArray(dayCodes)) return [];
+    const order = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return [...dayCodes].sort((a, b) => {
-      const indexA = order.indexOf(a) === -1 ? Number.MAX_SAFE_INTEGER : order.indexOf(a)
-      const indexB = order.indexOf(b) === -1 ? Number.MAX_SAFE_INTEGER : order.indexOf(b)
-      return indexA - indexB
-    })
-  }
+      const indexA = order.indexOf(a) === -1 ? Number.MAX_SAFE_INTEGER : order.indexOf(a);
+      const indexB = order.indexOf(b) === -1 ? Number.MAX_SAFE_INTEGER : order.indexOf(b);
+      return indexA - indexB;
+    });
+  };
 
   // Hook useMemo để map dữ liệu từ API ra format table
   const mappedShiftData = useMemo(() => {
     if (!setupShiftData?.rResult || !Array.isArray(setupShiftData.rResult)) {
-      return []
+      return [];
     }
 
     return setupShiftData.rResult.map(item => {
       // Map khung giờ từ time_start và time_end
-      const frameHour = `${formatTime(item.time_start)} - ${formatTime(item.time_end)}`
+      const frameHour = `${formatTime(item.time_start)} - ${formatTime(item.time_end)}`;
 
       // Map days từ string "Mon,Tue,Wed" sang array, và sắp xếp từ Thứ 2 -> Chủ nhật
       const days = item.days
@@ -222,7 +158,7 @@ const ShiftSetting = props => {
               .map(day => day.trim())
               .filter(Boolean)
           ).map(day => mapDayToVietnamese(day))
-        : []
+        : [];
 
       return {
         id: item.id,
@@ -235,134 +171,133 @@ const ShiftSetting = props => {
         branch_id: item.branch_id,
         branch_name: item.branch_name,
         daysRaw: item.days, // Giữ nguyên format gốc
-      }
-    })
-  }, [setupShiftData])
+      };
+    });
+  }, [setupShiftData]);
 
   // Log dữ liệu từ API
   useEffect(() => {
     if (setupShiftData) {
-      console.log('Setup Shift Data:', setupShiftData)
+      console.log('Setup Shift Data:', setupShiftData);
     }
-  }, [setupShiftData])
+  }, [setupShiftData]);
 
   // Log dữ liệu đã map
   useEffect(() => {
     if (mappedShiftData.length > 0) {
-      console.log('Mapped Shift Data:', mappedShiftData)
+      console.log('Mapped Shift Data:', mappedShiftData);
     }
-  }, [mappedShiftData])
-
+  }, [mappedShiftData]);
 
   // Filter dữ liệu từ API (server-side pagination, search, time và shift đã được xử lý)
   const filteredData = useMemo(() => {
     // Tất cả filter đã được xử lý ở server-side, không cần filter client-side
-    return mappedShiftData
-  }, [mappedShiftData])
+    return mappedShiftData;
+  }, [mappedShiftData]);
 
   // Pagination từ output của API
   const totalRecords = useMemo(() => {
     // Ưu tiên dùng iTotalDisplayRecords, nếu không có thì dùng iTotalRecords
-    return Number(setupShiftData?.output?.iTotalDisplayRecords) || Number(setupShiftData?.output?.iTotalRecords) || filteredData.length
-  }, [setupShiftData?.output, filteredData.length])
+    return Number(setupShiftData?.output?.iTotalDisplayRecords) || Number(setupShiftData?.output?.iTotalRecords) || filteredData.length;
+  }, [setupShiftData?.output, filteredData.length]);
 
   // Dữ liệu hiển thị trên table (API đã paginate server-side)
   const paginatedData = useMemo(() => {
     // API đã paginate server-side, dùng trực tiếp filteredData (đã được filter client-side nếu cần)
-    return filteredData
-  }, [filteredData])
-
-
- 
+    return filteredData;
+  }, [filteredData]);
 
   // Tự điều chỉnh về trang 1 nếu limit thay đổi hoặc khi refetch data
   useEffect(() => {
-    if (!effectiveLimit || effectiveLimit <= 0) return
+    if (!effectiveLimit || effectiveLimit <= 0) return;
 
-    const totalPages = Math.max(1, Math.ceil(totalRecords / effectiveLimit))
+    const totalPages = Math.max(1, Math.ceil(totalRecords / effectiveLimit));
     if (currentPage > totalPages && totalPages > 0) {
-      paginate(1)
+      paginate(1);
     }
-  }, [effectiveLimit, totalRecords, currentPage, paginate])
+  }, [effectiveLimit, totalRecords, currentPage, paginate]);
 
   // Hàm tìm kiếm - reset về trang 1 khi search thay đổi
   const _HandleOnChangeKeySearch = debounce(({ target: { value } }) => {
-    queryState({ keySearch: value })
+    queryState({ keySearch: value });
     // Reset về trang 1 khi search thay đổi
     if (currentPage !== 1) {
-      paginate(1)
+      paginate(1);
     }
-    router.replace('/piecework-wage/shift-setting')
-  }, 500)
+    router.replace('/piecework-wage/shift-setting');
+  }, 500);
 
   // Hàm refetch từ API
   const refetch = (showLoading = false) => {
     if (showLoading) {
-      setIsRefetching(true)
+      setIsRefetching(true);
     }
     refetchSetupShift().finally(() => {
       if (showLoading) {
-        setIsRefetching(false)
+        setIsRefetching(false);
       }
-    })
-      // isShow('success', dataLang?.reloaded_successfully || 'Tải lại thành công')
-  }
+    });
+    // isShow('success', dataLang?.reloaded_successfully || 'Tải lại thành công')
+  };
 
   // Xuất Excel từ dữ liệu đã map
-  const multiDataSet = useMemo(() => [
-    {
-      columns: [
-        {
-          title: `${dataLang?.stt || 'STT'}`,
-          width: { wch: 6 },
-          style: {
-            fill: { fgColor: { rgb: 'EFF6FF' } },
-            font: { bold: true, name: 'Lexend Deca', color: { rgb: '111827' } },
+  const multiDataSet = useMemo(
+    () => [
+      {
+        columns: [
+          {
+            title: `${dataLang?.stt || 'STT'}`,
+            width: { wch: 6 },
+            style: {
+              fill: { fgColor: { rgb: 'EFF6FF' } },
+              font: { bold: true, name: 'Lexend Deca', color: { rgb: '111827' } },
+            },
           },
-        },
-        {
-          title: `${dataLang?.shift_name || 'Tên ca'}`,
-          width: { wpx: 160 },
-          style: {
-            fill: { fgColor: { rgb: 'EFF6FF' } },
-            font: { bold: true, name: 'Lexend Deca', color: { rgb: '111827' } },
+          {
+            title: `${dataLang?.shift_name || 'Tên ca'}`,
+            width: { wpx: 160 },
+            style: {
+              fill: { fgColor: { rgb: 'EFF6FF' } },
+              font: { bold: true, name: 'Lexend Deca', color: { rgb: '111827' } },
+            },
           },
-        },
-        {
-          title: `${dataLang?.time_frame || 'Khung giờ'}`,
-          width: { wpx: 160 },
-          style: {
-            fill: { fgColor: { rgb: 'EFF6FF' } },
-            font: { bold: true, name: 'Lexend Deca', color: { rgb: '111827' } },
+          {
+            title: `${dataLang?.time_frame || 'Khung giờ'}`,
+            width: { wpx: 160 },
+            style: {
+              fill: { fgColor: { rgb: 'EFF6FF' } },
+              font: { bold: true, name: 'Lexend Deca', color: { rgb: '111827' } },
+            },
           },
-        },
-        {
-          title: `${dataLang?.days_of_week || 'Thứ trong tuần'}`,
-          width: { wpx: 300 },
-          style: {
-            fill: { fgColor: { rgb: 'EFF6FF' } },
-            font: { bold: true, name: 'Lexend Deca', color: { rgb: '111827' } },
+          {
+            title: `${dataLang?.days_of_week || 'Thứ trong tuần'}`,
+            width: { wpx: 300 },
+            style: {
+              fill: { fgColor: { rgb: 'EFF6FF' } },
+              font: { bold: true, name: 'Lexend Deca', color: { rgb: '111827' } },
+            },
           },
-        },
-        {
-          title: `${dataLang?.branch_name || 'Chi nhánh'}`,
-          width: { wpx: 200 },
-          style: {
-            fill: { fgColor: { rgb: 'EFF6FF' } },
-            font: { bold: true, name: 'Lexend Deca', color: { rgb: '111827' } },
+          {
+            title: `${dataLang?.branch_name || 'Chi nhánh'}`,
+            width: { wpx: 200 },
+            style: {
+              fill: { fgColor: { rgb: 'EFF6FF' } },
+              font: { bold: true, name: 'Lexend Deca', color: { rgb: '111827' } },
+            },
           },
-        },
-      ],
-      data:
-        filteredData?.map((e, index) => [
-          { value: index + 1, style: { numFmt: '0', font: { name: 'Lexend Deca' } } },
-          { value: `${e.name ? e.name : ''}`, style: { font: { name: 'Lexend Deca' } } },
-          { value: `${e.frameHour ? e.frameHour : ''}`, style: { font: { name: 'Lexend Deca' } } },
-          { value: `${e.days ? e.days.join(', ') : ''}`, style: { font: { name: 'Lexend Deca' } } },
-          { value: `${e.branch_name ? e.branch_name : ''}`, style: { font: { name: 'Lexend Deca' } } },
-        ]) || [],
-    },
-  ], [filteredData, dataLang])
+        ],
+        data:
+          filteredData?.map((e, index) => [
+            { value: index + 1, style: { numFmt: '0', font: { name: 'Lexend Deca' } } },
+            { value: `${e.name ? e.name : ''}`, style: { font: { name: 'Lexend Deca' } } },
+            { value: `${e.frameHour ? e.frameHour : ''}`, style: { font: { name: 'Lexend Deca' } } },
+            { value: `${e.days ? e.days.join(', ') : ''}`, style: { font: { name: 'Lexend Deca' } } },
+            { value: `${e.branch_name ? e.branch_name : ''}`, style: { font: { name: 'Lexend Deca' } } },
+          ]) || [],
+      },
+    ],
+    [filteredData, dataLang]
+  );
 
   const breadcrumbItems = [
     {
@@ -371,24 +306,23 @@ const ShiftSetting = props => {
     {
       label: `${dataLang?.shift_setting || 'Thiết lập ca làm việc'}`,
     },
-  ]
-
+  ];
 
   const handleOpenDeletePopup = id => {
-    if (isDeleting) return
-    setDeleteTarget(id)
-  }
+    if (isDeleting) return;
+    setDeleteTarget(id);
+  };
 
   const handleDelete = () => {
-    if (!deleteTarget || isDeleting) return
+    if (!deleteTarget || isDeleting) return;
     // Đóng modal ngay khi bấm xác nhận
-    const targetId = deleteTarget
-    
-    setDeleteTarget(null)
-    
+    const targetId = deleteTarget;
+
+    setDeleteTarget(null);
+
     // Gọi API xóa ca làm việc
-    deleteSetupShift(targetId)
-  }
+    deleteSetupShift(targetId);
+  };
 
   const popupSubtitle = isDeleting ? (
     <span className='inline-flex items-center gap-2 text-[#003DA0]'>
@@ -397,7 +331,7 @@ const ShiftSetting = props => {
     </span>
   ) : (
     CONFIRM_DELETION
-  )
+  );
 
   return (
     <div className='min-h-screen relative'>
@@ -423,17 +357,17 @@ const ShiftSetting = props => {
             <h2 className='text-title-section text-[#52575E] capitalize font-medium'>{dataLang?.shift_setting || 'Thiết lập ca làm việc'}</h2>
             <div className='flex items-center justify-end gap-2'>
               {role == true || checkAdd ? (
-              <PopupShiftSetting
-                dataLang={dataLang}
-                onRefresh={refetch}
-                listBranch={listBranch}
-                className='responsive-text-sm 3xl:py-3 3xl:px-4 py-2 px-3 text-sm font-normal rounded-md bg-blue-fmrp text-white btn-animation hover:scale-105'
-              />
+                <PopupShiftSetting
+                  dataLang={dataLang}
+                  onRefresh={refetch}
+                  listBranch={listBranch}
+                  className='responsive-text-sm 3xl:py-3 3xl:px-4 py-2 px-3 text-sm font-normal rounded-md bg-blue-fmrp text-white btn-animation hover:scale-105'
+                />
               ) : (
                 <button
                   type='button'
                   onClick={() => {
-                    isShow('error', WARNING_ACTION_STATUS_ROLE)
+                    isShow('error', WARNING_ACTION_STATUS_ROLE);
                   }}
                   className='responsive-text-sm 3xl:py-3 3xl:px-4 py-2 px-3 text-sm font-normal bg-blue-fmrp text-white rounded-lg btn-animation hover:scale-105'
                 >
@@ -452,10 +386,10 @@ const ShiftSetting = props => {
                   options={branchOptions}
                   colSpan={1}
                   onChange={selected => {
-                    queryState({ idBranch: selected || [] })
+                    queryState({ idBranch: selected || [] });
                     // Reset về trang 1 khi filter thay đổi
                     if (currentPage !== 1) {
-                      paginate(1)
+                      paginate(1);
                     }
                   }}
                   value={isState.idBranch}
@@ -470,20 +404,14 @@ const ShiftSetting = props => {
               <div className='flex items-center justify-end space-x-2'>
                 <OnResetData sOnFetching={e => {}} onClick={() => refetch(true)} />
                 {role == true || checkExport ? (
-                <div className={``}>
-                  {filteredData?.length > 0 && (
-                    <ExcelFileComponent multiDataSet={multiDataSet} filename='Danh sách ca làm việc' title='DSCLV' dataLang={dataLang} />
-                  )}
-                </div>
+                  <div className={``}>{filteredData?.length > 0 && <ExcelFileComponent multiDataSet={multiDataSet} filename='Danh sách ca làm việc' title='DSCLV' dataLang={dataLang} />}</div>
                 ) : (
                   <button
                     onClick={() => isShow('error', WARNING_ACTION_STATUS_ROLE)}
                     className='3xl:py-3 3xl:px-4 py-2 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded-lg border border-blue-fmrp transition'
                   >
                     <ExcelIcon className='3xl:size-5 size-4 text-blue-fmrp' />
-                    <span className='text-blue-fmrp responsive-text-sm font-medium whitespace-nowrap'>
-                      {dataLang?.client_list_exportexcel || 'Xuất Excel'}
-                    </span>
+                    <span className='text-blue-fmrp responsive-text-sm font-medium whitespace-nowrap'>{dataLang?.client_list_exportexcel || 'Xuất Excel'}</span>
                   </button>
                 )}
               </div>
@@ -518,7 +446,7 @@ const ShiftSetting = props => {
                     <div className='divide-y divide-slate-200 h-[100%]'>
                       {paginatedData.map((e, index) => {
                         // Tính STT dựa trên currentPage và effectiveLimit
-                        const stt = (currentPage - 1) * effectiveLimit + index + 1
+                        const stt = (currentPage - 1) * effectiveLimit + index + 1;
                         return (
                           <RowTable gridCols={15} key={e.id?.toString() || index}>
                             <RowItemTable colSpan={0.5} textAlign={'center'}>
@@ -538,43 +466,43 @@ const ShiftSetting = props => {
                             </RowItemTable>
                             <RowItemTable colSpan={2} className='flex items-center justify-center space-x-2 text-center'>
                               {role == true || checkEdit ? (
-                              <PopupShiftSetting
-                                dataLang={dataLang}
-                                onRefresh={() => {
-                                  refetch()
-                                }}
-                                listBranch={listBranch}
-                                editData={e}
-                                trigger={
-                                  <button
-                                    type='button'
-                                    className='group hover:border-blue-500 hover:bg-blue-50 rounded-lg p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer'
-                                    title='Sửa'
-                                  >
-                                    <EditIcon className='size-5 text-[#003DA0]' />
-                                  </button>
-                                }
-                                buttonClassName='inline-flex'
-                              />
+                                <PopupShiftSetting
+                                  dataLang={dataLang}
+                                  onRefresh={() => {
+                                    refetch();
+                                  }}
+                                  listBranch={listBranch}
+                                  editData={e}
+                                  trigger={
+                                    <button
+                                      type='button'
+                                      className='group hover:border-blue-500 hover:bg-blue-50 rounded-lg p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer'
+                                      title='Sửa'
+                                    >
+                                      <EditIcon className='size-5 text-[#003DA0]' />
+                                    </button>
+                                  }
+                                  buttonClassName='inline-flex'
+                                />
                               ) : (
-                               <div onClick={() => isShow('error', WARNING_ACTION_STATUS_ROLE)}>
-                                 <EditIcon className='cursor-pointer size-5 text-[#003DA0]'  />
-                               </div>
+                                <div onClick={() => isShow('error', WARNING_ACTION_STATUS_ROLE)}>
+                                  <EditIcon className='cursor-pointer size-5 text-[#003DA0]' />
+                                </div>
                               )}
                               {role == true || checkDelete ? (
-                              <button
-                                onClick={() => handleOpenDeletePopup(e.id)}
-                                className='group hover:border-red-01 hover:bg-red-02 rounded-lg w-fit p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer'
-                                title='Xóa'
-                              >
-                                <TrashIcon className='size-5 text-[#EE1E1E]' />
-                              </button>
+                                <button
+                                  onClick={() => handleOpenDeletePopup(e.id)}
+                                  className='group hover:border-red-01 hover:bg-red-02 rounded-lg w-fit p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer'
+                                  title='Xóa'
+                                >
+                                  <TrashIcon className='size-5 text-[#EE1E1E]' />
+                                </button>
                               ) : (
                                 <TrashIcon className='cursor-pointer size-5 text-[#EE1E1E]' onClick={() => isShow('error', WARNING_ACTION_STATUS_ROLE)} />
                               )}
                             </RowItemTable>
                           </RowTable>
-                        )
+                        );
                       })}
                     </div>
                   </>
@@ -603,24 +531,23 @@ const ShiftSetting = props => {
           isOpen={!!deleteTarget}
           save={() => {
             if (!isDeleting) {
-              handleDelete()
+              handleDelete();
             }
           }}
           cancel={() => {
             if (!isDeleting) {
-              setDeleteTarget(null)
+              setDeleteTarget(null);
             }
           }}
           onClose={() => {
             if (!isDeleting) {
-              setDeleteTarget(null)
+              setDeleteTarget(null);
             }
           }}
         />
       )}
     </div>
-  )
-}
+  );
+};
 
-export default ShiftSetting
-
+export default ShiftSetting;
