@@ -662,7 +662,7 @@ const ImportOutput = () => {
         </div>
 
         <div className='flex gap-6 w-full h-full flex-1 min-h-0 overflow-y-hidden'>
-          <Customscrollbar horizontalOnly={true} className='flex-1 min-h-0 h-full overflow-y-hidden'>
+          <Customscrollbar horizontalOnly={true} showOnHover={true} className='flex-1 min-h-0 h-full overflow-y-hidden'>
             <div className='px-6 flex gap-6 w-full h-full min-w-max overflow-y-hidden'>
               <div className='w-[394px] flex-shrink-0 rounded-t-2xl pt-1 flex flex-col gap-1 bg-[#EBEBEB]/50 h-full'>
                 <div className='px-4 py-3 flex flex-col gap-3 flex-shrink-0'>
@@ -679,7 +679,7 @@ const ImportOutput = () => {
                     <ProcessStatusDropdown processName='Cắt' />
                   </div>
                 </div>
-                <Customscrollbar className='flex-1 min-h-0 h-full'>
+                <Customscrollbar className='flex-1 min-h-0 h-full' showOnHover={true}>
                   <div className='flex flex-col gap-2.5 px-4 pb-4'>
                     <ProductionOrderCard borderColor='#EEB600' status='idle' time='00 : 00 : 00' />
                     <ProductionOrderCard borderColor='#1A7526' status='running' time='02 : 15 : 30' />
@@ -702,7 +702,7 @@ const ImportOutput = () => {
                     <ProcessStatusDropdown processName='Cắt' />
                   </div>
                 </div>
-                <Customscrollbar className='flex-1 min-h-0 h-full'>
+                <Customscrollbar className='flex-1 min-h-0 h-full' showOnHover={true}>
                   <div className='flex flex-col gap-2.5 px-4 pb-4'>
                     <ProductionOrderCard borderColor='#8A38F5' status='running' time='03 : 20 : 45' />
                     <ProductionOrderCard borderColor='#FF641C' status='completed' time='05 : 30 : 00' />
@@ -725,7 +725,7 @@ const ImportOutput = () => {
                     <ProcessStatusDropdown processName='Cắt' />
                   </div>
                 </div>
-                <Customscrollbar className='flex-1 min-h-0 h-full'>
+                <Customscrollbar className='flex-1 min-h-0 h-full' showOnHover={true}>
                   <div className='flex flex-col gap-2.5 px-4 pb-4'>
                     <ProductionOrderCard borderColor='LSX-161225109' status='idle' time='00 : 00 : 00' />
                   </div>
@@ -746,7 +746,7 @@ const ImportOutput = () => {
                     <ProcessStatusDropdown processName='Cắt' />
                   </div>
                 </div>
-                <Customscrollbar className='flex-1 min-h-0 h-full'>
+                <Customscrollbar className='flex-1 min-h-0 h-full' showOnHover={true}>
                   <div className='flex flex-col gap-2.5 px-4 pb-4'>
                     <ProductionOrderCard borderColor='#8A38F5' status='running' time='00 : 45 : 30' />
                     <ProductionOrderCard borderColor='#1A7526' status='paused' time='00 : 20 : 10' />
@@ -769,7 +769,7 @@ const ImportOutput = () => {
                     <ProcessStatusDropdown processName='Cắt' />
                   </div>
                 </div>
-                <Customscrollbar className='flex-1 min-h-0 h-full'>
+                <Customscrollbar className='flex-1 min-h-0 h-full' showOnHover={true}>
                   <div className='flex flex-col gap-2.5 px-4 pb-4'>
                     <ProductionOrderCard borderColor='#FF641C' status='idle' time='00 : 00 : 00' />
                     <ProductionOrderCard borderColor='#1A7526' status='running' time='02 : 15 : 30' />
