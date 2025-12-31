@@ -23,6 +23,7 @@ import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import PopupKeepStock from '@/containers/manufacture/materials-planning/components/popup/popupKeepStock';
 import PopupExportMaterials from '@/containers/manufacture/productions-orders/components/popup/PopupExportMaterials';
 import PopupListResponsiblePerson from '@/containers/manufacture/productions-orders/components/popup/PopupListResponsiblePerson';
+import { mockData as pieceworkWageMockData } from '@/containers/piecework-wage/components/PieceworkWageTable';
 import { StateContext } from '@/context/_state/productions-orders/StateContext';
 import { useSheet } from '@/context/ui/SheetContext';
 import { useBranchList } from '@/hooks/common/useBranch';
@@ -212,6 +213,23 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     return keepCount + purchaseCount + transferRecoveryCount;
   }, [dataProductionOrderDetail?.keepWarehouses, dataProductionOrderDetail?.purchase_order, dataProductionOrderDetail?.transfer_recovery]);
 
+  // Tính số lượng công nhân unique và tạo incomeChartData từ table data
+  const { pieceworkWageCount, incomeChartData } = useMemo(() => {
+    // Tính số lượng công nhân unique
+    const count = pieceworkWageMockData.length;
+
+    const chartData = pieceworkWageMockData.map(item => ({
+      id: item.id,
+      name: item.workers[0].name,
+      income: item.pieceworkWage?.replace(/\./g, '') || '0',
+    }));
+
+    return {
+      pieceworkWageCount: count,
+      incomeChartData: chartData,
+    };
+  }, []);
+
   // Lấy process steps từ dataProductionOrderDetail
   const processSteps = useMemo(() => {
     const processData = dataProductionOrderDetail?.process?.[0] || [];
@@ -246,7 +264,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     {
       id: '4',
       name: 'Lương Sản Lượng',
-      count: null,
+      count: pieceworkWageCount,
       type: 'pieceworkWage',
     },
   ];
@@ -1775,6 +1793,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                     isStateProvider={isStateProvider}
                     groupButtonRef={groupButtonRef}
                     listPrintTask={listPrintTask}
+                    incomeChartData={incomeChartData}
                   />
                 )}
               </React.Fragment>

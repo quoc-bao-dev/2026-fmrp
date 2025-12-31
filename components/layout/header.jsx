@@ -651,16 +651,16 @@ const Header = () => {
               link: '/piecework-wage/shift-schedule',
             },
             {
-              viewOwn: auth?.piecework_wage_summary?.is_view_own,
-              view: auth?.piecework_wage_summary?.is_view,
-              name: 'Tổng hợp lương sản lượng',
-              link: '/under-development',
-            },
-            {
               // viewOwn: auth?.piecework_wage_complete?.is_view_own,
               // view: auth?.piecework_wage_complete?.is_view,
               name: 'Nhập sản lượng',
               link: '/piecework-wage/import-output',
+            },
+            {
+              viewOwn: auth?.piecework_wage_summary?.is_view_own,
+              view: auth?.piecework_wage_summary?.is_view,
+              name: 'Tổng hợp lương sản lượng',
+              link: '/under-development',
             },
           ],
         },
