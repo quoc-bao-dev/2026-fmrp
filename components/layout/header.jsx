@@ -654,14 +654,14 @@ const Header = () => {
               viewOwn: auth?.piecework_wage_summary?.is_view_own,
               view: auth?.piecework_wage_summary?.is_view,
               name: 'Tổng hợp lương sản lượng',
-              link: '/piecework-wage/summary',
+              link: '/under-development',
             },
             {
               // viewOwn: auth?.piecework_wage_complete?.is_view_own,
               // view: auth?.piecework_wage_complete?.is_view,
               name: 'Nhập sản lượng',
               link: '/piecework-wage/import-output',
-            }
+            },
           ],
         },
       ],
@@ -815,14 +815,8 @@ const Header = () => {
             },
             {
               // Báo cáo quỹ: hiển thị nếu user có ít nhất 1 trong các quyền:
-              viewOwn:
-                !!Number(auth?.diary_of_revenue_and_expenditure?.is_view) ||
-                !!Number(auth?.aggregate_fund_balance?.is_view) ||
-                !!Number(auth?.report_financial?.is_view),
-              view:
-                !!Number(auth?.diary_of_revenue_and_expenditure?.is_view) ||
-                !!Number(auth?.aggregate_fund_balance?.is_view) ||
-                !!Number(auth?.report_financial?.is_view),
+              viewOwn: !!Number(auth?.diary_of_revenue_and_expenditure?.is_view) || !!Number(auth?.aggregate_fund_balance?.is_view) || !!Number(auth?.report_financial?.is_view),
+              view: !!Number(auth?.diary_of_revenue_and_expenditure?.is_view) || !!Number(auth?.aggregate_fund_balance?.is_view) || !!Number(auth?.report_financial?.is_view),
               name: 'Báo cáo quỹ',
               link: fundBalanceDefaultLink,
             },
@@ -1422,11 +1416,8 @@ const Header = () => {
             <p className='text-[#7A0916] font-medium text-sm'>
               {isTrialPackage ? (
                 <>
-                  Phiên bản dùng thử sẽ kết thúc sau{' '}
-                  <span className='text-[#F3032B]'>
-                    {typeof daysLeft === 'number' ? daysLeft : 7} ngày.
-                  </span>{' '}
-                  Nâng cấp để tiếp tục sử dụng đầy đủ tính năng hoặc liên hệ{' '}
+                  Phiên bản dùng thử sẽ kết thúc sau <span className='text-[#F3032B]'>{typeof daysLeft === 'number' ? daysLeft : 7} ngày.</span> Nâng cấp để tiếp tục sử dụng đầy đủ tính năng hoặc liên
+                  hệ{' '}
                   <a href='https://zalo.me/fososoft' target='_blank' className='text-[#137EF4] underline cursor-pointer font-bold'>
                     Zalo{' '}
                   </a>
@@ -1434,15 +1425,8 @@ const Header = () => {
                 </>
               ) : (
                 <>
-                  Gói{' '}
-                  <span className='font-semibold'>
-                    {currentPackageName || 'Pro'}
-                  </span>{' '}
-                  của bạn sẽ hết hạn sau{' '}
-                  <span className='text-[#F3032B]'>
-                    {typeof daysLeft === 'number' ? daysLeft : 7} ngày.
-                  </span>{' '}
-                  Gia hạn ngay để không bị gián đoạn sử dụng đầy đủ tính năng hoặc liên hệ{' '}
+                  Gói <span className='font-semibold'>{currentPackageName || 'Pro'}</span> của bạn sẽ hết hạn sau{' '}
+                  <span className='text-[#F3032B]'>{typeof daysLeft === 'number' ? daysLeft : 7} ngày.</span> Gia hạn ngay để không bị gián đoạn sử dụng đầy đủ tính năng hoặc liên hệ{' '}
                   <a href='https://zalo.me/fososoft' target='_blank' className='text-[#137EF4] underline cursor-pointer font-bold'>
                     Zalo{' '}
                   </a>

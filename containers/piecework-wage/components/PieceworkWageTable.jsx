@@ -3,6 +3,7 @@ import { AvatarStack } from '@/components/UI/common/user';
 import NoData from '@/components/UI/noData/nodata';
 import { memo, useState } from 'react';
 import PieceworkWageDetailModal from './PieceworkWageDetailModal';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 
 // Mock data dựa trên hình ảnh
 const mockData = [
@@ -90,7 +91,7 @@ const PieceworkWageTable = memo(() => {
           <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-4 px-1'>Tác vụ</h4>
         </div>
 
-        <div className='max-h-[calc(100svh-315px)] overflow-y-auto'>
+        <Customscrollbar className='max-h-[calc(100svh-315px)]'>
           {/* Rows */}
           {mockData.length === 0 ? (
             <div className='h-full flex items-center justify-center py-6'>
@@ -115,7 +116,7 @@ const PieceworkWageTable = memo(() => {
                 <h4 className='col-span-3 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1'>{item.quantity}</h4>
 
                 <h4 className='col-span-6 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1'>
-                  <span className='text-blue-fmrp'>{item.pieceworkWage}</span>
+                  <span className='text-blue-fmrp'>{item.pieceworkWage} đ</span>
                 </h4>
 
                 <h4 className='col-span-4 flex items-center justify-center px-1'>
@@ -136,7 +137,7 @@ const PieceworkWageTable = memo(() => {
               </div>
             ))
           )}
-        </div>
+        </Customscrollbar>
       </div>
       <div className='hidden'>
         <PieceworkWageDetailModal open={openDetail} onClose={handleCloseDetail} worker={selectedWorker} />

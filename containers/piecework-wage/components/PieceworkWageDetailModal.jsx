@@ -1,7 +1,7 @@
 import PopupCustom from '@/components/UI/popup';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import Image from 'next/image';
-import { useState, memo } from 'react';
+import { useState, memo, useEffect, useRef } from 'react';
 
 const quantityHistoryMock = [
   {
@@ -111,6 +111,23 @@ const tabs = [
 
 const PieceworkWageDetailModal = ({ open, onClose, worker }) => {
   const [activeTab, setActiveTab] = useState('quantity');
+  const quantityScrollRef = useRef(null);
+  const timeScrollRef = useRef(null);
+
+  useEffect(() => {
+    // Scroll về đầu table khi chuyển tab
+    if (activeTab === 'quantity' && quantityScrollRef.current) {
+      quantityScrollRef.current.scrollTo({
+        top: 0,
+        behavior: 'instant',
+      });
+    } else if (activeTab === 'time' && timeScrollRef.current) {
+      timeScrollRef.current.scrollTo({
+        top: 0,
+        behavior: 'instant',
+      });
+    }
+  }, [activeTab]);
 
   const workerName = worker?.workers?.[0]?.name || 'Nguyễn Thành';
 
@@ -121,14 +138,14 @@ const PieceworkWageDetailModal = ({ open, onClose, worker }) => {
           <h2 className='text-[20px] leading-5 font-semibold text-[#141522]'>Chi tiết lương sản lượng</h2>
         </div>
       }
-      classNameModeltime='px-6 2xl:px-10 3xl:px-12 py-4 2xl:py-5 3xl:py-6 flex flex-col gap-6'
+      classNameModeltime='px-6 2xl:px-10 3xl:px-12 py-4 2xl:py-5 3xl:py-6 flex flex-col gap-2'
       lockScroll={true}
       open={open}
       classNameIconClose='size-8 bg-white hover:bg-slate-200 text-[#9295A4] hover:text-slate-800'
       onClose={onClose}
     >
       {/* Thông tin công nhân + Tổng giờ/chi phí */}
-      <div className='flex items-start justify-between gap-8 px-4 w-[1200px]'>
+      <div className='flex items-start justify-between gap-8 px-4 w-[1000px]'>
         {/* Cột 1 - Thông tin công nhân */}
         <div className='flex-1 flex flex-col gap-3'>
           <h3 className='text-[20px] leading-5 font-medium text-[#11315B] mb-2'>Thông tin công nhân</h3>
@@ -190,7 +207,7 @@ const PieceworkWageDetailModal = ({ open, onClose, worker }) => {
               <h3 className='col-span-3 text-sm font-semibold text-[#9295A4] text-center px-2'>Thành tiền</h3>
             </div>
 
-            <Customscrollbar className='flex-1 min-h-0 max-h-[300px]'>
+            <Customscrollbar ref={quantityScrollRef} className='flex-1 min-h-0 max-h-[300px]'>
               {quantityHistoryMock.map((row, index) => (
                 <div key={row.id} className={`grid grid-cols-24 gap-2 items-center py-3 ${index === quantityHistoryMock.length - 1 ? '' : 'border-b border-[#F3F3F4]'}`}>
                   <div className='col-span-2 flex items-center justify-center text-xs font-semibold text-[#141522]'>{index + 1}</div>
@@ -231,7 +248,7 @@ const PieceworkWageDetailModal = ({ open, onClose, worker }) => {
               <h3 className='col-span-5 text-sm font-semibold text-[#9295A4] text-center px-2'>Tổng thời gian</h3>
             </div>
 
-            <Customscrollbar className='flex-1 min-h-0 max-h-[300px]'>
+            <Customscrollbar ref={timeScrollRef} className='flex-1 min-h-0 max-h-[300px]'>
               {timeHistoryMock.map((row, index) => (
                 <div key={row.id} className={`grid grid-cols-24 gap-2 items-center py-6 ${index === timeHistoryMock.length - 1 ? '' : 'border-b border-[#F3F3F4]'}`}>
                   <div className='col-span-4 flex items-center justify-center text-xs font-semibold text-[#141522]'>{index + 1}</div>

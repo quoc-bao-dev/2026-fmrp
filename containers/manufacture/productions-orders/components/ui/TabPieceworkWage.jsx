@@ -43,9 +43,9 @@ const TabPieceworkWage = ({ dataLang, refreshData, handleQueryId, isStateProvide
     <div className='flex flex-col gap-2 h-full relative'>
       {/* Action Buttons */}
       {/* Table Section - 2 boxes */}
-      <div className='flex gap-4 w-full mt-4'>
+      <div className='flex gap-4 w-full'>
         {/* Box 1 - 70% width */}
-        <div className='w-[60%] '>
+        <div className='w-[60%]'>
           {/* Table content sẽ được thêm sau */}
           <PieceworkWageTable />
         </div>
