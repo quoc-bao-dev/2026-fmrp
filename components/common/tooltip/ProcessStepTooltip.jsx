@@ -59,7 +59,7 @@ const ProcessStepTooltip = ({ children, references, dataLang }) => {
 
   return (
     <>
-      <div ref={triggerRef} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className='w-full h-full'>
+      <div ref={triggerRef} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className='w-full h-full cursor-pointer'>
         {children}
       </div>
 
