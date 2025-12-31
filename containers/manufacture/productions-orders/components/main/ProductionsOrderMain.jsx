@@ -246,7 +246,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     {
       id: '4',
       name: 'Lương Sản Lượng',
-      count: null,
+      count: 8,
       type: 'pieceworkWage',
     },
   ];
