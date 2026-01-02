@@ -823,12 +823,17 @@ body {
   }
 }
 
+.custom-toast-container {
+  z-index: 10000 !important;
+}
+
 .custom-toast-popup {
   background-color: #d3fcd2 !important; /* xanh đậm */
   color: white !important;
   // border: none !important; /* xanh lá mỏng */
   border-radius: 10px !important;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10000 !important;
 }
 .custom-toast-popup-success {
   background-color: #d3fcd2 !important; /* xanh đậm */
@@ -950,6 +955,11 @@ body {
 }
 .swal2-toast-shown .swal2-container.swal2-top {
   top: 70px !important;
+  z-index: 10000 !important;
+}
+
+.swal2-container {
+  z-index: 10000 !important;
 }
 
 //carousel

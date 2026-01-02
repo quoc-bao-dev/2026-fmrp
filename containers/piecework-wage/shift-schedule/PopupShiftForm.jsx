@@ -170,16 +170,21 @@ const PopupShiftForm = ({
 
   // Xử lý lưu ca
   const handleSave = () => {
-    if (!selectedShift) {
-      toast('error', 'Vui lòng chọn ca');
+    // Validate: Kiểm tra nhân viên trước
+    if (!employees || employees.length === 0) {
+      toast('error', 'Vui lòng chọn nhân viên');
       return;
     }
+
+    // Validate: Kiểm tra ngày
     if (!dateRange.startDate || !dateRange.endDate) {
       toast('error', 'Vui lòng chọn khoảng ngày');
       return;
     }
-    if (!employees || employees.length === 0) {
-      toast('error', 'Vui lòng chọn nhân viên');
+
+    // Validate: Kiểm tra ca (quan trọng nhất - hiển thị toast)
+    if (!selectedShift) {
+      toast('error', 'Vui lòng chọn ca');
       return;
     }
 
@@ -217,22 +222,25 @@ const PopupShiftForm = ({
         {/* Content */}
         <div className='px-4 2xl:px-8 py-4 flex flex-col gap-4 overflow-y-auto max-h-[79vh]'>
           {/* Section Nhân viên */}
-          <div className='flex items-center gap-4'>
-            <label className='responsive-text-base font-medium text-neutral-05 whitespace-nowrap w-[100px]'>Nhân viên</label>
-            <div className='flex flex-wrap flex-1 gap-2.5 px-2 py-1.5 bg-[#F8F9FB] rounded-lg'>
-              {employees.length > 0 ? (
-                employees.map(employee => (
-                  <div key={employee.id} className='inline-flex items-center gap-2 px-3 py-1 bg-[#EAECEF] rounded-lg'>
-                    <span className='responsive-text-sm text-[#4A5565]'>{employee.name}</span>
-                    <button type='button' onClick={() => handleRemoveEmployee(employee.id)} className='flex items-center justify-center hover:bg-blue-fmrp/10 rounded-full p-0.5 transition-colors'>
-                      <CloseXIcon className='size-3.5 text-[#4A5565]' />
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <span className='responsive-text-sm text-neutral-02 w-[100px]'>Chưa chọn nhân viên</span>
-              )}
+          <div className='flex flex-col gap-2'>
+            <div className='flex items-center gap-4'>
+              <label className='responsive-text-base font-medium text-neutral-05 whitespace-nowrap w-[100px]'>Nhân viên</label>
+              <div className='flex flex-wrap flex-1 gap-2.5 px-2 py-1.5 bg-[#F8F9FB] rounded-lg'>
+                {employees.length > 0 ? (
+                  employees.map(employee => (
+                    <div key={employee.id} className='inline-flex items-center gap-2 px-3 py-1 bg-[#EAECEF] rounded-lg'>
+                      <span className='responsive-text-sm text-[#4A5565]'>{employee.name}</span>
+                      <button type='button' onClick={() => handleRemoveEmployee(employee.id)} className='flex items-center justify-center hover:bg-blue-fmrp/10 rounded-full p-0.5 transition-colors'>
+                        <CloseXIcon className='size-3.5 text-[#4A5565]' />
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <span className='responsive-text-sm text-neutral-02 py-1'>Chưa chọn nhân viên</span>
+                )}
+              </div>
             </div>
+            {employees.length === 0 && <p className='responsive-text-sm text-red-500 ml-[116px]'>Vui lòng chọn nhân viên</p>}
           </div>
 
           {/* Section Chọn ngày */}
