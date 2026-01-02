@@ -2,6 +2,11 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 
 const TYPE_CONTENT = {
+  calendar: {
+    image: '/nodata/nodata-calendar.png',
+    title: 'Chưa có ca làm việc',
+    titleClassName: 'text-[#141522] opacity-90',
+  },
   chart: {
     image: '/nodata/nodata-chart.png',
     title: 'Chưa có dữ liệu',

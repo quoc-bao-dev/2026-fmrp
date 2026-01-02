@@ -432,9 +432,7 @@ const PieceworkWage = props => {
                     className='3xl:py-3 3xl:px-4 py-2 px-3 flex items-center space-x-2 bg-white hover:bg-primary-07 rounded-lg border border-blue-fmrp transition'
                   >
                     <ExcelIcon className='3xl:size-5 size-4 text-blue-fmrp' />
-                    <span className='text-blue-fmrp responsive-text-sm font-medium whitespace-nowrap'>
-                      {dataLang?.client_list_exportexcel || 'Xuất Excel'}
-                    </span>
+                    <span className='text-blue-fmrp responsive-text-sm font-medium whitespace-nowrap'>{dataLang?.client_list_exportexcel || 'Xuất Excel'}</span>
                   </button>
                 )}
               </div>

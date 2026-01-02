@@ -13,7 +13,8 @@ import { optionsQuery } from '@/configs/optionsQuery';
  * @param {Function} [options.onError] - Error callback
  * @returns {Object} Hook return object
  * @returns {boolean} returns.isLoading - Loading state
- * @returns {Object} returns.data - Response data with structure: { success: boolean, data: ShiftData[] }
+ * @returns {Object} returns.data - Response data with structure: { result: number, data: ShiftData[] }
+ * @returns {number} [returns.data.result] - Result code (1 = success)
  * @returns {ShiftData[]} [returns.data.data] - Array of shift data objects with id, name, time_start, time_end, branch_id
  * @returns {Error} returns.error - Error object if any
  * @returns {Function} returns.refetch - Function to refetch the data
@@ -32,7 +33,7 @@ import { optionsQuery } from '@/configs/optionsQuery';
  * });
  *
  * // Access data structure
- * if (data?.success) {
+ * if (data?.result === 1) {
  *   const shifts = data.data; // [{ id: "3", name: "Ca sáng 2", time_start: "08:00:00", time_end: "12:30:00", branch_id: "61" }, ...]
  *   shifts.forEach(shift => {
  *     console.log(`${shift.name}: ${shift.time_start} - ${shift.time_end}`);

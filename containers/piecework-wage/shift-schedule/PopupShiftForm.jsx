@@ -1,19 +1,14 @@
 import { CloseXIcon, SearchIcon } from '@/components/icons';
-import { useEffect, useState } from 'react';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComponent';
+import useToast from '@/hooks/useToast';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-
-// Danh sách các ca có sẵn
-const AVAILABLE_SHIFTS = [
-  { id: 'morning', label: 'Ca sáng', time: '08:00 - 12:00' },
-  { id: 'afternoon', label: 'Ca chiều', time: '11:00 - 16:00' },
-  { id: 'noon', label: 'Ca trưa', time: '12:00 - 14:00' },
-  { id: 'night', label: 'Ca tối', time: '18:00 - 21:30' },
-  { id: 'training', label: 'Training', time: '09:00 - 17:00' },
-];
+import { useGetShiftsByBranch } from '@/managers/api/shift-schedule/useGetShiftsByBranch';
+import { useSaveShiftScheduleRange } from '@/managers/api/shift-schedule/useSaveShiftScheduleRange';
 
 // Tên các ngày trong tuần
 const DAY_NAMES = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-const DAY_NAMES_FULL = ['Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy', 'Chủ nhật'];
 const DAY_DATES = ['23/10', '24/10', '25/10', '26/10', '27/10', '28/10', '29/10'];
 
 const PopupShiftForm = ({
@@ -24,11 +19,81 @@ const PopupShiftForm = ({
   initialShift = null, // Ca hiện tại khi sửa (ví dụ: 'morning', 'afternoon', ...)
   onSave,
   selectedEmployees = [], // Danh sách nhân viên đã chọn
+  selectedBranch = null, // Chi nhánh đã chọn
 }) => {
   const [selectedShift, setSelectedShift] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDays, setSelectedDays] = useState(new Set()); // Các ngày đã chọn
   const [employees, setEmployees] = useState(selectedEmployees); // Danh sách nhân viên trong popup
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }); // Khoảng ngày được chọn
+  const toast = useToast();
+
+  // Tính toán T2 và CN của tuần hiện tại
+  const getCurrentWeekRange = () => {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = CN, 1 = T2, ..., 6 = T7
+
+    // Tính T2 (Thứ 2) của tuần hiện tại
+    // Nếu hôm nay là CN (0), T2 là 6 ngày trước
+    // Nếu hôm nay là T2 (1), T2 là hôm nay
+    // Nếu hôm nay là T3 (2), T2 là 1 ngày trước
+    // Công thức: T2 = today - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)
+    const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - mondayOffset);
+    monday.setHours(0, 0, 0, 0);
+
+    // Tính CN (Chủ nhật) của tuần hiện tại
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+
+    // Format về YYYY-MM-DD
+    const formatDate = date => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    return {
+      startDate: formatDate(monday),
+      endDate: formatDate(sunday),
+    };
+  };
+
+  // Lấy danh sách ca theo chi nhánh
+  const branchId = selectedBranch?.value ? [selectedBranch.value] : null;
+  const { data: shiftsData, isLoading: isLoadingShifts } = useGetShiftsByBranch({
+    params: branchId ? { branch_id: branchId } : {},
+    enabled: open && !!branchId,
+  });
+
+  // Hook để lưu ca làm việc
+  const { saveShiftScheduleRange, isLoading: isSaving } = useSaveShiftScheduleRange({
+    onSuccess: () => {
+      handleClose();
+    },
+  });
+
+  // Map dữ liệu ca từ API
+  const availableShifts = useMemo(() => {
+    if (!shiftsData?.result || !shiftsData?.data || !Array.isArray(shiftsData.data)) {
+      return [];
+    }
+    return shiftsData.data.map(shift => {
+      // Format time từ "08:00:00" thành "08:00"
+      const formatTime = time => {
+        if (!time) return '';
+        return time.substring(0, 5); // Lấy 5 ký tự đầu (HH:mm)
+      };
+      return {
+        id: shift.id,
+        label: shift.name || '',
+        time: `${formatTime(shift.time_start)} - ${formatTime(shift.time_end)}`,
+      };
+    });
+  }, [shiftsData]);
 
   // Khởi tạo state khi mở popup
   useEffect(() => {
@@ -43,6 +108,9 @@ const PopupShiftForm = ({
       // 0 = T2, 1 = T3, 2 = T4, 3 = T5, 4 = T6, 5 = T7, 6 = CN
       setSelectedDays(new Set([0, 1, 2, 3, 4, 5]));
       setEmployees(selectedEmployees);
+      // Mặc định chọn T2 đến CN của tuần hiện tại mỗi lần mở popup
+      const weekRange = getCurrentWeekRange();
+      setDateRange(weekRange);
       // Lock scroll khi modal mở
       document.body.style.overflow = 'hidden';
     } else {
@@ -82,14 +150,49 @@ const PopupShiftForm = ({
   };
 
   // Lọc danh sách ca theo từ khóa tìm kiếm
-  const filteredShifts = AVAILABLE_SHIFTS.filter(shift => shift.label.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredShifts = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return availableShifts;
+    }
+    const query = searchQuery.toLowerCase();
+    return availableShifts.filter(shift => shift.label.toLowerCase().includes(query));
+  }, [availableShifts, searchQuery]);
+
+  // Xử lý thay đổi dateRange
+  const handleDateRangeChange = newDateRange => {
+    if (newDateRange?.startDate && newDateRange?.endDate) {
+      setDateRange({
+        startDate: newDateRange.startDate,
+        endDate: newDateRange.endDate,
+      });
+    }
+  };
 
   // Xử lý lưu ca
   const handleSave = () => {
-    if (selectedShift && selectedDays.size > 0) {
-      onSave?.(selectedShift, Array.from(selectedDays), mode, employees);
-      handleClose();
+    if (!selectedShift) {
+      toast('error', 'Vui lòng chọn ca');
+      return;
     }
+    if (!dateRange.startDate || !dateRange.endDate) {
+      toast('error', 'Vui lòng chọn khoảng ngày');
+      return;
+    }
+    if (!employees || employees.length === 0) {
+      toast('error', 'Vui lòng chọn nhân viên');
+      return;
+    }
+
+    // Chuẩn bị payload
+    const payload = {
+      start_date: dateRange.startDate,
+      end_date: dateRange.endDate,
+      staff_id: employees.map(emp => emp.id),
+      shift_id: selectedShift,
+    };
+
+    // Gọi API
+    saveShiftScheduleRange(payload);
   };
 
   // Tạo title dựa trên mode
@@ -112,11 +215,11 @@ const PopupShiftForm = ({
         </div>
 
         {/* Content */}
-        <div className='px-4 2xl:px-8 py-4 flex flex-col gap-6 overflow-y-auto max-h-[70vh]'>
+        <div className='px-4 2xl:px-8 py-4 flex flex-col gap-4 overflow-y-auto max-h-[79vh]'>
           {/* Section Nhân viên */}
-          <div className='flex items-center gap-10'>
-            <label className='responsive-text-base font-medium text-neutral-05 whitespace-nowrap'>Nhân viên</label>
-            <div className='flex flex-wrap w-full gap-2.5 px-2 py-1.5 bg-[#F8F9FB] rounded-lg'>
+          <div className='flex items-center gap-4'>
+            <label className='responsive-text-base font-medium text-neutral-05 whitespace-nowrap w-[100px]'>Nhân viên</label>
+            <div className='flex flex-wrap flex-1 gap-2.5 px-2 py-1.5 bg-[#F8F9FB] rounded-lg'>
               {employees.length > 0 ? (
                 employees.map(employee => (
                   <div key={employee.id} className='inline-flex items-center gap-2 px-3 py-1 bg-[#EAECEF] rounded-lg'>
@@ -127,36 +230,61 @@ const PopupShiftForm = ({
                   </div>
                 ))
               ) : (
-                <span className='responsive-text-sm text-neutral-02'>Chưa chọn nhân viên</span>
+                <span className='responsive-text-sm text-neutral-02 w-[100px]'>Chưa chọn nhân viên</span>
               )}
             </div>
           </div>
 
+          {/* Section Chọn ngày */}
+          <div className='flex items-center gap-4'>
+            <label className='responsive-text-base font-medium text-neutral-05 w-[100px]'>Chọn ngày</label>
+            <DateToDateComponent value={dateRange} onChange={handleDateRangeChange} className='text-base-default flex-1  z-[51]' useRange={false} placeholder='Chọn khoảng ngày' />
+          </div>
+
           {/* Section Chọn ca */}
-          <div className='flex flex-col gap-4'>
+          <div className='flex flex-col gap-4 mt-2'>
             <label className='responsive-text-base font-medium text-neutral-05'>Chọn ca</label>
-            <div className='flex flex-col'>
-              {filteredShifts.map(shift => (
-                <label key={shift.id} className='flex items-center gap-3 py-4 px-2 border-b border-[#F3F4F6] hover:bg-[#F9FAFB] cursor-pointer transition-colors last:border-b-0'>
-                  <input
-                    type='radio'
-                    name='shift'
-                    value={shift.id}
-                    checked={selectedShift === shift.id}
-                    onChange={() => setSelectedShift(shift.id)}
-                    className='size-5 text-blue-fmrp cursor-pointer outline-none focus:outline-none focus:ring-0'
-                  />
-                  <span className='responsive-text-sm font-medium text-neutral-05'>
-                    {shift.label} <span className='text-neutral-02 font-normal'>({shift.time})</span>
-                  </span>
-                </label>
-              ))}
-              {filteredShifts.length === 0 && <div className='text-center py-4 text-neutral-02 responsive-text-sm'>Không tìm thấy ca nào</div>}
+            {/* Input tìm kiếm */}
+            <div className='relative'>
+              <SearchIcon className='absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[#99A1AF]' />
+              <input
+                type='text'
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder='Tìm kiếm ca...'
+                className='w-full pl-10 pr-4 py-2.5 border border-[#D0D5DD] rounded-lg responsive-text-sm text-neutral-05 placeholder:text-neutral-02 focus:outline-none focus:ring-2 focus:ring-blue-fmrp/20 focus:border-blue-fmrp'
+              />
             </div>
+            {isLoadingShifts ? (
+              <div className='text-center py-4 text-neutral-02 responsive-text-sm'>Đang tải danh sách ca...</div>
+            ) : (
+              <Customscrollbar className='h-[200px]'>
+                <div className='flex flex-col'>
+                  {filteredShifts.map(shift => (
+                    <label key={shift.id} className='flex items-center gap-3 py-4 px-2 border-b border-[#F3F4F6] hover:bg-[#F9FAFB] cursor-pointer transition-colors last:border-b-0'>
+                      <input
+                        type='radio'
+                        name='shift'
+                        value={shift.id}
+                        checked={selectedShift === shift.id}
+                        onChange={() => setSelectedShift(shift.id)}
+                        className='size-5 text-blue-fmrp cursor-pointer outline-none focus:outline-none focus:ring-0'
+                      />
+                      <span className='responsive-text-sm font-medium text-neutral-05'>
+                        {shift.label} <span className='text-neutral-02 font-normal'>({shift.time})</span>
+                      </span>
+                    </label>
+                  ))}
+                  {filteredShifts.length === 0 && !isLoadingShifts && (
+                    <div className='text-center py-4 text-neutral-02 responsive-text-sm'>{!selectedBranch ? 'Vui lòng chọn chi nhánh' : 'Không tìm thấy ca nào'}</div>
+                  )}
+                </div>
+              </Customscrollbar>
+            )}
           </div>
 
           {/* Section Chọn thứ trong tuần */}
-          <div className='flex flex-col gap-4'>
+          {/* <div className='flex flex-col gap-4'>
             <label className='responsive-text-base font-medium text-neutral-05'>Chọn thứ trong tuần</label>
             <div className='flex items-center justify-between gap-3'>
               {DAY_NAMES_FULL.map((dayName, index) => (
@@ -171,11 +299,16 @@ const PopupShiftForm = ({
                 </label>
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* Nút Lưu */}
-          <button type='button' onClick={handleSave} className='mx-auto w-[126px] py-3 px-4 rounded-lg text-white font-medium responsive-text-sm transition-colors bg-blue-fmrp hover:bg-blue-600'>
-            Lưu
+          <button
+            type='button'
+            onClick={handleSave}
+            disabled={isSaving}
+            className='mx-auto w-[126px] py-3 px-4 rounded-lg text-white font-medium responsive-text-sm transition-colors bg-blue-fmrp hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed'
+          >
+            {isSaving ? 'Đang lưu...' : 'Lưu'}
           </button>
         </div>
       </div>
