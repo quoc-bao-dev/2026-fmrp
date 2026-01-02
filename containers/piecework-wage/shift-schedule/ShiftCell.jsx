@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFloating, offset, flip, shift as shiftMiddleware, useDismiss, useInteractions, autoUpdate } from '@floating-ui/react';
 import DropdownShiftSelector from './DropdownShiftSelector';
+import PopupConfirmSimple from '@/components/UI/popupConfim/popupConfirmSimple';
+import { useDeleteShiftSchedule } from '@/managers/api/shift-schedule/useDeleteShiftSchedule';
 
 // Helper function để format time từ "08:00:00" thành "08:00"
 const formatTime = timeString => {
@@ -49,14 +51,23 @@ const getShiftStyles = shiftName => {
   }
 };
 
-const ShiftCell = ({ shift, onAddShift, onEditShift, onSelectShift, dayIndex, rowId }) => {
+const ShiftCell = ({ shift, onAddShift, onEditShift, onSelectShift, dayIndex, rowId, branchIds = [], date, existingShifts = [] }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShiftDropdownOpen, setIsShiftDropdownOpen] = useState(false);
   const [shiftDropdownMode, setShiftDropdownMode] = useState('add');
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const actionBtnRef = useRef(null);
   const addShiftBtnRef = useRef(null);
   const editShiftBtnRef = useRef(null);
   const cellRef = useRef(null); // Ref cho cell div để tính toán vị trí dropdown
+
+  // Hook để xóa ca làm việc
+  const { deleteShiftSchedule, isLoading: isDeleting } = useDeleteShiftSchedule({
+    onSuccess: () => {
+      setIsDeleteConfirmOpen(false);
+      setIsMenuOpen(false);
+    },
+  });
 
   // Sử dụng Floating UI cho menu
   const {
@@ -116,6 +127,28 @@ const ShiftCell = ({ shift, onAddShift, onEditShift, onSelectShift, dayIndex, ro
     onSelectShift?.(shiftId, dayIndex, mode, shift);
   };
 
+  // Xử lý mở modal xác nhận xóa
+  const handleOpenDeleteConfirm = () => {
+    setIsMenuOpen(false);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  // Xử lý xác nhận xóa ca
+  const handleConfirmDelete = () => {
+    if (!shift || !rowId || !date) {
+      return;
+    }
+
+    // shift_id là shift.id
+    const shiftId = shift.id;
+
+    deleteShiftSchedule({
+      staff_id: rowId,
+      date: date,
+      shift_id: shiftId,
+    });
+  };
+
   // Ô trống: chỉ hiển thị nút PlusIcon ở giữa
   if (isEmpty) {
     return (
@@ -135,6 +168,10 @@ const ShiftCell = ({ shift, onAddShift, onEditShift, onSelectShift, dayIndex, ro
           mode='add'
           onSelect={handleSelectShift}
           dayIndex={dayIndex}
+          branchIds={branchIds}
+          staffId={rowId}
+          date={date}
+          existingShifts={existingShifts}
         />
       </>
     );
@@ -181,7 +218,15 @@ const ShiftCell = ({ shift, onAddShift, onEditShift, onSelectShift, dayIndex, ro
               <EditIcon className='size-4 text-green-00' />
               Sửa
             </button>
-            <button type='button' className='w-full p-2 flex items-center gap-3 text-left text-xs text-neutral-07 hover:bg-[#ECF3FB]'>
+            <button
+              type='button'
+              onClick={e => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleOpenDeleteConfirm();
+              }}
+              className='w-full p-2 flex items-center gap-3 text-left text-xs text-neutral-07 hover:bg-[#ECF3FB]'
+            >
               <TrashIcon className='size-4 text-red-01' />
               Xóa
             </button>
@@ -206,9 +251,9 @@ const ShiftCell = ({ shift, onAddShift, onEditShift, onSelectShift, dayIndex, ro
             isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}
         >
-          <button className='px-4 py-1.5 pointer-events-auto rounded bg-white hover:bg-blue-fmrp text-blue-fmrp hover:text-white flex items-center justify-center'>
+          {/* <button className='px-4 py-1.5 pointer-events-auto rounded bg-white hover:bg-blue-fmrp text-blue-fmrp hover:text-white flex items-center justify-center'>
             <EyeIcon className='size-4' />
-          </button>
+          </button> */}
           <button
             type='button'
             ref={actionBtnRef}
@@ -227,8 +272,25 @@ const ShiftCell = ({ shift, onAddShift, onEditShift, onSelectShift, dayIndex, ro
         initialShift={shiftDropdownMode === 'edit' ? shift : null}
         onSelect={handleSelectShift}
         dayIndex={dayIndex}
+        branchIds={branchIds}
+        staffId={rowId}
+        date={date}
+        existingShifts={existingShifts}
       />
       {menuPortal}
+      {/* Modal xác nhận xóa */}
+      <PopupConfirmSimple
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => !isDeleting && setIsDeleteConfirmOpen(false)}
+        cancel={() => !isDeleting && setIsDeleteConfirmOpen(false)}
+        save={handleConfirmDelete}
+        title='Xác nhận xóa ca'
+        subtitle='Bạn có chắc chắn muốn xóa ca này không?'
+        type='warning'
+        confirmLabel={isDeleting ? 'Đang xóa...' : 'Xác nhận'}
+        cancelLabel='Hủy'
+        className='popup-edit'
+      />
     </>
   );
 };

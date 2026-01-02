@@ -1,17 +1,17 @@
 import { CloseXIcon, SearchIcon } from '@/components/icons';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFloating, offset, flip, shift, size, useDismiss, useInteractions } from '@floating-ui/react';
 import { useGetShiftsByBranch } from '@/managers/api/shift-schedule/useGetShiftsByBranch';
+import { useSaveShiftSchedule } from '@/managers/api/shift-schedule/useSaveShiftSchedule';
+import { useUpdateShiftSchedule } from '@/managers/api/shift-schedule/useUpdateShiftSchedule';
+import useToast from '@/hooks/useToast';
 
-// Danh sách các ca có sẵn
-const AVAILABLE_SHIFTS = [
-  { id: 'morning', label: 'Ca sáng', time: '08:00 - 12:00' },
-  { id: 'afternoon', label: 'Ca chiều', time: '11:00 - 16:00' },
-  { id: 'noon', label: 'Ca trưa', time: '12:00 - 14:00' },
-  { id: 'night', label: 'Ca tối', time: '18:00 - 21:30' },
-  { id: 'training', label: 'Training', time: '09:00 - 17:00' },
-];
+// Helper function để format time từ "HH:mm:ss" thành "HH:mm"
+const formatTime = timeString => {
+  if (!timeString) return '';
+  return timeString.substring(0, 5); // Lấy "HH:mm" từ "HH:mm:ss"
+};
 
 const DropdownShiftSelector = ({
   open,
@@ -21,19 +21,69 @@ const DropdownShiftSelector = ({
   initialShift = null, // Ca hiện tại khi sửa
   onSelect,
   dayIndex,
+  branchIds = [], // Danh sách branch IDs để filter shifts
+  staffId, // Staff ID để lưu ca
+  date, // Date để lưu ca (YYYY-MM-DD format)
+  existingShifts = [], // Danh sách các ca đã được chọn cho ngày này
 }) => {
   const [selectedShift, setSelectedShift] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const isHandlingMenuActionRef = useRef(false);
+  const showToast = useToast();
 
-  const { data: shifts = [] } = useGetShiftsByBranch({});
-  console.log({ shifts });
+  // Tạo params cho API với branch_id array
+  const apiParams = useMemo(() => {
+    const params = {
+      branch_id: [],
+    };
+    if (branchIds.length > 0) {
+      params.branch_id = branchIds;
+    }
+    return params;
+  }, [branchIds]);
+
+  const { data: shiftsResponse, isLoading: isLoadingShifts } = useGetShiftsByBranch({
+    params: apiParams,
+    enabled: open, // Chỉ fetch khi dropdown mở
+  });
+
+  // Hook để lưu ca làm việc
+  const { saveShiftSchedule, isLoading: isSaving } = useSaveShiftSchedule({
+    onSuccess: () => {
+      onSelect?.(selectedShift, dayIndex, mode);
+      onClose();
+    },
+  });
+
+  // Hook để cập nhật ca làm việc
+  const { updateShiftSchedule, isLoading: isUpdating } = useUpdateShiftSchedule({
+    onSuccess: () => {
+      onSelect?.(selectedShift, dayIndex, mode);
+      onClose();
+    },
+  });
+
+  // Map dữ liệu từ API thành format cho dropdown
+  const availableShifts = useMemo(() => {
+    if (!shiftsResponse || shiftsResponse.result !== 1 || !Array.isArray(shiftsResponse.data)) {
+      return [];
+    }
+    return shiftsResponse.data.map(shift => ({
+      id: shift.id,
+      label: shift.name,
+      time: `${formatTime(shift.time_start)} - ${formatTime(shift.time_end)}`,
+      time_start: shift.time_start,
+      time_end: shift.time_end,
+      branch_id: shift.branch_id,
+    }));
+  }, [shiftsResponse]);
 
   // Khởi tạo selectedShift khi mở dropdown ở chế độ edit
   useEffect(() => {
     if (open) {
       if (mode === 'edit' && initialShift) {
-        setSelectedShift(initialShift);
+        // Nếu initialShift là object có id, dùng id; nếu là string/number, dùng trực tiếp
+        setSelectedShift(typeof initialShift === 'object' && initialShift?.id ? initialShift.id : initialShift);
       } else {
         setSelectedShift(null);
       }
@@ -41,11 +91,54 @@ const DropdownShiftSelector = ({
     }
   }, [open, mode, initialShift]);
 
-  // Lọc danh sách ca theo từ khóa tìm kiếm
-  const filteredShifts = AVAILABLE_SHIFTS.filter(shift => shift.label.toLowerCase().includes(searchQuery.toLowerCase()));
+  // Lấy danh sách ID các ca đã được chọn (trừ ca hiện tại nếu đang ở chế độ edit)
+  const selectedShiftIds = useMemo(() => {
+    const ids = existingShifts.filter(s => s && s !== 'empty' && typeof s === 'object' && s.id).map(s => String(s.id));
+
+    // Nếu đang ở chế độ edit, loại bỏ ca hiện tại khỏi danh sách disabled
+    if (mode === 'edit' && initialShift) {
+      const currentShiftId = typeof initialShift === 'object' && initialShift?.id ? String(initialShift.id) : String(initialShift);
+      return ids.filter(id => id !== currentShiftId);
+    }
+
+    return ids;
+  }, [existingShifts, mode, initialShift]);
+
+  // Kiểm tra xem ca có được chọn chưa
+  const isShiftSelected = shiftId => {
+    return selectedShiftIds.includes(String(shiftId));
+  };
+
+  // Lọc và sắp xếp danh sách ca: chưa chọn ở trên, đã chọn ở dưới
+  const filteredAndSortedShifts = useMemo(() => {
+    let filtered = availableShifts;
+
+    // Lọc theo từ khóa tìm kiếm
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(shift => shift.label.toLowerCase().includes(query));
+    }
+
+    // Sắp xếp: chưa chọn ở trên, đã chọn ở dưới
+    return filtered.sort((a, b) => {
+      const aSelected = selectedShiftIds.includes(String(a.id));
+      const bSelected = selectedShiftIds.includes(String(b.id));
+
+      if (aSelected && !bSelected) return 1; // a đã chọn, b chưa chọn -> b lên trên
+      if (!aSelected && bSelected) return -1; // a chưa chọn, b đã chọn -> a lên trên
+      return 0; // Giữ nguyên thứ tự nếu cùng trạng thái
+    });
+  }, [availableShifts, searchQuery, selectedShiftIds]);
 
   // Xử lý chọn ca
   const handleSelectShift = shiftId => {
+    // Kiểm tra nếu ca đã được chọn
+    if (isShiftSelected(shiftId)) {
+      const shiftName = availableShifts.find(s => String(s.id) === String(shiftId))?.label || 'Ca này';
+      showToast('warning', `${shiftName} đã được chọn cho ngày này`);
+      return;
+    }
+
     setSelectedShift(shiftId);
     onSelect?.(shiftId, dayIndex, mode);
   };
@@ -160,8 +253,35 @@ const DropdownShiftSelector = ({
   }, [open]);
 
   const handleSave = () => {
-    onSelect?.(selectedShift, dayIndex, mode);
-    onClose();
+    if (!selectedShift) {
+      return;
+    }
+
+    if (!staffId || !date) {
+      console.error('Missing staffId or date');
+      return;
+    }
+
+    // Nếu mode là 'edit', gọi API update; nếu không, gọi API save
+    if (mode === 'edit' && initialShift) {
+      // Lấy shift_id cũ từ initialShift
+      const oldShiftId = typeof initialShift === 'object' && initialShift?.id ? initialShift.id : initialShift;
+
+      // Gọi API để cập nhật ca làm việc
+      updateShiftSchedule({
+        staff_id: staffId,
+        date: date,
+        shift_id: oldShiftId,
+        new_shift_id: selectedShift,
+      });
+    } else {
+      // Gọi API để lưu ca làm việc
+      saveShiftSchedule({
+        staff_id: staffId,
+        date: date,
+        shifts: selectedShift,
+      });
+    }
   };
 
   // Chỉ render khi open và có reference element
@@ -206,31 +326,51 @@ const DropdownShiftSelector = ({
 
       {/* Danh sách các ca */}
       <div className='flex flex-col overflow-y-auto'>
-        {filteredShifts.map(shift => (
-          <button
-            key={shift.id}
-            type='button'
-            onClick={e => {
-              e.stopPropagation();
-              handleSelectShift(shift.id);
-            }}
-            className={`flex items-center justify-between py-3 px-1 border-b border-[#F3F4F6] hover:bg-[#F9FAFB] cursor-pointer transition-colors ${selectedShift === shift.id ? 'bg-[#ECF3FB]' : ''}`}
-          >
-            <span className='responsive-text-sm font-medium text-neutral-05 text-left'>
-              {shift.label} <span className='text-neutral-02 font-normal'>({shift.time})</span>
-            </span>
-            <input
-              type='radio'
-              name='shift'
-              value={shift.id}
-              checked={selectedShift === shift.id}
-              onChange={() => handleSelectShift(shift.id)}
-              className='size-4 text-blue-fmrp cursor-pointer outline-none focus:outline-none focus:ring-0'
-              onClick={e => e.stopPropagation()}
-            />
-          </button>
-        ))}
-        {filteredShifts.length === 0 && <div className='text-center py-4 text-neutral-02 responsive-text-sm'>Không tìm thấy ca nào</div>}
+        {isLoadingShifts ? (
+          <div className='text-center py-4 text-neutral-02 responsive-text-sm'>Đang tải...</div>
+        ) : filteredAndSortedShifts.length > 0 ? (
+          filteredAndSortedShifts.map(shift => {
+            const isSelected = isShiftSelected(shift.id);
+            const isCurrentSelected = selectedShift === shift.id;
+
+            return (
+              <button
+                key={shift.id}
+                type='button'
+                disabled={isSelected}
+                onClick={e => {
+                  e.stopPropagation();
+                  handleSelectShift(shift.id);
+                }}
+                className={`flex items-center justify-between py-3 px-1 border-b border-[#F3F4F6] transition-colors ${
+                  isSelected ? 'opacity-50 cursor-not-allowed bg-[#F9FAFB]' : isCurrentSelected ? 'bg-[#ECF3FB] hover:bg-[#ECF3FB] cursor-pointer' : 'hover:bg-[#F9FAFB] cursor-pointer'
+                }`}
+              >
+                <span className={`responsive-text-sm font-medium text-left ${isSelected ? 'text-neutral-02' : 'text-neutral-05'}`}>
+                  {shift.label} <span className='text-neutral-02 font-normal'>({shift.time})</span>
+                  {isSelected && <span className='text-neutral-02 font-normal text-xs ml-1'>(Đã chọn)</span>}
+                </span>
+                <input
+                  type='radio'
+                  name='shift'
+                  value={shift.id}
+                  checked={isCurrentSelected}
+                  disabled={isSelected}
+                  onChange={() => handleSelectShift(shift.id)}
+                  className='size-4 text-blue-fmrp outline-none focus:outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-not-allowed'
+                  onClick={e => {
+                    e.stopPropagation();
+                    if (!isSelected) {
+                      handleSelectShift(shift.id);
+                    }
+                  }}
+                />
+              </button>
+            );
+          })
+        ) : (
+          <div className='text-center py-4 text-neutral-02 responsive-text-sm'>Không tìm thấy ca nào</div>
+        )}
       </div>
       <button
         type='button'
@@ -238,9 +378,12 @@ const DropdownShiftSelector = ({
           e.stopPropagation();
           handleSave();
         }}
-        className='w-full py-3 px-4 rounded-lg bg-blue-fmrp text-white font-medium responsive-text-sm hover:bg-blue-600 transition-colors'
+        disabled={!selectedShift || isSaving || isUpdating}
+        className={`w-full py-3 px-4 rounded-lg bg-blue-fmrp text-white font-medium responsive-text-sm transition-colors ${
+          !selectedShift || isSaving || isUpdating ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
+        }`}
       >
-        Lưu
+        {isSaving || isUpdating ? (mode === 'edit' ? 'Đang cập nhật...' : 'Đang lưu...') : mode === 'edit' ? 'Cập nhật' : 'Lưu'}
       </button>
     </div>
   );

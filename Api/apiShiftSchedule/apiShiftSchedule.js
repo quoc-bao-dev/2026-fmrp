@@ -63,9 +63,62 @@ import { _ServerInstance as axiosCustom } from '@/services/axios';
 
 /**
  * @typedef {Object} GetShiftsByBranchResponse
+ * @property {number} result - Result code (1 = success)
+ * @property {ShiftData[]} data - Array of shift data objects
+ */
+
+/**
+ * @typedef {Object} SaveShiftSchedulePayload
+ * @property {string|number} staff_id - Staff ID
+ * @property {string} date - Date in YYYY-MM-DD format (e.g., "2025-12-31")
+ * @property {string|number} shifts - Shift ID
+ */
+
+/**
+ * @typedef {Object} SaveShiftScheduleResponse
  * @property {boolean} success - Indicates if the request was successful
- * @property {string} [message] - Response message
- * @property {ShiftData[]} [data] - Array of shift data objects
+ * @property {string} message - Response message
+ */
+
+/**
+ * @typedef {Object} UpdateShiftSchedulePayload
+ * @property {string|number} staff_id - Staff ID
+ * @property {string} date - Date in YYYY-MM-DD format (e.g., "2025-12-31")
+ * @property {string|number} shift_id - Old shift ID (ID of the shift to be updated)
+ * @property {string|number} new_shift_id - New shift ID (ID of the new shift)
+ */
+
+/**
+ * @typedef {Object} UpdateShiftScheduleResponse
+ * @property {boolean} success - Indicates if the request was successful
+ * @property {string} message - Response message
+ */
+
+/**
+ * @typedef {Object} DeleteShiftSchedulePayload
+ * @property {string|number} staff_id - Staff ID
+ * @property {string} date - Date in YYYY-MM-DD format (e.g., "2025-12-31")
+ * @property {string|number} shift_id - Shift ID
+ */
+
+/**
+ * @typedef {Object} DeleteShiftScheduleResponse
+ * @property {boolean} success - Indicates if the request was successful
+ * @property {string} message - Response message
+ */
+
+/**
+ * @typedef {Object} SaveShiftScheduleRangePayload
+ * @property {string} start_date - Start date in YYYY-MM-DD format (e.g., "2025-12-29")
+ * @property {string} end_date - End date in YYYY-MM-DD format (e.g., "2025-12-31")
+ * @property {Array<string|number>} staff_id - Array of staff IDs
+ * @property {string|number} shift_id - Shift ID
+ */
+
+/**
+ * @typedef {Object} SaveShiftScheduleRangeResponse
+ * @property {boolean} success - Indicates if the request was successful
+ * @property {string} message - Response message
  */
 
 const apiShiftSchedule = {
@@ -203,11 +256,11 @@ const apiShiftSchedule = {
    * });
    *
    * // Handle response
-   * if (result.success) {
+   * if (result.result === 1) {
    *   console.log("Shifts:", result.data);
    *   // Shifts: [{ id: "3", name: "Ca sáng 2", time_start: "08:00:00", time_end: "12:30:00", branch_id: "61" }, ...]
    * } else {
-   *   console.error("Failed to get shifts:", result.message);
+   *   console.error("Failed to get shifts");
    * }
    */
   async apiGetShiftsByBranch(params) {
@@ -236,6 +289,158 @@ const apiShiftSchedule = {
     }
 
     const response = await axiosCustom('GET', url, {});
+    return response.data;
+  },
+
+  /**
+   * Save Shift Schedule API
+   * @description Saves a shift schedule for a staff member on a specific date
+   * @param {Object} payload - Request payload
+   * @param {string|number} payload.staff_id - Staff ID
+   * @param {string} payload.date - Date in YYYY-MM-DD format (e.g., "2025-12-31")
+   * @param {string|number} payload.shifts - Shift ID
+   * @returns {Promise<SaveShiftScheduleResponse>} Promise that resolves to API response
+   * @throws {Error} When API call fails
+   * @example
+   * // Save shift schedule
+   * const result = await apiShiftSchedule.apiSaveShiftSchedule({
+   *   staff_id: 77,
+   *   date: "2025-12-31",
+   *   shifts: 3
+   * });
+   *
+   * // Handle response
+   * if (result.success === true) {
+   *   console.log("Shift schedule saved successfully:", result.message);
+   * } else {
+   *   console.error("Failed to save shift schedule:", result.message);
+   * }
+   */
+  async apiSaveShiftSchedule(payload) {
+    const formData = new FormData();
+    formData.append('staff_id', payload.staff_id.toString());
+    formData.append('date', payload.date);
+    formData.append('shifts', payload.shifts.toString());
+
+    const response = await axiosCustom('POST', `/api_web/api_shift_schedule/save_shift_schedule?csrf_protection=true`, {
+      data: formData,
+    });
+    return response.data;
+  },
+
+  /**
+   * Update Shift Schedule API
+   * @description Updates a shift schedule for a staff member on a specific date
+   * @param {Object} payload - Request payload
+   * @param {string|number} payload.staff_id - Staff ID
+   * @param {string} payload.date - Date in YYYY-MM-DD format (e.g., "2025-12-31")
+   * @param {string|number} payload.shift_id - Old shift ID (ID of the shift to be updated)
+   * @param {string|number} payload.new_shift_id - New shift ID (ID of the new shift)
+   * @returns {Promise<UpdateShiftScheduleResponse>} Promise that resolves to API response
+   * @throws {Error} When API call fails
+   * @example
+   * // Update shift schedule
+   * const result = await apiShiftSchedule.apiUpdateShiftSchedule({
+   *   staff_id: 77,
+   *   date: "2025-12-31",
+   *   shift_id: 3,
+   *   new_shift_id: 5
+   * });
+   *
+   * // Handle response
+   * if (result.success === true) {
+   *   console.log("Shift schedule updated successfully:", result.message);
+   * } else {
+   *   console.error("Failed to update shift schedule:", result.message);
+   * }
+   */
+  async apiUpdateShiftSchedule(payload) {
+    const formData = new FormData();
+    formData.append('staff_id', payload.staff_id.toString());
+    formData.append('date', payload.date);
+    formData.append('shift_id', payload.shift_id.toString());
+    formData.append('new_shift_id', payload.new_shift_id.toString());
+
+    const response = await axiosCustom('POST', `/api_web/api_shift_schedule/update_shift_schedule?csrf_protection=true`, formData);
+    return response.data;
+  },
+
+  /**
+   * Delete Shift Schedule API
+   * @description Deletes a shift schedule for a staff member on a specific date
+   * @param {Object} payload - Request payload
+   * @param {string|number} payload.staff_id - Staff ID
+   * @param {string} payload.date - Date in YYYY-MM-DD format (e.g., "2025-12-31")
+   * @param {string|number} payload.shift_id - Shift ID
+   * @returns {Promise<DeleteShiftScheduleResponse>} Promise that resolves to API response
+   * @throws {Error} When API call fails
+   * @example
+   * // Delete shift schedule
+   * const result = await apiShiftSchedule.apiDeleteShiftSchedule({
+   *   staff_id: 77,
+   *   date: "2025-12-31",
+   *   shift_id: 3
+   * });
+   *
+   * // Handle response
+   * if (result.success === true) {
+   *   console.log("Shift schedule deleted successfully:", result.message);
+   * } else {
+   *   console.error("Failed to delete shift schedule:", result.message);
+   * }
+   */
+  async apiDeleteShiftSchedule(payload) {
+    const formData = new FormData();
+    formData.append('staff_id', payload.staff_id.toString());
+    formData.append('date', payload.date);
+    formData.append('shift_id', payload.shift_id.toString());
+
+    const response = await axiosCustom('POST', `/api_web/api_shift_schedule/delete_shift_schedule?csrf_protection=true`, formData);
+    return response.data;
+  },
+
+  /**
+   * Save Shift Schedule Range API
+   * @description Saves shift schedules for multiple staff members within a date range
+   * @param {Object} payload - Request payload
+   * @param {string} payload.start_date - Start date in YYYY-MM-DD format (e.g., "2025-12-29")
+   * @param {string} payload.end_date - End date in YYYY-MM-DD format (e.g., "2025-12-31")
+   * @param {Array<string|number>} payload.staff_id - Array of staff IDs
+   * @param {string|number} payload.shift_id - Shift ID
+   * @returns {Promise<SaveShiftScheduleRangeResponse>} Promise that resolves to API response
+   * @throws {Error} When API call fails
+   * @example
+   * // Save shift schedule range for multiple staff
+   * const result = await apiShiftSchedule.apiSaveShiftScheduleRange({
+   *   start_date: "2025-12-29",
+   *   end_date: "2025-12-31",
+   *   staff_id: [77, 78, 79],
+   *   shift_id: 3
+   * });
+   *
+   * // Handle response
+   * if (result.success === true) {
+   *   console.log("Shift schedules saved successfully:", result.message);
+   * } else {
+   *   console.error("Failed to save shift schedules:", result.message);
+   * }
+   */
+  async apiSaveShiftScheduleRange(payload) {
+    const formData = new FormData();
+    formData.append('start_date', payload.start_date);
+    formData.append('end_date', payload.end_date);
+    formData.append('shift_id', payload.shift_id.toString());
+
+    // Append staff_id array
+    if (Array.isArray(payload.staff_id)) {
+      payload.staff_id.forEach(staffId => {
+        formData.append('staff_id[]', staffId.toString());
+      });
+    }
+
+    const response = await axiosCustom('POST', `/api_web/api_shift_schedule/save_shift_schedule_range?csrf_protection=true`, {
+      data: formData,
+    });
     return response.data;
   },
 };

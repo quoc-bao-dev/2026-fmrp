@@ -1,26 +1,71 @@
+import Skeleton from '@/components/common/skeleton/Skeleton';
+import SmartTooltip from '@/components/common/tooltip/SmartTooltip';
 import { BackIcon, CheckDoubleIcon, CloseXIcon, SearchIcon, UsersIcon } from '@/components/icons';
 import Breadcrumb from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { EmptyExprired } from '@/components/UI/common/EmptyExprired';
 import { Container } from '@/components/UI/common/layout';
+import AvatarText from '@/components/UI/common/user/AvatarText';
 import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComponent';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';
-import MultiValue from '@/components/UI/mutiValue/multiValue';
 import NoData from '@/components/UI/noData/nodata';
 import { useBranchList } from '@/hooks/common/useBranch';
 import useStatusExprired from '@/hooks/useStatusExprired';
+import useToast from '@/hooks/useToast';
 import { useGetScheduleTable } from '@/managers/api/shift-schedule/useGetScheduleTable';
 import Head from 'next/head';
-import Image from 'next/image';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import PopupShiftForm from './PopupShiftForm';
 import ShiftCell from './ShiftCell';
 
 const breadcrumbItems = [{ label: `Lương sản lượng` }, { label: `Bảng xếp ca` }];
 
+// Component wrapper để hiển thị tooltip chỉ khi text bị cắt
+const TruncatedTooltip = ({ children, text, placement = 'right' }) => {
+  const containerRef = useRef(null);
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  useEffect(() => {
+    const checkTruncation = () => {
+      if (containerRef.current) {
+        const textElement = containerRef.current.querySelector('p');
+        if (textElement) {
+          const isTruncated = textElement.scrollWidth > textElement.clientWidth;
+          setShowTooltip(isTruncated);
+        }
+      }
+    };
+
+    // Delay để đảm bảo DOM đã render
+    const timeoutId = setTimeout(checkTruncation, 0);
+    window.addEventListener('resize', checkTruncation);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', checkTruncation);
+    };
+  }, [text]);
+
+  const content = (
+    <div ref={containerRef} className='flex-1 min-w-0'>
+      {children}
+    </div>
+  );
+
+  if (showTooltip) {
+    return (
+      <SmartTooltip tooltip={text} placement={placement} classNameTrigger='flex-1 min-w-0'>
+        {content}
+      </SmartTooltip>
+    );
+  }
+
+  return content;
+};
+
 const ShiftSchedule = () => {
   const statusExprired = useStatusExprired();
+  const toast = useToast();
   const [isShiftPopupOpen, setIsShiftPopupOpen] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState(null);
   const [popupMode, setPopupMode] = useState('add'); // 'add' hoặc 'edit'
@@ -28,7 +73,12 @@ const ShiftSchedule = () => {
   const [openDropdown, setOpenDropdown] = useState(null); // Key của dropdown đang mở: `${rowId}-day-${dayIndex}`
   const [showSelectMode, setShowSelectMode] = useState(false); // Hiển thị checkbox để chọn nhân viên
   const [selectedEmployees, setSelectedEmployees] = useState(new Set()); // Danh sách nhân viên đã chọn
-  const [selectedBranches, setSelectedBranches] = useState([]); // Danh sách chi nhánh đã chọn
+  const [selectedBranch, setSelectedBranch] = useState(null); // Chi nhánh đã chọn
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }); // Khoảng ngày được chọn
+  const [searchTerm, setSearchTerm] = useState(''); // Từ khóa tìm kiếm
+  const [imageErrors, setImageErrors] = useState(new Set()); // Track các ảnh bị lỗi
+  const [slideDirection, setSlideDirection] = useState(null); // 'left' hoặc 'right' cho animation
+  const [opacity, setOpacity] = useState(1); // Opacity cho fade in/out
   const dropdownRefs = useRef({});
   const isHandlingMenuActionRef = useRef(false); // Flag để biết đang xử lý action từ menu
 
@@ -38,36 +88,53 @@ const ShiftSchedule = () => {
 
   // Khởi tạo branch mặc định từ branch hiện tại
   useEffect(() => {
-    if (authState?.branch_id && listBranch?.length > 0 && selectedBranches.length === 0) {
-      const currentBranchOption = listBranch.find(branch => branch.value === authState.branch_id || branch.value === String(authState.branch_id));
+    const branchId = authState?.branch[0]?.id;
+    if (branchId && listBranch?.length > 0 && !selectedBranch) {
+      const currentBranchOption = listBranch.find(branch => branch.value === branchId || branch.value === String(branchId));
       if (currentBranchOption) {
-        setSelectedBranches([currentBranchOption]);
+        setSelectedBranch(currentBranchOption);
       }
     }
-  }, [authState?.branch_id, listBranch, selectedBranches.length]);
+  }, [authState, listBranch, selectedBranch]);
 
   // Tạo branch options
   const branchOptions = useMemo(() => listBranch || [], [listBranch]);
 
-  // Tạo branch_id array từ selected branches
-  const branchIds = useMemo(() => {
-    return (selectedBranches || []).map(item => item?.value).filter(v => v !== '' && v !== null && v !== undefined);
-  }, [selectedBranches]);
+  // Tạo branch_id từ selected branch
+  const branchId = useMemo(() => {
+    return selectedBranch?.value || null;
+  }, [selectedBranch]);
 
-  // Tạo params cho API với branch_id array
+  // Tạo params cho API với branch_id, start_date và end_date
   const apiParams = useMemo(() => {
     const params = {};
-    if (branchIds.length > 0) {
-      // Axios sẽ tự động serialize array thành branch_id[]=59&branch_id[]=61 format
-      params.branch_id = branchIds;
+    if (branchId) {
+      params.branch_id = branchId;
+    }
+    // Thêm start_date và end_date nếu có
+    if (dateRange.startDate) {
+      params.start_date = dateRange.startDate;
+    }
+    if (dateRange.endDate) {
+      params.end_date = dateRange.endDate;
     }
     return params;
-  }, [branchIds]);
+  }, [branchId, dateRange]);
 
   const { data: scheduleTableData, isLoading: isLoadingScheduleTable } = useGetScheduleTable({
     enabled: true,
     params: apiParams,
   });
+
+  // Lấy branch_ids từ API response (từ rows[0].branch_ids)
+  // const branchIdsFromApi = useMemo(() => {
+  //   if (!scheduleTableData?.success || !scheduleTableData?.data?.rows || scheduleTableData.data.rows.length === 0) {
+  //     return [];
+  //   }
+  //   // Lấy branch_ids từ row đầu tiên
+  //   const firstRow = scheduleTableData.data.rows[0];
+  //   return firstRow?.branch_ids || [];
+  // }, [scheduleTableData]);
 
   // Map dữ liệu từ API ra format cần thiết
   const mappedRows = useMemo(() => {
@@ -78,10 +145,21 @@ const ShiftSchedule = () => {
     return scheduleTableData.data.rows.map(row => ({
       id: row.staff_id,
       name: row.staff_name,
-      avatar: row.avatar || '/shift-schedule.png',
+      avatar: row.avatar,
       days: row.shifts || [],
+      branch_ids: row.branch_ids || [],
     }));
   }, [scheduleTableData]);
+
+  // Filter rows dựa trên search term
+  const filteredRows = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return mappedRows;
+    }
+
+    const searchLower = searchTerm.toLowerCase().trim();
+    return mappedRows.filter(row => row.name.toLowerCase().includes(searchLower));
+  }, [mappedRows, searchTerm]);
 
   const headers = useMemo(() => {
     if (!scheduleTableData?.success || !scheduleTableData?.data?.headers) {
@@ -89,6 +167,80 @@ const ShiftSchedule = () => {
     }
     return scheduleTableData.data.headers;
   }, [scheduleTableData]);
+
+  // Khởi tạo dateRange từ headers khi có data và chưa được set
+  useEffect(() => {
+    if (headers && headers.length > 0 && (!dateRange.startDate || !dateRange.endDate)) {
+      const startDate = headers[0]?.date || null;
+      const endDate = headers[headers.length - 1]?.date || null;
+      if (startDate && endDate) {
+        setDateRange({ startDate, endDate });
+      }
+    }
+  }, [headers]);
+
+  // Xử lý thay đổi tuần (next/back)
+  const handleWeekChange = direction => {
+    if (!dateRange.startDate || !dateRange.endDate) return;
+
+    // Trigger slide animation
+    setSlideDirection(direction === 'next' ? 'right' : 'left');
+
+    const startDateObj = new Date(dateRange.startDate);
+    const endDateObj = new Date(dateRange.endDate);
+    const daysDiff = Math.ceil((endDateObj - startDateObj) / (1000 * 60 * 60 * 24)) + 1; // Số ngày trong tuần hiện tại
+
+    if (direction === 'next') {
+      // Tăng 7 ngày
+      startDateObj.setDate(startDateObj.getDate() + 7);
+      endDateObj.setDate(endDateObj.getDate() + 7);
+    } else if (direction === 'back') {
+      // Giảm 7 ngày
+      startDateObj.setDate(startDateObj.getDate() - 7);
+      endDateObj.setDate(endDateObj.getDate() - 7);
+    }
+
+    // Format lại về YYYY-MM-DD
+    const formatDate = date => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    // Sequence: Slide + Fade out cùng lúc → Update data → Fade in
+    // Bắt đầu trượt và fade out cùng lúc
+    setOpacity(0);
+
+    // Sau khi animation hoàn thành (200ms), update data và reset
+    setTimeout(() => {
+      // Update data khi đã fade out hoàn toàn
+      setDateRange({
+        startDate: formatDate(startDateObj),
+        endDate: formatDate(endDateObj),
+      });
+
+      // Reset transform về 0 ngay lập tức (không có transition)
+      setSlideDirection(null);
+
+      // Fade in với data mới (sau một chút delay để đảm bảo data đã render)
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          setOpacity(1);
+        }, 30);
+      });
+    }, 150); // Thời gian cho slide + fade out (cùng lúc)
+  };
+
+  // Xử lý onChange từ DateToDateComponent
+  const handleDateRangeChange = newDateRange => {
+    if (newDateRange?.startDate && newDateRange?.endDate) {
+      setDateRange({
+        startDate: newDateRange.startDate,
+        endDate: newDateRange.endDate,
+      });
+    }
+  };
 
   // Xử lý chọn/bỏ chọn nhân viên
   const handleToggleEmployee = employeeId => {
@@ -105,22 +257,24 @@ const ShiftSchedule = () => {
 
   // Xử lý xác nhận và mở popup
   const handleConfirmSelection = () => {
-    if (selectedEmployees.size > 0) {
-      isHandlingMenuActionRef.current = true;
-      setOpenDropdown(null);
-      setSelectedDayIndex(0); // Mặc định chọn ngày đầu tiên
-      setPopupMode('add');
-      setCurrentShift(null);
-      setIsShiftPopupOpen(true);
-      setTimeout(() => {
-        isHandlingMenuActionRef.current = false;
-      }, 100);
+    if (selectedEmployees.size === 0) {
+      toast('error', 'Vui lòng chọn nhân viên');
+      return;
     }
+    isHandlingMenuActionRef.current = true;
+    setOpenDropdown(null);
+    setSelectedDayIndex(0); // Mặc định chọn ngày đầu tiên
+    setPopupMode('add');
+    setCurrentShift(null);
+    setIsShiftPopupOpen(true);
+    setTimeout(() => {
+      isHandlingMenuActionRef.current = false;
+    }, 100);
   };
 
   // Lấy danh sách nhân viên đã chọn
   const getSelectedEmployeesData = () => {
-    return mappedRows.filter(row => selectedEmployees.has(row.id));
+    return filteredRows.filter(row => selectedEmployees.has(row.id));
   };
 
   // Giữ lại các hàm popup để tạm thời không dùng (có thể dùng lại sau)
@@ -246,26 +400,25 @@ const ShiftSchedule = () => {
             <SelectComponent
               options={branchOptions}
               colSpan={1}
-              onChange={selected => setSelectedBranches(selected || [])}
-              value={selectedBranches}
+              onChange={selected => setSelectedBranch(selected || null)}
+              value={selectedBranch}
               placeholder='Chi nhánh'
               isClearable={true}
-              isMulti={true}
-              closeMenuOnSelect={false}
-              components={{ MultiValue }}
+              closeMenuOnSelect={true}
             />
-            <DateToDateComponent
-              value={{
-                startDate: null,
-                endDate: null,
-              }}
-              onChange={() => {}}
-              className='text-base-default !w-[290px] h-10 z-[51]'
-            />
-            <button className='group size-10 rounded-lg border border-[#D0D5DD] hover:border-blue-fmrp flex items-center justify-center transition-all duration-300 ease-in-out'>
+            <DateToDateComponent value={dateRange} onChange={handleDateRangeChange} className='text-base-default !w-[290px] h-10 z-[51]' useRange={false} />
+            <button
+              onClick={() => handleWeekChange('back')}
+              disabled={!dateRange.startDate || !dateRange.endDate}
+              className='group size-10 rounded-lg border border-[#D0D5DD] hover:border-blue-fmrp flex items-center justify-center transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed'
+            >
               <BackIcon className='size-5 text-neutral-02 group-hover:text-blue-fmrp transition-all duration-300 ease-in-out' />
             </button>
-            <button className='group size-10 rounded-lg border border-[#D0D5DD] hover:border-blue-fmrp flex items-center justify-center transition-all duration-300 ease-in-out'>
+            <button
+              onClick={() => handleWeekChange('next')}
+              disabled={!dateRange.startDate || !dateRange.endDate}
+              className='group size-10 rounded-lg border border-[#D0D5DD] hover:border-blue-fmrp flex items-center justify-center transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed'
+            >
               <BackIcon className='rotate-180 size-5 text-neutral-02 group-hover:text-blue-fmrp transition-all duration-300 ease-in-out' />
             </button>
             {showSelectMode ? (
@@ -297,131 +450,222 @@ const ShiftSchedule = () => {
           </div>
         </div>
       </div>
-      <Customscrollbar className='flex flex-col flex-1 min-h-0 relative'>
-        {/* Header cột ngày */}
-        {headers.length > 0 && (
-          <div
-            className='sticky top-0 z-20 grid responsive-text-sm font-semibold text-neutral-02 bg-[#EDF5FE] h-12 border-b border-[#E5E7EB]'
-            style={{ gridTemplateColumns: `200px repeat(${headers.length}, 1fr)` }}
-          >
-            <div className='px-4 flex gap-2 items-center border-r border-[#E5E7EB]'>
-              <SearchIcon className='size-4 text-[#99A1AF] flex-shrink-0' />
-              <input className='responsive-text-sm font-normal text-neutral-02 bg-transparent border-none outline-none' placeholder='Tìm kiếm' />
-            </div>
-            {headers.map((header, index) => (
-              <div key={index} className='flex items-center justify-center border-r border-[#E5E7EB]'>
-                <p>{header.label}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Các dòng nhân sự */}
-        {mappedRows.length > 0
-          ? mappedRows.map(row => (
-              <div key={row.id} className='grid border-b border-[#E5E7EB]' style={{ gridTemplateColumns: `200px repeat(${headers.length}, 1fr)` }}>
-                <div
-                  className={`pl-4 py-2 flex gap-3 items-center border-x border-[#E5E7EB] ${showSelectMode ? 'cursor-pointer hover:bg-[#F9FAFB] transition-colors' : ''}`}
-                  onClick={showSelectMode ? () => handleToggleEmployee(row.id) : undefined}
-                >
-                  {showSelectMode && (
-                    <input
-                      type='checkbox'
-                      checked={selectedEmployees.has(row.id)}
-                      onChange={() => handleToggleEmployee(row.id)}
-                      className='size-4 text-blue-fmrp border-[#D0D5DD] border rounded-full cursor-pointer outline-none focus:outline-none focus:ring-0 appearance-none checked:bg-blue-fmrp checked:border-blue-fmrp relative checked:after:content-[""] checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 checked:after:w-2 checked:after:h-2 checked:after:bg-white checked:after:rounded-full'
-                      onClick={e => e.stopPropagation()}
-                    />
-                  )}
-                  <div className='flex-shrink-0 size-8 rounded-full overflow-hidden flex items-center justify-center bg-[#DBF3FF]'>
-                    <Image src={row.avatar} alt={row.name} width={32} height={32} className='size-full object-cover' />
-                  </div>
-                  <p className='responsive-text-sm font-medium text-neutral-05'>{row.name}</p>
+      <Customscrollbar className='flex flex-col flex-1 min-h-0 relative' style={{ zIndex: openDropdown ? 50 : 'auto' }}>
+        <div style={{ minWidth: headers.length > 0 ? `${200 + headers.length * 170}px` : '100%' }}>
+          {/* Skeleton loading */}
+          {isLoadingScheduleTable ? (
+            <>
+              {/* Header skeleton */}
+              <div
+                className='sticky top-0 z-20 grid responsive-text-sm font-semibold text-neutral-02 bg-[#EDF5FE] h-12 border-b border-[#E5E7EB]'
+                style={{ gridTemplateColumns: `230px repeat(7, 1fr)` }}
+              >
+                <div className='sticky left-0 z-30 px-4 flex gap-2 items-center border-r border-[#E5E7EB] bg-[#EDF5FE]'>
+                  <Skeleton className='w-full h-6 rounded' />
                 </div>
-
-                {row.days.map((dayShifts, index) => {
-                  // dayShifts là mảng các shift objects
-                  // Lọc ra các shift objects thực tế (bỏ null, undefined, 'empty')
-                  const allShifts = Array.isArray(dayShifts) ? dayShifts.filter(shift => shift && shift !== 'empty' && typeof shift === 'object' && shift.id) : [];
-                  const visibleShifts = allShifts.slice(0, 2);
-                  const remainingShifts = allShifts.slice(2);
-                  const remainingCount = remainingShifts.length;
-                  // Chỉ hiển thị empty khi không có shift nào
-                  const hasEmpty = allShifts.length === 0;
-                  const dropdownKey = `${row.id}-day-${index}`;
-                  const isDropdownOpen = openDropdown === dropdownKey;
-
-                  return (
-                    <div key={`${row.id}-day-${index}`} className='p-2 flex flex-col gap-2 border-r border-[#E5E7EB] relative'>
-                      {/* Hiển thị ô trống nếu không có ca nào */}
-                      {hasEmpty && (
-                        <ShiftCell
-                          key={`${row.id}-day-${index}-empty`}
-                          shift={null}
-                          onAddShift={handleOpenAddShiftPopup}
-                          onEditShift={handleOpenEditShiftPopup}
-                          onSelectShift={handleSelectShift}
-                          dayIndex={index}
-                          rowId={row.id}
-                        />
-                      )}
-                      {/* Hiển thị tối đa 2 ca */}
-                      {visibleShifts.map((shift, idx) => (
-                        <ShiftCell
-                          key={`${row.id}-day-${index}-shift-${idx}`}
-                          shift={shift}
-                          onAddShift={handleOpenAddShiftPopup}
-                          onEditShift={handleOpenEditShiftPopup}
-                          onSelectShift={handleSelectShift}
-                          dayIndex={index}
-                          rowId={row.id}
-                        />
-                      ))}
-                      {/* Hiển thị "Xem thêm" nếu có nhiều hơn 2 ca */}
-                      {remainingCount > 0 && (
-                        <>
-                          <button type='button' onClick={e => handleToggleDropdown(e, row.id, index)} className='responsive-text-xs text-blue-fmrp hover:underline w-fit'>
-                            Xem thêm ({remainingCount})
-                          </button>
-                          {/* Dropdown hiển thị các ca còn lại */}
-                          {isDropdownOpen && (
-                            <div
-                              ref={el => {
-                                if (el) dropdownRefs.current[dropdownKey] = el;
-                              }}
-                              className='absolute top-[20%] left-0 p-2 pb-4 mt-1 z-[1000] flex flex-col gap-2 bg-white rounded-lg border-r border-[#E5E7EB] shadow-[0px_4px_20px_0px_#00000033] w-full max-h-[400px] overflow-y-auto'
-                              onClick={e => e.stopPropagation()}
-                            >
-                              <div className='flex items-center justify-end sticky top-0 bg-white'>
-                                <button onClick={() => setOpenDropdown(null)} className='p-0.5 flex items-center justify-center transition rounded-full outline-none hover:bg-slate-100'>
-                                  <CloseXIcon className='size-5 text-[#99A1AF]' />
-                                </button>
-                              </div>
-                              {remainingShifts.map((shift, idx) => (
-                                <ShiftCell
-                                  key={`${row.id}-day-${index}-remaining-${idx}`}
-                                  shift={shift}
-                                  onAddShift={handleOpenAddShiftPopup}
-                                  onEditShift={handleOpenEditShiftPopup}
-                                  onSelectShift={handleSelectShift}
-                                  dayIndex={index}
-                                  rowId={row.id}
-                                />
-                              ))}
-                            </div>
-                          )}
-                        </>
-                      )}
+                {Array.from({ length: 7 }).map((_, index) => (
+                  <div key={index} className='flex items-center justify-center border-r border-[#E5E7EB]'>
+                    <Skeleton className='w-16 h-4 rounded' />
+                  </div>
+                ))}
+              </div>
+              {/* Rows skeleton */}
+              {Array.from({ length: 8 }).map((_, rowIndex) => (
+                <div key={rowIndex} className='grid border-b border-[#E5E7EB]' style={{ gridTemplateColumns: `230px repeat(7, 1fr)` }}>
+                  <div className='sticky left-0 z-10 pl-4 py-2 flex gap-3 items-center border-x border-[#E5E7EB] bg-white'>
+                    <Skeleton className='size-8 rounded-full' />
+                    <Skeleton className='h-4 w-24 rounded' />
+                  </div>
+                  {Array.from({ length: 7 }).map((_, colIndex) => (
+                    <div key={colIndex} className='p-2 flex flex-col gap-2 border-r border-[#E5E7EB]'>
+                      <Skeleton className='h-[50px] w-full rounded' />
                     </div>
-                  );
-                })}
-              </div>
-            ))
-          : !isLoadingScheduleTable && (
-              <div className='flex flex-col items-center justify-center h-[calc(100%-48px)]'>
-                <NoData />
-              </div>
-            )}
+                  ))}
+                </div>
+              ))}
+            </>
+          ) : (
+            <>
+              {/* Header cột ngày */}
+              {headers.length > 0 && (
+                <div
+                  className='sticky top-0 z-20 grid responsive-text-sm font-semibold text-neutral-02 bg-[#EDF5FE] h-12 border-b border-[#E5E7EB]'
+                  style={{ gridTemplateColumns: `230px repeat(${headers.length}, 1fr)` }}
+                >
+                  <div className='sticky left-0 z-30 px-4 flex gap-2 items-center border-r border-[#E5E7EB] bg-[#EDF5FE]'>
+                    <SearchIcon className='size-4 text-[#99A1AF] flex-shrink-0' />
+                    <input
+                      type='text'
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                      className='responsive-text-sm font-normal text-neutral-02 bg-transparent border-none outline-none flex-1'
+                      placeholder='Tìm kiếm'
+                    />
+                  </div>
+                  {headers.map((header, index) => (
+                    <div
+                      key={index}
+                      className='flex items-center justify-center border-r border-[#E5E7EB] min-w-[160px]'
+                      style={{
+                        transform: slideDirection === 'left' ? 'translateX(-50px)' : slideDirection === 'right' ? 'translateX(50px)' : 'translateX(0)',
+                        opacity: opacity,
+                        transition: slideDirection ? 'transform 200ms ease-in-out, opacity 200ms ease-in-out' : 'opacity 200ms ease-in-out',
+                      }}
+                    >
+                      <p>{header.label}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Các dòng nhân sự */}
+              {filteredRows.length > 0
+                ? filteredRows.map(row => (
+                    <div key={row.id} className='grid border-b border-[#E5E7EB]' style={{ gridTemplateColumns: `230px repeat(${headers.length}, 1fr)` }}>
+                      <div
+                        className={`sticky left-0 z-10 pl-4 py-2 flex gap-3 items-center border-x border-[#E5E7EB] bg-white ${
+                          showSelectMode ? 'cursor-pointer hover:bg-[#F9FAFB] transition-colors' : ''
+                        }`}
+                        onClick={showSelectMode ? () => handleToggleEmployee(row.id) : undefined}
+                      >
+                        {showSelectMode && (
+                          <input
+                            type='checkbox'
+                            checked={selectedEmployees.has(row.id)}
+                            onChange={() => handleToggleEmployee(row.id)}
+                            className='flex-shrink-0 size-4 text-blue-fmrp border-[#D0D5DD] border rounded-full cursor-pointer outline-none focus:outline-none focus:ring-0 appearance-none checked:bg-blue-fmrp checked:border-blue-fmrp relative checked:after:content-[""] checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:-translate-x-1/2 checked:after:-translate-y-1/2 checked:after:w-2 checked:after:h-2 checked:after:bg-white checked:after:rounded-full'
+                            onClick={e => e.stopPropagation()}
+                          />
+                        )}
+                        {row.avatar && !imageErrors.has(row.id) ? (
+                          <div className='flex-shrink-0 size-8 rounded-full overflow-hidden flex items-center justify-center bg-[#DBF3FF]'>
+                            <img
+                              src={row.avatar}
+                              alt={row.name}
+                              className='size-[32px] object-cover'
+                              onError={() => {
+                                setImageErrors(prev => new Set([...prev, row.id]));
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <SmartTooltip tooltip={row.name} placement='bottom' classNameTrigger='flex-shrink-0'>
+                            <div>
+                              <AvatarText fullName={row.name} className='size-8' />
+                            </div>
+                          </SmartTooltip>
+                        )}
+                        <TruncatedTooltip text={row.name} placement='bottom'>
+                          <p className='responsive-text-sm font-medium text-neutral-05 flex-1 truncate'>{row.name}</p>
+                        </TruncatedTooltip>
+                      </div>
+
+                      {row.days.map((dayShifts, index) => {
+                        // dayShifts là mảng các shift objects
+                        // Lọc ra các shift objects thực tế (bỏ null, undefined, 'empty')
+                        const allShifts = Array.isArray(dayShifts) ? dayShifts.filter(shift => shift && shift !== 'empty' && typeof shift === 'object' && shift.id) : [];
+                        const visibleShifts = allShifts.slice(0, 2);
+                        const remainingShifts = allShifts.slice(2);
+                        const remainingCount = remainingShifts.length;
+                        // Chỉ hiển thị empty khi không có shift nào
+                        const hasEmpty = allShifts.length === 0;
+                        const dropdownKey = `${row.id}-day-${index}`;
+                        const isDropdownOpen = openDropdown === dropdownKey;
+                        const branchIdsFromApi = row.branch_ids;
+
+                        return (
+                          <div
+                            key={`${row.id}-day-${index}`}
+                            className='p-2 flex flex-col gap-2 border-r border-[#E5E7EB] relative min-w-[160px]'
+                            style={{
+                              transform: slideDirection === 'left' ? 'translateX(-50px)' : slideDirection === 'right' ? 'translateX(50px)' : 'translateX(0)',
+                              opacity: opacity,
+                              transition: slideDirection ? 'transform 200ms ease-in-out, opacity 200ms ease-in-out' : 'opacity 200ms ease-in-out',
+                              zIndex: isDropdownOpen ? 100 : 'auto',
+                            }}
+                          >
+                            {/* Hiển thị ô trống nếu không có ca nào */}
+                            {hasEmpty && (
+                              <ShiftCell
+                                key={`${row.id}-day-${index}-empty`}
+                                shift={null}
+                                onAddShift={handleOpenAddShiftPopup}
+                                onEditShift={handleOpenEditShiftPopup}
+                                onSelectShift={handleSelectShift}
+                                dayIndex={index}
+                                rowId={row.id}
+                                branchIds={branchIdsFromApi}
+                                date={headers[index]?.date}
+                                existingShifts={allShifts}
+                              />
+                            )}
+                            {/* Hiển thị tối đa 2 ca */}
+                            {visibleShifts.map((shift, idx) => (
+                              <ShiftCell
+                                key={`${row.id}-day-${index}-shift-${idx}`}
+                                shift={shift}
+                                onAddShift={handleOpenAddShiftPopup}
+                                onEditShift={handleOpenEditShiftPopup}
+                                onSelectShift={handleSelectShift}
+                                dayIndex={index}
+                                rowId={row.id}
+                                branchIds={branchIdsFromApi}
+                                date={headers[index]?.date}
+                                existingShifts={allShifts}
+                              />
+                            ))}
+                            {/* Hiển thị "Xem thêm" nếu có nhiều hơn 2 ca */}
+                            {remainingCount > 0 && (
+                              <>
+                                <button type='button' onClick={e => handleToggleDropdown(e, row.id, index)} className='responsive-text-xs text-blue-fmrp hover:underline w-fit'>
+                                  Xem thêm ({remainingCount})
+                                </button>
+                                {/* Dropdown hiển thị các ca còn lại */}
+                                {isDropdownOpen && (
+                                  <div
+                                    ref={el => {
+                                      if (el) dropdownRefs.current[dropdownKey] = el;
+                                    }}
+                                    className='absolute top-[20%] left-0 p-2 pb-4 mt-1 z-[100] flex flex-col gap-2 bg-white rounded-lg border border-[#E5E7EB] shadow-[0px_4px_20px_0px_#00000033] w-full max-h-[400px] overflow-y-auto'
+                                    style={{ isolation: 'isolate' }}
+                                    onClick={e => e.stopPropagation()}
+                                  >
+                                    <div className='flex items-center justify-end sticky top-0 bg-white'>
+                                      <button onClick={() => setOpenDropdown(null)} className='p-0.5 flex items-center justify-center transition rounded-full outline-none hover:bg-slate-100'>
+                                        <CloseXIcon className='size-5 text-[#99A1AF]' />
+                                      </button>
+                                    </div>
+                                    {remainingShifts.map((shift, idx) => (
+                                      <ShiftCell
+                                        key={`${row.id}-day-${index}-remaining-${idx}`}
+                                        shift={shift}
+                                        onAddShift={handleOpenAddShiftPopup}
+                                        onEditShift={handleOpenEditShiftPopup}
+                                        onSelectShift={handleSelectShift}
+                                        dayIndex={index}
+                                        rowId={row.id}
+                                        branchIds={branchIdsFromApi}
+                                        date={headers[index]?.date}
+                                        existingShifts={allShifts}
+                                      />
+                                    ))}
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))
+                : !isLoadingScheduleTable && (
+                    <div className='flex flex-col items-center justify-center h-[calc(100%-48px)]'>
+                      <NoData type='calendar' />
+                    </div>
+                  )}
+            </>
+          )}
+        </div>
       </Customscrollbar>
 
       {/* Popup Thêm/Sửa ca */}
@@ -433,6 +677,7 @@ const ShiftSchedule = () => {
         initialShift={currentShift}
         onSave={handleSaveShift}
         selectedEmployees={getSelectedEmployeesData()}
+        selectedBranch={selectedBranch}
       />
     </Container>
   );

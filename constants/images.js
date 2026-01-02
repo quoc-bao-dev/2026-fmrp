@@ -1,42 +1,43 @@
 export const IMAGES = {
   // a
-  appstore: "/qrCode/appstore.svg",
+  appstore: '/qrCode/appstore.svg',
   // b
-  bullet: "/upgrade/bullet.png",
+  bullet: '/upgrade/bullet.png',
   // c
   // d
   // e
-  emptyProductOrder: "/background/system/emptyProductOrder.png",
+  emptyProductOrder: '/background/system/emptyProductOrder.png',
   // f
-  rocketBoy: "/dashboard/rocket-boy.png",
-  rocketBoyGif: "/dashboard/rocket-boy-1.gif",
+  rocketBoy: '/dashboard/rocket-boy.png',
+  rocketBoyGif: '/dashboard/rocket-boy-1.gif',
   // g
-  googleplay: "/qrCode/googleplay.svg",
+  googleplay: '/qrCode/googleplay.svg',
   // h
   // i
   // j
   // k
   // l
   // m
-  mess: "/dashboard/mess.png",
+  mess: '/dashboard/mess.png',
   // n
-  nodataShift: "/nodata/nodata-shift.png",
-  noImage: "/nodata/noimagelogo.png",
-  nodataStage: "/nodata/nodata-stage.png",
+  nodataShift: '/nodata/nodata-shift.png',
+  noImage: '/nodata/noimagelogo.png',
+  nodataStage: '/nodata/nodata-stage.png',
+  nodataShiftSchedule: '/nodata/nodata-calendar.png',
   // o
   // p
   // q
-  qrDownloadApp: "/qrCode/qrDowloadApp.jpeg",
+  qrDownloadApp: '/qrCode/qrDowloadApp.jpeg',
   // r
   // s
-  summary_LSX: "/background/system/summaryLSX.webp",
+  summary_LSX: '/background/system/summaryLSX.webp',
   // t
   // u
   upgrade_pro: '/upgrade/upgrade.png',
   upgrade_pro_gif: '/upgrade/upgrade.gif',
   // v
   // w
-  warningMobile: "/popup/Code.webp"
+  warningMobile: '/popup/Code.webp',
   // x
   // y
   // z

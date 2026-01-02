@@ -38,7 +38,8 @@ const useToast = () => {
                 popup: `custom-toast-popup custom-toast-popup-${type}`,
                 title: `custom-toast-title-${type} custom-toast-title`,
                 icon: "custom-toast-icon",
-                closeButton: `custom-toast-close-button-${type} custom-toast-close-button`
+                closeButton: `custom-toast-close-button-${type} custom-toast-close-button`,
+                container: "custom-toast-container"
             },
             showCloseButton: true,
         });
