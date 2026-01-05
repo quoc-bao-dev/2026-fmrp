@@ -15,11 +15,13 @@ import useToast from '@/hooks/useToast';
 import useActionRole from '@/hooks/useRole';
 import { WARNING_ACTION_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 import { useGetScheduleTable } from '@/managers/api/shift-schedule/useGetScheduleTable';
+import { useGetShiftsByBranch } from '@/managers/api/shift-schedule/useGetShiftsByBranch';
 import Head from 'next/head';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import PopupShiftForm from './PopupShiftForm';
 import ShiftCell from './ShiftCell';
+import MultiValue from '@/components/UI/mutiValue/multiValue';
 
 const breadcrumbItems = [{ label: `Lương sản lượng` }, { label: `Bảng xếp ca` }];
 
@@ -81,6 +83,7 @@ const ShiftSchedule = () => {
   const [imageErrors, setImageErrors] = useState(new Set()); // Track các ảnh bị lỗi
   const [slideDirection, setSlideDirection] = useState(null); // 'left' hoặc 'right' cho animation
   const [opacity, setOpacity] = useState(1); // Opacity cho fade in/out
+  const [selectedShifts, setSelectedShifts] = useState([]); // Các ca được chọn để lọc
   const dropdownRefs = useRef({});
   const isHandlingMenuActionRef = useRef(false); // Flag để biết đang xử lý action từ menu
 
@@ -121,6 +124,33 @@ const ShiftSchedule = () => {
   const branchId = useMemo(() => {
     return selectedBranch?.value || null;
   }, [selectedBranch]);
+
+  // Lấy danh sách ca theo chi nhánh (phục vụ filter ca)
+  const branchIdArray = useMemo(() => {
+    return branchId ? [branchId] : null;
+  }, [branchId]);
+
+  const { data: shiftsFilterData, isLoading: isLoadingShiftFilter } = useGetShiftsByBranch({
+    params: branchIdArray ? { branch_id: branchIdArray } : {},
+    enabled: !!branchIdArray,
+  });
+
+  // Map dữ liệu ca sang options cho SelectComponent
+  const shiftFilterOptions = useMemo(() => {
+    if (!shiftsFilterData?.result || !Array.isArray(shiftsFilterData?.data)) {
+      return [];
+    }
+
+    const formatTime = time => {
+      if (!time) return '';
+      return time.substring(0, 5); // HH:mm từ HH:mm:ss
+    };
+
+    return shiftsFilterData.data.map(shift => ({
+      value: shift.id,
+      label: `${shift.name || ''} (${formatTime(shift.time_start)} - ${formatTime(shift.time_end)})`,
+    }));
+  }, [shiftsFilterData]);
 
   // Tạo params cho API với branch_id, start_date và end_date
   const apiParams = useMemo(() => {
@@ -178,6 +208,17 @@ const ShiftSchedule = () => {
       rows = rows.filter(row => row.name.toLowerCase().includes(searchLower));
     }
 
+    // Lọc theo ca nếu có chọn ca
+    if (selectedShifts && selectedShifts.length > 0) {
+      const selectedIds = new Set(selectedShifts.map(s => String(s.value)));
+      rows = rows.filter(row =>
+        row.days?.some(dayShifts => {
+          if (!Array.isArray(dayShifts)) return false;
+          return dayShifts.some(shift => shift && typeof shift === 'object' && shift.id && selectedIds.has(String(shift.id)));
+        })
+      );
+    }
+
     // Nếu không có thông tin staff hiện tại thì giữ nguyên thứ tự
     if (!currentStaffId) return rows;
 
@@ -196,7 +237,7 @@ const ShiftSchedule = () => {
     });
 
     return [...currentUserRows, ...otherRows];
-  }, [mappedRows, searchTerm, currentStaffId]);
+  }, [mappedRows, searchTerm, selectedShifts, currentStaffId]);
 
   const headers = useMemo(() => {
     if (!scheduleTableData?.success || !scheduleTableData?.data?.headers) {
@@ -458,6 +499,18 @@ const ShiftSchedule = () => {
               placeholder='Chi nhánh'
               isClearable={true}
               closeMenuOnSelect={true}
+            />
+            <SelectComponent
+              options={shiftFilterOptions}
+              value={selectedShifts}
+              onChange={value => setSelectedShifts(value || [])}
+              isMulti
+              isClearable
+              placeholder='Lọc theo ca'
+              closeMenuOnSelect={false}
+              className='min-w-[220px]'
+              maxShowMuti={1}
+              components={{ MultiValue }}
             />
             <DateToDateComponent value={dateRange} onChange={handleDateRangeChange} className='text-base-default !w-[290px] h-fit z-[51]' useRange={false} />
             <button
