@@ -168,6 +168,18 @@ const ShiftSchedule = () => {
     return scheduleTableData.data.headers;
   }, [scheduleTableData]);
 
+  // Hàm kiểm tra xem một ngày có phải là hôm nay không
+  const isToday = useMemo(() => {
+    const today = new Date();
+    const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    return dateString => {
+      if (!dateString) return false;
+      // So sánh chỉ phần date (YYYY-MM-DD), bỏ qua phần time nếu có
+      const dateOnly = dateString.split(' ')[0];
+      return dateOnly === todayString;
+    };
+  }, []);
+
   // Khởi tạo dateRange từ headers khi có data và chưa được set
   useEffect(() => {
     if (headers && headers.length > 0 && (!dateRange.startDate || !dateRange.endDate)) {
@@ -406,7 +418,7 @@ const ShiftSchedule = () => {
               isClearable={true}
               closeMenuOnSelect={true}
             />
-            <DateToDateComponent value={dateRange} onChange={handleDateRangeChange} className='text-base-default !w-[290px] h-10 z-[51]' useRange={false} />
+            <DateToDateComponent value={dateRange} onChange={handleDateRangeChange} className='text-base-default !w-[290px] h-fit z-[51]' useRange={false} />
             <button
               onClick={() => handleWeekChange('back')}
               disabled={!dateRange.startDate || !dateRange.endDate}
@@ -502,19 +514,23 @@ const ShiftSchedule = () => {
                       placeholder='Tìm kiếm'
                     />
                   </div>
-                  {headers.map((header, index) => (
-                    <div
-                      key={index}
-                      className='flex items-center justify-center border-r border-[#E5E7EB] min-w-[160px]'
-                      style={{
-                        transform: slideDirection === 'left' ? 'translateX(-50px)' : slideDirection === 'right' ? 'translateX(50px)' : 'translateX(0)',
-                        opacity: opacity,
-                        transition: slideDirection ? 'transform 200ms ease-in-out, opacity 200ms ease-in-out' : 'opacity 200ms ease-in-out',
-                      }}
-                    >
-                      <p>{header.label}</p>
-                    </div>
-                  ))}
+                  {headers.map((header, index) => {
+                    const isTodayDate = isToday(header.date);
+                    return (
+                      <div
+                        key={index}
+                        className='flex items-center justify-center border-r border-[#E5E7EB] min-w-[160px]'
+                        style={{
+                          transform: slideDirection === 'left' ? 'translateX(-50px)' : slideDirection === 'right' ? 'translateX(50px)' : 'translateX(0)',
+                          opacity: opacity,
+                          transition: slideDirection ? 'transform 200ms ease-in-out, opacity 200ms ease-in-out' : 'opacity 200ms ease-in-out',
+                          backgroundColor: isTodayDate ? '#D3E8FF' : 'transparent',
+                        }}
+                      >
+                        <p>{header.label}</p>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
@@ -549,11 +565,9 @@ const ShiftSchedule = () => {
                             />
                           </div>
                         ) : (
-                          <SmartTooltip tooltip={row.name} placement='bottom' classNameTrigger='flex-shrink-0'>
-                            <div>
-                              <AvatarText fullName={row.name} className='size-8' />
-                            </div>
-                          </SmartTooltip>
+                          <div>
+                            <AvatarText fullName={row.name} className='size-8' />
+                          </div>
                         )}
                         <TruncatedTooltip text={row.name} placement='bottom'>
                           <p className='responsive-text-sm font-medium text-neutral-05 flex-1 truncate'>{row.name}</p>
@@ -573,6 +587,7 @@ const ShiftSchedule = () => {
                         const isDropdownOpen = openDropdown === dropdownKey;
                         const branchIdsFromApi = row.branch_ids;
 
+                        const isTodayDate = isToday(headers[index]?.date);
                         return (
                           <div
                             key={`${row.id}-day-${index}`}
@@ -582,6 +597,7 @@ const ShiftSchedule = () => {
                               opacity: opacity,
                               transition: slideDirection ? 'transform 200ms ease-in-out, opacity 200ms ease-in-out' : 'opacity 200ms ease-in-out',
                               zIndex: isDropdownOpen ? 100 : 'auto',
+                              backgroundColor: isTodayDate ? '#F4F8FC' : 'transparent',
                             }}
                           >
                             {/* Hiển thị ô trống nếu không có ca nào */}
@@ -678,6 +694,13 @@ const ShiftSchedule = () => {
         onSave={handleSaveShift}
         selectedEmployees={getSelectedEmployeesData()}
         selectedBranch={selectedBranch}
+        defaultDateRange={dateRange}
+        availableEmployees={mappedRows}
+        onEmployeesChange={newEmployees => {
+          // Đồng bộ selectedEmployees trong index.jsx với employees trong PopupShiftForm
+          const newSelectedSet = new Set(newEmployees.map(emp => emp.id));
+          setSelectedEmployees(newSelectedSet);
+        }}
       />
     </Container>
   );
