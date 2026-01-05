@@ -12,6 +12,8 @@ import NoData from '@/components/UI/noData/nodata';
 import { useBranchList } from '@/hooks/common/useBranch';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import useToast from '@/hooks/useToast';
+import useActionRole from '@/hooks/useRole';
+import { WARNING_ACTION_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 import { useGetScheduleTable } from '@/managers/api/shift-schedule/useGetScheduleTable';
 import Head from 'next/head';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -84,7 +86,22 @@ const ShiftSchedule = () => {
 
   // Lấy thông tin auth và branch từ Redux
   const authState = useSelector(state => state.auth);
+  const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
   const { data: listBranch = [] } = useBranchList();
+
+  // Lấy các quyền từ useActionRole
+  const { checkAdd, checkEdit, checkDelete } = useActionRole(auth, 'shift_schedule');
+
+  // Kiểm tra quyền xem
+  const canView = useMemo(() => {
+    return !auth || !!Number(auth?.shift_schedule?.is_view);
+  }, [auth]);
+
+  // Lấy staff_id của tài khoản hiện tại (ưu tiên field staff_id, fallback sang id)
+  const currentStaffId = useMemo(() => {
+    if (!authState) return null;
+    return authState.staff_id || authState.id || authState.staff_id_current || null;
+  }, [authState]);
 
   // Khởi tạo branch mặc định từ branch hiện tại
   useEffect(() => {
@@ -122,7 +139,7 @@ const ShiftSchedule = () => {
   }, [branchId, dateRange]);
 
   const { data: scheduleTableData, isLoading: isLoadingScheduleTable } = useGetScheduleTable({
-    enabled: true,
+    // enabled: canView,
     params: apiParams,
   });
 
@@ -153,13 +170,33 @@ const ShiftSchedule = () => {
 
   // Filter rows dựa trên search term
   const filteredRows = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return mappedRows;
+    let rows = mappedRows;
+
+    // Lọc theo từ khóa tìm kiếm
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      rows = rows.filter(row => row.name.toLowerCase().includes(searchLower));
     }
 
-    const searchLower = searchTerm.toLowerCase().trim();
-    return mappedRows.filter(row => row.name.toLowerCase().includes(searchLower));
-  }, [mappedRows, searchTerm]);
+    // Nếu không có thông tin staff hiện tại thì giữ nguyên thứ tự
+    if (!currentStaffId) return rows;
+
+    const currentIdStr = String(currentStaffId);
+
+    // Đưa lịch của tài khoản hiện tại (staff_id trùng với authState) lên đầu
+    const currentUserRows = [];
+    const otherRows = [];
+
+    rows.forEach(row => {
+      if (String(row.id) === currentIdStr) {
+        currentUserRows.push(row);
+      } else {
+        otherRows.push(row);
+      }
+    });
+
+    return [...currentUserRows, ...otherRows];
+  }, [mappedRows, searchTerm, currentStaffId]);
 
   const headers = useMemo(() => {
     if (!scheduleTableData?.success || !scheduleTableData?.data?.headers) {
@@ -269,6 +306,10 @@ const ShiftSchedule = () => {
 
   // Xử lý xác nhận và mở popup
   const handleConfirmSelection = () => {
+    if (role != true && !checkAdd) {
+      toast('error', WARNING_ACTION_STATUS_ROLE);
+      return;
+    }
     if (selectedEmployees.size === 0) {
       toast('error', 'Vui lòng chọn nhân viên');
       return;
@@ -450,9 +491,17 @@ const ShiftSchedule = () => {
                   <span className='responsive-text-sm font-medium text-white'>Xác nhận {selectedEmployees.size > 0 && `(${selectedEmployees.size})`}</span>
                 </button>
               </>
-            ) : (
+            ) : role == true || checkAdd ? (
               <button
                 onClick={() => setShowSelectMode(true)}
+                className='px-4 py-2.5 rounded-lg bg-blue-fmrp hover:bg-blue-fmrp/80 flex gap-2 items-center justify-center transition-all duration-300 ease-in-out'
+              >
+                <UsersIcon className='size-5 text-white' />
+                <span className='responsive-text-sm font-medium text-white'>Chọn nhân viên</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => toast('error', WARNING_ACTION_STATUS_ROLE)}
                 className='px-4 py-2.5 rounded-lg bg-blue-fmrp hover:bg-blue-fmrp/80 flex gap-2 items-center justify-center transition-all duration-300 ease-in-out'
               >
                 <UsersIcon className='size-5 text-white' />
@@ -519,7 +568,7 @@ const ShiftSchedule = () => {
                     return (
                       <div
                         key={index}
-                        className='flex items-center justify-center border-r border-[#E5E7EB] min-w-[160px]'
+                        className='flex items-center justify-center border-r border-[#E5E7EB] min-w-[160px] text-[#000]'
                         style={{
                           transform: slideDirection === 'left' ? 'translateX(-50px)' : slideDirection === 'right' ? 'translateX(50px)' : 'translateX(0)',
                           opacity: opacity,
@@ -613,6 +662,11 @@ const ShiftSchedule = () => {
                                 branchIds={branchIdsFromApi}
                                 date={headers[index]?.date}
                                 existingShifts={allShifts}
+                                role={role}
+                                checkAdd={checkAdd}
+                                checkEdit={checkEdit}
+                                checkDelete={checkDelete}
+                                toast={toast}
                               />
                             )}
                             {/* Hiển thị tối đa 2 ca */}
@@ -628,6 +682,11 @@ const ShiftSchedule = () => {
                                 branchIds={branchIdsFromApi}
                                 date={headers[index]?.date}
                                 existingShifts={allShifts}
+                                role={role}
+                                checkAdd={checkAdd}
+                                checkEdit={checkEdit}
+                                checkDelete={checkDelete}
+                                toast={toast}
                               />
                             ))}
                             {/* Hiển thị "Xem thêm" nếu có nhiều hơn 2 ca */}
@@ -663,6 +722,11 @@ const ShiftSchedule = () => {
                                         branchIds={branchIdsFromApi}
                                         date={headers[index]?.date}
                                         existingShifts={allShifts}
+                                        role={role}
+                                        checkAdd={checkAdd}
+                                        checkEdit={checkEdit}
+                                        checkDelete={checkDelete}
+                                        toast={toast}
                                       />
                                     ))}
                                   </div>
@@ -675,7 +739,7 @@ const ShiftSchedule = () => {
                     </div>
                   ))
                 : !isLoadingScheduleTable && (
-                    <div className='flex flex-col items-center justify-center h-[calc(100%-48px)]'>
+                    <div className='flex flex-1 flex-col items-center justify-center h-[calc(100%-48px)]'>
                       <NoData type='calendar' />
                     </div>
                   )}
