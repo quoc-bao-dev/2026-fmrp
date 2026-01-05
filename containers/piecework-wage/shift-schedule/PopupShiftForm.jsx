@@ -1,8 +1,9 @@
-import { CloseXIcon, SearchIcon } from '@/components/icons';
+import Skeleton from '@/components/common/skeleton/Skeleton';
+import { CloseXIcon, SearchIcon, CheckIcon } from '@/components/icons';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComponent';
 import useToast from '@/hooks/useToast';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useGetShiftsByBranch } from '@/managers/api/shift-schedule/useGetShiftsByBranch';
 import { useSaveShiftScheduleRange } from '@/managers/api/shift-schedule/useSaveShiftScheduleRange';
@@ -20,12 +21,19 @@ const PopupShiftForm = ({
   onSave,
   selectedEmployees = [], // Danh sách nhân viên đã chọn
   selectedBranch = null, // Chi nhánh đã chọn
+  defaultDateRange = null, // Khoảng ngày mặc định từ component cha
+  availableEmployees = [], // Danh sách nhân viên có sẵn từ component cha
+  onEmployeesChange, // Callback để đồng bộ employees với component cha
 }) => {
   const [selectedShift, setSelectedShift] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDays, setSelectedDays] = useState(new Set()); // Các ngày đã chọn
   const [employees, setEmployees] = useState(selectedEmployees); // Danh sách nhân viên trong popup
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }); // Khoảng ngày được chọn
+  const [showEmployeeDropdown, setShowEmployeeDropdown] = useState(false); // Hiển thị dropdown chọn nhân viên
+  const [employeeSearchTerm, setEmployeeSearchTerm] = useState(''); // Từ khóa tìm kiếm nhân viên
+  const employeeDropdownRef = useRef(null);
+  const employeeMenuRef = useRef(null);
   const toast = useToast();
 
   // Tính toán T2 và CN của tuần hiện tại
@@ -107,10 +115,15 @@ const PopupShiftForm = ({
       // Mặc định chọn tất cả các thứ trong tuần (T2-T7), trừ Chủ nhật (CN)
       // 0 = T2, 1 = T3, 2 = T4, 3 = T5, 4 = T6, 5 = T7, 6 = CN
       setSelectedDays(new Set([0, 1, 2, 3, 4, 5]));
+      // Chỉ đồng bộ employees khi popup mới mở (không reset khi selectedEmployees thay đổi từ bên ngoài)
       setEmployees(selectedEmployees);
-      // Mặc định chọn T2 đến CN của tuần hiện tại mỗi lần mở popup
-      const weekRange = getCurrentWeekRange();
-      setDateRange(weekRange);
+      // Mặc định chọn dateRange từ component cha, nếu không có thì dùng tuần hiện tại
+      if (defaultDateRange?.startDate && defaultDateRange?.endDate) {
+        setDateRange(defaultDateRange);
+      } else {
+        const weekRange = getCurrentWeekRange();
+        setDateRange(weekRange);
+      }
       // Lock scroll khi modal mở
       document.body.style.overflow = 'hidden';
     } else {
@@ -121,20 +134,90 @@ const PopupShiftForm = ({
     return () => {
       document.body.style.overflow = '';
     };
-  }, [open, mode, initialShift, selectedEmployees]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, mode, initialShift, defaultDateRange]);
 
   // Reset state khi popup đóng
   const handleClose = () => {
+    // Đồng bộ employees với component cha trước khi đóng
+    if (onEmployeesChange) {
+      onEmployeesChange(employees);
+    }
     setSelectedShift(null);
     setSearchQuery('');
     setSelectedDays(new Set());
     onClose();
   };
 
+  // Lọc và sắp xếp danh sách nhân viên: đã chọn lên trước, sau đó filter theo search term
+  const filteredAndSortedEmployees = useMemo(() => {
+    if (!availableEmployees || availableEmployees.length === 0) return [];
+
+    const selectedIds = new Set(employees.map(emp => emp.id));
+    // Sắp xếp: nhân viên đã chọn lên trước
+    const selected = availableEmployees.filter(emp => selectedIds.has(emp.id));
+    const unselected = availableEmployees.filter(emp => !selectedIds.has(emp.id));
+    const sorted = [...selected, ...unselected];
+
+    // Filter theo search term
+    if (!employeeSearchTerm.trim()) {
+      return sorted;
+    }
+
+    const searchLower = employeeSearchTerm.toLowerCase().trim();
+    return sorted.filter(emp => emp.name.toLowerCase().includes(searchLower));
+  }, [availableEmployees, employees, employeeSearchTerm]);
+
   // Xử lý xóa nhân viên khỏi danh sách
   const handleRemoveEmployee = employeeId => {
-    setEmployees(prev => prev.filter(emp => emp.id !== employeeId));
+    setEmployees(prev => {
+      const newEmployees = prev.filter(emp => emp.id !== employeeId);
+      // Đồng bộ với component cha
+      if (onEmployeesChange) {
+        onEmployeesChange(newEmployees);
+      }
+      return newEmployees;
+    });
   };
+
+  // Xử lý toggle chọn/bỏ chọn nhân viên
+  const handleToggleEmployee = employee => {
+    const isSelected = employees.some(emp => emp.id === employee.id);
+    setEmployees(prev => {
+      const newEmployees = isSelected ? prev.filter(emp => emp.id !== employee.id) : [...prev, employee];
+      // Đồng bộ với component cha
+      if (onEmployeesChange) {
+        onEmployeesChange(newEmployees);
+      }
+      return newEmployees;
+    });
+  };
+
+  // Kiểm tra nhân viên có được chọn không
+  const isEmployeeSelected = employeeId => {
+    return employees.some(emp => emp.id === employeeId);
+  };
+
+  // Đóng dropdown khi click outside
+  useEffect(() => {
+    if (!showEmployeeDropdown) return;
+
+    const handleClickOutside = event => {
+      if (employeeDropdownRef.current && !employeeDropdownRef.current.contains(event.target) && employeeMenuRef.current && !employeeMenuRef.current.contains(event.target)) {
+        setShowEmployeeDropdown(false);
+        setEmployeeSearchTerm('');
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmployeeDropdown]);
 
   // Xử lý toggle chọn ngày
   const handleToggleDay = dayIndex => {
@@ -225,19 +308,85 @@ const PopupShiftForm = ({
           <div className='flex flex-col gap-2'>
             <div className='flex items-center gap-4'>
               <label className='responsive-text-base font-medium text-neutral-05 whitespace-nowrap w-[100px]'>Nhân viên</label>
-              <div className='flex flex-wrap flex-1 gap-2.5 px-2 py-1.5 bg-[#F8F9FB] rounded-lg'>
-                {employees.length > 0 ? (
-                  employees.map(employee => (
-                    <div key={employee.id} className='inline-flex items-center gap-2 px-3 py-1 bg-[#EAECEF] rounded-lg'>
-                      <span className='responsive-text-sm text-[#4A5565]'>{employee.name}</span>
-                      <button type='button' onClick={() => handleRemoveEmployee(employee.id)} className='flex items-center justify-center hover:bg-blue-fmrp/10 rounded-full p-0.5 transition-colors'>
-                        <CloseXIcon className='size-3.5 text-[#4A5565]' />
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <span className='responsive-text-sm text-neutral-02 py-1'>Chưa chọn nhân viên</span>
-                )}
+              <div className='flex-1 relative' ref={employeeDropdownRef}>
+                {/* UI hiển thị danh sách nhân viên - luôn hiển thị */}
+                <div
+                  onClick={() => {
+                    setShowEmployeeDropdown(true);
+                  }}
+                  className='flex flex-wrap flex-1 gap-2.5 px-2 py-1.5 bg-[#F8F9FB] rounded-lg cursor-pointer hover:bg-[#F0F2F5] transition-colors min-h-[42px]'
+                >
+                  {employees.length > 0 ? (
+                    employees.map(employee => (
+                      <div key={employee.id} className='inline-flex items-center gap-2 px-3 py-1 bg-[#EAECEF] rounded-lg'>
+                        <span className='responsive-text-sm text-[#4A5565]'>{employee.name}</span>
+                        <button
+                          type='button'
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleRemoveEmployee(employee.id);
+                          }}
+                          className='flex items-center justify-center hover:bg-blue-fmrp/10 rounded-full p-0.5 transition-colors'
+                        >
+                          <CloseXIcon className='size-3.5 text-[#4A5565]' />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <span className='responsive-text-sm text-neutral-02 py-1'>Chưa chọn nhân viên</span>
+                  )}
+                </div>
+                {/* Dropdown menu tùy chỉnh */}
+                {showEmployeeDropdown &&
+                  createPortal(
+                    <div
+                      ref={employeeMenuRef}
+                      className='absolute bg-white rounded-[10px] shadow-[0px_4px_20px_0px_#00000033] border border-[#E5E7EB] min-w-[300px] max-w-[500px] z-[10001]'
+                      style={{
+                        top: employeeDropdownRef.current ? `${employeeDropdownRef.current.getBoundingClientRect().bottom + window.scrollY + 4}px` : '0',
+                        left: employeeDropdownRef.current ? `${employeeDropdownRef.current.getBoundingClientRect().left + window.scrollX}px` : '0',
+                      }}
+                      onClick={e => e.stopPropagation()}
+                    >
+                      {/* Search input */}
+                      <div className='relative p-2 border-b border-[#E5E7EB]'>
+                        <SearchIcon className='absolute left-4 top-1/2 -translate-y-1/2 size-4 text-[#99A1AF]' />
+                        <input
+                          type='text'
+                          value={employeeSearchTerm}
+                          onChange={e => setEmployeeSearchTerm(e.target.value)}
+                          placeholder='Tìm kiếm nhân viên...'
+                          className='w-full pl-10 pr-3 py-2 bg-[#F6F8FA] rounded-lg border-none outline-none responsive-text-sm text-[#141522] placeholder:text-[#9295A4]'
+                          autoFocus
+                        />
+                      </div>
+                      {/* Employee list */}
+                      <Customscrollbar className='max-h-[300px]'>
+                        <div className='flex flex-col'>
+                          {filteredAndSortedEmployees.length > 0 ? (
+                            filteredAndSortedEmployees.map(employee => {
+                              const isSelected = isEmployeeSelected(employee.id);
+                              return (
+                                <div
+                                  key={employee.id}
+                                  onClick={() => handleToggleEmployee(employee)}
+                                  className={`flex items-center justify-between px-4 py-3 cursor-pointer transition-colors ${
+                                    isSelected ? 'bg-blue-fmrp/5 hover:bg-blue-fmrp/15 text-blue-fmrp' : 'hover:bg-[#F9FAFB] text-[#141522]'
+                                  }`}
+                                >
+                                  <span className='responsive-text-sm font-medium'>{employee.name}</span>
+                                  {isSelected && <CheckIcon className='size-4 text-blue-fmrp' />}
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className='px-4 py-8 text-center responsive-text-sm text-[#9295A4]'>{employeeSearchTerm.trim() ? 'Không tìm thấy nhân viên' : 'Không có nhân viên'}</div>
+                          )}
+                        </div>
+                      </Customscrollbar>
+                    </div>,
+                    document.body
+                  )}
               </div>
             </div>
             {employees.length === 0 && <p className='responsive-text-sm text-red-500 ml-[116px]'>Vui lòng chọn nhân viên</p>}
@@ -264,7 +413,19 @@ const PopupShiftForm = ({
               />
             </div>
             {isLoadingShifts ? (
-              <div className='text-center py-4 text-neutral-02 responsive-text-sm'>Đang tải danh sách ca...</div>
+              <Customscrollbar className='h-[200px]'>
+                <div className='flex flex-col'>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <div key={index} className='flex items-center gap-3 py-4 px-2 border-b border-[#F3F4F6] last:border-b-0'>
+                      <Skeleton className='size-5 rounded-full' />
+                      <div className='flex-1 flex flex-col gap-2'>
+                        <Skeleton className='h-4 w-32 rounded' />
+                        <Skeleton className='h-3 w-24 rounded' />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Customscrollbar>
             ) : (
               <Customscrollbar className='h-[200px]'>
                 <div className='flex flex-col'>
