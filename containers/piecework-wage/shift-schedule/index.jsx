@@ -4,6 +4,7 @@ import { BackIcon, CheckDoubleIcon, CloseXIcon, SearchIcon, UsersIcon } from '@/
 import Breadcrumb from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { EmptyExprired } from '@/components/UI/common/EmptyExprired';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 import { Container } from '@/components/UI/common/layout';
 import AvatarText from '@/components/UI/common/user/AvatarText';
 import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComponent';
@@ -489,7 +490,15 @@ const ShiftSchedule = () => {
       <div className='flex flex-col gap-1'>
         {statusExprired ? <EmptyExprired /> : <Breadcrumb items={breadcrumbItems} className='responsive-text-sm' />}
         <div className='flex items-center justify-between'>
-          <h2 className='responsive-text-3xl text-neutral-04 font-medium capitalize'>Bảng xếp ca</h2>
+          <h2 className='responsive-text-3xl text-neutral-04 font-medium capitalize flex items-center gap-2'>
+            Bảng xếp ca
+            <InfoTooltip
+              content='Bảng xếp ca cho phép bạn quản lý và phân công ca làm việc cho công nhân theo từng ngày trong tuần. Nhân công sẽ dựa vào lịch ca đã được xếp để bấm giờ làm (chấm công) khi đến ca làm việc của mình.'
+              iconProps={{
+                className: '2xl:size-[21px] xl:size-[18px] size-[16px]',
+              }}
+            />
+          </h2>
           <div className='flex items-center gap-3'>
             <SelectComponent
               options={branchOptions}
@@ -635,7 +644,6 @@ const ShiftSchedule = () => {
                   })}
                 </div>
               )}
-
               {/* Các dòng nhân sự */}
               {filteredRows.length > 0
                 ? filteredRows.map(row => (
