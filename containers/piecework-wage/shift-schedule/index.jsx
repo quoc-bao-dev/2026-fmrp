@@ -792,7 +792,7 @@ const ShiftSchedule = () => {
                     </div>
                   ))
                 : !isLoadingScheduleTable && (
-                    <div className='flex flex-1 flex-col items-center justify-center h-[calc(100%-48px)]'>
+                    <div className='w-full flex items-center justify-center' style={{ minHeight: 'calc(100vh - 300px)' }}>
                       <NoData type='calendar' />
                     </div>
                   )}
