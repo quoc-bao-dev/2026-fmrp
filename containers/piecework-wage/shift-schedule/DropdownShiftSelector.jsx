@@ -1,4 +1,5 @@
 import { CloseXIcon, SearchIcon } from '@/components/icons';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFloating, offset, flip, shift, size, useDismiss, useInteractions } from '@floating-ui/react';
@@ -325,7 +326,7 @@ const DropdownShiftSelector = ({
       </div>
 
       {/* Danh sách các ca */}
-      <div className='flex flex-col overflow-y-auto'>
+      <Customscrollbar className='flex flex-col flex-1 min-h-0 w-full'>
         {isLoadingShifts ? (
           <div className='text-center py-4 text-neutral-02 responsive-text-sm'>Đang tải...</div>
         ) : filteredAndSortedShifts.length > 0 ? (
@@ -342,7 +343,7 @@ const DropdownShiftSelector = ({
                   e.stopPropagation();
                   handleSelectShift(shift.id);
                 }}
-                className={`flex items-center justify-between py-3 px-1 border-b border-[#F3F4F6] transition-colors ${
+                className={`flex items-center justify-between py-3 px-1 border-b border-[#F3F4F6] transition-colors w-full ${
                   isSelected ? 'opacity-50 cursor-not-allowed bg-[#F9FAFB]' : isCurrentSelected ? 'bg-[#ECF3FB] hover:bg-[#ECF3FB] cursor-pointer' : 'hover:bg-[#F9FAFB] cursor-pointer'
                 }`}
               >
@@ -371,7 +372,7 @@ const DropdownShiftSelector = ({
         ) : (
           <div className='text-center py-4 text-neutral-02 responsive-text-sm'>Không tìm thấy ca nào</div>
         )}
-      </div>
+      </Customscrollbar>
       <button
         type='button'
         onClick={e => {
