@@ -4,6 +4,7 @@ import { BackIcon, CheckDoubleIcon, CloseXIcon, SearchIcon, UsersIcon } from '@/
 import Breadcrumb from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { EmptyExprired } from '@/components/UI/common/EmptyExprired';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 import { Container } from '@/components/UI/common/layout';
 import AvatarText from '@/components/UI/common/user/AvatarText';
 import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComponent';
@@ -12,12 +13,16 @@ import NoData from '@/components/UI/noData/nodata';
 import { useBranchList } from '@/hooks/common/useBranch';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import useToast from '@/hooks/useToast';
+import useActionRole from '@/hooks/useRole';
+import { WARNING_ACTION_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 import { useGetScheduleTable } from '@/managers/api/shift-schedule/useGetScheduleTable';
+import { useGetShiftsByBranch } from '@/managers/api/shift-schedule/useGetShiftsByBranch';
 import Head from 'next/head';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import PopupShiftForm from './PopupShiftForm';
 import ShiftCell from './ShiftCell';
+import MultiValue from '@/components/UI/mutiValue/multiValue';
 
 const breadcrumbItems = [{ label: `Lương sản lượng` }, { label: `Bảng xếp ca` }];
 
@@ -79,12 +84,28 @@ const ShiftSchedule = () => {
   const [imageErrors, setImageErrors] = useState(new Set()); // Track các ảnh bị lỗi
   const [slideDirection, setSlideDirection] = useState(null); // 'left' hoặc 'right' cho animation
   const [opacity, setOpacity] = useState(1); // Opacity cho fade in/out
+  const [selectedShifts, setSelectedShifts] = useState([]); // Các ca được chọn để lọc
   const dropdownRefs = useRef({});
   const isHandlingMenuActionRef = useRef(false); // Flag để biết đang xử lý action từ menu
 
   // Lấy thông tin auth và branch từ Redux
   const authState = useSelector(state => state.auth);
+  const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
   const { data: listBranch = [] } = useBranchList();
+
+  // Lấy các quyền từ useActionRole
+  const { checkAdd, checkEdit, checkDelete } = useActionRole(auth, 'shift_schedule');
+
+  // Kiểm tra quyền xem
+  const canView = useMemo(() => {
+    return !auth || !!Number(auth?.shift_schedule?.is_view);
+  }, [auth]);
+
+  // Lấy staff_id của tài khoản hiện tại (ưu tiên field staff_id, fallback sang id)
+  const currentStaffId = useMemo(() => {
+    if (!authState) return null;
+    return authState.staff_id || authState.id || authState.staff_id_current || null;
+  }, [authState]);
 
   // Khởi tạo branch mặc định từ branch hiện tại
   useEffect(() => {
@@ -105,6 +126,33 @@ const ShiftSchedule = () => {
     return selectedBranch?.value || null;
   }, [selectedBranch]);
 
+  // Lấy danh sách ca theo chi nhánh (phục vụ filter ca)
+  const branchIdArray = useMemo(() => {
+    return branchId ? [branchId] : null;
+  }, [branchId]);
+
+  const { data: shiftsFilterData, isLoading: isLoadingShiftFilter } = useGetShiftsByBranch({
+    params: branchIdArray ? { branch_id: branchIdArray } : {},
+    enabled: !!branchIdArray,
+  });
+
+  // Map dữ liệu ca sang options cho SelectComponent
+  const shiftFilterOptions = useMemo(() => {
+    if (!shiftsFilterData?.result || !Array.isArray(shiftsFilterData?.data)) {
+      return [];
+    }
+
+    const formatTime = time => {
+      if (!time) return '';
+      return time.substring(0, 5); // HH:mm từ HH:mm:ss
+    };
+
+    return shiftsFilterData.data.map(shift => ({
+      value: shift.id,
+      label: `${shift.name || ''} (${formatTime(shift.time_start)} - ${formatTime(shift.time_end)})`,
+    }));
+  }, [shiftsFilterData]);
+
   // Tạo params cho API với branch_id, start_date và end_date
   const apiParams = useMemo(() => {
     const params = {};
@@ -122,7 +170,7 @@ const ShiftSchedule = () => {
   }, [branchId, dateRange]);
 
   const { data: scheduleTableData, isLoading: isLoadingScheduleTable } = useGetScheduleTable({
-    enabled: true,
+    // enabled: canView,
     params: apiParams,
   });
 
@@ -153,13 +201,44 @@ const ShiftSchedule = () => {
 
   // Filter rows dựa trên search term
   const filteredRows = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return mappedRows;
+    let rows = mappedRows;
+
+    // Lọc theo từ khóa tìm kiếm
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      rows = rows.filter(row => row.name.toLowerCase().includes(searchLower));
     }
 
-    const searchLower = searchTerm.toLowerCase().trim();
-    return mappedRows.filter(row => row.name.toLowerCase().includes(searchLower));
-  }, [mappedRows, searchTerm]);
+    // Lọc theo ca nếu có chọn ca
+    if (selectedShifts && selectedShifts.length > 0) {
+      const selectedIds = new Set(selectedShifts.map(s => String(s.value)));
+      rows = rows.filter(row =>
+        row.days?.some(dayShifts => {
+          if (!Array.isArray(dayShifts)) return false;
+          return dayShifts.some(shift => shift && typeof shift === 'object' && shift.id && selectedIds.has(String(shift.id)));
+        })
+      );
+    }
+
+    // Nếu không có thông tin staff hiện tại thì giữ nguyên thứ tự
+    if (!currentStaffId) return rows;
+
+    const currentIdStr = String(currentStaffId);
+
+    // Đưa lịch của tài khoản hiện tại (staff_id trùng với authState) lên đầu
+    const currentUserRows = [];
+    const otherRows = [];
+
+    rows.forEach(row => {
+      if (String(row.id) === currentIdStr) {
+        currentUserRows.push(row);
+      } else {
+        otherRows.push(row);
+      }
+    });
+
+    return [...currentUserRows, ...otherRows];
+  }, [mappedRows, searchTerm, selectedShifts, currentStaffId]);
 
   const headers = useMemo(() => {
     if (!scheduleTableData?.success || !scheduleTableData?.data?.headers) {
@@ -269,6 +348,10 @@ const ShiftSchedule = () => {
 
   // Xử lý xác nhận và mở popup
   const handleConfirmSelection = () => {
+    if (role != true && !checkAdd) {
+      toast('error', WARNING_ACTION_STATUS_ROLE);
+      return;
+    }
     if (selectedEmployees.size === 0) {
       toast('error', 'Vui lòng chọn nhân viên');
       return;
@@ -407,7 +490,15 @@ const ShiftSchedule = () => {
       <div className='flex flex-col gap-1'>
         {statusExprired ? <EmptyExprired /> : <Breadcrumb items={breadcrumbItems} className='responsive-text-sm' />}
         <div className='flex items-center justify-between'>
-          <h2 className='responsive-text-3xl text-neutral-04 font-medium capitalize'>Bảng xếp ca</h2>
+          <h2 className='responsive-text-3xl text-neutral-04 font-medium capitalize flex items-center gap-2'>
+            Bảng xếp ca
+            <InfoTooltip
+              content='Bảng xếp ca cho phép bạn quản lý và phân công ca làm việc cho công nhân theo từng ngày trong tuần. Nhân công sẽ dựa vào lịch ca đã được xếp để bấm giờ làm (chấm công) khi đến ca làm việc của mình.'
+              iconProps={{
+                className: '2xl:size-[21px] xl:size-[18px] size-[16px]',
+              }}
+            />
+          </h2>
           <div className='flex items-center gap-3'>
             <SelectComponent
               options={branchOptions}
@@ -417,6 +508,18 @@ const ShiftSchedule = () => {
               placeholder='Chi nhánh'
               isClearable={true}
               closeMenuOnSelect={true}
+            />
+            <SelectComponent
+              options={shiftFilterOptions}
+              value={selectedShifts}
+              onChange={value => setSelectedShifts(value || [])}
+              isMulti
+              isClearable
+              placeholder='Lọc theo ca'
+              closeMenuOnSelect={false}
+              className='min-w-[220px]'
+              maxShowMuti={1}
+              components={{ MultiValue }}
             />
             <DateToDateComponent value={dateRange} onChange={handleDateRangeChange} className='text-base-default !w-[290px] h-fit z-[51]' useRange={false} />
             <button
@@ -450,9 +553,17 @@ const ShiftSchedule = () => {
                   <span className='responsive-text-sm font-medium text-white'>Xác nhận {selectedEmployees.size > 0 && `(${selectedEmployees.size})`}</span>
                 </button>
               </>
-            ) : (
+            ) : role == true || checkAdd ? (
               <button
                 onClick={() => setShowSelectMode(true)}
+                className='px-4 py-2.5 rounded-lg bg-blue-fmrp hover:bg-blue-fmrp/80 flex gap-2 items-center justify-center transition-all duration-300 ease-in-out'
+              >
+                <UsersIcon className='size-5 text-white' />
+                <span className='responsive-text-sm font-medium text-white'>Chọn nhân viên</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => toast('error', WARNING_ACTION_STATUS_ROLE)}
                 className='px-4 py-2.5 rounded-lg bg-blue-fmrp hover:bg-blue-fmrp/80 flex gap-2 items-center justify-center transition-all duration-300 ease-in-out'
               >
                 <UsersIcon className='size-5 text-white' />
@@ -513,13 +624,18 @@ const ShiftSchedule = () => {
                       className='responsive-text-sm font-normal text-neutral-02 bg-transparent border-none outline-none flex-1'
                       placeholder='Tìm kiếm'
                     />
+                    {searchTerm && (
+                      <button type='button' onClick={() => setSearchTerm('')} className='flex-shrink-0 cursor-pointer hover:opacity-70 transition-opacity' aria-label='Xóa tìm kiếm'>
+                        <CloseXIcon className='size-4 text-[#99A1AF]' />
+                      </button>
+                    )}
                   </div>
                   {headers.map((header, index) => {
                     const isTodayDate = isToday(header.date);
                     return (
                       <div
                         key={index}
-                        className='flex items-center justify-center border-r border-[#E5E7EB] min-w-[160px]'
+                        className='flex items-center justify-center border-r border-[#E5E7EB] min-w-[160px] text-[#000]'
                         style={{
                           transform: slideDirection === 'left' ? 'translateX(-50px)' : slideDirection === 'right' ? 'translateX(50px)' : 'translateX(0)',
                           opacity: opacity,
@@ -533,7 +649,6 @@ const ShiftSchedule = () => {
                   })}
                 </div>
               )}
-
               {/* Các dòng nhân sự */}
               {filteredRows.length > 0
                 ? filteredRows.map(row => (
@@ -613,6 +728,11 @@ const ShiftSchedule = () => {
                                 branchIds={branchIdsFromApi}
                                 date={headers[index]?.date}
                                 existingShifts={allShifts}
+                                role={role}
+                                checkAdd={checkAdd}
+                                checkEdit={checkEdit}
+                                checkDelete={checkDelete}
+                                toast={toast}
                               />
                             )}
                             {/* Hiển thị tối đa 2 ca */}
@@ -628,6 +748,11 @@ const ShiftSchedule = () => {
                                 branchIds={branchIdsFromApi}
                                 date={headers[index]?.date}
                                 existingShifts={allShifts}
+                                role={role}
+                                checkAdd={checkAdd}
+                                checkEdit={checkEdit}
+                                checkDelete={checkDelete}
+                                toast={toast}
                               />
                             ))}
                             {/* Hiển thị "Xem thêm" nếu có nhiều hơn 2 ca */}
@@ -663,6 +788,11 @@ const ShiftSchedule = () => {
                                         branchIds={branchIdsFromApi}
                                         date={headers[index]?.date}
                                         existingShifts={allShifts}
+                                        role={role}
+                                        checkAdd={checkAdd}
+                                        checkEdit={checkEdit}
+                                        checkDelete={checkDelete}
+                                        toast={toast}
                                       />
                                     ))}
                                   </div>
@@ -675,7 +805,7 @@ const ShiftSchedule = () => {
                     </div>
                   ))
                 : !isLoadingScheduleTable && (
-                    <div className='flex flex-col items-center justify-center h-[calc(100%-48px)]'>
+                    <div className='w-full flex items-center justify-center' style={{ minHeight: 'calc(100vh - 300px)' }}>
                       <NoData type='calendar' />
                     </div>
                   )}

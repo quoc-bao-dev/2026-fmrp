@@ -5,6 +5,7 @@ import { useFloating, offset, flip, shift as shiftMiddleware, useDismiss, useInt
 import DropdownShiftSelector from './DropdownShiftSelector';
 import PopupConfirmSimple from '@/components/UI/popupConfim/popupConfirmSimple';
 import { useDeleteShiftSchedule } from '@/managers/api/shift-schedule/useDeleteShiftSchedule';
+import { WARNING_ACTION_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 
 // Helper function để format time từ "08:00:00" thành "08:00"
 const formatTime = timeString => {
@@ -51,7 +52,22 @@ const getShiftStyles = shiftName => {
   }
 };
 
-const ShiftCell = ({ shift, onAddShift, onEditShift, onSelectShift, dayIndex, rowId, branchIds = [], date, existingShifts = [] }) => {
+const ShiftCell = ({
+  shift,
+  onAddShift,
+  onEditShift,
+  onSelectShift,
+  dayIndex,
+  rowId,
+  branchIds = [],
+  date,
+  existingShifts = [],
+  role = false,
+  checkAdd = false,
+  checkEdit = false,
+  checkDelete = false,
+  toast,
+}) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShiftDropdownOpen, setIsShiftDropdownOpen] = useState(false);
   const [shiftDropdownMode, setShiftDropdownMode] = useState('add');
@@ -104,6 +120,12 @@ const ShiftCell = ({ shift, onAddShift, onEditShift, onSelectShift, dayIndex, ro
 
   // Xử lý mở dropdown thêm ca
   const handleOpenAddShiftDropdown = () => {
+    if (role != true && !checkAdd) {
+      if (toast) {
+        toast('error', WARNING_ACTION_STATUS_ROLE);
+      }
+      return;
+    }
     setIsMenuOpen(false);
     // Delay một chút để đảm bảo click event đã được xử lý xong
     setTimeout(() => {
@@ -114,6 +136,12 @@ const ShiftCell = ({ shift, onAddShift, onEditShift, onSelectShift, dayIndex, ro
 
   // Xử lý mở dropdown sửa ca
   const handleOpenEditShiftDropdown = () => {
+    if (role != true && !checkEdit) {
+      if (toast) {
+        toast('error', WARNING_ACTION_STATUS_ROLE);
+      }
+      return;
+    }
     setIsMenuOpen(false);
     // Delay một chút để đảm bảo click event đã được xử lý xong
     setTimeout(() => {
@@ -129,6 +157,12 @@ const ShiftCell = ({ shift, onAddShift, onEditShift, onSelectShift, dayIndex, ro
 
   // Xử lý mở modal xác nhận xóa
   const handleOpenDeleteConfirm = () => {
+    if (role != true && !checkDelete) {
+      if (toast) {
+        toast('error', WARNING_ACTION_STATUS_ROLE);
+      }
+      return;
+    }
     setIsMenuOpen(false);
     setIsDeleteConfirmOpen(true);
   };
