@@ -1,8 +1,7 @@
 import apiUpgradePackage from "@/Api/apiUpgradePackage/apiUpgradePackage";
 import CheckboxDefault from "@/components/common/checkbox/CheckboxDefault";
-import InputNumberCustom from "@/components/common/input/InputNumberCustom";
 import Skeleton from "@/components/common/skeleton/Skeleton";
-import { DropdownIcon } from "@/components/icons";
+import { CaretDownIcon, DropdownIcon } from "@/components/icons";
 import PopupConfim from "@/components/UI/popupConfim/popupConfim";
 import {
   useGetPackage,
@@ -18,6 +17,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Add as IconClose } from "iconsax-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { IoCopyOutline } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { Tooltip } from "react-tippy";
@@ -31,6 +31,21 @@ const deca = Lexend_Deca({
 // Thêm biến prices với thuế VAT 10%
 const prices = {
   vatRate: 0.1,
+};
+
+// CustomRadio component
+const CustomRadio = ({ checked }) => {
+  return (
+    <div className="relative flex items-center justify-center">
+      <div
+        className={`w-4 h-4 rounded-full border ${
+          checked ? "border-blue-fmrp" : "border-[#D0D5DD]"
+        } flex items-center justify-center`}
+      >
+        {checked && <div className="w-2 h-2 rounded-full bg-blue-fmrp" />}
+      </div>
+    </div>
+  );
 };
 
 const PopupUpgradeProfessional = (props) => {
@@ -48,8 +63,6 @@ const PopupUpgradeProfessional = (props) => {
 
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isQrUpdating, setIsQrUpdating] = useState(false);
-  const [contentHeight, setContentHeight] = useState(null);
-  const detailsRef = useRef(null);
   const detailsContentRef = useRef(null);
   const [isConfirmCloseOpen, setIsConfirmCloseOpen] = useState(false);
 
@@ -69,22 +82,11 @@ const PopupUpgradeProfessional = (props) => {
     packageData?.data?.[0]?.default_user || 5
   );
 
-  // const [selectedPackages, setSelectedPackages] = useState({
-  //   id_package_detail: packageData?.data?.[0]?.id_detail,
-  //   number_of_users: packageData?.data?.[0]?.default_user || 5,
-  //   id_service_add: [],
-  //   selectedServices: [],
-  //   selectedPackage: packageData?.data?.[0]
-  //     ? {
-  //         id: packageData?.data?.[0]?.id,
-  //         id_detail: packageData?.data?.[0]?.id_detail,
-  //         name: packageData?.data?.[0]?.name,
-  //         price: packageData?.data?.[0]?.price,
-  //         fullname: packageData?.data?.[0]?.fullname,
-  //       }
-  //     : null,
-  // });
-
+  const [selectedMonth, setSelectedMonth] = useState(6);
+  const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
+  const monthDropdownRef = useRef(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const prevApiCallRef = useRef({ id_package_detail: null, month: null, id_service_add: null });
   const [selectedPackages, setSelectedPackages] = useState(null);
 
   useEffect(() => {
@@ -96,6 +98,8 @@ const PopupUpgradeProfessional = (props) => {
         (pkg) => pkg.id_detail === upgradePackageApiData.data.id_package_detail
       );
       if (matchedPackage) {
+        // Chỉ set selectedMonth nếu chưa có giá trị được chọn (giữ nguyên nếu đã chọn)
+        const currentMonth = selectedMonth || (matchedPackage.month === 12 ? 12 : 6);
         setSelectedPackages({
           id_package_detail: matchedPackage.id_detail,
           number_of_users: matchedPackage.default_user || 5,
@@ -107,10 +111,15 @@ const PopupUpgradeProfessional = (props) => {
             name: matchedPackage.name,
             price: matchedPackage.price,
             fullname: matchedPackage.fullname,
-            month: matchedPackage.month,
+            month: currentMonth, // Sử dụng tháng hiện tại hoặc tháng từ package
           },
         });
         setUserCount(matchedPackage.default_user || 5);
+        // Chỉ set selectedMonth nếu chưa có giá trị
+        if (!selectedMonth) {
+          const initialMonth = matchedPackage.month === 12 ? 12 : 6;
+          setSelectedMonth(initialMonth);
+        }
       }
     }
   }, [packageData?.data, upgradePackageApiData?.data?.id_package_detail]);
@@ -130,25 +139,6 @@ const PopupUpgradeProfessional = (props) => {
   const statePopupUpgradeProfessional = useSelector(
     (state) => state.statePopupUpgradeProfessional
   );
-
-  // Tạo mutation để cập nhật thông tin QR
-  // const refreshPackageMutation = useMutation({
-  //   mutationFn: async () => {
-  //     setIsQrUpdating(true);
-  //     return await getUpgradePackageWithRefresh(
-  //       upgradePackageData,
-  //       setBankData,
-  //       isShow
-  //     );
-  //   },
-  //   onSuccess: () => {
-  //     setIsQrUpdating(false);
-  //   },
-  //   onError: () => {
-  //     setIsQrUpdating(false);
-  //     isShow("error", "Không thể cập nhật thông tin gói. Vui lòng thử lại.");
-  //   },
-  // });
 
   // Render QR code với trạng thái loading
   const renderQRCode = () => {
@@ -207,6 +197,8 @@ const PopupUpgradeProfessional = (props) => {
         transferContent: "Sao chép",
       });
       setIsDetailsOpen(false);
+      // Reset ref để cho phép gọi API khi popup mở lại
+      prevApiCallRef.current = { id_package_detail: null, month: null, id_service_add: null };
     }
   }, [statePopupUpgradeProfessional.open, packageData]);
 
@@ -265,12 +257,32 @@ const PopupUpgradeProfessional = (props) => {
       return;
     }
 
+    // So sánh với giá trị trước đó để tránh gọi API trùng lặp
+    const currentIdServiceAdd = JSON.stringify(selectedPackages?.id_service_add || []);
+    const prevIdServiceAdd = JSON.stringify(prevApiCallRef.current.id_service_add || []);
+
+    const hasChanged =
+      prevApiCallRef.current.id_package_detail !== selectedPackages?.id_package_detail ||
+      prevApiCallRef.current.month !== selectedMonth ||
+      prevIdServiceAdd !== currentIdServiceAdd;
+
+    if (!hasChanged) {
+      return;
+    }
+
+    // Cập nhật ref với giá trị hiện tại
+    prevApiCallRef.current = {
+      id_package_detail: selectedPackages?.id_package_detail,
+      month: selectedMonth,
+      id_service_add: selectedPackages?.id_service_add || [],
+    };
+
     // Dùng debounce để tránh gọi API quá nhiều lần khi người dùng chọn nhanh
     const timer = setTimeout(() => {
       try {
         // Tạo formData để gửi API
         let formData = new FormData();
-        formData.append(`number_of_users`, selectedPackages?.number_of_users);
+        formData.append(`number_month`, selectedMonth);
 
         // Thêm các dịch vụ add-on vào formData
         if (
@@ -298,7 +310,7 @@ const PopupUpgradeProfessional = (props) => {
     return () => clearTimeout(timer);
   }, [
     selectedPackages?.id_package_detail,
-    selectedPackages?.number_of_users,
+    selectedMonth,
     selectedPackages?.id_service_add,
     upgradePackageData?.data?.id,
   ]);
@@ -328,7 +340,7 @@ const PopupUpgradeProfessional = (props) => {
     // Tính giá gói Professional
     const professionalPrice = selectedPackages?.selectedPackage
       ? parseInt(selectedPackages?.selectedPackage?.price) *
-        selectedPackages?.number_of_users *
+        // selectedPackages?.number_of_users *
         selectedPackages?.selectedPackage?.month
       : 0;
 
@@ -362,59 +374,69 @@ const PopupUpgradeProfessional = (props) => {
 
   const dataSeting = useSetingServer();
 
+  // Options cho dropdown chọn thời hạn
+  const monthOptions = [
+    { label: "6 tháng", value: 6 },
+    { label: "12 tháng", value: 12 },
+  ];
+
   const formatMoney = (number) => {
     return formatMoneyConfig(+number, dataSeting);
   };
 
-  // Theo dõi và cập nhật chiều cao khi component được mount
+  // Tính toán vị trí dropdown khi mở
   useEffect(() => {
-    if (detailsRef.current && !contentHeight) {
-      setContentHeight(detailsRef.current.clientHeight);
-    }
-    
-    // Xử lý sự kiện resize để tính toán lại chiều cao
-    const handleResize = () => {
-      if (detailsRef.current && !isDetailsOpen) {
-        setContentHeight(detailsRef.current.clientHeight);
-        detailsRef.current.style.height = "auto";
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    
-    // Cleanup khi component unmount
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [isDetailsOpen]);
-
-  // Theo dõi trạng thái isDetailsOpen để điều chỉnh chiều cao
-  useEffect(() => {
-    if (!detailsRef.current) return;
-    
-    if (isDetailsOpen) {
-      // Khi mở chi tiết, đợi nội dung hiển thị và lấy chiều cao mới
-      setTimeout(() => {
-        if (detailsRef.current && detailsContentRef.current) {
-          // Lưu chiều cao ban đầu nếu chưa lưu
-          if (!contentHeight) {
-            setContentHeight(detailsRef.current.clientHeight);
-          }
-          
-          // Dùng auto thay vì giá trị cụ thể để đảm bảo nội dung hiển thị đầy đủ
-          // nhưng vẫn tôn trọng max-height
-          detailsRef.current.style.transition = "height 0.3s ease-in-out";
-          detailsRef.current.style.height = "auto";
+    if (isMonthDropdownOpen && monthDropdownRef.current) {
+      const updatePosition = () => {
+        if (monthDropdownRef.current) {
+          const rect = monthDropdownRef.current.getBoundingClientRect();
+          const dropdownWidth = rect.width * 1.1; // 110% width
+          setDropdownPosition({
+            top: rect.bottom + 4, // 4px là margin-top (mt-1)
+            left: rect.right - dropdownWidth, // Align right với width 110%
+            width: dropdownWidth,
+          });
         }
-      }, 100);
-    } else {
-      // Khi đóng chi tiết, đặt lại chiều cao ban đầu
-      if (contentHeight && detailsRef.current) {
-        detailsRef.current.style.transition = "height 0.3s ease-in-out";
-        detailsRef.current.style.height = `${contentHeight}px`;
-      }
+      };
+      updatePosition();
     }
-  }, [isDetailsOpen, contentHeight]);
+  }, [isMonthDropdownOpen]);
+
+  // Xử lý click outside để đóng dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        monthDropdownRef.current &&
+        !monthDropdownRef.current.contains(event.target) &&
+        !event.target.closest('[data-month-dropdown]')
+      ) {
+        setIsMonthDropdownOpen(false);
+      }
+    };
+
+    if (isMonthDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      // Cập nhật vị trí khi scroll hoặc resize
+      const updatePosition = () => {
+        if (monthDropdownRef.current) {
+          const rect = monthDropdownRef.current.getBoundingClientRect();
+          const dropdownWidth = rect.width * 1.1; // 110% width
+          setDropdownPosition({
+            top: rect.bottom + 4,
+            left: rect.right - dropdownWidth, // Align right với width 110%
+            width: dropdownWidth,
+          });
+        }
+      };
+      window.addEventListener("scroll", updatePosition, true);
+      window.addEventListener("resize", updatePosition);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        window.removeEventListener("scroll", updatePosition, true);
+        window.removeEventListener("resize", updatePosition);
+      };
+    }
+  }, [isMonthDropdownOpen]);
 
   return (
     <div
@@ -436,7 +458,7 @@ const PopupUpgradeProfessional = (props) => {
       </div>
 
       <div className="border-t border-[#919EAB3D] mt-2 2xl:mt-3 w-full">
-        <div className="w-full flex flex-col lg:flex-row gap-10 xl:gap-16 pt-3 2xl:pt-6 -mr-6 2xl:-mr-9 pr-4 2xl:pr-6 h-fit max-h-[76vh]" ref={detailsRef} style={{ transition: "height 0.3s ease-in-out" }}>
+        <div className="w-full flex flex-col lg:flex-row gap-10 xl:gap-16 pt-3 2xl:pt-6 -mr-6 2xl:-mr-9 pr-4 2xl:pr-6 h-fit max-h-[76vh]">
           <div className="lg:w-[505px] flex-1">
             <Customscrollbar className="h-full overflow-y-auto">
               <div className="flex flex-col gap-2.5 2xl:gap-9 ">
@@ -561,7 +583,7 @@ const PopupUpgradeProfessional = (props) => {
               </div>
             </Customscrollbar>
           </div>
-          <div className="flex flex-col gap-3 2xl:gap-9 lg:w-[505px] flex-1 max-h-full">
+          <div className="flex flex-col gap-3 2xl:gap-9 lg:w-[505px] flex-1 max-h-full h-[550px] 2xl:h-[650px]">
             <Customscrollbar className="pr-2 2xl:pr-2.5 flex flex-col gap-3 2xl:gap-9 max-h-full flex-1 min-h-0">
               <div className="flex flex-col gap-3 2xl:gap-9">
                 <div className="flex flex-col gap-2 2xl:gap-3">
@@ -571,78 +593,109 @@ const PopupUpgradeProfessional = (props) => {
                   {isLoadingPackage ? (
                     <Skeleton className="h-20 w-full rounded-2xl" />
                   ) : (
-                    packageData?.data?.map((pkg, index) => (
-                      <div
-                        key={`package-${pkg.id}-${index}`}
-                        className="py-3 2xl:py-5 px-6 bg-white border border-[#919EAB3D] rounded-2xl flex gap-4 cursor-pointer hover:bg-[#F4F6F8] transition-colors"
-                        onClick={() => {
-                          // Bắt buộc phải có một gói được chọn, không thể bỏ chọn
-                          setSelectedPackages((prev) => ({
-                            ...prev,
-                            id_package_detail: pkg.id_detail,
-                            selectedPackage: {
-                              id: pkg.id,
-                              id_detail: pkg.id_detail,
-                              name: pkg.name,
-                              price: pkg.price,
-                              fullname: pkg.fullname,
-                              month: pkg.month,
-                            },
-                          }));
-                        }}
-                      >
+                    packageData?.data?.map((pkg, index) => {
+                      const isSelected = selectedPackages?.id_package_detail === pkg.id_detail;
+                      return (
                         <div
-                          className="checkbox-wrapper flex items-center justify-center"
-                          onClick={(e) => {
-                            e.stopPropagation();
+                          key={`package-${pkg.id}-${index}`}
+                          className={`py-3 2xl:py-5 px-6 border border-[#919EAB3D] rounded-2xl flex gap-4 cursor-pointer hover:bg-[#F4F6F8] transition-colors ${
+                            isSelected ? "border-l-4 border-l-[#0375F3] bg-gradient-to-r from-[#CDE3FFCC] to-white" : "bg-white"
+                          }`}
+                          onClick={() => {
+                            // Bắt buộc phải có một gói được chọn, không thể bỏ chọn
+                            setSelectedPackages((prev) => ({
+                              ...prev,
+                              id_package_detail: pkg.id_detail,
+                              selectedPackage: {
+                                id: pkg.id,
+                                id_detail: pkg.id_detail,
+                                name: pkg.name,
+                                price: pkg.price,
+                                fullname: pkg.fullname,
+                                month: selectedMonth, // Giữ giá trị tháng đã chọn từ dropdown
+                              },
+                            }));
                           }}
                         >
-                          <CheckboxDefault
-                            checked={
-                              selectedPackages?.id_package_detail ===
-                              pkg.id_detail
-                            }
-                            onChange={() => {
-                              // Luôn chọn gói được click, không thể bỏ chọn
-                              setSelectedPackages((prev) => ({
-                                ...prev,
-                                id_package_detail: pkg.id_detail,
-                                selectedPackage: {
-                                  id: pkg.id,
-                                  id_detail: pkg.id_detail,
-                                  name: pkg.name,
-                                  price: pkg.price,
-                                  fullname: pkg.fullname,
-                                  month: pkg.month,
-                                },
-                              }));
-                            }}
-                          />
+                          <div className="flex flex-col gap-1 cursor-pointer w-full">
+                            <h4 className="text-xl font-bold text-typo-black-4">
+                              {pkg.fullname}
+                            </h4>
+                            <p className="text-base font-normal text-typo-gray-4">
+                              {pkg.full_note_price}
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex flex-col gap-1 cursor-pointer w-full">
-                          <h4 className="text-xl font-bold text-typo-black-4">
-                            {pkg.fullname}
-                          </h4>
-                          <p className="text-base font-normal text-typo-gray-4">
-                            {pkg.full_note_price}
-                          </p>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-normal text-typo-gray-4">
-                      Số user
+                      Thời hạn
                     </span>
-                    <InputNumberCustom
-                      classNameButton="rounded-full bg-[#EBF5FF] hover:bg-[#C7DFFB] cursor-pointer"
-                      className="p-[4px]"
-                      state={userCount}
-                      setState={(value) => {
-                        setUserCount(value);
-                      }}
-                      min={packageData?.data?.[0]?.default_user || 5}
-                    />
+                    <div className="relative" ref={monthDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => setIsMonthDropdownOpen(!isMonthDropdownOpen)}
+                        className="px-3 py-2 rounded-lg border border-[#D0D5DD] bg-white text-neutral-05 font-normal cursor-pointer hover:border-[#919EAB] focus:outline-none focus:border-[#0375F3] transition-colors flex items-center gap-2 justify-between"
+                      >
+                        <span>
+                          {monthOptions.find((opt) => opt.value === selectedMonth)
+                            ?.label || "Chọn thời hạn"}
+                        </span>
+                        <motion.div
+                          initial={false}
+                          animate={{ rotate: isMonthDropdownOpen ? 180 : 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <CaretDownIcon className="size-4 text-[#9295A4]"/>
+                        </motion.div>
+                      </button>
+                    </div>
+                    {typeof window !== "undefined" &&
+                      isMonthDropdownOpen &&
+                      createPortal(
+                        <div
+                          data-month-dropdown
+                          className="fixed bg-white border border-[#D8DAE5] rounded-2xl shadow-lg z-[9999]"
+                          style={{
+                            top: `${dropdownPosition.top}px`,
+                            left: `${dropdownPosition.left}px`,
+                            width: `${dropdownPosition.width}px`,
+                          }}
+                        >
+                          {monthOptions.map((option, index) => {
+                            const isSelected = selectedMonth === option.value;
+                            const isLast = index === monthOptions.length - 1;
+                            return (
+                              <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedMonth(option.value);
+                                  if (selectedPackages?.selectedPackage) {
+                                    setSelectedPackages((prev) => ({
+                                      ...prev,
+                                      selectedPackage: {
+                                        ...prev?.selectedPackage,
+                                        month: option.value,
+                                      },
+                                    }));
+                                  }
+                                  setIsMonthDropdownOpen(false);
+                                }}
+                                className={`w-full p-4 text-neutral-07 hover:text-blue-fmrp text-sm text-left transition-colors first:rounded-t-lg last:rounded-b-lg flex items-center gap-3 ${
+                                  !isLast ? "border-b border-[#F7F8F9]" : ""
+                                }`}
+                              >
+                                <CustomRadio checked={isSelected} />
+                                <span className="whitespace-nowrap">{option.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>,
+                        document.body
+                      )}
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 2xl:gap-3">
@@ -866,13 +919,12 @@ const PopupUpgradeProfessional = (props) => {
                     : selectedPackages?.selectedPackage?.month === 1
                     ? "tháng"
                     : `${selectedPackages?.selectedPackage?.month} tháng`}
-                  /{userCount} user
                 </p>
                 <button
                   className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-200"
                   onClick={toggleDetails}
                 >
-                  <p className="text-sm font-medium text-typo-gray-4">
+                  <p className="text-sm font-medium text-typo-gray-4 whitespace-nowrap">
                     {isDetailsOpen ? "Ẩn chi tiết" : "Xem chi tiết"}
                   </p>
                   <motion.div
@@ -884,16 +936,7 @@ const PopupUpgradeProfessional = (props) => {
                   </motion.div>
                 </button>
               </div>
-              <AnimatePresence
-                onExitComplete={() => {
-                  // Sau khi animation exit hoàn tất, đảm bảo chiều cao trở về giá trị ban đầu
-                  setTimeout(() => {
-                    if (detailsRef.current && contentHeight) {
-                      detailsRef.current.style.height = `${contentHeight}px`;
-                    }
-                  }, 50); // Thêm một thời gian trễ nhỏ để đảm bảo animation mượt mà
-                }}
-              >
+              <AnimatePresence>
                 {isDetailsOpen && (
                   <motion.div
                     id="price-details"
@@ -903,24 +946,12 @@ const PopupUpgradeProfessional = (props) => {
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
                     className="overflow-hidden"
-                    onAnimationStart={() => {
-                      // Khi bắt đầu animation, đảm bảo container cha sẵn sàng điều chỉnh chiều cao
-                      if (detailsRef.current) {
-                        detailsRef.current.style.overflow = "hidden";
-                      }
-                    }}
-                    onAnimationComplete={() => {
-                      // Khi animation hoàn tất, cho phép cuộn nếu cần thiết
-                      if (detailsRef.current) {
-                        detailsRef.current.style.overflow = "";
-                      }
-                    }}
                   >
                     <div className="flex flex-col gap-3">
                       <div className="flex justify-between items-center">
                         <p className="text-typo-gray-4 text-base font-normal">
                           {selectedPackages?.selectedPackage?.fullname}
-                          <br />x {userCount} user
+                          <br />x {selectedPackages?.selectedPackage?.month} tháng
                         </p>
                         <p className="text-typo-black-4 text-base font-medium">
                           {formatMoney(priceCalculation.professionalPrice)}{" "}

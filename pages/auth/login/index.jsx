@@ -730,7 +730,7 @@ const LoginContent = React.memo(props => {
                 </div>
                 <div className='text-center text-[#667085] text-sm font-light flex items-center gap-1 w-full justify-center'>
                   <p>Power by</p>
-                  <Link href='https://fososoft.vn' target='_blank' className='w-[45px] h-auto'>
+                  <Link href='https://fososoft.com' target='_blank' className='w-[45px] h-auto'>
                     <Image src={'/icon/logo-green.png'} width={1280} height={1024} alt='@logo' className='object-contain w-full h-full' />
                   </Link>
                 </div>
