@@ -12,24 +12,59 @@ const deca = Lexend_Deca({
 });
 
 /**
- * Parse HTML string và extract text từ các thẻ <li>
- * Bỏ qua tất cả style, màu sắc, font chữ, chỉ lấy nội dung text
+ * Parse HTML string và extract HTML từ các thẻ <li>
+ * Giữ nguyên định dạng in đậm (<strong>) và icon, loại bỏ các thuộc tính không cần thiết
  */
-const parseHtmlToList = (htmlString) => {
+const parseHtmlToList = htmlString => {
   if (!htmlString) return [];
 
   try {
     // Tạo DOM parser để parse HTML
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
-    
+
     // Tìm tất cả thẻ <li>
     const listItems = doc.querySelectorAll('li');
-    
-    // Extract text content từ mỗi <li> (bỏ qua HTML tags và style)
-    const items = Array.from(listItems).map(li => {
-      return li.textContent?.trim() || '';
-    }).filter(item => item.length > 0);
+
+    // Extract HTML content từ mỗi <li>, giữ nguyên <strong> và icon
+    const items = Array.from(listItems)
+      .map(li => {
+        // Clone node để không ảnh hưởng đến DOM gốc
+        const clonedLi = li.cloneNode(true);
+
+        // Loại bỏ các thuộc tính không cần thiết từ <strong> tags
+        const strongTags = clonedLi.querySelectorAll('strong');
+        strongTags.forEach(strong => {
+          // Giữ lại tag <strong> nhưng xóa các data attributes
+          Array.from(strong.attributes).forEach(attr => {
+            if (attr.name.startsWith('data-')) {
+              strong.removeAttribute(attr.name);
+            }
+          });
+        });
+
+        // Loại bỏ các thuộc tính không cần thiết từ các thẻ khác
+        const allElements = clonedLi.querySelectorAll('*');
+        allElements.forEach(el => {
+          // Xóa các thuộc tính không cần thiết như xss, class (nếu không cần)
+          if (el.hasAttribute('xss')) {
+            el.removeAttribute('xss');
+          }
+          // Giữ lại class nếu cần, nhưng có thể xóa nếu không cần
+          // el.removeAttribute('class');
+        });
+
+        // Lấy innerHTML để giữ nguyên format
+        const htmlContent = clonedLi.innerHTML?.trim() || '';
+
+        // Nếu không có HTML tags, lấy text content
+        if (!htmlContent || htmlContent === clonedLi.textContent?.trim()) {
+          return clonedLi.textContent?.trim() || '';
+        }
+
+        return htmlContent;
+      })
+      .filter(item => item.length > 0);
 
     return items;
   } catch (error) {
@@ -40,7 +75,7 @@ const parseHtmlToList = (htmlString) => {
 
 const PopupUpgradePro = ({ open, onClose, onUpgrade, onContact }) => {
   const dataSeting = useSetingServer();
-  
+
   // Parse HTML từ description_extend và fallback về mảng mặc định
   const improvements = useMemo(() => {
     if (dataSeting?.description_extend) {
@@ -60,18 +95,18 @@ const PopupUpgradePro = ({ open, onClose, onUpgrade, onContact }) => {
   }, [dataSeting?.description_extend]);
 
   return (
-    <PopupCustom 
-      open={open} 
-      onClose={onClose} 
-      lockScroll={true} 
-      closeOnDocumentClick={false} 
-      className='popup-upgrade-pro' 
+    <PopupCustom
+      open={open}
+      onClose={onClose}
+      lockScroll={true}
+      closeOnDocumentClick={false}
+      className='popup-upgrade-pro'
       type='no-close'
       overlayStyle={{
-        background: "#25387A50",
+        background: '#25387A50',
         zIndex: 1000,
-        backdropFilter: "blur(2.5px)",
-        WebkitBackdropFilter: "blur(2.5px)",
+        backdropFilter: 'blur(2.5px)',
+        WebkitBackdropFilter: 'blur(2.5px)',
       }}
     >
       <div className={`${deca.className} flex flex-col w-[90vw] xl:w-[480px] 2xl:w-[542px] h-fit rounded-2xl bg-white`}>
@@ -111,12 +146,12 @@ const PopupUpgradePro = ({ open, onClose, onUpgrade, onContact }) => {
               {improvements.map((item, index) => (
                 <div key={index} className='flex items-start gap-2 xl:gap-2.5 2xl:gap-3'>
                   <Image src={IMAGES.bullet} alt='bullet' width={24} height={24} className='w-5 h-5 xl:w-[22px] xl:h-[22px] 2xl:w-6 2xl:h-6 flex-shrink-0 mt-0.5' />
-                  <p className='text-xs xl:text-[13px] 2xl:text-sm font-normal text-[#101828] leading-4 xl:leading-[18px] 2xl:leading-5 flex-1'>{item}</p>
+                  <p className='text-xs xl:text-[13px] 2xl:text-sm font-normal text-[#101828] leading-4 xl:leading-[18px] 2xl:leading-5 flex-1' dangerouslySetInnerHTML={{ __html: item }} />
                 </div>
               ))}
             </div>
           </div>
-          <span tabIndex="0" className="sr-only" aria-hidden="true"></span>
+          <span tabIndex='0' className='sr-only' aria-hidden='true'></span>
           {/* Buttons */}
           <div className='flex items-center gap-3 w-[380px] xl:w-[400px] mx-auto justify-center'>
             <a href='https://zalo.me/fososoft' target='_blank' className='flex-1'>
