@@ -624,6 +624,11 @@ const ShiftSchedule = () => {
                       className='responsive-text-sm font-normal text-neutral-02 bg-transparent border-none outline-none flex-1'
                       placeholder='Tìm kiếm'
                     />
+                    {searchTerm && (
+                      <button type='button' onClick={() => setSearchTerm('')} className='flex-shrink-0 cursor-pointer hover:opacity-70 transition-opacity' aria-label='Xóa tìm kiếm'>
+                        <CloseXIcon className='size-4 text-[#99A1AF]' />
+                      </button>
+                    )}
                   </div>
                   {headers.map((header, index) => {
                     const isTodayDate = isToday(header.date);
