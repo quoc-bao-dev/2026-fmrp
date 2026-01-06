@@ -458,10 +458,10 @@ const PopupUpgradeProfessional = (props) => {
       </div>
 
       <div className="border-t border-[#919EAB3D] mt-2 2xl:mt-3 w-full">
-        <div className="w-full flex flex-col lg:flex-row gap-10 xl:gap-16 pt-3 2xl:pt-6 -mr-6 2xl:-mr-9 pr-4 2xl:pr-6 h-fit max-h-[76vh]">
+        <div className="w-full flex flex-col lg:flex-row gap-10 xl:gap-16 pt-3 2xl:pt-6 -mr-6 2xl:-mr-9 pr-4 2xl:pr-6 h-fit">
           <div className="lg:w-[505px] flex-1">
             <Customscrollbar className="h-full overflow-y-auto">
-              <div className="flex flex-col gap-2.5 2xl:gap-9 ">
+              <div className="flex flex-col gap-2.5 2xl:gap-6">
                 <h3 className="text-xl font-semibold text-typo-black-4">
                   Thông tin chuyển khoản
                 </h3>
@@ -583,9 +583,9 @@ const PopupUpgradeProfessional = (props) => {
               </div>
             </Customscrollbar>
           </div>
-          <div className="flex flex-col gap-3 2xl:gap-9 lg:w-[505px] flex-1 max-h-full h-[550px] 2xl:h-[650px]">
-            <Customscrollbar className="pr-2 2xl:pr-2.5 flex flex-col gap-3 2xl:gap-9 max-h-full flex-1 min-h-0">
-              <div className="flex flex-col gap-3 2xl:gap-9">
+          <div className="flex flex-col gap-3 2xl:gap-4 lg:w-[505px] flex-1 max-h-full h-[550px] 2xl:h-[650px]">
+            <Customscrollbar className="pr-2 2xl:pr-2.5 flex flex-col gap-3 2xl:gap-6 max-h-full flex-1 min-h-0">
+              <div className="flex flex-col gap-3 2xl:gap-6">
                 <div className="flex flex-col gap-2 2xl:gap-3">
                   <h3 className="text-xl font-semibold text-typo-black-4">
                     Gói thành viên
@@ -598,7 +598,7 @@ const PopupUpgradeProfessional = (props) => {
                       return (
                         <div
                           key={`package-${pkg.id}-${index}`}
-                          className={`py-3 2xl:py-5 px-6 border border-[#919EAB3D] rounded-2xl flex gap-4 cursor-pointer hover:bg-[#F4F6F8] transition-colors ${
+                          className={`py-3 2xl:py-5 px-4 border border-[#919EAB3D] rounded-2xl flex gap-4 cursor-pointer hover:bg-[#F4F6F8] transition-colors ${
                             isSelected ? "border-l-4 border-l-[#0375F3] bg-gradient-to-r from-[#CDE3FFCC] to-white" : "bg-white"
                           }`}
                           onClick={() => {
@@ -713,7 +713,7 @@ const PopupUpgradeProfessional = (props) => {
                     serviceAddData?.data?.map((service, index) => (
                       <div
                         key={`service-${service.id}-${index}`}
-                        className="py-3 2xl:py-5 px-6 bg-white border border-[#919EAB3D] rounded-2xl flex gap-4 cursor-pointer hover:bg-[#F4F6F8] transition-colors"
+                        className="py-3 px-2 bg-white border border-[#919EAB3D] rounded-2xl flex gap-4 cursor-pointer hover:bg-[#F4F6F8] transition-colors"
                         onClick={(e) => {
                           // Ngăn sự kiện click lan truyền nếu click vào checkbox
                           if (e.target.closest(".checkbox-wrapper")) {
@@ -881,13 +881,19 @@ const PopupUpgradeProfessional = (props) => {
                             }}
                           />
                         </div>
-                        <div className="flex flex-col gap-1 cursor-pointer w-full">
-                          <h4 className="text-xl font-bold text-typo-black-4 truncate">
+                        <div className="flex flex-col justify-center cursor-pointer w-full">
+                          <h4 className="text-lg font-normal text-typo-black-4 truncate">
                             {service.name}
                           </h4>
-                          <p className="text-base font-normal text-typo-gray-4 truncate">
-                            {service.full_note_price}
-                          </p>
+                          {(service.type === "radio"
+                            ? selectedPackages?.selectedServiceId === service.id
+                            : selectedPackages?.id_service_add?.includes(
+                                service.id
+                              )) && (
+                            <p className="text-sm font-normal italic text-typo-gray-4 truncate">
+                              {service.full_note_price}
+                            </p>
+                          )}
                         </div>
                         {service.img && (
                           <Image
@@ -895,7 +901,7 @@ const PopupUpgradeProfessional = (props) => {
                             alt={service.name}
                             width={58}
                             height={58}
-                            className="size-[58px] object-cover"
+                            className="size-[40px] object-cover"
                           />
                         )}
                       </div>
@@ -905,7 +911,7 @@ const PopupUpgradeProfessional = (props) => {
               </div>
             </Customscrollbar>
 
-            <div className="pr-2 2xl:pr-2.5 flex flex-col gap-2 2xl:gap-6 bg-[#F9FAFC]">
+            <div className="pr-2 2xl:pr-2.5 flex flex-col gap-2 bg-[#F9FAFC]">
               <hr className="border-[#919EAB3D]" />
               <div className="flex items-center justify-between">
                 <p className="text-2xl font-bold text-blue-fmrp">
