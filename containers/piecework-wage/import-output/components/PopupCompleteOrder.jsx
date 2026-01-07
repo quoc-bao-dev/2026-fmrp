@@ -6,7 +6,9 @@ import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';
 import NoData from '@/components/UI/noData/nodata';
 import { InputNumberCustom } from '@/containers/manufacture/productions-orders/components/popup/PopupCompleteCommand';
+import { useActiveStages } from '@/managers/api/piecework-wage/useImportOutput';
 import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
+import { IMAGES } from '@/constants/images';
 import { Lexend_Deca } from '@next/font/google';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
@@ -14,6 +16,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PiWarehouseLight } from 'react-icons/pi';
 import { Tooltip } from 'react-tippy';
 import Popup from 'reactjs-popup';
+import { useListFinishedStages } from '@/containers/manufacture/productions-orders/hooks/useListFinishedStages';
 
 const deca = Lexend_Deca({
   subsets: ['latin'],
@@ -64,7 +67,7 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
         <td className='py-2 px-3 text-left border-b border-[#F3F3F4]'>
           <div className='flex gap-2'>
             <div className='w-16 h-16 rounded flex items-center justify-center'>
-              <Image src={product.images || '/icon/default/default.png'} alt={product.name} width={64} height={64} className='object-cover rounded' />
+              <Image src={product.images || '/icon/default/default.png'} alt={product.item_name} width={64} height={64} className='object-cover rounded' />
             </div>
             <div className='flex flex-col gap-1'>
               <h3 className='text-sm font-semibold text-neutral-07 truncate'>{product.item_name}</h3>
@@ -93,59 +96,15 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
 
 ProductRow.displayName = 'ProductRow';
 
-const PopupCompleteOrder = ({ isOpen, onClose, referenceNo = 'LSX-161225109' }) => {
-  // Mock data cho products
-  const mockProducts = [
-    {
-      id: 1,
-      item_name: 'Dép tổ ong màu vàng',
-      product_variation: 'Vàng - 40',
-      item_code: 'TP-000001',
-      reference_no_detail: 'LSXCT-13032519',
-      images: '/icon/default/default.png',
-      quantity_success: 100,
-      error: 0,
-      selected: false,
-      originalIndex: 0,
-      uniqueId: 'product-1',
-    },
-    {
-      id: 2,
-      item_name: 'Dép tổ ong màu đỏ',
-      product_variation: 'Đỏ - 39',
-      item_code: 'TP-000002',
-      reference_no_detail: 'LSXCT-13032520',
-      images: '/icon/default/default.png',
-      quantity_success: 150,
-      error: 5,
-      selected: false,
-      originalIndex: 1,
-      uniqueId: 'product-2',
-    },
-    {
-      id: 3,
-      item_name: 'Dép tổ ong màu xanh',
-      product_variation: 'Xanh - 41',
-      item_code: 'TP-000003',
-      reference_no_detail: 'LSXCT-13032521',
-      images: '/icon/default/default.png',
-      quantity_success: 200,
-      error: 0,
-      selected: false,
-      originalIndex: 2,
-      uniqueId: 'product-3',
-    },
-  ];
-
-  // Mock data cho warehouses
-  const mockWarehouses = [
-    { id: 1, name: 'Kho chính' },
-    { id: 2, name: 'Kho phụ' },
-    { id: 3, name: 'Kho tạm' },
-  ];
+const PopupCompleteOrder = ({ stage_id, po, isOpen, onClose, referenceNo = 'LSX-161225109' }) => {
+  const { data: dataActiveStages, isLoading: isLoadingActiveStages } = useActiveStages({ po_id: po?.id, stage_id: stage_id, is_product: po?.is_product }, { enabled: isOpen });
+  const { data: dataWarehouses, isLoading: isLoadingWarehouses, refetch: refetchWarehouses } = useListFinishedStages({
+    id: po?.id,
+    open: isOpen,
+  });
 
   const [selectAll, setSelectAll] = useState(false);
-  const [products, setProducts] = useState(mockProducts);
+  const [products, setProducts] = useState([]);
   const [searchProducts, setSearchProducts] = useState('');
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
   const [isWarehouseMissing, setIsWarehouseMissing] = useState(false);
@@ -154,6 +113,26 @@ const PopupCompleteOrder = ({ isOpen, onClose, referenceNo = 'LSX-161225109' }) 
   const [showAutoTooltip, setShowAutoTooltip] = useState(false);
   const [autoTooltipText, setAutoTooltipText] = useState('');
   const hasShownTooltipRef = useRef(false);
+
+  // Sử dụng trực tiếp dữ liệu từ API, chỉ thêm các field cần thiết cho UI
+  useEffect(() => {
+    if (dataActiveStages?.items && Array.isArray(dataActiveStages.items)) {
+      const productsWithUI = dataActiveStages.items.map((item, index) => ({
+        ...item, 
+        images: item.images || IMAGES.noImage,
+        quantity_success: item.quantity_enter || 0,
+        error: 0,
+        selected: false,
+        originalIndex: index,
+        uniqueId: `product-${item.pois_id || item.poi_id || index}`,
+      }));
+      setProducts(productsWithUI);
+      setSelectAll(false);
+    } else if (!isLoadingActiveStages && (!dataActiveStages?.items || dataActiveStages.items.length === 0)) {
+      setProducts([]);
+      setSelectAll(false);
+    }
+  }, [dataActiveStages, isLoadingActiveStages]);
 
   useEffect(() => {
     if (isOpen && products.length > 0 && !hasShownTooltipRef.current) {
@@ -180,6 +159,12 @@ const PopupCompleteOrder = ({ isOpen, onClose, referenceNo = 'LSX-161225109' }) 
   useEffect(() => {
     if (!isOpen) {
       hasShownTooltipRef.current = false;
+      setSelectAll(false);
+      setSearchProducts('');
+      setSelectedWarehouse(null);
+      setIsWarehouseMissing(false);
+      setErrorTags({});
+      setErrorImages({});
     }
   }, [isOpen]);
 
@@ -313,20 +298,22 @@ const PopupCompleteOrder = ({ isOpen, onClose, referenceNo = 'LSX-161225109' }) 
       return products;
     }
     return products.filter(product => {
-      return (
-        searchWithoutDiacritics(product.item_name || '', searchProducts) ||
-        searchWithoutDiacritics(product.item_code || '', searchProducts)
-      );
+      return searchWithoutDiacritics(product.item_name || '', searchProducts) || searchWithoutDiacritics(product.item_code || '', searchProducts);
     });
   }, [products, searchProducts]);
 
   const warehouseOptions = useMemo(() => {
-    return mockWarehouses.map(warehouse => ({
-      value: warehouse.id,
-      label: warehouse.name,
-      ...warehouse,
-    }));
-  }, []);
+    // Chỉ sử dụng dữ liệu từ API
+    if (dataWarehouses?.warehouses && Array.isArray(dataWarehouses.warehouses)) {
+      return dataWarehouses.warehouses.map(warehouse => ({
+        value: warehouse.id || warehouse.value,
+        label: warehouse.name || warehouse.label,
+        ...warehouse,
+      }));
+    }
+    // Trả về mảng rỗng nếu chưa có dữ liệu
+    return [];
+  }, [dataWarehouses?.warehouses]);
 
   const handleWarehouseChange = useCallback(option => {
     setSelectedWarehouse(option);
@@ -361,8 +348,10 @@ const PopupCompleteOrder = ({ isOpen, onClose, referenceNo = 'LSX-161225109' }) 
       <div className={`p-6 flex flex-col gap-6 rounded-3xl w-[90vw] xl:w-[1085px] max-h-[90vh] bg-neutral-00 ${deca.className}`}>
         <div className='flex gap-2 justify-between items-start'>
           <div className='flex flex-col gap-1'>
-            <h2 className='text-2xl font-bold capitalize'>Nhập sản lượng công đoạn <span className='text-blue-fmrp'>May</span></h2>
-            <p className='responsive-text-base text-blue-fmrp'>{referenceNo}</p>
+            <h2 className='text-2xl font-bold capitalize'>
+              Nhập sản lượng công đoạn <span className='text-blue-fmrp'>May</span>
+            </h2>
+            <p className='responsive-text-base text-blue-fmrp'>{po?.reference_no || referenceNo}</p>
           </div>
           <div className='flex flex-col gap-2'>
             <div className='flex gap-2 items-center'>
@@ -374,7 +363,8 @@ const PopupCompleteOrder = ({ isOpen, onClose, referenceNo = 'LSX-161225109' }) 
                 icon={<PiWarehouseLight color='#9295A4' className='size-4' />}
                 closeMenuOnSelect={true}
                 hideSelectedOptions={false}
-                placeholder='Chọn kho hàng'
+                placeholder={isLoadingWarehouses ? 'Đang tải...' : 'Chọn kho hàng'}
+                isLoading={isLoadingWarehouses}
                 styles={{
                   control: (base, state) => ({
                     ...base,
@@ -455,10 +445,18 @@ const PopupCompleteOrder = ({ isOpen, onClose, referenceNo = 'LSX-161225109' }) 
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.length === 0 ? (
+              {isLoadingActiveStages ? (
                 <tr>
                   <td colSpan={5} className='py-8'>
-                    <NoData type='table' titleText='Không tìm thấy sản phẩm' />
+                    <div className='flex items-center justify-center'>
+                      <p className='text-sm text-[#667085]'>Đang tải dữ liệu...</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredProducts.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className='py-8'>
+                    <NoData type='table' titleText={products.length === 0 ? 'Chưa có sản phẩm' : 'Không tìm thấy sản phẩm'} />
                   </td>
                 </tr>
               ) : (
