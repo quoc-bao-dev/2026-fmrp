@@ -81,6 +81,14 @@ const PurchaseImportForm = props => {
   const [date, sDate] = useState(moment().format(FORMAT_MOMENT.DATE_TIME_LONG));
 
   const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature();
+
+  // cài đặt thuộc tính kho từ settings
+  const isWarehousePropertiesEnabled = dataSeting?.is_warehouse_properties === '1';
+  const warehouseProperties = Array.isArray(dataSeting?.warehouse_properties) ? dataSeting.warehouse_properties : [];
+  const getWarehousePropertyLabel = key => warehouseProperties.find(p => p.name === key)?.value || '';
+  const warehousePropertyKeys = ['value_1', 'value_2', 'value_3'];
+  const showWarehouseAttributes = isWarehousePropertiesEnabled;
+
   //new
   const [listData, sListData] = useState([]);
 
@@ -739,6 +747,11 @@ const PurchaseImportForm = props => {
               }
             } else if (type === 'date') {
               return { ...ce, date: value };
+            } else if (type === 'value_1' || type === 'value_2' || type === 'value_3') {
+              return {
+                ...ce,
+                [type]: value?.target?.value || value,
+              };
             }
           } else {
             return ce;
@@ -890,12 +903,12 @@ const PurchaseImportForm = props => {
                             <div className='col-span-2 h-full'>
                               <div className='flex items-center justify-between gap-1 xl:gap-2'>
                                 {selectItemsLabel(e?.item, true)}
-                                <button
+                                {/* <button
                                   onClick={_HandleAddChild.bind(this, e?.id, e?.item)}
                                   className='flex items-center justify-center xl:size-7 size-5 transition ease-in-out rounded text-typo-blue-1 bg-primary-05 hover:rotate-45 hover:hover:bg-[#e2f0fe] hover:scale-105 hover:text-red-500'
                                 >
                                   <Add />
-                                </button>
+                                </button> */}
                               </div>
                               {/* Ghi chú */}
                               <div className='flex items-center justify-center mt-2'>
@@ -910,7 +923,7 @@ const PurchaseImportForm = props => {
                                 />
                               </div>
                             </div>
-                            <div className='h-full col-span-11'>
+                            <div className='h-full col-span-11 flex flex-col gap-2'>
                               <div
                                 className={`${
                                   dataProductSerial?.is_enable == '1'
@@ -924,7 +937,7 @@ const PurchaseImportForm = props => {
                                     : dataMaterialExpiry?.is_enable == '1'
                                     ? 'grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,1.1fr)_minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,1.1fr)_minmax(0,0.2fr)]'
                                     : 'grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_minmax(0,1.3fr)_minmax(0,1.1fr)_minmax(0,1.3fr)_minmax(0,1.1fr)_minmax(0,1.3fr)_minmax(0,0.2fr)]'
-                                } grid items-center justify-center gap-3 h-full py-1`}
+                                } grid items-center justify-center gap-3 flex-1 py-1`}
                               >
                                 {e?.child?.map(ce => (
                                   <React.Fragment key={ce?.id?.toString()}>
@@ -1096,6 +1109,28 @@ const PurchaseImportForm = props => {
                                   </React.Fragment>
                                 ))}
                               </div>
+                              {/* Thuộc tính kho */}
+                              {showWarehouseAttributes && (
+                                <div className='mt-2 flex items-center gap-4'>
+                                  {warehousePropertyKeys.map(key => {
+                                    const label = getWarehousePropertyLabel(key);
+                                    if (!label) return null;
+                                    const value = firstChild?.[key];
+                                    const valueString = value !== undefined && value !== null ? String(value) : '';
+                                    return (
+                                      <div key={key} className='flex justify-between items-center gap-1'>
+                                        <label className='text-[10px] font-medium text-gray-700 truncate'>{label}</label>
+                                        <input
+                                          value={valueString}
+                                          onChange={event => _HandleChangeChild(e?.id, firstChild?.id, key, event?.target?.value ?? '')}
+                                          placeholder={`Nhập ${label.toLowerCase()}`}
+                                          className='w-[90px] focus:border-[#92BFF7] placeholder:text-[10px]  2xl:h-7 xl:h-5 py-0 px-1 text-[10px]  placeholder-slate-300 bg-white rounded-[5.5px] text-[#1C252E] font-normal outline-none placeholder:text-typo-gray-4 border border-neutral-N400'
+                                        />
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </div>
                           </div>
                         );
