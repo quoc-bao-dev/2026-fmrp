@@ -714,22 +714,27 @@ const Warehouse = props => {
                                   >
                                     {item.option_name_2 == null ? '-' : item.option_name_2}
                                   </RowItemTable>
-                                  {showWarehouseAttributesColumn && (
-                                    <RowItemTable colSpan={2} className='py-3 border-b !font-normal' textAlign={'left'}>
-                                      <div className='flex flex-col gap-1 '>
-                                        {warehousePropertyKeys.map(key => {
-                                          const label = getWarehousePropertyLabel(key);
-                                          if (!label) return null;
-                                          const value = item?.[key];
-                                          return (
-                                            <div key={key} className='flex items-start gap-1 w-full'>
-                                              <span className='text-xs font-semibold min-w-[70px]'>{label}</span> :<span className='text-xs text-gray-600 truncate ml-2'>{value ?? '-'}</span>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    </RowItemTable>
-                                  )}
+                                  {showWarehouseAttributesColumn &&
+                                    (e?.item_type !== 'product' ? (
+                                      <RowItemTable colSpan={2} className='py-3 border-b !font-normal' textAlign={'left'}>
+                                        <div className='flex flex-col gap-1 '>
+                                          {warehousePropertyKeys.map(key => {
+                                            const label = getWarehousePropertyLabel(key);
+                                            if (!label) return null;
+                                            const value = item?.[key];
+                                            return (
+                                              <div key={key} className='flex items-start gap-1 w-full'>
+                                                <span className='text-xs font-semibold min-w-[70px]'>{label}</span> :<span className='text-xs text-gray-600 truncate ml-2'>{value ?? '-'}</span>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      </RowItemTable>
+                                    ) : (
+                                      <RowItemTable colSpan={2} className='py-3 border-b !font-normal' textAlign={'left'}>
+                                        -
+                                      </RowItemTable>
+                                    ))}
                                   {isSerialEnabled ? (
                                     <RowItemTable
                                       colSpan={1}

@@ -171,6 +171,7 @@ const PopupDetail = props => {
                                 <h6 className='font-medium'>{e?.item?.name}</h6>
                                 <div className='flex-col flex-wrap items-center font-oblique'>
                                   {showWarehouseAttributes &&
+                                    e?.item?.text_type === 'material' &&
                                     warehousePropertyKeys.map(key => {
                                       const label = getWarehousePropertyLabel(key);
                                       if (!label) return null;
