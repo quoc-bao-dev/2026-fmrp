@@ -27,7 +27,7 @@ import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import { useListImportOutput, useListImportOutputItems, useLookupStages } from '@/managers/api/piecework-wage/useImportOutput';
 import formatNumber from '@/utils/helpers/formatnumber';
 import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
-import { Popover } from 'antd';
+import { Popover, Tooltip } from 'antd';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -316,9 +316,31 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
 
   const objects = po?.objects || [];
   const objectRefs = objects.map(obj => obj?.reference_no).filter(Boolean);
-  const objectText = objectRefs.length ? `Đơn hàng ${objectRefs.join(', ')}` : 'Đơn hàng';
+  const totalOrders = objectRefs.length;
+  const displayedOrders = objectRefs.slice(0, 2);
+  const remainingOrders = totalOrders > 2 ? objectRefs.slice(2) : [];
+  const hasMoreOrders = remainingOrders.length > 0;
+  
+  const displayText = totalOrders > 0 
+    ? `Đơn hàng ${displayedOrders.join(', ')}${hasMoreOrders ? ', ...' : ''}`
+    : 'Đơn hàng';
+  
+  const allOrdersText = totalOrders > 0 
+    ? objectRefs.join(', ')
+    : '';
 
   const formattedDate = po?.date ? po.date.split(' ')[0]?.split('-')?.reverse()?.join('/') : '';
+
+  const orderTextContent = (
+    <div className='flex items-center gap-1 flex-wrap'>
+      <span className='responsive-text-xs font-normal text-[#667085]'>{displayText}</span>
+      {hasMoreOrders && (
+        <span className='responsive-text-xs font-normal text-blue-fmrp cursor-pointer hover:underline'>
+          xem thêm
+        </span>
+      )}
+    </div>
+  );
 
   return (
     <div className='flex flex-col items-start gap-3 p-4 rounded-xl bg-white border border-[#F3F4F680] cursor-pointer' onClick={handleCardClick}>
@@ -327,7 +349,13 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
           <h4 className='responsive-text-sm font-semibold mb-1' style={{ color: borderColor }}>
             {po?.reference_no || '---'}
           </h4>
-          <p className='responsive-text-xs font-normal text-[#667085]'>{objectText}</p>
+          {hasMoreOrders ? (
+            <Tooltip title={allOrdersText} placement='top' overlayClassName='order-tooltip'>
+              {orderTextContent}
+            </Tooltip>
+          ) : (
+            <p className='responsive-text-xs font-normal text-[#667085]'>{displayText}</p>
+          )}
         </div>
         <div className='flex items-center gap-1.5'>
           <CalendarIcon className='size-3.5 text-[#667085]' />
