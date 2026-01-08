@@ -719,11 +719,11 @@ const Warehouse = props => {
                                       <div className='flex flex-col gap-1 '>
                                         {warehousePropertyKeys.map(key => {
                                           const label = getWarehousePropertyLabel(key);
-                                          const value = e?.[key];
-                                          if (!label && (value === null || value === undefined || value === '')) return null;
+                                          if (!label) return null;
+                                          const value = item?.[key];
                                           return (
                                             <div key={key} className='flex items-start gap-1 w-full'>
-                                              <span className='text-xs font-semibold min-w-[70px]'>{label || key}</span> :<span className='text-xs text-gray-600 truncate ml-2'>{value ?? '-'}</span>
+                                              <span className='text-xs font-semibold min-w-[70px]'>{label}</span> :<span className='text-xs text-gray-600 truncate ml-2'>{value ?? '-'}</span>
                                             </div>
                                           );
                                         })}

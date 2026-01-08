@@ -273,13 +273,11 @@ const General = props => {
     formData.append(`settings[is_warehouse_properties]`, isWarehouseProperties);
 
     // Lưu danh sách thuộc tính kho (data_warehouse_properties[])
-    if (isWarehouseProperties === '1') {
-      warehouseAttributes
-        .filter(v => typeof v === 'string' && v.trim() !== '')
-        .forEach((attr, index) => {
-          formData.append(`settings[data_warehouse_properties][${index}]`, attr.trim());
-        });
-    }
+    warehouseAttributes
+      .filter(v => typeof v === 'string' && v.trim() !== '')
+      .forEach((attr, index) => {
+        formData.append(`settings[data_warehouse_properties][${index}]`, attr.trim());
+      });
 
     try {
       const { isSuccess, message } = await apiGeneral.apiHanding(formData);

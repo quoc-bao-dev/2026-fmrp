@@ -74,8 +74,6 @@ const PurchaseImportForm = props => {
 
   const [startDate, sStartDate] = useState(new Date());
 
-  const [effectiveDate, sEffectiveDate] = useState(null);
-
   const [note, sNote] = useState('');
 
   const [date, sDate] = useState(moment().format(FORMAT_MOMENT.DATE_TIME_LONG));
@@ -210,6 +208,9 @@ const PurchaseImportForm = props => {
               label: ce?.tax_id && !ce?.tax_name ? 'Miễn thuế' : ce?.tax_name,
             },
             note: ce?.note,
+            value_1: ce?.value_1 ?? '',
+            value_2: ce?.value_2 ?? '',
+            value_3: ce?.value_3 ?? '',
           })),
         }))
       );
@@ -328,6 +329,9 @@ const PurchaseImportForm = props => {
               },
           totalMoney: Number(e?.e?.amount),
           note: e?.e?.note,
+          value_1: '',
+          value_2: '',
+          value_3: '',
         },
       ],
     };
@@ -602,6 +606,9 @@ const PurchaseImportForm = props => {
           formData.append(`items[${index}][child][${childIndex}][location_warehouses_id]`, childItem?.warehouse?.value ? childItem?.warehouse?.value : 0);
         }
         formData.append(`items[${index}][child][${childIndex}][discount_percent]`, childItem?.discount ? childItem?.discount : '');
+        formData.append(`items[${index}][child][${childIndex}][value_1]`, childItem?.value_1 ?? '');
+        formData.append(`items[${index}][child][${childIndex}][value_2]`, childItem?.value_2 ?? '');
+        formData.append(`items[${index}][child][${childIndex}][value_3]`, childItem?.value_3 ?? '');
       });
     });
     handingImport.mutate(formData, {
@@ -668,6 +675,9 @@ const PurchaseImportForm = props => {
               },
           totalMoney: Number(value?.e?.amount),
           note: value?.e?.note,
+          value_1: '',
+          value_2: '',
+          value_3: '',
         };
         return { ...e, child: [...e.child, newChild] };
       } else {
