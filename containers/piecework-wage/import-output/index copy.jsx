@@ -5,7 +5,6 @@ import {
   CheckDoubleIcon,
   Clock2Icon,
   ClockIcon,
-  CloseXIcon,
   EqualizerIcon,
   FunnelIcon,
   PresentationChartIcon,
@@ -15,28 +14,40 @@ import {
   UserGroupIcon,
   UsersIcon,
 } from '@/components/icons';
-import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
 import { DropdownAvatar } from '@/components/layout/header';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import InfoTooltip from '@/components/UI/common/InfoTooltip';
-import Loading from '@/components/UI/loading/loading';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
-import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComponent';
 import { IMAGES } from '@/constants/images';
-import { useSearchStaffs } from '@/hooks/common/useStaffs';
-import { useListImportOutput, useListImportOutputItems, useLookupStages } from '@/managers/api/piecework-wage/useImportOutput';
-import formatNumber from '@/utils/helpers/formatnumber';
 import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
-import { Popover, Tooltip } from 'antd';
+import { Popover } from 'antd';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FaPause, FaPlay, FaStop } from 'react-icons/fa';
-import { useDebounce } from 'use-debounce';
-import { useSelector } from 'react-redux';
 import PopupCompleteOrder from './components/PopupCompleteOrder';
-import moment from 'moment';
+import { useListImportOutput } from '@/managers/api/piecework-wage/useImportOutput';
+
+const ProductItem = () => {
+  return (
+    <div className='p-1 flex items-center gap-2 w-full'>
+      <Image src={IMAGES.noImage} alt='default' width={100} height={100} className='size-11 bg-[#E2E5E9] rounded-lg overflow-hidden object-cover border border-[#DDDDE2]' />
+      <div className='flex flex-col flex-1'>
+        <div className='flex items-center gap-2'>
+          <span className='responsive-text-xxs font-normal text-blue-fmrp'>TP-000001</span>
+          <span className='responsive-text-xxs font-normal text-[#D0D5DD]'>|</span>
+          <span className='responsive-text-xxs font-normal text-blue-fmrp'>LSXCT-13032519</span>
+        </div>
+        <div className='flex flex-col gap-0.5'>
+          <h4 className='responsive-text-sm font-semibold text-[#141522]'>Dép tổ ong màu vàng</h4>
+          <p className='responsive-text-xxs font-normal text-[#667085]'>Vàng - 40</p>
+        </div>
+      </div>
+      <div className='responsive-text-xs font-medium text-[#2BB38A]'>5.000/cái</div>
+    </div>
+  );
+};
 
 const Avatar = () => {
   return (
@@ -253,7 +264,7 @@ const ProcessStatusDropdown = ({ processName }) => {
   );
 };
 
-const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = '00 : 00 : 00', po, stage_id, stage_name }) => {
+const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = '00 : 00 : 00' }) => {
   const [statusState, setStatusState] = useState(status);
   const [elapsedSeconds, setElapsedSeconds] = useState(parseTimeString(time));
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
@@ -308,58 +319,23 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
     setShowCompletePopup(true);
   };
 
-  // Tổng số sản phẩm hiển thị trong card
-  const items = po?.items || [];
-  const totalItems = items.length || 1;
-  const visibleItemsCount = isExpanded || totalItems <= 3 ? totalItems : 3;
-  const remainingItems = totalItems > 3 ? totalItems - visibleItemsCount : 0;
-
-  const objects = po?.objects || [];
-  const objectRefs = objects.map(obj => obj?.reference_no).filter(Boolean);
-  const totalOrders = objectRefs.length;
-  const displayedOrders = objectRefs.slice(0, 2);
-  const remainingOrders = totalOrders > 2 ? objectRefs.slice(2) : [];
-  const hasMoreOrders = remainingOrders.length > 0;
-  
-  const displayText = totalOrders > 0 
-    ? `Đơn hàng ${displayedOrders.join(', ')}${hasMoreOrders ? ', ...' : ''}`
-    : 'Đơn hàng';
-  
-  const allOrdersText = totalOrders > 0 
-    ? objectRefs.join(', ')
-    : '';
-
-  const formattedDate = po?.date ? po.date.split(' ')[0]?.split('-')?.reverse()?.join('/') : '';
-
-  const orderTextContent = (
-    <div className='flex items-center gap-1 flex-wrap'>
-      <span className='responsive-text-xs font-normal text-[#667085]'>{displayText}</span>
-      {hasMoreOrders && (
-        <span className='responsive-text-xs font-normal text-blue-fmrp cursor-pointer hover:underline'>
-          xem thêm
-        </span>
-      )}
-    </div>
-  );
+  // Tổng số sản phẩm hiển thị trong card (demo UI)
+  const totalItems = 5;
+  const visibleItemsCount = isExpanded ? totalItems : 3;
+  const remainingItems = Math.max(totalItems - visibleItemsCount, 0);
 
   return (
     <div className='flex flex-col items-start gap-3 p-4 rounded-xl bg-white border border-[#F3F4F680] cursor-pointer' onClick={handleCardClick}>
       <div className='w-full flex items-center justify-between gap-2'>
         <div className='py-0.5 px-2 border-l-2' style={{ borderColor }}>
           <h4 className='responsive-text-sm font-semibold mb-1' style={{ color: borderColor }}>
-            {po?.reference_no || '---'}
+            LSX-161225109
           </h4>
-          {hasMoreOrders ? (
-            <Tooltip title={allOrdersText} placement='top' overlayClassName='order-tooltip'>
-              {orderTextContent}
-            </Tooltip>
-          ) : (
-            <p className='responsive-text-xs font-normal text-[#667085]'>{displayText}</p>
-          )}
+          <p className='responsive-text-xs font-normal text-[#667085]'>Đơn hàng SO_000010</p>
         </div>
         <div className='flex items-center gap-1.5'>
           <CalendarIcon className='size-3.5 text-[#667085]' />
-          <p className='responsive-text-xxs font-normal text-[#667085]'>{formattedDate}</p>
+          <p className='responsive-text-xxs font-normal text-[#667085]'>25/12/2025</p>
         </div>
       </div>
       <div onClick={e => e.stopPropagation()} className='w-full'>
@@ -375,7 +351,7 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
         nameModel='timer_stop'
         forceConfirm={true}
       />
-      <PopupCompleteOrder stage_id={stage_id} stage_name={stage_name} po={po} isOpen={showCompletePopup} onClose={() => setShowCompletePopup(false)} />
+      <PopupCompleteOrder isOpen={showCompletePopup} onClose={() => setShowCompletePopup(false)} referenceNo='LSX-161225109' />
       <Avatar />
 
       <div className='px-1 flex items-center gap-3 w-full'>
@@ -389,169 +365,20 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
         </div>
       </div>
       <div className='flex flex-col gap-1 w-full'>
-        {items.slice(0, visibleItemsCount).map((item, index) => (
-          <div key={index} className='p-1 flex items-center gap-2 w-full'>
-            <Image
-              src={item?.images || IMAGES.noImage}
-              alt={item?.item_name || 'default'}
-              width={100}
-              height={100}
-              className='size-11 bg-[#E2E5E9] rounded-lg overflow-hidden object-cover border border-[#DDDDE2]'
-            />
-            <div className='flex flex-col flex-1'>
-              <div className='flex items-center gap-2'>
-                <span className='responsive-text-xxs font-normal text-blue-fmrp'>{item?.item_code || '--'}</span>
-                <span className='responsive-text-xxs font-normal text-[#D0D5DD]'>|</span>
-                <span className='responsive-text-xxs font-normal text-blue-fmrp'>{item?.reference_no_detail || '--'}</span>
-              </div>
-              <div className='flex flex-col gap-0.5'>
-                <h4 className='responsive-text-sm font-semibold text-[#141522]'>{item?.item_name || '---'}</h4>
-                <p className='responsive-text-xxs font-normal text-[#667085]'>
-                  SL: {formatNumber(+(item?.quantity_rest ?? 0))} {item?.unit_name || ''}
-                </p>
-              </div>
-            </div>
-          </div>
+        {Array.from({ length: visibleItemsCount }).map((_, index) => (
+          <ProductItem key={index} />
         ))}
       </div>
-      {totalItems > 3 && (
-        <button
-          type='button'
-          className='px-1 text-left responsive-text-sm font-normal text-[#1760B9] hover:underline'
-          onClick={e => {
-            e.stopPropagation();
-            setIsExpanded(prev => !prev);
-          }}
-        >
-          {isExpanded ? 'Thu gọn' : `Xem thêm (${remainingItems})`}
-        </button>
-      )}
-    </div>
-  );
-};
-
-// Component StageColumn để quản lý infinite scroll cho từng stage
-const StageColumn = ({ stage }) => {
-  const [page, setPage] = useState(1);
-  const [allPos, setAllPos] = useState(stage?.items?.pos || []);
-  const [hasMore, setHasMore] = useState(stage?.items?.next || false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [shouldFetch, setShouldFetch] = useState(false); // Flag để kiểm soát việc gọi API
-  const scrollContainerRef = useRef(null);
-
-  const { data: listImportOutputItemsData, isLoading } = useListImportOutputItems(
-    {
-      stage_id: stage.stage_id,
-      is_check_po: 1,
-      page: page,
-      limit: 10,
-    },
-    {
-      enabled: shouldFetch && page > 1 && hasMore, // Chỉ gọi API khi shouldFetch = true và page > 1 và còn dữ liệu
-    }
-  );
-
-  // Cập nhật dữ liệu khi có response mới từ API
-  useEffect(() => {
-    if (page > 1 && shouldFetch && !isLoading) {
-      // Kiểm tra nếu response là mảng rỗng
-      if (Array.isArray(listImportOutputItemsData) && listImportOutputItemsData.length === 0) {
-        // Dữ liệu rỗng, dừng load more
-        setHasMore(false);
-        setIsLoadingMore(false);
-        setShouldFetch(false);
-        return;
-      }
-
-      // Kiểm tra nếu có dữ liệu (pos là mảng và có phần tử)
-      if (listImportOutputItemsData?.pos && Array.isArray(listImportOutputItemsData.pos)) {
-        if (listImportOutputItemsData.pos.length > 0) {
-          // Có dữ liệu mới, merge vào danh sách
-          setAllPos(prev => [...prev, ...listImportOutputItemsData.pos]);
-          setHasMore(listImportOutputItemsData.next || false);
-          setIsLoadingMore(false);
-          setShouldFetch(false);
-        } else {
-          // pos là mảng rỗng, dừng load more
-          setHasMore(false);
-          setIsLoadingMore(false);
-          setShouldFetch(false);
-        }
-      } else if (listImportOutputItemsData !== undefined) {
-        // Response không có cấu trúc pos như mong đợi, dừng load more
-        setHasMore(false);
-        setIsLoadingMore(false);
-        setShouldFetch(false);
-      }
-    }
-  }, [listImportOutputItemsData, page, isLoading, isLoadingMore, shouldFetch]);
-
-  // Khởi tạo dữ liệu từ stage ban đầu khi stage thay đổi
-  useEffect(() => {
-    if (stage?.items?.pos) {
-      setAllPos(stage.items.pos);
-      setHasMore(stage.items.next || false);
-      setPage(1);
-      setIsLoadingMore(false);
-      setShouldFetch(false); // Reset flag khi stage thay đổi
-    }
-  }, [stage?.stage_id, stage?.items?.pos?.length]);
-
-  // Xử lý scroll để load more
-  const handleScroll = useCallback(
-    e => {
-      const target = e.target;
-      const { scrollTop, scrollHeight, clientHeight } = target;
-      const scrollBottom = scrollHeight - scrollTop - clientHeight;
-
-      // Khi cuộn gần cuối (còn 100px), load thêm dữ liệu
-      if (scrollBottom < 100 && hasMore && !isLoadingMore && !isLoading && !shouldFetch) {
-        setIsLoadingMore(true);
-        setShouldFetch(true); // Set flag để cho phép gọi API
-        setPage(prev => prev + 1);
-      }
-    },
-    [hasMore, isLoadingMore, isLoading, shouldFetch]
-  );
-
-  const totalCount = Number(stage?.items?.total_count || 0);
-
-  return (
-    <div className='w-[394px] flex-shrink-0 rounded-t-2xl pt-1 flex flex-col gap-3 bg-[#EBEBEB]/50 h-full'>
-      <div className='px-4 py-3 flex flex-col gap-3 flex-shrink-0'>
-        <div className='flex items-center gap-2'>
-          <PresentationChartIcon className='size-6' />
-          <h3 className='responsive-text-2xl font-medium text-blue-fmrp'>{stage.stage_name}</h3>
-          <span className='bg-[#FD2424] min-w-4 h-4 flex items-center justify-center rounded-full px-1 responsive-text-xs font-normal text-white -mt-3 -ml-1'>{totalCount}</span>
-        </div>
-        <div className='flex items-center justify-between gap-2 bg-[#FFFFFF66] border border-white rounded-[14px] px-3 py-[14px]'>
-          <div className='flex items-center gap-3'>
-            <p className='responsive-text-base font-semibold text-[#1A7526]'>Tổng lệnh: {totalCount}</p>
-          </div>
-          <ProcessStatusDropdown processName={stage.stage_name} />
-        </div>
-      </div>
-      <Customscrollbar className='flex-1 min-h-0 h-full' showOnHover={true} onScroll={handleScroll} ref={scrollContainerRef}>
-        <div className='flex flex-col gap-2.5 px-4 pb-4'>
-          {allPos.length > 0 ? (
-            <>
-              {allPos.map((po, index) => (
-                <ProductionOrderCard key={`${stage.stage_id}-${po.id}-${po.reference_no}-${index}`} borderColor='#1A7526' status='idle' time='00 : 00 : 00' po={po} stage_id={stage.stage_id} stage_name={stage.stage_name} />
-              ))}
-              {isLoadingMore && (
-                <div className='flex items-center justify-center py-4'>
-                  <p className='responsive-text-sm font-normal text-[#667085]'>Đang tải thêm...</p>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className='flex flex-col items-center justify-center gap-2 py-6 text-center text-[#637381]'>
-              <Image src={IMAGES.nodataStage || IMAGES.nodata} alt='nodata' width={80} height={80} className='object-contain' />
-              <p className='responsive-text-sm font-normal'>Chưa có lệnh sản xuất ở công đoạn này.</p>
-            </div>
-          )}
-        </div>
-      </Customscrollbar>
+      <button
+        type='button'
+        className='px-1 text-left responsive-text-sm font-normal text-[#1760B9] hover:underline'
+        onClick={e => {
+          e.stopPropagation();
+          setIsExpanded(prev => !prev);
+        }}
+      >
+        {isExpanded ? 'Thu gọn' : remainingItems > 0 ? `Xem thêm (${remainingItems})` : 'Xem thêm'}
+      </button>
     </div>
   );
 };
@@ -561,31 +388,37 @@ const ImportOutput = () => {
   const [searchStaff, setSearchStaff] = useState('');
   const [selectedProcess, setSelectedProcess] = useState(null);
   const [searchProcess, setSearchProcess] = useState('');
-  const [debouncedSearchProcess] = useDebounce(searchProcess, 300);
-  const [searchReferenceNo, setSearchReferenceNo] = useState('');
-  const [debouncedSearchReferenceNo] = useDebounce(searchReferenceNo, 300);
-  const [dateFilter, setDateFilter] = useState({
-    dateStart: null,
-    dateEnd: null,
-  });
 
-  const stateFilterDropdown = useSelector(state => state.stateFilterDropdown);
-
-  const { isLoading: isLoadingListImportOutput, data: listImportOutput } = useListImportOutput({
-    start_date: dateFilter.dateStart ? moment(dateFilter.dateStart).format('DD/MM/YYYY') : null,
-    end_date: dateFilter.dateEnd ? moment(dateFilter.dateEnd).format('DD/MM/YYYY') : null,
-    staff_id: selectedEmployee?.value,
-    stage_ids: selectedProcess?.value,
-    search: debouncedSearchReferenceNo || '',
-  });
-  const { data: listStaffs } = useSearchStaffs();
-  const { data: listStages } = useLookupStages({ search: debouncedSearchProcess || '' });
-
-  // Lấy dữ liệu nhân viên từ API
-  const staffs = listStaffs?.data?.staffs || [];
-
-  // Lấy dữ liệu công đoạn từ API (đã được filter từ server)
-  const stagesList = listStages?.stages || [];
+  const { data: listImportOutput } = useListImportOutput();
+  console.log(listImportOutput);
+  // Dữ liệu ảo cho nhân viên
+  const mockStaffs = [
+    {
+      staffid: 1,
+      full_name: 'Thành',
+      profile_image: '/shift-schedule.png', // hoặc có thể dùng avatar thật
+    },
+    {
+      staffid: 2,
+      full_name: 'Quang',
+      profile_image: '/shift-schedule.png',
+    },
+    {
+      staffid: 3,
+      full_name: 'Hùng',
+      profile_image: '/shift-schedule.png',
+    },
+    {
+      staffid: 4,
+      full_name: 'Minh',
+      profile_image: '/shift-schedule.png',
+    },
+    {
+      staffid: 5,
+      full_name: 'Lan',
+      profile_image: '/shift-schedule.png',
+    },
+  ];
 
   // Dữ liệu ảo cho nhóm
   const mockGroups = [
@@ -606,26 +439,59 @@ const ImportOutput = () => {
     },
   ];
 
+  // Dữ liệu ảo cho công đoạn
+  const mockProcesses = [
+    {
+      id: 1,
+      name: 'Cắt',
+      code: 'CD001',
+    },
+    {
+      id: 2,
+      name: 'Thêu',
+      code: 'CD002',
+    },
+    {
+      id: 3,
+      name: 'May',
+      code: 'CD003',
+    },
+    {
+      id: 4,
+      name: 'Đóng gói',
+      code: 'CD004',
+    },
+    {
+      id: 5,
+      name: 'Kiểm tra chất lượng',
+      code: 'CD005',
+    },
+  ];
+
   // Format options cho SelectSearchableRadio với filter theo search
   const employeeOptions = useMemo(() => {
     const options = [];
 
+    // Option "Tất cả"
+    options.push({
+      value: 'all',
+      label: 'Tất cả',
+    });
+
     // Filter nhân viên theo search
     const filteredStaffs = searchStaff
-      ? staffs.filter(staff => {
-          return searchWithoutDiacritics(staff?.full_name || '', searchStaff);
+      ? mockStaffs.filter(staff => {
+          return searchWithoutDiacritics(staff.full_name, searchStaff);
         })
-      : staffs;
+      : mockStaffs;
 
     // Thêm các nhân viên
     filteredStaffs.forEach(staff => {
-      if (staff?.staffid && staff?.full_name) {
-        options.push({
-          value: String(staff.staffid),
-          label: staff.full_name,
-          avatar: staff.profile_image || IMAGES.noImage, // Fallback nếu không có avatar
-        });
-      }
+      options.push({
+        value: staff.staffid,
+        label: staff.full_name,
+        avatar: staff.profile_image,
+      });
     });
 
     // Filter nhóm theo search
@@ -645,7 +511,7 @@ const ImportOutput = () => {
     });
 
     return options;
-  }, [searchStaff, staffs]);
+  }, [searchStaff]);
 
   // Xử lý khi chọn nhân viên
   const handleEmployeeChange = value => {
@@ -668,15 +534,33 @@ const ImportOutput = () => {
     setSearchStaff('');
   };
 
-  // Format options cho SelectSearchableRadio công đoạn (dữ liệu đã được filter từ API)
+  // Format options cho SelectSearchableRadio công đoạn với filter theo search
   const processOptions = useMemo(() => {
-    return stagesList
-      .filter(stage => stage?.id && stage?.name)
-      .map(stage => ({
-        value: String(stage.id),
-        label: stage.name,
-      }));
-  }, [stagesList]);
+    const options = [];
+
+    // Option "Tất cả"
+    options.push({
+      value: 'all',
+      label: 'Tất cả',
+    });
+
+    // Filter công đoạn theo search
+    const filteredProcesses = searchProcess
+      ? mockProcesses.filter(process => {
+          return searchWithoutDiacritics(process.name, searchProcess) || searchWithoutDiacritics(process.code, searchProcess);
+        })
+      : mockProcesses;
+
+    // Thêm các công đoạn
+    filteredProcesses.forEach(process => {
+      options.push({
+        value: process.id,
+        label: process.name,
+      });
+    });
+
+    return options;
+  }, [searchProcess]);
 
   // Xử lý khi chọn công đoạn
   const handleProcessChange = value => {
@@ -698,39 +582,6 @@ const ImportOutput = () => {
     setSelectedProcess(null);
     setSearchProcess('');
   };
-
-  const stages = listImportOutput?.stages || [];
-  const hasStages = stages.length > 0;
-
-  // Tính số lượng filter đang active
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-
-    // Đếm date filter (chỉ tính 1 nếu có startDate hoặc endDate)
-    if (dateFilter.dateStart || dateFilter.dateEnd) count++;
-
-    return count;
-  }, [dateFilter.dateStart, dateFilter.dateEnd]);
-
-  // Trigger button cho FilterDropdown
-  const triggerFilterAll = (
-    <button
-      className={`${
-        stateFilterDropdown?.open || activeFilterCount > 0
-          ? 'text-[#0F4F9E] border-[#3276FA] bg-[#EBF5FF]'
-          : 'bg-white text-[#9295A4] border-[#D0D5DD] hover:text-[#0F4F9E] hover:bg-[#EBF5FF] hover:border-[#3276FA]'
-      } flex items-center space-x-2 border rounded-lg h-10 px-3 group custom-transition`}
-    >
-      <span className='size-4 shrink-0'>
-        <EqualizerIcon className='w-full h-full' />
-      </span>
-      <span className={`${stateFilterDropdown?.open || activeFilterCount > 0 ? 'text-[#0F4F9E]' : 'text-[#3A3E4C] group-hover:text-[#0F4F9E]'} text-nowrap text-sm custom-transition`}>Lọc</span>
-      {activeFilterCount > 0 && <span className='rounded-full bg-[#0F4F9E] text-white text-xs size-5 flex items-center justify-center'>{activeFilterCount}</span>}
-      <span className='size-3.5 shrink-0'>
-        <CaretDownIcon className={`${stateFilterDropdown?.open || activeFilterCount > 0 ? 'rotate-180' : 'rotate-0'} w-full h-full custom-transition`} />
-      </span>
-    </button>
-  );
 
   return (
     <div className='flex flex-col gap-5 h-screen max-h-screen'>
@@ -773,29 +624,12 @@ const ImportOutput = () => {
             />
           </div>
           <div className='flex items-center gap-2'>
-            <div className='h-10 w-[340px] bg-white px-3 py-2 rounded-lg flex items-center justify-between gap-2 border border-[#D0D5DD]'>
-              <input
-                className='flex-1 border-none outline-none responsive-text-base text[#3A3E4C]'
-                placeholder='Tìm kiếm mã lệnh sản xuất'
-                value={searchReferenceNo}
-                onChange={e => setSearchReferenceNo(e.target.value)}
-                onClick={e => e.stopPropagation()}
-              />
-              {searchReferenceNo && (
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    setSearchReferenceNo('');
-                  }}
-                  className='flex items-center justify-center p-0.5 rounded hover:bg-[#F3F4F6] transition-colors'
-                >
-                  <CloseXIcon className='size-4 text-[#667085]' />
-                </button>
-              )}
+            <button className='h-10 w-[340px] bg-white px-3 py-2 rounded-lg flex items-center justify-between gap-2 border border-[#D0D5DD]'>
+              <input className='w-full border-none outline-none responsive-text-base text[#3A3E4C]' placeholder='Tìm kiếm mã lệnh sản xuất' />
               <div className='p-1 rounded-lg bg-[#1760B9]'>
                 <SearchIcon className='size-4 text-white' />
               </div>
-            </div>
+            </button>
             <SelectSearchableRadio
               placeholder='Lọc nhân viên'
               label='Lọc nhân viên'
@@ -820,59 +654,140 @@ const ImportOutput = () => {
               icon={<FunnelIcon className='size-4 text-[#003DA0]' />}
               className='w-auto min-w-[180px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
             />
-            <FilterDropdown
-              trigger={triggerFilterAll}
-              classNameContainer='!w-auto'
-              style={{
-                boxShadow: '0px 20px 24px -4px #10182814, 0px 4px 4px 0px #00000040',
-              }}
-              className='z-[999] flex flex-col gap-4 border-[#D8DAE5] rounded-lg min-w-[400px]'
-              dropdownId='dropdownFilterImportOutput'
-            >
-              <div className='text-lg text-[#344054] font-medium'>Bộ lọc</div>
-              <div className='space-y-1'>
-                <h3 className='text-xs text-[#051B44] font-normal'>Thời gian</h3>
-                <DateToDateComponent
-                  placeholder='dd/mm/yyyy → dd/mm/yyyy'
-                  value={{
-                    startDate: dateFilter.dateStart || null,
-                    endDate: dateFilter.dateEnd || null,
-                  }}
-                  onChange={value => {
-                    setDateFilter({
-                      dateStart: value?.startDate || null,
-                      dateEnd: value?.endDate || null,
-                    });
-                  }}
-                  className='text-base-default w-full'
-                />
-              </div>
-            </FilterDropdown>
+            <button className='h-10 bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-[#D0D5DD]'>
+              <EqualizerIcon className='size-4 text-[#9295A4]' />
+              <span className='responsive-text-base font-normal text[#3A3E4C]'>Lọc</span>
+              <CaretDownIcon className='size-3 text-[#9295A4]' />
+            </button>
           </div>
         </div>
 
         <div className='w-full h-full flex-1 min-h-0 overflow-y-hidden'>
-          {isLoadingListImportOutput ? (
-            <div className='flex items-center justify-center h-full'>
-              <Loading />
-            </div>
-          ) : hasStages ? (
-            <Customscrollbar horizontalOnly={true} showOnHover={true} className='flex-1 min-h-0 h-full overflow-y-hidden'>
-              <div className='px-6 flex gap-6 w-full h-full min-w-max overflow-y-hidden'>
-                {stages.map(stage => (
-                  <StageColumn key={stage.stage_id} stage={stage} />
-                ))}
+          <Customscrollbar horizontalOnly={true} showOnHover={true} className='flex-1 min-h-0 h-full overflow-y-hidden'>
+            <div className='px-6 flex gap-6 w-full h-full min-w-max overflow-y-hidden'>
+              <div className='w-[394px] flex-shrink-0 rounded-t-2xl pt-1 flex flex-col gap-1 bg-[#EBEBEB]/50 h-full'>
+                <div className='px-4 py-3 flex flex-col gap-3 flex-shrink-0'>
+                  <div className='flex items-center gap-2'>
+                    <PresentationChartIcon className='size-6' />
+                    <h3 className='responsive-text-2xl font-medium text-blue-fmrp'>Cắt</h3>
+                    <span className='bg-[#FD2424] size-4 flex items-center justify-center rounded-full px-1 responsive-text-xs font-normal text-white -mt-3 -ml-1'>2</span>
+                  </div>
+                  <div className='flex items-center justify-between gap-2 bg-[#FFFFFF66] border border-white rounded-[14px] px-3 py-[14px]'>
+                    <div className='flex items-center gap-3'>
+                      <p className='responsive-text-base font-semibold text-[#1A7526]'>Đang chạy: 2</p>
+                      <p className='responsive-text-base font-semibold text-red-01'>Tạm dừng: 1</p>
+                    </div>
+                    <ProcessStatusDropdown processName='Cắt' />
+                  </div>
+                </div>
+                <Customscrollbar className='flex-1 min-h-0 h-full' showOnHover={true}>
+                  <div className='flex flex-col gap-2.5 px-4 pb-4'>
+                    <ProductionOrderCard borderColor='#EEB600' status='idle' time='00 : 00 : 00' />
+                    <ProductionOrderCard borderColor='#1A7526' status='running' time='02 : 15 : 30' />
+                    <ProductionOrderCard borderColor='#1A7526' status='paused' time='01 : 45 : 20' />
+                  </div>
+                </Customscrollbar>
               </div>
-            </Customscrollbar>
-          ) : (
-            <div className='flex flex-col gap-4 h-full w-full items-center justify-center'>
-              <Image src={IMAGES.nodataStage || IMAGES.nodata} alt='nodata' width={165} height={165} className='object-contain' />
-              <p className='responsive-text-sm font-normal text-[#637381]'>Chưa có công đoạn, vui lòng thiết kế ngay.</p>
-              <Link href='/settings/category?tab=stages&page=1' className='px-3 py-2 rounded-lg responsive-text-lg font-medium text-white bg-blue-fmrp'>
-                Thiết kế công đoạn
-              </Link>
+              <div className='w-[394px] flex-shrink-0 rounded-t-2xl pt-1 flex flex-col gap-3 bg-[#EBEBEB]/50 h-full'>
+                <div className='px-4 py-3 flex flex-col gap-3 flex-shrink-0'>
+                  <div className='flex items-center gap-2'>
+                    <PresentationChartIcon className='size-6' />
+                    <h3 className='responsive-text-2xl font-medium text-blue-fmrp'>Thêu</h3>
+                    <span className='bg-[#FD2424] size-4 flex items-center justify-center rounded-full px-1 responsive-text-xs font-normal text-white -mt-3 -ml-1'>2</span>
+                  </div>
+                  <div className='flex items-center justify-between gap-2 bg-[#FFFFFF66] border border-white rounded-[14px] px-3 py-[14px]'>
+                    <div className='flex items-center gap-3'>
+                      <p className='responsive-text-base font-semibold text-[#1A7526]'>Đang chạy: 2</p>
+                      <p className='responsive-text-base font-semibold text-red-01'>Tạm dừng: 1</p>
+                    </div>
+                    <ProcessStatusDropdown processName='Cắt' />
+                  </div>
+                </div>
+                <Customscrollbar className='flex-1 min-h-0 h-full' showOnHover={true}>
+                  <div className='flex flex-col gap-2.5 px-4 pb-4'>
+                    <ProductionOrderCard borderColor='#8A38F5' status='running' time='03 : 20 : 45' />
+                    <ProductionOrderCard borderColor='#FF641C' status='completed' time='05 : 30 : 00' />
+                    <ProductionOrderCard borderColor='#1A7526' status='paused' time='02 : 10 : 15' />
+                  </div>
+                </Customscrollbar>
+              </div>
+              <div className='w-[394px] flex-shrink-0 rounded-t-2xl pt-1 flex flex-col gap-3 bg-[#EBEBEB]/50 h-full'>
+                <div className='px-4 py-3 flex flex-col gap-3 flex-shrink-0'>
+                  <div className='flex items-center gap-2'>
+                    <PresentationChartIcon className='size-6' />
+                    <h3 className='responsive-text-2xl font-medium text-blue-fmrp'>May</h3>
+                    <span className='bg-[#FD2424] size-4 flex items-center justify-center rounded-full px-1 responsive-text-xs font-normal text-white -mt-3 -ml-1'>2</span>
+                  </div>
+                  <div className='flex items-center justify-between gap-2 bg-[#FFFFFF66] border border-white rounded-[14px] px-3 py-[14px]'>
+                    <div className='flex items-center gap-3'>
+                      <p className='responsive-text-base font-semibold text-[#1A7526]'>Đang chạy: 2</p>
+                      <p className='responsive-text-base font-semibold text-red-01'>Tạm dừng: 1</p>
+                    </div>
+                    <ProcessStatusDropdown processName='Cắt' />
+                  </div>
+                </div>
+                <Customscrollbar className='flex-1 min-h-0 h-full' showOnHover={true}>
+                  <div className='flex flex-col gap-2.5 px-4 pb-4'>
+                    <ProductionOrderCard borderColor='LSX-161225109' status='idle' time='00 : 00 : 00' />
+                  </div>
+                </Customscrollbar>
+              </div>
+              <div className='w-[394px] flex-shrink-0 rounded-t-2xl pt-1 flex flex-col gap-3 bg-[#EBEBEB]/50 h-full'>
+                <div className='px-4 py-3 flex flex-col gap-3 flex-shrink-0'>
+                  <div className='flex items-center gap-2'>
+                    <PresentationChartIcon className='size-6' />
+                    <h3 className='responsive-text-2xl font-medium text-blue-fmrp'>Đóng gói</h3>
+                    <span className='bg-[#FD2424] size-4 flex items-center justify-center rounded-full px-1 responsive-text-xs font-normal text-white -mt-3 -ml-1'>2</span>
+                  </div>
+                  <div className='flex items-center justify-between gap-2 bg-[#FFFFFF66] border border-white rounded-[14px] px-3 py-[14px]'>
+                    <div className='flex items-center gap-3'>
+                      <p className='responsive-text-base font-semibold text-[#1A7526]'>Đang chạy: 2</p>
+                      <p className='responsive-text-base font-semibold text-red-01'>Tạm dừng: 1</p>
+                    </div>
+                    <ProcessStatusDropdown processName='Cắt' />
+                  </div>
+                </div>
+                <Customscrollbar className='flex-1 min-h-0 h-full' showOnHover={true}>
+                  <div className='flex flex-col gap-2.5 px-4 pb-4'>
+                    <ProductionOrderCard borderColor='#8A38F5' status='running' time='00 : 45 : 30' />
+                    <ProductionOrderCard borderColor='#1A7526' status='paused' time='00 : 20 : 10' />
+                    <ProductionOrderCard borderColor='#1A7526' status='completed' time='02 : 00 : 00' />
+                  </div>
+                </Customscrollbar>
+              </div>
+              <div className='w-[394px] flex-shrink-0 rounded-t-2xl pt-1 flex flex-col gap-1 bg-[#EBEBEB]/50 h-full'>
+                <div className='px-4 py-3 flex flex-col gap-3 flex-shrink-0'>
+                  <div className='flex items-center gap-2'>
+                    <PresentationChartIcon className='size-6' />
+                    <h3 className='responsive-text-2xl font-medium text-blue-fmrp'>Cắt</h3>
+                    <span className='bg-[#FD2424] size-4 flex items-center justify-center rounded-full px-1 responsive-text-xs font-normal text-white -mt-3 -ml-1'>2</span>
+                  </div>
+                  <div className='flex items-center justify-between gap-2 bg-[#FFFFFF66] border border-white rounded-[14px] px-3 py-[14px]'>
+                    <div className='flex items-center gap-3'>
+                      <p className='responsive-text-base font-semibold text-[#1A7526]'>Đang chạy: 2</p>
+                      <p className='responsive-text-base font-semibold text-red-01'>Tạm dừng: 1</p>
+                    </div>
+                    <ProcessStatusDropdown processName='Cắt' />
+                  </div>
+                </div>
+                <Customscrollbar className='flex-1 min-h-0 h-full' showOnHover={true}>
+                  <div className='flex flex-col gap-2.5 px-4 pb-4'>
+                    <ProductionOrderCard borderColor='#FF641C' status='idle' time='00 : 00 : 00' />
+                    <ProductionOrderCard borderColor='#1A7526' status='running' time='02 : 15 : 30' />
+                    <ProductionOrderCard borderColor='#1A7526' status='paused' time='01 : 45 : 20' />
+                  </div>
+                </Customscrollbar>
+              </div>
             </div>
-          )}
+          </Customscrollbar>
+          {/* nodata */}
+          {/* <div className='flex flex-col gap-4 h-full w-full items-center justify-center'>
+            <Image src={IMAGES.nodataStage} alt='nodata' width={165} height={165} className='object-contain' />
+            <p className='responsive-text-sm font-normal text-[#637381]'>Chưa có công đoạn, vui lòng thiết kế ngay.</p>
+            <Link href='/settings/category?tab=stages&page=1' className='px-3 py-2 rounded-lg responsive-text-lg font-medium text-white bg-blue-fmrp'>
+              Thiết kế công đoạn
+            </Link>
+          </div> */}
         </div>
       </div>
     </div>
