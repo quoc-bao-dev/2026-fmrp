@@ -12,7 +12,7 @@ const AvatarStack = ({ people = [], size = 40 }) => {
   const visible = people.slice(0, 3);
   const remaining = people.length - visible.length;
 
-  const updateTooltipPosition = personId => {
+  const updateTooltipPosition = (personId) => {
     const avatarElement = avatarRefs.current[personId];
     if (avatarElement) {
       const rect = avatarElement.getBoundingClientRect();
@@ -23,7 +23,7 @@ const AvatarStack = ({ people = [], size = 40 }) => {
     }
   };
 
-  const handleMouseEnter = personId => {
+  const handleMouseEnter = (personId) => {
     setHoverId(personId);
     updateTooltipPosition(personId);
   };
@@ -46,16 +46,16 @@ const AvatarStack = ({ people = [], size = 40 }) => {
     }
   }, [hoverId]);
 
-  const hoveredPerson = visible.find(person => person.id === hoverId);
+  const hoveredPerson = visible.find((person) => person.id === hoverId);
 
   return (
     <>
-      <div className={`inline-flex items-center pl-1.5 py-1.5 bg-[#EBF5FF] rounded-full overflow-visible relative z-0 ${Number(remaining) > 0 ? '' : 'pr-1.5'}`}>
+      <div className='inline-flex items-center px-1.5 py-1.5 bg-[#EBF5FF] rounded-full overflow-visible relative z-0'>
         {visible.map((person, idx) => {
           return (
             <div
               key={person.id}
-              ref={el => (avatarRefs.current[person.id] = el)}
+              ref={(el) => (avatarRefs.current[person.id] = el)}
               className='relative overflow-visible z-10'
               onMouseEnter={() => handleMouseEnter(person.id)}
               onMouseLeave={() => setHoverId(null)}
@@ -67,10 +67,7 @@ const AvatarStack = ({ people = [], size = 40 }) => {
         })}
 
         {remaining > 0 && (
-          <div
-            className={`left-[-8px] relative z-50 rounded-full border-2 border-[#549AE8] bg-[#D1D1D1] text-[#606060] font-semibold flex items-center justify-center shadow-sm`}
-            style={{ width: size, height: size }}
-          >
+          <div className={`left-[-8px] relative z-50 rounded-full border-2 border-[#549AE8] bg-[#D1D1D1] text-[#606060] font-semibold flex items-center justify-center shadow-sm`} style={{ width: size, height: size }}>
             +{remaining}
           </div>
         )}
@@ -90,7 +87,9 @@ const AvatarStack = ({ people = [], size = 40 }) => {
           >
             <div className='relative'>
               <div className='absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-b-8 border-b-[#0375F3]' />
-              <div className='px-3 py-2 bg-[#0375F3] text-white rounded-[12px] text-sm font-semibold shadow-lg whitespace-nowrap truncate'>{hoveredPerson.name}</div>
+              <div className='px-3 py-2 bg-[#0375F3] text-white rounded-[12px] text-sm font-semibold shadow-lg whitespace-nowrap truncate'>
+                {hoveredPerson.name}
+              </div>
             </div>
           </div>,
           document.body

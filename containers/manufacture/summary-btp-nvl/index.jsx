@@ -1,6 +1,5 @@
 import BreadcrumbCustom from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
-import InfoTooltip from '@/components/UI/common/InfoTooltip';
 import { Container } from '@/components/UI/common/layout';
 import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport';
 import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet';
@@ -29,12 +28,14 @@ import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import { debounce } from 'lodash';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
+import PopupRequestUpdateVersion from '@/components/common/popup/PopupRequestUpdateVersion';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { FaPlus } from 'react-icons/fa6';
 import { useDispatch, useSelector } from 'react-redux';
 import { listLsxStatus } from '../productions-orders/components/main/constants/listData';
 import { useProductionOrdersCombobox } from '../productions-orders/hooks/useProductionOrdersCombobox';
 import { useSummaryBtpNvl } from './hook';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 
 const breadcrumbItems = [
   {

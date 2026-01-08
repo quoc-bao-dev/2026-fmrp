@@ -29,7 +29,7 @@ const deca = Lexend_Deca({
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
 });
 
-export const InputNumberCustom = memo(
+const InputNumberCustom = memo(
   ({
     state = 0,
     setState,

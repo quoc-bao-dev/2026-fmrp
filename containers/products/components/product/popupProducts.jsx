@@ -1107,7 +1107,7 @@ const Popup_Products = React.memo(props => {
                           value={
                             variantMain
                               ? {
-                                  label: dataOptVariant?.find(e => e.value == variantMain)?.label,
+                                  label: dataOptVariant.find(e => e.value == variantMain)?.label,
                                   value: variantMain,
                                 }
                               : null
@@ -1199,7 +1199,7 @@ const Popup_Products = React.memo(props => {
                           value={
                             variantSub
                               ? {
-                                  label: dataOptVariant?.find(e => e.value == variantSub)?.label,
+                                  label: dataOptVariant.find(e => e.value == variantSub)?.label,
                                   value: variantSub,
                                 }
                               : null

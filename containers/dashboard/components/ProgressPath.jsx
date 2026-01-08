@@ -1,13 +1,16 @@
+import { MobileIcon } from '@/components/icons';
+import ProgressCollapseArrowIcon from '@/components/icons/common/ProgressCollapseArrowIcon';
+import ProgressWatermarkIcon from '@/components/icons/common/ProgressWatermarkIcon';
+import { useGetInfoStepUse } from '@/hooks/dashboard/useGetInfoStepUse';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { MdArrowOutward } from 'react-icons/md';
 import AnimatedProgressPath from './AnimatedProgressPath';
-import ProgressWatermarkIcon from '@/components/icons/common/ProgressWatermarkIcon';
-import ProgressCollapseArrowIcon from '@/components/icons/common/ProgressCollapseArrowIcon';
-import { useGetInfoStepUse } from '@/hooks/dashboard/useGetInfoStepUse';
 import PopupGuide from './PopupGuide';
-import { MobileIcon } from '@/components/icons';
 
 const ProgressPath = () => {
+  const router = useRouter();
+
   // const [progress, setProgress] = useState(null);
   const [pathHeight, setPathHeight] = useState(240);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -116,6 +119,22 @@ const ProgressPath = () => {
     parsePercentage(infoStepUse?.percent);
   const displayPercentage = apiPercentageRaw !== null ? clampPercentage(apiPercentageRaw) : clampPercentage(snappedPercentage);
 
+  const handleChildClick = item => {
+    const isActive = item?.active === 1 || item?.active === true || item?.active === '1';
+    if (isActive && item?.link_next) {
+      const link = item.link_next;
+      if (link.startsWith('http://') || link.startsWith('https://')) {
+        window.location.href = link;
+      } else {
+        router.push(link);
+      }
+      return;
+    }
+
+    setSelectedItem(item);
+    setIsPopupOpen(true);
+  };
+
   const WrapContainer = () => {
     return (
       <svg width='100%' height='100%' viewBox='22.7 18.7 1920 470' preserveAspectRatio='none' fill='none' xmlns='http://www.w3.org/2000/svg' className='absolute inset-0'>
@@ -220,10 +239,7 @@ const ProgressPath = () => {
                           <li key={item.id || idx} className='responsive-text-sm transition-all duration-500 text-left leading-tight' style={{ color: itemColor }}>
                             <span
                               className='inline text-inherit cursor-pointer hover:opacity-80 transition-opacity group'
-                              onClick={() => {
-                                setSelectedItem(item);
-                                setIsPopupOpen(true);
-                              }}
+                              onClick={() => handleChildClick(item)}
                             >
                               {item.name}
                               <MdArrowOutward className='inline-block align-middle ml-1 text-base transition-all duration-300 group-hover:-translate-y-1 group-hover:translate-x-1' />

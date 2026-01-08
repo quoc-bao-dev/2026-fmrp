@@ -12,7 +12,6 @@ import { CaretDownIcon, ChartDonutIcon, MagnifyingGlassIcon, PlusIcon, PrinterIc
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
 import BreadcrumbCustom from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
-import InfoTooltip from '@/components/UI/common/InfoTooltip';
 import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComponent';
 import Loading from '@/components/UI/loading/loading';
 import MultiValue from '@/components/UI/mutiValue/multiValue';
@@ -23,7 +22,6 @@ import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import PopupKeepStock from '@/containers/manufacture/materials-planning/components/popup/popupKeepStock';
 import PopupExportMaterials from '@/containers/manufacture/productions-orders/components/popup/PopupExportMaterials';
 import PopupListResponsiblePerson from '@/containers/manufacture/productions-orders/components/popup/PopupListResponsiblePerson';
-import { mockData as pieceworkWageMockData } from '@/containers/piecework-wage/components/PieceworkWageTable';
 import { StateContext } from '@/context/_state/productions-orders/StateContext';
 import { useSheet } from '@/context/ui/SheetContext';
 import { useBranchList } from '@/hooks/common/useBranch';
@@ -61,8 +59,8 @@ import SheetProductionsOrderDetail from '../sheet/SheetProductionsOrderDetail';
 import DetailProductionOrderList from '../ui/DetailProductionOrderList';
 import PlaningProductionOrder from '../ui/PlaningProductionOrder';
 import TabKeepStock from '../ui/tabKeepStock';
-import TabPieceworkWage from '../ui/TabPieceworkWage';
 import { listDropdownCompleteStage, listLsxStatus } from './constants/listData';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 
 const initialState = {
   isTab: 'item',
@@ -213,23 +211,6 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     return keepCount + purchaseCount + transferRecoveryCount;
   }, [dataProductionOrderDetail?.keepWarehouses, dataProductionOrderDetail?.purchase_order, dataProductionOrderDetail?.transfer_recovery]);
 
-  // Tính số lượng công nhân unique và tạo incomeChartData từ table data
-  const { pieceworkWageCount, incomeChartData } = useMemo(() => {
-    // Tính số lượng công nhân unique
-    const count = pieceworkWageMockData.length;
-
-    const chartData = pieceworkWageMockData.map(item => ({
-      id: item.id,
-      name: item.workers[0].name,
-      income: item.pieceworkWage?.replace(/\./g, '') || '0',
-    }));
-
-    return {
-      pieceworkWageCount: count,
-      incomeChartData: chartData,
-    };
-  }, []);
-
   // Lấy process steps từ dataProductionOrderDetail
   const processSteps = useMemo(() => {
     const processData = dataProductionOrderDetail?.process?.[0] || [];
@@ -260,12 +241,6 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
       name: 'Giữ kho & Mua hàng',
       count: keepStockPurchaseCount,
       type: 'keepStock',
-    },
-    {
-      id: '4',
-      name: 'Lương Sản Lượng',
-      count: pieceworkWageCount,
-      type: 'pieceworkWage',
     },
   ];
 
@@ -1335,6 +1310,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
 
       <div ref={titleRef} className='flex items-center justify-between w-full'>
         <h2 className='text-title-section text-[#52575E] capitalize font-medium'>
+          {' '}
           {dataLang?.productions_orders || 'productions_orders'}{' '}
           <InfoTooltip
             content='Lệnh sản xuất là các đơn hàng sản xuất được tạo ra để thực hiện việc sản xuất sản phẩm theo yêu cầu, bao gồm thông tin về số lượng, thời gian và quy trình sản xuất.'
@@ -1738,7 +1714,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
 
         <div className='relative z-50 flex-1 min-w-0 size-full space-y-4 border-none border-[#D0D5DD] border overflow-y-hidden'>
           <Customscrollbar
-            className='h-fit pr-2 relative -z-10 pt-0'
+            className='h-full pr-2 relative -z-10 pt-0'
             style={{
               height: calcAvailableHeight('submain'),
               maxHeight: calcAvailableHeight('submain'),
@@ -1785,17 +1761,6 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                   />
                 )}
                 {isStateProvider?.productionsOrders?.isTabList?.type == 'keepStock' && <TabKeepStock {...shareProps} />}
-                {isStateProvider?.productionsOrders?.isTabList?.type == 'pieceworkWage' && (
-                  <TabPieceworkWage
-                    {...shareProps}
-                    refreshData={refreshData}
-                    handleQueryId={handleQueryId}
-                    isStateProvider={isStateProvider}
-                    groupButtonRef={groupButtonRef}
-                    listPrintTask={listPrintTask}
-                    incomeChartData={incomeChartData}
-                  />
-                )}
               </React.Fragment>
             ) : (
               <NoData className='mt-0' />

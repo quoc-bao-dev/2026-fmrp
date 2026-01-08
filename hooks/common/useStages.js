@@ -14,7 +14,6 @@ export const useStageList = (dataLang) => {
                 payload: stage?.map((e) => ({
                     label: e.name,
                     value: e.id,
-                    price_default: e.price_default,
                 })),
             });
 
