@@ -2,10 +2,10 @@ import apiProducts from '@/Api/apiProducts/products/apiProducts';
 import SearchActionInput from '@/components/common/input/SearchActionInput';
 import { CaretDropDownThinIcon } from '@/components/icons';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 import { ColumnTablePopup, HeaderTablePopup } from '@/components/UI/common/TablePopup';
 import TagBranch from '@/components/UI/common/Tag/TagBranch';
 import { TagColorProduct } from '@/components/UI/common/Tag/TagStatus';
-import { InfoCircle } from 'iconsax-react';
 import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
 import PopupCustom from '@/components/UI/popup';
@@ -25,7 +25,6 @@ import { useProductDetail } from '../../hooks/product/useProductDetail';
 import { useProductDetailStage } from '../../hooks/product/useProductDetailStage';
 import Popup_Bom from './popupBom';
 import Popup_GiaiDoan from './popupStage';
-import InfoTooltip from '@/components/UI/common/InfoTooltip';
 
 const Popup_Detail = React.memo(props => {
   const isShow = useToast();
@@ -376,7 +375,7 @@ const Popup_Detail = React.memo(props => {
       nested
       classNameBtn={props.classNameBtn}
     >
-      <div className='py-4 xl:w-[1000px] w-[900px] space-y-5'>
+      <div className='py-4  2xl:w-[1100px] xl:w-[1000px] w-[900px] space-y-5'>
         <div className='flex items-center space-x-4 border-[#E7EAEE] border-opacity-70 border-b-[1px]'>
           {dataTab?.map(item => (
             <button
@@ -781,7 +780,8 @@ const Popup_Detail = React.memo(props => {
                 ) : (
                   <React.Fragment>
                     {dataStage?.length > 0 ? (
-                      <div className='space-y-0.5 min-h-[384px]'>
+                      <>
+                        <div className='space-y-0.5 min-h-[384px]'>
                         <HeaderTablePopup gridCols={10}>
                           <ColumnTablePopup>{props.dataLang?.no || 'no'}</ColumnTablePopup>
                           <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_finishedProduct}</ColumnTablePopup>
@@ -818,6 +818,7 @@ const Popup_Detail = React.memo(props => {
                             ))}
                           </div>
                         </Customscrollbar>
+                        </div>
                         <div className='flex items-center justify-end space-x-3'>
                           <Popup_GiaiDoan
                             dataLang={props.dataLang}
@@ -825,11 +826,11 @@ const Popup_Detail = React.memo(props => {
                             name={list?.name}
                             onRefresh={refetchStage.bind(this)}
                             code={list?.code}
-                            typeOpen='edit'
-                            className='px-4 py-2 text-base transition rounded-lg bg-slate-200 hover:opacity-90 hover:scale-105'
+                            type='edit'
+                            className='px-4 py-2 text-base transition rounded-lg bg-blue-fmrp hover:opacity-90 hover:scale-105'
                           />
                         </div>
-                      </div>
+                      </>
                     ) : (
                       <NoData />
                     )}

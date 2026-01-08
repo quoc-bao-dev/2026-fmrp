@@ -50,6 +50,7 @@ import PopupDetailProduct from './components/PopupDetailProduct'
 import { useSalesOrderCombobox } from './hooks/useSalesOrderCombobox'
 import { useSalesOrderFilterbar } from './hooks/useSalesOrderFilterbar'
 import { useSalesOrderList } from './hooks/useSalesOrderList'
+import ProcessStepIcon from '@/components/icons/common/ProcessStepIcon'
 registerLocale('vi', vi)
 
 const initialValue = {
@@ -405,7 +406,7 @@ const SalesOrder = (props) => {
                     active={e?.id}
                     className={'text-[#0F4F9E]'}
                   >
-                    {dataLang[e?.name]}
+                    {dataLang[e?.name] ?? e?.name}
                   </TabFilter>
                 )
               })}
@@ -599,86 +600,92 @@ const SalesOrder = (props) => {
                           </RowItemTable>
                           <RowItemTable colSpan={1}>{e?.branch_name}</RowItemTable>
 
-                          <RowItemTable colSpan={4}>
-                            <div className="grid grid-cols-4 items-start py-2 pl-12 relative">
-                              {e?.process.map((item, i) => {
-                                const isValue = [
-                                  'production_plan',
-                                  'produced_at_company',
-                                  'import_warehouse',
-                                  'delivery',
-                                ].includes(item?.code)
-                                const isValueDelivery = ['delivery'].includes(item?.code)
+                          <RowItemTable colSpan={4} className="overflow-visible pr-6 2xl:pr-7">
+                            <div className="flex items-start py-2 gap-0 w-full overflow-visible">
+                              {e?.process
+                                .filter((item) => !['keep_stock', 'import_outsourcing'].includes(item?.code))
+                                .map((item, i, filteredArray) => {
+                                  const isValueDelivery = ['delivery'].includes(item?.code)
+                                  const isProducing = ['produced_at_company'].includes(item?.code)
+                                  const isLastStep = i === filteredArray.length - 1
+                                  
+                                  // Kiểm tra xem bước tiếp theo có active không
+                                  const nextStepActive = i < filteredArray.length - 1 && filteredArray[i + 1]?.active
+                                  
+                                  // Xác định trạng thái delivery cho bước cuối
+                                  let deliveryStatus = null
+                                  if (isValueDelivery) {
+                                    // Kiểm tra status để xác định trạng thái giao hàng
+                                    const status = item?.status || ''
+                                    if (status === 'delivery_receipt_quantity_delivered_order_part') {
+                                      // Giao 1 phần
+                                      deliveryStatus = 'partial'
+                                    } else if (status === 'delivery_receipt_quantity_delivered_order') {
+                                      // Đã giao đủ
+                                      deliveryStatus = 'full'
+                                    } else {
+                                      // Chưa giao (delivery_receipt_quantity_undelivered_order hoặc các trạng thái khác)
+                                      deliveryStatus = null
+                                    }
+                                  }
 
-                                return (
-                                  <div
-                                    className={`${i === e?.process.length - 1 ? ' relative' : 'relative'}`}
-                                    key={`process-${i}`}
-                                  >
-                                    {!['keep_stock', 'import_outsourcing'].includes(item?.code) && (
-                                      <>
-                                        <div className="flex items-center">
-                                          <div
-                                            className={`${
-                                              item?.active
-                                                ? `h-2 w-2 rounded-full bg-green-500`
-                                                : `h-2 w-2 rounded-full bg-gray-400`
-                                            } `}
-                                          />
+                                  return (
+                                    <div
+                                      key={`process-${i}`}
+                                      className={`relative flex-1 h-[42px] ${i === 0 ? 'ml-0' : 'ml-[-15px] 2xl:ml-[-20px]'}`}
+                                      style={{
+                                        zIndex: filteredArray.length - i,
+                                      }}
+                                    >
+                                      {/* SVG Step Icon */}
+                                      <div className="relative w-full h-full">
+                                        <ProcessStepIcon
+                                          active={item?.active}
+                                          isLast={isValueDelivery}
+                                          deliveryStatus={deliveryStatus}
+                                          isProducing={isProducing}
+                                          nextStepActive={nextStepActive}
+                                          className="w-full h-full object-cover"
+                                          style={{
+                                            minWidth: '100%',
+                                            height: '100%',
+                                          }}
+                                        />
+                                        {/* Text overlay trên SVG */}
+                                        <div
+                                          className={`absolute py-0.5 px-2 inset-0 flex flex-col items-center justify-center pointer-events-none ${
+                                            item?.active || (isValueDelivery && deliveryStatus === 'full')
+                                              ? 'text-white'
+                                              : isValueDelivery && deliveryStatus === 'partial'
+                                              ? 'text-white'
+                                              : (isProducing && item?.active) || (item?.active && !isProducing)
+                                              ? 'text-white'
+                                              : 'text-gray-600'
+                                          }`}
+                                        >
                                           {!isValueDelivery && (
-                                            <div
-                                              className={`${
-                                                item?.active
-                                                  ? `w-full bg-green-500 h-0.5 `
-                                                  : `w-full bg-gray-200 h-0.5 dark:bg-gray-400`
+                                            <h6 className="responsive-text-xxs font-medium leading-tight text-center whitespace-nowrap">
+                                              {dataLang[item?.name] || item?.name}
+                                            </h6>
+                                          )}
+                                          {isValueDelivery && (
+                                            <h6
+                                              className={`responsive-text-xxs font-medium ${
+                                                deliveryStatus === 'full'
+                                                  ? 'text-white'
+                                                  : deliveryStatus === 'partial'
+                                                  ? 'text-white'
+                                                  : 'text-gray-500'
                                               }`}
-                                            />
+                                            >
+                                              {dataLang[item?.status] || item?.status || 'Chưa giao'}
+                                            </h6>
                                           )}
                                         </div>
-                                        <div className="mt-2 3xl:w-[120px] xxl:w-[90px] 2xl:w-[90px] xl:w-[70px] lg:w-[50px]">
-                                          <div
-                                            className={`${
-                                              item?.active ? 'text-green-500' : 'text-slate-500'
-                                            } block w-full text-center mb-2 responsive-text-sm font-semibold leading-none absolute 3xl:translate-x-[-38%] 2xl:translate-x-[-40%] xl:translate-x-[-40%] translate-x-[-40%] 3xl:translate-y-[-10%] 2xl:translate-y-[-20%] xl:translate-y-[-20%] translate-y-[-20%]`}
-                                          >
-                                            <div className="flex flex-col items-center justify-center w-full gap-1">
-                                              <h6>{dataLang[item?.name]}</h6>
-                                              {isValueDelivery && (
-                                                <h6
-                                                  className={`${
-                                                    item?.active && isValueDelivery
-                                                      ? 'text-green-500'
-                                                      : 'text-orange-500'
-                                                  } responsive-text-sm`}
-                                                >{`(${dataLang[item?.status] || item?.status})`}</h6>
-                                              )}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </>
-                                    )}
-                                    <p
-                                      className={`${
-                                        isValueDelivery ? '3xl:mt-8 mt-7' : 'mt-3'
-                                      } py-2 text-blue-700 text-center cursor-pointer responsive-text-sm left-0 translate-x-[-40%]  font-semibold`}
-                                    >
-                                      {/* <p className="text-blue-700 cursor-pointer  3xl:text-[9.5px] xxl:text-[9px] 2xl:text-[9px] xl:text-[7.5px] lg:text-[6px] text-[7px]  left-0 3xl:-translate-x-[17%] 2xl:-translate-x-1/3 xl:-translate-x-1/3 lg:-translate-x-1/3 -translate-x-1/4 3xl:translate-y-[10%] xxl:translate-y-1/3 2xl:translate-y-1/3 xl:translate-y-1/2 lg:translate-y-full translate-y-1/2 font-semibold"> */}
-
-                                      {item?.reference &&
-                                        item?.reference
-                                          .slice(0, isExpanded ? item?.reference?.length : 2)
-                                          .map((ci, index) => (
-                                            <div className="flex flex-col" key={index}>
-                                              {ci?.reference_no}
-                                            </div>
-                                          ))}
-                                      {item?.reference && item?.reference?.length > 2 && (
-                                        <button onClick={toggleShowAll}>{isExpanded ? 'Rút gọn' : 'Xem thêm'}</button>
-                                      )}
-                                    </p>
-                                  </div>
-                                )
-                              })}
+                                      </div>
+                                    </div>
+                                  )
+                                })}
                             </div>
                           </RowItemTable>
                           <RowItemTable colSpan={0.5}>

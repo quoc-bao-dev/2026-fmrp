@@ -2,6 +2,16 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 
 const TYPE_CONTENT = {
+  calendar: {
+    image: '/nodata/nodata-calendar.png',
+    title: 'Chưa có ca làm việc',
+    titleClassName: 'text-[#141522] opacity-90',
+  },
+  chart: {
+    image: '/nodata/nodata-chart.png',
+    title: 'Chưa có dữ liệu',
+    titleClassName: 'text-[#141522] opacity-90',
+  },
   noti: {
     image: '/nodata/nodata-noti.png',
     title: 'Không có thông báo',
@@ -34,14 +44,7 @@ const TYPE_CONTENT = {
   },
 };
 
-const NoData = ({
-  type = 'table',
-  className = '',
-  classNameImage = '3xl:max-w-[280px] max-w-[200px] w-full h-auto object-contain',
-  classNameTitle = 'text-sm',
-  titleText = '',
-  ...rest
-}) => {
+const NoData = ({ type = 'table', className = '', classNameImage = '3xl:max-w-[280px] max-w-[200px] w-full h-auto object-contain', classNameTitle = 'text-sm', titleText = '', ...rest }) => {
   const { image, title, titleClassName } = TYPE_CONTENT[type] || TYPE_CONTENT.default;
   const finalTitle = titleText || title;
 
@@ -55,11 +58,7 @@ const NoData = ({
     >
       <div className='h-full flex flex-col justify-center items-center 3xl:gap-5 gap-3 3xl:py-5 py-3 mx-auto text-center'>
         <Image src={image} width={1000} height={1000} alt='nodata' className={classNameImage} priority />
-        {finalTitle && (
-          <h3 className={`${titleClassName} ${classNameTitle} font-medium`}>
-            {finalTitle}
-          </h3>
-        )}
+        {finalTitle && <h3 className={`${titleClassName} ${classNameTitle} font-medium`}>{finalTitle}</h3>}
       </div>
     </motion.div>
   );

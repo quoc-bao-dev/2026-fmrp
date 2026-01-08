@@ -1,10 +1,10 @@
+import apiComons from '@/Api/apiComon/apiComon';
 import apiCategory from '@/Api/apiProducts/category/apiCategory';
 import apiProducts from '@/Api/apiProducts/products/apiProducts';
-import apiComons from '@/Api/apiComon/apiComon';
 import { ButtonAddNew } from '@/components/common/button/AddNew';
+import DropdownPrice from '@/components/common/orderManagement/DropdownPrice';
 import { PlusIcon, TrashIcon } from '@/components/icons';
 import EditIcon from '@/components/icons/common/EditIcon';
-import DropdownPrice from '@/components/common/orderManagement/DropdownPrice';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import InPutMoneyFormat from '@/components/UI/inputNumericFormat/inputMoneyFormat';
 import InPutNumericFormat from '@/components/UI/inputNumericFormat/inputNumericFormat';
@@ -18,7 +18,7 @@ import useActionRole from '@/hooks/useRole';
 import useToast from '@/hooks/useToast';
 import { useToggle } from '@/hooks/useToggle';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Trash as IconDelete, GalleryEdit as IconEditImg, Image as IconImage } from 'iconsax-react';
+import { Copy, Trash as IconDelete, GalleryEdit as IconEditImg, Image as IconImage } from 'iconsax-react';
 import Image from 'next/image';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -208,7 +208,7 @@ const Popup_Products = React.memo(props => {
           id_primary: newViar?.id_primary ? newViar?.id_primary : e?.id_primary,
           isDelete: newViar?.isDelete,
           variation_option_2: optSelectedVariantSub?.map(item2 => {
-            const check = newViar?.variation_option_2.find(x => x?.id == item2?.id);
+            const check = newViar?.variation_option_2?.find(x => x?.id == item2?.id);
             const checkItem = newViar?.variation_option_2?.find(x => x?.id_primary);
             return {
               ...item2,
@@ -410,6 +410,64 @@ const Popup_Products = React.memo(props => {
     },
   });
 
+  // dữ liệu chi tiết khi copy
+  useQuery({
+    queryKey: ['detail_product_copy', props?.copyId],
+    enabled: !!isOpen && !!props?.copyId,
+    queryFn: async () => {
+      const list = await apiProducts.apiDetailProducts(props?.copyId);
+
+      sUnit({ label: list?.unit, value: list?.unit_id });
+      sDataVariantSending(list?.variation);
+      sVariantMain(list?.variation?.[0]?.id);
+      sVariantSub(list?.variation?.[1]?.id);
+
+      sOptSelectedVariantMain(list?.variation?.[0]?.option);
+      sOptSelectedVariantSub(list?.variation?.[1]?.option);
+
+      // Clear id_primary để tạo mới biến thể khi copy
+      const copiedVariants = list?.variation_option_value?.map(item => ({
+        ...item,
+        id_primary: undefined,
+        variation_option_2: item?.variation_option_2?.map(subItem => ({
+          ...subItem,
+          id_primary: undefined,
+        })),
+      }));
+      sDataTotalVariant(copiedVariants || []);
+
+      sMinimumAmount(Number(list?.quantity_minimum));
+      sExpiry(Number(list?.expiry));
+      sThumb(list?.images);
+      sThumbFile(null);
+      sBranch(
+        list?.branch?.map(e => ({
+          label: e.name,
+          value: e.id,
+        }))
+      );
+      sCategory(
+        list?.category_id
+          ? {
+              label: list?.category_name,
+              value: list?.category_id,
+            }
+          : null
+      );
+      sType({
+        label: props.dataLang[list?.type_products?.name],
+        value: list?.type_products?.code,
+      });
+      // Xóa code khi copy để tạo mới
+      sCode('');
+      sName(list?.name);
+      sPrice(Number(list?.price_sell));
+      sNote(list?.note);
+
+      return list;
+    },
+  });
+
   // danh sách danh mục
   useQuery({
     queryKey: ['api_category', branch],
@@ -434,7 +492,8 @@ const Popup_Products = React.memo(props => {
 
   const handingProducts = useMutation({
     mutationFn: async data => {
-      return apiProducts.apiHandingProducts(props?.id, data);
+      // Nếu copy thì tạo mới (không truyền id), nếu không thì update theo id
+      return apiProducts.apiHandingProducts(props?.copyId ? null : props?.id, data);
     },
   });
 
@@ -501,11 +560,12 @@ const Popup_Products = React.memo(props => {
 
   const _HandleSubmit = e => {
     e.preventDefault();
-    if (branch?.length == 0 || category?.value == null || type?.value == null || (props?.id && code == '') || unit?.value == null || name == '') {
+    // Khi copy, không bắt buộc code (vì đã xóa code)
+    if (branch?.length == 0 || category?.value == null || type?.value == null || (props?.id && !props?.copyId && code == '') || unit?.value == null || name == '') {
       branch?.length == 0 && sErrBranch(true);
       category?.value == null && sErrGroup(true);
       type?.value == null && sErrType(true);
-      props?.id && code == '' && sErrCode(true);
+      props?.id && !props?.copyId && code == '' && sErrCode(true);
       unit?.value == null && sErrUnit(true);
       name == '' && sErrName(true);
       isShow('error', props.dataLang?.required_field_null);
@@ -528,10 +588,24 @@ const Popup_Products = React.memo(props => {
 
   // change tiền trong biến thể
   const _HandleChangePrice = (parentId, id, value) => {
-    var parentIndex = dataTotalVariant?.findIndex(x => x.id === parentId);
-    var index = dataTotalVariant[parentIndex].variation_option_2.findIndex(x => x.id === id);
-    dataTotalVariant[parentIndex].variation_option_2[index].price = Number(value.value);
-    sDataTotalVariant([...dataTotalVariant]);
+    if (!Array.isArray(dataTotalVariant) || dataTotalVariant.length === 0) return;
+
+    const parentIndex = dataTotalVariant.findIndex(x => String(x?.id) === String(parentId));
+    if (parentIndex < 0) return;
+
+    const children = dataTotalVariant[parentIndex]?.variation_option_2;
+    if (!Array.isArray(children) || children.length === 0) return;
+
+    const childIndex = children.findIndex(x => String(x?.id) === String(id));
+    if (childIndex < 0) return;
+
+    const next = [...dataTotalVariant];
+    next[parentIndex] = { ...next[parentIndex], variation_option_2: [...children] };
+    next[parentIndex].variation_option_2[childIndex] = {
+      ...next[parentIndex].variation_option_2[childIndex],
+      price: Number(value?.value),
+    };
+    sDataTotalVariant(next);
   };
 
   // áp dụng giá cho tất cả biến thể
@@ -624,9 +698,20 @@ const Popup_Products = React.memo(props => {
   };
   return (
     <PopupCustom
-      title={props?.id ? `${props.dataLang?.edit_finishedProduct || 'edit_finishedProduct'}` : `${props.dataLang?.addNew_finishedProduct || 'addNew_finishedProduct'}`}
+      title={
+        props?.copyId
+          ? `Sao chép thành phẩm`
+          : props?.id
+          ? `${props.dataLang?.edit_finishedProduct || 'edit_finishedProduct'}`
+          : `${props.dataLang?.addNew_finishedProduct || 'addNew_finishedProduct'}`
+      }
       button={
-        props?.id ? (
+        props?.copyId ? (
+          <div className='hover:bg-primary-05 group rounded-lg w-full p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer'>
+            <Copy size={20} className='size-5 transition-all duration-300 text-neutral-03 group-hover:text-neutral-07' />
+            <p className='text-neutral-03 group-hover:text-neutral-07 font-normal whitespace-nowrap'>Sao chép</p>
+          </div>
+        ) : props?.id ? (
           <div
             onClick={() => {
               if (role || checkEdit) {
@@ -651,9 +736,15 @@ const Popup_Products = React.memo(props => {
         )
       }
       onClickOpen={() => {
-        if (!props?.id) {
-          sIsOpen(true);
+        // Mở popup cho add/copy (edit đã có handler riêng để check quyền)
+        if (props?.id) return;
+        // Nếu là copy thì vẫn check quyền edit (giống Items)
+        if (props?.copyId) {
+          if (role || checkEdit) sIsOpen(true);
+          else isShow('error', WARNING_STATUS_ROLE);
+          return;
         }
+        sIsOpen(true);
       }}
       open={isOpen}
       onClose={_ToggleModal.bind(this, false)}
@@ -777,7 +868,7 @@ const Popup_Products = React.memo(props => {
                     </div>
                     <div className='2xl:space-y-1'>
                       <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
-                        {props.dataLang?.code_finishedProduct} {props?.id && <span className='text-red-500'>*</span>}
+                        {props.dataLang?.code_finishedProduct} {props?.id && !props?.copyId && <span className='text-red-500'>*</span>}
                       </label>
                       <input
                         value={code}
@@ -1213,7 +1304,7 @@ const Popup_Products = React.memo(props => {
                       <Customscrollbar className='max-h-[300px]'>
                         <div className='space-y-0.5'>
                           {dataTotalVariant?.map((e, index) => (
-                            <div className="grid-cols-16 grid gap-3 items-center bg-slate-50 hover:bg-slate-100 py-2 px-1" key={e?.id ? e?.id.toString() : index + 1}>
+                            <div className='grid-cols-16 grid gap-3 items-center bg-slate-50 hover:bg-slate-100 py-2 px-1' key={e?.id ? e?.id.toString() : index + 1}>
                               <div className='flex flex-col items-center justify-center w-full h-full col-span-2'>
                                 {e?.id != null && <input onChange={_HandleChangeVariant.bind(this, e?.id, 'image')} type='file' id={`uploadImg+${e?.id}`} accept='image/png, image/jpeg' hidden />}
                                 <label htmlFor={`uploadImg+${e?.id}`} className={`${e?.id != null && 'cursor-pointer'} h-14 w-14 flex flex-col justify-center items-center bg-slate-200/50 rounded`}>
@@ -1317,9 +1408,9 @@ const Popup_Products = React.memo(props => {
                                         })
                                       }
                                       className='group hover:border-red-01 hover:bg-red-02 rounded-lg h-fit w-fit p-1 border border-transparent transition-all ease-in-out cursor-pointer'
-                                      >
-                                        <TrashIcon className='text-red-500 size-5' />
-                                      </button>
+                                    >
+                                      <TrashIcon className='text-red-500 size-5' />
+                                    </button>
                                   </div>
                                 </div>
                               )}

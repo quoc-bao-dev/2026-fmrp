@@ -194,7 +194,7 @@ const ProductRow = ({
 
   const handleImageUpload = useCallback(e => {
     const files = Array.from(e.target.files || []);
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    const MAX_SIZE = 1 * 1024 * 1024; // 5MB
     let hasOversize = false;
 
     files.forEach(file => {
@@ -208,7 +208,7 @@ const ProductRow = ({
       }
     });
 
-    setImageError(hasOversize ? 'Kích thước ảnh không được vượt quá 5MB' : '');
+    setImageError(hasOversize ? 'Kích thước ảnh không được vượt quá 1MB' : '');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }

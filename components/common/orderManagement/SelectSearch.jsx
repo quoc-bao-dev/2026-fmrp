@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { CiSearch } from 'react-icons/ci'
 import CheckboxDefault from '../checkbox/CheckboxDefault'
 import { CloseXIcon } from '@/components/icons'
+import { normalizeText } from '@/utils/helpers/stringHelper'
 
 const SelectSearch = ({ 
   options, 
@@ -20,6 +21,7 @@ const SelectSearch = ({
   onDuplicateSelect,
   preventDeselectOnClick = false,
   noDataMessage = 'Không có dữ liệu', // Prop mới: thông báo khi không có dữ liệu
+  keepSearchOnSelect = false, // Prop mới: giữ lại giá trị tìm kiếm sau khi chọn (mặc định false để backward compatible)
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
@@ -29,17 +31,22 @@ const SelectSearch = ({
   const inputRef = useRef(null)
 
   const filteredOptions = React.useMemo(() => {
+    // Nếu có setSearch (server-side search), không filter client-side vì API đã filter rồi
+    if (setSearch) {
+      return options;
+    }
+    // Client-side filtering khi không có server-side search
     if (!searchText?.trim()) return options;
-    const keyword = searchText.toLowerCase();
+    const keyword = normalizeText(searchText);
     return options?.filter(opt => {
       const label = opt?.label || '';
       const name = opt?.e?.name || '';
       const code = opt?.e?.code || '';
       const variation = opt?.e?.product_variation || '';
       const textType = opt?.e?.text_type || '';
-      return [label, name, code, variation, textType].some(v => v?.toString().toLowerCase().includes(keyword));
+      return [label, name, code, variation, textType].some(v => normalizeText(v).includes(keyword));
     });
-  }, [options, searchText]);
+  }, [options, searchText, normalizeText, setSearch]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -70,7 +77,11 @@ const SelectSearch = ({
     if (!multiple) {
       onChange(option) // Trả về object đơn, không phải array
       setIsOpen(false) // Đóng dropdown sau khi chọn
-      setSearchText('') // Reset search text
+      // Chỉ reset search text nếu keepSearchOnSelect = false
+      if (!keepSearchOnSelect) {
+        setSearchText('') // Reset search text
+        setSearch && setSearch('')
+      }
       return
     }
 

@@ -204,48 +204,93 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
 
   const formatNumberWithSetting = useCallback(number => formatNumberConfig(+number, dataSeting), [dataSeting]);
 
-  const handleSelectAll = useCallback(checked => {
-    setSelectAll(checked);
-    setProducts(prevProducts => {
-      const now = Date.now();
-      const updatedProducts = prevProducts.map((product, index) => {
-        const isSemiProduct = product.type_origin === 'semi_products';
-        const newSelected = isSemiProduct ? true : checked;
+  const handleSelectAll = useCallback(
+    checked => {
+      setProducts(prevProducts => {
+        const now = Date.now();
+        const skippedNoWarehouse = []; // lưu lại sản phẩm bị bỏ qua vì không có kho
 
-        const updatedProduct = {
-          ...product,
-          selected: newSelected,
-        };
+        const updatedProducts = prevProducts.map((product, index) => {
+          const isSemiProduct = product.type_origin === 'semi_products';
+          const hasWarehouses = product.warehouses && product.warehouses.length > 0;
 
-        // Nếu check, thêm checkOrder (giữ nguyên thứ tự ban đầu bằng cách dùng originalIndex)
-        if (newSelected) {
-          updatedProduct.checkOrder = now - (product.originalIndex || index);
+          // Đối với semi_products luôn cho phép chọn
+          // Đối với sản phẩm thường, chỉ cho phép chọn khi có kho
+          let newSelected = isSemiProduct ? true : checked && hasWarehouses;
+
+          // Nếu đang chọn tất cả nhưng không có kho -> bỏ qua và ghi nhận để báo toast
+          if (checked && !isSemiProduct && !hasWarehouses) {
+            newSelected = false;
+            skippedNoWarehouse.push(product);
+          }
+
+          const updatedProduct = {
+            ...product,
+            selected: newSelected,
+          };
+
+          // Nếu check, thêm checkOrder (giữ nguyên thứ tự ban đầu bằng cách dùng originalIndex)
+          if (newSelected) {
+            updatedProduct.checkOrder = now - (product.originalIndex || index);
+          } else {
+            // Nếu uncheck, xóa checkOrder
+            delete updatedProduct.checkOrder;
+          }
+
+          return updatedProduct;
+        });
+
+        // Sau khi map xong, tính lại trạng thái selectAll dựa trên các sản phẩm có thể chọn
+        if (!checked) {
+          // Nếu đang bỏ chọn tất cả
+          setSelectAll(false);
         } else {
-          // Nếu uncheck, xóa checkOrder
-          delete updatedProduct.checkOrder;
+          // Chỉ xét những sản phẩm có thể chọn (semi_products hoặc có kho)
+          const selectableProducts = updatedProducts.filter(p => {
+            if (p.type_origin === 'semi_products') return true;
+            const hasWarehouses = p.warehouses && p.warehouses.length > 0;
+            return hasWarehouses;
+          });
+
+          if (selectableProducts.length === 0) {
+            // Không có sản phẩm nào có thể chọn -> không được coi là "chọn tất cả"
+            setSelectAll(false);
+
+            // Chỉ trong TH này (tất cả đều không có kho) mới hiển thị toast
+            if (skippedNoWarehouse.length > 0) {
+              showToast(
+                'error',
+                `Vui lòng bổ sung kho trước khi xuất.`
+              );
+            }
+          } else {
+            const allSelectableSelected = selectableProducts.every(p => p.selected);
+            setSelectAll(allSelectableSelected);
+            // Nếu vẫn còn sản phẩm có thể chọn thì KHÔNG hiển thị toast,
+            // kể cả khi có một số sản phẩm không có kho bị bỏ qua.
+          }
         }
 
-        return updatedProduct;
+        // Sắp xếp lại: các phần tử được check lên đầu (theo checkOrder), các phần tử uncheck sắp xếp theo originalIndex
+        updatedProducts.sort((a, b) => {
+          // Phần tử được check luôn ở đầu
+          if (a.selected && !b.selected) return -1;
+          if (!a.selected && b.selected) return 1;
+
+          // Nếu cả hai đều được check, sắp xếp theo checkOrder (check gần nhất ở đầu)
+          if (a.selected && b.selected) {
+            return (b.checkOrder || 0) - (a.checkOrder || 0);
+          }
+
+          // Cả hai đều uncheck, sắp xếp theo originalIndex
+          return (a.originalIndex || 0) - (b.originalIndex || 0);
+        });
+
+        return updatedProducts;
       });
-
-      // Sắp xếp lại: các phần tử được check lên đầu (theo checkOrder), các phần tử uncheck sắp xếp theo originalIndex
-      updatedProducts.sort((a, b) => {
-        // Phần tử được check luôn ở đầu
-        if (a.selected && !b.selected) return -1;
-        if (!a.selected && b.selected) return 1;
-
-        // Nếu cả hai đều được check, sắp xếp theo checkOrder (check gần nhất ở đầu)
-        if (a.selected && b.selected) {
-          return (b.checkOrder || 0) - (a.checkOrder || 0);
-        }
-
-        // Cả hai đều uncheck, sắp xếp theo originalIndex
-        return (a.originalIndex || 0) - (b.originalIndex || 0);
-      });
-
-      return updatedProducts;
-    });
-  }, []);
+    },
+    [showToast]
+  );
 
   const handleSelectProduct = useCallback((index, checked) => {
     setProducts(prevProducts => {
@@ -743,7 +788,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
             </button>
           )}
           {activeTab?.id === 'reexport' &&
-            (isProPackage ? (
+            // (isProPackage ? (
               <button
                 onClick={handleConfirmReexport}
                 disabled={isSavingReexport}
@@ -753,9 +798,10 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
               >
                 <CheckIcon className='size-4' /> {isSavingReexport ? 'Đang xử lý...' : `Xuất bổ sung${reexportSelectedCount > 0 ? ` (${reexportSelectedCount})` : ''}`}
               </button>
-            ) : (
-              <PackageUpgradeButton />
-            ))}
+            // ) : (
+            //   <PackageUpgradeButton />
+            // ))
+            }
           <motion.div
             whileHover={{ scale: 1.2, rotate: 90 }}
             whileTap={{ scale: 0.9, rotate: -90 }}

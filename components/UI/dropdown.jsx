@@ -28,6 +28,58 @@ export const Dropdown = props => {
 
   const showToat = useToast();
 
+  // Helper function để lấy prefix (loại báo cáo) từ một path
+  const getPathPrefix = (path) => {
+    if (!path || path === '#') return '';
+    const pathWithoutQuery = path.split('?')[0];
+    const segments = pathWithoutQuery.split('/').filter(s => s.length > 0);
+    // Lấy tất cả segments trừ segment cuối cùng
+    if (segments.length <= 1) return pathWithoutQuery;
+    return '/' + segments.slice(0, -1).join('/');
+  };
+
+  // Helper function để check xem pathname có match với link không
+  const isActiveLink = (link, allItems = []) => {
+    if (!link || link === '#') return false;
+    const currentPath = router.pathname;
+    const linkPath = link.split('?')[0]; // Loại bỏ query params
+    const currentPathWithoutQuery = currentPath.split('?')[0];
+    
+    // Match chính xác
+    if (currentPathWithoutQuery === linkPath) return true;
+    
+    // Nếu pathname bắt đầu bằng link (link là prefix của pathname)
+    // Nhưng cần kiểm tra xem có link nào khác dài hơn và cũng match không
+    if (currentPathWithoutQuery.startsWith(linkPath + '/')) {
+      // Kiểm tra xem có link nào khác trong cùng danh sách dài hơn và cũng match không
+      const hasLongerMatch = allItems.some(item => {
+        if (!item.link || item.link === link) return false;
+        const otherLinkPath = item.link.split('?')[0];
+        // Nếu link khác dài hơn và cũng match với currentPath
+        if (otherLinkPath.length > linkPath.length && currentPathWithoutQuery.startsWith(otherLinkPath)) {
+          return true;
+        }
+        return false;
+      });
+      
+      // Chỉ active nếu không có link nào khác dài hơn và cũng match
+      if (!hasLongerMatch) return true;
+    }
+    
+    // Chỉ áp dụng logic "cùng prefix thì active" cho report-statistical
+    // Để tránh bị trùng ở các module khác như manufacture
+    if (linkPath.startsWith('/report-statistical') && currentPathWithoutQuery.startsWith('/report-statistical')) {
+      // Nếu cả hai có cùng prefix (cùng loại báo cáo)
+      const linkPrefix = getPathPrefix(linkPath);
+      const currentPrefix = getPathPrefix(currentPathWithoutQuery);
+      
+      // Nếu cả hai có cùng prefix và prefix không rỗng, thì active
+      if (linkPrefix && currentPrefix && linkPrefix === currentPrefix) return true;
+    }
+    
+    return false;
+  };
+
   // Component wrapper cho Link để check quyền và redirect nếu cần
   const SecureLink = ({ href, children, item, className, title, ...linkProps }) => {
     const handleClick = e => {
@@ -98,7 +150,14 @@ export const Dropdown = props => {
               <div key={i} className={`${e.title ? '3xl:px-6 3xl:py-3 2xl:px-3 2xl:py-1 xl:px-0.5 xl:py-0.5 lg:px-0.5 lg:py-0.5' : 'px-1'} space-y-1 ${props.wFit ? 'w-fit' : 'w-full'} `}>
                 {e.title && <h3 className='px-3 text-[14.5px] uppercase'>{e.title}</h3>}
                 <div className='flex flex-col gap-8'>
-                  {e.sub?.map((ce, ci) => (
+                  {e.sub?.map((ce, ci) => {
+                    // Tạo mảng chứa tất cả các link trong cùng một sub để check active
+                    const allLinksInSub = [
+                      ...(ce.link ? [{ link: ce.link }] : []),
+                      ...(ce.items || []).filter(item => item.link).map(item => ({ link: item.link }))
+                    ];
+                    
+                    return (
                     <div className='space-y-0 ' key={ci}>
                       {ce.link ? (
                         <>
@@ -107,7 +166,7 @@ export const Dropdown = props => {
                               title={ce.title}
                               href={`${ce.link}`}
                               item={ce}
-                              className='flex items-center 2xl:space-x-2 2xl:mb-0 2xl:px-3 2xl:py-2 xl:space-x-1 xl:mb-0 xl:px-3 xl:py-1 lg:space-x-1 lg:mb-0 lg:px-1 lg:py-1 rounded text-[#637381] list-none hover:list-disc std:text-base hover:text-[#0375F3] mb-1'
+                              className={`flex items-center 2xl:space-x-2 2xl:mb-0 2xl:px-3 2xl:py-2 xl:space-x-1 xl:mb-0 xl:px-3 xl:py-1 lg:space-x-1 lg:mb-0 lg:px-1 lg:py-1 rounded mb-1 ${isActiveLink(ce.link, allLinksInSub) ? 'text-[#0375F3] list-disc' : 'text-[#637381] list-none hover:list-disc std:text-base hover:text-[#0375F3]'}`}
                             >
                               {ce?.img ? (
                                 <React.Fragment>
@@ -126,7 +185,7 @@ export const Dropdown = props => {
                                   <h5 className='uppercase 3xl:text-base 2xl:text-[14px] xl:text-[10px] lg:text-[10px] '>{ce.title}</h5>
                                 </React.Fragment>
                               ) : (
-                                <li className=' 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] text-[#637381] list-none hover:list-disc std:text-base hover:text-[#0375F3] mb-1  outline-none'>
+                                <li className={`3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] mb-1 outline-none ${isActiveLink(ce.link, allLinksInSub) ? 'text-[#0375F3] list-disc' : 'text-[#637381] list-none hover:list-disc std:text-base hover:text-[#0375F3]'}`}>
                                   {ce.title}
                                 </li>
                               )}
@@ -136,7 +195,7 @@ export const Dropdown = props => {
                               title={ce.title}
                               href={`${ce.link}`}
                               item={ce}
-                              className='flex  items-center 2xl:space-x-2 2xl:mb-0 2xl:px-3 2xl:py-2 xl:space-x-1 xl:mb-0 xl:px-3 xl:py-1 lg:space-x-1 lg:mb-0 lg:px-1 lg:py-1 rounded text-[#637381] list-none hover:list-disc std:text-base hover:text-[#0375F3] mb-1'
+                              className={`flex items-center 2xl:space-x-2 2xl:mb-0 2xl:px-3 2xl:py-2 xl:space-x-1 xl:mb-0 xl:px-3 xl:py-1 lg:space-x-1 lg:mb-0 lg:px-1 lg:py-1 rounded mb-1 ${isActiveLink(ce.link, allLinksInSub) ? 'text-[#0375F3] list-disc' : 'text-[#637381] list-none hover:list-disc std:text-base hover:text-[#0375F3]'}`}
                             >
                               {ce?.img ? (
                                 <React.Fragment>
@@ -155,7 +214,7 @@ export const Dropdown = props => {
                                   <h5 className='uppercase 3xl:text-base 2xl:text-[14px] xl:text-[10px] lg:text-[10px] '>{ce.title}</h5>
                                 </React.Fragment>
                               ) : (
-                                <li className='3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] text-[#637381] list-none hover:list-disc std:text-base hover:text-[#0375F3] mb-1  outline-none'>
+                                <li className={`3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] mb-1 outline-none ${isActiveLink(ce.link, allLinksInSub) ? 'text-[#0375F3] list-disc' : 'text-[#637381] list-none hover:list-disc std:text-base hover:text-[#0375F3]'}`}>
                                   {ce.title}
                                 </li>
                               )}
@@ -215,12 +274,13 @@ export const Dropdown = props => {
                       )}
                       <div className='flex flex-col gap-y-4'>
                         {ce.items?.map((e, i) => {
+                          const isActive = isActiveLink(e.link, ce.items);
                           return (
                             <div key={i}>
                               {e?.role == '1' && e.name === 'Tổng hợp kế hoạch BTP & NVL' ? (
                                 <SecureLink href={e.link ? e.link : '#'} title={e.name} item={e} className='outline-none' key={i}>
-                                  <li className='relative pl-4 text-[#637381] std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none group hover:text-[#0375F3] flex items-center'>
-                                    <span className="before:content-['•'] before:absolute before:left-0 before:text-blue-600 before:opacity-0 group-hover:before:opacity-100">{e?.name}</span>
+                                  <li className={`relative pl-4 std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none flex items-center ${isActive ? 'text-[#0375F3]' : 'text-[#637381] group hover:text-[#0375F3]'}`}>
+                                    <span className={`before:content-['•'] before:absolute before:left-0 before:text-blue-600 ${isActive ? 'before:opacity-100' : 'before:opacity-0 group-hover:before:opacity-100'}`}>{e?.name}</span>
                                     {e?.isPro && (
                                       // Render badge "pro" ngay cạnh tên item khi item có key isPro
                                       <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full h-fit text-[10px] leading-[130%]'>pro</span>
@@ -251,8 +311,8 @@ export const Dropdown = props => {
                                     });
                                   }}
                                 >
-                                  <li className='relative pl-4 text-[#637381] std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none group hover:text-[#0375F3] flex items-center'>
-                                    <span className="before:content-['•'] before:absolute before:left-0 before:text-blue-600 before:opacity-0 group-hover:before:opacity-100">{e?.name}</span>
+                                  <li className={`relative pl-4 std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none flex items-center ${isActive ? 'text-[#0375F3]' : 'text-[#637381] group hover:text-[#0375F3]'}`}>
+                                    <span className={`before:content-['•'] before:absolute before:left-0 before:text-blue-600 ${isActive ? 'before:opacity-100' : 'before:opacity-0 group-hover:before:opacity-100'}`}>{e?.name}</span>
                                     {e?.isPro && (
                                       // Render badge "pro" ngay cạnh tên item khi item có key isPro
                                       <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full h-fit text-[10px] leading-[130%]'>pro</span>
@@ -261,8 +321,8 @@ export const Dropdown = props => {
                                 </Link>
                               ) : is_admin && !e?.forceDisableForAdmin ? (
                                 <SecureLink href={e.link ? e.link : '#'} title={e.name} item={e} className='outline-none ' key={i}>
-                                  <li className='relative pl-4 text-[#637381] std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none group hover:text-[#0375F3]'>
-                                    <span className="before:content-['•'] before:absolute before:left-0 before:text-blue-600 before:opacity-0 group-hover:before:opacity-100">{e?.name} </span>
+                                  <li className={`relative pl-4 std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none ${isActive ? 'text-[#0375F3]' : 'text-[#637381] group hover:text-[#0375F3]'}`}>
+                                    <span className={`before:content-['•'] before:absolute before:left-0 before:text-blue-600 ${isActive ? 'before:opacity-100' : 'before:opacity-0 group-hover:before:opacity-100'}`}>{e?.name} </span>
                                     {e?.isPro && (
                                       // Render badge "pro" ngay cạnh tên item khi item có key isPro
                                       <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-[10px]'>pro</span>
@@ -271,8 +331,8 @@ export const Dropdown = props => {
                                 </SecureLink>
                               ) : e?.viewOwn == '1' || e?.view == '1' ? (
                                 <SecureLink href={e.link ? e.link : '#'} title={e.name} item={e} className='outline-none' key={i}>
-                                  <li className='relative pl-4 text-[#637381] std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none group hover:text-[#0375F3]'>
-                                    <span className="before:content-['•'] before:absolute before:left-0 before:text-blue-600 before:opacity-0 group-hover:before:opacity-100">{e?.name} </span>
+                                  <li className={`relative pl-4 std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none ${isActive ? 'text-[#0375F3]' : 'text-[#637381] group hover:text-[#0375F3]'}`}>
+                                    <span className={`before:content-['•'] before:absolute before:left-0 before:text-blue-600 ${isActive ? 'before:opacity-100' : 'before:opacity-0 group-hover:before:opacity-100'}`}>{e?.name} </span>
                                     {e?.isPro && (
                                       // Render badge "pro" ngay cạnh tên item khi item có key isPro
                                       <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-[10px]'>pro</span>
@@ -299,7 +359,8 @@ export const Dropdown = props => {
                         })}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}

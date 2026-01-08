@@ -14,7 +14,7 @@ import { CONFIRM_DELETION, TITLE_DELETE } from '@/constants/delete/deleteTable';
 import useToast from '@/hooks/useToast';
 import { useToggle } from '@/hooks/useToggle';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Trash as IconDelete, GalleryEdit as IconEditImg, Image as IconImage } from 'iconsax-react';
+import { Copy, Trash as IconDelete, GalleryEdit as IconEditImg, Image as IconImage } from 'iconsax-react';
 import Image from 'next/image';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -22,6 +22,7 @@ import Select from 'react-select';
 import { useItemCategoryOptions } from '../../hooks/items/useItemCategoryOptions';
 import PopupCategory from '../category/popup';
 import PopupUnit from '../unit/popup';
+
 const Popup_NVL = React.memo(props => {
   const dataOptUnit = useSelector(state => state.unit_NVL);
 
@@ -401,7 +402,8 @@ const Popup_NVL = React.memo(props => {
   // lưu tạo nguyên vật liệu
   const handingItems = useMutation({
     mutationFn: async data => {
-      return apiItems.apiHandingItems(data, props.id);
+      // Nếu là copy thì không truyền id (tạo mới), nếu không thì truyền id (update hoặc tạo mới)
+      return apiItems.apiHandingItems(data, props.copyId ? null : props.id);
     },
   });
 
@@ -483,9 +485,10 @@ const Popup_NVL = React.memo(props => {
 
   const _HandleSubmit = e => {
     e.preventDefault();
-    if (name?.length == 0 || (props.id && code?.length == 0) || groupId == null || unit == null || branch.length == 0) {
+    // Khi copy, không bắt buộc code (vì đã xóa code)
+    if (name?.length == 0 || ((props.id && !props.copyId) && code?.length == 0) || groupId == null || unit == null || branch.length == 0) {
       name?.length == 0 && sErrName(true);
-      props.id && code?.length == 0 && sErrCode(true);
+      (props.id && !props.copyId) && code?.length == 0 && sErrCode(true);
       groupId == null && sErrGroup(true);
       unit == null && sErrUnit(true);
       branch.length == 0 && sErrBranch(true);
@@ -552,7 +555,57 @@ const Popup_NVL = React.memo(props => {
       sDataTotalVariant(data?.variation_option_value);
       return data;
     },
-    enabled: open && !!props?.id,
+    enabled: open && !!props?.id && !props?.copyId,
+  });
+
+  // get dữ liệu chi tiết khi copy
+  const { isLoading: isLoadingCopy, isFetching: isFetchingCopy } = useQuery({
+    queryKey: ['api_detail_items', props?.copyId],
+    queryFn: async () => {
+      const data = await apiItems.apiDetailItems(props?.copyId);
+      console.log(data)
+      sName(data?.name);
+      sCode(''); // Xóa code khi copy để tạo mới
+      sNote(data?.note);
+      sPrice(Number(data?.import_price));
+      sMinimumAmount(Number(data?.minimum_quantity));
+      sGroupId(
+        data?.category_id
+          ? {
+              label: data?.category_name,
+              value: data?.category_id,
+            }
+          : null
+      );
+      sExpiry(Number(data?.expiry));
+      sUnitAmount(Number(data?.coefficient));
+      sThumb(data?.images);
+      sUnit(data?.unit_id);
+      sUnitChild(data?.unit_convert_id);
+      sBranch(
+        data?.branch.map(e => ({
+          label: e.name,
+          value: e.id,
+        }))
+      );
+      sDataVariantSending(data?.variation);
+      sVariantMain(data?.variation[0]?.id);
+      sVariantSub(data?.variation[1]?.id);
+      sOptSelectedVariantMain(data?.variation[0]?.option);
+      sOptSelectedVariantSub(data?.variation[1]?.option);
+      // Xóa id_primary của các biến thể để tạo mới
+      const copiedVariants = data?.variation_option_value?.map(item => ({
+        ...item,
+        id_primary: undefined,
+        variation_option_2: item?.variation_option_2?.map(subItem => ({
+          ...subItem,
+          id_primary: undefined,
+        })),
+      }));
+      sDataTotalVariant(copiedVariants || []);
+      return data;
+    },
+    enabled: open && !!props?.copyId,
   });
 
   // change biến thể
@@ -624,15 +677,17 @@ const Popup_NVL = React.memo(props => {
 
   return (
     <PopupCustom
-      title={props?.id ? `${props.dataLang?.category_material_list_edit}` : `${props.dataLang?.category_material_list_addnew}`}
+      title={props?.copyId ? `Sao chép nguyên vật liệu` : props?.id ? `${props.dataLang?.category_material_list_edit}` : `${props.dataLang?.category_material_list_addnew}`}
       button={
-        props?.id ? (
-          // <IconEdit />
+        props?.copyId ? (
+          <div className='group rounded-lg w-full p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer hover:border-[#064E3B] hover:bg-[#064E3B]/10'>
+            <Copy size={20}/>
+          </div>
+        ) : props?.id ? (
           <div className='group rounded-lg w-full p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer hover:border-[#064E3B] hover:bg-[#064E3B]/10'>
             <EditIcon className={`size-5 transition-all duration-300 `} />
           </div>
         ) : (
-          // `${props.dataLang?.branch_popup_create_new}`
           <p className='flex flex-row justify-center items-center gap-x-1 responsive-text-sm text-sm font-normal'>
             <PlusIcon /> {props.dataLang?.branch_popup_create_new}
           </p>
@@ -659,7 +714,7 @@ const Popup_NVL = React.memo(props => {
           </button>
         </div>
         <div className='3xl:h-[600px]  2xl:h-[470px] xl:h-[380px] lg:h-[350px] h-[400px] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100'>
-          {isFetching || isLoading ? (
+          {(isFetching || isLoading || isFetchingCopy || isLoadingCopy) ? (
             <Loading className='h-80' color='#0f4f9e' />
           ) : (
             <React.Fragment>
@@ -751,7 +806,7 @@ const Popup_NVL = React.memo(props => {
                     </div>
                     <div className='2xl:space-y-1'>
                       <label className='text-[#344054] font-normal 2xl:text-base text-[15px]'>
-                        {props.dataLang?.category_material_list_code || 'category_material_list_code'} {props.id && <span className='text-red-500'>*</span>}
+                        {props.dataLang?.category_material_list_code || 'category_material_list_code'} {props.id && !props.copyId && <span className='text-red-500'>*</span>}
                       </label>
                       <input
                         value={code}

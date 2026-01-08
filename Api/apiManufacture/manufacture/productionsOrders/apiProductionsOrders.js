@@ -202,6 +202,7 @@ const apiProductionsOrders = {
         const headers = {
           Authorization: `Bearer ${token}`,
           'x-api-key': databaseApp,
+        //   'databaseapp': databaseApp,
           // LƯU Ý: browser tự set Content-Type cho FormData
         };
       
@@ -290,6 +291,56 @@ const apiProductionsOrders = {
     async apiHandlingFinishedStages(data) {
         const response = await axiosCustom('POST', `/api_web/api_manufactures/handlingFinishedStages`, data);
         return response.data
+    },
+    async apiHandlingFinishedStagesFetch(data) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFMRP = urlParams.get('tokenFMRP');
+        const databaseappFMRP = urlParams.get('databaseappFMRP');
+        
+        let token = '';
+        let databaseApp = '';
+        
+        try { 
+            token = Cookies.get('tokenFMRP') ?? tokenFMRP ?? ''; 
+        } catch (_) {}
+        
+        try { 
+            databaseApp = Cookies.get('databaseappFMRP') ?? databaseappFMRP ?? ''; 
+        } catch (_) {}
+        
+        const baseURL = process.env.NEXT_PUBLIC_URL_API || '';
+        const url = `${baseURL}/api_web/api_manufactures/handlingFinishedStages`;
+        
+        const headers = {
+            Authorization: `Bearer ${token}`,
+            'x-api-key': databaseApp,
+            // 'databaseapp': databaseApp,
+            // LƯU Ý: Không set Content-Type cho FormData, browser sẽ tự động set với boundary
+        };
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers,
+            body: data, // FormData
+            credentials: 'omit',
+        });
+        
+        if (!response.ok) {
+            const status = response.status;
+            const responseData = await response.json().catch(() => ({}));
+            const message = responseData?.message || 'An error occurred';
+            
+            const error = new Error(message);
+            error.response = { status, data: responseData };
+            
+            if (status === 403) setTimeout(() => (window.location.href = '/error/403'), 1500);
+            else if (status === 404) window.location.href = '/error/404';
+            
+            throw error;
+        }
+        
+        const responseData = await response.json();
+        return responseData;
     },
     // xóa lsx
     async apiDeleteProductionOrders(id) {
@@ -402,6 +453,18 @@ const apiProductionsOrders = {
     // Lưu thu hồi nguyên liệu
     async apiSaveRecallMaterials(data) {
         const response = await axiosCustom('POST', `/api_web/purchase-internal/save`, data);
+        return response.data;
+    },
+
+    // danh sách NVL thu hồi giữ kho
+    async apiListRecallKeepStock(data) {
+        const response = await axiosCustom('POST', `/api_web/transfer-warehouse/recovery-items`, data);
+        return response.data;
+    },
+
+    // Lưu thu hồi giữ kho
+    async apiSaveRecoveryKeepStock(data) {
+        const response = await axiosCustom('POST', `/api_web/transfer-warehouse/save-recovery`, data);
         return response.data;
     },
     

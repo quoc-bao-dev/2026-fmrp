@@ -1,124 +1,105 @@
-import React from 'react';
-import Avatar from './Avatar';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import ResponsibleAvatar from './ResponsibleAvatar';
 
-const SIZE_MAP = {
-  sm: 24,
-  md: 32,
-  lg: 40,
-};
+const AvatarStack = ({ people = [], size = 40 }) => {
+  const [hoverId, setHoverId] = useState(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const avatarRefs = useRef({});
 
-export default function AvatarStack({ items = [], max = 3, size = 'md', overlap = 0.35, showNames = false, tooltip = true, counterPlacement = 'end', ring = true, className = '' }) {
-  const count = items.length;
-  const px = SIZE_MAP[size] || SIZE_MAP.md;
-  const spacing = Math.floor(px * overlap);
+  if (!people || people.length === 0) return null;
 
-  if (count === 0) return null;
+  const visible = people.slice(0, 3);
+  const remaining = people.length - visible.length;
 
-  if (count === 1 && showNames) {
-    const user = items[0];
-    return (
-      <div
-        className={className}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 8,
-          background: 'rgba(59,130,246,0.08)',
-          border: '1px solid rgba(59,130,246,0.25)',
-          padding: '6px 10px 6px 6px',
-          borderRadius: 9999,
-        }}
-      >
-        <Avatar src={user.src} alt={user.name} name={user.name} size={size} ring={ring} tooltip={tooltip} />
-        <span
-          style={{
-            fontWeight: 600,
-            color: '#111827',
-            whiteSpace: 'nowrap',
-          }}
-          title={tooltip ? user.name : undefined}
-        >
-          {user.name}
-        </span>
-      </div>
-    );
-  }
+  const updateTooltipPosition = (personId) => {
+    const avatarElement = avatarRefs.current[personId];
+    if (avatarElement) {
+      const rect = avatarElement.getBoundingClientRect();
+      setTooltipPosition({
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX + rect.width / 2,
+      });
+    }
+  };
 
-  const cap = Math.max(0, max);
-  const visible = cap > 0 ? items.slice(0, cap) : [];
-  const rest = Math.max(0, count - visible.length);
-  const order = counterPlacement === 'start' ? ['counter', ...visible] : [...visible, 'counter'];
+  const handleMouseEnter = (personId) => {
+    setHoverId(personId);
+    updateTooltipPosition(personId);
+  };
+
+  useEffect(() => {
+    if (hoverId) {
+      updateTooltipPosition(hoverId);
+      const handleScroll = () => {
+        updateTooltipPosition(hoverId);
+      };
+      const handleResize = () => {
+        updateTooltipPosition(hoverId);
+      };
+      window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', handleResize);
+      return () => {
+        window.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+  }, [hoverId]);
+
+  const hoveredPerson = visible.find((person) => person.id === hoverId);
 
   return (
-    <div
-      className={className}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        background: 'rgba(59,130,246,0.08)',
-        border: '1px solid rgba(59,130,246,0.25)',
-        padding: 6,
-        borderRadius: 9999,
-      }}
-    >
-      <div style={{ display: 'inline-flex', position: 'relative', paddingLeft: 0 }}>
-        {order.map((entry, idx) => {
-          if (entry === 'counter') {
-            if (rest <= 0) return null;
-            return (
-              <div
-                key='more-counter'
-                style={{
-                  marginLeft: idx === 0 ? 0 : -spacing,
-                  zIndex: 1,
-                }}
-              >
-                <CounterAvatar value={rest} size={size} ring={ring} />
-              </div>
-            );
-          }
-
-          const user = entry;
-          const isFirst = idx === 0 || (idx === 1 && order[0] === 'counter');
+    <>
+      <div
+        className={`inline-flex items-center pl-1.5 py-1.5 bg-[#EBF5FF] rounded-full overflow-visible relative z-0 ${
+          Number(remaining) > 0 ? '' : 'pr-1.5'
+        }`}
+      >
+        {visible.map((person, idx) => {
           return (
             <div
-              key={user.id || idx}
-              style={{
-                marginLeft: isFirst ? 0 : -spacing,
-                zIndex: idx + 2,
-              }}
+              key={person.id}
+              ref={(el) => (avatarRefs.current[person.id] = el)}
+              className='relative overflow-visible z-10'
+              onMouseEnter={() => handleMouseEnter(person.id)}
+              onMouseLeave={() => setHoverId(null)}
+              style={idx > 0 ? { marginLeft: -8 } : undefined}
             >
-              <Avatar src={user.src} alt={user.name} name={user.name} size={size} ring={ring} tooltip={tooltip} />
+              <ResponsibleAvatar avatarUrl={person.avatarUrl} fullName={person.name} size={size} />
             </div>
           );
         })}
-      </div>
-    </div>
-  );
-}
 
-function CounterAvatar({ value, size = 'md', ring = true }) {
-  const px = SIZE_MAP[size] || SIZE_MAP.md;
-  return (
-    <div
-      title={`+${value} more`}
-      aria-label={`+${value} more`}
-      style={{
-        width: px,
-        height: px,
-        borderRadius: px,
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#E5E7EB',
-        color: '#374151',
-        fontWeight: 700,
-        fontSize: Math.max(10, Math.floor(px * 0.45)),
-        border: ring ? '2px solid #fff' : 'none',
-        boxShadow: ring ? '0 0 0 1px rgba(59,130,246,0.5)' : 'none',
-      }}
-    >
-      +{value}
-    </div>
+        {remaining > 0 && (
+          <div className={`left-[-8px] relative z-50 rounded-full border-2 border-[#549AE8] bg-[#D1D1D1] text-[#606060] font-semibold flex items-center justify-center shadow-sm`} style={{ width: size, height: size }}>
+            +{remaining}
+          </div>
+        )}
+
+        {visible.length === 1 && <p className='px-2 text-xs max-w-[100px] truncate font-medium'> {visible[0].name}</p>}
+      </div>
+
+      {hoveredPerson &&
+        createPortal(
+          <div
+            className='fixed z-[9999] pointer-events-none'
+            style={{
+              top: `${tooltipPosition.top}px`,
+              left: `${tooltipPosition.left}px`,
+              transform: 'translateX(-50%)',
+            }}
+          >
+            <div className='relative'>
+              <div className='absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-b-8 border-b-[#0375F3]' />
+              <div className='px-3 py-2 bg-[#0375F3] text-white rounded-[12px] text-sm font-semibold shadow-lg whitespace-nowrap truncate'>
+                {hoveredPerson.name}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
   );
-}
+};
+
+export default AvatarStack;

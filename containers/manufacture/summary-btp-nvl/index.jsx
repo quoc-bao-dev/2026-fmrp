@@ -1,5 +1,6 @@
 import BreadcrumbCustom from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 import { Container } from '@/components/UI/common/layout';
 import DateToDateReport from '@/components/UI/filterComponents/dateTodateReport';
 import ExcelFileComponent from '@/components/UI/filterComponents/excelFilecomponet';
@@ -28,7 +29,6 @@ import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import { debounce } from 'lodash';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import PopupRequestUpdateVersion from '@/components/common/popup/PopupRequestUpdateVersion';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { FaPlus } from 'react-icons/fa6';
 import { useDispatch, useSelector } from 'react-redux';
@@ -131,31 +131,31 @@ const SummaryBtpNvl = () => {
   }, []);
 
   // Hiển thị popup sau 15 giây nếu không phải gói pro, nếu bấm đóng thì chuyển về trang chủ
-  useEffect(() => {
-    if (!isProPackage) {
-      const timer = setTimeout(() => {
-        dispatch({
-          type: 'statePopupGlobal',
-          payload: {
-            open: true,
-            children: (
-              <PopupRequestUpdateVersion
-                onClose={() => {
-                  router.push('/');
-                }}
-              >
-                <p className='text-start xlg:text-2xl text-xl leading-[32px] font-semibold text-[#141522]'>
-                  Theo dõi chặt <span className='text-[#0375F3]'>Tổng hợp nhu cầu nguyên vật liệu & BTP</span> rõ ràng hiệu quả nhất !
-                </p>
-              </PopupRequestUpdateVersion>
-            ),
-          },
-        });
-      }, 2000); // 2 giây = 2000 milliseconds
+  // useEffect(() => {
+  //   if (!isProPackage) {
+  //     const timer = setTimeout(() => {
+  //       dispatch({
+  //         type: 'statePopupGlobal',
+  //         payload: {
+  //           open: true,
+  //           children: (
+  //             <PopupRequestUpdateVersion
+  //               onClose={() => {
+  //                 router.push('/');
+  //               }}
+  //             >
+  //               <p className='text-start xlg:text-2xl text-xl leading-[32px] font-semibold text-[#141522]'>
+  //                 Theo dõi chặt <span className='text-[#0375F3]'>Tổng hợp nhu cầu nguyên vật liệu & BTP</span> rõ ràng hiệu quả nhất !
+  //               </p>
+  //             </PopupRequestUpdateVersion>
+  //           ),
+  //         },
+  //       });
+  //     }, 2000); // 2 giây = 2000 milliseconds
 
-      return () => clearTimeout(timer);
-    }
-  }, [isProPackage, router, dispatch]);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [isProPackage, router, dispatch]);
 
   // Hàm toggle chọn trạng thái lọc lệnh sản xuất
   const toggleStatus = value => {
@@ -525,7 +525,19 @@ const SummaryBtpNvl = () => {
     <Container className='flex flex-col gap-2 !space-y-0 pb-4'>
       <BreadcrumbCustom items={breadcrumbItems} className='3xl:text-sm 2xl:text-xs xl:text-[10px] lg:text-[10px]' />
       <div className='flex items-center justify-between w-full'>
-        <h2 className='text-title-section text-[#52575E] capitalize font-medium'>Tổng hợp kế hoạch BTP & NVL</h2>
+        <h2 className='text-title-section text-[#52575E] capitalize font-medium'>
+          Tổng hợp kế hoạch BTP & NVL{' '}
+          <InfoTooltip
+            content={
+              <p>
+                <span className='font-bold'>Tổng hợp kế hoạch BTP & NVL</span> là bảng tổng hợp về nhu cầu NVL/BTP của tất cả các lệnh sản xuất hoặc theo tổng mặt hàng NVL/ BTP.
+              </p>
+            }
+            iconProps={{
+              className: '2xl:size-[21px] xl:size-[18px] size-[16px]',
+            }}
+          />
+        </h2>
         <div className='flex items-center gap-2'>
           {/* <ButtonAnimationNew
             icon={
@@ -742,14 +754,14 @@ const SummaryBtpNvl = () => {
               />
             </div>
             {/* <div className='w-full'> */}
-              <SearchComponent
-                onChange={e => setSearchMaterial(e?.target?.value || '')}
-                value={searchMaterial}
-                classNameBox='!py-2 2xl:!p-2.5 w-1/2'
-                placeholder='Tìm kiếm mã/tên ...'
-                classInput='w-full'
-                alwaysOpen={true}
-              />
+            <SearchComponent
+              onChange={e => setSearchMaterial(e?.target?.value || '')}
+              value={searchMaterial}
+              classNameBox='!py-2 2xl:!p-2.5 w-1/2'
+              placeholder='Tìm kiếm mã/tên ...'
+              classInput='w-full'
+              alwaysOpen={true}
+            />
             {/* </div> */}
           </div>
 

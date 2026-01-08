@@ -91,7 +91,7 @@ const _ServerInstance = async (method, url, dataObject = {}, callback) => {
           // window.location.href = '/error/500';
         } else if (status === 403) {
           showToat('error', message);
-          // setTimeout(() => (window.location.href = '/error/403'), 1500);
+          setTimeout(() => (window.location.href = '/error/403'), 1500);
         } else if (status === 404) {
           showToat('error', message);
           window.location.href = '/error/404';

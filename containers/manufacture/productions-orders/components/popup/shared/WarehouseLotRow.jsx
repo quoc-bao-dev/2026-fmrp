@@ -224,6 +224,7 @@ const WarehouseLotRow = memo(
                         max={Number(total_quantity) || Infinity}
                         allowDecimal={true}
                         useConfigFormat={false}
+                        classNameButton='size-7'
                       />
                         <span className='text-[#141522] text-left text-xs font-medium min-w-10 whitespace-nowrap'>/{unitName}</span>
                     </div>

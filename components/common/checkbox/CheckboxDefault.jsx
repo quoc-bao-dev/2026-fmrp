@@ -18,7 +18,7 @@ const CheckboxDefault = ({
         >
             <input
                 type="checkbox"
-                className="peer hidden"
+                className="peer hidden select-none"
                 checked={checked}
                 defaultChecked={defaultChecked}
                 onChange={(e) => onChange?.(e.target.checked)}
@@ -26,7 +26,7 @@ const CheckboxDefault = ({
             />
             <div
                 className={twMerge(
-                    "w-5 h-5 border-[1px] border-[#D0D5DD] rounded-md peer-checked:bg-[#0375F3] flex items-center justify-center transition",
+                    "w-5 h-5 border-[1px] border-[#D0D5DD] rounded-md peer-checked:bg-[#0375F3] flex items-center justify-center transition select-none",
                 )}
             >
                 <svg
@@ -35,6 +35,7 @@ const CheckboxDefault = ({
                     viewBox="0 0 12 9"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
+                    className="select-none"
                 >
                     <path
                         d="M10.6663 1L4.24967 7.41667L1.33301 4.5"
@@ -45,7 +46,7 @@ const CheckboxDefault = ({
                     />
                 </svg>
             </div>
-            {label && <span className="responsive-text-base text-gray-700">{label}</span>}
+            {label && <span className="responsive-text-base text-gray-700 select-none">{label}</span>}
         </label>
     );
 };

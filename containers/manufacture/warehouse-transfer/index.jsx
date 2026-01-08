@@ -496,18 +496,18 @@ const WarehouseTransfer = props => {
                   <ColumnTable colSpan={1} textAlign={'left'}>
                     {dataLang?.import_code_vouchers || 'import_code_vouchers'}
                   </ColumnTable>
-                  <ColumnTable colSpan={1} textAlign={'left'}>
+                  <ColumnTable colSpan={1.5} textAlign={'left'}>
                     {dataLang?.warehouseTransfer_transferWarehouse || 'warehouseTransfer_transferWarehouse'}
                   </ColumnTable>
-                  <ColumnTable colSpan={1} textAlign={'left'}>
+                  <ColumnTable colSpan={1.5} textAlign={'left'}>
                     {dataLang?.warehouseTransfer_receivingWarehouse || 'warehouseTransfer_receivingWarehouse'}
                   </ColumnTable>
                   <ColumnTable colSpan={1} textAlign={'left'}>
                     {dataLang?.production_warehouse_Total_value || 'production_warehouse_Total_value'}
                   </ColumnTable>
-                  <ColumnTable colSpan={1} textAlign={'left'}>
+                  {/* <ColumnTable colSpan={1} textAlign={'left'}>
                     {dataLang?.warehouses_localtion_status || 'warehouses_localtion_status'}
-                  </ColumnTable>
+                  </ColumnTable> */}
                   <ColumnTable colSpan={1.5} textAlign={'left'}>
                     {dataLang?.production_warehouse_note || 'production_warehouse_note'}
                   </ColumnTable>
@@ -545,19 +545,19 @@ const WarehouseTransfer = props => {
                               id={e?.id}
                             />
                           </RowItemTable>
-                          <RowItemTable colSpan={1} textAlign={'left'}>
+                          <RowItemTable colSpan={1.5} textAlign={'left'}>
                             <LinkWarehouse colSpan={1} disbleClick={true} warehouse_id={e?.warehouses_id} warehouse_name={e?.warehouses_id_name} />
                           </RowItemTable>
-                          <RowItemTable colSpan={1} textAlign={'left'}>
+                          <RowItemTable colSpan={1.5} textAlign={'left'}>
                             <LinkWarehouse disbleClick={true} colSpan={1} warehouse_id={e?.warehouses_to} warehouse_name={e?.warehouses_to_name} color='text-neutral-07' />
                           </RowItemTable>
 
                           <RowItemTable colSpan={1} textAlign={'left'}>
                             {renderMoneyOrDash(e?.grand_total)}
                           </RowItemTable>
-                          <RowItemTable colSpan={1} className='flex'>
+                          {/* <RowItemTable colSpan={1} className='flex'>
                             {e?.order_id != 0 || e?.plan_id != 0 ? <TagColorOrange name={'Đã giữ kho'} /> : <TagColorSky name={'Chưa giữ kho'} />}
-                          </RowItemTable>
+                          </RowItemTable> */}
                           <RowItemTable colSpan={1.5} textAlign={'left'} className={'truncate'}>
                             {e?.note}
                           </RowItemTable>
@@ -619,7 +619,7 @@ const WarehouseTransfer = props => {
         total={
           <>
             <ContainerTotal className='!grid-cols-24'>
-              <RowItemTable colSpan={3.5} textAlign={'right'} className='p-2'></RowItemTable>
+              <RowItemTable colSpan={4.5} textAlign={'right'} className='p-2'></RowItemTable>
               <RowItemTable colSpan={1} textAlign={'left'} className='p-2'>
                 {dataLang?.import_total || 'import_total'}
               </RowItemTable>

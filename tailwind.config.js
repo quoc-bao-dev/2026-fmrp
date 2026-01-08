@@ -195,6 +195,18 @@ module.exports = {
         'span-14': 'span 14 / span 14',
         'span-15': 'span 15 / span 15',
         'span-16': 'span 16 / span 16',
+        'span-17': 'span 17 / span 17',
+        'span-18': 'span 18 / span 18',
+        'span-19': 'span 19 / span 19',
+        'span-20': 'span 20 / span 20',
+        'span-21': 'span 21 / span 21',
+        'span-22': 'span 22 / span 22',
+        'span-23': 'span 23 / span 23',
+        'span-24': 'span 24 / span 24',
+        'span-25': 'span 25 / span 25',
+        'span-26': 'span 26 / span 26',
+        'span-27': 'span 27 / span 27',
+        'span-28': 'span 28 / span 28',
       },
       backgroundImage: {
         logo: "url('/logo_1.png')",
@@ -353,6 +365,22 @@ module.exports = {
           },
           '@screen 3xl': {
             fontSize: '26px',
+            lineHeight: '32px',
+          },
+        },
+        '.responsive-text-4xl': {
+          fontSize: '25px',
+          lineHeight: '32px',
+          '@screen xl': {
+            fontSize: '26px',
+            lineHeight: '32px',
+          },
+          '@screen 2xl': {
+            fontSize: '27px',
+            lineHeight: '32px',
+          },
+          '@screen 3xl': {
+            fontSize: '28px',
             lineHeight: '32px',
           },
         },

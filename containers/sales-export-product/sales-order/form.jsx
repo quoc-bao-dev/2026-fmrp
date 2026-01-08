@@ -982,7 +982,7 @@ const SalesOrderForm = props => {
           <div className='font-semibold responsive-text-sm truncate text-black'>{option.e?.name}</div>
           {option.e?.product_variation && (
             <div className='text-blue-600 truncate'>
-              {option.e?.product_variation}
+              {option.e?.code} - {option.e?.product_variation}
               {/* {option.e?.product_variation && `Màu sắc: ${option.e?.product_variation} `} */}
               {/* {option.e?.product_variation_1 && `- Size: ${option.e?.product_variation_1}`} */}
             </div>

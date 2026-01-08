@@ -1,12 +1,12 @@
+import { MagnifyingGlassIcon } from '@/components/icons';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import Loading from '@/components/UI/loading/loading';
+import NoData from '@/components/UI/noData/nodata';
+import formatNumber from '@/utils/helpers/formatnumber';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { MdArrowDropDown, MdClose } from 'react-icons/md';
 import { twMerge } from 'tailwind-merge';
-import { MagnifyingGlassIcon } from '@/components/icons';
-import Loading from '@/components/UI/loading/loading';
-import NoData from '@/components/UI/noData/nodata';
-import formatNumber from '@/utils/helpers/formatnumber';
 
 const defaultFormatDate = value => {
   if (!value) return '';
@@ -98,7 +98,7 @@ export const CustomDropdownRadioGroup = ({
   const buttonRef = useRef(null);
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
-  const hasOpenedRef = useRef(false);
+  const [internalSearchValue, setInternalSearchValue] = useState('');
 
   const updatePosition = useCallback(() => {
     if (!buttonRef.current) return;
@@ -128,13 +128,6 @@ export const CustomDropdownRadioGroup = ({
     };
   }, [open, updatePosition]);
 
-  // Ghi nhận đã từng mở dropdown bằng thao tác người dùng
-  useEffect(() => {
-    if (open) {
-      hasOpenedRef.current = true;
-    }
-  }, [open]);
-
   useEffect(() => {
     if (!open) return undefined;
     const handleClickOutside = event => {
@@ -157,14 +150,16 @@ export const CustomDropdownRadioGroup = ({
     }
   }, [open, isSearchable]);
 
-  // Giữ dropdown mở khi đang loading
-  useEffect(() => {
-    // Chỉ tự mở lại khi người dùng đã từng mở dropdown
-    if (isLoading && !open && isSearchable && hasOpenedRef.current) {
-      setOpen(true);
-      updatePosition();
+  // Giá trị search: nếu parent truyền control thì dùng, ngược lại dùng state nội bộ
+  const effectiveSearchValue = onSearchChange ? searchValue : internalSearchValue;
+
+  const handleSearchChange = value => {
+    if (onSearchChange) {
+      onSearchChange(value);
+    } else {
+      setInternalSearchValue(value);
     }
-  }, [isLoading, open, isSearchable, updatePosition]);
+  };
 
   const selectedOption = useMemo(() => {
     for (const group of data || []) {
@@ -176,9 +171,33 @@ export const CustomDropdownRadioGroup = ({
     return null;
   }, [data, value]);
 
+  // Lọc dữ liệu theo search trên phía client
+  const filteredData = useMemo(() => {
+    // Nếu parent đã điều khiển search và gọi API server-side, không lọc thêm phía client
+    if (!isSearchable || onSearchChange) return data || [];
+
+    const keyword = effectiveSearchValue?.toLowerCase().trim();
+    if (!keyword) return data || [];
+
+    return (data || [])
+      .map(group => {
+        const groupMatches = group.label?.toLowerCase().includes(keyword);
+        const options = (group.options || []).filter(option => {
+          const loc = option.name_location?.toLowerCase() || '';
+          const lot = option.lot?.toLowerCase() || '';
+          const serial = option.serial?.toLowerCase() || '';
+          return groupMatches || loc.includes(keyword) || lot.includes(keyword) || serial.includes(keyword);
+        });
+        return { ...group, options };
+      })
+      .filter(group => group.options && group.options.length > 0);
+  }, [data, isSearchable, effectiveSearchValue, onSearchChange]);
+
   const displayText = selectedOption
     ? showOnlyLotDate
-      ? `LOT: ${selectedOption.option.lot} | Date: ${formatDate(selectedOption.option.expiration_date)}${selectedOption.option.serial ? ` | Serial: ${selectedOption.option.serial}` : ''} | Tồn: ${formatNumber(Number(selectedOption.option.total_quantity))}`
+      ? `LOT: ${selectedOption.option.lot} | Date: ${formatDate(selectedOption.option.expiration_date)}${
+          selectedOption.option.serial ? ` | Serial: ${selectedOption.option.serial}` : ''
+        } | Tồn: ${formatNumber(Number(selectedOption.option.total_quantity))}`
       : showOnlyWarehouseLocation
       ? `${selectedOption.group.label} - ${selectedOption.option.name_location}`
       : `${selectedOption.group.label} - ${selectedOption.option.name_location}`
@@ -204,19 +223,21 @@ export const CustomDropdownRadioGroup = ({
               type='text'
               placeholder='Tìm kiếm...'
               className='flex-1 border-none outline-none text-[#3A3E4C] placeholder-gray-300 text-xs'
-              value={searchValue}
-              onChange={e => onSearchChange?.(e.target.value)}
+              value={effectiveSearchValue}
+              onChange={e => handleSearchChange(e.target.value)}
               onClick={e => e.stopPropagation()}
             />
             <button
               type='button'
               onClick={e => {
                 e.stopPropagation();
-                onSearchChange?.('');
+                if (effectiveSearchValue) {
+                  handleSearchChange('');
+                }
               }}
-              className={`rounded-lg p-1 transition-colors ${searchValue ? 'bg-[#0375F3]' : 'bg-transparent'}`}
+              className={`rounded-lg p-1 transition-colors ${effectiveSearchValue ? 'bg-[#FEE2E2]' : 'bg-transparent'}`}
             >
-              <MagnifyingGlassIcon className={`size-3 ${searchValue ? 'text-white' : 'text-[#9295A4]'}`} />
+              {effectiveSearchValue ? <MdClose className='size-3 text-[#DC2626]' /> : <MagnifyingGlassIcon className='size-3 text-[#9295A4]' />}
             </button>
           </div>
         </div>
@@ -228,7 +249,7 @@ export const CustomDropdownRadioGroup = ({
       ) : data && data.length > 0 ? (
         <Customscrollbar className={maxHeightClass}>
           <div className='flex flex-col gap-y-2'>
-            {data.map((group, groupIndex) => (
+            {filteredData.map((group, groupIndex) => (
               <div key={groupIndex} className='flex-shrink-0 w-full'>
                 {!showOnlyLotDate && <p className='font-semibold text-[#003DA0] uppercase text-xs'>{group.label}</p>}
                 <div>
@@ -281,7 +302,7 @@ export const CustomDropdownRadioGroup = ({
           </div>
         </Customscrollbar>
       ) : (
-        <NoData type='report' titleText={searchValue ? 'Không tìm thấy kết quả' : 'Không có dữ liệu'} />
+        <NoData type='report' titleText={effectiveSearchValue ? 'Không tìm thấy kết quả' : 'Không có dữ liệu'} />
       )}
     </div>
   );

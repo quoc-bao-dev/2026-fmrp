@@ -279,7 +279,7 @@ const EntryAndExist = (props) => {
                 mode="multiple"
               />
             </div>
-            <div className="flex gap-3 items-center">
+            <div className="flex gap-3 items-center ">
               <SearchComponent
                 dataLang={dataLang}
                 onChange={handleSearch}
@@ -342,8 +342,8 @@ const EntryAndExist = (props) => {
                 <RowItemTable className="w-14 flex justify-center items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0">
                   {index + 1}
                 </RowItemTable>
-                <RowItemTable className="w-32 flex flex-col justify-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0">
-                  <span>{item.item_code}</span>
+                <RowItemTable className="w-32 flex flex-col justify-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0 break-words">
+                  {item.item_code}
                 </RowItemTable>
                 <RowItemTable className="w-64 flex items-center py-2 px-3 border-r border-[#E0E0E1] text-neutral-07 font-normal flex-shrink-0">
                   <div className="flex flex-col gap-1 justify-start">

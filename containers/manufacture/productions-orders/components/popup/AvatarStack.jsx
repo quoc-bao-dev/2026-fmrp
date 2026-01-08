@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import ResponsibleAvatar from './ResponsibleAvatar';
 
-const AvatarStack = ({ people = [] }) => {
+const AvatarStack = ({ people = [], size = 40 }) => {
   const [hoverId, setHoverId] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const avatarRefs = useRef({});
@@ -12,7 +12,7 @@ const AvatarStack = ({ people = [] }) => {
   const visible = people.slice(0, 3);
   const remaining = people.length - visible.length;
 
-  const updateTooltipPosition = (personId) => {
+  const updateTooltipPosition = personId => {
     const avatarElement = avatarRefs.current[personId];
     if (avatarElement) {
       const rect = avatarElement.getBoundingClientRect();
@@ -23,7 +23,7 @@ const AvatarStack = ({ people = [] }) => {
     }
   };
 
-  const handleMouseEnter = (personId) => {
+  const handleMouseEnter = personId => {
     setHoverId(personId);
     updateTooltipPosition(personId);
   };
@@ -46,33 +46,36 @@ const AvatarStack = ({ people = [] }) => {
     }
   }, [hoverId]);
 
-  const hoveredPerson = visible.find((person) => person.id === hoverId);
+  const hoveredPerson = visible.find(person => person.id === hoverId);
 
   return (
     <>
-      <div className='inline-flex items-center px-2 py-2 bg-[#EBF5FF] rounded-full overflow-visible relative z-0'>
+      <div className={`inline-flex items-center pl-1.5 py-1.5 bg-[#EBF5FF] rounded-full overflow-visible relative z-0 ${Number(remaining) > 0 ? '' : 'pr-1.5'}`}>
         {visible.map((person, idx) => {
           return (
             <div
               key={person.id}
-              ref={(el) => (avatarRefs.current[person.id] = el)}
+              ref={el => (avatarRefs.current[person.id] = el)}
               className='relative overflow-visible z-10'
               onMouseEnter={() => handleMouseEnter(person.id)}
               onMouseLeave={() => setHoverId(null)}
               style={idx > 0 ? { marginLeft: -8 } : undefined}
             >
-              <ResponsibleAvatar avatarUrl={person.avatarUrl} fullName={person.name} size={40} />
+              <ResponsibleAvatar avatarUrl={person.avatarUrl} fullName={person.name} size={size} />
             </div>
           );
         })}
 
         {remaining > 0 && (
-          <div className='w-10 h-10 left-[-8px] relative z-50 rounded-full border-2 border-[#549AE8] bg-[#D1D1D1] text-[#606060] font-semibold flex items-center justify-center shadow-sm'>
+          <div
+            className={`left-[-8px] relative z-50 rounded-full border-2 border-[#549AE8] bg-[#D1D1D1] text-[#606060] font-semibold flex items-center justify-center shadow-sm`}
+            style={{ width: size, height: size }}
+          >
             +{remaining}
           </div>
         )}
 
-        {visible.length === 1 && <p className='px-2  max-w-[100px] truncate'> {visible[0].name}</p>}
+        {visible.length === 1 && <p className='px-2 text-xs max-w-[100px] truncate font-medium'> {visible[0].name}</p>}
       </div>
 
       {hoveredPerson &&
@@ -87,9 +90,7 @@ const AvatarStack = ({ people = [] }) => {
           >
             <div className='relative'>
               <div className='absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-b-8 border-b-[#0375F3]' />
-              <div className='px-3 py-2 bg-[#0375F3] text-white rounded-[12px] text-sm font-semibold shadow-lg whitespace-nowrap truncate'>
-                {hoveredPerson.name}
-              </div>
+              <div className='px-3 py-2 bg-[#0375F3] text-white rounded-[12px] text-sm font-semibold shadow-lg whitespace-nowrap truncate'>{hoveredPerson.name}</div>
             </div>
           </div>,
           document.body

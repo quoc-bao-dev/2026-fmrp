@@ -1,10 +1,12 @@
 'use client';
 
-import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
+import apiProductionPlan from '@/Api/apiManufacture/manufacture/productionPlan/apiProductionPlan';
+import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import Loading from '@/components/UI/loading/loading';
 import LoadingButton from '@/components/UI/loading/loadingButton';
 import NoData from '@/components/UI/noData/nodata';
+import { optionsQuery } from '@/configs/optionsQuery';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import SheetProductionsOrderDetail from '@/containers/manufacture/productions-orders/components/sheet/SheetProductionsOrderDetail';
 import { ProductionsOrdersContext } from '@/containers/manufacture/productions-orders/context/productionsOrders';
@@ -14,6 +16,7 @@ import useSetingServer from '@/hooks/useConfigNumber';
 import useToast from '@/hooks/useToast';
 import { formatMoment } from '@/utils/helpers/formatMoment';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
+import { useQuery } from '@tanstack/react-query';
 import * as d3 from 'd3';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
@@ -88,9 +91,54 @@ const GanttChart = ({
 
   const nextRouter = useRouter();
 
+  const [activeTabKey, setActiveTabKey] = useState('order');
+
+  // Tạo params để kiểm tra tab plan có dữ liệu không
+  const planCheckParams = useMemo(() => {
+    return {
+      page: 1,
+      limit: 1, // Chỉ lấy 1 record để kiểm tra nhanh
+      sort: null,
+      status: isValue?.planStatus?.map((e) => e?.value),
+      date_start: isValue?.valueDate?.startDate != null ? formatMoment(isValue?.valueDate?.startDate, FORMAT_MOMENT.DATE_SLASH_LONG) : null,
+      date_end: isValue?.valueDate?.endDate != null ? formatMoment(isValue?.valueDate?.endDate, FORMAT_MOMENT.DATE_SLASH_LONG) : null,
+      customer_id: isValue?.idClient?.value ? isValue?.idClient?.value : '',
+      category_id: isValue?.idProductGroup?.value ? isValue?.idProductGroup?.value : '',
+      branch_id: isValue?.valueBr?.value ? isValue?.valueBr?.value : '',
+      product_id: isValue?.idProduct?.length > 0 ? isValue?.idProduct.map((e) => e?.value) : null,
+    };
+  }, [isValue]);
+
+  // Query để kiểm tra tab plan có dữ liệu không (chỉ chạy khi đang ở tab order)
+  const { data: planCheckData } = useQuery({
+    queryKey: ['check_plan_tab_has_data', planCheckParams],
+    queryFn: async () => {
+      try {
+        const { data } = await apiProductionPlan.apiListOrderPlan('/api_web/api_manufactures/getByInternalPlan?csrf_protection=true', {
+          params: planCheckParams,
+        });
+        return data;
+      } catch (error) {
+        return null;
+      }
+    },
+    enabled: activeTabKey === 'order' && nextRouter.isReady, // Chỉ chạy khi đang ở tab order
+    ...optionsQuery,
+  });
+
+  // Kiểm tra tab plan có dữ liệu không
+  const hasPlanData = useMemo(() => {
+    // Nếu đang ở tab plan, kiểm tra từ orders hiện tại
+    if (activeTabKey === 'plan') {
+      return orders?.length > 0;
+    }
+    // Nếu đang ở tab order, kiểm tra từ query riêng
+    return planCheckData?.rResult?.length > 0 || false;
+  }, [activeTabKey, orders, planCheckData]);
+
   // Tabs cấu hình cho tiêu đề
-  const tabsHeader = useMemo(
-    () => [
+  const tabsHeader = useMemo(() => {
+    return [
       {
         id: 'order',
         name: dataLang?.production_plan_gantt_order || 'production_plan_gantt_order',
@@ -100,12 +148,10 @@ const GanttChart = ({
         id: 'plan',
         name: dataLang?.production_plan_gantt_internal || 'production_plan_gantt_internal',
         tab: 'plan',
+        hasData: hasPlanData,
       },
-    ],
-    [dataLang?.production_plan_gantt_order, dataLang?.production_plan_gantt_internal]
-  );
-
-  const [activeTabKey, setActiveTabKey] = useState('order');
+    ];
+  }, [dataLang?.production_plan_gantt_order, dataLang?.production_plan_gantt_internal, hasPlanData]);
 
   const activeTabObj = useMemo(() => {
     const found = tabsHeader.find(t => t.tab === activeTabKey);
@@ -633,8 +679,15 @@ const GanttChart = ({
     <div className='flex flex-col lg:h-[82vh] h-[80vh] overflow-hidden border'>
       <div className='sticky top-0 flex border-b border-b-[#e5e7eb]'>
         <div className='w-[45%] border-r border-[#e5e7eb] h-full'>
-          <div className='h-[30px] flex items-center justify-between gap-2 w-full'>
-            <TabSwitcherWithUnderline tabs={tabsHeader} activeTab={activeTabObj} onChange={handleChangeTabHeader} className='justify-center items-center h-[30px]' />
+          <div className='flex items-center justify-between gap-2 w-full p-1 border-b border-b-[#e5e7eb]'>
+            <TabSwitcherWithSlidingBackground
+              tabs={tabsHeader}
+              activeTab={activeTabObj}
+              onChange={handleChangeTabHeader}
+              className='justify-center items-center !p-1 overflow-visible !rounded-md'
+              buttonClassName='!py-1.5 !px-3 !responsive-text-sm'
+              buttonActiveClassName='!top-1 !bottom-1 rounded-md'
+            />
           </div>
           <div className='flex items-center gap-2 px-1 h-[30px]'>
             <div className='w-[35%] flex items-center gap-1'>
