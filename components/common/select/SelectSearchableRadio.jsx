@@ -1,9 +1,8 @@
-import DropdownFilledIcon from '@/components/icons/common/DropdownFilledIcon';
 import { MagnifyingGlassIcon } from '@/components/icons';
-import { Empty, Select, Input } from 'antd';
-import InfoFormLabel from '../orderManagement/InfoFormLabel';
-import { useState, useMemo } from 'react';
-import { earchWithoutDiacritics } from '@/utils/helpers/stringHelper';
+import DropdownFilledIcon from '@/components/icons/common/DropdownFilledIcon';
+import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
+import { Empty, Input, Select } from 'antd';
+import { useMemo, useState } from 'react';
 
 const { Option } = Select;
 
