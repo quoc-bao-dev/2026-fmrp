@@ -41,10 +41,10 @@ export const useOrderConfirm = () => {
         },  
         onSuccess: (data) => {
             if(data.isSuccess){
-                showToast('success', dataLang[data.message] || 'Xác nhận đơn hàng thành công');
+                showToast('success', dataLang[data.message] ? dataLang[data.message] : data.message || 'Xác nhận đơn hàng thành công');
                 queryClient.invalidateQueries({ queryKey: ["api_list_order"] });
             } else {
-                showToast('error', dataLang[data.message] || 'Xác nhận đơn hàng thất bại');
+                showToast('error', dataLang[data.message] ? dataLang[data.message] : data.message || 'Xác nhận đơn hàng thất bại');
             }
         },
         onError: (error) => {
