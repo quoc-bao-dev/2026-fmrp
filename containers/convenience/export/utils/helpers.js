@@ -178,9 +178,14 @@ export const transformDataForExcel = (dataServer, arrEmty, tabPage, dataLang) =>
     })();
 
     return allFields.map(field => {
-      // Gán vào cả 2 cột code & name
-      if (field.value === 'code' || field.value === 'name') {
+      // Xử lý riêng cho code và name
+      if (field.value === 'code') {
+        // Cột code: hiển thị combineValue (code + variation nếu có)
         return combineValue;
+      }
+      if (field.value === 'name') {
+        // Cột name: hiển thị tên thực tế từ item.name
+        return item.name || '';
       }
       return item[field.value] || '';
     });
