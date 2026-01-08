@@ -28,6 +28,7 @@ import usePagination from "@/hooks/usePagination";
 import useActionRole from "@/hooks/useRole";
 import useStatusExprired from "@/hooks/useStatusExprired";
 import useTab from "@/hooks/useTab";
+import useToast from "@/hooks/useToast";
 import { routerOrder } from "@/routers/buyImportGoods";
 import { formatMoment } from "@/utils/helpers/formatMoment";
 import formatMoneyConfig from "@/utils/helpers/formatMoney";
@@ -39,9 +40,9 @@ import React, { useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useSelector } from "react-redux";
 import { useOrderFilterbar } from "./hooks/useOrderFilterbar";
-import { useOrderList, useOrderListCode } from "./hooks/useOrderList";
+import { useOrderList, useOrderListCode, useOrderConfirm } from "./hooks/useOrderList";
 import { useOrderTypeList } from "./hooks/useOrderTypeList";
-import ButtonWarehouse from "@/components/UI/btnWarehouse/btnWarehouse";
+import ButtonStatus from "./components/ButtonStatus";
 
 const initalState = {
     keySearch: "",
@@ -54,7 +55,7 @@ const initalState = {
 
 const Order = (props) => {
     const dataLang = props.dataLang;
-
+    const isShow = useToast();
     const router = useRouter();
 
     const { paginate } = usePagination();
@@ -102,6 +103,8 @@ const Order = (props) => {
 
     const { data, isFetching, refetch } = useOrderList(params)
 
+    const orderConfirmMutation = useOrderConfirm();
+
     const _HandleOnChangeKeySearch = debounce(({ target: { value } }) => {
         queryState({ keySearch: value });
         router.replace({
@@ -113,11 +116,25 @@ const Order = (props) => {
     }, 500);
 
     const _HandleChangeInput = (id, checkedUn, type, value) => {
-        handleQueryId({
-          status: true,
-          initialKey: { id, checkedUn, type, value },
-        })
-      }
+        if (!id || !value?.target?.value) {
+            return;
+        }
+        
+        // Kiểm tra quyền is_agree từ auth.purchase_order
+        // is_agree === "0" là không có quyền
+        const hasPermission = role || (auth?.purchase_order?.is_agree && auth.purchase_order.is_agree !== "0");
+        
+        if (!hasPermission) {
+            isShow("error", "Bạn không có quyền thực hiện thao tác này");
+            return;
+        }
+        
+        const status = String(value.target.value);
+        
+        orderConfirmMutation.mutate(
+            { id, status },
+        );
+    }
 
     const formatMoney = (number) => {
         return formatMoneyConfig(+number, dataSeting);
@@ -598,10 +615,21 @@ const Order = (props) => {
                                                         ))} */}
                                                 </RowItemTable>
                                                 <RowItemTable colSpan={1.5} className="cursor-pointer">
-                                                    <ButtonWarehouse
-                                                        warehouseman_id={e?.warehouseman_id}
+                                                    <ButtonStatus
+                                                        warehouseman_id={e?.status}
                                                         _HandleChangeInput={_HandleChangeInput}
                                                         id={e?.id}
+                                                        currentStatus={e?.status}
+                                                        options={[
+                                                            { 
+                                                                label: "Chưa duyệt", 
+                                                                targetStatus: "0" 
+                                                            },
+                                                            { 
+                                                                label: "Đã duyệt", 
+                                                                targetStatus: "1" 
+                                                            }
+                                                        ]}
                                                     />
                                                 </RowItemTable>
                                                 <RowItemTable colSpan={1} textAlign={"right"}>
