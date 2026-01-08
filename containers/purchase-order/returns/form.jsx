@@ -767,7 +767,7 @@ const PurchaseReturnsForm = props => {
               ''
             )}
           </div>
-          {showWarehouseAttributes && (
+          {showWarehouseAttributes && option.e?.text_type === 'material' && (
             <div className='flex items-center gap-2 italic text-neutral-03'>
               {warehousePropertyKeys.map(key => {
                 const label = getWarehousePropertyLabel(key);

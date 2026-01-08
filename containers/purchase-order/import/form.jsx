@@ -1120,7 +1120,7 @@ const PurchaseImportForm = props => {
                                 ))}
                               </div>
                               {/* Thuộc tính kho */}
-                              {showWarehouseAttributes && (
+                              {showWarehouseAttributes && e?.item?.e?.text_type === 'material' && (
                                 <div className='mt-2 flex items-center gap-4'>
                                   {warehousePropertyKeys.map(key => {
                                     const label = getWarehousePropertyLabel(key);

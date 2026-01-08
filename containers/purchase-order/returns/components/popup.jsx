@@ -169,6 +169,7 @@ const PopupDetail = props => {
                                       )}
                                     </div>
                                     {showWarehouseAttributes &&
+                                      e?.item?.text_type === 'material' &&
                                       warehousePropertyKeys.map(key => {
                                         const label = getWarehousePropertyLabel(key);
                                         if (!label) return null;
