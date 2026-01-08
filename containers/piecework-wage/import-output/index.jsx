@@ -507,7 +507,7 @@ const StageColumn = ({ stage }) => {
     [hasMore, isLoadingMore, isLoading, shouldFetch]
   );
 
-  const totalCount = Number(stage?.items?.total_count || 0);
+  const totalCount = Number(stage?.items?.total_count || 0); 
 
   return (
     <div className='w-[394px] flex-shrink-0 rounded-t-2xl pt-1 flex flex-col gap-3 bg-[#EBEBEB]/50 h-full'>
