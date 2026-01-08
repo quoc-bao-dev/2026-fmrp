@@ -13,6 +13,7 @@ import {
   SearchIcon,
   ThreeDotIcon,
   UserGroupIcon,
+  UserPlus2Icon,
   UsersIcon,
 } from '@/components/icons';
 import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
@@ -128,10 +129,10 @@ const TimerControl = ({ time = '00 : 00 : 00', status = 'idle', onStart, onPause
   // const containerBg = status === 'running' || status === 'completed' ? 'bg-[#DFF3E2]' : 'bg-[#E8E8E8]';
 
   return (
-    <div className={`w-full flex justify-between items-center gap-2 rounded-2xl p-2 `}>
+    <div className={`w-full flex justify-between items-center gap-2 rounded-2xl `}>
       <div className='flex items-center gap-1'>
-        <Clock2Icon className='size-6 text-[#4E4E4E]' />
-        <p className='responsive-text-base font-semibold text-[#4E4E4E] whitespace-nowrap'>{time}</p>
+        <Clock2Icon className='size-5 text-[#4E4E4E]' />
+        <p className='responsive-text-xs font-semibold text-[#4E4E4E] whitespace-nowrap'>{time}</p>
       </div>
       <div className='flex items-center gap-1'>{renderButtons()}</div>
     </div>
@@ -320,25 +321,17 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
   const displayedOrders = objectRefs.slice(0, 2);
   const remainingOrders = totalOrders > 2 ? objectRefs.slice(2) : [];
   const hasMoreOrders = remainingOrders.length > 0;
-  
-  const displayText = totalOrders > 0 
-    ? `Đơn hàng ${displayedOrders.join(', ')}${hasMoreOrders ? ', ...' : ''}`
-    : 'Đơn hàng';
-  
-  const allOrdersText = totalOrders > 0 
-    ? objectRefs.join(', ')
-    : '';
+
+  const displayText = totalOrders > 0 ? `Đơn hàng ${displayedOrders.join(', ')}${hasMoreOrders ? ', ...' : ''}` : 'Đơn hàng';
+
+  const allOrdersText = totalOrders > 0 ? objectRefs.join(', ') : '';
 
   const formattedDate = po?.date ? po.date.split(' ')[0]?.split('-')?.reverse()?.join('/') : '';
 
   const orderTextContent = (
     <div className='flex items-center gap-1 flex-wrap'>
       <span className='responsive-text-xs font-normal text-[#667085]'>{displayText}</span>
-      {hasMoreOrders && (
-        <span className='responsive-text-xs font-normal text-blue-fmrp cursor-pointer hover:underline'>
-          xem thêm
-        </span>
-      )}
+      {hasMoreOrders && <span className='responsive-text-xs font-normal text-blue-fmrp cursor-pointer hover:underline'>xem thêm</span>}
     </div>
   );
 
@@ -346,7 +339,7 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
     <div className='flex flex-col items-start gap-3 p-4 rounded-xl bg-white border border-[#F3F4F680] cursor-pointer hover:border-blue-fmrp' onClick={handleCardClick}>
       <div className='w-full flex items-center justify-between gap-2'>
         <div className='py-0.5 px-2 border-l-2' style={{ borderColor }}>
-          <h4 className='responsive-text-sm font-semibold mb-1' style={{ color: borderColor }}>
+          <h4 className='responsive-text-lg font-semibold mb-1' style={{ color: borderColor }}>
             {po?.reference_no || '---'}
           </h4>
           {hasMoreOrders ? (
@@ -519,10 +512,16 @@ const StageColumn = ({ stage }) => {
   return (
     <div className='w-[394px] flex-shrink-0 rounded-t-2xl pt-1 flex flex-col gap-3 bg-[#EBEBEB]/50 h-full'>
       <div className='px-4 py-3 flex flex-col gap-3 flex-shrink-0'>
-        <div className='flex items-center gap-2'>
-          <PresentationChartIcon className='size-6' />
-          <h3 className='responsive-text-2xl font-medium text-blue-fmrp'>{stage.stage_name}</h3>
-          <span className='bg-[#FD2424] min-w-4 h-4 flex items-center justify-center rounded-full px-1 responsive-text-xs font-normal text-white -mt-3 -ml-1'>{totalCount}</span>
+        <div className='flex items-center gap-2 justify-between'>
+          <div className='flex items-center gap-2 w-[70%]'>
+            <PresentationChartIcon className='size-6' />
+            <h3 className='responsive-text-2xl font-medium text-blue-fmrp truncate' title={stage.stage_name}>{stage.stage_name}</h3>
+            <span className='bg-[#FD2424] min-w-4 h-4 flex items-center justify-center rounded-full px-1 responsive-text-xs font-normal text-white -mt-3 -ml-1'>{totalCount}</span>
+          </div>
+          <div className='border border-transparent hover:border-blue-fmrp hover:bg-blue-fmrp/10 rounded-lg p-1 cursor-pointer transition-all duration-300'>
+
+          <UserPlus2Icon className='size-6 flex-shrink-0'/>
+          </div>
         </div>
         <div className='flex items-center justify-between gap-2 bg-[#FFFFFF66] border border-white rounded-[14px] px-3 py-[14px]'>
           <div className='flex items-center gap-3'>
@@ -536,7 +535,15 @@ const StageColumn = ({ stage }) => {
           {allPos.length > 0 ? (
             <>
               {allPos.map((po, index) => (
-                <ProductionOrderCard key={`${stage.stage_id}-${po.id}-${po.reference_no}-${index}`} borderColor='#1A7526' status='idle' time='00 : 00 : 00' po={po} stage_id={stage.stage_id} stage_name={stage.stage_name} />
+                <ProductionOrderCard
+                  key={`${stage.stage_id}-${po.id}-${po.reference_no}-${index}`}
+                  borderColor='#1A7526'
+                  status='idle'
+                  time='00 : 00 : 00'
+                  po={po}
+                  stage_id={stage.stage_id}
+                  stage_name={stage.stage_name}
+                />
               ))}
               {isLoadingMore && (
                 <div className='flex items-center justify-center py-4'>

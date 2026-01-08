@@ -105,6 +105,7 @@ import UsersIcon from './source/users.svg';
 import WarningAlertIcon from './source/warning-alert-icon.svg';
 import WarningIcon from './source/warning-icon.svg';
 import ZaloIcon from './source/zalo.svg';
+import UserPlus2Icon from './source/user-plus-2.svg';
 
 // Export tất cả các icon
 export {
@@ -187,6 +188,7 @@ export {
   UserCircleIcon,
   UserGroupIcon,
   UserPlusIcon,
+  UserPlus2Icon,
   UsersIcon,
   WarningAlertIcon,
   WarningIcon,
