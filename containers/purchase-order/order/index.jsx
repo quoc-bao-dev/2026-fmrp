@@ -28,6 +28,7 @@ import usePagination from "@/hooks/usePagination";
 import useActionRole from "@/hooks/useRole";
 import useStatusExprired from "@/hooks/useStatusExprired";
 import useTab from "@/hooks/useTab";
+import useToast from "@/hooks/useToast";
 import { routerOrder } from "@/routers/buyImportGoods";
 import { formatMoment } from "@/utils/helpers/formatMoment";
 import formatMoneyConfig from "@/utils/helpers/formatMoney";
@@ -39,8 +40,9 @@ import React, { useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useSelector } from "react-redux";
 import { useOrderFilterbar } from "./hooks/useOrderFilterbar";
-import { useOrderList, useOrderListCode } from "./hooks/useOrderList";
+import { useOrderList, useOrderListCode, useOrderConfirm } from "./hooks/useOrderList";
 import { useOrderTypeList } from "./hooks/useOrderTypeList";
+import ButtonStatus from "./components/ButtonStatus";
 
 const initalState = {
     keySearch: "",
@@ -53,7 +55,7 @@ const initalState = {
 
 const Order = (props) => {
     const dataLang = props.dataLang;
-
+    const isShow = useToast();
     const router = useRouter();
 
     const { paginate } = usePagination();
@@ -101,6 +103,8 @@ const Order = (props) => {
 
     const { data, isFetching, refetch } = useOrderList(params)
 
+    const orderConfirmMutation = useOrderConfirm();
+
     const _HandleOnChangeKeySearch = debounce(({ target: { value } }) => {
         queryState({ keySearch: value });
         router.replace({
@@ -110,6 +114,27 @@ const Order = (props) => {
             },
         });
     }, 500);
+
+    const _HandleChangeInput = (id, checkedUn, type, value) => {
+        if (!id || !value?.target?.value) {
+            return;
+        }
+        
+        // Kiểm tra quyền is_agree từ auth.purchase_order
+        // is_agree === "0" là không có quyền
+        const hasPermission = role || (auth?.purchase_order?.is_agree && auth.purchase_order.is_agree !== "0");
+        
+        if (!hasPermission) {
+            isShow("error", "Bạn không có quyền thực hiện thao tác này");
+            return;
+        }
+        
+        const status = String(value.target.value);
+        
+        orderConfirmMutation.mutate(
+            { id, status },
+        );
+    }
 
     const formatMoney = (number) => {
         return formatMoneyConfig(+number, dataSeting);
@@ -468,7 +493,7 @@ const Order = (props) => {
                         </div>
                         <Customscrollbar className="h-full overflow-y-auto">
                             <div className="w-full">
-                                <HeaderTable gridCols={13}>
+                                <HeaderTable gridCols={14.5}>
                                     <ColumnTable colSpan={0.5} textAlign={"center"}>
                                         {dataLang?.stt || "STT"}
                                     </ColumnTable>
@@ -487,6 +512,9 @@ const Order = (props) => {
                                     <ColumnTable colSpan={1} textAlign={"left"}>
                                         Số Kế hoạch
                                         {/* {dataLang?.purchase_order_table_number || "purchase_order_table_number"} */}
+                                    </ColumnTable>
+                                    <ColumnTable colSpan={1.5} textAlign={'left'}>
+                                        Trạng thái
                                     </ColumnTable>
                                     <ColumnTable colSpan={1} textAlign={"right"}>
                                         {dataLang?.purchase_order_table_total || "purchase_order_table_total"}
@@ -515,7 +543,7 @@ const Order = (props) => {
                                 ) : data?.rResult?.length > 0 ? (
                                     <div className="divide-y divide-slate-200 min:h-[400px] h-[100%] max:h-[800px] ">
                                         {data?.rResult?.map((e, index) => (
-                                            <RowTable key={e?.id} gridCols={13}>
+                                            <RowTable key={e?.id} gridCols={14.5}>
                                                 <RowItemTable colSpan={0.5} textAlign={"center"}>
                                                     {index + 1}
                                                 </RowItemTable>
@@ -586,6 +614,24 @@ const Order = (props) => {
                                                             </React.Fragment>
                                                         ))} */}
                                                 </RowItemTable>
+                                                <RowItemTable colSpan={1.5} className="cursor-pointer">
+                                                    <ButtonStatus
+                                                        warehouseman_id={e?.status}
+                                                        _HandleChangeInput={_HandleChangeInput}
+                                                        id={e?.id}
+                                                        currentStatus={e?.status}
+                                                        options={[
+                                                            { 
+                                                                label: "Chưa duyệt", 
+                                                                targetStatus: "0" 
+                                                            },
+                                                            { 
+                                                                label: "Đã duyệt", 
+                                                                targetStatus: "1" 
+                                                            }
+                                                        ]}
+                                                    />
+                                                </RowItemTable>
                                                 <RowItemTable colSpan={1} textAlign={"right"}>
                                                     {renderMoneyOrDash(e.total_price)}
                                                 </RowItemTable>
@@ -612,7 +658,7 @@ const Order = (props) => {
                                                 <RowItemTable
                                                     colSpan={1}
                                                     textAlign={"text-left"}
-                                                    className="truncate "
+                                                    className="break-words"
                                                 >
                                                     {e.note}
                                                 </RowItemTable>
@@ -646,24 +692,26 @@ const Order = (props) => {
 
                 showTotal={true}
                 total={<>
-                    <ContainerTotal className="!grid-cols-13">
-                        <RowItemTable colSpan={3} textAlign={"end"} className="px-5">
+                    <ContainerTotal className="!grid-cols-29">
+                        <RowItemTable colSpan={6} textAlign={"end"} className="px-5">
+                        </RowItemTable>
+                        <RowItemTable colSpan={1.5} textAlign={"start"} className="px-5">
                             {dataLang?.purchase_order_table_total_outside || "purchase_order_table_total_outside"}
                         </RowItemTable>
                         <RowItemTable
-                            colSpan={0.5}
+                            colSpan={1}
                             textAlign={"right"}
                         >
                             {renderMoneyOrDash(data?.rTotal?.total_price)}
                         </RowItemTable>
                         <RowItemTable
-                            colSpan={0.5}
+                            colSpan={1}
                             textAlign={"right"}
                         >
                             {renderMoneyOrDash(data?.rTotal?.total_tax_price)}
                         </RowItemTable>
                         <RowItemTable
-                            colSpan={0.5}
+                            colSpan={1}
                             textAlign={"right"}
                         >
                             {renderMoneyOrDash(data?.rTotal?.total_amount)}

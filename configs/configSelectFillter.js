@@ -1,7 +1,7 @@
 const configSelectFillter = {
     hideSelectedOptions: false,
     isClearable: true,
-    className: "responsive-text-base placeholder:responsive-text-base w-full h-full rounded-lg bg-white z-20 cursor-pointer",
+    className: "responsive-text-base placeholder:responsive-text-base w-full h-full rounded-lg bg-white z-20",
     isSearchable: true,
     noOptionsMessage: () => "Không có dữ liệu",
     closeMenuOnSelect: true,

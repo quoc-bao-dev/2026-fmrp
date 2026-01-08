@@ -4,12 +4,9 @@ import EditIcon from '@/components/icons/common/EditIcon';
 import ButtonCancel from '@/components/UI/button/buttonCancel';
 import ButtonSubmit from '@/components/UI/button/buttonSubmit';
 import PopupCustom from '@/components/UI/popup';
-import PriceInput from '@/components/common/input/PriceInput';
 import useToast from '@/hooks/useToast';
 import { useMutation } from '@tanstack/react-query';
-import { InfoCircle } from 'iconsax-react';
 import React, { useEffect, useState } from 'react';
-import InfoTooltip from '@/components/UI/common/InfoTooltip';
 
 const PopupStageAdd = React.memo(props => {
   const isShow = useToast();
@@ -27,8 +24,6 @@ const PopupStageAdd = React.memo(props => {
   const [stages_status, sStagesStatus] = useState('0');
 
   const [stages_note, sStagesNote] = useState('');
-
-  const [stages_unit_price, sStagesUnitPrice] = useState(0);
 
   const [errInputcode, sErrInputcode] = useState(false);
 
@@ -50,7 +45,6 @@ const PopupStageAdd = React.memo(props => {
     sStagesName('');
     sStagesStatus('0');
     sStagesNote('');
-    sStagesUnitPrice(0);
   }, [open]);
 
   const _HandleChangeInput = (type, value) => {
@@ -66,8 +60,6 @@ const PopupStageAdd = React.memo(props => {
       }
     } else if (type == 'note') {
       sStagesNote(value.target?.value);
-    } else if (type === 'unit_price') {
-      sStagesUnitPrice(value || 0);
     }
   };
 
@@ -84,8 +76,6 @@ const PopupStageAdd = React.memo(props => {
     formData.append('name', stages_name);
     formData.append('status_qc', stages_status);
     formData.append('note', stages_note);
-    // Đơn giá mặc định cho công đoạn (giống form popupCategory)
-    formData.append('price_default', stages_unit_price || 0);
 
     handingStage.mutate(formData, {
       onSuccess: ({ isSuccess, message, data, rResult, id }) => {
@@ -163,7 +153,11 @@ const PopupStageAdd = React.memo(props => {
               errInputcode ? 'border-red-500' : 'focus:border-[#92BFF7] border-[#d0d5dd] '
             } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal  p-2 border outline-none`}
           />
-          {errInputcode && <label className='text-sm text-red-500'>{props.dataLang?.settings_category_stages_errCode || 'settings_category_stages_errCode'}</label>}
+          {errInputcode && (
+            <label className='text-sm text-red-500'>
+              {props.dataLang?.settings_category_stages_errCode || 'settings_category_stages_errCode'}
+            </label>
+          )}
         </div>
         <div className='space-y-1'>
           <label className='text-[#344054] font-normal text-base'>
@@ -178,14 +172,11 @@ const PopupStageAdd = React.memo(props => {
               errInputName ? 'border-red-500' : 'focus:border-[#92BFF7] border-[#d0d5dd] '
             } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal  p-2 border outline-none`}
           />
-          {errInputName && <label className='text-sm text-red-500'>{props.dataLang?.settings_category_stages_errName || 'settings_category_stages_errName'}</label>}
-        </div>
-        <div className='space-y-1'>
-          <label className='text-[#344054] font-normal text-base flex items-center gap-2'>
-            Đơn giá
-            <InfoTooltip content='Đơn giá là số tiền trả cho từng công đoạn cụ thể trong quá trình làm ra một sản phẩm khi công đoạn đó hoàn thành, làm căn cứ tính lương và sản lượng.' position='bottom' />
-          </label>
-          <PriceInput value={typeof stages_unit_price === 'number' ? stages_unit_price : 0} onChange={val => _HandleChangeInput('unit_price', val)} />
+          {errInputName && (
+            <label className='text-sm text-red-500'>
+              {props.dataLang?.settings_category_stages_errName || 'settings_category_stages_errName'}
+            </label>
+          )}
         </div>
         <div className='flex items-center gap-3.5'>
           <label className='relative flex cursor-pointer items-center rounded-full p-1' htmlFor='stage-status' data-ripple-dark='true'>
@@ -199,7 +190,11 @@ const PopupStageAdd = React.memo(props => {
             />
             <div className='pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-white opacity-0 transition-opacity peer-checked:opacity-100'>
               <svg xmlns='http://www.w3.org/2000/svg' className='h-3.5 w-3.5' viewBox='0 0 20 20' fill='currentColor' stroke='currentColor' strokeWidth='1'>
-                <path fillRule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clipRule='evenodd'></path>
+                <path
+                  fillRule='evenodd'
+                  d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
+                  clipRule='evenodd'
+                ></path>
               </svg>
             </div>
           </label>
@@ -208,7 +203,9 @@ const PopupStageAdd = React.memo(props => {
           </label>
         </div>
         <div className='space-y-1'>
-          <label className='text-[#344054] font-normal text-base'>{props.dataLang?.settings_category_stages_note || 'settings_category_stages_note'}</label>
+          <label className='text-[#344054] font-normal text-base'>
+            {props.dataLang?.settings_category_stages_note || 'settings_category_stages_note'}
+          </label>
           <textarea
             value={stages_note}
             placeholder={props.dataLang?.settings_category_stages_note || 'settings_category_stages_note'}
@@ -233,3 +230,4 @@ const PopupStageAdd = React.memo(props => {
 PopupStageAdd.displayName = 'PopupStageAdd';
 
 export default PopupStageAdd;
+

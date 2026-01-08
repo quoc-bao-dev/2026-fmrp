@@ -8,7 +8,6 @@ import ButtonAddNew from '@/components/UI/button/buttonAddNew';
 import ContainerPagination from '@/components/UI/common/ContainerPagination/ContainerPagination';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { EmptyExprired } from '@/components/UI/common/EmptyExprired';
-import InfoTooltip from '@/components/UI/common/InfoTooltip';
 import { ColumnTable, HeaderTable, RowItemTable, RowTable } from '@/components/UI/common/Table';
 import { ContainerTotal, LayOutTableDynamic } from '@/components/UI/common/layout';
 import CustomAvatar from '@/components/UI/common/user/CustomAvatar';
@@ -48,6 +47,7 @@ import PopupDetail from './components/popup';
 import { useProductionWarehouseCombobox } from './hooks/useProductionWarehouseCombobox';
 import { useProductionWarehouseFillterbar } from './hooks/useProductionWarehouseFillterbar';
 import { useProductionWarehouseList } from './hooks/useProductionWarehouseList';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 
 const initialState = {
   onSending: false,

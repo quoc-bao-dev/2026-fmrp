@@ -368,22 +368,6 @@ module.exports = {
             lineHeight: '32px',
           },
         },
-        '.responsive-text-4xl': {
-          fontSize: '25px',
-          lineHeight: '32px',
-          '@screen xl': {
-            fontSize: '26px',
-            lineHeight: '32px',
-          },
-          '@screen 2xl': {
-            fontSize: '27px',
-            lineHeight: '32px',
-          },
-          '@screen 3xl': {
-            fontSize: '28px',
-            lineHeight: '32px',
-          },
-        },
       });
     },
   ],

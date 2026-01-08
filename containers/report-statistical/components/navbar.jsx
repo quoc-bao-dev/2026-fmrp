@@ -164,19 +164,16 @@ const Navbar = props => {
       id: uuidv4(),
       name: 'Nhật ký thu - chi',
       path: '/report-statistical/fund-balance/income-expenses',
-      disabled: !canView(auth?.diary_of_revenue_and_expenditure),
     },
     {
       id: uuidv4(),
       name: 'Tổng hợp tồn quỹ',
       path: '/report-statistical/fund-balance/synthetic-fund',
-      disabled: !canView(auth?.aggregate_fund_balance),
     },
     {
       id: uuidv4(),
       name: 'Báo cáo chi phí',
       path: '/report-statistical/fund-balance/expense',
-      disabled: !canView(auth?.report_financial),
     },
     // {
     //   id: uuidv4(),
