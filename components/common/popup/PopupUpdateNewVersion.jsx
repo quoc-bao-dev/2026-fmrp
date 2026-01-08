@@ -104,25 +104,26 @@ const PopupUpdateNewVersion = ({ version, setHasNewVersion }) => {
           <h3 className='font-semibold text-[28px] text-typo-black-2 leading-9 text-center -mx-6'>
             Cập nhật phiên bản mới <span className='font-bold text-typo-blue-3'>v{version_new?.version ?? '1.0'}</span> - Trải nghiệm mượt hơn!
           </h3>
-          <p className='font-medium text-base text-typo-gray-1 w-[70%] text-center'>
-            Chúng tôi vừa phát hành Phiên bản <span className='font-semibold text-typo-gray-2'>v{version_new?.version ?? '1.0'}</span> với nhiều cải tiến quan trọng:
-          </p>
+         
         </div>
 
         {/* content */}
-        <div className='flex flex-col rounded-2xl bg-background-blue-3 w-full h-fit gap-y-2 p-6'>
+        <div className='flex flex-col rounded-2xl bg-background-blue-3 w-full h-fit gap-y-2 p-5'>
           {/* {children} */}
+          <p className='font-medium text-base text-blue-fmrp text-center mx-auto'>
+            Chúng tôi vừa phát hành Phiên bản <span className='font-bold text-blue-fmrp'>v{version_new?.version ?? '1.0'}</span><br/> với nhiều cải tiến quan trọng:
+          </p>
           {version_new &&
             version_new?.description.length > 0 &&
             version_new?.description.map((item, index) => (
-              <div className='flex flex-row gap-x-2 items-center justify-center' key={index}>
-                <SealCheckIcon />
-                <p className='flex-1 text-sm font-medium text-typo-gray-3'>{item}</p>
+              <div className='flex flex-row gap-x-2 items-center justify-center pr-2' key={index}>
+                <SealCheckIcon className='size-4' />
+                <p className='flex-1 text-sm font-medium text-typo-gray-3 text-justify'>{item}</p>
               </div>
             ))}
 
-          <div className='text-sm text-typo-gray-3 font-normal'>
-            <p className=''>Hãy cập nhật phiên bản mới để tối ưu quản lý xưởng ngay hôm nay!</p>
+          <div className='text-base text-blue-fmrp font-medium'>
+            <p className='text-justify'>Hãy cập nhật phiên bản mới để tối ưu quản lý xưởng ngay hôm nay!</p>
             <p className='mt-2'>Trân trọng,</p>
             <p className='mt-1'>FMRP Team</p>
           </div>
