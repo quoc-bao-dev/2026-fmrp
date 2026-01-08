@@ -253,7 +253,7 @@ const ProcessStatusDropdown = ({ processName }) => {
   );
 };
 
-const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = '00 : 00 : 00', po, stage_id }) => {
+const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = '00 : 00 : 00', po, stage_id, stage_name }) => {
   const [statusState, setStatusState] = useState(status);
   const [elapsedSeconds, setElapsedSeconds] = useState(parseTimeString(time));
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
@@ -347,7 +347,7 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
         nameModel='timer_stop'
         forceConfirm={true}
       />
-      <PopupCompleteOrder stage_id={stage_id} po={po} isOpen={showCompletePopup} onClose={() => setShowCompletePopup(false)} referenceNo='LSX-161225109' />
+      <PopupCompleteOrder stage_id={stage_id} stage_name={stage_name} po={po} isOpen={showCompletePopup} onClose={() => setShowCompletePopup(false)} />
       <Avatar />
 
       <div className='px-1 flex items-center gap-3 w-full'>
@@ -508,7 +508,7 @@ const StageColumn = ({ stage }) => {
           {allPos.length > 0 ? (
             <>
               {allPos.map((po, index) => (
-                <ProductionOrderCard key={`${stage.stage_id}-${po.id}-${po.reference_no}-${index}`} borderColor='#1A7526' status='idle' time='00 : 00 : 00' po={po} stage_id={stage.stage_id} />
+                <ProductionOrderCard key={`${stage.stage_id}-${po.id}-${po.reference_no}-${index}`} borderColor='#1A7526' status='idle' time='00 : 00 : 00' po={po} stage_id={stage.stage_id} stage_name={stage.stage_name} />
               ))}
               {isLoadingMore && (
                 <div className='flex items-center justify-center py-4'>

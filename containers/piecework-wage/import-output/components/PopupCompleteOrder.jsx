@@ -1,22 +1,26 @@
 import CheckboxDefault from '@/components/common/checkbox/CheckboxDefault';
-import { MagnifyingGlassIcon } from '@/components/icons';
+import { MagnifyingGlassIcon, WarningIcon } from '@/components/icons';
 import CheckIcon from '@/components/icons/common/CheckIcon';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';
 import NoData from '@/components/UI/noData/nodata';
+import { IMAGES } from '@/constants/images';
 import { InputNumberCustom } from '@/containers/manufacture/productions-orders/components/popup/PopupCompleteCommand';
+import { useHandingFinishedStages } from '@/containers/manufacture/productions-orders/hooks/useHandingFinishedStages';
+import { useListFinishedStages } from '@/containers/manufacture/productions-orders/hooks/useListFinishedStages';
+import { useLoadOutOfStock } from '@/containers/manufacture/productions-orders/hooks/useLoadOutOfStock';
+import useToast from '@/hooks/useToast';
 import { useActiveStages } from '@/managers/api/piecework-wage/useImportOutput';
 import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
-import { IMAGES } from '@/constants/images';
 import { Lexend_Deca } from '@next/font/google';
+import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PiWarehouseLight } from 'react-icons/pi';
 import { Tooltip } from 'react-tippy';
 import Popup from 'reactjs-popup';
-import { useListFinishedStages } from '@/containers/manufacture/productions-orders/hooks/useListFinishedStages';
 
 const deca = Lexend_Deca({
   subsets: ['latin'],
@@ -96,12 +100,16 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
 
 ProductRow.displayName = 'ProductRow';
 
-const PopupCompleteOrder = ({ stage_id, po, isOpen, onClose, referenceNo = 'LSX-161225109' }) => {
+const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose }) => {
+  const showToast = useToast();
+  const { onSubmit } = useHandingFinishedStages();
+  const queryClient = useQueryClient();
   const { data: dataActiveStages, isLoading: isLoadingActiveStages } = useActiveStages({ po_id: po?.id, stage_id: stage_id, is_product: po?.is_product }, { enabled: isOpen });
-  const { data: dataWarehouses, isLoading: isLoadingWarehouses, refetch: refetchWarehouses } = useListFinishedStages({
+  const { data: dataWarehouses, isLoading: isLoadingWarehouses } = useListFinishedStages({
     id: po?.id,
     open: isOpen,
   });
+  const { onGetData: onGetDataLoadOutOfStock } = useLoadOutOfStock();
 
   const [selectAll, setSelectAll] = useState(false);
   const [products, setProducts] = useState([]);
@@ -112,13 +120,17 @@ const PopupCompleteOrder = ({ stage_id, po, isOpen, onClose, referenceNo = 'LSX-
   const [errorImages, setErrorImages] = useState({});
   const [showAutoTooltip, setShowAutoTooltip] = useState(false);
   const [autoTooltipText, setAutoTooltipText] = useState('');
+  const [errorNVLData, setErrorNVLData] = useState({ items: [] });
+  const [errorNVLDataBefore, setErrorNVLDataBefore] = useState({ items: [] });
+  const [isInputPending, setIsInputPending] = useState(false);
+  const [dataTableBom, setDataTableBom] = useState(null);
   const hasShownTooltipRef = useRef(false);
 
   // Sử dụng trực tiếp dữ liệu từ API, chỉ thêm các field cần thiết cho UI
   useEffect(() => {
     if (dataActiveStages?.items && Array.isArray(dataActiveStages.items)) {
       const productsWithUI = dataActiveStages.items.map((item, index) => ({
-        ...item, 
+        ...item,
         images: item.images || IMAGES.noImage,
         quantity_success: item.quantity_enter || 0,
         error: 0,
@@ -165,30 +177,152 @@ const PopupCompleteOrder = ({ stage_id, po, isOpen, onClose, referenceNo = 'LSX-
       setIsWarehouseMissing(false);
       setErrorTags({});
       setErrorImages({});
+      setErrorNVLData({ items: [] });
+      setErrorNVLDataBefore({ items: [] });
+      setDataTableBom(null);
+      setIsInputPending(false);
     }
   }, [isOpen]);
 
-  const updateProductQuantity = useCallback((index, value) => {
-    setProducts(prevProducts => {
-      const updatedProducts = [...prevProducts];
-      updatedProducts[index] = {
-        ...updatedProducts[index],
-        quantity_success: value,
-      };
-      return updatedProducts;
-    });
-  }, []);
+  // Hàm gọi API kiểm tra tồn kho (tương tự onGetBom trong PopupConfimStage)
+  const onGetBom = useCallback(
+    async items => {
+      try {
+        setIsInputPending(true);
+        const object = {
+          isProduct: po?.is_product ? 1 : 0,
+          activeStep: {
+            type: po?.is_product ? 'TP' : 'BTP',
+            item: {
+              stage_id: stage_id,
+            },
+          },
+          poId: po?.id,
+          arrayMoveBom: [],
+        };
 
-  const updateProductError = useCallback((index, value) => {
-    setProducts(prevProducts => {
-      const updatedProducts = [...prevProducts];
-      updatedProducts[index] = {
-        ...updatedProducts[index],
-        error: value,
-      };
-      return updatedProducts;
-    });
-  }, []);
+        const r = await onGetDataLoadOutOfStock({ object, items });
+
+        if (!r?.data?.boms) {
+          setIsInputPending(false);
+          return;
+        }
+
+        const check = r.data.boms.map(e => {
+          const existingBom = dataTableBom?.data?.bomsClientHistory?.find(item => item?.item_id === e?.item_id && item?.pois_id === e?.pois_id);
+
+          return {
+            ...e,
+            warehouseId: existingBom?.warehouseId || e?.list_warehouse_bom,
+          };
+        });
+
+        setDataTableBom({
+          ...r,
+          data: {
+            ...r?.data,
+            boms: check,
+            bomsClientHistory: check,
+          },
+        });
+      } catch (error) {
+        console.error('Error in onGetBom:', error);
+      } finally {
+        setIsInputPending(false);
+      }
+    },
+    [po?.id, po?.is_product, stage_id, onGetDataLoadOutOfStock, dataTableBom]
+  );
+
+  const updateProductQuantity = useCallback(
+    async (index, value) => {
+      setProducts(prevProducts => {
+        const updatedProducts = [...prevProducts];
+        const product = updatedProducts[index];
+
+        // Tự động chọn sản phẩm khi thay đổi số lượng
+        const updatedProduct = {
+          ...product,
+          quantity_success: value,
+          quantityEnterClient: value,
+          selected: true,
+          checkOrder: Date.now(),
+        };
+
+        // Nếu sản phẩm chưa được chọn, di chuyển lên đầu danh sách
+        if (!product.selected) {
+          updatedProducts.splice(index, 1);
+          updatedProducts.unshift(updatedProduct);
+        } else {
+          updatedProducts[index] = updatedProduct;
+        }
+
+        // Sắp xếp lại danh sách: sản phẩm đã chọn lên đầu
+        updatedProducts.sort((a, b) => {
+          if (a.selected && !b.selected) return -1;
+          if (!a.selected && b.selected) return 1;
+          if (a.selected && b.selected) {
+            return (b.checkOrder || 0) - (a.checkOrder || 0);
+          }
+          return (a.originalIndex || 0) - (b.originalIndex || 0);
+        });
+
+        // Cập nhật selectAll nếu tất cả đều được chọn
+        const allSelected = updatedProducts.every(p => p.selected);
+        setSelectAll(allSelected);
+
+        // Gọi API kiểm tra tồn kho khi thay đổi số lượng
+        onGetBom(updatedProducts);
+        return updatedProducts;
+      });
+    },
+    [onGetBom]
+  );
+
+  const updateProductError = useCallback(
+    async (index, value) => {
+      setProducts(prevProducts => {
+        const updatedProducts = [...prevProducts];
+        const product = updatedProducts[index];
+
+        // Tự động chọn sản phẩm khi thay đổi số lượng lỗi
+        const updatedProduct = {
+          ...product,
+          error: value,
+          quantityError: value,
+          selected: true,
+          checkOrder: Date.now(),
+        };
+
+        // Nếu sản phẩm chưa được chọn, di chuyển lên đầu danh sách
+        if (!product.selected) {
+          updatedProducts.splice(index, 1);
+          updatedProducts.unshift(updatedProduct);
+        } else {
+          updatedProducts[index] = updatedProduct;
+        }
+
+        // Sắp xếp lại danh sách: sản phẩm đã chọn lên đầu
+        updatedProducts.sort((a, b) => {
+          if (a.selected && !b.selected) return -1;
+          if (!a.selected && b.selected) return 1;
+          if (a.selected && b.selected) {
+            return (b.checkOrder || 0) - (a.checkOrder || 0);
+          }
+          return (a.originalIndex || 0) - (b.originalIndex || 0);
+        });
+
+        // Cập nhật selectAll nếu tất cả đều được chọn
+        const allSelected = updatedProducts.every(p => p.selected);
+        setSelectAll(allSelected);
+
+        // Gọi API kiểm tra tồn kho khi thay đổi số lượng lỗi
+        onGetBom(updatedProducts);
+        return updatedProducts;
+      });
+    },
+    [onGetBom]
+  );
 
   const handleSelectAll = useCallback(checked => {
     setSelectAll(checked);
@@ -320,28 +454,80 @@ const PopupCompleteOrder = ({ stage_id, po, isOpen, onClose, referenceNo = 'LSX-
     setIsWarehouseMissing(false);
   }, []);
 
-  const handleConfirm = useCallback(() => {
+  const handleConfirm = useCallback(async () => {
+    if (isInputPending) {
+      showToast('error', 'Vui lòng đợi xử lý dữ liệu hoàn tất');
+      return;
+    }
+
     const selectedProducts = products.filter(product => product.selected);
 
     if (!selectedWarehouse) {
       setIsWarehouseMissing(true);
+      showToast('error', 'Vui lòng chọn kho');
       return;
     }
 
     if (selectedProducts.length === 0) {
+      showToast('error', 'Vui lòng chọn ít nhất một sản phẩm');
       return;
     }
 
-    console.log('Confirm with:', {
-      warehouse: selectedWarehouse,
-      products: selectedProducts,
-      errorTags,
-      errorImages,
-    });
+    // Chuẩn bị dữ liệu theo cấu trúc useHandingFinishedStages
+    const formattedItems =
+      selectedProducts.map((product, index) => {
+        const quantityEnterClient = product?.quantity_success ?? product?.quantityEnterClient ?? 0;
+        const quantityError = product?.error ?? product?.quantityError ?? 0;
 
-    // Close popup after confirm
-    onClose();
-  }, [products, selectedWarehouse, errorTags, errorImages, onClose]);
+        // Lấy tag & ảnh lỗi nếu sau này có UI nhập chi tiết theo từng dòng
+        const productIndex = product?.originalIndex ?? index;
+        const rowErrorTags = errorTags[productIndex] || [];
+        const rowErrorImages = (errorImages[productIndex] || []).map(img => img?.file).filter(Boolean);
+
+        return {
+          ...product,
+          quantityEnterClient,
+          quantityError,
+          error_tags: rowErrorTags,
+          error_images: rowErrorImages,
+        };
+      }) || [];
+
+    const payload = {
+      poId: po?.id,
+      objectData: {
+        objectWareHouse: selectedWarehouse,
+        dataTableProducts: {
+          data: {
+            items: formattedItems,
+          },
+        },
+        // Truyền dataTableBom thực tế từ state (đã được cập nhật từ onGetBom)
+        dataTableBom: dataTableBom || {
+          data: {
+            boms: [],
+            bomItemsPod: [],
+          },
+        },
+      },
+    };
+
+    const result = await onSubmit(payload);
+
+    if (result?.isSuccess === 1) {
+      onClose();
+      // Refetch lại list nhập sản lượng khoán sau khi hoàn thành
+      queryClient.invalidateQueries({ queryKey: ['api_list_import_output'] });
+    } else if (result?.data?.errors || result?.data?.errors_before) {
+      setErrorNVLData({
+        items: [...(result?.data?.errors || [])],
+      });
+      setErrorNVLDataBefore({
+        items: [...(result?.data?.errors_before || [])],
+      });
+    }
+  }, [products, selectedWarehouse, errorTags, errorImages, po?.id, onSubmit, onClose, showToast, queryClient, isInputPending, dataTableBom]);
+  console.log(dataTableBom);
 
   return (
     <Popup open={isOpen} closeOnDocumentClick={false} onClose={onClose} className='popup-edit' overlayStyle={{ zIndex: 1100 }}>
@@ -349,9 +535,9 @@ const PopupCompleteOrder = ({ stage_id, po, isOpen, onClose, referenceNo = 'LSX-
         <div className='flex gap-2 justify-between items-start'>
           <div className='flex flex-col gap-1'>
             <h2 className='text-2xl font-bold capitalize'>
-              Nhập sản lượng công đoạn <span className='text-blue-fmrp'>May</span>
+              Nhập sản lượng công đoạn <span className='text-blue-fmrp'>{stage_name}</span>
             </h2>
-            <p className='responsive-text-base text-blue-fmrp'>{po?.reference_no || referenceNo}</p>
+            <p className='responsive-text-base text-blue-fmrp'>{po?.reference_no}</p>
           </div>
           <div className='flex flex-col gap-2'>
             <div className='flex gap-2 items-center'>
@@ -379,7 +565,7 @@ const PopupCompleteOrder = ({ stage_id, po, isOpen, onClose, referenceNo = 'LSX-
                 }}
                 isSearchable={true}
               />
-              <button onClick={handleConfirm} className='flex items-center gap-2 text-sm font-medium rounded-lg py-2.5 px-4 w-fit text-white bg-blue-fmrp hover:opacity-80'>
+              <button onClick={handleConfirm} className='whitespace-nowrap flex items-center gap-2 text-sm font-medium rounded-lg py-2.5 px-4 w-fit text-white bg-blue-fmrp hover:opacity-80'>
                 <CheckIcon className='size-4' />
                 {`Xác nhận${selectedCount > 0 ? ` (${selectedCount})` : ''}`}
               </button>
@@ -414,6 +600,73 @@ const PopupCompleteOrder = ({ stage_id, po, isOpen, onClose, referenceNo = 'LSX-
             </div>
           </div>
         </div>
+        {(errorNVLData?.items?.length > 0 || errorNVLDataBefore?.items?.length > 0) && (
+          <div className='flex flex-col gap-2'>
+            {errorNVLData && errorNVLData?.items?.length > 0 && (
+              <div className='py-2 px-3 flex flex-col gap-2 bg-[#FFEEF0] border border-[#991B1B] rounded-lg flex-shrink-0'>
+                <div className='flex items-center justify-between gap-2'>
+                  <div className='flex items-center gap-1'>
+                    <WarningIcon className='size-5' />
+                    <h3 className='text-sm font-normal text-neutral-07'>
+                      <span className='font-semibold text-[#EE1E1E]'>{errorNVLData.items.length}</span> nguyên vật liệu dưới đây chưa được xuất kho, vui lòng xuất trước khi hoàn thành!
+                    </h3>
+                  </div>
+                  <CloseXIcon className='size-5 cursor-pointer' onClick={() => setErrorNVLData({ items: [] })} />
+                </div>
+                <div className='flex flex-col gap-1'>
+                  {errorNVLData.items.map((item, index) => (
+                    <div key={index} className='px-3 py-1 flex items-center justify-between gap-1'>
+                      <div className='flex items-center gap-2'>
+                        <Image src={item.images || '/icon/default/default.png'} alt='default' width={36} height={36} className='object-cover rounded' />
+                        <div className='flex flex-col gap-0.5'>
+                          <h3 className='text-sm font-semibold text-neutral-07'>{item.item_name}</h3>
+                          <p className='text-xs font-normal text-neutral-03'>{item.product_variation}</p>
+                        </div>
+                      </div>
+                      <p className='text-sm font-normal text-neutral-07'>
+                        <span className='text-lg font-medium text-[#EE1E1E]'>{item.quantity_missing}</span>/{item.unit_name}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {errorNVLDataBefore && errorNVLDataBefore?.items?.length > 0 && (
+              <div className='py-2 px-3 flex flex-col gap-2 bg-[#FFEEF0] border border-[#991B1B] rounded-lg flex-shrink-0'>
+                <div className='flex items-center justify-between gap-2'>
+                  <div className='flex items-center gap-1'>
+                    <WarningIcon className='size-5' />
+                    <h3 className='text-sm font-normal text-neutral-07'>
+                      <span className='font-semibold text-[#EE1E1E]'>{errorNVLDataBefore.items.length}</span> nguyên liệu dưới đây chưa được hoàn thành ở bước trước, vui lòng hoàn thành trước khi đến
+                      bước này!
+                    </h3>
+                  </div>
+                  <CloseXIcon className='size-5 cursor-pointer' onClick={() => setErrorNVLDataBefore({ items: [] })} />
+                </div>
+                <div className='flex flex-col gap-1'>
+                  {errorNVLDataBefore.items.map((item, index) => (
+                    <div key={index} className='px-3 py-1 flex items-center justify-between gap-1'>
+                      <div className='flex items-center gap-2'>
+                        <Image src={item.images || '/icon/default/default.png'} alt='default' width={36} height={36} className='object-cover rounded' />
+                        <div className='flex flex-col gap-0.5'>
+                          <h3 className='text-sm font-semibold text-neutral-07'>
+                            {item.item_name} - <span className='responsive-text-base font-medium text-neutral-03'>({item.stage_name})</span>
+                          </h3>
+                          <p className='text-xs font-normal text-neutral-03'>{item.product_variation}</p>
+                          <p className='responsive-text-xs font-normal text-typo-blue-2'>{item.reference_no_detail}</p>
+                        </div>
+                      </div>
+                      <p className='text-sm font-normal text-neutral-07'>
+                        <span className='text-lg font-medium text-[#EE1E1E]'>{item.quantity_missing}</span>/{item.unit_name}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         <Customscrollbar className='max-h-[60vh] pr-2'>
           <table className='min-w-full border-separate border-spacing-0'>
             <thead className='sticky top-0 bg-white'>
