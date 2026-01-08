@@ -59,10 +59,10 @@ const TimerControl = ({ time = '00 : 00 : 00', status = 'idle', onStart, onPause
         return (
           <button
             onClick={onStart}
-            className='p-1.5 rounded-xl flex items-center gap-1 bg-[#4BBA5E] shadow-[0px_2px_8px_0px_#4CD96466] hover:bg-[#3FA550] hover:shadow-[0px_4px_12px_0px_#4CD96499] transition-all duration-200 active:scale-95'
+            className='p-1.5 !pl-2 aspect-1 rounded-full flex items-center gap-1 bg-[#4BBA5E] shadow-[0px_2px_8px_0px_#4CD96466] hover:bg-[#3FA550] hover:shadow-[0px_4px_12px_0px_#4CD96499] transition-all duration-200 active:scale-95'
           >
             <FaPlay className='size-5 p-0.5 text-white' />
-            <span className='responsive-text-sm font-medium text-white whitespace-nowrap'>Bắt đầu</span>
+            {/* <span className='responsive-text-sm font-medium text-white whitespace-nowrap'>Bắt đầu</span> */}
           </button>
         );
 
@@ -125,10 +125,10 @@ const TimerControl = ({ time = '00 : 00 : 00', status = 'idle', onStart, onPause
     }
   };
 
-  const containerBg = status === 'running' || status === 'completed' ? 'bg-[#DFF3E2]' : 'bg-[#E8E8E8]';
+  // const containerBg = status === 'running' || status === 'completed' ? 'bg-[#DFF3E2]' : 'bg-[#E8E8E8]';
 
   return (
-    <div className={`w-full flex justify-between items-center gap-2 rounded-2xl p-2 ${containerBg}`}>
+    <div className={`w-full flex justify-between items-center gap-2 rounded-2xl p-2 `}>
       <div className='flex items-center gap-1'>
         <Clock2Icon className='size-6 text-[#4E4E4E]' />
         <p className='responsive-text-base font-semibold text-[#4E4E4E] whitespace-nowrap'>{time}</p>
@@ -343,7 +343,7 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
   );
 
   return (
-    <div className='flex flex-col items-start gap-3 p-4 rounded-xl bg-white border border-[#F3F4F680] cursor-pointer' onClick={handleCardClick}>
+    <div className='flex flex-col items-start gap-3 p-4 rounded-xl bg-white border border-[#F3F4F680] cursor-pointer hover:border-blue-fmrp' onClick={handleCardClick}>
       <div className='w-full flex items-center justify-between gap-2'>
         <div className='py-0.5 px-2 border-l-2' style={{ borderColor }}>
           <h4 className='responsive-text-sm font-semibold mb-1' style={{ color: borderColor }}>
@@ -378,7 +378,7 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
       <PopupCompleteOrder stage_id={stage_id} stage_name={stage_name} po={po} isOpen={showCompletePopup} onClose={() => setShowCompletePopup(false)} />
       <Avatar />
 
-      <div className='px-1 flex items-center gap-3 w-full'>
+      <div className='px-1 flex items-center gap-3 w-1/2'>
         <div className='flex items-center gap-1 flex-shrink-0'>
           <ProgressIcon className='size-4 text-[#99A1AF]' />
           <p className='responsive-text-xs font-normal text-[#667085]'>Tiến trình</p>
@@ -858,7 +858,7 @@ const ImportOutput = () => {
             </div>
           ) : hasStages ? (
             <Customscrollbar horizontalOnly={true} showOnHover={true} className='flex-1 min-h-0 h-full overflow-y-hidden'>
-              <div className='px-6 flex gap-6 w-full h-full min-w-max overflow-y-hidden'>
+              <div className='px-6 flex gap-2 w-full h-full min-w-max overflow-y-hidden'>
                 {stages.map(stage => (
                   <StageColumn key={stage.stage_id} stage={stage} />
                 ))}
