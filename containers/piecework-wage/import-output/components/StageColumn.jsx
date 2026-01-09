@@ -119,6 +119,9 @@ const StageColumn = ({ stage }) => {
   const scrollContainerRef = useRef(null);
   const [isResponsiblePersonOpen, setIsResponsiblePersonOpen] = useState(false);
   const [selectedResponsiblePersons, setSelectedResponsiblePersons] = useState([]);
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedProductionOrders, setSelectedProductionOrders] = useState([]);
+  const [pendingSelectedPersons, setPendingSelectedPersons] = useState([]);
   
   const { data: listStaffs } = useSearchStaffs();
 
@@ -217,6 +220,29 @@ const StageColumn = ({ stage }) => {
     console.log('Selected responsible persons:', selected);
   };
 
+  // Handler khi bấm "Tùy chọn" - kích hoạt chế độ chọn
+  const handleSelectMode = (selectedPersons) => {
+    setPendingSelectedPersons(selectedPersons);
+    setIsSelectMode(true);
+    setSelectedProductionOrders([]);
+  };
+
+  // Handler toggle chọn ProductionOrderCard
+  const handleToggleProductionOrder = (po) => {
+    setSelectedProductionOrders(prev => {
+      const exists = prev.some(selectedPo => selectedPo.id === po.id && selectedPo.reference_no === po.reference_no);
+      if (exists) {
+        return prev.filter(selectedPo => !(selectedPo.id === po.id && selectedPo.reference_no === po.reference_no));
+      }
+      return [...prev, po];
+    });
+  };
+
+  // Kiểm tra ProductionOrderCard có được chọn không
+  const isProductionOrderSelected = (po) => {
+    return selectedProductionOrders.some(selectedPo => selectedPo.id === po.id && selectedPo.reference_no === po.reference_no);
+  };
+
   return (
     <div className='w-[394px] flex-shrink-0 rounded-t-2xl pt-1 flex flex-col gap-3 bg-[#EBEBEB]/50 h-full'>
       <div className='px-4 py-3 flex flex-col gap-3 flex-shrink-0'>
@@ -228,10 +254,17 @@ const StageColumn = ({ stage }) => {
           </div>
           <PersonSelector
             open={isResponsiblePersonOpen}
-            onClose={() => setIsResponsiblePersonOpen(false)}
+            onClose={() => {
+              if (!isSelectMode) {
+                setIsResponsiblePersonOpen(false);
+              }
+            }}
             onConfirm={handleResponsiblePersonConfirm}
+            onSelectMode={handleSelectMode}
             selected={selectedResponsiblePersons}
             data={responsiblePersonData}
+            selectedProductionOrdersCount={selectedProductionOrders.length}
+            isSelectMode={isSelectMode}
           >
             <button
               className={`border rounded-lg p-1 cursor-pointer transition-all duration-300 ${
@@ -265,6 +298,9 @@ const StageColumn = ({ stage }) => {
                   po={po}
                   stage_id={stage.stage_id}
                   stage_name={stage.stage_name}
+                  isSelectMode={isSelectMode}
+                  isSelected={isProductionOrderSelected(po)}
+                  onToggleSelect={() => handleToggleProductionOrder(po)}
                 />
               ))}
               {isLoadingMore && (

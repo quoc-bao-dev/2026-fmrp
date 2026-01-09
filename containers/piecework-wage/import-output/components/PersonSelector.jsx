@@ -43,7 +43,7 @@ const areArraysEqual = (arr1, arr2) => {
   return true;
 };
 
-const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], className, children, hideSelected = true }) => {
+const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], className, children, hideSelected = true, onSelectMode, selectedProductionOrdersCount = 0, isSelectMode = false }) => {
   const [search, setSearch] = useState('');
   const [localSelected, setLocalSelected] = useState(selected);
   const lastSelectedIdRef = useRef(null);
@@ -105,10 +105,10 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
 
   // Xử lý click outside với xác nhận nếu có thay đổi
   const dismiss = useDismiss(context, {
-    enabled: open && !isConfirmOpen,
+    enabled: open && !isConfirmOpen && !isSelectMode, // Không cho phép đóng khi đang ở chế độ chọn
     outsidePress: () => {
-      // Nếu đang mở popup confirm thì bỏ qua click outside
-      if (isConfirmOpen) {
+      // Nếu đang mở popup confirm hoặc đang ở chế độ chọn thì bỏ qua click outside
+      if (isConfirmOpen || isSelectMode) {
         return false;
       }
 
@@ -188,7 +188,7 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
         createPortal(
           <div
             ref={refs.setFloating}
-            className={`font-deca w-[389px] bg-white rounded-[16px] shadow-xl flex flex-col overflow-hidden ${className}`}
+            className={`font-deca p-3 w-[389px] bg-white rounded-[16px] shadow-xl flex flex-col gap-2 overflow-hidden ${className}`}
             style={{
               ...floatingStyles,
               minWidth: triggerRef.current ? Math.max(360, triggerRef.current.getBoundingClientRect().width || 0) : 360,
@@ -197,31 +197,15 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
             {...getFloatingProps()}
           >
             {/* Search */}
-            <div className='px-3 pt-3'>
-              <div className='flex items-center  gap-2'>
-                <div className='flex-1 flex items-center gap-3 pl-4 pr-1 py-1 border border-[#D0D5DD] rounded-[12px] bg-white focus-within:ring-2 focus-within:ring-[#1760B9]'>
-                  <input value={search} onChange={e => setSearch(e.target.value)} placeholder='Tìm người phụ trách' className='flex-1 text-sm text-[#101828] outline-none placeholder:text-[#9295A4]' />
-                  <div className='w-8 h-8 rounded-lg bg-[#1760B9] flex items-center justify-center'>
-                    <MagnifyingGlassIcon className='size-5 text-white' />
-                  </div>
-                </div>
-                <div className='flex items-center justify-center'>
-                  <button
-                    className='bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
-                    onClick={() => {
-                      onConfirm?.(localSelected);
-                      onClose?.();
-                    }}
-                  >
-                    Xác nhận
-                  </button>
-                </div>
+            <div className='flex-1 flex items-center gap-3 pl-4 pr-1 py-1 border border-[#D0D5DD] rounded-[12px] bg-white focus-within:ring-2 focus-within:ring-[#1760B9]'>
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder='Tìm người phụ trách' className='flex-1 text-sm text-[#101828] outline-none placeholder:text-[#9295A4]' />
+              <div className='w-8 h-8 rounded-lg bg-[#1760B9] flex items-center justify-center'>
+                <MagnifyingGlassIcon className='size-5 text-white' />
               </div>
             </div>
 
-            <div className='pt-2'></div>
             {/* List */}
-            <div className='flex-1 overflow-y-auto px-3 pb-2'>
+            <div className='flex-1 overflow-y-auto'>
               <div className='space-y-1'>
                 {filtered
                   .slice()
@@ -254,6 +238,25 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
                   </div>
                 )}
               </div>
+            </div>
+            <div className='flex items-center justify-center gap-2 w-full'>
+              <button
+                className='w-full bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
+                onClick={() => {
+                  onConfirm?.(localSelected);
+                  onClose?.();
+                }}
+              >
+                Áp dụng tất cả
+              </button>
+              <button
+                className='w-full bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
+                onClick={() => {
+                  onSelectMode?.(localSelected);
+                }}
+              >
+                Tùy chọn{selectedProductionOrdersCount > 0 && ` (${selectedProductionOrdersCount})`}
+              </button>
             </div>
           </div>,
           document.body

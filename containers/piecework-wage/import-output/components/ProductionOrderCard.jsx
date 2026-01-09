@@ -120,7 +120,7 @@ const formatTime = seconds => {
   return `${pad(h)} : ${pad(m)} : ${pad(s)}`;
 };
 
-const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = '00 : 00 : 00', po, stage_id, stage_name }) => {
+const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = '00 : 00 : 00', po, stage_id, stage_name, isSelectMode = false, isSelected = false, onToggleSelect }) => {
   const [statusState, setStatusState] = useState(status);
   const [elapsedSeconds, setElapsedSeconds] = useState(parseTimeString(time));
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
@@ -202,8 +202,29 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
   );
 
   return (
-    <div className='flex flex-col items-start gap-3 p-4 rounded-xl bg-white border border-[#F3F4F680] cursor-pointer hover:border-blue-fmrp' onClick={handleCardClick}>
+    <div className={`flex flex-col items-start gap-3 p-4 rounded-xl bg-white border transition-colors ${
+      isSelectMode 
+        ? isSelected 
+          ? 'border-[#1760B9] bg-[#EBF5FF] cursor-pointer' 
+          : 'border-[#F3F4F680] cursor-pointer hover:border-blue-fmrp'
+        : 'border-[#F3F4F680] cursor-pointer hover:border-blue-fmrp'
+    }`} onClick={isSelectMode ? (e) => {
+      e.stopPropagation();
+      onToggleSelect?.();
+    } : handleCardClick}>
       <div className='w-full flex items-center justify-between gap-2'>
+        {isSelectMode && (
+          <input
+            type='checkbox'
+            checked={isSelected}
+            onChange={(e) => {
+              e.stopPropagation();
+              onToggleSelect?.();
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className='w-4 h-4 text-[#1760B9] rounded border-[#D0D5DD] focus:ring-[#1760B9] cursor-pointer flex-shrink-0'
+          />
+        )}
         <div className='py-0.5 px-2 border-l-2' style={{ borderColor }}>
           <h4 className='responsive-text-lg font-semibold mb-1' style={{ color: borderColor }}>
             {po?.reference_no || '---'}
