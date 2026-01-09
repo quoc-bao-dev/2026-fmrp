@@ -215,7 +215,7 @@ const ImportOutput = () => {
             placeholder='blur'
             blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
           />
-          <h2 className='p-2 rounded-full bg-[#E2F0FE] responsive-text-base font-medium text-new-blue capitalize'>Trang quản lý</h2>
+          <h2 className='p-2 rounded-full bg-[#E2F0FE] hover:bg-blue-fmrp transition-colors hover:text-white hover:border-white border border-transparent responsive-text-base font-medium text-new-blue capitalize'>Trang quản lý</h2>
         </Link>
         <div className='flex items-center gap-3'>
           <button className='h-10 bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-[#D0D5DD]'>

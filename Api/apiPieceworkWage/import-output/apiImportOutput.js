@@ -15,6 +15,11 @@ const apiImportOutput = {
     const response = await axiosCustom('POST', `/api_web/production-input/items`, params);
     return response.data;
   },
+
+  async apiSavePomStages(params) {
+    const response = await axiosCustom('POST', `/api_web/pom-stages/save`, params);
+    return response.data;
+  },
 };
 
 export default apiImportOutput;
