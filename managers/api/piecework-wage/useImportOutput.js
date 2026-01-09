@@ -52,3 +52,21 @@ export const useActiveStages = (params, options = {}) => {
     ...options,
   });
 };
+
+export const useSavePomStages = (params, options = {}) => {
+  const fetchSavePomStages = async () => {
+    const response = await apiImportOutput.apiSavePomStages({ params: params });
+    return response.data;
+  };
+  return useMutation({
+    mutationFn: fetchSavePomStages,
+    onSuccess: (data) => {
+      if (data.isSuccess) {
+        showToast('success', data.message);
+      } else {
+        showToast('error', data.message);
+      }
+    },
+    ...options,
+  });
+};
