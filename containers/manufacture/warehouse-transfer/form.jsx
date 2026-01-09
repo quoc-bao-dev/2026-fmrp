@@ -38,6 +38,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useWarehouseTransferExport } from './hooks/useWarehouseTransferExport';
 import { useWarehouseTransferItems } from './hooks/useWarehouseTransferItems';
 import { useWarehouseTransferTo } from './hooks/useWarehouseTransferTo';
+import { useWarehouseProperties } from './hooks/useWarehouseProperties';
 
 /// Hậu viết API
 const WarehouseTransferForm = props => {
@@ -53,6 +54,9 @@ const WarehouseTransferForm = props => {
   const statusExprired = useStatusExprired();
   const { isOpen, isKeyState, handleQueryId } = useToggle();
   const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature();
+
+  // Thuộc tính kho
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties(dataSeting);
 
   const [onSending, sOnSending] = useState(false);
   const [onLoadingChild, sOnLoadingChild] = useState(false);
@@ -580,6 +584,28 @@ const WarehouseTransferForm = props => {
                         {option.e?.text_type && (
                           <TagColorProduct dataLang={dataLang} dataKey={getTypeDataKey(option.e?.text_type)} name={option.e?.text_type} className='!px-1' textSize='text-[11px]' />
                         )}
+                        {/* Lot / Date */}
+                        {dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' ? (
+                          <div className='flex flex-wrap items-center gap-2 text-neutral-03'>
+                            <span className=''>Lot: {option.e?.lot ? option.e?.lot : '-'}</span>
+                            <span className=''>Date: {option.e?.expiration_date ? formatMoment(option.e?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}</span>
+                          </div>
+                        ) : null}
+                        {/* Thuộc tính kho - chỉ hiển thị cho nguyên vật liệu */}
+                        {isWarehousePropertiesEnabled && option.e?.text_type === 'material' && (
+                          <div className='flex gap-3 text-neutral-03'>
+                            {warehousePropertyLabels.map(({ key, label }) => {
+                              const value = option.e?.[key];
+                              return (
+                                <div key={key} className='flex items-start gap-1'>
+                                  <span className=' '>{label}</span>
+                                  <span>:</span>
+                                  <span className='truncate'>{value ?? '-'}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -634,6 +660,21 @@ const WarehouseTransferForm = props => {
                                 ) : (
                                   ''
                                 )}
+                                {/* Thuộc tính kho - chỉ hiển thị cho nguyên vật liệu */}
+                                {isWarehousePropertiesEnabled && e?.item?.e?.text_type === 'material' && (
+                                  <div className='flex flex-col text-neutral-03 responsive-text-xs'>
+                                    {warehousePropertyLabels.map(({ key, label }) => {
+                                      const value = e?.item?.e?.[key];
+                                      return (
+                                        <div key={key} className='flex items-start gap-1'>
+                                          <span className='font-semibold'>{label}</span>
+                                          <span>:</span>
+                                          <span className='truncate'>{value ?? '-'}</span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -645,13 +686,13 @@ const WarehouseTransferForm = props => {
                           </button>
                         </div>
                       </div>
-                      <div className='col-span-15'>
-                        <div className='grid grid-cols-15 gap-2'>
+                      <div className='col-span-15 h-full flex flex-col justify-center'>
+                        <div className='grid grid-cols-15 gap-2 items-center'>
                           {load ? (
                             <Loading className='h-full col-span-15' color='#0f4f9e' />
                           ) : (
                             e?.child?.map((ce, index) => (
-                              <div key={ce?.id?.toString()} className='col-span-15 grid grid-cols-15 gap-2'>
+                              <div key={ce?.id?.toString()} className='col-span-15 grid grid-cols-15 gap-2 '>
                                 <div className='col-span-3 flex flex-col justify-center h-fit'>
                                   <SelectComponent
                                     options={ce?.dataWarehouse}
