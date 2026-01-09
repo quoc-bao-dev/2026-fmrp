@@ -592,7 +592,7 @@ const Warehouse = props => {
                       {dataLang?.warehouses_detail_wareLoca || 'warehouses_detail_wareLoca'}
                     </ColumnTable>
                     <ColumnTable colSpan={1} textAlign={'left'}>
-                      {dataLang?.warehouses_detail_mainVar || 'warehouses_detail_mainVar'}
+                      <span className='-mx-1'>{dataLang?.warehouses_detail_mainVar || 'warehouses_detail_mainVar'}</span>
                     </ColumnTable>
                     <ColumnTable colSpan={1} textAlign={'left'}>
                       {dataLang?.warehouses_detail_subVar || 'warehouses_detail_subVar'}
@@ -610,10 +610,10 @@ const Warehouse = props => {
                     {isExpiryEnabled ? (
                       <>
                         <ColumnTable colSpan={1} textAlign={'center'}>
-                          {'Lot'}
+                          <span className='-ml-6'> {'Lot'}</span>
                         </ColumnTable>
                         <ColumnTable colSpan={1} textAlign={'center'}>
-                          {dataLang?.warehouses_detail_date || 'warehouses_detail_date'}
+                          <span className='-ml-6'>{dataLang?.warehouses_detail_date || 'warehouses_detail_date'}</span>
                         </ColumnTable>
                       </>
                     ) : (
@@ -716,7 +716,7 @@ const Warehouse = props => {
                                   </RowItemTable>
                                   {showWarehouseAttributesColumn &&
                                     (e?.item_type !== 'product' ? (
-                                      <RowItemTable colSpan={2} className='py-3 border-b !font-normal' textAlign={'left'}>
+                                      <RowItemTable colSpan={2} className='pl-10 py-3 border-b !font-normal' textAlign={'left'}>
                                         <div className='flex flex-col gap-1 '>
                                           {warehousePropertyKeys.map(key => {
                                             const label = getWarehousePropertyLabel(key);
@@ -731,7 +731,7 @@ const Warehouse = props => {
                                         </div>
                                       </RowItemTable>
                                     ) : (
-                                      <RowItemTable colSpan={2} className='py-3 border-b !font-normal' textAlign={'left'}>
+                                      <RowItemTable colSpan={2} className='pl-10 py-3 border-b !font-normal' textAlign={'left'}>
                                         -
                                       </RowItemTable>
                                     ))}
@@ -752,7 +752,7 @@ const Warehouse = props => {
                                       <RowItemTable
                                         colSpan={1}
                                         // textSize={"text-[13px]"}
-                                        className='py-3 border-b !font-normal'
+                                        className='py-3 -ml-6 border-b !font-normal'
                                         textAlign={'center'}
                                       >
                                         {item.lot == null || item.lot == '' ? '-' : item.lot}
@@ -760,7 +760,7 @@ const Warehouse = props => {
                                       <RowItemTable
                                         colSpan={1}
                                         // textSize={"text-[13px]"}
-                                        className='py-3 border-b !font-normal'
+                                        className='py-3 -ml-6 border-b !font-normal'
                                         textAlign={'center'}
                                       >
                                         {item.expiration_date ? formatMoment(item.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}
