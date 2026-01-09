@@ -1,20 +1,38 @@
 import { CalendarIcon, CheckDoubleIcon, Clock2Icon, ProgressIcon } from '@/components/icons';
+import AvatarText from '@/components/UI/common/user/AvatarText';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
 import { IMAGES } from '@/constants/images';
 import formatNumber from '@/utils/helpers/formatnumber';
+import { Tooltip } from 'antd';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { FaPause, FaPlay, FaStop } from 'react-icons/fa';
-import { Tooltip } from 'antd';
 import PopupCompleteOrder from './PopupCompleteOrder';
 
-const Avatar = () => {
+const Avatar = ({ staffs_assigned }) => {
+  if (!staffs_assigned || staffs_assigned.length === 0) return null;
   return (
     <div className='flex items-center gap-2 justify-between w-full'>
       <div className='p-1 flex rounded-full bg-[#D6EAFE]'>
-        <Image src='/shift-schedule.png' alt='default' width={100} height={100} className='size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] -ml-0 z-1' />
-        <Image src='/shift-schedule.png' alt='default' width={100} height={100} className='size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] -ml-2 z-[2]' />
-        <Image src='/shift-schedule.png' alt='default' width={100} height={100} className='size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] -ml-2 z-[3]' />
+        {staffs_assigned.map((staff, index) => {
+          const isFirst = index === 0;
+          const hasImage = staff?.profile_image && staff.profile_image.trim() !== '';
+
+          return hasImage ? (
+            <Image
+              key={staff?.staffid || index}
+              src={staff.profile_image}
+              alt={staff?.full_name || 'Staff'}
+              width={30}
+              height={30}
+              className={`size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] ${isFirst ? '' : '-ml-2'} z-1`}
+            />
+          ) : (
+            <div key={staff?.staffid || index} className={`size-[30px] rounded-full overflow-hidden border-2 border-[#549AE8] flex items-center justify-center bg-white ${isFirst ? '' : '-ml-2'} z-1`}>
+              <AvatarText fullName={staff?.full_name || '?'} className='w-full h-full text-base flex items-center justify-center' />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -210,7 +228,7 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
 
   return (
     <div
-      className={`flex flex-col items-start gap-3 p-4 rounded-xl border transition-colors ${
+      className={`flex flex-col items-start gap-3 p-4 rounded-xl border transition-colors duration-300 ${
         isSelectMode
           ? isSelected
             ? 'border-[#1760B9] bg-[#EBF5FF] cursor-pointer'
@@ -270,7 +288,7 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
         forceConfirm={true}
       />
       <PopupCompleteOrder stage_id={stage_id} stage_name={stage_name} po={po} isOpen={showCompletePopup} onClose={() => setShowCompletePopup(false)} />
-      <Avatar />
+      <Avatar staffs_assigned={po?.staffs_assigned || []} />
 
       <div className='px-1 flex items-center gap-3 w-1/2'>
         <div className='flex items-center gap-1 flex-shrink-0'>

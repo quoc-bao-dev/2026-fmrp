@@ -35,13 +35,15 @@ const ImportOutput = () => {
 
   const stateFilterDropdown = useSelector(state => state.stateFilterDropdown);
 
-  const { isLoading: isLoadingListImportOutput, data: listImportOutput } = useListImportOutput({
+  const filterParams = {
     start_date: dateFilter.dateStart ? moment(dateFilter.dateStart).format('DD/MM/YYYY') : null,
     end_date: dateFilter.dateEnd ? moment(dateFilter.dateEnd).format('DD/MM/YYYY') : null,
     staff_id: selectedEmployee?.value,
     stage_ids: selectedProcess?.value,
     search: debouncedSearchReferenceNo || '',
-  });
+  };
+
+  const { isLoading: isLoadingListImportOutput, data: listImportOutput } = useListImportOutput(filterParams);
   const { data: listStaffs } = useSearchStaffs();
   const { data: listStages } = useLookupStages({ search: debouncedSearchProcess || '' });
 
@@ -342,6 +344,7 @@ const ImportOutput = () => {
                     selectModeResetKey={selectModeResetKey}
                     activePersonSelectorStageId={activePersonSelectorStageId}
                     onPersonSelectorClick={handlePersonSelectorClick}
+                    filterParams={filterParams}
                   />
                 ))}
               </div>
