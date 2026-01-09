@@ -5,6 +5,7 @@ import { autoUpdate, flip, offset, shift, size, useDismiss, useFloating, useInte
 import Image from 'next/image';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import useToast from '@/hooks/useToast';
 
 const ResponsibleAvatar = ({ avatarUrl, fullName = '', size = 40, borderColor = '#549AE8', className = '' }) => {
   const [isError, setIsError] = useState(false);
@@ -52,6 +53,7 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
   const prevSelectedRef = useRef(selected);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const triggerRef = useRef(null);
+  const showToast = useToast();
 
   // Reset localSelected về selected mới nhất khi mở popup hoặc khi selected thay đổi
   useEffect(() => {
@@ -124,6 +126,8 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
   const { getReferenceProps, getFloatingProps } = useInteractions([dismiss]);
 
   const selectedIds = useMemo(() => new Set(selected?.map(p => p.id) || []), [selected]);
+
+  const hasPersonSelected = useMemo(() => (Array.isArray(localSelected) ? localSelected.length > 0 : false), [localSelected]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -243,6 +247,10 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
               <button
                 className='w-full bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
                 onClick={() => {
+                  if (!hasPersonSelected) {
+                    showToast('error', 'Vui lòng chọn ít nhất một người phụ trách trước khi áp dụng');
+                    return;
+                  }
                   onConfirm?.(localSelected);
                   onClose?.();
                 }}
@@ -250,12 +258,23 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
                 Áp dụng tất cả
               </button>
               <button
-                className='w-full bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
+                className='w-full text-blue-fmrp bg-white border border-blue-fmrp px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-blue-fmrp/20 transition-colors truncate'
                 onClick={() => {
-                  onSelectMode?.(localSelected);
+                  if (!hasPersonSelected) {
+                    showToast('error', 'Vui lòng chọn ít nhất một người phụ trách trước khi chọn lệnh');
+                    return;
+                  }
+                  if (selectedProductionOrdersCount > 0) {
+                    onClose?.();
+                  } else {
+                    showToast('success', 'Vui lòng chọn các lệnh sản xuất cần áp dụng');
+                    onSelectMode?.(localSelected);
+                  }
                 }}
               >
-                Tùy chọn{selectedProductionOrdersCount > 0 && ` (${selectedProductionOrdersCount})`}
+                {selectedProductionOrdersCount > 0
+                  ? `Áp dụng (${selectedProductionOrdersCount}) lệnh`
+                  : 'Tùy chọn lệnh'}
               </button>
             </div>
           </div>,

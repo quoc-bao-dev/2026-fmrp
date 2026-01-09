@@ -243,6 +243,30 @@ const StageColumn = ({ stage }) => {
     return selectedProductionOrders.some(selectedPo => selectedPo.id === po.id && selectedPo.reference_no === po.reference_no);
   };
 
+  // Sắp xếp lại danh sách PO khi ở chế độ chọn:
+  // - Các PO đã chọn sẽ được đưa lên đầu, giữ nguyên thứ tự tương đối ban đầu
+  const orderedPos = useMemo(() => {
+    if (!isSelectMode || selectedProductionOrders.length === 0) return allPos;
+
+    const selectedKeySet = new Set(
+      selectedProductionOrders.map(po => `${po.id}-${po.reference_no}`)
+    );
+
+    const selectedList = [];
+    const unselectedList = [];
+
+    allPos.forEach(po => {
+      const key = `${po.id}-${po.reference_no}`;
+      if (selectedKeySet.has(key)) {
+        selectedList.push(po);
+      } else {
+        unselectedList.push(po);
+      }
+    });
+
+    return [...selectedList, ...unselectedList];
+  }, [allPos, isSelectMode, selectedProductionOrders]);
+
   return (
     <div className='w-[394px] flex-shrink-0 rounded-t-2xl pt-1 flex flex-col gap-3 bg-[#EBEBEB]/50 h-full'>
       <div className='px-4 py-3 flex flex-col gap-3 flex-shrink-0'>
@@ -255,9 +279,11 @@ const StageColumn = ({ stage }) => {
           <PersonSelector
             open={isResponsiblePersonOpen}
             onClose={() => {
-              if (!isSelectMode) {
-                setIsResponsiblePersonOpen(false);
-              }
+              // Đóng popup chọn người phụ trách và thoát chế độ chọn lệnh
+              setIsResponsiblePersonOpen(false);
+              setIsSelectMode(false);
+              setSelectedProductionOrders([]);
+              setPendingSelectedPersons([]);
             }}
             onConfirm={handleResponsiblePersonConfirm}
             onSelectMode={handleSelectMode}
@@ -287,9 +313,9 @@ const StageColumn = ({ stage }) => {
       </div>
       <Customscrollbar className='flex-1 min-h-0 h-full' showOnHover={true} onScroll={handleScroll} ref={scrollContainerRef}>
         <div className='flex flex-col gap-2.5 px-4 pb-4'>
-          {allPos.length > 0 ? (
+          {orderedPos.length > 0 ? (
             <>
-              {allPos.map((po, index) => (
+              {orderedPos.map((po, index) => (
                 <ProductionOrderCard
                   key={`${stage.stage_id}-${po.id}-${po.reference_no}-${index}`}
                   borderColor='#1A7526'
