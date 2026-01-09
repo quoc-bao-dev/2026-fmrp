@@ -6,6 +6,7 @@ import Image from 'next/image';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import useToast from '@/hooks/useToast';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 
 const ResponsibleAvatar = ({ avatarUrl, fullName = '', size = 40, borderColor = '#549AE8', className = '' }) => {
   const [isError, setIsError] = useState(false);
@@ -44,7 +45,19 @@ const areArraysEqual = (arr1, arr2) => {
   return true;
 };
 
-const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], className, children, hideSelected = true, onSelectMode, selectedProductionOrdersCount = 0, isSelectMode = false }) => {
+const PersonSelector = ({
+  open,
+  onClose,
+  onConfirm,
+  onApplySelected,
+  selected = [],
+  data = [],
+  className,
+  children,
+  onSelectMode,
+  selectedProductionOrdersCount = 0,
+  isSelectMode = false,
+}) => {
   const [search, setSearch] = useState('');
   const [localSelected, setLocalSelected] = useState(selected);
   const lastSelectedIdRef = useRef(null);
@@ -125,19 +138,14 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
 
   const { getReferenceProps, getFloatingProps } = useInteractions([dismiss]);
 
-  const selectedIds = useMemo(() => new Set(selected?.map(p => p.id) || []), [selected]);
-
   const hasPersonSelected = useMemo(() => (Array.isArray(localSelected) ? localSelected.length > 0 : false), [localSelected]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     const peopleList = Array.isArray(data) ? data : [];
-    // Nếu hideSelected = true (mặc định): ẩn các user đã chọn
-    // Nếu hideSelected = false: hiển thị tất cả, kể cả đã chọn
-    const base = hideSelected ? peopleList.filter(p => !selectedIds.has(p.id)) : peopleList;
-    if (!term) return base;
-    return base.filter(p => p.name.toLowerCase().includes(term));
-  }, [search, selectedIds, data, hideSelected]);
+    if (!term) return peopleList;
+    return peopleList.filter(p => p.name.toLowerCase().includes(term));
+  }, [search, data]);
 
   const isSelected = id => localSelected?.some(item => item.id === id);
 
@@ -214,7 +222,7 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
             </div>
 
             {/* List */}
-            <div className='flex-1 overflow-y-auto'>
+            <Customscrollbar className='flex-1 overflow-y-auto'>
               <div className='space-y-1'>
                 {filtered
                   .slice()
@@ -230,7 +238,7 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
                         <button
                           data-rpcb-item={person.id}
                           onClick={() => toggleLocal(person)}
-                          className={`w-full flex items-center gap-3 py-1.5 rounded-[10px] text-left transition-colors  border-[#E7EAEE] ${
+                          className={`w-full flex items-center gap-3 p-1.5 rounded-[10px] text-left transition-colors  border-[#E7EAEE] ${
                             active ? 'bg-[#EBF5FF]' : 'bg-white hover:bg-[#F6F8FB]'
                           }`}
                         >
@@ -242,16 +250,18 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
                     );
                   })}
                 {filtered.length === 0 && (
-                  <div className='text-center text-sm text-[#9295A4] py-4'>
-                    {hideSelected && selectedIds.size > 0 && Array.isArray(data) && data.length === selectedIds.size ? 'Tất cả người phụ trách đã được chọn' : 'Không tìm thấy người phù hợp'}
-                  </div>
+                  <div className='text-center text-sm text-[#9295A4] py-4'>Không tìm thấy người phù hợp</div>
                 )}
               </div>
-            </div>
+            </Customscrollbar>
             <div className='flex flex-col items-center justify-center gap-2 w-full'>
               <button
                 className='w-full bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
                 onClick={() => {
+                  if (isSelectMode) {
+                    showToast('error', 'Vui lòng hoàn thành chế độ chọn lệnh trước khi áp dụng tất cả');
+                    return;
+                  }
                   if (!hasPersonSelected) {
                     showToast('error', 'Vui lòng chọn ít nhất một người phụ trách trước khi áp dụng');
                     return;
@@ -270,6 +280,7 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
                     return;
                   }
                   if (selectedProductionOrdersCount > 0) {
+                    onApplySelected?.(localSelected);
                     onClose?.();
                   } else {
                     showToast('success', 'Vui lòng chọn các lệnh sản xuất cần áp dụng');

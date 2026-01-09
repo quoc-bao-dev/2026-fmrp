@@ -2,10 +2,10 @@ import { PresentationChartIcon, ThreeDotIcon, UserGroupIcon, UserPlus2Icon } fro
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { IMAGES } from '@/constants/images';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
-import { useListImportOutputItems } from '@/managers/api/piecework-wage/useImportOutput';
+import { useListImportOutputItems, useSavePomStages } from '@/managers/api/piecework-wage/useImportOutput';
+import { Popover } from 'antd';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Popover } from 'antd';
 import PersonSelector from './PersonSelector';
 import ProductionOrderCard from './ProductionOrderCard';
 
@@ -110,7 +110,7 @@ const ProcessStatusDropdown = ({ processName }) => {
 };
 
 // Component StageColumn để quản lý infinite scroll cho từng stage
-const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, onPersonSelectorClick }) => {
+const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, onPersonSelectorClick, filterParams }) => {
   const [page, setPage] = useState(1);
   const [allPos, setAllPos] = useState(stage?.items?.pos || []);
   const [hasMore, setHasMore] = useState(stage?.items?.next || false);
@@ -122,9 +122,19 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedProductionOrders, setSelectedProductionOrders] = useState([]);
   const [pendingSelectedPersons, setPendingSelectedPersons] = useState([]);
-  
-  const { data: listStaffs } = useSearchStaffs();
 
+  const { data: listStaffs } = useSearchStaffs();
+  const { mutate: savePomStages } = useSavePomStages({
+    onSuccess: data => {
+      // Logic của hook (showToast, invalidateQueries) đã được xử lý trong hook
+      // Chỉ cần reset selectedResponsiblePersons sau khi submit thành công
+      if (data?.isSuccess) {
+        setSelectedResponsiblePersons([]);
+        // Đóng PersonSelector sau khi submit thành công
+        setIsResponsiblePersonOpen(false);
+      }
+    },
+  });
   const { data: listImportOutputItemsData, isLoading } = useListImportOutputItems(
     {
       stage_id: stage.stage_id,
@@ -172,7 +182,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
     }
   }, [listImportOutputItemsData, page, isLoading, isLoadingMore, shouldFetch]);
 
-  // Khởi tạo dữ liệu từ stage ban đầu khi stage thay đổi
+  // Khởi tạo/cập nhật dữ liệu từ stage ban đầu khi stage thay đổi
   useEffect(() => {
     if (stage?.items?.pos) {
       setAllPos(stage.items.pos);
@@ -181,7 +191,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
       setIsLoadingMore(false);
       setShouldFetch(false); // Reset flag khi stage thay đổi
     }
-  }, [stage?.stage_id, stage?.items?.pos?.length]);
+  }, [stage?.stage_id, stage?.items?.pos]);
 
   // Xử lý scroll để load more
   const handleScroll = useCallback(
@@ -200,7 +210,17 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
     [hasMore, isLoadingMore, isLoading, shouldFetch]
   );
 
-  const totalCount = Number(stage?.items?.total_count || 0);
+  const buildBasePayload = (selectedPersons = []) => {
+    const staff_ids = (selectedPersons || []).map(person => Number(person.id)).filter(id => Number.isFinite(id));
+
+    return {
+      start_date: filterParams?.start_date ?? null,
+      end_date: filterParams?.end_date ?? null,
+      search: filterParams?.search ?? '',
+      stage_id: stage?.stage_id,
+      staff_ids,
+    };
+  };
 
   // Format dữ liệu nhân viên cho PersonSelector
   const responsiblePersonData = useMemo(() => {
@@ -214,10 +234,10 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
       }));
   }, [listStaffs]);
 
-  const handleResponsiblePersonConfirm = (selected) => {
+  const handleResponsiblePersonConfirm = selected => {
     setSelectedResponsiblePersons(selected);
-    // TODO: Xử lý lưu dữ liệu người phụ trách cho stage
-    console.log('Selected responsible persons:', selected);
+    const payload = buildBasePayload(selected);
+    savePomStages(payload);
   };
 
   // Mỗi khi selectModeResetKey thay đổi (bấm PersonSelector ở StageColumn khác)
@@ -227,10 +247,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
     if (
       activePersonSelectorStageId !== null &&
       activePersonSelectorStageId !== stage.stage_id &&
-      (isResponsiblePersonOpen ||
-        isSelectMode ||
-        selectedProductionOrders.length > 0 ||
-        pendingSelectedPersons.length > 0)
+      (isResponsiblePersonOpen || isSelectMode || selectedProductionOrders.length > 0 || pendingSelectedPersons.length > 0)
     ) {
       setIsResponsiblePersonOpen(false);
       setIsSelectMode(false);
@@ -240,14 +257,14 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
   }, [selectModeResetKey, activePersonSelectorStageId, isResponsiblePersonOpen, isSelectMode, selectedProductionOrders.length, pendingSelectedPersons.length, stage.stage_id]);
 
   // Handler khi bấm "Tùy chọn" - kích hoạt chế độ chọn
-  const handleSelectMode = (selectedPersons) => {
+  const handleSelectMode = selectedPersons => {
     setPendingSelectedPersons(selectedPersons);
     setIsSelectMode(true);
     setSelectedProductionOrders([]);
   };
 
   // Handler toggle chọn ProductionOrderCard
-  const handleToggleProductionOrder = (po) => {
+  const handleToggleProductionOrder = po => {
     setSelectedProductionOrders(prev => {
       const exists = prev.some(selectedPo => selectedPo.id === po.id && selectedPo.reference_no === po.reference_no);
       if (exists) {
@@ -258,7 +275,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
   };
 
   // Kiểm tra ProductionOrderCard có được chọn không
-  const isProductionOrderSelected = (po) => {
+  const isProductionOrderSelected = po => {
     return selectedProductionOrders.some(selectedPo => selectedPo.id === po.id && selectedPo.reference_no === po.reference_no);
   };
 
@@ -267,9 +284,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
   const orderedPos = useMemo(() => {
     if (!isSelectMode || selectedProductionOrders.length === 0) return allPos;
 
-    const selectedKeySet = new Set(
-      selectedProductionOrders.map(po => `${po.id}-${po.reference_no}`)
-    );
+    const selectedKeySet = new Set(selectedProductionOrders.map(po => `${po.id}-${po.reference_no}`));
 
     const selectedList = [];
     const unselectedList = [];
@@ -286,14 +301,35 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
     return [...selectedList, ...unselectedList];
   }, [allPos, isSelectMode, selectedProductionOrders]);
 
+  const handleApplySelectedOrders = selectedPersons => {
+    const persons = selectedPersons && selectedPersons.length ? selectedPersons : pendingSelectedPersons;
+    if (!persons.length || !selectedProductionOrders.length) return;
+
+    const po_ids = selectedProductionOrders.map(po => Number(po.id)).filter(id => Number.isFinite(id));
+
+    if (!po_ids.length) return;
+
+    const basePayload = buildBasePayload(persons);
+    savePomStages({
+      ...basePayload,
+      po_ids,
+    });
+
+    setIsSelectMode(false);
+    setSelectedProductionOrders([]);
+    setPendingSelectedPersons([]);
+  };
+
   return (
     <div className='w-[394px] flex-shrink-0 rounded-t-2xl pt-1 flex flex-col gap-3 bg-[#EBEBEB]/50 h-full'>
       <div className='px-4 py-3 flex flex-col gap-3 flex-shrink-0'>
         <div className='flex items-center gap-2 justify-between'>
           <div className='flex items-center gap-2 w-[70%]'>
             <PresentationChartIcon className='size-6' />
-            <h3 className='responsive-text-2xl font-medium text-blue-fmrp truncate' title={stage.stage_name}>{stage.stage_name}</h3>
-            <span className='bg-[#FD2424] min-w-4 h-4 flex items-center justify-center rounded-full px-1 responsive-text-xs font-normal text-white -mt-3 -ml-1'>{totalCount}</span>
+            <h3 className='responsive-text-2xl font-medium text-blue-fmrp truncate' title={stage.stage_name}>
+              {stage.stage_name}
+            </h3>
+            <span className='bg-[#FD2424] min-w-4 h-4 flex items-center justify-center rounded-full px-1 responsive-text-xs font-normal text-white -mt-3 -ml-1'>{stage?.items?.total_count || 0}</span>
           </div>
           <PersonSelector
             open={isResponsiblePersonOpen}
@@ -306,6 +342,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
             }}
             onConfirm={handleResponsiblePersonConfirm}
             onSelectMode={handleSelectMode}
+            onApplySelected={handleApplySelectedOrders}
             selected={selectedResponsiblePersons}
             data={responsiblePersonData}
             selectedProductionOrdersCount={selectedProductionOrders.length}
@@ -313,9 +350,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
           >
             <button
               className={`border rounded-lg p-1 cursor-pointer transition-all duration-300 ${
-                isResponsiblePersonOpen
-                  ? 'border-blue-fmrp bg-blue-fmrp/10'
-                  : 'border-transparent hover:border-blue-fmrp hover:bg-blue-fmrp/10'
+                isResponsiblePersonOpen ? 'border-blue-fmrp bg-blue-fmrp/10' : 'border-transparent hover:border-blue-fmrp hover:bg-blue-fmrp/10'
               }`}
               onClick={() => {
                 // Thông báo cho parent: stage này đang mở PersonSelector
@@ -329,13 +364,13 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
                 setIsResponsiblePersonOpen(true);
               }}
             >
-              <UserPlus2Icon className='size-6 flex-shrink-0'/>
+              <UserPlus2Icon className='size-6 flex-shrink-0' />
             </button>
           </PersonSelector>
         </div>
         <div className='flex items-center justify-between gap-2 bg-[#FFFFFF66] border border-white rounded-[14px] px-3 py-[14px]'>
           <div className='flex items-center gap-3'>
-            <p className='responsive-text-base font-semibold text-[#1A7526]'>Tổng lệnh: {totalCount}</p>
+            <p className='responsive-text-base font-semibold text-[#1A7526]'>Tổng lệnh: {stage?.items?.total_count || 0}</p>
           </div>
           <ProcessStatusDropdown processName={stage.stage_name} />
         </div>
