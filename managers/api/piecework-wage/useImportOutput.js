@@ -1,8 +1,9 @@
 import apiProductionsOrders from '@/Api/apiManufacture/manufacture/productionsOrders/apiProductionsOrders';
 import apiImportOutput from '@/Api/apiPieceworkWage/import-output/apiImportOutput';
 import useToast from '@/hooks/useToast';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+//Danh sách công đoạn
 export const useListImportOutput = params => {
   const showToast = useToast();
   const fetchListImportOutput = async () => {
@@ -18,6 +19,7 @@ export const useListImportOutput = params => {
   });
 };
 
+//Gọi thêm các công đoạn nếu nhiều
 export const useListImportOutputItems = (params, options = {}) => {
   const fetchListImportOutputItems = async () => {
     const response = await apiImportOutput.apiListImportOutputItems({ params: params });
@@ -30,6 +32,7 @@ export const useListImportOutputItems = (params, options = {}) => {
   });
 };
 
+//Gọi danh sách công đoạn
 export const useLookupStages = data => {
   const fetchLookupStages = async () => {
     const response = await apiImportOutput.apiLookupStages({ params: data });
@@ -41,6 +44,7 @@ export const useLookupStages = data => {
   });
 };
 
+//Gọi danh sách công đoạn trong popup
 export const useActiveStages = (params, options = {}) => {
   const fetchActiveStages = async () => {
     const response = await apiProductionsOrders.apiActiveStages({ params: params });
@@ -53,20 +57,32 @@ export const useActiveStages = (params, options = {}) => {
   });
 };
 
-export const useSavePomStages = (params, options = {}) => {
-  const fetchSavePomStages = async () => {
-    const response = await apiImportOutput.apiSavePomStages({ params: params });
-    return response.data;
+//Thêm người phụ trách vào công đoạn
+export const useSavePomStages = (options = {}) => {
+  const showToast = useToast();
+  const queryClient = useQueryClient();
+
+  const fetchSavePomStages = async params => {
+    const response = await apiImportOutput.apiSavePomStages({ params });
+    return response;
   };
+
+  // Lưu onSuccess từ options để merge với logic của hook
+  const { onSuccess: onSuccessFromOptions, ...restOptions } = options;
+
   return useMutation({
     mutationFn: fetchSavePomStages,
-    onSuccess: (data) => {
-      if (data.isSuccess) {
-        showToast('success', data.message);
+    onSuccess: data => {
+      // Logic của hook: showToast và invalidateQueries
+      if (data?.isSuccess) {
+        showToast('success', data?.message);
+        queryClient.invalidateQueries({ queryKey: ['api_list_import_output'] });
       } else {
-        showToast('error', data.message);
+        showToast('error', data?.message);
       }
+      // Gọi callback từ options nếu có
+      onSuccessFromOptions?.(data);
     },
-    ...options,
+    ...restOptions,
   });
 };
