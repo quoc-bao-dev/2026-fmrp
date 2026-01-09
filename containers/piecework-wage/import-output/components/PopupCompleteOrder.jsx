@@ -527,7 +527,6 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose }) => {
       });
     }
   }, [products, selectedWarehouse, errorTags, errorImages, po?.id, onSubmit, onClose, showToast, queryClient, isInputPending, dataTableBom]);
-  console.log(dataTableBom);
 
   return (
     <Popup open={isOpen} closeOnDocumentClick={false} onClose={onClose} className='popup-edit' overlayStyle={{ zIndex: 1100 }}>
