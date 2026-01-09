@@ -716,7 +716,7 @@ const Warehouse = props => {
                                   </RowItemTable>
                                   {showWarehouseAttributesColumn &&
                                     (e?.item_type !== 'product' ? (
-                                      <RowItemTable colSpan={2} className='pl-10 py-3 border-b !font-normal' textAlign={'left'}>
+                                      <RowItemTable colSpan={2} className='!pl-10 py-3 border-b !font-normal' textAlign={'left'}>
                                         <div className='flex flex-col gap-1 '>
                                           {warehousePropertyKeys.map(key => {
                                             const label = getWarehousePropertyLabel(key);
@@ -731,7 +731,7 @@ const Warehouse = props => {
                                         </div>
                                       </RowItemTable>
                                     ) : (
-                                      <RowItemTable colSpan={2} className='pl-10 py-3 border-b !font-normal' textAlign={'left'}>
+                                      <RowItemTable colSpan={2} className='!pl-10 py-3 border-b !font-normal' textAlign={'left'}>
                                         -
                                       </RowItemTable>
                                     ))}

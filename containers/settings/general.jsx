@@ -118,7 +118,7 @@ const WarehouseAttributesInput = ({ warehouseAttributes, setWarehouseAttributes,
         }
 
         return (
-          <div key={index} className='flex items-center gap-x-3 w-[310px]'>
+          <div key={index} className='flex items-center gap-x-3 w-[280px]'>
             {/* Hiển thị input nếu đã được mở */}
             {isInputVisible ? <AttributeInput value={value} onChange={handleChange} onClear={handleClear} onBlur={handleBlur} placeholder={`Thuộc tính ${index + 1}`} disabled={isDisabled} /> : null}
             {/* Hiển thị nút "+" bên phải input nếu input có giá trị và chưa đạt max */}
