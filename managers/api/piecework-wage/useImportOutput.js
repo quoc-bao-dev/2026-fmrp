@@ -1,10 +1,15 @@
 import apiProductionsOrders from '@/Api/apiManufacture/manufacture/productionsOrders/apiProductionsOrders';
 import apiImportOutput from '@/Api/apiPieceworkWage/import-output/apiImportOutput';
+import useToast from '@/hooks/useToast';
 import { useQuery } from '@tanstack/react-query';
 
 export const useListImportOutput = params => {
+  const showToast = useToast();
   const fetchListImportOutput = async () => {
     const response = await apiImportOutput.apiListImportOutput({ params: params });
+    if (response.isSuccess === false) {
+      showToast('error', response?.message);
+    }
     return response.data;
   };
   return useQuery({
