@@ -110,7 +110,7 @@ const ProcessStatusDropdown = ({ processName }) => {
 };
 
 // Component StageColumn để quản lý infinite scroll cho từng stage
-const StageColumn = ({ stage }) => {
+const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, onPersonSelectorClick }) => {
   const [page, setPage] = useState(1);
   const [allPos, setAllPos] = useState(stage?.items?.pos || []);
   const [hasMore, setHasMore] = useState(stage?.items?.next || false);
@@ -220,6 +220,25 @@ const StageColumn = ({ stage }) => {
     console.log('Selected responsible persons:', selected);
   };
 
+  // Mỗi khi selectModeResetKey thay đổi (bấm PersonSelector ở StageColumn khác)
+  // thì thoát chế độ chọn lệnh, clear các lệnh đang chọn và đóng PersonSelector
+  // ở cột hiện tại NẾU stage_id khác với cột đang được mở PersonSelector
+  useEffect(() => {
+    if (
+      activePersonSelectorStageId !== null &&
+      activePersonSelectorStageId !== stage.stage_id &&
+      (isResponsiblePersonOpen ||
+        isSelectMode ||
+        selectedProductionOrders.length > 0 ||
+        pendingSelectedPersons.length > 0)
+    ) {
+      setIsResponsiblePersonOpen(false);
+      setIsSelectMode(false);
+      setSelectedProductionOrders([]);
+      setPendingSelectedPersons([]);
+    }
+  }, [selectModeResetKey, activePersonSelectorStageId, isResponsiblePersonOpen, isSelectMode, selectedProductionOrders.length, pendingSelectedPersons.length, stage.stage_id]);
+
   // Handler khi bấm "Tùy chọn" - kích hoạt chế độ chọn
   const handleSelectMode = (selectedPersons) => {
     setPendingSelectedPersons(selectedPersons);
@@ -298,7 +317,17 @@ const StageColumn = ({ stage }) => {
                   ? 'border-blue-fmrp bg-blue-fmrp/10'
                   : 'border-transparent hover:border-blue-fmrp hover:bg-blue-fmrp/10'
               }`}
-              onClick={() => setIsResponsiblePersonOpen(true)}
+              onClick={() => {
+                // Thông báo cho parent: stage này đang mở PersonSelector
+                onPersonSelectorClick?.(stage.stage_id);
+                // Nếu đang ở chế độ chọn lệnh tại chính cột này, reset trạng thái chọn trước khi mở PersonSelector
+                if (isSelectMode || selectedProductionOrders.length > 0 || pendingSelectedPersons.length > 0) {
+                  setIsSelectMode(false);
+                  setSelectedProductionOrders([]);
+                  setPendingSelectedPersons([]);
+                }
+                setIsResponsiblePersonOpen(true);
+              }}
             >
               <UserPlus2Icon className='size-6 flex-shrink-0'/>
             </button>
