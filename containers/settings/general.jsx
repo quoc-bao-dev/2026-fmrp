@@ -55,7 +55,7 @@ const AttributeInput = ({ value, onChange, onClear, placeholder, disabled, onBlu
   );
 };
 
-const WarehouseAttributesInput = ({ warehouseAttributes, setWarehouseAttributes, visibleInputs, setVisibleInputs, disabled }) => {
+const WarehouseAttributesInput = ({ warehouseAttributes, setWarehouseAttributes, visibleInputs, setVisibleInputs, disabled, dataSetting, isShow }) => {
   const isDisabledAll = !!disabled;
 
   return (
@@ -75,6 +75,16 @@ const WarehouseAttributesInput = ({ warehouseAttributes, setWarehouseAttributes,
 
         const handleClear = () => {
           if (isDisabledAll) return;
+
+          // Kiểm tra check_quantili từ API settings
+          const warehouseProperty = dataSetting?.warehouse_properties?.[index];
+          const checkQuantili = warehouseProperty?.check_quantili;
+          // Kiểm tra cả true, 'true', 1, '1'
+          if (checkQuantili === true || checkQuantili === 'true' || checkQuantili === 1 || checkQuantili === '1') {
+            isShow('error', 'Thuộc tính này đã được sử dụng bạn không thể xoá');
+            return;
+          }
+
           // Tạo mảng mới bằng cách loại bỏ phần tử tại index và dồn các phần tử sau lên
           const newValues = warehouseAttributes.filter((_, i) => i !== index);
           // Thêm phần tử rỗng ở cuối để giữ mảng có 3 phần tử
@@ -108,7 +118,7 @@ const WarehouseAttributesInput = ({ warehouseAttributes, setWarehouseAttributes,
         }
 
         return (
-          <div key={index} className='flex items-center gap-x-3 w-full'>
+          <div key={index} className='flex items-center gap-x-3 w-[310px]'>
             {/* Hiển thị input nếu đã được mở */}
             {isInputVisible ? <AttributeInput value={value} onChange={handleChange} onClear={handleClear} onBlur={handleBlur} placeholder={`Thuộc tính ${index + 1}`} disabled={isDisabled} /> : null}
             {/* Hiển thị nút "+" bên phải input nếu input có giá trị và chưa đạt max */}
@@ -374,25 +384,29 @@ const General = props => {
                             <p className='font-medium text-base text-typo-black-1'>Thuộc tính kho</p>
                             <p className='font-normal text-sm text-typo-gray-2'>Quản lý các thuộc tính tùy chỉnh cho nvl trong kho</p>
                           </div>
-                          <div className='pl-[150px] flex-1'>
-                            <label className='text-sm font-normal text-[#344054] '>
-                              Tên thuộc tính{' '}
-                              <InfoTooltip
-                                content='Thuộc tính kho là các thuộc tính tùy chỉnh cho nvl trong kho. Bạn có thể sử dụng để quản lý các thuộc tính tùy chỉnh cho nvl trong kho.'
-                                iconProps={{
-                                  size: 12,
-                                  className: 'text-blue-fmrp transition-colors',
-                                }}
+                          {isWarehouseProperties === '1' && (
+                            <div className='pl-[150px] flex-1'>
+                              <label className='text-sm font-normal text-[#344054] '>
+                                Tên thuộc tính{' '}
+                                <InfoTooltip
+                                  content='Thuộc tính kho là các thuộc tính tùy chỉnh cho nvl trong kho. Bạn có thể sử dụng để quản lý các thuộc tính tùy chỉnh cho nvl trong kho.'
+                                  iconProps={{
+                                    size: 13,
+                                    className: 'text-blue-fmrp transition-colors',
+                                  }}
+                                />
+                              </label>
+                              <WarehouseAttributesInput
+                                warehouseAttributes={warehouseAttributes}
+                                setWarehouseAttributes={setWarehouseAttributes}
+                                visibleInputs={visibleInputs}
+                                setVisibleInputs={setVisibleInputs}
+                                disabled={isWarehouseProperties !== '1'}
+                                dataSetting={dataSetting}
+                                isShow={isShow}
                               />
-                            </label>
-                            <WarehouseAttributesInput
-                              warehouseAttributes={warehouseAttributes}
-                              setWarehouseAttributes={setWarehouseAttributes}
-                              visibleInputs={visibleInputs}
-                              setVisibleInputs={setVisibleInputs}
-                              disabled={isWarehouseProperties !== '1'}
-                            />
-                          </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

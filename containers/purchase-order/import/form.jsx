@@ -1129,12 +1129,12 @@ const PurchaseImportForm = props => {
                                     const valueString = value !== undefined && value !== null ? String(value) : '';
                                     return (
                                       <div key={key} className='flex justify-between items-center gap-1'>
-                                        <label className='text-[10px] font-medium text-gray-700 truncate'>{label}</label>
+                                        <label className='text-[11px] font-medium text-gray-700 truncate'>{label}</label>
                                         <input
                                           value={valueString}
                                           onChange={event => _HandleChangeChild(e?.id, firstChild?.id, key, event?.target?.value ?? '')}
                                           placeholder={`Nhập ${label.toLowerCase()}`}
-                                          className='w-[90px] focus:border-[#92BFF7] placeholder:text-[10px]  2xl:h-7 xl:h-5 py-0 px-1 text-[10px]  placeholder-slate-300 bg-white rounded-[5.5px] text-[#1C252E] font-normal outline-none placeholder:text-typo-gray-4 border border-neutral-N400'
+                                          className='w-[100px] focus:border-[#92BFF7] placeholder:text-[11px]  2xl:h-7 xl:h-5 py-0 px-1 text-[11px]  placeholder-slate-300 bg-white rounded-[5.5px] text-[#1C252E] font-normal outline-none placeholder:text-typo-gray-4 border border-neutral-N400'
                                         />
                                       </div>
                                     );
