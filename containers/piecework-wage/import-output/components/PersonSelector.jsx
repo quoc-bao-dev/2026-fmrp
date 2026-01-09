@@ -192,18 +192,23 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
         createPortal(
           <div
             ref={refs.setFloating}
-            className={`font-deca p-3 w-[389px] bg-white rounded-[16px] shadow-xl flex flex-col gap-2 overflow-hidden ${className}`}
+            className={`font-deca p-3 w-[200px] bg-white rounded-[16px] shadow-xl flex flex-col gap-2 overflow-hidden ${className}`}
             style={{
               ...floatingStyles,
-              minWidth: triggerRef.current ? Math.max(360, triggerRef.current.getBoundingClientRect().width || 0) : 360,
+              minWidth: triggerRef.current ? Math.max(230, triggerRef.current.getBoundingClientRect().width || 0) : 360,
               zIndex: 100,
             }}
             {...getFloatingProps()}
           >
             {/* Search */}
-            <div className='flex-1 flex items-center gap-3 pl-4 pr-1 py-1 border border-[#D0D5DD] rounded-[12px] bg-white focus-within:ring-2 focus-within:ring-[#1760B9]'>
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder='Tìm người phụ trách' className='flex-1 text-sm text-[#101828] outline-none placeholder:text-[#9295A4]' />
-              <div className='w-8 h-8 rounded-lg bg-[#1760B9] flex items-center justify-center'>
+            <div className='w-full flex items-center gap-3 pl-4 pr-1 py-1 border border-[#D0D5DD] rounded-[12px] bg-white focus-within:ring-2 focus-within:ring-[#1760B9]'>
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder='Tìm người phụ trách'
+                className='flex-1 min-w-0 text-sm text-[#101828] outline-none placeholder:text-[#9295A4]'
+              />
+              <div className='w-8 h-8 flex-shrink-0 rounded-lg bg-[#1760B9] flex items-center justify-center'>
                 <MagnifyingGlassIcon className='size-5 text-white' />
               </div>
             </div>
@@ -225,7 +230,7 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
                         <button
                           data-rpcb-item={person.id}
                           onClick={() => toggleLocal(person)}
-                          className={`w-full flex items-center gap-3 px-2 py-1.5 rounded-[10px] text-left transition-colors  border-[#E7EAEE] ${
+                          className={`w-full flex items-center gap-3 py-1.5 rounded-[10px] text-left transition-colors  border-[#E7EAEE] ${
                             active ? 'bg-[#EBF5FF]' : 'bg-white hover:bg-[#F6F8FB]'
                           }`}
                         >
@@ -243,7 +248,7 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
                 )}
               </div>
             </div>
-            <div className='flex items-center justify-center gap-2 w-full'>
+            <div className='flex flex-col items-center justify-center gap-2 w-full'>
               <button
                 className='w-full bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
                 onClick={() => {

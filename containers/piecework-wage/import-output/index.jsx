@@ -166,6 +166,18 @@ const ImportOutput = () => {
   const stages = listImportOutput?.stages || [];
   const hasStages = stages.length > 0;
 
+  // Dùng để reset chế độ chọn lệnh trên tất cả StageColumn khi mở PersonSelector ở cột khác
+  const [selectModeResetKey, setSelectModeResetKey] = useState(0);
+  const [activePersonSelectorStageId, setActivePersonSelectorStageId] = useState(null);
+
+  const handlePersonSelectorClick = stageId => {
+    // Mỗi lần bấm nút chọn người phụ trách:
+    // - tăng key để các StageColumn khác thoát chế độ chọn lệnh
+    // - lưu stageId hiện tại để KHÔNG đóng PersonSelector của chính cột đó
+    setSelectModeResetKey(prev => prev + 1);
+    setActivePersonSelectorStageId(stageId);
+  };
+
   // Tính số lượng filter đang active
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -324,7 +336,13 @@ const ImportOutput = () => {
             <Customscrollbar horizontalOnly={true} showOnHover={true} className='flex-1 min-h-0 h-full overflow-y-hidden'>
               <div className='px-6 flex gap-2 w-full h-full min-w-max overflow-y-hidden'>
                 {stages.map(stage => (
-                  <StageColumn key={stage.stage_id} stage={stage} />
+                  <StageColumn
+                    key={stage.stage_id}
+                    stage={stage}
+                    selectModeResetKey={selectModeResetKey}
+                    activePersonSelectorStageId={activePersonSelectorStageId}
+                    onPersonSelectorClick={handlePersonSelectorClick}
+                  />
                 ))}
               </div>
             </Customscrollbar>
