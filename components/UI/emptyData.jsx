@@ -1,10 +1,11 @@
+import { IMAGES } from '@/constants/images'
 import Image from 'next/image'
 
 const EmptyData = () => {
   return (
     <div className="w-full min-h-[78vh] flex flex-col justify-center items-center select-none">
       <Image
-        src={'/data-not-found.png'}
+        src={IMAGES.nodataNotFound}
         alt="No Data"
         width={400}
         height={400}
