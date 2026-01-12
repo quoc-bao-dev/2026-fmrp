@@ -109,7 +109,7 @@ const PersonSelector = ({
       size({
         apply({ availableHeight, elements }) {
           // Giới hạn chiều cao tối đa là 414px nhưng không vượt quá khoảng trống
-          const maxHeight = Math.min(414, availableHeight);
+          const maxHeight = Math.min(500, availableHeight);
           elements.floating.style.maxHeight = `${maxHeight}px`;
         },
         padding: 16,
@@ -222,7 +222,7 @@ const PersonSelector = ({
             </div>
 
             {/* List */}
-            <Customscrollbar className='flex-1 overflow-y-auto'>
+            <Customscrollbar className='max-h-[328px]'>
               <div className='space-y-1'>
                 {filtered
                   .slice()

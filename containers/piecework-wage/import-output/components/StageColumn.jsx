@@ -6,7 +6,7 @@ import { useListImportOutputItems, useSavePomStages } from '@/managers/api/piece
 import { Popover } from 'antd';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import PersonSelector from './PersonSelector';
+import PersonSelector from './modal/PersonSelector';
 import ProductionOrderCard from './ProductionOrderCard';
 
 // Component dropdown hiển thị nhân viên/nhóm đang làm và tạm dừng

@@ -7,12 +7,19 @@ import { Tooltip } from 'antd';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { FaPause, FaPlay, FaStop } from 'react-icons/fa';
-import PopupCompleteOrder from './PopupCompleteOrder';
+import PopupCompleteOrder from './modal/PopupCompleteOrder';
+import PopupResponsiblePerson from './modal/PopupResponsiblePerson';
 
-const Avatar = ({ staffs_assigned }) => {
+const Avatar = ({ staffs_assigned, onClick }) => {
   if (!staffs_assigned || staffs_assigned.length === 0) return null;
   return (
-    <div className='flex items-center gap-2 justify-between w-full'>
+    <div
+      className='flex items-center gap-2 justify-between w-full cursor-pointer hover:opacity-80 transition-opacity'
+      onClick={e => {
+        e.stopPropagation();
+        onClick?.();
+      }}
+    >
       <div className='p-1 flex rounded-full bg-[#D6EAFE]'>
         {staffs_assigned.map((staff, index) => {
           const isFirst = index === 0;
@@ -145,12 +152,25 @@ const formatTime = seconds => {
   return `${pad(h)} : ${pad(m)} : ${pad(s)}`;
 };
 
-const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = '00 : 00 : 00', po, stage_id, stage_name, isSelectMode = false, isSelected = false, onToggleSelect }) => {
+const ProductionOrderCard = ({
+  borderColor = '#EEB600',
+  status = 'idle',
+  time = '00 : 00 : 00',
+  po,
+  stage_id,
+  stage_name,
+  isSelectMode = false,
+  isSelected = false,
+  onToggleSelect,
+  canManageManagers,
+  onRefreshManagers,
+}) => {
   const [statusState, setStatusState] = useState(status);
   const [elapsedSeconds, setElapsedSeconds] = useState(parseTimeString(time));
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [showCompletePopup, setShowCompletePopup] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showResponsiblePersonPopup, setShowResponsiblePersonPopup] = useState(false);
   const intervalRef = useRef(null);
 
   const clearTimer = () => {
@@ -199,6 +219,15 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
     // Mở popup khi click vào card
     setShowCompletePopup(true);
   };
+
+  // Chuyển đổi staffs_assigned sang format initialManagers cho PopupListResponsiblePerson
+  const initialManagers = (po?.staffs_assigned || []).map(staff => ({
+    recordId: staff?.record_id || 0,
+    id: staff?.staffid || 0,
+    name: staff?.full_name || '',
+    avatarUrl: staff?.profile_image || '',
+    role: staff?.is_manager ? 'manager' : staff?.is_btp_nvl ? 'btp_nvl' : staff?.is_manufacture ? 'manufacture' : '',
+  }));
 
   // Tổng số sản phẩm hiển thị trong card
   const items = po?.items || [];
@@ -288,7 +317,16 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
         forceConfirm={true}
       />
       <PopupCompleteOrder stage_id={stage_id} stage_name={stage_name} po={po} isOpen={showCompletePopup} onClose={() => setShowCompletePopup(false)} />
-      <Avatar staffs_assigned={po?.staffs_assigned || []} />
+      <Avatar staffs_assigned={po?.staffs_assigned || []} onClick={() => setShowResponsiblePersonPopup(true)} />
+      <PopupResponsiblePerson
+        open={showResponsiblePersonPopup}
+        onClose={() => setShowResponsiblePersonPopup(false)}
+        brandId={po?.branch_id}
+        initialManagers={initialManagers}
+        canManageManagers={canManageManagers}
+        onRefreshManagers={onRefreshManagers}
+        po_id={po?.id}
+      />
 
       <div className='px-1 flex items-center gap-3 w-1/2'>
         <div className='flex items-center gap-1 flex-shrink-0'>

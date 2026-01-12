@@ -6,7 +6,7 @@ export const IMAGES = {
   // c
   // d
   // e
-  emptyProductOrder: '/background/system/emptyProductOrder.png',
+  emptyProductOrder: '/nodata/emptyProductOrder.png',
   // f
   rocketBoy: '/dashboard/rocket-boy.png',
   rocketBoyGif: '/dashboard/rocket-boy-1.gif',
@@ -30,7 +30,7 @@ export const IMAGES = {
   qrDownloadApp: '/qrCode/qrDowloadApp.jpeg',
   // r
   // s
-  summary_LSX: '/background/system/summaryLSX.webp',
+  summary_LSX: '/nodata/summaryLSX.webp',
   // t
   // u
   upgrade_pro: '/upgrade/upgrade.png',
