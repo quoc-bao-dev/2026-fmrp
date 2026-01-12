@@ -40,18 +40,20 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
 
   const { data: staffs } = useSearchStaffs({ branch_ids: brandId ? [brandId] : [] });
 
-  const { mutate: savePomStages } = useSavePomStages({
+  const { mutate: savePomStagesDetail, isPending: isSaving } = useSavePomStagesDetail({
     onSuccess: data => {
       if (data?.isSuccess) {
+        showToast('success', data?.message || 'Lưu thành công');
+        queryClient.invalidateQueries({ queryKey: ['api_list_import_output'] });
         queryClient.invalidateQueries({ queryKey: ['api_list_pom_stages'] });
-        setOpenCombo(false);
+      } else {
+        showToast('error', data?.message || 'Lưu thất bại');
       }
-    },
-  });
-
-  const { mutate: savePomStagesDetail, isPending: isSaving } = useSavePomStagesDetail({
-    onSuccess: () => {
       onClose?.();
+    },
+    onError: error => {
+      console.error('Failed to save managers:', error);
+      showToast('error', 'Không thể lưu người phụ trách');
     },
   });
 
@@ -77,20 +79,34 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
   };
 
   const handleConfirmSelection = newSelected => {
-    const payload = {
-      stage_id: stage_id,
-      po_ids: po_id ? [po_id] : [],
-      staff_ids: newSelected?.map(item => Number(item.id)).filter(id => Number.isFinite(id)),
-      start_date: start_date ?? null,
-      end_date: end_date ?? null,
-      search: search ?? '',
-    };
+    // Chuẩn hoá dữ liệu từ PersonSelector về format dùng nội bộ
+    const normalized = (newSelected || []).map(item => ({
+      id: item.id,
+      staff_id: item.id,
+      staff: {
+        full_name: item.name,
+        profile_image: item.avatarUrl,
+      },
+    }));
 
-    if (!payload.po_ids.length) {
-      showToast('error', 'Không xác định được lệnh sản xuất để cập nhật');
-      return;
-    }
-    savePomStages(payload);
+    // Cập nhật role mapping, giữ vai trò cũ nếu còn tồn tại
+    setRoleByPerson(prev => {
+      const next = { ...prev };
+      // Xoá role của những người không còn được chọn
+      Object.keys(next).forEach(id => {
+        const stillExists = normalized.some(p => String(p.id) === String(id));
+        if (!stillExists) delete next[id];
+      });
+      // Gán role mặc định nếu chưa có
+      normalized.forEach(p => {
+        if (!next[p.id]) next[p.id] = 'manufacture';
+      });
+      return next;
+    });
+
+    // Chỉ cập nhật state local, không gọi API
+    setSelectedStaffs(normalized);
+    setOpenCombo(false);
   };
 
   const handleSelectRole = (personId, role) => {
