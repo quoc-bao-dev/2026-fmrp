@@ -86,3 +86,40 @@ export const useSavePomStages = (options = {}) => {
     ...restOptions,
   });
 };
+
+//Danh sách nhân viên phụ trách
+export const useListPomStages = (params, options = {}) => {
+  const fetchListPomStages = async () => {
+    const response = await apiImportOutput.apiListPomStages({ params: params });
+    return response.data;
+  };
+  return useQuery({
+    queryKey: ['api_list_pom_stages', { ...params }],
+    queryFn: fetchListPomStages,
+    ...options, // Cho phép truyền các options như enabled, refetchOnMount, etc.
+  });
+};
+
+// Lưu nhân viên chi tiết
+export const useSavePomStagesDetail = (options = {}) => {
+  const showToast = useToast();
+  const queryClient = useQueryClient();
+  const { onSuccess: onSuccessFromOptions, ...restOptions } = options;
+
+  return useMutation({
+    mutationFn: async params => {
+      const response = await apiImportOutput.apiSavePomStagesDetail({ params });
+      return response;
+    },
+    onSuccess: data => {
+      if (data?.isSuccess) {
+        showToast('success', data?.message);
+        queryClient.invalidateQueries({ queryKey: ['api_list_import_output'] });
+      } else {
+        showToast('error', data?.message);
+      }
+      onSuccessFromOptions?.(data);
+    },
+    ...restOptions,
+  });
+};

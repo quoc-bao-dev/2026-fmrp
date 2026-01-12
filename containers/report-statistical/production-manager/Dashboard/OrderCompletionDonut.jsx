@@ -97,7 +97,7 @@ const OrderCompletionDonut = ({
       <div className='w-full h-[463px] bg-[#EAF6FF] rounded-[20px] p-4 flex flex-col min-h-0'>
         <h3 className='responsive-text-xl font-semibold text-neutral-04 text-center'>Phân Loại Lệnh Sản Xuất Hoàn Thành</h3>
         <div className='flex flex-col items-center justify-center h-full'>
-          <Image src='/background/system/nodata-table-2.png' alt='Không có dữ liệu' width={160} height={100} />
+          <Image src='/nodata/nodata-table-2.png' alt='Không có dữ liệu' width={160} height={100} />
           <p className='responsive-text-sm text-neutral-03 mt-2'>Không có dữ liệu</p>
         </div>
       </div>

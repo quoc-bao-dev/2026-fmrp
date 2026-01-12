@@ -1,4 +1,4 @@
-import { CalendarIcon, CheckDoubleIcon, Clock2Icon, ProgressIcon } from '@/components/icons';
+import { CalendarIcon, CheckDoubleIcon, Clock2Icon, ProgressIcon, UserPlusIcon } from '@/components/icons';
 import AvatarText from '@/components/UI/common/user/AvatarText';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
 import { IMAGES } from '@/constants/images';
@@ -7,32 +7,64 @@ import { Tooltip } from 'antd';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { FaPause, FaPlay, FaStop } from 'react-icons/fa';
-import PopupCompleteOrder from './PopupCompleteOrder';
+import PopupCompleteOrder from './modal/PopupCompleteOrder';
+import PopupResponsiblePerson from './modal/PopupResponsiblePerson';
 
-const Avatar = ({ staffs_assigned }) => {
-  if (!staffs_assigned || staffs_assigned.length === 0) return null;
+const Avatar = ({ staffs_assigned, onClick }) => {
+  if (!staffs_assigned || staffs_assigned.length === 0) {
+    return (
+      <Tooltip title='Thêm người phụ trách' placement='top'>
+        <button
+          className='cursor-pointer flex items-center justify-start w-fit p-2 rounded-lg border border-[#003DA0] hover:bg-[#EBF5FF] transition-colors'
+          onClick={e => {
+            e.stopPropagation();
+            onClick?.();
+          }}
+        >
+          <UserPlusIcon className='size-5 text-[#11315B]' />
+        </button>
+      </Tooltip>
+    );
+  }
+  const isSingle = staffs_assigned.length === 1;
+
   return (
-    <div className='flex items-center gap-2 justify-between w-full'>
-      <div className='p-1 flex rounded-full bg-[#D6EAFE]'>
+    <div
+      className='flex items-center gap-2 justify-between w-fit cursor-pointer hover:opacity-80 transition-opacity'
+      onClick={e => {
+        e.stopPropagation();
+        onClick?.();
+      }}
+    >
+      <div className='p-1 flex items-center gap-1 rounded-full bg-[#D6EAFE]'>
         {staffs_assigned.map((staff, index) => {
           const isFirst = index === 0;
           const hasImage = staff?.profile_image && staff.profile_image.trim() !== '';
+          const staffName = staff?.full_name || 'Chưa có tên';
 
-          return hasImage ? (
-            <Image
-              key={staff?.staffid || index}
-              src={staff.profile_image}
-              alt={staff?.full_name || 'Staff'}
-              width={30}
-              height={30}
-              className={`size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] ${isFirst ? '' : '-ml-2'} z-1`}
-            />
-          ) : (
-            <div key={staff?.staffid || index} className={`size-[30px] rounded-full overflow-hidden border-2 border-[#549AE8] flex items-center justify-center bg-white ${isFirst ? '' : '-ml-2'} z-1`}>
-              <AvatarText fullName={staff?.full_name || '?'} className='w-full h-full text-base flex items-center justify-center' />
-            </div>
+          return (
+            <Tooltip key={staff?.staffid || index} title={staffName} placement='top'>
+              {hasImage ? (
+                <Image
+                  src={staff.profile_image}
+                  alt={staffName}
+                  width={30}
+                  height={30}
+                  className={`size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] ${isFirst ? '' : '-ml-2'} z-1 cursor-pointer`}
+                />
+              ) : (
+                <div className={`size-[30px] rounded-full overflow-hidden border-2 border-[#549AE8] flex items-center justify-center bg-white ${isFirst ? '' : '-ml-2'} z-1 cursor-pointer`}>
+                  <AvatarText fullName={staffName} className='w-full h-full text-base flex items-center justify-center' />
+                </div>
+              )}
+            </Tooltip>
           );
         })}
+        {isSingle && (
+          <span className='responsive-text-sm font-medium text-[#101828] truncate max-w-[160px]' title={staffs_assigned[0]?.full_name || ''}>
+            {staffs_assigned[0]?.full_name || ''}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -145,12 +177,27 @@ const formatTime = seconds => {
   return `${pad(h)} : ${pad(m)} : ${pad(s)}`;
 };
 
-const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = '00 : 00 : 00', po, stage_id, stage_name, isSelectMode = false, isSelected = false, onToggleSelect }) => {
+const ProductionOrderCard = ({
+  start_date = null,
+  end_date = null,
+  search = '',
+  borderColor = '#EEB600',
+  status = 'idle',
+  time = '00 : 00 : 00',
+  po,
+  stage_id,
+  stage_name,
+  isSelectMode = false,
+  isSelected = false,
+  onToggleSelect,
+  canManageManagers,
+}) => {
   const [statusState, setStatusState] = useState(status);
   const [elapsedSeconds, setElapsedSeconds] = useState(parseTimeString(time));
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [showCompletePopup, setShowCompletePopup] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showResponsiblePersonPopup, setShowResponsiblePersonPopup] = useState(false);
   const intervalRef = useRef(null);
 
   const clearTimer = () => {
@@ -288,7 +335,20 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
         forceConfirm={true}
       />
       <PopupCompleteOrder stage_id={stage_id} stage_name={stage_name} po={po} isOpen={showCompletePopup} onClose={() => setShowCompletePopup(false)} />
-      <Avatar staffs_assigned={po?.staffs_assigned || []} />
+      <Avatar staffs_assigned={po?.staffs_assigned || []} onClick={() => setShowResponsiblePersonPopup(true)} />
+      {showResponsiblePersonPopup && (
+        <PopupResponsiblePerson
+          open={showResponsiblePersonPopup}
+          onClose={() => setShowResponsiblePersonPopup(false)}
+          brandId={po?.branch_id}
+          canManageManagers={canManageManagers}
+          po_id={po?.id}
+          stage_id={stage_id}
+          start_date={start_date}
+          end_date={end_date}
+          search={search}
+        />
+      )}
 
       <div className='px-1 flex items-center gap-3 w-1/2'>
         <div className='flex items-center gap-1 flex-shrink-0'>

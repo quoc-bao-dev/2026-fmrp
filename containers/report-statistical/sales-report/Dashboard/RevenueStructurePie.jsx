@@ -89,7 +89,7 @@ const RevenueStructurePie = ({ data }) => {
           Theo Doanh Thu
         </h3>
         <div className='flex flex-col items-center justify-center h-full'>
-          <Image src='/background/system/nodata-table-2.png' alt='Không có dữ liệu' width={160} height={100} />
+          <Image src='/nodata/nodata-table-2.png' alt='Không có dữ liệu' width={160} height={100} />
           <p className='responsive-text-sm text-neutral-03'>Không có dữ liệu</p>
         </div>
       </div>
