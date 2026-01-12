@@ -243,6 +243,7 @@ const ProductionOrderCard = ({
   const displayTime = formatTime(elapsedSeconds);
 
   const handleCardClick = () => {
+    if (showResponsiblePersonPopup) return;
     // Mở popup khi click vào card
     setShowCompletePopup(true);
   };
