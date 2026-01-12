@@ -77,6 +77,8 @@ const WarehouseTransferForm = props => {
   const [errReceivingLocation, sErrReceivingLocation] = useState(false);
   const [isOpenReceivingLocationWarning, sIsOpenReceivingLocationWarning] = useState(false);
   const prevReceiveWarehouseRef = useRef(null);
+  // Track kho nào đã được check để tránh hiện popup nhiều lần cho cùng một kho
+  const checkedWarehouseRef = useRef(null);
 
   // danh sách chi nhánh
   const { data: dataBranch = [] } = useBranchList();
@@ -87,8 +89,8 @@ const WarehouseTransferForm = props => {
   // Chỉ lấy những mặt hàng có dữ liệu kho (e.warehouse length > 0) phòng trường hợp API vẫn trả về rỗng
   const dataItems = Array.isArray(dataItemsRaw) ? dataItemsRaw.filter(item => Array.isArray(item?.e?.warehouse) && item.e.warehouse.length > 0) : [];
 
-  // danh sách vị trí nhận
-  const { data: dataReceivingLocation = [] } = useLocationByWarehouseTo(idReceiveWarehouse);
+  // danh sách vị trí nhận - lấy cả isLoading để biết API đã hoàn thành chưa
+  const { data: dataReceivingLocation = [], isLoading: isLoadingReceivingLocation, isFetching: isFetchingReceivingLocation } = useLocationByWarehouseTo(idReceiveWarehouse);
   // danh sách kho
   const { data: dataWarehouse = [] } = useWarehouseTransferExport(idBranch, idExportWarehouse);
 
@@ -249,6 +251,10 @@ const WarehouseTransferForm = props => {
     } else if (type == 'idReceiveWarehouse' && idReceiveWarehouse != value) {
       // Lưu lại kho nhận hiện tại để có thể quay lại nếu kho mới không có vị trí
       prevReceiveWarehouseRef.current = idReceiveWarehouse || null;
+      // Reset flag check khi chọn kho mới để API có thể check lại từ đầu
+      checkedWarehouseRef.current = null;
+      // Đóng popup khi chọn kho mới
+      sIsOpenReceivingLocationWarning(false);
       if (listData?.length > 0) {
         if (type === 'idReceiveWarehouse' && idBranch != value) {
           handleQueryId({ status: true, initialKey: { type, value } });
@@ -311,10 +317,27 @@ const WarehouseTransferForm = props => {
 
   // Cảnh báo khi kho nhận không có vị trí nhận
   useEffect(() => {
-    if (idReceiveWarehouse && Array.isArray(dataReceivingLocation) && dataReceivingLocation.length === 0) {
+    // Chỉ check và hiện popup khi:
+    // 1. Có kho nhận được chọn
+    // 2. API đã hoàn thành (không còn loading/fetching)
+    // 3. API đã trả về kết quả (dataReceivingLocation !== undefined)
+    // 4. Mảng vị trí rỗng (length === 0)
+    // 5. Kho này chưa được check (để tránh hiện popup nhiều lần cho cùng một kho)
+    if (
+      idReceiveWarehouse &&
+      !isLoadingReceivingLocation &&
+      !isFetchingReceivingLocation &&
+      dataReceivingLocation !== undefined &&
+      Array.isArray(dataReceivingLocation) &&
+      dataReceivingLocation.length === 0 &&
+      checkedWarehouseRef.current?.value !== idReceiveWarehouse?.value
+    ) {
+      // Đánh dấu kho này đã được check
+      checkedWarehouseRef.current = idReceiveWarehouse;
+      // Hiện popup cảnh báo
       sIsOpenReceivingLocationWarning(true);
     }
-  }, [idReceiveWarehouse, dataReceivingLocation]);
+  }, [idReceiveWarehouse, dataReceivingLocation, isLoadingReceivingLocation, isFetchingReceivingLocation]);
 
   const formatNumber = number => {
     return formatNumberConfig(+number, dataSeting);
@@ -942,8 +965,12 @@ const WarehouseTransferForm = props => {
           // Quay lại kho nhận trước đó (nếu có), không giữ kho không có vị trí
           if (prevReceiveWarehouseRef.current) {
             sIdReceiveWarehouse(prevReceiveWarehouseRef.current);
+            // Reset flag check để có thể check lại nếu chọn lại cùng kho sau này
+            checkedWarehouseRef.current = null;
           } else {
             sIdReceiveWarehouse(null);
+            // Reset flag check khi quay về null
+            checkedWarehouseRef.current = null;
           }
         }}
       />
