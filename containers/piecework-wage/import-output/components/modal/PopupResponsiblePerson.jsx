@@ -3,6 +3,7 @@ import PopupCustom from '@/components/UI/popup';
 import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew';
 import { CaretDownIcon, CheckThinIcon, UserPlusIcon } from '@/components/icons';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
+import { IMAGES } from '@/constants/images';
 import ResponsibleAvatar from '@/containers/manufacture/productions-orders/components/popup/ResponsibleAvatar';
 import ResponsiblePersonComboBox from '@/containers/manufacture/productions-orders/components/popup/ResponsiblePersonComboBox';
 import { StateContext } from '@/context/_state/productions-orders/StateContext';
@@ -10,6 +11,7 @@ import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import useToast from '@/hooks/useToast';
 import { useSaveProductionOrderManagers } from '@/managers/api/productions-order/useSaveProductionOrderManagers';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -207,7 +209,7 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, initialManagers = [], 
             </div>
           </ResponsiblePersonComboBox>
         )}
-        
+
         {/* Content */}
         <div className='flex-1 flex flex-col gap-1 overflow-hidden h-full'>
           {/* Table Header */}
@@ -224,8 +226,11 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, initialManagers = [], 
 
           {/* Danh sách người phụ trách */}
           <Customscrollbar className='max-h-[280px] overflow-y-auto'>
-            {selectedPeople.length !== 0 ? (
-              <div className='py-4 text-sm text-[#9295A4]'>Chưa có người phụ trách</div>
+            {selectedPeople.length === 0 ? (
+              <div className='flex flex-col items-center justify-center gap-2 py-4'>
+                <Image src={IMAGES.nodataNotFound} alt='No Data' width={200} height={200} className='object-contain' />
+                <span className='text-sm text-[#9295A4]'>Chưa có người phụ trách</span>
+              </div>
             ) : (
               <div className='divide-y divide-[#E7EAEE]'>
                 {selectedPeople.map(person => (

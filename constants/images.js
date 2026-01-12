@@ -24,6 +24,9 @@ export const IMAGES = {
   noImage: '/nodata/noimagelogo.png',
   nodataStage: '/nodata/nodata-stage.png',
   nodataShiftSchedule: '/nodata/nodata-calendar.png',
+  nodataNotFound: '/nodata/data-not-found.png',
+  nodataChart: '/nodata/nodata-chart.png',
+  nodataNoti: '/nodata/nodata-noti.png',
   // o
   // p
   // q
