@@ -281,7 +281,7 @@ const PopupConfim = props => {
                     onClick={props.cancel}
                     className='text-base text-red-600 hover:bg-red-100 transition-all duration-150 ease-linear tran font-normal rounded-lg w-full  border-red-600 border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]'
                   >
-                    {props.nameModel === 'change_item' ? 'Không' : 'Hủy'}
+                    {props.cancelLabel ?? (props.nameModel === 'change_item' ? 'Không' : 'Hủy')}
                   </button>
                 </Zoom>
                 <Zoom className='w-1/2'>
@@ -289,7 +289,7 @@ const PopupConfim = props => {
                     onClick={() => handleConfimDelete()}
                     className='text-base text-white bg-[#003DA0] hover:bg-[#0375F3] transition-all duration-150 ease-linear tran font-normal rounded-lg w-full border-[#D0D5DD] border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]'
                   >
-                    {props.nameModel === 'change_item' ? 'Đồng ý' : 'Xác nhận'}
+                    {props.confirmLabel ?? (props.nameModel === 'change_item' ? 'Đồng ý' : 'Xác nhận')}
                   </button>
                 </Zoom>
               </>
@@ -328,7 +328,7 @@ const PopupConfim = props => {
                     onClick={props.cancel}
                     className='text-base text-red-600 hover:bg-red-100 transition-all duration-150 ease-linear tran font-normal rounded-lg w-full  border-red-600 border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]'
                   >
-                    Hủy
+                    {props.cancelLabel ?? 'Hủy'}
                   </button>
                 </Zoom>
                 <Zoom className='w-1/2'>
@@ -347,7 +347,7 @@ const PopupConfim = props => {
                     }}
                     className='text-base text-white bg-[#003DA0] hover:bg-[#0375F3] transition-all duration-150 ease-linear tran font-normal rounded-lg w-full border-[#D0D5DD] border px-[18px] py-[10px] shadow-[0px 1px 2px 0px rgba(16, 24, 40, 0.05)]'
                   >
-                    Xác nhận
+                    {props.confirmLabel ?? 'Xác nhận'}
                   </button>
                 </Zoom>
               </>

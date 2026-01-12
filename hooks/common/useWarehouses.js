@@ -92,6 +92,8 @@ export const useLocationByWarehouseTo = (idWarehouse, idBranch = undefined) => {
       }))
     },
     enabled: !!idWarehouse || !!idBranch,
+    // Luôn refetch lại khi người dùng chuyển tab và quay lại
+    refetchOnWindowFocus: true,
   })
 }
 
