@@ -75,13 +75,17 @@ const WarehouseTransferForm = props => {
   const [errReceiveWarehouse, sErrReceiveWarehouse] = useState(false);
   const [errWarehouse, sErrWarehouse] = useState(false);
   const [errReceivingLocation, sErrReceivingLocation] = useState(false);
+  const [isOpenReceivingLocationWarning, sIsOpenReceivingLocationWarning] = useState(false);
 
   // danh sách chi nhánh
   const { data: dataBranch = [] } = useBranchList();
   // danh sách kho nhận
   const { data: dataReceiveWarehouse = [] } = useWarehouseTransferTo();
-  // danh sách mặt hàng
-  const { data: dataItems } = useWarehouseTransferItems(idBranch, idExportWarehouse);
+  // danh sách mặt hàng: chỉ lấy những mặt hàng có tồn kho (warehouse_stock_only = 1)
+  const { data: dataItemsRaw } = useWarehouseTransferItems(idBranch, idExportWarehouse, 1);
+  // Chỉ lấy những mặt hàng có dữ liệu kho (e.warehouse length > 0) phòng trường hợp API vẫn trả về rỗng
+  const dataItems = Array.isArray(dataItemsRaw) ? dataItemsRaw.filter(item => Array.isArray(item?.e?.warehouse) && item.e.warehouse.length > 0) : [];
+
   // danh sách vị trí nhận
   const { data: dataReceivingLocation = [] } = useLocationByWarehouseTo(idReceiveWarehouse);
   // danh sách kho
@@ -301,6 +305,13 @@ const WarehouseTransferForm = props => {
   useEffect(() => {
     idBranch == null && sIdExportWarehouse(null);
   }, [idBranch]);
+
+  // Cảnh báo khi kho nhận không có vị trí nhận
+  useEffect(() => {
+    if (idReceiveWarehouse && Array.isArray(dataReceivingLocation) && dataReceivingLocation.length === 0) {
+      sIsOpenReceivingLocationWarning(true);
+    }
+  }, [idReceiveWarehouse, dataReceivingLocation]);
 
   const formatNumber = number => {
     return formatNumberConfig(+number, dataSeting);
@@ -903,6 +914,27 @@ const WarehouseTransferForm = props => {
         save={resetValue}
         nameModel={'change_item'}
         cancel={() => handleQueryId({ status: false })}
+      />
+      <PopupConfim
+        dataLang={dataLang}
+        type='warning'
+        nameModel='bom_require_stage'
+        title={dataLang?.warning || 'Cảnh Báo'}
+        subtitle={
+          <span>
+            Kho nhận hiện <span className='font-semibold'>chưa có vị trí nhận</span>. Bạn có muốn tạo vị trí mới không?
+          </span>
+        }
+        isOpen={isOpenReceivingLocationWarning}
+        cancelLabel={dataLang?.cancel || 'Hủy'}
+        confirmLabel='Tạo vị trí'
+        save={() => {
+          sIsOpenReceivingLocationWarning(false);
+          if (typeof window !== 'undefined') {
+            window.open('/warehouses/location', '_blank');
+          }
+        }}
+        cancel={() => sIsOpenReceivingLocationWarning(false)}
       />
     </React.Fragment>
   );
