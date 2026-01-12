@@ -1599,3 +1599,13 @@ svg:focus {
     z-index: 2;
   }
 }
+
+// Config Tooltip của Antd - màu nền và arrow
+.ant-tooltip-inner {
+  background-color: #555F6D !important;
+  color: #FFFFFF !important;
+}
+
+.ant-tooltip-arrow::before {
+  background-color: #555F6D !important;
+}

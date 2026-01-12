@@ -57,6 +57,9 @@ const PersonSelector = ({
   onSelectMode,
   selectedProductionOrdersCount = 0,
   isSelectMode = false,
+  inlineConfirm = false,
+  hideFooterActions = false,
+  width = 230,
 }) => {
   const [search, setSearch] = useState('');
   const [localSelected, setLocalSelected] = useState(selected);
@@ -193,6 +196,33 @@ const PersonSelector = ({
       ...getReferenceProps(),
     });
 
+  const handleConfirmAll = () => {
+    if (isSelectMode) {
+      showToast('error', 'Vui lòng hoàn thành chế độ chọn lệnh trước khi áp dụng tất cả');
+      return;
+    }
+    if (!hasPersonSelected) {
+      showToast('error', 'Vui lòng chọn ít nhất một người phụ trách trước khi áp dụng');
+      return;
+    }
+    onConfirm?.(localSelected);
+    onClose?.();
+  };
+
+  const handleSelectModeAction = () => {
+    if (!hasPersonSelected) {
+      showToast('error', 'Vui lòng chọn ít nhất một người phụ trách trước khi chọn lệnh');
+      return;
+    }
+    if (selectedProductionOrdersCount > 0) {
+      onApplySelected?.(localSelected);
+      onClose?.();
+    } else {
+      showToast('success', 'Vui lòng chọn các lệnh sản xuất cần áp dụng');
+      onSelectMode?.(localSelected);
+    }
+  };
+
   return (
     <>
       {triggerElement}
@@ -200,24 +230,27 @@ const PersonSelector = ({
         createPortal(
           <div
             ref={refs.setFloating}
-            className={`font-deca p-3 w-[200px] bg-white rounded-[16px] shadow-xl flex flex-col gap-2 overflow-hidden ${className}`}
+            className={`font-deca p-3 bg-white rounded-[16px] shadow-xl flex flex-col gap-2 overflow-hidden ${className}`}
             style={{
               ...floatingStyles,
-              minWidth: triggerRef.current ? Math.max(230, triggerRef.current.getBoundingClientRect().width || 0) : 360,
-              zIndex: 100,
+              width,
+              minWidth: triggerRef.current ? Math.max(width, triggerRef.current.getBoundingClientRect().width || 0) : width,
+              zIndex: 1000,
             }}
             {...getFloatingProps()}
           >
             {/* Search */}
-            <div className='w-full flex items-center gap-3 pl-4 pr-1 py-1 border border-[#D0D5DD] rounded-[12px] bg-white focus-within:ring-2 focus-within:ring-[#1760B9]'>
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder='Tìm người phụ trách'
-                className='flex-1 min-w-0 text-sm text-[#101828] outline-none placeholder:text-[#9295A4]'
-              />
-              <div className='w-8 h-8 flex-shrink-0 rounded-lg bg-[#1760B9] flex items-center justify-center'>
-                <MagnifyingGlassIcon className='size-5 text-white' />
+            <div className='w-full flex items-center gap-2'>
+              <div className='min-w-0 flex-1 flex items-center gap-3 pl-4 pr-1 py-1 border border-[#D0D5DD] rounded-[12px] bg-white focus-within:ring-2 focus-within:ring-[#1760B9]'>
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder='Tìm người phụ trách'
+                  className='flex-1 min-w-0 text-sm text-[#101828] outline-none placeholder:text-[#9295A4]'
+                />
+                <div className='w-8 h-8 flex-shrink-0 rounded-lg bg-[#1760B9] flex items-center justify-center'>
+                  <MagnifyingGlassIcon className='size-5 text-white' />
+                </div>
               </div>
             </div>
 
@@ -254,45 +287,35 @@ const PersonSelector = ({
                 )}
               </div>
             </Customscrollbar>
-            <div className='flex flex-col items-center justify-center gap-2 w-full'>
-              <button
-                className='w-full bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
-                onClick={() => {
-                  if (isSelectMode) {
-                    showToast('error', 'Vui lòng hoàn thành chế độ chọn lệnh trước khi áp dụng tất cả');
-                    return;
-                  }
-                  if (!hasPersonSelected) {
-                    showToast('error', 'Vui lòng chọn ít nhất một người phụ trách trước khi áp dụng');
-                    return;
-                  }
-                  onConfirm?.(localSelected);
-                  onClose?.();
-                }}
-              >
-                Áp dụng tất cả
-              </button>
-              <button
-                className='w-full text-blue-fmrp bg-white border border-blue-fmrp px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-blue-fmrp/20 transition-colors truncate'
-                onClick={() => {
-                  if (!hasPersonSelected) {
-                    showToast('error', 'Vui lòng chọn ít nhất một người phụ trách trước khi chọn lệnh');
-                    return;
-                  }
-                  if (selectedProductionOrdersCount > 0) {
-                    onApplySelected?.(localSelected);
-                    onClose?.();
-                  } else {
-                    showToast('success', 'Vui lòng chọn các lệnh sản xuất cần áp dụng');
-                    onSelectMode?.(localSelected);
-                  }
-                }}
-              >
-                {selectedProductionOrdersCount > 0
-                  ? `Áp dụng (${selectedProductionOrdersCount}) lệnh`
-                  : 'Tùy chọn lệnh'}
-              </button>
-            </div>
+            {inlineConfirm ? (
+              <div className='flex items-center justify-center w-full pt-2'>
+                <button
+                  className='w-full text-blue-fmrp bg-white border border-blue-fmrp px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-blue-fmrp/20 transition-colors truncate'
+                  onClick={handleConfirmAll}
+                >
+                  Xác nhận
+                </button>
+              </div>
+            ) : (
+              !hideFooterActions && (
+              <div className='flex flex-col items-center justify-center gap-2 w-full'>
+                <button
+                  className='w-full bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
+                  onClick={handleConfirmAll}
+                >
+                  Áp dụng tất cả
+                </button>
+                <button
+                  className='w-full text-blue-fmrp bg-white border border-blue-fmrp px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-blue-fmrp/20 transition-colors truncate'
+                  onClick={handleSelectModeAction}
+                >
+                  {selectedProductionOrdersCount > 0
+                    ? `Áp dụng (${selectedProductionOrdersCount}) lệnh`
+                    : 'Tùy chọn lệnh'}
+                </button>
+              </div>
+              )
+            )}
           </div>,
           document.body
         )}

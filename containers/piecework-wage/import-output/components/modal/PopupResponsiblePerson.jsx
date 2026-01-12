@@ -1,48 +1,57 @@
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import Loading from '@/components/UI/loading/loading';
 import PopupCustom from '@/components/UI/popup';
 import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew';
 import { CaretDownIcon, CheckThinIcon, UserPlusIcon } from '@/components/icons';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import { IMAGES } from '@/constants/images';
 import ResponsibleAvatar from '@/containers/manufacture/productions-orders/components/popup/ResponsibleAvatar';
-import ResponsiblePersonComboBox from '@/containers/manufacture/productions-orders/components/popup/ResponsiblePersonComboBox';
-import { StateContext } from '@/context/_state/productions-orders/StateContext';
+import PersonSelector from '@/containers/piecework-wage/import-output/components/modal/PersonSelector';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import useToast from '@/hooks/useToast';
-import { useSaveProductionOrderManagers } from '@/managers/api/productions-order/useSaveProductionOrderManagers';
+import { useListPomStages, useSavePomStages, useSavePomStagesDetail } from '@/managers/api/piecework-wage/useImportOutput';
+import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-const PopupResponsiblePerson = ({ open, onClose, brandId, initialManagers = [], canManageManagers, onRefreshManagers, po_id }) => {
-  const { isStateProvider } = useContext(StateContext);
+const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_id, stage_id, start_date = null, end_date = null, search = '' }) => {
   const showToast = useToast();
+  const queryClient = useQueryClient();
 
   const [openCombo, setOpenCombo] = useState(false);
-  const [selectedPeople, setSelectedPeople] = useState([]);
   const [openRoleId, setOpenRoleId] = useState(null);
   const [roleByPerson, setRoleByPerson] = useState({});
   const [anchorRoleRect, setAnchorRoleRect] = useState(null);
   const roleDropdownRef = useRef(null);
   const [roleAnchorEl, setRoleAnchorEl] = useState(null);
+  const [selectedStaffs, setSelectedStaffs] = useState([]);
 
-  // Lấy po_id từ props hoặc context
-  const finalPoId = po_id || isStateProvider?.productionsOrders?.idDetailProductionOrder || 50;
+  const { data: listPomStages, isLoading } = useListPomStages(
+    {
+      po_ids: po_id ? [po_id] : [],
+      stage_id: stage_id || null,
+    },
+    {
+      enabled: open && !!po_id && !!stage_id,
+    }
+  );
 
-  // Lấy branch_id từ production order
   const { data: staffs } = useSearchStaffs({ branch_ids: brandId ? [brandId] : [] });
 
-  // Hook để save production order managers
-  const { saveProductionOrderManagers, isLoading: isSaving } = useSaveProductionOrderManagers({
-    onSuccess: response => {
-      // Đóng popup sau khi save thành công
-      onClose?.();
-      // Trigger refetch managers list (avatar/table) nếu có
-      onRefreshManagers?.();
+  const { mutate: savePomStages } = useSavePomStages({
+    onSuccess: data => {
+      if (data?.isSuccess) {
+        queryClient.invalidateQueries({ queryKey: ['api_list_pom_stages'] });
+        setOpenCombo(false);
+      }
     },
-    onError: error => {
-      console.error('Failed to save managers:', error);
+  });
+
+  const { mutate: savePomStagesDetail, isPending: isSaving } = useSavePomStagesDetail({
+    onSuccess: () => {
+      onClose?.();
     },
   });
 
@@ -68,8 +77,20 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, initialManagers = [], 
   };
 
   const handleConfirmSelection = newSelected => {
-    setSelectedPeople(newSelected || []);
-    setOpenCombo(false);
+    const payload = {
+      stage_id: stage_id,
+      po_ids: po_id ? [po_id] : [],
+      staff_ids: newSelected?.map(item => Number(item.id)).filter(id => Number.isFinite(id)),
+      start_date: start_date ?? null,
+      end_date: end_date ?? null,
+      search: search ?? '',
+    };
+
+    if (!payload.po_ids.length) {
+      showToast('error', 'Không xác định được lệnh sản xuất để cập nhật');
+      return;
+    }
+    savePomStages(payload);
   };
 
   const handleSelectRole = (personId, role) => {
@@ -79,70 +100,36 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, initialManagers = [], 
     setRoleAnchorEl(null);
   };
 
-  // Prefill / reset theo lệnh sản xuất hiện tại
+  // Init roleByPerson từ dữ liệu API khi popup mở
   useEffect(() => {
-    if (!open) return;
+    if (!open || !listPomStages?.staffs) return;
 
-    const list = initialManagers || [];
-
-    // Set selected people
-    const prefillPeople = list.map(item => ({
-      recordId: item.recordId,
-      id: item.id,
-      name: item.name,
-      avatarUrl: item.avatarUrl || '',
-    }));
-    setSelectedPeople(prefillPeople);
-
-    // Set role mapping
-    const prefillRoles = list.reduce((acc, cur) => {
-      acc[cur.id] = cur.role || '';
+    const prefillRoles = listPomStages.staffs.reduce((acc, cur) => {
+      acc[cur.id] = 'manufacture'; // Mặc định là 'manufacture'
       return acc;
     }, {});
     setRoleByPerson(prefillRoles);
-  }, [initialManagers, open]);
+    setSelectedStaffs(listPomStages.staffs || []);
+  }, [listPomStages, open]);
 
   const handleSave = () => {
     // Phân quyền: chỉ cho phép role is_manager được lưu
-    if (!canManageManagers) {
-      showToast('error', 'Bạn không có quyền thực hiện thao tác này');
-      return;
-    }
+    // if (!canManageManagers) {
+    //   showToast('error', 'Bạn không có quyền thực hiện thao tác này');
+    //   return;
+    // }
 
-    // Chỉ kiểm tra quyền nếu có người được chọn
-    if (selectedPeople.length > 0) {
-      const peopleWithoutRole = selectedPeople.filter(person => !roleByPerson[person.id]);
-      if (peopleWithoutRole.length > 0) {
-        showToast('error', 'Vui lòng chọn quyền cho tất cả người phụ trách');
-        return;
-      }
-    }
-
-    // Transform dữ liệu từ selectedPeople và roleByPerson
-    const items = selectedPeople.map(person => {
-      const roleValue = roleByPerson[person.id] || '';
-
-      // Map role value thành các flags
-      const is_manager = roleValue === 'manager' ? 1 : 0;
-      const is_btp_nvl = roleValue === 'btp_nvl' ? 1 : 0;
-      const is_manufacture = roleValue === 'manufacture' ? 1 : 0;
-
-      return {
-        id: person.recordId ?? 0,
-        staff_id: person.id,
-        is_manager,
-        is_btp_nvl,
-        is_manufacture,
-      };
-    });
+    // Lấy danh sách staff_ids từ dữ liệu API
+    const staff_ids = selectedStaffs.map(person => Number(person.staff_id)).filter(id => Number.isFinite(id));
 
     const payload = {
-      po_id: finalPoId,
-      items,
+      po_id: po_id,
+      stage_id: stage_id,
+      staff_ids: staff_ids,
     };
 
     // Gọi mutation để save
-    saveProductionOrderManagers(payload);
+    savePomStagesDetail(payload);
   };
 
   useEffect(() => {
@@ -194,8 +181,21 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, initialManagers = [], 
         </div>
 
         {canManageManagers !== false && (
-          <ResponsiblePersonComboBox open={openCombo} onClose={() => setOpenCombo(false)} onConfirm={handleConfirmSelection} selected={selectedPeople} data={listStaffs}>
-            <div className='inline-flex'>
+          <PersonSelector
+            open={openCombo}
+            onClose={() => setOpenCombo(false)}
+            onConfirm={handleConfirmSelection}
+            selected={selectedStaffs.map(item => ({
+              id: item.staff_id,
+              name: item.staff?.full_name || '',
+              avatarUrl: item.staff?.profile_image || '',
+            }))}
+            data={listStaffs}
+            inlineConfirm
+            hideFooterActions
+            width={300}
+          >
+            <div className='inline-flex w-fit'>
               <ButtonAnimationNew
                 icon={
                   <div className='size-6'>
@@ -207,7 +207,7 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, initialManagers = [], 
                 onClick={handleAddPerson}
               />
             </div>
-          </ResponsiblePersonComboBox>
+          </PersonSelector>
         )}
 
         {/* Content */}
@@ -226,18 +226,20 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, initialManagers = [], 
 
           {/* Danh sách người phụ trách */}
           <Customscrollbar className='max-h-[280px] overflow-y-auto'>
-            {selectedPeople.length === 0 ? (
+            {isLoading ? (
+              <Loading />
+            ) : selectedStaffs.length === 0 ? (
               <div className='flex flex-col items-center justify-center gap-2 py-4'>
                 <Image src={IMAGES.nodataNotFound} alt='No Data' width={200} height={200} className='object-contain' />
                 <span className='text-sm text-[#9295A4]'>Chưa có người phụ trách</span>
               </div>
             ) : (
               <div className='divide-y divide-[#E7EAEE]'>
-                {selectedPeople.map(person => (
-                  <div key={person.id} className='flex items-center py-4 gap-4'>
+                {selectedStaffs.map(person => (
+                  <div key={person.id} className='flex items-center py-4 gap-4 hover:bg-[#F9FAFB] px-2'>
                     <div className='flex-1 flex items-center gap-3'>
-                      <ResponsibleAvatar avatarUrl={person.avatarUrl} fullName={person.name} size={40} />
-                      <span className='text-sm font-medium text-[#101828]'>{person.name}</span>
+                      <ResponsibleAvatar avatarUrl={person.staff?.profile_image} fullName={person.staff?.full_name} size={40} />
+                      <span className='text-sm font-medium text-[#101828]'>{person.staff?.full_name}</span>
                     </div>
                     <div className='flex-1 flex justify-end'>
                       <div className='relative'>
@@ -257,7 +259,9 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, initialManagers = [], 
                               setOpenRoleId(prev => (prev === person.id ? null : person.id));
                             }}
                             className={`flex rounded-lg items-center gap-2 px-4 py-2 border text-sm font-medium transition-colors ${
-                              openRoleId === person.id ? 'bg-[#EBF5FF] border-[#3276FA] text-[#1F3A63]' : 'bg-white border-[#EBEDF1] text-[#4B5563]'
+                              openRoleId === person.id
+                                ? 'bg-[#EBF5FF] border-[#3276FA] text-[#1F3A63]'
+                                : 'bg-white border-[#EBEDF1] text-[#4B5563] hover:bg-[#EBF5FF] hover:border-[#3276FA] hover:text-[#1F3A63]'
                             }`}
                           >
                             {roleOptions.find(opt => opt.value === roleByPerson[person.id])?.label || 'Chọn vai trò'}
@@ -283,8 +287,17 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, initialManagers = [], 
                     isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#0375F3]/90 cursor-pointer'
                   }`}
                 >
-                  <CheckThinIcon className='size-5' />
-                  Lưu
+                  {isSaving ? (
+                    <span className='flex items-center gap-2'>
+                      <span className='inline-block h-4 w-4 border-2 border-white/60 border-t-white rounded-full animate-spin' />
+                      <span>Đang lưu...</span>
+                    </span>
+                  ) : (
+                    <>
+                      <CheckThinIcon className='size-5' />
+                      <span>Lưu</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -323,8 +336,9 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, initialManagers = [], 
               })}
               <button
                 onClick={() => {
-                  // Xoá khỏi bảng & đưa lại vào combo
-                  setSelectedPeople(prev => prev.filter(p => p.id !== openRoleId));
+                  // Xoá tạm thời khỏi giao diện; API sẽ được gọi khi nhấn Lưu
+                  setSelectedStaffs(prev => prev.filter(person => person.id !== openRoleId));
+                  // Xoá role mapping
                   setRoleByPerson(prev => {
                     const clone = { ...prev };
                     delete clone[openRoleId];

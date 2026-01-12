@@ -3,7 +3,7 @@ import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { IMAGES } from '@/constants/images';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import { useListImportOutputItems, useSavePomStages } from '@/managers/api/piecework-wage/useImportOutput';
-import { Popover } from 'antd';
+import { Popover, Tooltip } from 'antd';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PersonSelector from './modal/PersonSelector';
@@ -254,7 +254,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
       setSelectedProductionOrders([]);
       setPendingSelectedPersons([]);
     }
-  }, [selectModeResetKey, activePersonSelectorStageId, isResponsiblePersonOpen, isSelectMode, selectedProductionOrders.length, pendingSelectedPersons.length, stage.stage_id]);
+  }, [selectModeResetKey, activePersonSelectorStageId, stage.stage_id]);
 
   // Handler khi bấm "Tùy chọn" - kích hoạt chế độ chọn
   const handleSelectMode = selectedPersons => {
@@ -382,6 +382,9 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
               {orderedPos.map((po, index) => (
                 <ProductionOrderCard
                   key={`${stage.stage_id}-${po.id}-${po.reference_no}-${index}`}
+                  start_date={filterParams?.start_date ?? null}
+                  end_date={filterParams?.end_date ?? null}
+                  search={filterParams?.search ?? ''}
                   borderColor='#1A7526'
                   status='idle'
                   time='00 : 00 : 00'
