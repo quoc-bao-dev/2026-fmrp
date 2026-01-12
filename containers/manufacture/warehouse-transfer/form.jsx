@@ -31,7 +31,7 @@ import { Add } from 'iconsax-react';
 import moment from 'moment/moment';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { PiMapPinLight } from 'react-icons/pi';
 import { useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
@@ -76,6 +76,7 @@ const WarehouseTransferForm = props => {
   const [errWarehouse, sErrWarehouse] = useState(false);
   const [errReceivingLocation, sErrReceivingLocation] = useState(false);
   const [isOpenReceivingLocationWarning, sIsOpenReceivingLocationWarning] = useState(false);
+  const prevReceiveWarehouseRef = useRef(null);
 
   // danh sách chi nhánh
   const { data: dataBranch = [] } = useBranchList();
@@ -246,6 +247,8 @@ const WarehouseTransferForm = props => {
         sIdExportWarehouse(value);
       }
     } else if (type == 'idReceiveWarehouse' && idReceiveWarehouse != value) {
+      // Lưu lại kho nhận hiện tại để có thể quay lại nếu kho mới không có vị trí
+      prevReceiveWarehouseRef.current = idReceiveWarehouse || null;
       if (listData?.length > 0) {
         if (type === 'idReceiveWarehouse' && idBranch != value) {
           handleQueryId({ status: true, initialKey: { type, value } });
@@ -934,7 +937,15 @@ const WarehouseTransferForm = props => {
             window.open('/warehouses/location', '_blank');
           }
         }}
-        cancel={() => sIsOpenReceivingLocationWarning(false)}
+        cancel={() => {
+          sIsOpenReceivingLocationWarning(false);
+          // Quay lại kho nhận trước đó (nếu có), không giữ kho không có vị trí
+          if (prevReceiveWarehouseRef.current) {
+            sIdReceiveWarehouse(prevReceiveWarehouseRef.current);
+          } else {
+            sIdReceiveWarehouse(null);
+          }
+        }}
       />
     </React.Fragment>
   );
