@@ -50,10 +50,10 @@ const Avatar = ({ staffs_assigned, onClick }) => {
                   alt={staffName}
                   width={30}
                   height={30}
-                  className={`size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] ${isFirst ? '' : '-ml-2'} z-1 cursor-pointer`}
+                  className={`size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] ${isFirst ? '' : '-ml-3'} z-1 cursor-pointer`}
                 />
               ) : (
-                <div className={`size-[30px] rounded-full overflow-hidden border-2 border-[#549AE8] flex items-center justify-center bg-white ${isFirst ? '' : '-ml-2'} z-1 cursor-pointer`}>
+                <div className={`size-[30px] rounded-full overflow-hidden border-2 border-[#549AE8] flex items-center justify-center bg-white ${isFirst ? '' : '-ml-3'} z-1 cursor-pointer`}>
                   <AvatarText fullName={staffName} className='w-full h-full text-base flex items-center justify-center' />
                 </div>
               )}
@@ -243,6 +243,7 @@ const ProductionOrderCard = ({
   const displayTime = formatTime(elapsedSeconds);
 
   const handleCardClick = () => {
+    if (showResponsiblePersonPopup) return;
     // Mở popup khi click vào card
     setShowCompletePopup(true);
   };
@@ -336,19 +337,17 @@ const ProductionOrderCard = ({
       />
       <PopupCompleteOrder stage_id={stage_id} stage_name={stage_name} po={po} isOpen={showCompletePopup} onClose={() => setShowCompletePopup(false)} />
       <Avatar staffs_assigned={po?.staffs_assigned || []} onClick={() => setShowResponsiblePersonPopup(true)} />
-      {showResponsiblePersonPopup && (
-        <PopupResponsiblePerson
-          open={showResponsiblePersonPopup}
-          onClose={() => setShowResponsiblePersonPopup(false)}
-          brandId={po?.branch_id}
-          canManageManagers={canManageManagers}
-          po_id={po?.id}
-          stage_id={stage_id}
-          start_date={start_date}
-          end_date={end_date}
-          search={search}
-        />
-      )}
+      <PopupResponsiblePerson
+        open={showResponsiblePersonPopup}
+        onClose={() => setShowResponsiblePersonPopup(false)}
+        brandId={po?.branch_id}
+        canManageManagers={canManageManagers}
+        po_id={po?.id}
+        stage_id={stage_id}
+        start_date={start_date}
+        end_date={end_date}
+        search={search}
+      />
 
       <div className='px-1 flex items-center gap-3 w-1/2'>
         <div className='flex items-center gap-1 flex-shrink-0'>
