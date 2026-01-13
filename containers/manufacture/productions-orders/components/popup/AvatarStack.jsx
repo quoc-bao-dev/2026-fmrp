@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import ResponsibleAvatar from './ResponsibleAvatar';
 
-const AvatarStack = ({ people = [], size = 40 }) => {
+const AvatarStack = ({ people = [], size = 40, className = '' }) => {
   const [hoverId, setHoverId] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const avatarRefs = useRef({});
@@ -50,7 +50,7 @@ const AvatarStack = ({ people = [], size = 40 }) => {
 
   return (
     <>
-      <div className={`inline-flex items-center pl-1.5 py-1.5 bg-[#EBF5FF] rounded-full overflow-visible relative z-0 ${Number(remaining) > 0 ? '' : 'pr-1.5'}`}>
+      <div className={`inline-flex items-center pl-1.5 py-1.5 bg-[#EBF5FF] rounded-full overflow-visible relative z-0 ${Number(remaining) > 0 ? '' : 'pr-1.5'} ${className}`}>
         {visible.map((person, idx) => {
           return (
             <div

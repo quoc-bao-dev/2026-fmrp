@@ -12,6 +12,7 @@ export const IMAGES = {
   rocketBoyGif: '/dashboard/rocket-boy-1.gif',
   // g
   googleplay: '/qrCode/googleplay.svg',
+  groupUser: '/icon/GroupUser.png',
   // h
   // i
   // j

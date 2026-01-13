@@ -30,6 +30,11 @@ const apiImportOutput = {
     const response = await axiosCustom('POST', `/api_web/pom-stages/save-detail`, params);
     return response.data;
   },
+
+  async apiLookupGroupMembers(params) {
+    const response = await axiosCustom('GET', `/api_web/group-members/lookup`, params);
+    return response.data;
+  },
 };
 
 export default apiImportOutput;

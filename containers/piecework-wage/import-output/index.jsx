@@ -1,6 +1,6 @@
 import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
 import SelectSearchableRadio from '@/components/common/select/SelectSearchableRadio';
-import { CaretDownIcon, ClockIcon, CloseXIcon, EqualizerIcon, FunnelIcon, SearchIcon, UsersIcon } from '@/components/icons';
+import { CaretDownIcon, ClockIcon, CloseXIcon, EqualizerIcon, FunnelIcon, SearchIcon } from '@/components/icons';
 import { DropdownAvatar } from '@/components/layout/header';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import InfoTooltip from '@/components/UI/common/InfoTooltip';
@@ -8,7 +8,7 @@ import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComp
 import Loading from '@/components/UI/loading/loading';
 import { IMAGES } from '@/constants/images';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
-import { useListImportOutput, useLookupStages } from '@/managers/api/piecework-wage/useImportOutput';
+import { useListImportOutput, useLookupGroupMembers, useLookupStages } from '@/managers/api/piecework-wage/useImportOutput';
 import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import moment from 'moment';
 import Head from 'next/head';
@@ -45,8 +45,8 @@ const ImportOutput = () => {
 
   const { isLoading: isLoadingListImportOutput, data: listImportOutput } = useListImportOutput(filterParams);
   const { data: listStaffs } = useSearchStaffs();
+  const { data: listGroupMembers } = useLookupGroupMembers({ limit: 100 });
   const { data: listStages } = useLookupStages({ search: debouncedSearchProcess || '' });
-
   // Lấy dữ liệu nhân viên từ API
   const staffs = listStaffs?.data?.staffs || [];
 
@@ -96,22 +96,22 @@ const ImportOutput = () => {
 
     // Filter nhóm theo search
     const filteredGroups = searchStaff
-      ? mockGroups.filter(group => {
+      ? listGroupMembers?.group_members?.filter(group => {
           return searchWithoutDiacritics(group.name, searchStaff) || searchWithoutDiacritics(group.code, searchStaff);
         })
-      : mockGroups;
+      : listGroupMembers?.group_members;
 
     // Thêm các nhóm
-    filteredGroups.forEach(group => {
+    filteredGroups?.forEach(group => {
       options.push({
         value: `group_${group.id}`,
         label: group.name,
-        icon: <UsersIcon className='size-6 text-blue-fmrp' />,
+        avatar: IMAGES.groupUser,
       });
     });
 
     return options;
-  }, [searchStaff, staffs]);
+  }, [searchStaff, staffs, listGroupMembers]);
 
   // Xử lý khi chọn nhân viên
   const handleEmployeeChange = value => {
@@ -229,7 +229,9 @@ const ImportOutput = () => {
             placeholder='blur'
             blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
           />
-          <h2 className='p-2 rounded-full bg-[#E2F0FE] hover:bg-blue-fmrp transition-colors hover:text-white hover:border-white border border-transparent responsive-text-base font-medium text-new-blue capitalize'>Trang quản lý</h2>
+          <h2 className='p-2 rounded-full bg-[#E2F0FE] hover:bg-blue-fmrp transition-colors hover:text-white hover:border-white border border-transparent responsive-text-base font-medium text-new-blue capitalize'>
+            Trang quản lý
+          </h2>
         </Link>
         <div className='flex items-center gap-3'>
           <button className='h-10 bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-[#D0D5DD]'>
@@ -345,6 +347,8 @@ const ImportOutput = () => {
                     activePersonSelectorStageId={activePersonSelectorStageId}
                     onPersonSelectorClick={handlePersonSelectorClick}
                     filterParams={filterParams}
+                    listGroupMembers={listGroupMembers}
+                    listStaffs={listStaffs}
                   />
                 ))}
               </div>

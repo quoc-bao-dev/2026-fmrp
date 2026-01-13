@@ -32,6 +32,19 @@ export const useListImportOutputItems = (params, options = {}) => {
   });
 };
 
+//danh sách nhóm
+export const useLookupGroupMembers = (params, options = {}) => {
+  const fetchLookupGroupMembers = async () => {
+    const response = await apiImportOutput.apiLookupGroupMembers({ params: params });
+    return response.data;
+  };
+  return useQuery({
+    queryKey: ['api_lookup_group_members', { ...params }],
+    queryFn: fetchLookupGroupMembers,
+    ...options,
+  });
+};
+
 //Gọi danh sách công đoạn
 export const useLookupStages = data => {
   const fetchLookupStages = async () => {
