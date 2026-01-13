@@ -321,8 +321,8 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
   };
 
   return (
-    <div className='w-[394px] flex-shrink-0 rounded-t-2xl pt-1 flex flex-col gap-3 bg-[#EBEBEB]/50 h-full'>
-      <div className='px-4 py-3 flex flex-col gap-3 flex-shrink-0'>
+    <div className='w-[394px] flex-shrink-0 rounded-t-2xl pt-1 flex flex-col bg-[#EBEBEB]/50 h-full'>
+      <div className='px-4 py-3 flex flex-col gap-2 flex-shrink-0'>
         <div className='flex items-center gap-2 justify-between'>
           <div className='flex items-center gap-2 w-[70%]'>
             <PresentationChartIcon className='size-6' />
@@ -368,7 +368,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
             </button>
           </PersonSelector>
         </div>
-        <div className='flex items-center justify-between gap-2 bg-[#FFFFFF66] border border-white rounded-[14px] px-3 py-[14px]'>
+        <div className='flex items-center justify-between gap-2 bg-[#FFFFFF66] border border-white rounded-[14px] p-2'>
           <div className='flex items-center gap-3'>
             <p className='responsive-text-base font-semibold text-[#1A7526]'>Tổng lệnh: {stage?.items?.total_count || 0}</p>
           </div>
