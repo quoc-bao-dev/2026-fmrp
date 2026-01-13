@@ -1,13 +1,13 @@
 import { PresentationChartIcon, ThreeDotIcon, UserGroupIcon, UserPlus2Icon } from '@/components/icons';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { IMAGES } from '@/constants/images';
-import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import { useListImportOutputItems, useSavePomStages } from '@/managers/api/piecework-wage/useImportOutput';
 import { Popover, Tooltip } from 'antd';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PersonSelector from './modal/PersonSelector';
 import ProductionOrderCard from './ProductionOrderCard';
+import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 
 // Component dropdown hiển thị nhân viên/nhóm đang làm và tạm dừng
 const ProcessStatusDropdown = ({ processName }) => {
@@ -110,7 +110,7 @@ const ProcessStatusDropdown = ({ processName }) => {
 };
 
 // Component StageColumn để quản lý infinite scroll cho từng stage
-const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, onPersonSelectorClick, filterParams }) => {
+const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, onPersonSelectorClick, filterParams, listGroupMembers, listStaffs }) => {
   const [page, setPage] = useState(1);
   const [allPos, setAllPos] = useState(stage?.items?.pos || []);
   const [hasMore, setHasMore] = useState(stage?.items?.next || false);
@@ -123,7 +123,6 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
   const [selectedProductionOrders, setSelectedProductionOrders] = useState([]);
   const [pendingSelectedPersons, setPendingSelectedPersons] = useState([]);
 
-  const { data: listStaffs } = useSearchStaffs();
   const { mutate: savePomStages } = useSavePomStages({
     onSuccess: data => {
       // Logic của hook (showToast, invalidateQueries) đã được xử lý trong hook
@@ -211,7 +210,25 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
   );
 
   const buildBasePayload = (selectedPersons = []) => {
-    const staff_ids = (selectedPersons || []).map(person => Number(person.id)).filter(id => Number.isFinite(id));
+    const staff_ids = [];
+    const group_ids = [];
+
+    (selectedPersons || []).forEach(person => {
+      if (person.id && person.id.startsWith('group_')) {
+        // Là nhóm, lấy id từ format "group_${id}"
+        const groupId = person.id.replace('group_', '');
+        const numId = Number(groupId);
+        if (Number.isFinite(numId)) {
+          group_ids.push(numId);
+        }
+      } else {
+        // Là nhân viên
+        const numId = Number(person.id);
+        if (Number.isFinite(numId)) {
+          staff_ids.push(numId);
+        }
+      }
+    });
 
     return {
       start_date: filterParams?.start_date ?? null,
@@ -219,20 +236,42 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
       search: filterParams?.search ?? '',
       stage_id: stage?.stage_id,
       staff_ids,
+      ...(group_ids.length > 0 && { group_ids }), // Chỉ thêm group_ids nếu có
     };
   };
 
-  // Format dữ liệu nhân viên cho PersonSelector
+  // Format dữ liệu nhân viên và nhóm cho PersonSelector
   const responsiblePersonData = useMemo(() => {
+    const data = [];
     const staffs = listStaffs?.data?.staffs || [];
-    return staffs
+    
+    // Thêm các nhân viên
+    staffs
       .filter(staff => staff?.staffid && staff?.full_name)
-      .map(staff => ({
-        id: String(staff.staffid),
-        name: staff.full_name,
-        avatarUrl: staff.profile_image,
-      }));
-  }, [listStaffs]);
+      .forEach(staff => {
+        data.push({
+          id: String(staff.staffid),
+          name: staff.full_name,
+          avatarUrl: staff.profile_image || IMAGES.noImage,
+          type: 'staff',
+        });
+      });
+
+    // Thêm các nhóm
+    const groupMembers = listGroupMembers?.group_members || [];
+    groupMembers.forEach(group => {
+      if (group?.id && group?.name) {
+        data.push({
+          id: `group_${group.id}`,
+          name: group.name,
+          avatarUrl: IMAGES.groupUser,
+          type: 'group',
+        });
+      }
+    });
+
+    return data;
+  }, [listStaffs, listGroupMembers]);
 
   const handleResponsiblePersonConfirm = selected => {
     setSelectedResponsiblePersons(selected);
@@ -322,7 +361,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
 
   return (
     <div className='w-[394px] flex-shrink-0 rounded-t-2xl pt-1 flex flex-col bg-[#EBEBEB]/50 h-full'>
-      <div className='px-4 py-3 flex flex-col gap-2 flex-shrink-0'>
+      <div className='p-3 flex flex-col gap-2 flex-shrink-0'>
         <div className='flex items-center gap-2 justify-between'>
           <div className='flex items-center gap-2 w-[70%]'>
             <PresentationChartIcon className='size-6' />
@@ -376,16 +415,12 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
         </div>
       </div>
       <Customscrollbar className='flex-1 min-h-0 h-full' showOnHover={true} onScroll={handleScroll} ref={scrollContainerRef}>
-        <div className='flex flex-col gap-2.5 px-4 pb-4'>
+        <div className='flex flex-col gap-2.5 px-3 pb-4'>
           {orderedPos.length > 0 ? (
             <>
               {orderedPos.map((po, index) => (
                 <ProductionOrderCard
                   key={`${stage.stage_id}-${po.id}-${po.reference_no}-${index}`}
-                  start_date={filterParams?.start_date ?? null}
-                  end_date={filterParams?.end_date ?? null}
-                  search={filterParams?.search ?? ''}
-                  borderColor='#1A7526'
                   status='idle'
                   time='00 : 00 : 00'
                   po={po}

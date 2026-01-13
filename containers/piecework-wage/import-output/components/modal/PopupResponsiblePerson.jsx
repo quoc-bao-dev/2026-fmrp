@@ -3,30 +3,22 @@ import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import Loading from '@/components/UI/loading/loading';
 import PopupCustom from '@/components/UI/popup';
 import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew';
-import { CaretDownIcon, CheckThinIcon, UserPlusIcon } from '@/components/icons';
+import { CheckThinIcon, UserPlusIcon } from '@/components/icons';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import { IMAGES } from '@/constants/images';
 import ResponsibleAvatar from '@/containers/manufacture/productions-orders/components/popup/ResponsibleAvatar';
 import PersonSelector from '@/containers/piecework-wage/import-output/components/modal/PersonSelector';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import useToast from '@/hooks/useToast';
-import { useListPomStages, useSavePomStagesDetail } from '@/managers/api/piecework-wage/useImportOutput';
-import { useQueryClient } from '@tanstack/react-query';
+import { useListPomStages, useLookupGroupMembers, useSavePomStagesDetail } from '@/managers/api/piecework-wage/useImportOutput';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useEffect, useMemo, useState } from 'react';
 
-const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_id, stage_id, start_date = null, end_date = null, search = '' }) => {
+const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_id, stage_id }) => {
   const showToast = useToast();
-  const queryClient = useQueryClient();
 
   const [openCombo, setOpenCombo] = useState(false);
-  const [openRoleId, setOpenRoleId] = useState(null);
-  const [roleByPerson, setRoleByPerson] = useState({});
-  const [anchorRoleRect, setAnchorRoleRect] = useState(null);
-  const roleDropdownRef = useRef(null);
-  const [roleAnchorEl, setRoleAnchorEl] = useState(null);
   const [selectedStaffs, setSelectedStaffs] = useState([]);
 
   const { data: listPomStages, isLoading } = useListPomStages(
@@ -39,17 +31,11 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
     }
   );
 
-  const { data: staffs } = useSearchStaffs({ branch_ids: brandId ? [brandId] : [] });
+  const { data: staffs } = useSearchStaffs({ branch_ids: brandId ? [brandId] : [] }, { enabled: open });
+  const { data: listGroupMembers } = useLookupGroupMembers({ limit: 100 }, { enabled: open });
 
   const { mutate: savePomStagesDetail, isPending: isSaving } = useSavePomStagesDetail({
-    onSuccess: data => {
-      if (data?.isSuccess) {
-        showToast('success', data?.message || 'Lưu thành công');
-        queryClient.invalidateQueries({ queryKey: ['api_list_import_output'] });
-        queryClient.invalidateQueries({ queryKey: ['api_list_pom_stages'] });
-      } else {
-        showToast('error', data?.message || 'Lưu thất bại');
-      }
+    onSuccess: () => {
       onClose?.();
     },
     onError: error => {
@@ -59,16 +45,36 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
   });
 
   const listStaffs = useMemo(() => {
-    return (
-      staffs?.data?.staffs?.map(e => ({
-        id: e.staffid,
-        name: e.full_name,
-        avatarUrl: e.profile_image,
-      })) || []
-    );
-  }, [staffs]);
+    const data = [];
+    const staffsList = staffs?.data?.staffs || [];
 
-  const roleOptions = [{ label: 'Phụ trách sản xuất', value: 'manufacture' }];
+    // Thêm các nhân viên
+    staffsList.forEach(staff => {
+      if (staff?.staffid && staff?.full_name) {
+        data.push({
+          id: String(staff.staffid),
+          name: staff.full_name,
+          avatarUrl: staff.profile_image || IMAGES.noImage,
+          type: 'staff',
+        });
+      }
+    });
+
+    // Thêm các nhóm
+    const groupMembers = listGroupMembers?.group_members || [];
+    groupMembers.forEach(group => {
+      if (group?.id && group?.name) {
+        data.push({
+          id: `group_${group.id}`,
+          name: group.name,
+          avatarUrl: IMAGES.groupUser,
+          type: 'group',
+        });
+      }
+    });
+
+    return data;
+  }, [staffs, listGroupMembers]);
 
   const handleAddPerson = () => {
     // Phân quyền: chỉ cho phép role is_manager được thêm người phụ trách (nếu có truyền canManageManagers)
@@ -81,108 +87,113 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
 
   const handleConfirmSelection = newSelected => {
     // Chuẩn hoá dữ liệu từ PersonSelector về format dùng nội bộ
-    const normalized = (newSelected || []).map(item => ({
-      id: item.id,
-      staff_id: item.id,
-      staff: {
-        full_name: item.name,
-        profile_image: item.avatarUrl,
-      },
-    }));
-
-    // Cập nhật role mapping, giữ vai trò cũ nếu còn tồn tại
-    setRoleByPerson(prev => {
-      const next = { ...prev };
-      // Xoá role của những người không còn được chọn
-      Object.keys(next).forEach(id => {
-        const stillExists = normalized.some(p => String(p.id) === String(id));
-        if (!stillExists) delete next[id];
-      });
-      // Gán role mặc định nếu chưa có
-      normalized.forEach(p => {
-        if (!next[p.id]) next[p.id] = 'manufacture';
-      });
-      return next;
+    const normalized = (newSelected || []).map(item => {
+      const isGroup = item.type === 'group';
+      return {
+        id: item.id,
+        staff_id: item.id,
+        staff: {
+          full_name: item.name,
+          profile_image: isGroup ? IMAGES.groupUser : item.avatarUrl,
+        },
+        type: item.type || 'staff',
+      };
     });
 
-    // Chỉ cập nhật state local, không gọi API
-    setSelectedStaffs(normalized);
+    // Thêm vào đầu danh sách (select later, go first)
+    setSelectedStaffs(prev => {
+      const existingIds = new Set();
+      prev.forEach(p => {
+        if (p?.id) existingIds.add(String(p.id));
+        if (p?.staff_id) existingIds.add(String(p.staff_id));
+      });
+      const newItems = normalized.filter(item => !existingIds.has(String(item.id)));
+      return [...newItems, ...prev];
+    });
     setOpenCombo(false);
   };
 
-  const handleSelectRole = (personId, role) => {
-    setRoleByPerson(prev => ({ ...prev, [personId]: role }));
-    setOpenRoleId(null);
-    setAnchorRoleRect(null);
-    setRoleAnchorEl(null);
-  };
-
-  // Init roleByPerson từ dữ liệu API khi popup mở
+  // Init selectedStaffs từ dữ liệu API khi popup mở
   useEffect(() => {
-    if (!open || !listPomStages?.staffs) return;
+    if (!open || !listPomStages) return;
 
-    const prefillRoles = listPomStages.staffs.reduce((acc, cur) => {
-      acc[cur.id] = 'manufacture'; // Mặc định là 'manufacture'
-      return acc;
-    }, {});
-    setRoleByPerson(prefillRoles);
-    setSelectedStaffs(listPomStages.staffs || []);
+    const transformed = [];
+
+    // Transform staffs từ API
+    const staffsList = listPomStages?.staffs || [];
+    staffsList.forEach(staff => {
+      if (staff?.id && staff?.staff_id && staff?.staff) {
+        transformed.push({
+          id: String(staff.staff_id), // đồng bộ với id PersonSelector
+          staff_id: String(staff.staff_id),
+          staff: {
+            full_name: staff.staff?.full_name || '',
+            profile_image: staff.staff?.profile_image || null,
+          },
+          type: 'staff',
+        });
+      }
+    });
+
+    // Transform group_members từ API
+    const groupMembers = listPomStages?.group_members || [];
+    groupMembers.forEach(group => {
+      if (group?.id && group?.name) {
+        transformed.push({
+          id: `group_${group.id}`,
+          staff_id: `group_${group.id}`,
+          staff: {
+            full_name: group.name || '',
+            profile_image: IMAGES.groupUser,
+          },
+          type: 'group',
+        });
+      }
+    });
+
+    setSelectedStaffs(transformed);
   }, [listPomStages, open]);
+  console.log(selectedStaffs);
 
   const handleSave = () => {
-    // Phân quyền: chỉ cho phép role is_manager được lưu
-    // if (!canManageManagers) {
-    //   showToast('error', 'Bạn không có quyền thực hiện thao tác này');
-    //   return;
-    // }
+    // Tách staff_ids và group_ids
+    const staff_ids = [];
+    const group_ids = [];
 
-    // Lấy danh sách staff_ids từ dữ liệu API
-    const staff_ids = selectedStaffs.map(person => Number(person.staff_id)).filter(id => Number.isFinite(id));
+    selectedStaffs.forEach(person => {
+      const personId = String(person.staff_id || person.id || '');
+      const isGroup = person.type === 'group' || personId.startsWith('group_');
+
+      if (isGroup) {
+        // Là nhóm, lấy id từ format "group_${id}"
+        const groupId = personId.replace('group_', '');
+        const numId = Number(groupId);
+        if (Number.isFinite(numId)) {
+          group_ids.push(numId);
+        }
+      } else {
+        // Là nhân viên
+        const numId = Number(personId);
+        if (Number.isFinite(numId)) {
+          staff_ids.push(numId);
+        }
+      }
+    });
 
     const payload = {
       po_id: po_id,
       stage_id: stage_id,
-      staff_ids: staff_ids,
+      staff_ids,
+      ...(group_ids.length > 0 && { group_ids }), // Chỉ thêm group_ids nếu có
     };
 
     // Gọi mutation để save
     savePomStagesDetail(payload);
   };
 
-  useEffect(() => {
-    if (!openRoleId) return;
-    const handler = e => {
-      if (roleDropdownRef.current && !roleDropdownRef.current.contains(e.target)) {
-        setOpenRoleId(null);
-        setAnchorRoleRect(null);
-        setRoleAnchorEl(null);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [openRoleId]);
-
-  useEffect(() => {
-    if (!openRoleId || !roleAnchorEl) return;
-    const updatePos = () => {
-      const rect = roleAnchorEl.getBoundingClientRect();
-      setAnchorRoleRect({
-        top: rect.bottom + window.scrollY + 8,
-        left: rect.right - 240 + window.scrollX,
-      });
-    };
-    updatePos();
-    window.addEventListener('scroll', updatePos, true);
-    window.addEventListener('resize', updatePos);
-    return () => {
-      window.removeEventListener('scroll', updatePos, true);
-      window.removeEventListener('resize', updatePos);
-    };
-  }, [openRoleId, roleAnchorEl]);
-
   return (
     <PopupCustom title='' open={open || false} onClose={onClose} lockScroll={true} closeOnDocumentClick={false} className='popup-list-responsible-person' type='PopupResponsiblePerson'>
-      <div className='p-4 w-[554px] h-[319px]- bg-white rounded-[24px] relative flex flex-col gap-4 overflow-hidden'>
+      <div className='p-4 w-[554px] bg-white rounded-3xl relative flex flex-col gap-4 overflow-hidden'>
         {/* Header */}
         <div className='flex items-center justify-between'>
           <h2 className='text-[24px] font-bold leading-[20px] capitalize text-[#101828]'>Danh Sách Người Phụ Trách</h2>
@@ -203,9 +214,10 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
             onClose={() => setOpenCombo(false)}
             onConfirm={handleConfirmSelection}
             selected={selectedStaffs.map(item => ({
-              id: item.staff_id,
+              id: item.staff_id || item.id,
               name: item.staff?.full_name || '',
               avatarUrl: item.staff?.profile_image || '',
+              type: item.type || 'staff',
             }))}
             data={listStaffs}
             inlineConfirm
@@ -230,7 +242,7 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
         {/* Content */}
         <div className='flex-1 flex flex-col gap-1 overflow-hidden h-full'>
           {/* Table Header */}
-          <div className='flex items-center'>
+          <div className='flex items-center border-b border-[#E7EAEE] pb-1'>
             <div className='flex-1'>
               <span className='text-[14px] font-semibold leading-[20px] text-[#9295A4]'>Người phụ trách</span>
             </div>
@@ -238,8 +250,6 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
               <span className='text-[14px] text-end font-semibold leading-[20px] text-[#9295A4]'>Tác vụ</span>
             </div>
           </div>
-
-          <div className='border-b border-[#E7EAEE]'></div>
 
           {/* Danh sách người phụ trách */}
           <Customscrollbar className='max-h-[280px] overflow-y-auto'>
@@ -253,43 +263,17 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
             ) : (
               <div className='divide-y divide-[#E7EAEE]'>
                 {selectedStaffs.map(person => (
-                  <div key={person.id} className='flex items-center py-4 gap-4 hover:bg-[#F9FAFB] px-2'>
-                    <div className='flex-1 flex items-center gap-3'>
+                  <div key={person.id} className='flex items-center justify-between py-4 gap-4 hover:bg-[#F9FAFB] px-2'>
+                    <div className='flex items-center gap-3'>
                       <ResponsibleAvatar avatarUrl={person.staff?.profile_image} fullName={person.staff?.full_name} size={40} />
                       <span className='text-sm font-medium text-[#101828]'>{person.staff?.full_name}</span>
                     </div>
-                    <div className='flex-1 flex justify-end'>
-                      {/* <button
-                        onClick={() => {
-                          // Xoá tạm thời khỏi giao diện; API sẽ được gọi khi nhấn Lưu
-                          setSelectedStaffs(prev => prev.filter(person => person.id !== openRoleId));
-                          // Xoá role mapping
-                          setRoleByPerson(prev => {
-                            const clone = { ...prev };
-                            delete clone[openRoleId];
-                            return clone;
-                          });
-                          setOpenRoleId(null);
-                          setAnchorRoleRect(null);
-                          setRoleAnchorEl(null);
-                        }}
-                        className='w-fit flex items-center justify-between px-4 py-3 text-base text-[#C02A26] hover:bg-[#FDEEEE] transition-colors'
-                      >
-                        Xoá
-                      </button> */}
-                      <ButtonDelete
-                        onClick={() => {
-                          // Xoá tạm thời khỏi giao diện; API sẽ được gọi khi nhấn Lưu
-                          setSelectedStaffs(prev => prev.filter(p => String(p.id) !== String(person.id)));
-                          // Xoá role mapping
-                          setRoleByPerson(prev => {
-                            const clone = { ...prev };
-                            delete clone[person.id];
-                            return clone;
-                          });
-                        }}
-                      />
-                    </div>
+                    <ButtonDelete
+                      onClick={() => {
+                        // Xoá tạm thời khỏi giao diện; API sẽ được gọi khi nhấn Lưu
+                        setSelectedStaffs(prev => prev.filter(p => String(p.id) !== String(person.id)));
+                      }}
+                    />
                   </div>
                 ))}
               </div>
