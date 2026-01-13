@@ -259,7 +259,7 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
                       <span className='text-sm font-medium text-[#101828]'>{person.staff?.full_name}</span>
                     </div>
                     <div className='flex-1 flex justify-end'>
-                      <button
+                      {/* <button
                         onClick={() => {
                           // Xoá tạm thời khỏi giao diện; API sẽ được gọi khi nhấn Lưu
                           setSelectedStaffs(prev => prev.filter(person => person.id !== openRoleId));
@@ -276,10 +276,19 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
                         className='w-fit flex items-center justify-between px-4 py-3 text-base text-[#C02A26] hover:bg-[#FDEEEE] transition-colors'
                       >
                         Xoá
-                      </button>
-                      <ButtonDelete onClick={() => {
-                        setSelectedStaffs(prev => prev.filter(person => person.id !== person.id));
-                      }} />
+                      </button> */}
+                      <ButtonDelete
+                        onClick={() => {
+                          // Xoá tạm thời khỏi giao diện; API sẽ được gọi khi nhấn Lưu
+                          setSelectedStaffs(prev => prev.filter(p => String(p.id) !== String(person.id)));
+                          // Xoá role mapping
+                          setRoleByPerson(prev => {
+                            const clone = { ...prev };
+                            delete clone[person.id];
+                            return clone;
+                          });
+                        }}
+                      />
                     </div>
                   </div>
                 ))}

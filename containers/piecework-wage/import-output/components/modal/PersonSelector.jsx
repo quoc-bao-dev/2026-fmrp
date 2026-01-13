@@ -288,7 +288,7 @@ const PersonSelector = ({
               </div>
             </Customscrollbar>
             {inlineConfirm ? (
-              <div className='flex items-center justify-center w-full pt-2'>
+              <div className='flex items-center justify-center w-full pt-2 z-10'>
                 <button
                   className='w-full text-blue-fmrp bg-white border border-blue-fmrp px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-blue-fmrp/20 transition-colors truncate'
                   onClick={handleConfirmAll}
@@ -298,7 +298,7 @@ const PersonSelector = ({
               </div>
             ) : (
               !hideFooterActions && (
-              <div className='flex flex-col items-center justify-center gap-2 w-full'>
+              <div className='flex flex-col items-center justify-center gap-2 w-full z-10'>
                 <button
                   className='w-full bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
                   onClick={handleConfirmAll}
