@@ -38,7 +38,7 @@ const PopupListResponsiblePerson = props => {
 
   // Hook để save production order managers
   const { saveProductionOrderManagers, isLoading: isSaving } = useSaveProductionOrderManagers({
-    onSuccess: (response) => {
+    onSuccess: response => {
       // Đóng popup sau khi save thành công
       handleClose();
       // Trigger refetch detail (if provided)
@@ -46,9 +46,9 @@ const PopupListResponsiblePerson = props => {
       // Trigger refetch managers list (avatar/table) nếu có
       props?.onRefreshManagers?.();
     },
-    onError: (error) => {
+    onError: error => {
       console.error('Failed to save managers:', error);
-    }
+    },
   });
 
   const listStaffs = useMemo(() => {
@@ -64,7 +64,7 @@ const PopupListResponsiblePerson = props => {
   const roleOptions = [
     { label: 'Quản lý', value: 'manager' },
     { label: 'Phụ trách BTP & NVL', value: 'btp_nvl' },
-    { label: 'Phụ trách sản xuất', value: 'manufacture' }
+    { label: 'Phụ trách sản xuất', value: 'manufacture' },
   ];
 
   const handleClose = () => {
@@ -141,37 +141,33 @@ const PopupListResponsiblePerson = props => {
 
     // Lấy po_id từ production order detail
     const po_id = isStateProvider?.productionsOrders?.idDetailProductionOrder || 50;
-    
+
     // Transform dữ liệu từ selectedPeople và roleByPerson
     const items = selectedPeople.map(person => {
       const roleValue = roleByPerson[person.id] || '';
-      
+
       // Map role value thành các flags
       const is_manager = roleValue === 'manager' ? 1 : 0;
       const is_btp_nvl = roleValue === 'btp_nvl' ? 1 : 0;
       const is_manufacture = roleValue === 'manufacture' ? 1 : 0;
-      
+
       return {
         id: person.recordId ?? 0,
         staff_id: person.id,
         is_manager,
         is_btp_nvl,
-        is_manufacture
+        is_manufacture,
       };
     });
 
     const payload = {
       po_id,
-      items
+      items,
     };
 
     // Gọi mutation để save
     saveProductionOrderManagers(payload);
   };
-
-console.log('canManageManagers', props?.canManageManagers );
-
-
   useEffect(() => {
     if (!openRoleId) return;
     const handler = e => {

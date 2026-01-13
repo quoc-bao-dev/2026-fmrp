@@ -22,6 +22,7 @@ import useSetingServer from '@/hooks/useConfigNumber';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import useToast from '@/hooks/useToast';
 import { useToggle } from '@/hooks/useToggle';
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 import { routerExportToOther, routerWarehouseTransfer } from '@/routers/manufacture';
 import { formatMoment } from '@/utils/helpers/formatMoment';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
@@ -49,6 +50,7 @@ const ExportToOtherForm = props => {
 
   const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature();
   const statusExprired = useStatusExprired();
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties(dataSeting);
 
   const { isOpen, isKeyState, handleQueryId } = useToggle();
   const [onLoadingChild, sOnLoadingChild] = useState(false);
@@ -75,7 +77,10 @@ const ExportToOtherForm = props => {
   const { data: dataObjects = [] } = useObject(dataLang);
   const { data: dataListObject } = useObjectList(dataLang, idBranch, object);
   const { data: dataWarehouses } = useWarehouseComboboxByManufactureByBranch(idBranch, undefined);
-  const { data: dataItems } = useExportToOtherItems(idBranch, idExportWarehouse, searchItems);
+  const { data: dataItems } = useExportToOtherItems(idBranch, idExportWarehouse, searchItems, 1);
+  const filteredDataItems = dataItems?.filter(item => item?.e?.warehouseList?.length > 0) || [];
+  console.log('dataItems', dataItems);
+  console.log('filteredDataItems', filteredDataItems);
 
   useEffect(() => {
     router.query && sErrDate(false);
@@ -523,7 +528,7 @@ const ExportToOtherForm = props => {
             <div className='flex items-center justify-between flex-shrink-0 mb-4'>
               <h2 className='responsive-text-xl font-medium text-brand-color w-full'>Thông tin mặt hàng</h2>
               <SelectSearch
-                options={!idBranch || !idExportWarehouse || !object || !listObject ? [] : (dataItems || [])}
+                options={!idBranch || !idExportWarehouse || !object || !listObject ? [] : filteredDataItems}
                 placeholder='Tìm kiếm mặt hàng'
                 value={null}
                 multiple={false}
@@ -537,7 +542,7 @@ const ExportToOtherForm = props => {
                 formatOptionLabel={option => (
                   <div className='flex items-start p-1 cursor-pointer font-deca'>
                     <div className='flex items-center gap-2'>
-                      <img src={option.e?.images ?? '/icon/noimagelogo.png'} alt={option?.e?.name} className='size-16 object-cover rounded-md' />
+                      <img src={option.e?.images ?? '/icon/noimagelogo.png'} alt={option?.e?.name} className='size-16 object-cover rounded-md flex-shrink-0' />
                       <div className='flex flex-col gap-1 3xl:text-[10px] text-[9px] font-normal overflow-hidden w-full'>
                         <h3 className='font-semibold responsive-text-sm truncate text-black'>{option.e?.name}</h3>
                         <h5 className='text-blue-fmrp truncate'>
@@ -558,6 +563,21 @@ const ExportToOtherForm = props => {
                             ''
                           )}
                         </div>
+                        {isWarehousePropertiesEnabled && warehousePropertyLabels.length > 0 && option.e?.text_type === 'material' && (
+                          <div className='flex gap-1 flex-wrap'>
+                            {warehousePropertyLabels.map(({ key, label }) => {
+                              const value = option.e?.[key];
+                              if (!label) return null;
+                              return (
+                                <div key={key} className='flex gap-0.5 italic'>
+                                  <h6 className='responsive-text-xs text-[#667085] font-[500]'>{label}:</h6>
+                                  <h6 className='responsive-text-xs text-[#667085] font-[500]'>{value ?? '-'}</h6>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
                         {option.e?.text_type && (
                           <TagColorProduct dataLang={dataLang} dataKey={getTypeDataKey(option.e?.text_type)} name={option.e?.text_type} className='!px-1' textSize='text-[11px]' />
                         )}
@@ -603,7 +623,9 @@ const ExportToOtherForm = props => {
                                 <TagColorProduct dataLang={dataLang} dataKey={getTypeDataKey(e?.item?.e?.text_type)} name={e?.item?.e?.text_type} className='!px-1' textSize='text-[11px]' />
                               )}
                               <div className='flex flex-col italic'>
-                                {dataProductSerial.is_enable === '1' && e?.item?.e?.text_type !== 'material' && <div className='responsive-text-xs text-[#667085] font-[500]'>Serial: {e?.item?.e?.serial ? e?.item?.e?.serial : '-'}</div>}
+                                {dataProductSerial.is_enable === '1' && e?.item?.e?.text_type !== 'material' && (
+                                  <div className='responsive-text-xs text-[#667085] font-[500]'>Serial: {e?.item?.e?.serial ? e?.item?.e?.serial : '-'}</div>
+                                )}
                                 {dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' ? (
                                   <>
                                     <div className='responsive-text-xs text-[#667085] font-[500]'>Lot: {e?.item?.e?.lot ? e?.item?.e?.lot : '-'}</div>
@@ -613,6 +635,20 @@ const ExportToOtherForm = props => {
                                   </>
                                 ) : (
                                   ''
+                                )}
+                                {isWarehousePropertiesEnabled && warehousePropertyLabels.length > 0 && e?.item?.e?.text_type === 'material' && (
+                                  <>
+                                    {warehousePropertyLabels.map(({ key, label }) => {
+                                      const value = e?.item?.e?.[key];
+                                      if (!label) return null;
+                                      return (
+                                        <div key={key} className='flex gap-0.5'>
+                                          <h6 className='responsive-text-xs text-[#667085] font-[500]'>{label}:</h6>
+                                          <h6 className='responsive-text-xs text-[#667085] font-[500]'>{value ?? '-'}</h6>
+                                        </div>
+                                      );
+                                    })}
+                                  </>
                                 )}
                               </div>
                             </div>
@@ -625,13 +661,13 @@ const ExportToOtherForm = props => {
                           </button>
                         </div>
                       </div>
-                      <div className='col-span-14'>
-                        <div className='grid grid-cols-14 gap-2'>
+                      <div className='col-span-14 h-full flex flex-col justify-center'>
+                        <div className='grid grid-cols-14 gap-2 h-fit'>
                           {isFetching ? (
                             <Loading className='h-full col-span-14' color='#0f4f9e' />
                           ) : (
                             e?.child?.map((ce, index) => (
-                              <div key={ce?.id?.toString()} className='col-span-14 grid grid-cols-14 gap-2'>
+                              <div key={ce?.id?.toString()} className='col-span-14 grid grid-cols-14 gap-2 h-full'>
                                 <div className='col-span-4 flex flex-col justify-center h-fit'>
                                   <SelectComponent
                                     options={ce?.dataWarehouse}
