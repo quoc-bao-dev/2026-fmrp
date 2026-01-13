@@ -4,6 +4,7 @@ import PopupErrorInformation from '@/containers/manufacture/check-quality/compon
 import moment from 'moment/moment';
 import { useState } from 'react';
 import { PiCaretDownBold, PiCaretUpBold } from 'react-icons/pi';
+import AvatarStack from '../popup/AvatarStack';
 
 const steps = [
   { id: '189', name: 'Đóng gói', qty: 5, lot: 'LSXCT12031526', completed: false },
@@ -187,11 +188,22 @@ const ProductionSteps = ({ stages }) => {
                   const totalError = step?.purchase_items?.reduce((sum, pi) => sum + (Number(pi?.quantity_error) || 0), 0) || 0;
                   return (
                     <div className='flex w-full gap-3 items-center'>
-                      <div
-                        className={`text-sm-default font-medium 
-                                  ${step.active == '1' ? 'text-[#1FC583]' : step.begin_production == '1' ? 'text-[#141522]' : 'text-[#9295A4]'}`}
-                      >
-                        {step.stage_name}
+                      <div className='flex flex-col gap-1'>
+                        <div
+                          className={`text-sm-default font-medium 
+                                    ${step.active == '1' ? 'text-[#1FC583]' : step.begin_production == '1' ? 'text-[#141522]' : 'text-[#9295A4]'}`}
+                        >
+                          {step.stage_name}
+                        </div>
+                        <div className='w-fit'>
+                          <AvatarStack 
+                          people={[
+                            { id: '1', name: 'Nguyễn Văn A', avatarUrl: 'https://via.placeholder.com/150' }, 
+                            { id: '2', name: 'Nguyễn Văn B', avatarUrl: 'https://via.placeholder.com/150' },
+                            { id: '3', name: 'Nguyễn Văn C', avatarUrl: 'https://via.placeholder.com/150' },
+                          ]} 
+                            size={26} className='!p-1'/>
+                        </div>
                       </div>
 
                       {totalError > 0 && (

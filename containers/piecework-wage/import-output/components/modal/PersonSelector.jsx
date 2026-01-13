@@ -162,7 +162,8 @@ const PersonSelector = ({
       }
       lastActionRef.current = 'select';
       lastSelectedIdRef.current = person.id;
-      return [...prev, person];
+      // Đưa phần tử mới chọn lên đầu danh sách
+      return [person, ...prev];
     });
   };
 
@@ -241,7 +242,7 @@ const PersonSelector = ({
           >
             {/* Search */}
             <div className='w-full flex items-center gap-2'>
-              <div className='min-w-0 flex-1 flex items-center gap-3 pl-4 pr-1 py-1 border border-[#D0D5DD] rounded-[12px] bg-white focus-within:ring-2 focus-within:ring-[#1760B9]'>
+              <div className='min-w-0 flex-1 flex items-center gap-3 pl-2 pr-1 py-1 border border-[#D0D5DD] rounded-lg bg-white focus-within:ring-2 focus-within:ring-[#1760B9]'>
                 <input
                   value={search}
                   onChange={e => setSearch(e.target.value)}
@@ -260,9 +261,22 @@ const PersonSelector = ({
                 {filtered
                   .slice()
                   .sort((a, b) => {
-                    const aSel = isSelected(a.id) ? 1 : 0;
-                    const bSel = isSelected(b.id) ? 1 : 0;
-                    return bSel - aSel; // đưa item đã chọn lên đầu
+                    const aSelected = isSelected(a.id);
+                    const bSelected = isSelected(b.id);
+                    
+                    // Phần tử đã chọn lên đầu, chưa chọn ở sau
+                    if (aSelected && !bSelected) return -1;
+                    if (!aSelected && bSelected) return 1;
+                    
+                    // Nếu cả hai đều đã chọn, sắp xếp theo thứ tự trong localSelected (phần tử mới chọn lên trước)
+                    if (aSelected && bSelected) {
+                      const aIndex = localSelected.findIndex(item => item.id === a.id);
+                      const bIndex = localSelected.findIndex(item => item.id === b.id);
+                      return aIndex - bIndex;
+                    }
+                    
+                    // Cả hai đều chưa chọn, giữ nguyên thứ tự
+                    return 0;
                   })
                   .map(person => {
                     const active = isSelected(person.id);

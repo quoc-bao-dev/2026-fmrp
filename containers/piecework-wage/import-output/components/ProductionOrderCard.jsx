@@ -5,13 +5,40 @@ import { IMAGES } from '@/constants/images';
 import formatNumber from '@/utils/helpers/formatnumber';
 import { Tooltip } from 'antd';
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FaPause, FaPlay, FaStop } from 'react-icons/fa';
 import PopupCompleteOrder from './modal/PopupCompleteOrder';
 import PopupResponsiblePerson from './modal/PopupResponsiblePerson';
 
-const Avatar = ({ staffs_assigned, onClick }) => {
-  if (!staffs_assigned || staffs_assigned.length === 0) {
+const Avatar = ({ group_members_assigned, staffs_assigned, onClick }) => {
+  // Transform staffs_assigned và group_members_assigned thành format thống nhất
+  const avatarList = useMemo(() => {
+    const list = [];
+    
+    // Thêm nhân viên
+    (staffs_assigned || []).forEach(staff => {
+      list.push({
+        id: String(staff?.staffid),
+        name: staff?.full_name || '',
+        profile_image: staff?.profile_image || null,
+        type: 'staff',
+      });
+    });
+
+    // Thêm nhóm (transform từ cấu trúc group_members_assigned)
+    (group_members_assigned || []).forEach(group => {
+      list.push({
+        id: `group_${group?.id}`,
+        name: group?.name || '',
+        profile_image: null, // Nhóm không có profile_image, sẽ dùng icon nhóm
+        type: 'group',
+      });
+    });
+
+    return list;
+  }, [staffs_assigned, group_members_assigned]);
+
+  if (avatarList.length === 0) {
     return (
       <Tooltip title='Thêm người phụ trách' placement='top'>
         <button
@@ -26,7 +53,7 @@ const Avatar = ({ staffs_assigned, onClick }) => {
       </Tooltip>
     );
   }
-  const isSingle = staffs_assigned.length === 1;
+  const isSingle = avatarList.length === 1;
 
   return (
     <div
@@ -37,32 +64,41 @@ const Avatar = ({ staffs_assigned, onClick }) => {
       }}
     >
       <div className='p-1 flex items-center gap-1 rounded-full bg-[#D6EAFE]'>
-        {staffs_assigned.map((staff, index) => {
+        {avatarList.map((item, index) => {
           const isFirst = index === 0;
-          const hasImage = staff?.profile_image && staff.profile_image.trim() !== '';
-          const staffName = staff?.full_name || 'Chưa có tên';
+          const hasImage = item?.profile_image && item.profile_image.trim() !== '';
+          const itemName = item?.name || 'Chưa có tên';
+          const isGroup = item?.type === 'group';
 
           return (
-            <Tooltip key={staff?.staffid || index} title={staffName} placement='top'>
+            <Tooltip key={item?.id || index} title={itemName} placement='top'>
               {hasImage ? (
                 <Image
-                  src={staff.profile_image}
-                  alt={staffName}
-                  width={30}
-                  height={30}
+                  src={item.profile_image}
+                  alt={itemName}
+                  width={100}
+                  height={100}
+                  className={`size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] ${isFirst ? '' : '-ml-3'} z-1 cursor-pointer`}
+                />
+              ) : isGroup ? (
+                <Image
+                  src={IMAGES.groupUser}
+                  alt={itemName}
+                  width={100}
+                  height={100}
                   className={`size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] ${isFirst ? '' : '-ml-3'} z-1 cursor-pointer`}
                 />
               ) : (
                 <div className={`size-[30px] rounded-full overflow-hidden border-2 border-[#549AE8] flex items-center justify-center bg-white ${isFirst ? '' : '-ml-3'} z-1 cursor-pointer`}>
-                  <AvatarText fullName={staffName} className='w-full h-full text-base flex items-center justify-center' />
+                  <AvatarText fullName={itemName} className='w-full h-full text-base flex items-center justify-center' />
                 </div>
               )}
             </Tooltip>
           );
         })}
         {isSingle && (
-          <span className='responsive-text-sm font-medium text-[#101828] truncate max-w-[160px]' title={staffs_assigned[0]?.full_name || ''}>
-            {staffs_assigned[0]?.full_name || ''}
+          <span className='responsive-text-sm mr-1 font-medium text-[#101828] truncate max-w-[160px]' title={avatarList[0]?.name || ''}>
+            {avatarList[0]?.name || ''}
           </span>
         )}
       </div>
@@ -178,10 +214,6 @@ const formatTime = seconds => {
 };
 
 const ProductionOrderCard = ({
-  start_date = null,
-  end_date = null,
-  search = '',
-  borderColor = '#EEB600',
   status = 'idle',
   time = '00 : 00 : 00',
   po,
@@ -199,6 +231,31 @@ const ProductionOrderCard = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showResponsiblePersonPopup, setShowResponsiblePersonPopup] = useState(false);
   const intervalRef = useRef(null);
+
+  // Tạo màu dựa trên số cuối của reference_no (0-9)
+  const borderColor = useMemo(() => {
+    const colors = [
+      '#0375F3', // 0 - Màu xanh dương
+      '#1A7526', // 1 - Màu xanh lá
+      '#FF641C', // 2 - Màu cam
+      '#EEB600', // 3 - Màu vàng
+      '#9C27B0', // 4 - Màu tím
+      '#E91E63', // 5 - Màu hồng
+      '#00BCD4', // 6 - Màu cyan
+      '#F44336', // 7 - Màu đỏ
+      '#795548', // 8 - Màu nâu
+      '#607D8B', // 9 - Màu xám xanh
+    ];
+    
+    // Lấy số cuối của reference_no
+    const referenceNo = (po?.reference_no || po?.id || '').toString();
+    const lastDigit = referenceNo.match(/\d+$/)?.[0]?.slice(-1);
+    
+    // Nếu có số cuối, dùng nó để chọn màu (0-9), nếu không dùng màu đầu tiên
+    const colorIndex = lastDigit ? parseInt(lastDigit, 10) : 0;
+    
+    return colors[colorIndex];
+  }, [po?.reference_no, po?.id]);
 
   const clearTimer = () => {
     if (intervalRef.current) {
@@ -336,7 +393,7 @@ const ProductionOrderCard = ({
         forceConfirm={true}
       />
       <PopupCompleteOrder stage_id={stage_id} stage_name={stage_name} po={po} isOpen={showCompletePopup} onClose={() => setShowCompletePopup(false)} />
-      <Avatar staffs_assigned={po?.staffs_assigned || []} onClick={() => setShowResponsiblePersonPopup(true)} />
+      <Avatar group_members_assigned={po?.group_members_assigned || []} staffs_assigned={po?.staffs_assigned || []} onClick={() => setShowResponsiblePersonPopup(true)} />
       <PopupResponsiblePerson
         open={showResponsiblePersonPopup}
         onClose={() => setShowResponsiblePersonPopup(false)}
@@ -344,9 +401,6 @@ const ProductionOrderCard = ({
         canManageManagers={canManageManagers}
         po_id={po?.id}
         stage_id={stage_id}
-        start_date={start_date}
-        end_date={end_date}
-        search={search}
       />
 
       <div className='px-1 flex items-center gap-3 w-1/2'>
@@ -361,7 +415,7 @@ const ProductionOrderCard = ({
       </div>
       <div className='flex flex-col gap-1 w-full'>
         {items.slice(0, visibleItemsCount).map((item, index) => (
-          <div key={index} className='p-1 flex items-center gap-2 w-full'>
+          <div key={index} className='p-1 flex items-center gap-2 w-full hover:bg-[#E3F0FF] rounded-lg'>
             <Image
               src={item?.images || IMAGES.noImage}
               alt={item?.item_name || 'default'}
