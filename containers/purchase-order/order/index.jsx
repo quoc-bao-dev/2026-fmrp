@@ -623,11 +623,11 @@ const Order = (props) => {
                                                         options={[
                                                             { 
                                                                 label: "Chưa duyệt", 
-                                                                targetStatus: "0" 
+                                                                targetStatus: "0" // 0 = Chưa duyệt
                                                             },
                                                             { 
                                                                 label: "Đã duyệt", 
-                                                                targetStatus: "1" 
+                                                                targetStatus: "1" // Khác 0 = Đã duyệt
                                                             }
                                                         ]}
                                                     />
