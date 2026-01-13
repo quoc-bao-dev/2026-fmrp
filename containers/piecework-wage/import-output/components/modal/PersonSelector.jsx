@@ -255,7 +255,7 @@ const PersonSelector = ({
             </div>
 
             {/* List */}
-            <Customscrollbar className='max-h-[328px]'>
+            <Customscrollbar className='flex-1 min-h-0'>
               <div className='space-y-1'>
                 {filtered
                   .slice()

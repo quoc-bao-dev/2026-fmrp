@@ -1,3 +1,4 @@
+import { ButtonDelete } from '@/components/UI/button/buttonDelete';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import Loading from '@/components/UI/loading/loading';
 import PopupCustom from '@/components/UI/popup';
@@ -9,7 +10,7 @@ import ResponsibleAvatar from '@/containers/manufacture/productions-orders/compo
 import PersonSelector from '@/containers/piecework-wage/import-output/components/modal/PersonSelector';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import useToast from '@/hooks/useToast';
-import { useListPomStages, useSavePomStages, useSavePomStagesDetail } from '@/managers/api/piecework-wage/useImportOutput';
+import { useListPomStages, useSavePomStagesDetail } from '@/managers/api/piecework-wage/useImportOutput';
 import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
@@ -234,7 +235,7 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
               <span className='text-[14px] font-semibold leading-[20px] text-[#9295A4]'>Người phụ trách</span>
             </div>
             <div className='flex-1 text-end '>
-              <span className='text-[14px] text-end font-semibold leading-[20px] text-[#9295A4]'>Vai trò phụ trách</span>
+              <span className='text-[14px] text-end font-semibold leading-[20px] text-[#9295A4]'>Tác vụ</span>
             </div>
           </div>
 
@@ -258,33 +259,27 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
                       <span className='text-sm font-medium text-[#101828]'>{person.staff?.full_name}</span>
                     </div>
                     <div className='flex-1 flex justify-end'>
-                      <div className='relative'>
-                        {canManageManagers === false ? (
-                          <div className='flex items-center gap-2 px-4 py-2 rounded-[8px] border text-sm font-medium bg-[#F9FAFB] border-[#EBEDF1] text-[#4B5563] cursor-default'>
-                            {roleOptions.find(opt => opt.value === roleByPerson[person.id])?.label || 'Chưa gán vai trò'}
-                          </div>
-                        ) : (
-                          <button
-                            onClick={e => {
-                              setRoleAnchorEl(e.currentTarget);
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              setAnchorRoleRect({
-                                top: rect.bottom + window.scrollY + 8,
-                                left: rect.right - 240 + window.scrollX,
-                              });
-                              setOpenRoleId(prev => (prev === person.id ? null : person.id));
-                            }}
-                            className={`flex rounded-lg items-center gap-2 px-4 py-2 border text-sm font-medium transition-colors ${
-                              openRoleId === person.id
-                                ? 'bg-[#EBF5FF] border-[#3276FA] text-[#1F3A63]'
-                                : 'bg-white border-[#EBEDF1] text-[#4B5563] hover:bg-[#EBF5FF] hover:border-[#3276FA] hover:text-[#1F3A63]'
-                            }`}
-                          >
-                            {roleOptions.find(opt => opt.value === roleByPerson[person.id])?.label || 'Chọn vai trò'}
-                            <CaretDownIcon className={`size-4 transition-transform duration-200 ${openRoleId === person.id ? 'rotate-180 text-[#3276FA]' : 'text-[#8E94A4]'}`} />
-                          </button>
-                        )}
-                      </div>
+                      <button
+                        onClick={() => {
+                          // Xoá tạm thời khỏi giao diện; API sẽ được gọi khi nhấn Lưu
+                          setSelectedStaffs(prev => prev.filter(person => person.id !== openRoleId));
+                          // Xoá role mapping
+                          setRoleByPerson(prev => {
+                            const clone = { ...prev };
+                            delete clone[openRoleId];
+                            return clone;
+                          });
+                          setOpenRoleId(null);
+                          setAnchorRoleRect(null);
+                          setRoleAnchorEl(null);
+                        }}
+                        className='w-fit flex items-center justify-between px-4 py-3 text-base text-[#C02A26] hover:bg-[#FDEEEE] transition-colors'
+                      >
+                        Xoá
+                      </button>
+                      <ButtonDelete onClick={() => {
+                        setSelectedStaffs(prev => prev.filter(person => person.id !== person.id));
+                      }} />
                     </div>
                   </div>
                 ))}
@@ -320,58 +315,6 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
           )}
         </div>
       </div>
-      {openRoleId &&
-        anchorRoleRect &&
-        createPortal(
-          <div className='fixed inset-0 z-[1600] pointer-events-none'>
-            <div
-              ref={roleDropdownRef}
-              className='pointer-events-auto w-60 bg-white border border-[#EBEDF1] rounded-[16px] shadow-lg overflow-hidden'
-              style={{
-                position: 'absolute',
-                top: anchorRoleRect.top,
-                left: anchorRoleRect.left,
-              }}
-            >
-              {roleOptions.map(option => {
-                const active = roleByPerson[openRoleId] === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    onClick={() => handleSelectRole(openRoleId, option.value)}
-                    className={`w-full flex items-center justify-between px-4 py-3 text-base transition-colors ${active ? 'bg-[#EBF5FF] text-[#1F3A63]' : 'text-[#101828] hover:bg-[#F4F6FA]'}`}
-                  >
-                    <span>{option.label}</span>
-                    {active && (
-                      <svg width='16' height='12' viewBox='0 0 16 12' fill='none' xmlns='http://www.w3.org/2000/svg'>
-                        <path d='M5.99973 9.1998L1.79973 4.9998L0.399727 6.3998L5.99973 11.9998L15.9997 1.9998L14.5997 0.599804L5.99973 9.1998Z' fill='#3276FA' />
-                      </svg>
-                    )}
-                  </button>
-                );
-              })}
-              <button
-                onClick={() => {
-                  // Xoá tạm thời khỏi giao diện; API sẽ được gọi khi nhấn Lưu
-                  setSelectedStaffs(prev => prev.filter(person => person.id !== openRoleId));
-                  // Xoá role mapping
-                  setRoleByPerson(prev => {
-                    const clone = { ...prev };
-                    delete clone[openRoleId];
-                    return clone;
-                  });
-                  setOpenRoleId(null);
-                  setAnchorRoleRect(null);
-                  setRoleAnchorEl(null);
-                }}
-                className='w-full flex items-center justify-between px-4 py-3 text-base text-[#C02A26] hover:bg-[#FDEEEE] transition-colors'
-              >
-                Xoá
-              </button>
-            </div>
-          </div>,
-          document.body
-        )}
     </PopupCustom>
   );
 };
