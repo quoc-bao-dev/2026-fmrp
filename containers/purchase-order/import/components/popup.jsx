@@ -56,7 +56,7 @@ const PopupDetail = props => {
         classNameBtn={props?.className}
       >
         <div className='flex items-center space-x-4 my-2 border-[#E7EAEE] border-opacity-70 border-b-[1px]'></div>
-        <div className=' space-x-5 3xl:w-[1250px] 2xl:w-[1100px] w-[1050px] 3xl:h-auto  2xl:h-auto xl:h-[540px] h-[500px] '>
+        <div className=' space-x-5 3xl:w-[1250px] 2xl:w-[1100px] w-[1050px]'>
           <div>
             <div className='3xl:w-[1250px] 2xl:w-[1100px] w-[1050px]'>
               <div className='min:h-[170px] h-[72%] max:h-[100px]  customsroll overflow-auto pb-1 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100'>
