@@ -14,7 +14,7 @@ const Avatar = ({ group_members_assigned, staffs_assigned, onClick }) => {
   // Transform staffs_assigned và group_members_assigned thành format thống nhất
   const avatarList = useMemo(() => {
     const list = [];
-    
+
     // Thêm nhân viên
     (staffs_assigned || []).forEach(staff => {
       list.push({
@@ -54,6 +54,9 @@ const Avatar = ({ group_members_assigned, staffs_assigned, onClick }) => {
     );
   }
   const isSingle = avatarList.length === 1;
+  const maxDisplay = 10;
+  const displayAvatars = avatarList.slice(0, maxDisplay);
+  const remainingCount = avatarList.length > maxDisplay ? avatarList.length - maxDisplay : 0;
 
   return (
     <div
@@ -64,7 +67,7 @@ const Avatar = ({ group_members_assigned, staffs_assigned, onClick }) => {
       }}
     >
       <div className='p-1 flex items-center gap-1 rounded-full bg-[#D6EAFE]'>
-        {avatarList.map((item, index) => {
+        {displayAvatars.map((item, index) => {
           const isFirst = index === 0;
           const hasImage = item?.profile_image && item.profile_image.trim() !== '';
           const itemName = item?.name || 'Chưa có tên';
@@ -96,6 +99,15 @@ const Avatar = ({ group_members_assigned, staffs_assigned, onClick }) => {
             </Tooltip>
           );
         })}
+        {remainingCount > 0 && (
+          <Tooltip title={`Còn ${remainingCount} người khác`} placement='top'>
+            <div
+              className={`size-[30px] rounded-full overflow-hidden border-2 border-[#549AE8] flex items-center justify-center bg-[#549AE8] text-white font-semibold responsive-text-xs -ml-3 z-1 cursor-pointer`}
+            >
+              +{remainingCount}
+            </div>
+          </Tooltip>
+        )}
         {isSingle && (
           <span className='responsive-text-sm mr-1 font-medium text-[#101828] truncate max-w-[160px]' title={avatarList[0]?.name || ''}>
             {avatarList[0]?.name || ''}
@@ -213,17 +225,7 @@ const formatTime = seconds => {
   return `${pad(h)} : ${pad(m)} : ${pad(s)}`;
 };
 
-const ProductionOrderCard = ({
-  status = 'idle',
-  time = '00 : 00 : 00',
-  po,
-  stage_id,
-  stage_name,
-  isSelectMode = false,
-  isSelected = false,
-  onToggleSelect,
-  canManageManagers,
-}) => {
+const ProductionOrderCard = ({ status = 'idle', time = '00 : 00 : 00', po, stage_id, stage_name, isSelectMode = false, isSelected = false, onToggleSelect, canManageManagers }) => {
   const [statusState, setStatusState] = useState(status);
   const [elapsedSeconds, setElapsedSeconds] = useState(parseTimeString(time));
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
@@ -246,14 +248,14 @@ const ProductionOrderCard = ({
       '#795548', // 8 - Màu nâu
       '#607D8B', // 9 - Màu xám xanh
     ];
-    
+
     // Lấy số cuối của reference_no
     const referenceNo = (po?.reference_no || po?.id || '').toString();
     const lastDigit = referenceNo.match(/\d+$/)?.[0]?.slice(-1);
-    
+
     // Nếu có số cuối, dùng nó để chọn màu (0-9), nếu không dùng màu đầu tiên
     const colorIndex = lastDigit ? parseInt(lastDigit, 10) : 0;
-    
+
     return colors[colorIndex];
   }, [po?.reference_no, po?.id]);
 
@@ -367,7 +369,7 @@ const ProductionOrderCard = ({
             {po?.reference_no || '---'}
           </h4>
           {hasMoreOrders ? (
-            <Tooltip title={allOrdersText} placement='top' overlayClassName='order-tooltip'>
+            <Tooltip title={allOrdersText} placement='top' classNames={{ root: 'order-tooltip' }}>
               {orderTextContent}
             </Tooltip>
           ) : (
