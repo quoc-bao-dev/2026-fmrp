@@ -197,11 +197,11 @@ const ProductionSteps = ({ stages }) => {
                         </div>
                         <div className='w-fit'>
                           <AvatarStack 
-                          people={[
-                            { id: '1', name: 'Nguyễn Văn A', avatarUrl: 'https://via.placeholder.com/150' }, 
-                            { id: '2', name: 'Nguyễn Văn B', avatarUrl: 'https://via.placeholder.com/150' },
-                            { id: '3', name: 'Nguyễn Văn C', avatarUrl: 'https://via.placeholder.com/150' },
-                          ]} 
+                            people={[
+                              { id: '1', name: 'Nguyễn Văn A', avatarUrl: 'https://via.placeholder.com/150' }, 
+                              { id: '2', name: 'Nguyễn Văn B', avatarUrl: 'https://via.placeholder.com/150' },
+                              { id: '3', name: 'Nguyễn Văn C', avatarUrl: 'https://via.placeholder.com/150' },
+                            ]} 
                             size={26} className='!p-1'/>
                         </div>
                       </div>
@@ -293,7 +293,7 @@ const ProductionSteps = ({ stages }) => {
                 </div>
             )} */}
 
-      {showAll && stepFake.length > 2 && (
+      {showAll && (
         <div
           className='flex items-center justify-center gap-2 cursor-pointer text-[#1FC583] text-center 3xl:text-sm xl:text-xs lg:text-[11px] text-xs 3xl:mt-2 mt-0.5'
           onClick={() => setShowAll(false)}

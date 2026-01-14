@@ -169,9 +169,6 @@ const PopupListResponsiblePerson = props => {
     saveProductionOrderManagers(payload);
   };
 
-console.log('canManageManagers', props?.canManageManagers );
-
-
   useEffect(() => {
     if (!openRoleId) return;
     const handler = e => {

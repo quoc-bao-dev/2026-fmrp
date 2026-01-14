@@ -101,7 +101,7 @@ const ProcessStatusDropdown = ({ processName }) => {
   );
 
   return (
-    <Popover content={dropdownContent} placement='bottomRight' trigger='click' overlayClassName='process-status-dropdown' open={open} onOpenChange={setOpen}>
+    <Popover content={dropdownContent} placement='bottomRight' trigger='click' classNames={{ root: "process-status-dropdown" }} open={open} onOpenChange={setOpen}>
       <button className={`p-1 rounded-lg transition-all duration-300 ${open ? 'bg-[#667085]/30 text-white' : 'bg-transparent hover:bg-[#667085]/30 text-[#667085] hover:text-white'}`}>
         <ThreeDotIcon className='size-5' />
       </button>

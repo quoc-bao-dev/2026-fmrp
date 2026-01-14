@@ -20,7 +20,7 @@ import { useDebounce } from 'use-debounce';
 import StageColumn from './components/StageColumn';
 
 const ImportOutput = () => {
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedEmployee, setSelectedEmployee] = useState([]);
   const [searchStaff, setSearchStaff] = useState('');
   const [selectedProcess, setSelectedProcess] = useState(null);
   const [searchProcess, setSearchProcess] = useState('');
@@ -38,7 +38,12 @@ const ImportOutput = () => {
   const filterParams = {
     start_date: dateFilter.dateStart ? moment(dateFilter.dateStart).format('DD/MM/YYYY') : null,
     end_date: dateFilter.dateEnd ? moment(dateFilter.dateEnd).format('DD/MM/YYYY') : null,
-    staff_id: selectedEmployee?.value,
+    ...(selectedEmployee?.value
+      ? selectedEmployee.value.startsWith('group_')
+        ? { group_member_ids: [selectedEmployee.value.replace('group_', '')] }
+        : { staff_ids: [selectedEmployee.value] }
+      : {}
+    ),
     stage_ids: selectedProcess?.value,
     search: debouncedSearchReferenceNo || '',
   };
@@ -52,25 +57,6 @@ const ImportOutput = () => {
 
   // Lấy dữ liệu công đoạn từ API (đã được filter từ server)
   const stagesList = listStages?.stages || [];
-
-  // Dữ liệu ảo cho nhóm
-  const mockGroups = [
-    {
-      id: 1,
-      name: 'Nhóm may',
-      code: 'NM001',
-    },
-    {
-      id: 2,
-      name: 'Nhóm cắt',
-      code: 'NC001',
-    },
-    {
-      id: 3,
-      name: 'Nhóm thêu',
-      code: 'NT001',
-    },
-  ];
 
   // Format options cho SelectSearchableRadio với filter theo search
   const employeeOptions = useMemo(() => {
