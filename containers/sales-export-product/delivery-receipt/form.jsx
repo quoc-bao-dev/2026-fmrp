@@ -250,7 +250,11 @@ const DeliveryReceiptForm = (props) => {
           const warehouseList = e?.item?.warehouseList || []
 
           const child = e?.child.map((ce) => {
-            const warehouse = warehouseList?.find((item) => item.id === ce?.warehouse_use_id)
+            // Thêm thuộc tính nên id thay đổi
+            const warehouse =
+              warehouseList?.find((item) => item?.id === ce?.warehouse_use_id) ||
+              warehouseList?.find((item) => item?.id && ce?.warehouse_use_id && item.id.startsWith(ce.warehouse_use_id)) ||
+              warehouseList?.find((item) => item?.id && ce?.warehouse_use_id && ce.warehouse_use_id.startsWith(item.id))
 
             return {
               id: Number(ce?.id),
@@ -260,15 +264,21 @@ const DeliveryReceiptForm = (props) => {
                 (e.item?.text_type == 'material' && dataMaterialExpiry?.is_enable == '0' && true) ||
                 (e.item?.text_type == 'products' && dataProductExpiry?.is_enable == '1' && false) ||
                 (e.item?.text_type == 'products' && dataProductExpiry?.is_enable == '0' && true),
-              warehouse: {
-                label: warehouse?.location_name,
-                value: warehouse?.id,
-                warehouse_name: warehouse?.warehouse_name,
-                qty: warehouse?.quantity,
-                lot: warehouse?.lot,
-                date: warehouse?.expiration_date,
-                serial: warehouse?.serial,
-              },
+              // Nếu không match được kho thì để null để validate bắt lỗi đúng (warehouse === null)
+              warehouse: warehouse
+                ? {
+                    label: warehouse?.location_name,
+                    value: warehouse?.id,
+                    warehouse_name: warehouse?.warehouse_name,
+                    qty: warehouse?.quantity,
+                    lot: warehouse?.lot,
+                    date: warehouse?.expiration_date,
+                    serial: warehouse?.serial,
+                    value_1: warehouse?.value_1,
+                    value_2: warehouse?.value_2,
+                    value_3: warehouse?.value_3,
+                  }
+                : null,
               dataWarehouse: e?.item?.warehouseList?.map((s) => ({
                 label: s?.location_name,
                 value: s?.id,
@@ -277,6 +287,9 @@ const DeliveryReceiptForm = (props) => {
                 lot: s?.lot,
                 date: s?.expiration_date,
                 serial: s?.serial,
+                value_1: s?.value_1,
+                value_2: s?.value_2,
+                value_3: s?.value_3,
               })),
               quantityStock: e?.item?.quantity,
               quantityDelive: e?.item?.quantity_delivery,
@@ -605,6 +618,9 @@ const DeliveryReceiptForm = (props) => {
         lot: e?.lot,
         date: e?.expiration_date,
         serial: e?.serial,
+        value_1: e?.value_1,
+        value_2: e?.value_2,
+        value_3: e?.value_3,
       })),
       unit: value?.e?.unit_name,
       price: Number(value?.e?.price),
@@ -1126,7 +1142,7 @@ const DeliveryReceiptForm = (props) => {
                               )}
                             </div>
                             {/* Body */}
-                            <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.6fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,0.2fr)] gap-4 2xl:gap-5 items-center">
+                            <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.6fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,0.2fr)] gap-2 2xl:gap-3 items-center">
                               {e?.child?.map((ce) => {
                                 const discountedPrice = formatMoney(
                                   Number(ce?.price) * (1 - Number(ce?.discount) / 100)
@@ -1143,6 +1159,7 @@ const DeliveryReceiptForm = (props) => {
                                         onChange={(value) => _HandleChangeChild(e?.id, ce?.id, 'warehouse', value)}
                                         formatNumber={formatNumber}
                                         isError={errWarehouse}
+                                        showProperties={true}
                                       />
                                       {(
                                         errWarehouse && (
@@ -1156,7 +1173,7 @@ const DeliveryReceiptForm = (props) => {
                                     {/* Số lượng */}
                                     <div className="flex items-center justify-center">
                                       <div
-                                        className={`relative flex items-center justify-center 3xl:p-2 xl:p-[2px] p-[1px] border rounded-3xl ${
+                                        className={`relative flex items-center justify-center 3xl:p-1 xl:p-[2px] p-[1px] border rounded-3xl ${
                                           errQuantity &&
                                           (ce?.quantity == null || ce?.quantity == '' || ce?.quantity == 0)
                                             ? 'border-red-500'
@@ -1178,7 +1195,7 @@ const DeliveryReceiptForm = (props) => {
                                           className="2xl:scale-100 xl:scale-90 scale-75 font-bold flex items-center justify-center p-0.5 bg-primary-05 hover:bg-blue-fmrp/50 rounded-full"
                                           onClick={_HandleChangeChild.bind(this, e?.id, ce?.id, 'decrease')}
                                         >
-                                          <Minus size="16" className="scale-75 2xl:scale-100 xl:scale-90" />
+                                          <Minus size="20" className="scale-75 2xl:scale-100 xl:scale-90" />
                                         </button>
                                         <InPutNumericFormat
                                           onValueChange={_HandleChangeChild.bind(this, e?.id, ce?.id, 'quantity')}
@@ -1214,7 +1231,7 @@ const DeliveryReceiptForm = (props) => {
                                           className="2xl:scale-100 xl:scale-90 scale-75 font-bold flex items-center justify-center p-0.5 bg-primary-05 hover:bg-blue-fmrp/50 rounded-full"
                                           onClick={_HandleChangeChild.bind(this, e?.id, ce?.id, 'increase')}
                                         >
-                                          <Add size="16" className="scale-75 2xl:scale-100 xl:scale-90" />
+                                          <Add size="20" className="scale-75 2xl:scale-100 xl:scale-90" />
                                         </button>
                                         <div className="absolute -top-4 -right-2 p-1 cursor-pointer">
                                           <PopupParent

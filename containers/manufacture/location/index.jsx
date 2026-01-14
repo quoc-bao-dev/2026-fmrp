@@ -81,7 +81,7 @@ const Location = (props) => {
     const { data, isFetching, isLoading, refetch } = useLocationList(params)
 
     // danh sách kho hàng
-    const { data: listWarehouse } = useWarehouseList(params)
+    const { data: listWarehouse } = useWarehouseList()
 
     // convert mảng danh sách kho hàng
     const dataWarehouse = listWarehouse?.rResult?.map((e) => ({ label: e.name, value: e.id })) || [];
