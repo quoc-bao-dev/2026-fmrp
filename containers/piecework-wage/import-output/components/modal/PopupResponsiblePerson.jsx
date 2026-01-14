@@ -153,7 +153,6 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
 
     setSelectedStaffs(transformed);
   }, [listPomStages, open]);
-  console.log(selectedStaffs);
 
   const handleSave = () => {
     // Tách staff_ids và group_ids
@@ -262,8 +261,8 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
               </div>
             ) : (
               <div className='divide-y divide-[#E7EAEE]'>
-                {selectedStaffs.map(person => (
-                  <div key={person.id} className='flex items-center justify-between py-4 gap-4 hover:bg-[#F9FAFB] px-2'>
+                {selectedStaffs.map((person, index) => (
+                  <div key={`${person.id}_${index}`} className='flex items-center justify-between py-4 gap-4 hover:bg-[#F9FAFB] px-2'>
                     <div className='flex items-center gap-3'>
                       <ResponsibleAvatar avatarUrl={person.staff?.profile_image} fullName={person.staff?.full_name} size={40} />
                       <span className='text-sm font-medium text-[#101828]'>{person.staff?.full_name}</span>
