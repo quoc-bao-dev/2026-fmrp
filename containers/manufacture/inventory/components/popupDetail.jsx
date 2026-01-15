@@ -186,16 +186,16 @@ const PopupDetail = props => {
                                     </div>
                                     {/* Thuộc tính kho - chỉ hiển thị cho nguyên vật liệu */}
                                     {showWarehouseAttributes && (e?.item?.text_type === 'material' || e?.text_type === 'material') && warehousePropertyLabels.length > 0 && (
-                                      <div className='flex flex-col italic'>
+                                      <div className='flex flex-col italic gap-0.5'>
                                         {warehousePropertyLabels.map(({ key, label }) => {
                                           const value = e?.[key] ?? e?.item?.[key];
                                           const valueString = value !== undefined && value !== null && value !== '' ? String(value) : '-';
                                           // Nếu cả label và value đều rỗng thì bỏ qua
                                           if (!label) return null;
                                           return (
-                                            <div key={key} className='flex items-center gap-1'>
-                                              <span className='text-[11px] font-medium text-gray-700 truncate'>{label}:</span>
-                                              <span className='text-[11px] text-gray-900 truncate max-w-[120px]'>{valueString}</span>
+                                            <div key={key} className='flex items-baseline gap-1'>
+                                              <span className='text-[11px] font-medium text-gray-700 whitespace-nowrap'>{label}:</span>
+                                              <span className='text-[11px] text-gray-900 break-words'>{valueString}</span>
                                             </div>
                                           );
                                         })}
