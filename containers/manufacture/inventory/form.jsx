@@ -1,5 +1,5 @@
-import apiInventory from '@/Api/apiManufacture/warehouse/inventory/apiInventory';
 import apiDashboard from '@/Api/apiDashboard/apiDashboard';
+import apiInventory from '@/Api/apiManufacture/warehouse/inventory/apiInventory';
 import ButtonDelete from '@/components/common/orderManagement/ButtonDelete';
 import { DocumentDate, DocumentNumber } from '@/components/common/orderManagement/GeneralInfo';
 import OrderFormTabs from '@/components/common/orderManagement/OrderFormTabs';
@@ -33,11 +33,127 @@ import { Add } from 'iconsax-react';
 import moment from 'moment';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { PiMapPinLight } from 'react-icons/pi';
+import { useDispatch } from 'react-redux';
 import { useDebounce } from 'use-debounce';
 import PopupImportExcel from './components/popupImportExcel';
+import ReactDOM from 'react-dom';
+
+// Component input với dropdown gợi ý cho warehouse properties
+const WarehousePropertyInput = ({ label, value, suggestions, hasSuggestions, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const inputRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target) && inputRef.current && !inputRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isOpen]);
+
+  // Cập nhật lại vị trí dropdown khi scroll / resize để luôn bám theo input
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const updatePosition = () => {
+      if (!inputRef.current) return;
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width || 100,
+      });
+    };
+
+    updatePosition();
+
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isOpen]);
+
+  const handleInputClick = () => {
+    if (hasSuggestions && inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width || 100,
+      });
+      setIsOpen(true);
+    } else {
+      setIsOpen(false);
+    }
+  };
+
+  const handleSelectSuggestion = suggestion => {
+    onChange(suggestion);
+    setIsOpen(false);
+  };
+
+  const portalTarget = typeof document !== 'undefined' ? document.body : null;
+
+  return (
+    <div className='flex justify-between items-center gap-1 relative isolate'>
+      <label className='text-[11px] font-medium text-gray-700 truncate'>{label}</label>
+      <div className='relative isolate '>
+        <input
+          ref={inputRef}
+          value={value}
+          onChange={event => onChange(event?.target?.value ?? '')}
+          onClick={handleInputClick}
+          onFocus={handleInputClick}
+          placeholder={`Nhập ${label.toLowerCase()}`}
+          className='w-[100px] focus:border-[#92BFF7] placeholder:text-[11px]  2xl:h-7 xl:h-5 py-0 px-1 text-[11px]  placeholder-slate-300 bg-white rounded-[5.5px] text-[#1C252E] font-normal outline-none placeholder:text-typo-gray-4 border border-neutral-N400'
+        />
+        {portalTarget &&
+          hasSuggestions &&
+          isOpen &&
+          suggestions.length > 0 &&
+          inputRef.current &&
+          ReactDOM.createPortal(
+            <div
+              ref={dropdownRef}
+              className='z-[9999] bg-white border border-neutral-N400 rounded-[5.5px] shadow-lg max-h-[150px] overflow-y-auto'
+              style={{
+                position: 'absolute',
+                top: dropdownPosition.top,
+                left: dropdownPosition.left,
+                width: dropdownPosition.width || 100,
+                marginTop: 4,
+              }}
+            >
+              {suggestions.map((suggestion, index) => (
+                <div
+                  key={index}
+                  onClick={() => handleSelectSuggestion(suggestion)}
+                  className='px-2 py-1 text-[11px] text-[#1C252E] cursor-pointer hover:bg-[#EBF5FF] first:rounded-t-[5.5px] last:rounded-b-[5.5px]'
+                >
+                  {suggestion}
+                </div>
+              ))}
+            </div>,
+            portalTarget
+          )}
+      </div>
+    </div>
+  );
+};
 
 const InventoryForm = props => {
   const isShow = useToast();
@@ -93,6 +209,70 @@ const InventoryForm = props => {
   const { data: dataPstWH } = useLocationByWarehouseInventory(warehouse?.value);
   const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature();
   const isExpiryEnabled = dataMaterialExpiry?.is_enable === '1' || dataProductExpiry?.is_enable === '1';
+
+  // cài đặt thuộc tính kho từ settings
+  const isWarehousePropertiesEnabled = dataSeting?.is_warehouse_properties === '1';
+  const warehouseProperties = Array.isArray(dataSeting?.warehouse_properties) ? dataSeting.warehouse_properties : [];
+  const getWarehousePropertyLabel = key => warehouseProperties.find(p => p.name === key)?.value || '';
+  const warehousePropertyKeys = ['value_1', 'value_2', 'value_3'];
+  const showWarehouseAttributes = isWarehousePropertiesEnabled;
+
+  // Helper function để match warehouse properties (value_1, value_2, value_3)
+  // Logic: Nếu đã nhập bất kỳ value nào, thì TẤT CẢ các value phải match (bao gồm cả null)
+  // Nếu chưa nhập gì cả, chỉ match với item có tất cả null
+  const matchWarehouseProperties = (child, item) => {
+    if (!isWarehousePropertiesEnabled) return true;
+
+    // Kiểm tra xem child có nhập bất kỳ value nào không
+    const hasAnyValue = warehousePropertyKeys.some(key => {
+      const childVal = child?.[key];
+      return childVal != null && childVal !== '';
+    });
+
+    // Nếu chưa nhập gì cả, chỉ match với item có tất cả null
+    if (!hasAnyValue) {
+      return warehousePropertyKeys.every(key => {
+        const itemVal = item?.[key];
+        return itemVal == null || itemVal === '';
+      });
+    }
+
+    // Nếu đã nhập ít nhất 1 value, thì TẤT CẢ các value phải match (bao gồm cả null)
+    for (const key of warehousePropertyKeys) {
+      const childVal = child?.[key];
+      const itemVal = item?.[key];
+
+      // So sánh: nếu child có giá trị thì item phải có cùng giá trị
+      // Nếu child null thì item cũng phải null
+      if (childVal != null && childVal !== '') {
+        if (itemVal !== childVal) return false;
+      } else {
+        // Child null, item cũng phải null
+        if (itemVal != null && itemVal !== '') return false;
+      }
+    }
+    return true;
+  };
+
+  // Helper function để so sánh warehouse properties giữa 2 child items
+  // Dùng để check trùng sản phẩm - chỉ trùng khi các thuộc tính giống nhau
+  const compareWarehouseProperties = (child1, child2) => {
+    if (!isWarehousePropertiesEnabled) return true;
+
+    // So sánh từng key
+    for (const key of warehousePropertyKeys) {
+      const val1 = child1?.[key];
+      const val2 = child2?.[key];
+
+      // Chuyển về string để so sánh chính xác
+      const str1 = val1 != null && val1 !== '' ? String(val1) : '';
+      const str2 = val2 != null && val2 !== '' ? String(val2) : '';
+
+      if (str1 !== str2) return false;
+    }
+    return true;
+  };
+
   const { data: dataItems = [] } = useImportItemByOrder(null, null, branch, null, debouncedInputValue, warehouse);
 
   const options = dataItems?.map(e => ({
@@ -129,11 +309,11 @@ const InventoryForm = props => {
       try {
         const fature = await apiDashboard.apiFeature();
         const newData = {
-          dataMaterialExpiry: fature.find((x) => x.code == "material_expiry"),
-          dataProductExpiry: fature.find((x) => x.code == "product_expiry"),
-          dataProductSerial: fature.find((x) => x.code == "product_serial"),
+          dataMaterialExpiry: fature.find(x => x.code == 'material_expiry'),
+          dataProductExpiry: fature.find(x => x.code == 'product_expiry'),
+          dataProductSerial: fature.find(x => x.code == 'product_serial'),
         };
-        dispatch({ type: "setings/feature", payload: newData });
+        dispatch({ type: 'setings/feature', payload: newData });
       } catch (error) {
         console.error('Failed to fetch feature data:', error);
       }
@@ -193,6 +373,9 @@ const InventoryForm = props => {
                       value: serial,
                     }))
                   : [],
+              value_1_array: variant?.value_1_array || [],
+              value_2_array: variant?.value_2_array || [],
+              value_3_array: variant?.value_3_array || [],
               dataWarehouse: mappedWarehouse,
               checkChild:
                 variant?.warehouse?.map(ce => ({
@@ -202,6 +385,9 @@ const InventoryForm = props => {
                   lot: ce.lot,
                   date: ce.expiration_date ? moment(ce.expiration_date).format('DD/MM/yyyy') : null,
                   locate: ce.location_id,
+                  value_1: ce?.value_1 ?? null,
+                  value_2: ce?.value_2 ?? null,
+                  value_3: ce?.value_3 ?? null,
                 })) || [],
               child: item.child.map(child => ({
                 ...child,
@@ -297,10 +483,8 @@ const InventoryForm = props => {
             const baseKey = row?.id || `${row?.item_id || 'item'}__${row?.item_variation_id || 0}__${row?.type || 'product'}`;
             if (!groupedMap.has(baseKey)) {
               // Response đã có đầy đủ expiry và serial, sử dụng trực tiếp
-              const checkExpiryValue = row?.expiry !== undefined 
-                ? (row?.expiry === '1' || row?.expiry === 1 ? '1' : '0')
-                : (row?.lot || row?.date ? '1' : '0'); // Fallback: nếu không có expiry, dựa vào lot/date
-              
+              const checkExpiryValue = row?.expiry !== undefined ? (row?.expiry === '1' || row?.expiry === 1 ? '1' : '0') : row?.lot || row?.date ? '1' : '0'; // Fallback: nếu không có expiry, dựa vào lot/date
+
               // serial có thể là '1', '0', null, hoặc string (serial number)
               // Nếu serial là '1' hoặc '0' => checkSerial
               // Nếu serial là string (serial number) => checkSerial = '1'
@@ -348,7 +532,7 @@ const InventoryForm = props => {
               // Fallback: nếu không có expiry trong response nhưng có lot/date, set checkExpiry = '1'
               parent.checkExpiry = '1';
             }
-            
+
             // Cập nhật checkSerial từ response (response đã có đầy đủ thông tin)
             if (row?.serial !== undefined && row?.serial !== null) {
               if (row?.serial === '1' || row?.serial === 1) {
@@ -393,6 +577,10 @@ const InventoryForm = props => {
               serial: row?.serial ?? null,
               quantity: Number(row?.quantity ?? 0),
               price: Number(row?.price ?? 0),
+              // Thuộc tính kho import từ Excel (nếu có)
+              value_1: row?.value_1 ?? null,
+              value_2: row?.value_2 ?? null,
+              value_3: row?.value_3 ?? null,
               dataWarehouse: [],
             };
 
@@ -418,10 +606,22 @@ const InventoryForm = props => {
               lot: row?.lot ?? null,
               date: row?.date ? moment(row.date).format('DD/MM/yyyy') : null,
               locate: row?.location_id ?? null,
+              // Thuộc tính kho import từ Excel để phục vụ tra cứu SL phần mềm
+              value_1: row?.value_1 ?? null,
+              value_2: row?.value_2 ?? null,
+              value_3: row?.value_3 ?? null,
             };
 
             const isCheckChildDuplicated = parent.checkChild.some(entry => {
-              return entry.locate === checkChildEntry.locate && entry.lot === checkChildEntry.lot && entry.serial === checkChildEntry.serial && entry.date === checkChildEntry.date;
+              return (
+                entry.locate === checkChildEntry.locate &&
+                entry.lot === checkChildEntry.lot &&
+                entry.serial === checkChildEntry.serial &&
+                entry.date === checkChildEntry.date &&
+                entry.value_1 === checkChildEntry.value_1 &&
+                entry.value_2 === checkChildEntry.value_2 &&
+                entry.value_3 === checkChildEntry.value_3
+              );
             });
 
             if (!isCheckChildDuplicated) {
@@ -437,7 +637,7 @@ const InventoryForm = props => {
         sDataChoose(prev => {
           const merged = new Map(prev.map(item => [item.id, item]));
           const newItemsToFetch = [];
-          
+
           mappedInventoryItems.forEach(item => {
             const existingItem = merged.get(item.id);
             if (existingItem) {
@@ -457,7 +657,7 @@ const InventoryForm = props => {
               merged.set(item.id, item);
             }
           });
-          
+
           // Chỉ gọi API nếu thiếu thông tin checkExpiry/checkSerial (backward compatibility)
           // Hoặc cần lấy thêm dataLot, dataSerial, dataWarehouse, checkChild cho item mới
           if (newItemsToFetch.length > 0 && warehouse?.value) {
@@ -470,7 +670,7 @@ const InventoryForm = props => {
                       warehouse_id: warehouse.value,
                     },
                   });
-                  
+
                   if (isSuccess?.result && isSuccess.result.length > 0) {
                     const variant = isSuccess.result[0];
                     return {
@@ -479,20 +679,28 @@ const InventoryForm = props => {
                       checkSerial: variant?.serial === '1' ? '1' : '0',
                       dataLot: variant?.lot_array?.map(lot => ({ label: lot, value: lot })) || [],
                       dataSerial: variant?.serial_array?.map(serial => ({ label: serial, value: serial })) || [],
-                      dataWarehouse: variant?.warehouse?.map(wh => ({
-                        label: wh?.location_name,
-                        value: wh?.id,
-                        warehouse_name: wh?.warehouse_name,
-                        qty: wh?.quantity,
-                      })) || [],
-                      checkChild: variant?.warehouse?.map(ce => ({
-                        amount: null,
-                        quantity: Number(ce.quantity),
-                        serial: ce.serial,
-                        lot: ce.lot,
-                        date: ce.expiration_date ? moment(ce.expiration_date).format('DD/MM/yyyy') : null,
-                        locate: ce.location_id,
-                      })) || [],
+                      value_1_array: variant?.value_1_array || [],
+                      value_2_array: variant?.value_2_array || [],
+                      value_3_array: variant?.value_3_array || [],
+                      dataWarehouse:
+                        variant?.warehouse?.map(wh => ({
+                          label: wh?.location_name,
+                          value: wh?.id,
+                          warehouse_name: wh?.warehouse_name,
+                          qty: wh?.quantity,
+                        })) || [],
+                      checkChild:
+                        variant?.warehouse?.map(ce => ({
+                          amount: null,
+                          quantity: Number(ce.quantity),
+                          serial: ce.serial,
+                          lot: ce.lot,
+                          date: ce.expiration_date ? moment(ce.expiration_date).format('DD/MM/yyyy') : null,
+                          locate: ce.location_id,
+                          value_1: ce?.value_1 ?? null,
+                          value_2: ce?.value_2 ?? null,
+                          value_3: ce?.value_3 ?? null,
+                        })) || [],
                     };
                   }
                 } catch (error) {
@@ -512,6 +720,9 @@ const InventoryForm = props => {
                       checkSerial: fetchedData.checkSerial || item.checkSerial,
                       dataLot: fetchedData.dataLot.length > 0 ? fetchedData.dataLot : item.dataLot,
                       dataSerial: fetchedData.dataSerial.length > 0 ? fetchedData.dataSerial : item.dataSerial,
+                      value_1_array: fetchedData.value_1_array?.length > 0 ? fetchedData.value_1_array : item.value_1_array || [],
+                      value_2_array: fetchedData.value_2_array?.length > 0 ? fetchedData.value_2_array : item.value_2_array || [],
+                      value_3_array: fetchedData.value_3_array?.length > 0 ? fetchedData.value_3_array : item.value_3_array || [],
                       dataWarehouse: fetchedData.dataWarehouse.length > 0 ? fetchedData.dataWarehouse : item.dataWarehouse,
                       checkChild: fetchedData.checkChild.length > 0 ? fetchedData.checkChild : item.checkChild,
                     };
@@ -522,7 +733,7 @@ const InventoryForm = props => {
               });
             });
           }
-          
+
           return Array.from(merged.values());
         });
       }
@@ -601,6 +812,9 @@ const InventoryForm = props => {
                   value: serial,
                 }))
               : [],
+          value_1_array: e.value_1_array || [],
+          value_2_array: e.value_2_array || [],
+          value_3_array: e.value_3_array || [],
           dataWarehouse:
             e?.warehouse?.map(wh => ({
               label: wh?.location_name,
@@ -635,6 +849,9 @@ const InventoryForm = props => {
               lot: ce.lot,
               date: ce.expiration_date ? moment(ce.expiration_date).format('DD/MM/yyyy') : null,
               locate: ce.location_id,
+              value_1: ce?.value_1 ?? null,
+              value_2: ce?.value_2 ?? null,
+              value_3: ce?.value_3 ?? null,
             })) || [],
         }));
 
@@ -709,7 +926,10 @@ const InventoryForm = props => {
                 const locateValue = ce.locate.value;
                 const checkByLocate = e.checkChild?.find(item => {
                   // So sánh với cả string và number để đảm bảo khớp
-                  return String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue);
+                  const locateMatch = String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue);
+                  if (!locateMatch) return false;
+                  // Match thêm theo warehouse properties nếu có bật và có giá trị
+                  return matchWarehouseProperties(ce, item);
                 });
                 if (checkByLocate && checkByLocate.quantity != null) {
                   ce.quantity = Number(checkByLocate.quantity);
@@ -724,7 +944,7 @@ const InventoryForm = props => {
               return { ...ce };
             } else if (type === 'lot') {
               ce.lot = value;
-              
+
               // Nếu bỏ chọn lot, reset lot về null và tìm quantity với lot = null trong checkChild
               if (value === null || value === undefined) {
                 ce.lot = null;
@@ -733,10 +953,11 @@ const InventoryForm = props => {
                   const locateValue = ce.locate.value;
                   // Tìm trong checkChild dựa trên locate và lot = null
                   const checkByLocateAndNullLot = e.checkChild?.find(item => {
-                    return (
-                      (String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue)) &&
-                      (item.lot === null || item.lot === undefined || item.lot === '')
-                    );
+                    const locateMatch = String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue);
+                    const lotMatch = item.lot === null || item.lot === undefined || item.lot === '';
+                    if (!locateMatch || !lotMatch) return false;
+                    // Match thêm theo warehouse properties nếu có bật và có giá trị
+                    return matchWarehouseProperties(ce, item);
                   });
                   if (checkByLocateAndNullLot && checkByLocateAndNullLot.quantity != null) {
                     ce.quantity = Number(checkByLocateAndNullLot.quantity);
@@ -761,10 +982,11 @@ const InventoryForm = props => {
                   const lotValue = ce.lot.value;
                   // Tìm trong checkChild dựa trên locate và lot (chưa cần date)
                   const checkByLocateAndLot = e.checkChild?.find(item => {
-                    return (
-                      (String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue)) &&
-                      item.lot === lotValue
-                    );
+                    const locateMatch = String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue);
+                    const lotMatch = item.lot === lotValue;
+                    if (!locateMatch || !lotMatch) return false;
+                    // Match thêm theo warehouse properties nếu có bật và có giá trị
+                    return matchWarehouseProperties(ce, item);
                   });
                   if (checkByLocateAndLot && checkByLocateAndLot.quantity != null) {
                     ce.quantity = Number(checkByLocateAndLot.quantity);
@@ -799,7 +1021,11 @@ const InventoryForm = props => {
                 const locateValue = ce.locate.value;
                 const serialValue = ce.serial;
                 const checkByLocateAndSerial = e.checkChild?.find(item => {
-                  return (String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue)) && item.serial === serialValue;
+                  const locateMatch = String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue);
+                  const serialMatch = item.serial === serialValue;
+                  if (!locateMatch || !serialMatch) return false;
+                  // Match thêm theo warehouse properties nếu có bật và có giá trị
+                  return matchWarehouseProperties(ce, item);
                 });
                 if (checkByLocateAndSerial && checkByLocateAndSerial.quantity != null) {
                   ce.quantity = Number(checkByLocateAndSerial.quantity);
@@ -811,6 +1037,93 @@ const InventoryForm = props => {
               return { ...ce };
             } else if (type === 'price') {
               return { ...ce, price: Number(value?.value) };
+            } else {
+              // Các thuộc tính động khác (ví dụ: value_1, value_2, value_3 cho thuộc tính kho)
+              ce[type] = value;
+
+              // Nếu là warehouse property và đã có locate, tìm lại quantity từ checkChild
+              if (warehousePropertyKeys.includes(type) && ce?.locate !== null) {
+                const locateValue = ce.locate.value;
+
+                // Tìm quantity dựa trên các điều kiện hiện có
+                let checkItem = null;
+
+                // Trường hợp có lot và date (expiry enabled)
+                if (e?.checkExpiry === '1' && ce?.lot !== null && ce?.date !== null) {
+                  const lotValue = ce.lot?.value;
+                  const dateValue = moment(ce.date).format('DD/MM/yyyy');
+                  checkItem = e.checkChild?.find(item => {
+                    const locateMatch = String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue);
+                    const lotMatch = item.lot === lotValue;
+                    const dateMatch = item.date === dateValue;
+                    if (!locateMatch || !lotMatch || !dateMatch) return false;
+                    return matchWarehouseProperties(ce, item);
+                  });
+                }
+                // Trường hợp có serial
+                else if (e?.checkSerial === '1' && ce?.serial !== null && ce.serial !== '') {
+                  const serialValue = ce.serial;
+                  checkItem = e.checkChild?.find(item => {
+                    const locateMatch = String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue);
+                    const serialMatch = item.serial === serialValue;
+                    if (!locateMatch || !serialMatch) return false;
+                    return matchWarehouseProperties(ce, item);
+                  });
+                }
+                // Trường hợp chỉ có locate (không có expiry và serial)
+                else if (e?.checkExpiry === '0' && e?.checkSerial === '0') {
+                  checkItem = e.checkChild?.find(item => {
+                    const locateMatch = String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue);
+                    if (!locateMatch) return false;
+                    return matchWarehouseProperties(ce, item);
+                  });
+                }
+                // Trường hợp có lot nhưng chưa có date
+                else if (ce?.lot !== null) {
+                  const lotValue = ce.lot?.value;
+                  checkItem = e.checkChild?.find(item => {
+                    const locateMatch = String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue);
+                    const lotMatch = item.lot === lotValue;
+                    if (!locateMatch || !lotMatch) return false;
+                    return matchWarehouseProperties(ce, item);
+                  });
+                }
+                // Trường hợp chỉ có locate
+                else {
+                  checkItem = e.checkChild?.find(item => {
+                    const locateMatch = String(item.locate) === String(locateValue) || Number(item.locate) === Number(locateValue);
+                    if (!locateMatch) return false;
+                    return matchWarehouseProperties(ce, item);
+                  });
+                }
+
+                if (checkItem && checkItem.quantity != null) {
+                  ce.quantity = Number(checkItem.quantity);
+                } else {
+                  ce.quantity = 0;
+                }
+              }
+
+              // Gọi các hàm kiểm tra trùng lặp khi change warehouse properties
+              // Tương tự như khi change locate/lot/date/serial
+              if (warehousePropertyKeys.includes(type) && ce?.locate !== null) {
+                // Trường hợp có lot và date (expiry enabled)
+                if (e?.checkExpiry === '1' && ce?.lot !== null && ce.date !== null) {
+                  _HandleCheckSameLot(parentId, id, ce?.locate, ce?.lot, ce?.date);
+                }
+                // Trường hợp có serial
+                else if (e?.checkSerial === '1' && ce?.serial !== null && ce.serial !== '') {
+                  setTimeout(() => {
+                    _HandleCheckSameSerial(parentId, id, ce?.locate, ce?.serial);
+                  }, 1000);
+                }
+                // Trường hợp chỉ có locate (không có expiry và serial)
+                else if (e?.checkExpiry === '0' && e?.checkSerial === '0') {
+                  _HandleCheckSameLoca(parentId, id, ce?.locate);
+                }
+              }
+
+              return { ...ce };
             }
           }
           return ce;
@@ -826,9 +1139,17 @@ const InventoryForm = props => {
     setTimeout(() => {
       const newData = dataChoose.map(e => {
         if (e.id === parentId) {
+          const currentChild = e.child?.find(ce => ce?.id === id);
           const checkData = e.child
             ?.filter(ce => ce?.id !== id)
-            ?.some(item => item?.locate?.value === locate?.value && item.lot?.value === lot?.value && moment(item.date).format('DD/MM/yyyy') == moment(date).format('DD/MM/yyyy'));
+            ?.some(item => {
+              const locateMatch = item?.locate?.value === locate?.value;
+              const lotMatch = item.lot?.value === lot?.value;
+              const dateMatch = moment(item.date).format('DD/MM/yyyy') == moment(date).format('DD/MM/yyyy');
+              if (!locateMatch || !lotMatch || !dateMatch) return false;
+              // Check warehouse properties - chỉ trùng khi các thuộc tính giống nhau
+              return compareWarehouseProperties(currentChild, item);
+            });
           const newChild = e.child
             ?.map(ce => {
               if (ce.id == id && checkData) {
@@ -855,7 +1176,13 @@ const InventoryForm = props => {
       if (!parent) return null;
       const child = parent.child.find(e => e.id === id) || null;
       // if(!child) return null;
-      const check = parent.checkChild.find(e => e.locate === child?.locate?.value && e.lot === child.lot?.value && e.date === moment(child.date).format('DD/MM/yyyy'));
+      const check = parent.checkChild.find(item => {
+        if (item.locate !== child?.locate?.value) return false;
+        if (item.lot !== child?.lot?.value) return false;
+        if (item.date !== moment(child?.date).format('DD/MM/yyyy')) return false;
+        // Match thêm theo warehouse properties nếu có bật và có giá trị
+        return matchWarehouseProperties(child, item);
+      });
       const newData1 = newData.map(e => {
         if (e.id === parentId) {
           const newChild = e.child?.map(ce => {
@@ -874,8 +1201,14 @@ const InventoryForm = props => {
 
   const _HandleCheckSameSerial = (parentId, id, locate, serial) => {
     setTimeout(() => {
+      const currentChild = dataChoose?.find(e => e.id === parentId)?.child?.find(ce => ce?.id === id);
       const dataChild = dataChoose?.map(e => e?.child)?.flatMap(innerList => innerList);
-      const checkData = dataChild?.some(item => item?.serial === serial && item?.id !== id);
+      const checkData = dataChild?.some(item => {
+        const serialMatch = item?.serial === serial && item?.id !== id;
+        if (!serialMatch) return false;
+        // Check warehouse properties - chỉ trùng khi các thuộc tính giống nhau
+        return compareWarehouseProperties(currentChild, item);
+      });
 
       const newData = dataChoose?.map(e => {
         if (e.id === parentId && checkData) {
@@ -890,7 +1223,12 @@ const InventoryForm = props => {
       });
       const parent = newData?.find(item => item.id === parentId) || null;
       const child = parent?.child.find(e => e.id === id) || null;
-      const check = parent?.checkChild.find(e => e.locate === child?.locate?.value && e.serial === child?.serial);
+      const check = parent?.checkChild.find(item => {
+        if (item.locate !== child?.locate?.value) return false;
+        if (item.serial !== child?.serial) return false;
+        // Match thêm theo warehouse properties nếu có bật và có giá trị
+        return matchWarehouseProperties(child, item);
+      });
 
       const newData1 = newData.map(e => {
         if (e.id === parentId) {
@@ -912,7 +1250,15 @@ const InventoryForm = props => {
     setTimeout(() => {
       const newData = dataChoose.map(e => {
         if (e.id === parentId) {
-          const checkData = e.child?.filter(ce => ce?.id !== id)?.some(item => item?.locate?.value === locate?.value);
+          const currentChild = e.child?.find(ce => ce?.id === id);
+          const checkData = e.child
+            ?.filter(ce => ce?.id !== id)
+            ?.some(item => {
+              const locateMatch = item?.locate?.value === locate?.value;
+              if (!locateMatch) return false;
+              // Check warehouse properties - chỉ trùng khi các thuộc tính giống nhau
+              return compareWarehouseProperties(currentChild, item);
+            });
           const newChild = e.child
             ?.map(ce => {
               if (ce.id == id && checkData) {
@@ -940,7 +1286,12 @@ const InventoryForm = props => {
       const parent = newData.find(item => item.id === parentId);
       if (!parent) return null;
       const child = parent.child.find(e => e.id === id) || null;
-      const check = parent.checkChild.find(e => e.locate === child?.locate?.value);
+      const check = parent.checkChild.find(item => {
+        const locateMatch = item.locate === child?.locate?.value;
+        if (!locateMatch) return false;
+        // Match thêm theo warehouse properties nếu có bật và có giá trị
+        return matchWarehouseProperties(child, item);
+      });
       const newData1 = newData.map(e => {
         if (e.id === parentId) {
           const newChild = e.child?.map(ce => {
@@ -981,6 +1332,9 @@ const InventoryForm = props => {
         formData.append(`data[${index}][child][${indexChild}][quantity]`, itemChild?.quantity || 0);
         formData.append(`data[${index}][child][${indexChild}][lot]`, itemChild?.lot?.value || null);
         formData.append(`data[${index}][child][${indexChild}][serial]`, itemChild?.serial || null);
+        formData.append(`data[${index}][child][${indexChild}][value_1]`, itemChild?.value_1 || null);
+        formData.append(`data[${index}][child][${indexChild}][value_2]`, itemChild?.value_2 || null);
+        formData.append(`data[${index}][child][${indexChild}][value_3]`, itemChild?.value_3 || null);
       });
     });
     try {
@@ -1102,7 +1456,6 @@ const InventoryForm = props => {
       label: `Thêm Phiếu Kiểm Kê Kho`,
     },
   ];
-  console.log(dataChoose);
   return (
     <LayoutForm
       title='Thêm phiếu kiểm kê kho'
@@ -1236,7 +1589,7 @@ const InventoryForm = props => {
                     } grid items-start gap-2 py-2 border-b border-b-[#F3F3F4]`}
                   >
                     <div className='h-full col-span-4'>
-                      <div className='flex items-center justify-between gap-1 xl:gap-2'>
+                      <div className='flex items-center justify-between gap-1 xl:gap-1'>
                         <div className='flex items-center gap-2'>
                           <div className='size-10 xl:size-12 flex-shrink-0 rounded-md overflow-hidden'>
                             <Image src={e?.img ?? '/icon/noimagelogo.png'} alt='Product Image' className='size-full object-cover' width={64} height={64} />
@@ -1246,7 +1599,7 @@ const InventoryForm = props => {
                             <h5 className='text-neutral-03 font-normal responsive-text-xs'>
                               {e?.code}: {e?.variant}
                             </h5>
-                            {e?.type && <TagColorProduct dataLang={dataLang} dataKey={getTypeDataKey(e?.type)} name={e?.type} className='!px-1' textSize='text-[11px]' />}
+                            {e?.type && <TagColorProduct dataLang={dataLang} dataKey={getTypeDataKey(e?.type)} name={e?.type} className='!px-1 truncate' textSize='text-[11px]' />}
                           </div>
                         </div>
                         <button
@@ -1258,157 +1611,184 @@ const InventoryForm = props => {
                       </div>
                     </div>
                     <div className={`${dataProductSerial?.is_enable === '1' ? (isExpiryEnabled ? 'col-span-21' : 'col-span-15') : isExpiryEnabled ? 'col-span-18' : 'col-span-12'}`}>
-                      <div className={`${dataProductSerial?.is_enable === '1' ? (isExpiryEnabled ? 'grid-cols-21' : 'grid-cols-15') : isExpiryEnabled ? 'grid-cols-18' : 'grid-cols-12'} grid gap-2`}>
+                      <div className={`${dataProductSerial?.is_enable === '1' ? (isExpiryEnabled ? 'grid-cols-21' : 'grid-cols-15') : isExpiryEnabled ? 'grid-cols-18' : 'grid-cols-12'} grid gap-2 `}>
                         {e?.child?.map((ce, index) => (
-                          <div
-                            key={ce?.id?.toString()}
-                            className={`${
-                              dataProductSerial?.is_enable === '1'
-                                ? isExpiryEnabled
-                                  ? 'col-span-21 grid grid-cols-21'
-                                  : 'col-span-15 grid grid-cols-15'
-                                : isExpiryEnabled
-                                ? 'col-span-18 grid grid-cols-18'
-                                : 'col-span-12 grid grid-cols-12'
-                            } gap-1`}
-                          >
-                            <div className='col-span-3 flex flex-col justify-center h-fit'>
-                              <SelectComponent
-                                options={dataPstWH || []}
-                                value={ce?.locate}
-                                onChange={value => _HandleChangeChild(e?.id, ce?.id, 'locate', value)}
-                                placeholder='Vị trí kho'
-                                isClearable={true}
-                                className='w-full'
-                                classParent={`${errNullLocate && ce.locate == null ? 'border-red-500 border rounded-lg' : ''}`}
-                                noOptionsMessage={() => dataLang?.no_data_found || 'no_data_found'}
-                                menuPortalTarget={document.body}
-                              />
-                            </div>
-                            {dataProductSerial?.is_enable === '1' ? (
+                          <Fragment key={ce?.id?.toString()}>
+                            <div
+                              className={`${
+                                dataProductSerial?.is_enable === '1'
+                                  ? isExpiryEnabled
+                                    ? 'col-span-21 grid grid-cols-21'
+                                    : 'col-span-15 grid grid-cols-15'
+                                  : isExpiryEnabled
+                                  ? 'col-span-18 grid grid-cols-18'
+                                  : 'col-span-12 grid grid-cols-12'
+                              } gap-1`}
+                            >
                               <div className='col-span-3 flex flex-col justify-center h-fit'>
-                                <input
-                                  disabled={e?.checkSerial == '0'}
-                                  value={ce?.serial || ''}
-                                  onChange={event => _HandleChangeChild(e?.id, ce?.id, 'serial', event)}
-                                  className={`${
-                                    e?.checkSerial == '0' ? 'bg-gray-100' : errNullSerial && (ce.serial === null || ce.serial === '') ? 'border-red-500' : 'border-gray-200'
-                                  } !h-[38px] rounded-lg appearance-none text-center p-2 text-neutral-07 responsive-text-base font-medium placeholder:font-normal w-full focus:outline-none focus:border-brand-color hover:border-brand-color border border-neutral-N400`}
-                                  placeholder='Nhập serial'
-                                />
-                                {isSubmitted && duplicateIds.includes(ce.id) && <span className='text-red-500 text-[10px] mt-1'>Serial đã tồn tại trong phần mềm</span>}
-                              </div>
-                            ) : null}
-                            {isExpiryEnabled ? (
-                              <div className='col-span-3 flex flex-col justify-center h-fit'>
-                                <CreatableSelectCore
-                                  isDisabled={e?.checkExpiry == '0'}
-                                  placeholder={'Lot'}
-                                  options={e?.dataLot}
-                                  value={ce?.lot}
-                                  onChange={_HandleChangeChild.bind(this, e?.id, ce?.id, 'lot')}
+                                <SelectComponent
+                                  options={dataPstWH || []}
+                                  value={ce?.locate}
+                                  onChange={value => _HandleChangeChild(e?.id, ce?.id, 'locate', value)}
+                                  placeholder='Vị trí kho'
                                   isClearable={true}
-                                  classNamePrefix='Select'
-                                  className={`${
-                                    e?.checkExpiry == '0' ? 'border-transparent' : errNullLot && ce.lot == null ? 'border-red-500 border' : 'border-transparent'
-                                  } Select__custom removeDivide placeholder:text-slate-300 w-full bg-[#ffffff] rounded-lg text-[#52575E] font-normal outline-none border text-[13px]`}
-                                  isSearchable={true}
+                                  className='w-full'
+                                  classParent={`${errNullLocate && ce.locate == null ? 'border-red-500 border rounded-lg' : ''}`}
+                                  noOptionsMessage={() => dataLang?.no_data_found || 'no_data_found'}
                                   menuPortalTarget={document.body}
-                                  onMenuOpen={handleMenuOpen}
-                                  noOptionsMessage={() => `Chưa có gợi ý`}
-                                  formatCreateLabel={value => `Tạo "${value}"`}
-                                  style={{
-                                    border: 'none',
-                                    boxShadow: 'none',
-                                    outline: 'none',
-                                    borderRadius: '8px',
-                                  }}
-                                  theme={theme => ({
-                                    ...theme,
-                                    colors: {
-                                      ...theme.colors,
-                                      primary25: '#EBF5FF',
-                                      primary50: '#92BFF7',
-                                      primary: '#0F4F9E',
-                                    },
-                                  })}
-                                  styles={{
-                                    placeholder: base => ({
-                                      ...base,
-                                      color: '#cbd5e1',
-                                      borderRadius: '8px',
-                                    }),
-                                    menuPortal: base => ({
-                                      ...base,
-                                      zIndex: 9999,
-                                      position: 'absolute',
-                                    }),
-                                    control: (base, state) => ({
-                                      ...base,
+                                />
+                              </div>
+                              {dataProductSerial?.is_enable === '1' ? (
+                                <div className='col-span-3 flex flex-col justify-center h-fit'>
+                                  <input
+                                    disabled={e?.checkSerial == '0'}
+                                    value={ce?.serial || ''}
+                                    onChange={event => _HandleChangeChild(e?.id, ce?.id, 'serial', event)}
+                                    className={`${
+                                      e?.checkSerial == '0' ? 'bg-gray-100' : errNullSerial && (ce.serial === null || ce.serial === '') ? 'border-red-500' : 'border-gray-200'
+                                    } !h-[38px] rounded-lg appearance-none text-center p-2 text-neutral-07 responsive-text-base font-medium placeholder:font-normal w-full focus:outline-none focus:border-brand-color hover:border-brand-color border border-neutral-N400`}
+                                    placeholder='Nhập serial'
+                                  />
+                                  {isSubmitted && duplicateIds.includes(ce.id) && <span className='text-red-500 text-[10px] mt-1'>Serial đã tồn tại trong phần mềm</span>}
+                                </div>
+                              ) : null}
+                              {isExpiryEnabled ? (
+                                <div className='col-span-3 flex flex-col justify-center h-fit'>
+                                  <CreatableSelectCore
+                                    isDisabled={e?.checkExpiry == '0'}
+                                    placeholder={'Lot'}
+                                    options={e?.dataLot}
+                                    value={ce?.lot}
+                                    onChange={_HandleChangeChild.bind(this, e?.id, ce?.id, 'lot')}
+                                    isClearable={true}
+                                    classNamePrefix='Select'
+                                    className={`${
+                                      e?.checkExpiry == '0' ? 'border-transparent' : errNullLot && ce.lot == null ? 'border-red-500 border' : 'border-transparent'
+                                    } Select__custom removeDivide placeholder:text-slate-300 w-full bg-[#ffffff] rounded-lg text-[#52575E] font-normal outline-none border text-[13px]`}
+                                    isSearchable={true}
+                                    menuPortalTarget={document.body}
+                                    onMenuOpen={handleMenuOpen}
+                                    noOptionsMessage={() => `Chưa có gợi ý`}
+                                    formatCreateLabel={value => `Tạo "${value}"`}
+                                    style={{
+                                      border: 'none',
                                       boxShadow: 'none',
-                                      ...(state.isFocused && {
-                                        border: '0 0 0 1px #92BFF7',
-                                      }),
+                                      outline: 'none',
                                       borderRadius: '8px',
-                                    }),
+                                    }}
+                                    theme={theme => ({
+                                      ...theme,
+                                      colors: {
+                                        ...theme.colors,
+                                        primary25: '#EBF5FF',
+                                        primary50: '#92BFF7',
+                                        primary: '#0F4F9E',
+                                      },
+                                    })}
+                                    styles={{
+                                      placeholder: base => ({
+                                        ...base,
+                                        color: '#cbd5e1',
+                                        borderRadius: '8px',
+                                      }),
+                                      menuPortal: base => ({
+                                        ...base,
+                                        zIndex: 9999,
+                                        position: 'absolute',
+                                      }),
+                                      control: (base, state) => ({
+                                        ...base,
+                                        boxShadow: 'none',
+                                        ...(state.isFocused && {
+                                          border: '0 0 0 1px #92BFF7',
+                                        }),
+                                        borderRadius: '8px',
+                                      }),
+                                    }}
+                                  />
+                                </div>
+                              ) : null}
+                              {isExpiryEnabled ? (
+                                <div className='col-span-3 flex flex-col justify-center h-fit [&>div]:gap-y-0 [&>div]:w-full [&>div>div:first-child]:hidden'>
+                                  <DocumentDate
+                                    dataLang={dataLang}
+                                    value={ce?.date}
+                                    onChange={date => _HandleChangeChild(e?.id, ce?.id, 'date', date)}
+                                    errDate={errNullDate && ce?.date == null}
+                                    isRequired={false}
+                                    label=''
+                                    showTime={false}
+                                    format='DD/MM/YYYY'
+                                    disabled={e?.checkExpiry == '0'}
+                                    height='!h-[38px]'
+                                  />
+                                </div>
+                              ) : null}
+                              <div className='col-span-3 flex flex-col justify-center h-fit'>
+                                <InPutNumericFormat
+                                  value={ce?.price}
+                                  onValueChange={value => _HandleChangeChild(e?.id, ce?.id, 'price', value)}
+                                  className='h-[38px] rounded-lg appearance-none text-center p-2 text-neutral-07 responsive-text-base font-medium placeholder:font-normal w-full focus:outline-none focus:border-brand-color hover:border-brand-color border border-neutral-N400'
+                                  isAllowed={isAllowedNumber}
+                                  placeholder='Nhập đơn giá'
+                                />
+                              </div>
+                              <div className='col-span-3 flex flex-col justify-center h-fit'>
+                                <InPutNumericFormat
+                                  value={ce?.amount}
+                                  placeholder='Nhập số lượng'
+                                  onValueChange={value => _HandleChangeChild(e?.id, ce?.id, 'amount', value)}
+                                  className={`${
+                                    errNullQty && ce?.amount == null ? 'border-red-500' : 'border-gray-200'
+                                  } h-[38px] appearance-none text-center p-2 rounded-lg text-neutral-07 responsive-text-base font-medium placeholder:font-normal w-full focus:outline-none focus:border-brand-color hover:border-brand-color border border-neutral-N400`}
+                                  isAllowed={values => {
+                                    const { floatValue, value } = values;
+                                    // Nếu xóa hết (giá trị rỗng hoặc null) thì trả về true (hiển thị về 0)
+                                    if (value === '' || value === null || typeof value === 'undefined') {
+                                      return true;
+                                    }
+                                    if (e?.checkSerial == '1') {
+                                      return floatValue >= 0 && floatValue < 2;
+                                    } else {
+                                      return floatValue >= 0;
+                                    }
                                   }}
                                 />
+                                <h3 className='mt-1 responsive-text-xxs'>SL phần mềm: {formatNumber(ce?.quantity || 0)}</h3>
+                                <h3 className='responsive-text-xxs text-blue-fmrp'>Chênh lệch: {(ce?.amount != null && formatNumber(ce?.amount - (ce?.quantity || 0))) || 0}</h3>
                               </div>
-                            ) : null}
-                            {isExpiryEnabled ? (
-                              <div className='col-span-3 flex flex-col justify-center h-fit [&>div]:gap-y-0 [&>div]:w-full [&>div>div:first-child]:hidden'>
-                                <DocumentDate
-                                  dataLang={dataLang}
-                                  value={ce?.date}
-                                  onChange={date => _HandleChangeChild(e?.id, ce?.id, 'date', date)}
-                                  errDate={errNullDate && ce?.date == null}
-                                  isRequired={false}
-                                  label=''
-                                  showTime={false}
-                                  format='DD/MM/YYYY'
-                                  disabled={e?.checkExpiry == '0'}
-                                  height='!h-[38px]'
-                                />
+                              <div className='col-span-2 text-right pt-2 h-full z-[2]'>{(ce?.amount != null && formatNumber(ce?.amount * (ce?.price || 0))) || 0}</div>
+                              <div className='flex pt-2 justify-center h-full'>
+                                <ButtonDelete onDelete={_HandleDeleteChild.bind(this, e?.id, ce?.id)} className='h-fit' />
                               </div>
-                            ) : null}
-                            <div className='col-span-3 flex flex-col justify-center h-fit'>
-                              <InPutNumericFormat
-                                value={ce?.price}
-                                onValueChange={value => _HandleChangeChild(e?.id, ce?.id, 'price', value)}
-                                className='h-[38px] rounded-lg appearance-none text-center p-2 text-neutral-07 responsive-text-base font-medium placeholder:font-normal w-full focus:outline-none focus:border-brand-color hover:border-brand-color border border-neutral-N400'
-                                isAllowed={isAllowedNumber}
-                                placeholder='Nhập đơn giá'
-                              />
                             </div>
-                            <div className='col-span-3 flex flex-col justify-center h-fit'>
-                              <InPutNumericFormat
-                                value={ce?.amount}
-                                placeholder='Nhập số lượng'
-                                onValueChange={value => _HandleChangeChild(e?.id, ce?.id, 'amount', value)}
-                                className={`${
-                                  errNullQty && ce?.amount == null ? 'border-red-500' : 'border-gray-200'
-                                } h-[38px] appearance-none text-center p-2 rounded-lg text-neutral-07 responsive-text-base font-medium placeholder:font-normal w-full focus:outline-none focus:border-brand-color hover:border-brand-color border border-neutral-N400`}
-                                isAllowed={values => {
-                                  const { floatValue, value } = values;
-                                  // Nếu xóa hết (giá trị rỗng hoặc null) thì trả về true (hiển thị về 0)
-                                  if (value === '' || value === null || typeof value === 'undefined') {
-                                    return true;
-                                  }
-                                  if (e?.checkSerial == '1') {
-                                    return floatValue >= 0 && floatValue < 2;
-                                  } else {
-                                    return floatValue >= 0;
-                                  }
-                                }}
-                              />
-                              <h3 className='mt-1 responsive-text-xxs'>SL phần mềm: {formatNumber(ce?.quantity || 0)}</h3>
-                              <h3 className='responsive-text-xxs text-blue-fmrp'>Chênh lệch: {(ce?.amount != null && formatNumber(ce?.amount - (ce?.quantity || 0))) || 0}</h3>
-                            </div>
-                            <div className='col-span-2 text-right pt-2 h-full z-[2]'>{(ce?.amount != null && formatNumber(ce?.amount * (ce?.price || 0))) || 0}</div>
-                            <div className='flex pt-2 justify-center h-full'>
-                              <ButtonDelete onDelete={_HandleDeleteChild.bind(this, e?.id, ce?.id)} className='h-fit' />
-                            </div>
-                          </div>
+                            {/* Thuộc tính kho cho từng child */}
+                            {showWarehouseAttributes && e?.type === 'material' && (
+                              <div className='col-span-full relative h-[10px]'>
+                                <div className='mt-2 flex items-center gap-4 flex-wrap absolute -top-[42px] left-0'>
+                                  {warehousePropertyKeys.map(key => {
+                                    const label = getWarehousePropertyLabel(key);
+                                    if (!label) return null;
+                                    const value = ce?.[key];
+                                    const valueString = value !== undefined && value !== null ? String(value) : '';
+                                    const suggestionsArray = e?.[`${key}_array`] || [];
+                                    const hasSuggestions = suggestionsArray.length > 0;
+
+                                    return (
+                                      <WarehousePropertyInput
+                                        key={key}
+                                        label={label}
+                                        value={valueString}
+                                        suggestions={suggestionsArray}
+                                        hasSuggestions={hasSuggestions}
+                                        onChange={newValue => _HandleChangeChild(e?.id, ce?.id, key, newValue)}
+                                      />
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </Fragment>
                         ))}
                       </div>
                     </div>
