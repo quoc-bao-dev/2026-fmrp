@@ -1,6 +1,6 @@
 import CheckboxDefault from '@/components/common/checkbox/CheckboxDefault';
 import Loading from '@/components/common/loading/loading/LoadingComponent';
-import { PlusIcon, WarningIcon, MagnifyingGlassIcon } from '@/components/icons';
+import { MagnifyingGlassIcon, PlusIcon, WarningIcon } from '@/components/icons';
 import CheckIcon from '@/components/icons/common/CheckIcon';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
@@ -11,17 +11,17 @@ import useSetingServer from '@/hooks/useConfigNumber';
 import useToast from '@/hooks/useToast';
 import { useHandlingProductCompleted, useProductCompleted } from '@/managers/api/productions-order/useProductCompleted';
 import { useQRCodProductCompleted } from '@/managers/api/productions-order/useQR';
+import { useGetQcErrorDetails } from '@/managers/api/qc/useGetQcErrorDetails';
 import { default as formatNumber, default as formatNumberConfig } from '@/utils/helpers/formatnumber';
 import { Lexend_Deca } from '@next/font/google';
 import { AnimatePresence, motion } from 'framer-motion';
+import debounce from 'lodash/debounce';
 import Image from 'next/image';
 import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { FaMinus, FaPlus } from 'react-icons/fa';
 import { PiWarehouseLight } from 'react-icons/pi';
 import { Tooltip } from 'react-tippy';
 import { twMerge } from 'tailwind-merge';
-import { useGetQcErrorDetails } from '@/managers/api/qc/useGetQcErrorDetails';
-import debounce from 'lodash/debounce';
 import { v4 as uuidv4 } from 'uuid';
 
 const deca = Lexend_Deca({
@@ -209,62 +209,6 @@ export const InputNumberCustom = memo(
 );
 
 InputNumberCustom.displayName = 'InputNumberCustom';
-
-// const CheckboxDefault = memo(
-//   ({
-//     label,
-//     checked,
-//     defaultChecked,
-//     onChange,
-//     disabled = false,
-//     className = "",
-//   }) => {
-//     return (
-//       <label
-//         className={`inline-flex items-center space-x-2 cursor-pointer ${
-//           disabled ? "opacity-50 cursor-not-allowed" : ""
-//         } ${className}`}
-//       >
-//         <input
-//           type="checkbox"
-//           className="peer hidden"
-//           checked={checked}
-//           defaultChecked={defaultChecked}
-//           onChange={(e) => onChange?.(e.target.checked)}
-//           disabled={disabled}
-//         />
-//         <div
-//           className={twMerge(
-//             "w-5 h-5 border-[1px] border-[#D0D5DD] rounded-md flex items-center justify-center transition",
-//             checked ? "bg-[#0375F3] border-[#0375F3]" : "bg-white"
-//           )}
-//         >
-//           {checked && (
-//             <svg
-//               width="12"
-//               height="9"
-//               viewBox="0 0 12 9"
-//               fill="none"
-//               xmlns="http://www.w3.org/2000/svg"
-//               className="h-5"
-//             >
-//               <path
-//                 d="M10.6663 1L4.24967 7.41667L1.33301 4.5"
-//                 stroke="white"
-//                 strokeWidth="2"
-//                 strokeLinecap="round"
-//                 strokeLinejoin="round"
-//               />
-//             </svg>
-//           )}
-//         </div>
-//         {label && <span className="text-sm text-gray-700">{label}</span>}
-//       </label>
-//     );
-//   }
-// );
-
-// CheckboxDefault.displayName = "CheckboxDefault";
 
 const ProductRow = memo(({ product, index, updateProductQuantity, updateProductError, handleSelectProduct, errorTags, errorImages, onAddTag, onRemoveTag, onAddImage, onRemoveImage }) => {
   const handleToggleRowSelect = useCallback(() => {
@@ -699,7 +643,7 @@ const PopupCompleteCommand = ({ onClose }) => {
           setShowAutoTooltip(true);
           hasShownTooltipRef.current = true;
         });
-      }, 200);
+      }, 400);
       const autoCloseTimer = setTimeout(() => {
         setShowAutoTooltip(false);
         setAutoTooltipText('');
