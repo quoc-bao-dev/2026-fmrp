@@ -186,7 +186,7 @@ const PopupDetail = props => {
                                     </div>
                                     {/* Thuộc tính kho - chỉ hiển thị cho nguyên vật liệu */}
                                     {showWarehouseAttributes && (e?.item?.text_type === 'material' || e?.text_type === 'material') && warehousePropertyLabels.length > 0 && (
-                                      <div className='flex flex-col italic gap-0.5'>
+                                      <div className='flex flex-col italic '>
                                         {warehousePropertyLabels.map(({ key, label }) => {
                                           const value = e?.[key] ?? e?.item?.[key];
                                           const valueString = value !== undefined && value !== null && value !== '' ? String(value) : '-';
