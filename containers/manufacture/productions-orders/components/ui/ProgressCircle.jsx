@@ -59,7 +59,7 @@ export default function ProgressCircle({ className, title, step, total, quantity
                 {/* Info */}
                 <div className="relative z-10 flex flex-col items-center">
                     <span className="text-[7px] text-[#9295A4] font-medium">{`${step}/${total} công đoạn`}</span>
-                    <h3 className="text-[10px] font-semibold">{title}</h3>
+                    <h3 className="text-[10px] font-semibold text-center">{title}</h3>
                     <span className="text-[9px] font-medium text-[#9295A4]">SL: {quantity}</span>
                 </div>
             </div>

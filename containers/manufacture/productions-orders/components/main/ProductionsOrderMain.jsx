@@ -36,7 +36,6 @@ import useToast from '@/hooks/useToast';
 import { useToggle } from '@/hooks/useToggle';
 import { fetchItemsManufactures, fetchPDFManufactures, fetchPDFPlanManufactures } from '@/managers/api/productions-order/useLinkFilePDF';
 import { useProductionOrderDetail } from '@/managers/api/productions-order/useProductionOrderDetail';
-import { useProductionOrderManagers } from '@/managers/api/productions-order/useProductionOrderManagers';
 import { useProductionOrderPermission } from '@/managers/api/productions-order/useProductionOrderPermission';
 import { useProductionOrdersList } from '@/managers/api/productions-order/useProductionOrdersList';
 import { formatMoment } from '@/utils/helpers/formatMoment';
@@ -326,43 +325,6 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
   const flagProductionOrders = useMemo(() => (dataProductionOrders ? dataProductionOrders?.pages?.flatMap(page => page?.productionOrders) : []), [dataProductionOrders]);
 
   const poiId = router.query.poi_id;
-
-  const { data: listProductionOrderManagers, refetch: refetchProductionOrderManagers } = useProductionOrderManagers({
-    po_id: isStateProvider?.productionsOrders?.idDetailProductionOrder,
-  });
-
-  const managerAvatars = useMemo(() => {
-    const records = listProductionOrderManagers?.data?.production_order_managers || [];
-
-    return records.map(item => ({
-      id: item?.staff?.staffid || item?.staff_id,
-      name: item?.staff?.full_name || 'Không tên',
-      avatarUrl: item?.staff?.profile_image || '',
-    }));
-  }, [listProductionOrderManagers]);
-
-  const managerInitialData = useMemo(() => {
-    const records = listProductionOrderManagers?.data?.production_order_managers || [];
-
-    return records.map(item => {
-      const role =
-        item?.is_manager == 1 || item?.is_manager === '1'
-          ? 'manager'
-          : item?.is_btp_nvl == 1 || item?.is_btp_nvl === '1'
-          ? 'btp_nvl'
-          : item?.is_manufacture == 1 || item?.is_manufacture === '1'
-          ? 'manufacture'
-          : '';
-
-      return {
-        recordId: item?.id,
-        id: item?.staff?.staffid || item?.staff_id,
-        name: item?.staff?.full_name || 'Không tên',
-        avatarUrl: item?.staff?.profile_image || '',
-        role,
-      };
-    });
-  }, [listProductionOrderManagers]);
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -797,7 +759,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
       productionsOrders: {
         ...prev.productionsOrders,
         itemDetailPoi: item,
-        managerAvatars,
+        // managerAvatars,
         selectedImages: [],
         uploadProgress: {},
       },
@@ -819,7 +781,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     // Mở Sheet sau khi URL đã cập nhật
     openSheet({
       type: 'manufacture-productions-orders',
-      content: <SheetProductionsOrderDetail {...shareProps} managerAvatars={managerAvatars} />,
+      content: <SheetProductionsOrderDetail {...shareProps} />,
       className: 'w-[90vw] md:w-[700px] xl:w-[70%] lg:w-[75%]',
     });
   };
@@ -941,7 +903,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     dataTable,
     dataLang,
     searchMaterials,
-    managerAvatars: isStateProvider?.productionsOrders?.managerAvatars || [],
+    // managerAvatars: isStateProvider?.productionsOrders?.managerAvatars || [],
     canManageManagers,
     handleToggleAccordionList,
     handShowItem: (id, type) => {
@@ -1131,7 +1093,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                   payload: { open: false },
                 });
                 // Làm mới dữ liệu sau khi hoàn thành lệnh sản xuất
-                refreshData();
+                // refreshData();
               }}
               code={isStateProvider.productionsOrders.dataProductionOrderDetail.title}
               id={isStateProvider?.productionsOrders?.idDetailProductionOrder}
@@ -1156,7 +1118,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                   payload: { open: false },
                 });
                 // Làm mới dữ liệu sau khi hoàn thành lệnh sản xuất
-                refreshData();
+                // refreshData();
               }}
             />
           ),
@@ -1760,7 +1722,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                   <DetailProductionOrderList
                     {...shareProps}
                     processSteps={processSteps}
-                    managerAvatars={managerAvatars}
+                    // managerAvatars={managerAvatars}
                     typePageMoblie={typePageMoblie}
                     hasPoPermission={hasPoPermission}
                     authState={authState}
@@ -1858,9 +1820,8 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
       />
       <PopupListResponsiblePerson
         brandId={dataProductionOrderDetail?.productionOrder?.branch_id}
-        initialManagers={managerInitialData}
+        poId={isStateProvider?.productionsOrders?.idDetailProductionOrder}
         onRefreshDetail={refetchProductionOrderDetail}
-        onRefreshManagers={refetchProductionOrderManagers}
         canManageManagers={canManageManagers}
       />
     </React.Fragment>

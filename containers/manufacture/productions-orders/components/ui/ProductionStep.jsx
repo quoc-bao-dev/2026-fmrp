@@ -1,132 +1,11 @@
 import CheckIcon from '@/components/icons/common/CheckIcon';
+import { AvatarStack } from '@/components/UI/common/user';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
+import { IMAGES } from '@/constants/images';
 import PopupErrorInformation from '@/containers/manufacture/check-quality/components/PopupErrorInformation';
 import moment from 'moment/moment';
 import { useState } from 'react';
 import { PiCaretDownBold, PiCaretUpBold } from 'react-icons/pi';
-import AvatarStack from '../popup/AvatarStack';
-
-const steps = [
-  { id: '189', name: 'Đóng gói', qty: 5, lot: 'LSXCT12031526', completed: false },
-  { id: '188', name: 'Là ủi', qty: 5, completed: false },
-  { id: '187', name: 'Vắt sổ', qty: 5, completed: true, active: true, date: '13/03' },
-  { id: '186', name: 'May', qty: 5, completed: true, date: '12/03 16:30' },
-  { id: '185', name: 'Xem thêm (+3 công đoạn)', qty: null, completed: true, date: '11/03 12:59' },
-];
-
-const stepFake = [
-  {
-    id: '249',
-    po_id: '39',
-    poi_id: '50',
-    stage_id: '10',
-    number: '3',
-    final_stage: '1',
-    type: 3,
-    bom_id: '0',
-    begin_production: '0',
-    date_production: null,
-    staff_production: '0',
-    staff_active: '0',
-    active: '0',
-    date_active: null,
-    stage_code: 'HOANTHANH',
-    stage_name: 'Hoàn Thành',
-    purchase_items: [
-      {
-        pp_id: '249',
-        poisub_id: '0',
-        pois_id: '188',
-        reference_no: 'PR_000249',
-        date: '2025-03-25 09:41:12',
-        item_code: 'WINNER2025',
-        item_name: 'Xe máy winner 2025 v3',
-        quantity: '15',
-        serial: 'LSXCT12031526',
-        lot: 'LSXCT12031526',
-        expiration_date: '2025-03-24 09:41:12',
-        quantity_error: '0',
-        quantity_success: '15',
-      },
-    ],
-  },
-  {
-    id: '32',
-    po_id: '39',
-    poi_id: '50',
-    stage_id: '10',
-    number: '3',
-    final_stage: '1',
-    type: 3,
-    bom_id: '0',
-    begin_production: '0',
-    date_production: null,
-    staff_production: '0',
-    staff_active: '0',
-    active: '0',
-    date_active: null,
-    stage_code: 'HOANTHANH',
-    stage_name: 'Hoàn Thành',
-    purchase_items: null,
-  },
-  {
-    id: '424',
-    po_id: '39',
-    poi_id: '50',
-    stage_id: '10',
-    number: '3',
-    final_stage: '1',
-    type: 3,
-    bom_id: '0',
-    begin_production: '0',
-    date_production: null,
-    staff_production: '0',
-    staff_active: '0',
-    active: '0',
-    date_active: null,
-    stage_code: 'HOANTHANH',
-    stage_name: 'Hoàn Thành',
-    purchase_items: null,
-  },
-  {
-    id: '248',
-    po_id: '39',
-    poi_id: '50',
-    stage_id: '9',
-    number: '2',
-    final_stage: '0',
-    type: 3,
-    bom_id: '0',
-    begin_production: '1',
-    date_production: '2025-03-24 09:41:12',
-    staff_production: '0',
-    staff_active: '0',
-    active: '0',
-    date_active: null,
-    stage_code: 'SON XE',
-    stage_name: 'Sơn Xe',
-    purchase_items: null,
-  },
-  {
-    id: '247',
-    po_id: '39',
-    poi_id: '50',
-    stage_id: '19',
-    number: '1',
-    final_stage: '0',
-    type: '2',
-    bom_id: '0',
-    begin_production: '0',
-    date_production: null,
-    staff_production: '0',
-    staff_active: '0',
-    active: '1',
-    date_active: '2025-03-22 09:41:12',
-    stage_code: 'Ghép phụ tùng',
-    stage_name: 'Ghép phụ tùng',
-    purchase_items: null,
-  },
-];
 
 const ProductionSteps = ({ stages }) => {
   const [showAll, setShowAll] = useState(false);
@@ -134,6 +13,41 @@ const ProductionSteps = ({ stages }) => {
 
   const visibleSteps = showAll ? stages : stages?.slice(0, 3);
   const hiddenCount = stages?.length - visibleSteps?.length;
+
+  // Hàm transform staff_and_groups thành format cho AvatarStack
+  const transformStaffAndGroups = (staffAndGroups) => {
+    if (!staffAndGroups || (Array.isArray(staffAndGroups) && staffAndGroups.length === 0)) {
+      return [];
+    }
+
+    const people = [];
+
+    // Lấy staff trực tiếp từ items
+    if (staffAndGroups.items && Array.isArray(staffAndGroups.items)) {
+      staffAndGroups.items.forEach((item) => {
+        if (item.staff) {
+          people.push({
+            id: `staff-${item.staff.staffid}`,
+            name: item.staff.full_name || '',
+            avatarUrl: item.staff.profile_image || null,
+          });
+        }
+      });
+    }
+
+    // Lấy groups và tạo avatar cho mỗi nhóm
+    if (staffAndGroups.groups && Array.isArray(staffAndGroups.groups)) {
+      staffAndGroups.groups.forEach((group) => {
+        people.push({
+          id: `group-${group.id}`,
+          name: group.name || '',
+          avatarUrl: IMAGES.groupUser,
+        });
+      });
+    }
+
+    return people;
+  };
 
   return (
     <div className='3xl:pl-4 pl-2 3xl:py-4 py-2'>
@@ -196,13 +110,11 @@ const ProductionSteps = ({ stages }) => {
                           {step.stage_name}
                         </div>
                         <div className='w-fit'>
-                          <AvatarStack 
-                            people={[
-                              { id: '1', name: 'Nguyễn Văn A', avatarUrl: 'https://via.placeholder.com/150' }, 
-                              { id: '2', name: 'Nguyễn Văn B', avatarUrl: 'https://via.placeholder.com/150' },
-                              { id: '3', name: 'Nguyễn Văn C', avatarUrl: 'https://via.placeholder.com/150' },
-                            ]} 
-                            size={26} className='!p-1'/>
+                          <AvatarStack
+                            people={transformStaffAndGroups(step.staff_and_groups)}
+                            size={26}
+                            className='!p-1'
+                          />
                         </div>
                       </div>
 
@@ -228,7 +140,7 @@ const ProductionSteps = ({ stages }) => {
                           </div>
                         </div>
 
-                        {  !!item?.has_qc_error && item?.quantity_error > 0 && (
+                        {!!item?.has_qc_error && item?.quantity_error > 0 && (
                           <button
                             className='px-2 py-1 text-[10px] leading-0 text-center bg-blue-fmrp text-white rounded-full hover:bg-blue-fmrp/80 cursor-pointer'
                             onClick={() => {

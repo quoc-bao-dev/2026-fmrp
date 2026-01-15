@@ -4,6 +4,8 @@ import Skeleton from '@/components/common/skeleton/Skeleton';
 import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import { AvatarStack } from '@/components/UI/common/user';
+import { IMAGES } from '@/constants/images';
 import CostCardSkeleton from '@/containers/manufacture/productions-orders/components/skeleton/CostCardSkeleton';
 import TabSwitcherWithUnderlineSkeleton from '@/containers/manufacture/productions-orders/components/skeleton/TabSwitcherWithUnderlineSkeleton';
 import { StateContext } from '@/context/_state/productions-orders/StateContext';
@@ -24,12 +26,6 @@ import TabMaterialIssueHistory from '../tab/TabMaterialIssueHistory';
 import TabMaterialOutputTab from '../tab/TabMaterialOutput';
 import TabMaterialReturn from '../tab/TabMaterialReturn';
 import CostCard from '../ui/CostCard';
-import { AvatarStack } from '@/components/UI/common/user';
-
-const initialState = {
-  isTab: 1,
-  dataDetail: {},
-};
 
 const SheetProductionsOrderDetail = memo(({ dataLang, ...props }) => {
   const router = useRouter();
@@ -102,8 +98,41 @@ const SheetProductionsOrderDetail = memo(({ dataLang, ...props }) => {
     }
   }, [isOpenSheet, isStateProvider?.productionsOrders?.poiId]);
 
-  // Manager detail (người phụ trách) nhận từ props (đã chuẩn bị ở list)
-  const managerAvatars = props?.managerAvatars || [];
+  // Hàm transform poi.staff_and_groups thành format cho AvatarStack
+  const transformPoiStaffAndGroups = staffAndGroups => {
+    if (!staffAndGroups) {
+      return [];
+    }
+
+    const people = [];
+
+    // Lấy staff từ staffs
+    if (staffAndGroups.staffs && Array.isArray(staffAndGroups.staffs)) {
+      staffAndGroups.staffs.forEach(staff => {
+        people.push({
+          id: `staff-${staff.staffid}`,
+          name: staff.full_name || '',
+          avatarUrl: staff.profile_image || null,
+        });
+      });
+    }
+
+    // Lấy groups và tạo avatar cho mỗi nhóm
+    if (staffAndGroups.groups && Array.isArray(staffAndGroups.groups)) {
+      staffAndGroups.groups.forEach(group => {
+        people.push({
+          id: `group-${group.id}`,
+          name: group.name || '',
+          avatarUrl: IMAGES.groupUser,
+        });
+      });
+    }
+
+    return people;
+  };
+
+  // Manager detail (người phụ trách) từ poi.staff_and_groups
+  const managerAvatars = transformPoiStaffAndGroups(dataItemOrderDetail?.poi?.staff_and_groups);
 
   const components = {
     1: <TabInformation dataLang={dataLang} scrollRef={scrollRef} {...props} />,
@@ -177,7 +206,7 @@ const SheetProductionsOrderDetail = memo(({ dataLang, ...props }) => {
 
   const { isNearlyExpired } = useSettingExpiration();
   const hasAlert = isNearlyExpired;
-  const classNameSpace =  hasAlert ? "pt-[28px] " : "pt-[0px]"
+  const classNameSpace = hasAlert ? 'pt-[28px] ' : 'pt-[0px]';
 
   return (
     <div className={`flex flex-col overflow-hidden !bg-white h-full ${classNameSpace}`}>
