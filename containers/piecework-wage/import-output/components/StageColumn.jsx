@@ -252,7 +252,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
         data.push({
           id: String(staff.staffid),
           name: staff.full_name,
-          avatarUrl: staff.profile_image || IMAGES.noImage,
+          avatarUrl: staff.profile_image,
           type: 'staff',
         });
       });

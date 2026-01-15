@@ -13,6 +13,8 @@ import ResponsibleAvatar from './ResponsibleAvatar';
 import ResponsiblePersonComboBox from './ResponsiblePersonComboBox';
 import { StateContext } from '@/context/_state/productions-orders/StateContext';
 import { useSaveProductionOrderManagers } from '@/managers/api/productions-order/useSaveProductionOrderManagers';
+import { useProductionOrderManagers } from '@/managers/api/productions-order/useProductionOrderManagers';
+import Loading from '@/components/UI/loading/loading';
 
 const deca = Lexend_Deca({
   subsets: ['latin'],
@@ -33,22 +35,22 @@ const PopupListResponsiblePerson = props => {
   const roleDropdownRef = useRef(null);
   const [roleAnchorEl, setRoleAnchorEl] = useState(null);
 
-  // Lấy branch_id từ production order
-  const { data: staffs } = useSearchStaffs({ branch_ids: [props.brandId] });
-
+  // Lấy list nhân sự & list người phụ trách theo LSX hiện tại
+  const { data: staffs } = useSearchStaffs({ branch_ids: [props.brandId], enabled: statePopupListResponsiblePerson?.open });
+  const { data: listProductionOrderManagers, isLoading: isLoadingProductionOrderManagers } = useProductionOrderManagers({
+    po_id: props.poId,
+    enabled: statePopupListResponsiblePerson?.open && !!props.poId,
+  });
   // Hook để save production order managers
   const { saveProductionOrderManagers, isLoading: isSaving } = useSaveProductionOrderManagers({
-    onSuccess: (response) => {
-      // Đóng popup sau khi save thành công
+    onSuccess: () => {
       handleClose();
-      // Trigger refetch detail (if provided)
       props?.onRefreshDetail?.();
-      // Trigger refetch managers list (avatar/table) nếu có
       props?.onRefreshManagers?.();
     },
-    onError: (error) => {
+    onError: error => {
       console.error('Failed to save managers:', error);
-    }
+    },
   });
 
   const listStaffs = useMemo(() => {
@@ -61,10 +63,34 @@ const PopupListResponsiblePerson = props => {
     );
   }, [staffs]);
 
+  // Map dữ liệu người phụ trách từ API về dạng dùng trong popup
+  const managerInitialData = useMemo(() => {
+    const records = listProductionOrderManagers?.data?.production_order_managers || [];
+
+    return records.map(item => {
+      const role =
+        item?.is_manager == 1 || item?.is_manager === '1'
+          ? 'manager'
+          : item?.is_btp_nvl == 1 || item?.is_btp_nvl === '1'
+          ? 'btp_nvl'
+          : item?.is_manufacture == 1 || item?.is_manufacture === '1'
+          ? 'manufacture'
+          : '';
+
+      return {
+        recordId: item?.id,
+        id: item?.staff?.staffid || item?.staff_id,
+        name: item?.staff?.full_name || 'Không tên',
+        avatarUrl: item?.staff?.profile_image || '',
+        role,
+      };
+    });
+  }, [listProductionOrderManagers]);
+
   const roleOptions = [
     { label: 'Quản lý', value: 'manager' },
     { label: 'Phụ trách BTP & NVL', value: 'btp_nvl' },
-    { label: 'Phụ trách sản xuất', value: 'manufacture' }
+    // { label: 'Phụ trách sản xuất', value: 'manufacture' }
   ];
 
   const handleClose = () => {
@@ -104,7 +130,8 @@ const PopupListResponsiblePerson = props => {
 
   // Prefill / reset theo lệnh sản xuất hiện tại
   useEffect(() => {
-    const list = props?.initialManagers || [];
+    // Ưu tiên dữ liệu truyền từ ngoài vào (nếu có), nếu không thì dùng dữ liệu từ API trong popup
+    const list = props?.initialManagers && props.initialManagers.length > 0 ? props.initialManagers : managerInitialData;
 
     // Set selected people
     const prefillPeople = list.map(item => ({
@@ -121,7 +148,7 @@ const PopupListResponsiblePerson = props => {
       return acc;
     }, {});
     setRoleByPerson(prefillRoles);
-  }, [props?.initialManagers, statePopupListResponsiblePerson?.open]);
+  }, [props?.initialManagers, managerInitialData, statePopupListResponsiblePerson?.open]);
 
   const handleSave = () => {
     // Phân quyền: chỉ cho phép role is_manager được lưu
@@ -141,28 +168,28 @@ const PopupListResponsiblePerson = props => {
 
     // Lấy po_id từ production order detail
     const po_id = isStateProvider?.productionsOrders?.idDetailProductionOrder || 50;
-    
+
     // Transform dữ liệu từ selectedPeople và roleByPerson
     const items = selectedPeople.map(person => {
       const roleValue = roleByPerson[person.id] || '';
-      
+
       // Map role value thành các flags
       const is_manager = roleValue === 'manager' ? 1 : 0;
       const is_btp_nvl = roleValue === 'btp_nvl' ? 1 : 0;
       const is_manufacture = roleValue === 'manufacture' ? 1 : 0;
-      
+
       return {
         id: person.recordId ?? 0,
         staff_id: person.id,
         is_manager,
         is_btp_nvl,
-        is_manufacture
+        is_manufacture,
       };
     });
 
     const payload = {
       po_id,
-      items
+      items,
     };
 
     // Gọi mutation để save
@@ -259,7 +286,9 @@ const PopupListResponsiblePerson = props => {
 
           {/* Danh sách người phụ trách */}
           <div className='mx-4 max-h-[280px] overflow-y-auto'>
-            {selectedPeople.length === 0 ? (
+            {isLoadingProductionOrderManagers ? (
+              <Loading />
+            ) : selectedPeople.length === 0 ? (
               <div className='py-4 text-sm text-[#9295A4]'>Chưa có người phụ trách</div>
             ) : (
               <div className='divide-y divide-[#E7EAEE]'>

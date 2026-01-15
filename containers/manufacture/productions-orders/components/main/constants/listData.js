@@ -81,7 +81,7 @@ export const listDropdownCompleteStage = [
     icon: <ListChecksIcon className="size-full " />, // bạn thay bằng icon tương ứng
     isPremium: false,
     type: 'normal',
-    permission: ['is_manager', 'is_manufacture'], // Nhóm quyền 2: Hoàn thành lệnh & công đoạn
+    permission: ['is_manager'], // Nhóm quyền 2: Hoàn thành lệnh & công đoạn
   },
   {
     id: 4,
@@ -89,7 +89,7 @@ export const listDropdownCompleteStage = [
     icon: <KanbanIcon className="size-full" />,
     isPremium: false,
     type: 'complete_stage',
-    permission: ['is_manager', 'is_manufacture'], // Nhóm quyền 2: Hoàn thành lệnh & công đoạn
+    // permission: ['is_manager', 'is_manufacture'], // Nhóm quyền 2: Hoàn thành lệnh & công đoạn
   },
   // {
   //   id: 5,
