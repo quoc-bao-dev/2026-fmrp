@@ -5,6 +5,8 @@ import { autoUpdate, flip, offset, shift, size, useDismiss, useFloating, useInte
 import Image from 'next/image';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import useToast from '@/hooks/useToast';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 
 const ResponsibleAvatar = ({ avatarUrl, fullName = '', size = 40, borderColor = '#549AE8', className = '' }) => {
   const [isError, setIsError] = useState(false);
@@ -43,7 +45,22 @@ const areArraysEqual = (arr1, arr2) => {
   return true;
 };
 
-const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], className, children, hideSelected = true }) => {
+const PersonSelector = ({
+  open,
+  onClose,
+  onConfirm,
+  onApplySelected,
+  selected = [],
+  data = [],
+  className,
+  children,
+  onSelectMode,
+  selectedProductionOrdersCount = 0,
+  isSelectMode = false,
+  inlineConfirm = false,
+  hideFooterActions = false,
+  width = 230,
+}) => {
   const [search, setSearch] = useState('');
   const [localSelected, setLocalSelected] = useState(selected);
   const lastSelectedIdRef = useRef(null);
@@ -52,6 +69,7 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
   const prevSelectedRef = useRef(selected);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const triggerRef = useRef(null);
+  const showToast = useToast();
 
   // Reset localSelected về selected mới nhất khi mở popup hoặc khi selected thay đổi
   useEffect(() => {
@@ -94,7 +112,7 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
       size({
         apply({ availableHeight, elements }) {
           // Giới hạn chiều cao tối đa là 414px nhưng không vượt quá khoảng trống
-          const maxHeight = Math.min(414, availableHeight);
+          const maxHeight = Math.min(500, availableHeight);
           elements.floating.style.maxHeight = `${maxHeight}px`;
         },
         padding: 16,
@@ -105,10 +123,10 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
 
   // Xử lý click outside với xác nhận nếu có thay đổi
   const dismiss = useDismiss(context, {
-    enabled: open && !isConfirmOpen,
+    enabled: open && !isConfirmOpen && !isSelectMode, // Không cho phép đóng khi đang ở chế độ chọn
     outsidePress: () => {
-      // Nếu đang mở popup confirm thì bỏ qua click outside
-      if (isConfirmOpen) {
+      // Nếu đang mở popup confirm hoặc đang ở chế độ chọn thì bỏ qua click outside
+      if (isConfirmOpen || isSelectMode) {
         return false;
       }
 
@@ -123,17 +141,14 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
 
   const { getReferenceProps, getFloatingProps } = useInteractions([dismiss]);
 
-  const selectedIds = useMemo(() => new Set(selected?.map(p => p.id) || []), [selected]);
+  const hasPersonSelected = useMemo(() => (Array.isArray(localSelected) ? localSelected.length > 0 : false), [localSelected]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     const peopleList = Array.isArray(data) ? data : [];
-    // Nếu hideSelected = true (mặc định): ẩn các user đã chọn
-    // Nếu hideSelected = false: hiển thị tất cả, kể cả đã chọn
-    const base = hideSelected ? peopleList.filter(p => !selectedIds.has(p.id)) : peopleList;
-    if (!term) return base;
-    return base.filter(p => p.name.toLowerCase().includes(term));
-  }, [search, selectedIds, data, hideSelected]);
+    if (!term) return peopleList;
+    return peopleList.filter(p => p.name.toLowerCase().includes(term));
+  }, [search, data]);
 
   const isSelected = id => localSelected?.some(item => item.id === id);
 
@@ -147,7 +162,8 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
       }
       lastActionRef.current = 'select';
       lastSelectedIdRef.current = person.id;
-      return [...prev, person];
+      // Đưa phần tử mới chọn lên đầu danh sách
+      return [person, ...prev];
     });
   };
 
@@ -181,6 +197,33 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
       ...getReferenceProps(),
     });
 
+  const handleConfirmAll = () => {
+    if (isSelectMode) {
+      showToast('error', 'Vui lòng hoàn thành chế độ chọn lệnh trước khi áp dụng tất cả');
+      return;
+    }
+    if (!hasPersonSelected) {
+      showToast('error', 'Vui lòng chọn ít nhất một người phụ trách trước khi áp dụng');
+      return;
+    }
+    onConfirm?.(localSelected);
+    onClose?.();
+  };
+
+  const handleSelectModeAction = () => {
+    if (!hasPersonSelected) {
+      showToast('error', 'Vui lòng chọn ít nhất một người phụ trách trước khi chọn lệnh');
+      return;
+    }
+    if (selectedProductionOrdersCount > 0) {
+      onApplySelected?.(localSelected);
+      onClose?.();
+    } else {
+      showToast('success', 'Vui lòng chọn các lệnh sản xuất cần áp dụng');
+      onSelectMode?.(localSelected);
+    }
+  };
+
   return (
     <>
       {triggerElement}
@@ -188,47 +231,52 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
         createPortal(
           <div
             ref={refs.setFloating}
-            className={`font-deca w-[389px] bg-white rounded-[16px] shadow-xl flex flex-col overflow-hidden ${className}`}
+            className={`font-deca p-3 bg-white rounded-[16px] shadow-xl flex flex-col gap-2 overflow-hidden ${className}`}
             style={{
               ...floatingStyles,
-              minWidth: triggerRef.current ? Math.max(360, triggerRef.current.getBoundingClientRect().width || 0) : 360,
-              zIndex: 100,
+              width,
+              minWidth: triggerRef.current ? Math.max(width, triggerRef.current.getBoundingClientRect().width || 0) : width,
+              zIndex: 1000,
             }}
             {...getFloatingProps()}
           >
             {/* Search */}
-            <div className='px-3 pt-3'>
-              <div className='flex items-center  gap-2'>
-                <div className='flex-1 flex items-center gap-3 pl-4 pr-1 py-1 border border-[#D0D5DD] rounded-[12px] bg-white focus-within:ring-2 focus-within:ring-[#1760B9]'>
-                  <input value={search} onChange={e => setSearch(e.target.value)} placeholder='Tìm người phụ trách' className='flex-1 text-sm text-[#101828] outline-none placeholder:text-[#9295A4]' />
-                  <div className='w-8 h-8 rounded-lg bg-[#1760B9] flex items-center justify-center'>
-                    <MagnifyingGlassIcon className='size-5 text-white' />
-                  </div>
-                </div>
-                <div className='flex items-center justify-center'>
-                  <button
-                    className='bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
-                    onClick={() => {
-                      onConfirm?.(localSelected);
-                      onClose?.();
-                    }}
-                  >
-                    Xác nhận
-                  </button>
+            <div className='w-full flex items-center gap-2'>
+              <div className='min-w-0 flex-1 flex items-center gap-3 pl-2 pr-1 py-1 border border-[#D0D5DD] rounded-lg bg-white focus-within:ring-2 focus-within:ring-[#1760B9]'>
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder='Tìm người phụ trách'
+                  className='flex-1 min-w-0 text-sm text-[#101828] outline-none placeholder:text-[#9295A4]'
+                />
+                <div className='w-8 h-8 flex-shrink-0 rounded-lg bg-[#1760B9] flex items-center justify-center'>
+                  <MagnifyingGlassIcon className='size-5 text-white' />
                 </div>
               </div>
             </div>
 
-            <div className='pt-2'></div>
             {/* List */}
-            <div className='flex-1 overflow-y-auto px-3 pb-2'>
+            <Customscrollbar className='flex-1 min-h-0'>
               <div className='space-y-1'>
                 {filtered
                   .slice()
                   .sort((a, b) => {
-                    const aSel = isSelected(a.id) ? 1 : 0;
-                    const bSel = isSelected(b.id) ? 1 : 0;
-                    return bSel - aSel; // đưa item đã chọn lên đầu
+                    const aSelected = isSelected(a.id);
+                    const bSelected = isSelected(b.id);
+                    
+                    // Phần tử đã chọn lên đầu, chưa chọn ở sau
+                    if (aSelected && !bSelected) return -1;
+                    if (!aSelected && bSelected) return 1;
+                    
+                    // Nếu cả hai đều đã chọn, sắp xếp theo thứ tự trong localSelected (phần tử mới chọn lên trước)
+                    if (aSelected && bSelected) {
+                      const aIndex = localSelected.findIndex(item => item.id === a.id);
+                      const bIndex = localSelected.findIndex(item => item.id === b.id);
+                      return aIndex - bIndex;
+                    }
+                    
+                    // Cả hai đều chưa chọn, giữ nguyên thứ tự
+                    return 0;
                   })
                   .map(person => {
                     const active = isSelected(person.id);
@@ -237,7 +285,7 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
                         <button
                           data-rpcb-item={person.id}
                           onClick={() => toggleLocal(person)}
-                          className={`w-full flex items-center gap-3 px-2 py-1.5 rounded-[10px] text-left transition-colors  border-[#E7EAEE] ${
+                          className={`w-full flex items-center gap-3 p-1.5 rounded-[10px] text-left transition-colors  border-[#E7EAEE] ${
                             active ? 'bg-[#EBF5FF]' : 'bg-white hover:bg-[#F6F8FB]'
                           }`}
                         >
@@ -249,12 +297,39 @@ const PersonSelector = ({ open, onClose, onConfirm, selected = [], data = [], cl
                     );
                   })}
                 {filtered.length === 0 && (
-                  <div className='text-center text-sm text-[#9295A4] py-4'>
-                    {hideSelected && selectedIds.size > 0 && Array.isArray(data) && data.length === selectedIds.size ? 'Tất cả người phụ trách đã được chọn' : 'Không tìm thấy người phù hợp'}
-                  </div>
+                  <div className='text-center text-sm text-[#9295A4] py-4'>Không tìm thấy người phù hợp</div>
                 )}
               </div>
-            </div>
+            </Customscrollbar>
+            {inlineConfirm ? (
+              <div className='flex items-center justify-center w-full pt-2 z-10'>
+                <button
+                  className='w-full text-blue-fmrp bg-white border border-blue-fmrp px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-blue-fmrp/20 transition-colors truncate'
+                  onClick={handleConfirmAll}
+                >
+                  Xác nhận
+                </button>
+              </div>
+            ) : (
+              !hideFooterActions && (
+              <div className='flex flex-col items-center justify-center gap-2 w-full z-10'>
+                <button
+                  className='w-full bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
+                  onClick={handleConfirmAll}
+                >
+                  Áp dụng tất cả
+                </button>
+                <button
+                  className='w-full text-blue-fmrp bg-white border border-blue-fmrp px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-blue-fmrp/20 transition-colors truncate'
+                  onClick={handleSelectModeAction}
+                >
+                  {selectedProductionOrdersCount > 0
+                    ? `Áp dụng (${selectedProductionOrdersCount}) lệnh`
+                    : 'Tùy chọn lệnh'}
+                </button>
+              </div>
+              )
+            )}
           </div>,
           document.body
         )}

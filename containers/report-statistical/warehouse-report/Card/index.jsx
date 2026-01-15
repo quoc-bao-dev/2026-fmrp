@@ -25,6 +25,7 @@ import { useExportExcel } from './hooks/useExportExcel';
 import { useGetCardStock } from './hooks/useGetListReportStock';
 import { usePersistedBranches } from '@/hooks/common/usePersistedBranches';
 import { useGetItemsWithBranch } from '@/hooks/useComboBoxReport';
+import { IMAGES } from '@/constants/images';
 
 const breadcrumbItems = [
   {
@@ -303,7 +304,7 @@ const Card = props => {
           !selectedProduct ? (
             <div className='p-10 bg-gray-50 border border-[#E0E0E1] rounded-lg h-full'>
               <div className='text-center flex flex-col items-center justify-center gap-2'>
-                <Image src='/data-not-found.png' alt='No Data' width={300} height={300} className='object-contain' />
+                <Image src={IMAGES.nodataNotFound} alt='No Data' width={300} height={300} className='object-contain' />
                 <p className='text-lg font-medium text-gray-600 mb-2'>Vui lòng chọn mặt hàng</p>
                 <p className='text-sm text-gray-500'>Để xem báo cáo thẻ kho, bạn cần chọn mặt hàng từ combo box bên trên</p>
               </div>

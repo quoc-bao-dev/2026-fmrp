@@ -6,12 +6,13 @@ export const IMAGES = {
   // c
   // d
   // e
-  emptyProductOrder: '/background/system/emptyProductOrder.png',
+  emptyProductOrder: '/nodata/emptyProductOrder.png',
   // f
   rocketBoy: '/dashboard/rocket-boy.png',
   rocketBoyGif: '/dashboard/rocket-boy-1.gif',
   // g
   googleplay: '/qrCode/googleplay.svg',
+  groupUser: '/icon/GroupUser.png',
   // h
   // i
   // j
@@ -24,13 +25,16 @@ export const IMAGES = {
   noImage: '/nodata/noimagelogo.png',
   nodataStage: '/nodata/nodata-stage.png',
   nodataShiftSchedule: '/nodata/nodata-calendar.png',
+  nodataNotFound: '/nodata/data-not-found.png',
+  nodataChart: '/nodata/nodata-chart.png',
+  nodataNoti: '/nodata/nodata-noti.png',
   // o
   // p
   // q
   qrDownloadApp: '/qrCode/qrDowloadApp.jpeg',
   // r
   // s
-  summary_LSX: '/background/system/summaryLSX.webp',
+  summary_LSX: '/nodata/summaryLSX.webp',
   // t
   // u
   upgrade_pro: '/upgrade/upgrade.png',

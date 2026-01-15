@@ -22,11 +22,6 @@ import { PiWarehouseLight } from 'react-icons/pi';
 import { Tooltip } from 'react-tippy';
 import Popup from 'reactjs-popup';
 
-const deca = Lexend_Deca({
-  subsets: ['latin'],
-  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
-});
-
 const ProductRow = memo(({ product, index, updateProductQuantity, updateProductError, handleSelectProduct, errorTags, errorImages, onAddTag, onRemoveTag, onAddImage, onRemoveImage }) => {
   const handleToggleRowSelect = useCallback(() => {
     handleSelectProduct(index, !product.selected);
@@ -530,7 +525,7 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose }) => {
 
   return (
     <Popup open={isOpen} closeOnDocumentClick={false} onClose={onClose} className='popup-edit' overlayStyle={{ zIndex: 1100 }}>
-      <div className={`p-6 flex flex-col gap-6 rounded-3xl w-[90vw] xl:w-[1085px] max-h-[90vh] bg-neutral-00 ${deca.className}`}>
+      <div className={`p-6 flex flex-col gap-6 rounded-3xl w-[90vw] xl:w-[1085px] max-h-[90vh] bg-neutral-00 font-deca`}>
         <div className='flex gap-2 justify-between items-start'>
           <div className='flex flex-col gap-1'>
             <h2 className='text-2xl font-bold capitalize'>

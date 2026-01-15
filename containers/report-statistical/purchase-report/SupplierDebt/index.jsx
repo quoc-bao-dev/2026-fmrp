@@ -508,7 +508,7 @@ const SupplierDebt = () => {
           </div>
         ) : !selectedSupplier ? (
           <div className='flex flex-col items-center justify-center h-full'>
-            <Image src='/background/system/repostSupplier.webp' alt='Không có dữ liệu' width={165} height={100} priority unoptimized/>
+            <Image src='/nodata/repostSupplier.webp' alt='Không có dữ liệu' width={165} height={100} priority unoptimized/>
             <div className='flex items-center gap-2 mt-2'>
               <FaPlus color='#000' className='size-4' />
               <p className='responsive-text-xl font-semibold text-neutral-05'>Chọn nhà cung cấp</p>

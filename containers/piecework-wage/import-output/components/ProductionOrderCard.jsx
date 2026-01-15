@@ -1,20 +1,118 @@
-import { CalendarIcon, CheckDoubleIcon, Clock2Icon, ProgressIcon } from '@/components/icons';
+import { CalendarIcon, CheckDoubleIcon, Clock2Icon, ProgressIcon, UserPlusIcon } from '@/components/icons';
+import AvatarText from '@/components/UI/common/user/AvatarText';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
 import { IMAGES } from '@/constants/images';
 import formatNumber from '@/utils/helpers/formatnumber';
-import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
-import { FaPause, FaPlay, FaStop } from 'react-icons/fa';
 import { Tooltip } from 'antd';
-import PopupCompleteOrder from './PopupCompleteOrder';
+import Image from 'next/image';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { FaPause, FaPlay, FaStop } from 'react-icons/fa';
+import PopupCompleteOrder from './modal/PopupCompleteOrder';
+import PopupResponsiblePerson from './modal/PopupResponsiblePerson';
 
-const Avatar = () => {
+const Avatar = ({ group_members_assigned, staffs_assigned, onClick }) => {
+  // Transform staffs_assigned và group_members_assigned thành format thống nhất
+  const avatarList = useMemo(() => {
+    const list = [];
+
+    // Thêm nhân viên
+    (staffs_assigned || []).forEach(staff => {
+      list.push({
+        id: String(staff?.staffid),
+        name: staff?.full_name || '',
+        profile_image: staff?.profile_image || null,
+        type: 'staff',
+      });
+    });
+
+    // Thêm nhóm (transform từ cấu trúc group_members_assigned)
+    (group_members_assigned || []).forEach(group => {
+      list.push({
+        id: `group_${group?.id}`,
+        name: group?.name || '',
+        profile_image: null, // Nhóm không có profile_image, sẽ dùng icon nhóm
+        type: 'group',
+      });
+    });
+
+    return list;
+  }, [staffs_assigned, group_members_assigned]);
+
+  if (avatarList.length === 0) {
+    return (
+      <Tooltip title='Thêm người phụ trách' placement='top'>
+        <button
+          className='cursor-pointer flex items-center justify-start w-fit p-2 rounded-lg border border-[#003DA0] hover:bg-[#EBF5FF] transition-colors'
+          onClick={e => {
+            e.stopPropagation();
+            onClick?.();
+          }}
+        >
+          <UserPlusIcon className='size-5 text-[#11315B]' />
+        </button>
+      </Tooltip>
+    );
+  }
+  const isSingle = avatarList.length === 1;
+  const maxDisplay = 10;
+  const displayAvatars = avatarList.slice(0, maxDisplay);
+  const remainingCount = avatarList.length > maxDisplay ? avatarList.length - maxDisplay : 0;
+
   return (
-    <div className='flex items-center gap-2 justify-between w-full'>
-      <div className='p-1 flex rounded-full bg-[#D6EAFE]'>
-        <Image src='/shift-schedule.png' alt='default' width={100} height={100} className='size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] -ml-0 z-1' />
-        <Image src='/shift-schedule.png' alt='default' width={100} height={100} className='size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] -ml-2 z-[2]' />
-        <Image src='/shift-schedule.png' alt='default' width={100} height={100} className='size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] -ml-2 z-[3]' />
+    <div
+      className='flex items-center gap-2 justify-between w-fit cursor-pointer hover:opacity-80 transition-opacity'
+      onClick={e => {
+        e.stopPropagation();
+        onClick?.();
+      }}
+    >
+      <div className='p-1 flex items-center gap-1 rounded-full bg-[#D6EAFE]'>
+        {displayAvatars.map((item, index) => {
+          const isFirst = index === 0;
+          const hasImage = item?.profile_image && item.profile_image.trim() !== '';
+          const itemName = item?.name || 'Chưa có tên';
+          const isGroup = item?.type === 'group';
+
+          return (
+            <Tooltip key={item?.id || index} title={itemName} placement='top'>
+              {hasImage ? (
+                <Image
+                  src={item.profile_image}
+                  alt={itemName}
+                  width={100}
+                  height={100}
+                  className={`size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] ${isFirst ? '' : '-ml-3'} z-1 cursor-pointer`}
+                />
+              ) : isGroup ? (
+                <Image
+                  src={IMAGES.groupUser}
+                  alt={itemName}
+                  width={100}
+                  height={100}
+                  className={`size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] ${isFirst ? '' : '-ml-3'} z-1 cursor-pointer`}
+                />
+              ) : (
+                <div className={`size-[30px] rounded-full overflow-hidden border-2 border-[#549AE8] flex items-center justify-center bg-white ${isFirst ? '' : '-ml-3'} z-1 cursor-pointer`}>
+                  <AvatarText fullName={itemName} className='w-full h-full text-base flex items-center justify-center' />
+                </div>
+              )}
+            </Tooltip>
+          );
+        })}
+        {remainingCount > 0 && (
+          <Tooltip title={`Còn ${remainingCount} người khác`} placement='top'>
+            <div
+              className={`size-[30px] rounded-full overflow-hidden border-2 border-[#549AE8] flex items-center justify-center bg-[#549AE8] text-white font-semibold responsive-text-xs -ml-3 z-1 cursor-pointer`}
+            >
+              +{remainingCount}
+            </div>
+          </Tooltip>
+        )}
+        {isSingle && (
+          <span className='responsive-text-sm mr-1 font-medium text-[#101828] truncate max-w-[160px]' title={avatarList[0]?.name || ''}>
+            {avatarList[0]?.name || ''}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -100,7 +198,14 @@ const TimerControl = ({ time = '00 : 00 : 00', status = 'idle', onStart, onPause
         <Clock2Icon className='size-5 text-[#4E4E4E]' />
         <p className='responsive-text-xs font-semibold text-[#4E4E4E] whitespace-nowrap'>{time}</p>
       </div>
-      <div className='flex items-center gap-1'>{renderButtons()}</div>
+      <div
+        className='flex items-center gap-1'
+        onClick={e => {
+          e.stopPropagation();
+        }}
+      >
+        {renderButtons()}
+      </div>
     </div>
   );
 };
@@ -120,13 +225,39 @@ const formatTime = seconds => {
   return `${pad(h)} : ${pad(m)} : ${pad(s)}`;
 };
 
-const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = '00 : 00 : 00', po, stage_id, stage_name }) => {
+const ProductionOrderCard = ({ status = 'idle', time = '00 : 00 : 00', po, stage_id, stage_name, isSelectMode = false, isSelected = false, onToggleSelect, canManageManagers }) => {
   const [statusState, setStatusState] = useState(status);
   const [elapsedSeconds, setElapsedSeconds] = useState(parseTimeString(time));
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [showCompletePopup, setShowCompletePopup] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showResponsiblePersonPopup, setShowResponsiblePersonPopup] = useState(false);
   const intervalRef = useRef(null);
+
+  // Tạo màu dựa trên số cuối của reference_no (0-9)
+  const borderColor = useMemo(() => {
+    const colors = [
+      '#0375F3', // 0 - Màu xanh dương
+      '#1A7526', // 1 - Màu xanh lá
+      '#FF641C', // 2 - Màu cam
+      '#EEB600', // 3 - Màu vàng
+      '#9C27B0', // 4 - Màu tím
+      '#E91E63', // 5 - Màu hồng
+      '#00BCD4', // 6 - Màu cyan
+      '#F44336', // 7 - Màu đỏ
+      '#795548', // 8 - Màu nâu
+      '#607D8B', // 9 - Màu xám xanh
+    ];
+
+    // Lấy số cuối của reference_no
+    const referenceNo = (po?.reference_no || po?.id || '').toString();
+    const lastDigit = referenceNo.match(/\d+$/)?.[0]?.slice(-1);
+
+    // Nếu có số cuối, dùng nó để chọn màu (0-9), nếu không dùng màu đầu tiên
+    const colorIndex = lastDigit ? parseInt(lastDigit, 10) : 0;
+
+    return colors[colorIndex];
+  }, [po?.reference_no, po?.id]);
 
   const clearTimer = () => {
     if (intervalRef.current) {
@@ -171,6 +302,7 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
   const displayTime = formatTime(elapsedSeconds);
 
   const handleCardClick = () => {
+    if (showResponsiblePersonPopup) return;
     // Mở popup khi click vào card
     setShowCompletePopup(true);
   };
@@ -202,14 +334,42 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
   );
 
   return (
-    <div className='flex flex-col items-start gap-3 p-4 rounded-xl bg-white border border-[#F3F4F680] cursor-pointer hover:border-blue-fmrp' onClick={handleCardClick}>
+    <div
+      className={`flex flex-col items-start gap-3 p-4 rounded-xl border transition-colors duration-300 ${
+        isSelectMode
+          ? isSelected
+            ? 'border-[#1760B9] bg-[#EBF5FF] cursor-pointer'
+            : 'border-[#1760B9]/40 bg-[#F3F4FF] cursor-pointer hover:border-blue-fmrp'
+          : 'border-[#F3F4F680] bg-white cursor-pointer hover:border-blue-fmrp'
+      }`}
+      onClick={
+        isSelectMode
+          ? e => {
+              e.stopPropagation();
+              onToggleSelect?.();
+            }
+          : handleCardClick
+      }
+    >
+      {isSelectMode && (
+        <input
+          type='checkbox'
+          checked={isSelected}
+          onChange={e => {
+            e.stopPropagation();
+            onToggleSelect?.();
+          }}
+          onClick={e => e.stopPropagation()}
+          className='w-4 h-4 text-[#1760B9] rounded border-[#D0D5DD] focus:ring-[#1760B9] cursor-pointer flex-shrink-0'
+        />
+      )}
       <div className='w-full flex items-center justify-between gap-2'>
         <div className='py-0.5 px-2 border-l-2' style={{ borderColor }}>
           <h4 className='responsive-text-lg font-semibold mb-1' style={{ color: borderColor }}>
             {po?.reference_no || '---'}
           </h4>
           {hasMoreOrders ? (
-            <Tooltip title={allOrdersText} placement='top' overlayClassName='order-tooltip'>
+            <Tooltip title={allOrdersText} placement='top' classNames={{ root: 'order-tooltip' }}>
               {orderTextContent}
             </Tooltip>
           ) : (
@@ -221,7 +381,7 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
           <p className='responsive-text-xxs font-normal text-[#667085]'>{formattedDate}</p>
         </div>
       </div>
-      <div onClick={e => e.stopPropagation()} className='w-full'>
+      <div className='w-full'>
         <TimerControl time={displayTime} status={statusState} onStart={startTimer} onPause={pauseTimer} onStop={handleStopClick} onComplete={() => setShowCompletePopup(true)} />
       </div>
       <PopupConfim
@@ -235,7 +395,15 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
         forceConfirm={true}
       />
       <PopupCompleteOrder stage_id={stage_id} stage_name={stage_name} po={po} isOpen={showCompletePopup} onClose={() => setShowCompletePopup(false)} />
-      <Avatar />
+      <Avatar group_members_assigned={po?.group_members_assigned || []} staffs_assigned={po?.staffs_assigned || []} onClick={() => setShowResponsiblePersonPopup(true)} />
+      <PopupResponsiblePerson
+        open={showResponsiblePersonPopup}
+        onClose={() => setShowResponsiblePersonPopup(false)}
+        brandId={po?.branch_id}
+        canManageManagers={canManageManagers}
+        po_id={po?.id}
+        stage_id={stage_id}
+      />
 
       <div className='px-1 flex items-center gap-3 w-1/2'>
         <div className='flex items-center gap-1 flex-shrink-0'>
@@ -249,7 +417,7 @@ const ProductionOrderCard = ({ borderColor = '#EEB600', status = 'idle', time = 
       </div>
       <div className='flex flex-col gap-1 w-full'>
         {items.slice(0, visibleItemsCount).map((item, index) => (
-          <div key={index} className='p-1 flex items-center gap-2 w-full'>
+          <div key={index} className='p-1 flex items-center gap-2 w-full hover:bg-[#E3F0FF] rounded-lg'>
             <Image
               src={item?.images || IMAGES.noImage}
               alt={item?.item_name || 'default'}

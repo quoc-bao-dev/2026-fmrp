@@ -1,6 +1,6 @@
 import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
 import SelectSearchableRadio from '@/components/common/select/SelectSearchableRadio';
-import { CaretDownIcon, ClockIcon, CloseXIcon, EqualizerIcon, FunnelIcon, SearchIcon, UsersIcon } from '@/components/icons';
+import { CaretDownIcon, ClockIcon, CloseXIcon, EqualizerIcon, FunnelIcon, SearchIcon } from '@/components/icons';
 import { DropdownAvatar } from '@/components/layout/header';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import InfoTooltip from '@/components/UI/common/InfoTooltip';
@@ -8,7 +8,7 @@ import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComp
 import Loading from '@/components/UI/loading/loading';
 import { IMAGES } from '@/constants/images';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
-import { useListImportOutput, useLookupStages } from '@/managers/api/piecework-wage/useImportOutput';
+import { useListImportOutput, useLookupGroupMembers, useLookupStages } from '@/managers/api/piecework-wage/useImportOutput';
 import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import moment from 'moment';
 import Head from 'next/head';
@@ -20,7 +20,7 @@ import { useDebounce } from 'use-debounce';
 import StageColumn from './components/StageColumn';
 
 const ImportOutput = () => {
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedEmployee, setSelectedEmployee] = useState([]);
   const [searchStaff, setSearchStaff] = useState('');
   const [selectedProcess, setSelectedProcess] = useState(null);
   const [searchProcess, setSearchProcess] = useState('');
@@ -35,40 +35,28 @@ const ImportOutput = () => {
 
   const stateFilterDropdown = useSelector(state => state.stateFilterDropdown);
 
-  const { isLoading: isLoadingListImportOutput, data: listImportOutput } = useListImportOutput({
+  const filterParams = {
     start_date: dateFilter.dateStart ? moment(dateFilter.dateStart).format('DD/MM/YYYY') : null,
     end_date: dateFilter.dateEnd ? moment(dateFilter.dateEnd).format('DD/MM/YYYY') : null,
-    staff_id: selectedEmployee?.value,
+    ...(selectedEmployee?.value
+      ? selectedEmployee.value.startsWith('group_')
+        ? { group_member_ids: [selectedEmployee.value.replace('group_', '')] }
+        : { staff_ids: [selectedEmployee.value] }
+      : {}
+    ),
     stage_ids: selectedProcess?.value,
     search: debouncedSearchReferenceNo || '',
-  });
-  const { data: listStaffs } = useSearchStaffs();
-  const { data: listStages } = useLookupStages({ search: debouncedSearchProcess || '' });
+  };
 
+  const { isLoading: isLoadingListImportOutput, data: listImportOutput } = useListImportOutput(filterParams);
+  const { data: listStaffs } = useSearchStaffs();
+  const { data: listGroupMembers } = useLookupGroupMembers({ limit: 100 });
+  const { data: listStages } = useLookupStages({ search: debouncedSearchProcess || '' });
   // Lấy dữ liệu nhân viên từ API
   const staffs = listStaffs?.data?.staffs || [];
 
   // Lấy dữ liệu công đoạn từ API (đã được filter từ server)
   const stagesList = listStages?.stages || [];
-
-  // Dữ liệu ảo cho nhóm
-  const mockGroups = [
-    {
-      id: 1,
-      name: 'Nhóm may',
-      code: 'NM001',
-    },
-    {
-      id: 2,
-      name: 'Nhóm cắt',
-      code: 'NC001',
-    },
-    {
-      id: 3,
-      name: 'Nhóm thêu',
-      code: 'NT001',
-    },
-  ];
 
   // Format options cho SelectSearchableRadio với filter theo search
   const employeeOptions = useMemo(() => {
@@ -94,22 +82,22 @@ const ImportOutput = () => {
 
     // Filter nhóm theo search
     const filteredGroups = searchStaff
-      ? mockGroups.filter(group => {
+      ? listGroupMembers?.group_members?.filter(group => {
           return searchWithoutDiacritics(group.name, searchStaff) || searchWithoutDiacritics(group.code, searchStaff);
         })
-      : mockGroups;
+      : listGroupMembers?.group_members;
 
     // Thêm các nhóm
-    filteredGroups.forEach(group => {
+    filteredGroups?.forEach(group => {
       options.push({
         value: `group_${group.id}`,
         label: group.name,
-        icon: <UsersIcon className='size-6 text-blue-fmrp' />,
+        avatar: IMAGES.groupUser,
       });
     });
 
     return options;
-  }, [searchStaff, staffs]);
+  }, [searchStaff, staffs, listGroupMembers]);
 
   // Xử lý khi chọn nhân viên
   const handleEmployeeChange = value => {
@@ -166,6 +154,18 @@ const ImportOutput = () => {
   const stages = listImportOutput?.stages || [];
   const hasStages = stages.length > 0;
 
+  // Dùng để reset chế độ chọn lệnh trên tất cả StageColumn khi mở PersonSelector ở cột khác
+  const [selectModeResetKey, setSelectModeResetKey] = useState(0);
+  const [activePersonSelectorStageId, setActivePersonSelectorStageId] = useState(null);
+
+  const handlePersonSelectorClick = stageId => {
+    // Mỗi lần bấm nút chọn người phụ trách:
+    // - tăng key để các StageColumn khác thoát chế độ chọn lệnh
+    // - lưu stageId hiện tại để KHÔNG đóng PersonSelector của chính cột đó
+    setSelectModeResetKey(prev => prev + 1);
+    setActivePersonSelectorStageId(stageId);
+  };
+
   // Tính số lượng filter đang active
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -215,7 +215,9 @@ const ImportOutput = () => {
             placeholder='blur'
             blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
           />
-          <h2 className='p-2 rounded-full bg-[#E2F0FE] responsive-text-base font-medium text-new-blue capitalize'>Trang quản lý</h2>
+          <h2 className='p-2 rounded-full bg-[#E2F0FE] hover:bg-blue-fmrp transition-colors hover:text-white hover:border-white border border-transparent responsive-text-base font-medium text-new-blue capitalize'>
+            Trang quản lý
+          </h2>
         </Link>
         <div className='flex items-center gap-3'>
           <button className='h-10 bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-[#D0D5DD]'>
@@ -324,7 +326,16 @@ const ImportOutput = () => {
             <Customscrollbar horizontalOnly={true} showOnHover={true} className='flex-1 min-h-0 h-full overflow-y-hidden'>
               <div className='px-6 flex gap-2 w-full h-full min-w-max overflow-y-hidden'>
                 {stages.map(stage => (
-                  <StageColumn key={stage.stage_id} stage={stage} />
+                  <StageColumn
+                    key={stage.stage_id}
+                    stage={stage}
+                    selectModeResetKey={selectModeResetKey}
+                    activePersonSelectorStageId={activePersonSelectorStageId}
+                    onPersonSelectorClick={handlePersonSelectorClick}
+                    filterParams={filterParams}
+                    listGroupMembers={listGroupMembers}
+                    listStaffs={listStaffs}
+                  />
                 ))}
               </div>
             </Customscrollbar>

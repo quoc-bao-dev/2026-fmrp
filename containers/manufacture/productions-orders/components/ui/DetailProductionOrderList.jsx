@@ -19,88 +19,118 @@ import { useDispatch } from 'react-redux';
 import { listDropdownCompleteStage } from '../main/constants/listData';
 import PopupConfimStage from '../popup/PopupConfimStage';
 import ResponsiblePersonComboBox from '../popup/ResponsiblePersonComboBox';
+import { IMAGES } from '@/constants/images';
 
 // Sub-component for ProductRow to use hooks
 const ProductRow = memo(
   ({ product, index, item, totalLength, formatNumber, handleToggleSheetDetail, isStateProvider, dataLang, openManagerComboId, setOpenManagerComboId, branchId, canManageManagers = true }) => {
-    const po_id = item.po_id;
-    const poi_id = product.poi_id;
+    // const po_id = item.po_id;
+    // const poi_id = product.poi_id;
+
+    const transformPoiStaffAndGroups = data => {
+      if (!data) {
+        return [];
+      }
+      console.log(data);
+      const people = [];
+      if (data.items && Array.isArray(data.items)) {
+        data.items.forEach(staff => {
+          people.push({
+            id: staff.staffid,
+            name: staff.full_name,
+            avatarUrl: staff.profile_image,
+          });
+        });
+      }
+      if (data.groups && Array.isArray(data.groups)) {
+        data.groups.forEach(group => {
+          people.push({
+            id: group.id,
+            name: group.name,
+            avatarUrl: IMAGES.groupUser,
+          });
+        });
+      }
+      return people;
+    };
+
+    let managerAvatars = transformPoiStaffAndGroups(product?.staff_group_detail_stage);
 
     // Gọi hook để lấy manager detail
-    const { data: managerDetailData, refetch: refetchManagerDetail } = useProductionOrderManagerDetail({
-      po_id,
-      poi_id,
-      enabled: !!po_id && !!poi_id,
-    });
+    // const { data: managerDetailData, refetch: refetchManagerDetail } = useProductionOrderManagerDetail({
+    //   po_id,
+    //   poi_id,
+    //   enabled: !!po_id && !!poi_id,
+    // });
 
     // Gọi hook để lấy danh sách staffs
-    const { data: staffs } = useSearchStaffs({
-      branch_ids: branchId ? [branchId] : [],
-      enabled: !!branchId,
-      po_id: po_id,
-    });
+    // const { data: staffs } = useSearchStaffs({
+    //   branch_ids: branchId ? [branchId] : [],
+    //   enabled: !!branchId,
+    //   po_id: po_id,
+    // });
 
-    // Map dữ liệu từ API response
-    const listStaffs = useMemo(() => {
-      return (
-        staffs?.data?.staffs?.map(e => ({
-          id: e.staffid,
-          name: e.full_name,
-          avatarUrl: e.profile_image,
-        })) || []
-      );
-    }, [staffs]);
+    // // Map dữ liệu từ API response
+    // const listStaffs = useMemo(() => {
+    //   return (
+    //     staffs?.data?.staffs?.map(e => ({
+    //       id: e.staffid,
+    //       name: e.full_name,
+    //       avatarUrl: e.profile_image,
+    //     })) || []
+    //   );
+    // }, [staffs]);
 
     // Map dữ liệu từ API response - dùng để hiển thị selected
-    const managerAvatars = useMemo(() => {
-      const details = managerDetailData?.data?.production_order_manager_details || [];
-      return details.map(mgr => ({
-        id: mgr?.staff?.staffid || mgr?.staff_id,
-        name: mgr?.staff?.full_name || 'Không tên',
-        avatarUrl: mgr?.staff?.profile_image || '',
-      }));
-    }, [managerDetailData]);
+    // const managerAvatars = useMemo(() => {
+    //   const details = managerDetailData?.data?.production_order_manager_details || [];
+    //   return details.map(mgr => ({
+    //     id: mgr?.staff?.staffid || mgr?.staff_id,
+    //     name: mgr?.staff?.full_name || 'Không tên',
+    //     avatarUrl: mgr?.staff?.profile_image || '',
+    //   }));
+    // }, [managerDetailData]);
 
     // Filter managerAvatars để chỉ lấy những người có trong listStaffs
     // Đảm bảo combo box có thể active đúng các item đã chọn
-    const selectedManagers = useMemo(() => {
-      if (!listStaffs || listStaffs.length === 0) return [];
-      const staffIds = new Set(listStaffs.map(staff => staff.id));
-      return managerAvatars.filter(manager => staffIds.has(manager.id));
-    }, [managerAvatars, listStaffs]);
+    // const selectedManagers = useMemo(() => {
+    //   if (!listStaffs || listStaffs.length === 0) return [];
+    //   const staffIds = new Set(listStaffs.map(staff => staff.id));
+    //   return managerAvatars.filter(manager => staffIds.has(manager.id));
+    // }, [managerAvatars, listStaffs]);
 
     // Hook để save production order manager detail
-    const { saveProductionOrderManagerDetail, isLoading: isSaving } = useSaveProductionOrderManagerDetail({
-      onSuccess: response => {
-        console.log('Save manager detail success:', response);
-        // Refresh lại dữ liệu manager detail
-        refetchManagerDetail();
-        // Đóng combo box
-        setOpenManagerComboId(null);
-      },
-      onError: error => {
-        console.error('Save manager detail error:', error);
-      },
-    });
+    // const { saveProductionOrderManagerDetail, isLoading: isSaving } = useSaveProductionOrderManagerDetail({
+    //   onSuccess: response => {
+    //     console.log('Save manager detail success:', response);
+    //     // Refresh lại dữ liệu manager detail
+    //     refetchManagerDetail();
+    //     // Đóng combo box
+    //     setOpenManagerComboId(null);
+    //   },
+    //   onError: error => {
+    //     console.error('Save manager detail error:', error);
+    //   },
+    // });
 
     // Hàm handle submit để lưu danh sách người phụ trách
-    const handleSubmit = useCallback(
-      selected => {
-        // Format payload theo yêu cầu
-        const payload = {
-          po_id: po_id,
-          poi_id: poi_id,
-          items: selected.map(person => ({
-            staff_id: person.id,
-            is_manufacture: 1, // 1: Phụ trách sản xuất
-          })),
-        };
+    // const handleSubmit = useCallback(
+    //   selected => {
+    //     // Format payload theo yêu cầu
+    //     const payload = {
+    //       po_id: po_id,
+    //       poi_id: poi_id,
+    //       items: selected.map(person => ({
+    //         staff_id: person.id,
+    //         is_manufacture: 1, // 1: Phụ trách sản xuất
+    //       })),
+    //     };
 
-        // Gọi API để lưu
-        saveProductionOrderManagerDetail(payload);
-      },
-      [po_id, poi_id, saveProductionOrderManagerDetail]
-    );
+    //     // Gọi API để lưu
+    //     saveProductionOrderManagerDetail(payload);
+    //   },
+    //   [po_id, poi_id, saveProductionOrderManagerDetail]
+    // );
 
     const colorMap = {
       0: { color: 'bg-[#FF811A]/15 text-[#C25705]', title: dataLang?.productions_orders_produced || 'produced' },
@@ -113,7 +143,7 @@ const ProductRow = memo(
     return (
       <div
         key={`product-${index}`}
-        onClick={() => handleToggleSheetDetail(product, managerAvatars)}
+        onClick={() => handleToggleSheetDetail(product)}
         className={`col-span-16 grid grid-cols-23 gap-2 items-center group hover:bg-gray-100 cursor-pointer transition-all duration-150 ease-in-out 3xl:py-4 py-2 ${
           totalLength - 1 === index ? 'border-transparent' : 'border-b'
         }`}
@@ -150,38 +180,13 @@ const ProductRow = memo(
         <h4 className='col-span-2 text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1'>{product.quantity > 0 ? formatNumber(product.quantity) : '-'}</h4>
         <h4 className='col-span-2 text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1'>{product.quantity_stage_end > 0 ? formatNumber(product.quantity_stage_end) : '-'}</h4>
         <h4 className='col-span-3 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1 flex justify-center items-center'>
-          {canManageManagers ? (
-            <div
-              onClick={e => {
-                setOpenManagerComboId(product.poi_id);
-                e.stopPropagation();
-              }}
-            >
-              <ResponsiblePersonComboBox
-                className='!max-h-[300px]'
-                open={openManagerComboId === product.poi_id}
-                onClose={() => setOpenManagerComboId(null)}
-                data={listStaffs}
-                selected={selectedManagers}
-                hideSelected={false}
-                onConfirm={selected => {
-                  handleSubmit(selected);
-                }}
-              >
-                <div>
-                  {managerAvatars.length > 0 ? (
-                    <AvatarStack people={managerAvatars} size={32} />
-                  ) : (
-                    <button className='cursor-pointer flex items-center justify-start w-[112px] px-3 h-10 rounded-lg border border-[#003DA0] hover:bg-[#EBF5FF] transition-colors'>
-                      <UserPlusIcon className='size-5 text-[#11315B]' />
-                    </button>
-                  )}
-                </div>
-              </ResponsiblePersonComboBox>
-            </div>
-          ) : managerAvatars.length > 0 ? (
-            <AvatarStack people={managerAvatars} size={32} />
-          ) : null}
+          {managerAvatars.length > 0 ? (
+            <AvatarStack people={managerAvatars} size={32} className='!p-1 ' />
+          ) : (
+            <span className='responsive-text-sm font-normal text-neutral-02'>
+              Chưa có người <br /> phụ trách
+            </span>
+          )}
         </h4>
 
         <h4 className='col-span-3 flex items-center justify-start px-1'>
@@ -229,7 +234,18 @@ const DetailProductionOrderList = memo(
 
     // Lấy branch_id từ production order
     const branchId = isStateProvider?.productionsOrders?.dataProductionOrderDetail?.productionOrder?.branch_id;
-
+    
+    const staff_managers = isStateProvider?.productionsOrders?.dataProductionOrderDetail?.staff_managers;
+    const staffManagerAvatars = useMemo(
+      () =>
+        (staff_managers || []).map(item => ({
+          id: item?.staff_id || item?.staff?.staffid || item?.id,
+          name: item?.staff?.full_name || 'Không tên',
+          avatarUrl: item?.staff?.profile_image || '',
+        })),
+      [staff_managers]
+    );
+    
     // Trigger buttons cho dropdown
     const triggerCompleteStage = (
       <div className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center xl:gap-4 gap-2 font-medium text-white border-[#0375F3] bg-[#0375F3] hover:bg-[#0375F3] hover:opacity-80 cursor-pointer hover:shadow-hover-button rounded-lg custom-transition'>
@@ -327,9 +343,9 @@ const DetailProductionOrderList = memo(
           </div>
           {/* Action Buttons */}
           <div ref={groupButtonRef} className='flex items-center justify-end gap-2 p-0.5 mb-2'>
-            <button className='w-[134px] h-10 flex items-center gap-2 px-2 rounded-2xl bg-[#DFF3E2] text-[#4E4E4E] hover:opacity-80 transition-opacity'>
+            <button className='3xl:h-10 h-[38px] flex items-center gap-1 px-2 rounded-2xl bg-[#DFF3E2] text-[#4E4E4E] hover:opacity-80 transition-opacity'>
               <TimerIcon size={24} color='#4E4E4E' />
-              <span className='text-base font-normal'>08 : 27 : 00</span>
+              <span className='responsive-text-base font-normal'>08 : 27 : 00</span>
             </button>
             <div
               onClick={() => {
@@ -337,18 +353,20 @@ const DetailProductionOrderList = memo(
               }}
               className='cursor-pointer'
             >
-              {managerAvatars?.length > 0 ? (
-                <AvatarStack people={managerAvatars} size={32} className='mr-2' />
+              {staffManagerAvatars?.length > 0 ? (
+                <AvatarStack people={staffManagerAvatars} size={32} className='!p-1' />
               ) : (
-                <ButtonAnimationNew
-                  icon={
-                    <div className='size-4'>
-                      <UserPlusIcon className='size-full text-[#11315B]' />
-                    </div>
-                  }
-                  title='Thêm người phụ trách'
-                  className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] bg-white border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
-                />
+                <>
+                  <ButtonAnimationNew
+                    icon={
+                      <div className='size-4'>
+                        <UserPlusIcon className='size-full text-[#11315B]' />
+                      </div>
+                    }
+                    title='Thêm người phụ trách'
+                    className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] bg-white border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
+                  />
+                </>
               )}
             </div>
 

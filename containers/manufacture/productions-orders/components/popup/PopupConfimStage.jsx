@@ -687,7 +687,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
       return next;
     });
   }, []);
-  console.log(isState.dataTableProducts?.data?.items);
+
   return (
     <>
       {isOrderCompleted ? (

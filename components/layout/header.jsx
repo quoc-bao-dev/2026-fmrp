@@ -653,6 +653,8 @@ const Header = () => {
             {
               // viewOwn: auth?.piecework_wage_complete?.is_view_own,
               // view: auth?.piecework_wage_complete?.is_view,
+              viewOwn: 1,
+              view: 1,
               name: 'Nhập sản lượng',
               link: '/piecework-wage/import-output',
             },

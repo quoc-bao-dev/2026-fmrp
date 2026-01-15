@@ -270,7 +270,7 @@ const CustomerTypeSales = ({ data }) => {
       <div ref={containerRef} className='w-full h-full bg-[#EAF6FF] rounded-[20px] p-4 flex flex-col min-h-0'>
         <h3 className='responsive-text-xl font-semibold text-neutral-04 capitalize text-center'>Doanh Số KH Theo Loại KH</h3>
         <div className='flex-1 flex flex-col items-center justify-center min-h-0'>
-          <Image src='/background/system/nodata-table-2.png' alt='Không có dữ liệu' width={160} height={100} />
+          <Image src='/nodata/nodata-table-2.png' alt='Không có dữ liệu' width={160} height={100} />
           <span className='responsive-text-sm text-neutral-03'>Không có dữ liệu</span>
         </div>
       </div>
