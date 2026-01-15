@@ -30,7 +30,7 @@ const apiOrder = {
         return response.data
     },
     async apiSearchProductItems(data) {
-        const response = await axiosCustom('POST', `/api_web/Api_product/searchItemsVariant/?csrf_protection=true`, data);
+        const response = await axiosCustom('POST', `/api_web/api_inventory/searchItemsVariant/?csrf_protection=true`, data);
         return response.data
     },
     async apiHandingOrder(id, data) {

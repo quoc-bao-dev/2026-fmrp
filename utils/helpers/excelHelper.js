@@ -279,10 +279,13 @@ export const createExcelTemplateFromColumns = (data = [], options = {}) => {
           },
         };
       } else {
-        // Các hàng khác - alternating colors tinh tế
-        const isEvenRow = rowIndex % 2 === 0;
-        // Màu trắng và xám rất nhạt để tinh tế, không quá nổi bật
-        const bgColor = isEvenRow ? 'FFFFFF' : 'FAFAFA'; // Trắng và xám rất nhạt
+        // Các hàng khác - phối màu nhạt, dễ đọc hơn
+        // Hàng 2 & 3 (code, name) dùng màu nền nhạt (xanh nhẹ) cho đẹp và nổi khối
+        // rowIndex: 0 => code, 1 => name, 3 => items1, 4 => items2
+        let bgColor = 'FFFFFF';
+        if (rowIndex === 0) bgColor = 'F3F8FF'; // xanh rất nhạt
+        else if (rowIndex === 1) bgColor = 'F7FBFF'; // xanh rất nhạt (khác nhẹ)
+        else bgColor = rowIndex % 2 === 0 ? 'FFFFFF' : 'FAFAFA';
 
         worksheet[cellAddress].s = {
           font: { sz: 10, color: { rgb: '2C2C2C' }, name: 'Arial' },
@@ -317,8 +320,12 @@ export const createExcelTemplateFromColumns = (data = [], options = {}) => {
   if (showHeader) {
     rowHeights.push({ hpt: 28 }); // header - cao hơn
   }
+  // 5 hàng dữ liệu: code, name, note, items1, items2
   for (let i = 0; i < 5; i++) {
-    rowHeights.push({ hpt: 22 }); // 5 hàng dữ liệu - cao hơn cho dễ đọc
+    // Hàng thứ 4 của sheet (khi không có header) tương ứng rowIndex=2 (note) => tăng chiều cao
+    // Nếu có header, vẫn muốn note cao hơn để chứa hướng dẫn
+    if (i === 2) rowHeights.push({ hpt: 44 });
+    else rowHeights.push({ hpt: 22 });
   }
   worksheet['!rows'] = rowHeights;
 
