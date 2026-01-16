@@ -164,6 +164,7 @@ const CreatableInputWithSuggestions = ({ value, options = [], onChange, onOption
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
   const addButtonRef = useRef(null);
+  const isClickingDropdown = useRef(false); // Flag để track xem có đang click vào dropdown không
 
   // Sync inputValue với value prop
   useEffect(() => {
@@ -316,6 +317,33 @@ const CreatableInputWithSuggestions = ({ value, options = [], onChange, onOption
     handleInputClick();
   };
 
+  const handleInputBlur = e => {
+    // Khi blur, nếu người dùng đã nhập giá trị mới (chưa có trong options) thì tự động tạo
+    // Nhưng cần kiểm tra xem có phải đang click vào dropdown hoặc button không
+    const relatedTarget = e.relatedTarget;
+    const clickedInsideDropdown = dropdownRef.current && dropdownRef.current?.contains(relatedTarget);
+    const clickedInsideAddButton = addButtonRef.current && addButtonRef.current?.contains(relatedTarget);
+    const clickedInsideClearButton = relatedTarget?.closest('button[title="Xóa"]');
+
+    // Nếu không click vào dropdown hoặc button, và có giá trị mới thì tự động tạo
+    if (!clickedInsideDropdown && !clickedInsideAddButton && !clickedInsideClearButton && !isClickingDropdown.current) {
+      // Sử dụng setTimeout để đảm bảo các click event đã xử lý xong
+      setTimeout(() => {
+        // Kiểm tra lại flag để đảm bảo không phải đang click vào dropdown
+        if (!isClickingDropdown.current) {
+          if (isNewValue && inputValue.trim()) {
+            handleAddNew();
+          } else if (inputValue.trim() && !isNewValue) {
+            // Nếu giá trị đã có trong options, chỉ cần gọi onChange để sync
+            if (onChange) {
+              onChange(inputValue.trim());
+            }
+          }
+        }
+      }, 200);
+    }
+  };
+
   const handleSelectOption = option => {
     const optionValue = typeof option === 'string' ? option : option.value || option.label || '';
     setInputValue(optionValue);
@@ -418,6 +446,7 @@ const CreatableInputWithSuggestions = ({ value, options = [], onChange, onOption
           onChange={handleInputChange}
           onClick={handleInputClick}
           onFocus={handleInputFocus}
+          onBlur={handleInputBlur}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={isDisabled}
@@ -466,7 +495,13 @@ const CreatableInputWithSuggestions = ({ value, options = [], onChange, onOption
                 return (
                   <div
                     key={index}
-                    onClick={() => handleSelectOption(option)}
+                    onMouseDown={() => {
+                      isClickingDropdown.current = true;
+                    }}
+                    onClick={() => {
+                      isClickingDropdown.current = false;
+                      handleSelectOption(option);
+                    }}
                     onMouseEnter={() => setHighlightedIndex(index)}
                     className={`px-2 py-1.5 text-[11px] text-[#1C252E] cursor-pointer transition-colors duration-150 first:rounded-t-[5.5px] last:rounded-b-[5.5px] ${
                       isSelected ? 'bg-[#EBF5FF] font-medium' : isHighlighted ? 'bg-[#F3F8FF]' : 'hover:bg-[#F3F8FF]'
@@ -478,7 +513,13 @@ const CreatableInputWithSuggestions = ({ value, options = [], onChange, onOption
               })}
               {isNewValue && inputValue.trim() && (
                 <div
-                  onClick={handleAddNew}
+                  onMouseDown={() => {
+                    isClickingDropdown.current = true;
+                  }}
+                  onClick={() => {
+                    isClickingDropdown.current = false;
+                    handleAddNew();
+                  }}
                   onMouseEnter={() => setHighlightedIndex(-2)}
                   className={`px-2 py-1.5 text-[11px] text-[#0F4F9E] cursor-pointer transition-colors duration-150 flex items-center gap-1 border-t border-neutral-N200 ${
                     highlightedIndex === -2 ? 'bg-[#EBF5FF]' : 'hover:bg-[#EBF5FF]'
