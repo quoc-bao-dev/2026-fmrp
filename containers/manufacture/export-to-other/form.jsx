@@ -552,26 +552,30 @@ const ExportToOtherForm = props => {
                           {dataProductSerial.is_enable === '1' && option.e?.text_type !== 'material' && (
                             <div className='responsive-text-xs text-[#667085] font-[500]'>Serial: {option.e?.serial ? option.e?.serial : '-'}</div>
                           )}
-                          {dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' ? (
-                            <>
-                              <div className='responsive-text-xs text-[#667085] font-[500]'>Lot: {option.e?.lot ? option.e?.lot : '-'}</div>
+                          <>
+                            {/* Hiển thị Lot nếu setting bật HOẶC có giá trị */}
+                            {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' || (option.e?.lot != null && option.e?.lot !== '')) && (
+                              <div className='responsive-text-xs text-[#667085] font-[500]'>Lot: {option.e?.lot == null || option.e?.lot === '' ? '-' : option.e?.lot}</div>
+                            )}
+                            {/* Hiển thị Date nếu setting bật HOẶC có giá trị */}
+                            {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' || option.e?.expiration_date) && (
                               <div className='responsive-text-xs text-[#667085] font-[500]'>
                                 Date: {option.e?.expiration_date ? formatMoment(option.e?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}
                               </div>
-                            </>
-                          ) : (
-                            ''
-                          )}
+                            )}
+                          </>
                         </div>
-                        {isWarehousePropertiesEnabled && warehousePropertyLabels.length > 0 && option.e?.text_type === 'material' && (
+                        {option.e?.text_type === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
                           <div className='flex gap-1 flex-wrap'>
                             {warehousePropertyLabels.map(({ key, label }) => {
-                              const value = option.e?.[key];
                               if (!label) return null;
+                              const value = option.e?.[key];
+                              // Hiển thị nếu isWarehousePropertiesEnabled bật HOẶC thuộc tính có giá trị
+                              if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
                               return (
                                 <div key={key} className='flex gap-0.5 italic'>
                                   <h6 className='responsive-text-xs text-[#667085] font-[500]'>{label}:</h6>
-                                  <h6 className='responsive-text-xs text-[#667085] font-[500]'>{value ?? '-'}</h6>
+                                  <h6 className='responsive-text-xs text-[#667085] font-[500]'>{value == null || value === '' ? '-' : value}</h6>
                                 </div>
                               );
                             })}
@@ -626,25 +630,29 @@ const ExportToOtherForm = props => {
                                 {dataProductSerial.is_enable === '1' && e?.item?.e?.text_type !== 'material' && (
                                   <div className='responsive-text-xs text-[#667085] font-[500]'>Serial: {e?.item?.e?.serial ? e?.item?.e?.serial : '-'}</div>
                                 )}
-                                {dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' ? (
-                                  <>
-                                    <div className='responsive-text-xs text-[#667085] font-[500]'>Lot: {e?.item?.e?.lot ? e?.item?.e?.lot : '-'}</div>
+                                <>
+                                  {/* Hiển thị Lot nếu setting bật HOẶC có giá trị */}
+                                  {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' || (e?.item?.e?.lot != null && e?.item?.e?.lot !== '')) && (
+                                    <div className='responsive-text-xs text-[#667085] font-[500]'>Lot: {e?.item?.e?.lot == null || e?.item?.e?.lot === '' ? '-' : e?.item?.e?.lot}</div>
+                                  )}
+                                  {/* Hiển thị Date nếu setting bật HOẶC có giá trị */}
+                                  {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' || e?.item?.e?.expiration_date) && (
                                     <div className='responsive-text-xs text-[#667085] font-[500]'>
                                       Date: {e?.item?.e?.expiration_date ? formatMoment(e?.item?.e?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}
                                     </div>
-                                  </>
-                                ) : (
-                                  ''
-                                )}
-                                {isWarehousePropertiesEnabled && warehousePropertyLabels.length > 0 && e?.item?.e?.text_type === 'material' && (
+                                  )}
+                                </>
+                                {e?.item?.e?.text_type === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
                                   <>
                                     {warehousePropertyLabels.map(({ key, label }) => {
-                                      const value = e?.item?.e?.[key];
                                       if (!label) return null;
+                                      const value = e?.item?.e?.[key];
+                                      // Hiển thị nếu isWarehousePropertiesEnabled bật HOẶC thuộc tính có giá trị
+                                      if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
                                       return (
                                         <div key={key} className='flex gap-0.5'>
                                           <h6 className='responsive-text-xs text-[#667085] font-[500]'>{label}:</h6>
-                                          <h6 className='responsive-text-xs text-[#667085] font-[500]'>{value ?? '-'}</h6>
+                                          <h6 className='responsive-text-xs text-[#667085] font-[500]'>{value == null || value === '' ? '-' : value}</h6>
                                         </div>
                                       );
                                     })}

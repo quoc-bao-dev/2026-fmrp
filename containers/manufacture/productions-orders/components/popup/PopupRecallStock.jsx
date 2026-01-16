@@ -717,15 +717,17 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
                                     {e?.expiration_date ? `Date: ${moment(e.expiration_date).format('DD/MM/YYYY')}` : ''}
                                   </p>
                                 )}
-                                {isWarehousePropertiesEnabled && activeTab.id === 'material' && warehousePropertyLabels.length > 0 && (
+                                {activeTab.id === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
                                   <div className='flex gap-1 flex-wrap'>
                                     {warehousePropertyLabels.map(({ key, label }) => {
-                                      const value = e?.[key];
                                       if (!label) return null;
+                                      const value = e?.[key];
+                                      // Hiển thị nếu isWarehousePropertiesEnabled bật HOẶC thuộc tính có giá trị
+                                      if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
                                       return (
                                         <div key={key} className='flex gap-0.5 text-[#667085]'>
                                           <h6 className='text-[10px]'>{label}:</h6>
-                                          <h6 className='text-[10px] px-1 text-left'>{value ?? '-'}</h6>
+                                          <h6 className='text-[10px] px-1 text-left'>{value == null || value === '' ? '-' : value}</h6>
                                         </div>
                                       );
                                     })}
