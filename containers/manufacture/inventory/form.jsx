@@ -33,12 +33,12 @@ import { Add } from 'iconsax-react';
 import moment from 'moment';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import ReactDOM from 'react-dom';
 import { PiMapPinLight } from 'react-icons/pi';
 import { useDispatch } from 'react-redux';
 import { useDebounce } from 'use-debounce';
 import PopupImportExcel from './components/popupImportExcel';
-import ReactDOM from 'react-dom';
 
 // Component input với dropdown gợi ý cho warehouse properties
 const WarehousePropertyInput = ({ label, value, suggestions, hasSuggestions, onChange }) => {
@@ -155,6 +155,347 @@ const WarehousePropertyInput = ({ label, value, suggestions, hasSuggestions, onC
   );
 };
 
+// Component input với dropdown gợi ý và khả năng tạo mới (tương tự CreatableSelectCore)
+const CreatableInputWithSuggestions = ({ value, options = [], onChange, onOptionsChange, placeholder = 'Nhập hoặc chọn...', isDisabled = false, className = '', error = false, label = '' }) => {
+  const [inputValue, setInputValue] = useState(value || '');
+  const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const inputRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const addButtonRef = useRef(null);
+
+  // Sync inputValue với value prop
+  useEffect(() => {
+    setInputValue(value || '');
+  }, [value]);
+
+  // Filter suggestions: trùng lên trên
+  // Khi chưa nhập gì, hiện tất cả options. Khi đã nhập, filter theo inputValue
+  const filteredOptions = useMemo(() => {
+    if (!inputValue.trim()) return options;
+
+    const lowerInput = inputValue.toLowerCase().trim();
+    const exactMatches = options.filter(opt => {
+      const optValue = typeof opt === 'string' ? opt : opt.value || opt.label || '';
+      return optValue.toLowerCase().trim() === lowerInput;
+    });
+
+    const startsWith = options.filter(opt => {
+      const optValue = typeof opt === 'string' ? opt : opt.value || opt.label || '';
+      return optValue.toLowerCase().trim().startsWith(lowerInput) && optValue.toLowerCase().trim() !== lowerInput;
+    });
+
+    const contains = options.filter(opt => {
+      const optValue = typeof opt === 'string' ? opt : opt.value || opt.label || '';
+      return optValue.toLowerCase().trim().includes(lowerInput) && !optValue.toLowerCase().trim().startsWith(lowerInput) && optValue.toLowerCase().trim() !== lowerInput;
+    });
+
+    return [...exactMatches, ...startsWith, ...contains];
+  }, [inputValue, options]);
+
+  // Kiểm tra xem inputValue có trong options không (không có thì hiện nút "+" để tạo mới)
+  const isNewValue = useMemo(() => {
+    if (!inputValue.trim()) return false;
+    const lowerInput = inputValue.toLowerCase().trim();
+    // Kiểm tra trong tất cả options (không chỉ filteredOptions) để đảm bảo chính xác
+    return !options.some(opt => {
+      const optValue = typeof opt === 'string' ? opt : opt.value || opt.label || '';
+      return optValue.toLowerCase().trim() === lowerInput;
+    });
+  }, [inputValue, options]);
+
+  // Cập nhật lại vị trí dropdown khi scroll / resize
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const updatePosition = () => {
+      if (!inputRef.current) return;
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width || 200,
+      });
+    };
+
+    updatePosition();
+
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isOpen]);
+
+  // Handle click outside - đóng dropdown khi click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = event => {
+      // Kiểm tra xem click có nằm trong các element của component không
+      const clickedInsideInput = inputRef.current && inputRef.current.contains(event.target);
+      const clickedInsideDropdown = dropdownRef.current && dropdownRef.current.contains(event.target);
+      const clickedInsideAddButton = addButtonRef.current && addButtonRef.current.contains(event.target);
+
+      // Kiểm tra nút clear button (có thể không có ref, nên check bằng cách khác)
+      const clickedInsideClearButton = event.target.closest('button[title="Xóa"]');
+
+      // Nếu click ra ngoài tất cả các element của component, đóng dropdown
+      if (!clickedInsideInput && !clickedInsideDropdown && !clickedInsideAddButton && !clickedInsideClearButton) {
+        setIsOpen(false);
+        setHighlightedIndex(-1);
+      }
+    };
+
+    if (isOpen) {
+      // Sử dụng mousedown để bắt sớm hơn click
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isOpen]);
+
+  const handleInputChange = e => {
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    setHighlightedIndex(-1);
+
+    // Khi typing, chỉ update input value local, KHÔNG gọi onChange ngay
+    // Chỉ hiện dropdown nếu có suggestions hoặc cần hiện nút "+"
+    // Chỉ gọi onChange khi:
+    // - Select một option từ dropdown
+    // - Bấm nút "+" để tạo mới
+    // - Clear input
+
+    // Kiểm tra xem có suggestions không (sau khi filter)
+    const lowerInput = newValue.toLowerCase().trim();
+    const hasSuggestions =
+      newValue.trim() &&
+      options.some(opt => {
+        const optValue = typeof opt === 'string' ? opt : opt.value || opt.label || '';
+        return optValue.toLowerCase().trim().includes(lowerInput);
+      });
+
+    // Kiểm tra xem có phải giá trị mới không
+    const willBeNewValue =
+      newValue.trim() &&
+      !options.some(opt => {
+        const optValue = typeof opt === 'string' ? opt : opt.value || opt.label || '';
+        return optValue.toLowerCase().trim() === lowerInput;
+      });
+
+    // Chỉ mở dropdown nếu có suggestions hoặc cần hiện nút "+"
+    if (hasSuggestions || willBeNewValue) {
+      setIsOpen(true);
+    } else {
+      setIsOpen(false);
+    }
+  };
+
+  const handleInputClick = () => {
+    if (!isDisabled && inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width || 200,
+      });
+      // Khi focus/click, nếu có gợi ý (options) thì hiện dropdown ngay
+      const hasSuggestions = inputValue.trim() && filteredOptions.length > 0;
+      const needsAddButton = isNewValue && inputValue.trim();
+      const hasOptions = options.length > 0; // Có options thì hiện dropdown
+      if (hasSuggestions || needsAddButton || hasOptions) {
+        setIsOpen(true);
+      }
+    }
+  };
+
+  const handleInputFocus = () => {
+    handleInputClick();
+  };
+
+  const handleSelectOption = option => {
+    const optionValue = typeof option === 'string' ? option : option.value || option.label || '';
+    setInputValue(optionValue);
+    setIsOpen(false);
+    setHighlightedIndex(-1);
+
+    if (onChange) {
+      onChange(optionValue);
+    }
+  };
+
+  const handleAddNew = () => {
+    if (!inputValue.trim()) return;
+
+    const newOption = inputValue.trim();
+
+    // Kiểm tra lại xem giá trị đã có trong options chưa (tránh duplicate)
+    const lowerNewOption = newOption.toLowerCase();
+    const alreadyExists = options.some(opt => {
+      const optValue = typeof opt === 'string' ? opt : opt.value || opt.label || '';
+      return optValue.toLowerCase().trim() === lowerNewOption;
+    });
+
+    if (alreadyExists) {
+      // Nếu đã tồn tại, chỉ select giá trị đó
+      setInputValue(newOption);
+      setIsOpen(false);
+      setHighlightedIndex(-1);
+      if (onChange) {
+        onChange(newOption);
+      }
+      return;
+    }
+
+    // Thêm vào options
+    const updatedOptions = [...options, newOption];
+
+    // Update options nếu có callback
+    if (onOptionsChange) {
+      onOptionsChange(updatedOptions);
+    }
+
+    // Fill giá trị vào input
+    setInputValue(newOption);
+    setIsOpen(false);
+    setHighlightedIndex(-1);
+
+    if (onChange) {
+      onChange(newOption);
+    }
+  };
+
+  const handleClear = () => {
+    setInputValue('');
+    setIsOpen(false);
+    setHighlightedIndex(-1);
+    if (onChange) {
+      onChange(null);
+    }
+  };
+
+  const handleKeyDown = e => {
+    if (!isOpen || filteredOptions.length === 0) {
+      if (e.key === 'Enter' && isNewValue) {
+        handleAddNew();
+      }
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex(prev => (prev < filteredOptions.length - 1 ? prev + 1 : prev));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex(prev => (prev > 0 ? prev - 1 : -1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (highlightedIndex >= 0 && highlightedIndex < filteredOptions.length) {
+        handleSelectOption(filteredOptions[highlightedIndex]);
+      } else if (isNewValue) {
+        handleAddNew();
+      }
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+      setHighlightedIndex(-1);
+    }
+  };
+
+  const portalTarget = typeof document !== 'undefined' ? document.body : null;
+  // Hiện dropdown khi có filteredOptions hoặc cần hiện nút "+"
+  const showDropdown = isOpen && (filteredOptions.length > 0 || (isNewValue && inputValue.trim()));
+
+  return (
+    <div className={`relative ${className}`}>
+      {label && <label className='text-[11px] font-medium text-gray-700 truncate block mb-1'>{label}</label>}
+      <div className='relative flex items-center'>
+        <input
+          ref={inputRef}
+          value={inputValue}
+          onChange={handleInputChange}
+          onClick={handleInputClick}
+          onFocus={handleInputFocus}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          disabled={isDisabled}
+          className={`w-full h-[38px] appearance-none text-left p-2 rounded-lg text-neutral-07 responsive-text-base font-medium placeholder:font-normal focus:outline-none focus:border-brand-color hover:border-brand-color border ${
+            error ? 'border-red-500' : 'border-neutral-N400'
+          } ${isDisabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'} ${inputValue.trim() ? 'pr-8' : ''}`}
+        />
+        <div className='absolute right-2 flex items-center gap-1'>
+          {inputValue.trim() && !isDisabled && (
+            <button onClick={handleClear} className='flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-200 transition-colors duration-200' title='Xóa'>
+              <CloseXIcon className='w-3 h-3 text-gray-500' />
+            </button>
+          )}
+          {isNewValue && inputValue.trim() && (
+            <button
+              ref={addButtonRef}
+              onClick={handleAddNew}
+              className='flex items-center justify-center w-5 h-5 rounded-full bg-[#EBF5FF] hover:bg-[#92BFF7] transition-colors duration-200'
+              title={`Tạo "${inputValue.trim()}"`}
+            >
+              <Add size={14} className='text-[#0F4F9E]' />
+            </button>
+          )}
+        </div>
+        {portalTarget &&
+          showDropdown &&
+          inputRef.current &&
+          ReactDOM.createPortal(
+            <div
+              ref={dropdownRef}
+              className='z-[9999] bg-white border border-neutral-N400 rounded-[5.5px] shadow-lg max-h-[200px] overflow-y-auto'
+              style={{
+                position: 'absolute',
+                top: dropdownPosition.top,
+                left: dropdownPosition.left,
+                width: dropdownPosition.width || 200,
+                marginTop: 4,
+              }}
+            >
+              {filteredOptions.map((option, index) => {
+                const optionValue = typeof option === 'string' ? option : option.value || option.label || '';
+                const optionLabel = typeof option === 'string' ? option : option.label || option.value || '';
+                const isSelected = optionValue === value;
+                const isHighlighted = index === highlightedIndex;
+
+                return (
+                  <div
+                    key={index}
+                    onClick={() => handleSelectOption(option)}
+                    onMouseEnter={() => setHighlightedIndex(index)}
+                    className={`px-2 py-1.5 text-[11px] text-[#1C252E] cursor-pointer transition-colors duration-150 first:rounded-t-[5.5px] last:rounded-b-[5.5px] ${
+                      isSelected ? 'bg-[#EBF5FF] font-medium' : isHighlighted ? 'bg-[#F3F8FF]' : 'hover:bg-[#F3F8FF]'
+                    }`}
+                  >
+                    {optionLabel}
+                  </div>
+                );
+              })}
+              {isNewValue && inputValue.trim() && (
+                <div
+                  onClick={handleAddNew}
+                  onMouseEnter={() => setHighlightedIndex(-2)}
+                  className={`px-2 py-1.5 text-[11px] text-[#0F4F9E] cursor-pointer transition-colors duration-150 flex items-center gap-1 border-t border-neutral-N200 ${
+                    highlightedIndex === -2 ? 'bg-[#EBF5FF]' : 'hover:bg-[#EBF5FF]'
+                  }`}
+                >
+                  <Add size={14} className='text-[#0F4F9E]' />
+                  <span>Tạo "{inputValue.trim()}"</span>
+                </div>
+              )}
+            </div>,
+            portalTarget
+          )}
+      </div>
+    </div>
+  );
+};
+
 const InventoryForm = props => {
   const isShow = useToast();
   const dataLang = props.dataLang;
@@ -162,6 +503,7 @@ const InventoryForm = props => {
   const dispatch = useDispatch();
   const statusExprired = useStatusExprired();
   const scrollAreaRef = useRef(null);
+  const timeoutRefs = useRef(new Map()); // Lưu các timeout IDs để clear khi cần
   const dataSeting = useSetingServer();
   const [onSending, sOnSending] = useState(false);
   const [dataChoose, sDataChoose] = useState([]);
@@ -938,9 +1280,10 @@ const InventoryForm = props => {
                 }
               }
               // Gọi các hàm kiểm tra trùng lặp khi có đủ điều kiện
+              // Chỉ gọi khi locate không null để tránh gọi hàm check trùng không cần thiết khi user clear locate
               e?.checkExpiry === '1' && ce?.locate !== null && ce?.lot !== null && ce.date !== null && _HandleCheckSameLot(parentId, id, ce?.locate, ce?.lot, ce?.date);
               e?.checkSerial === '1' && ce?.locate !== null && ce?.serial !== null && _HandleCheckSameSerial(parentId, id, ce?.locate, ce?.serial);
-              e?.checkExpiry === '0' && e?.checkSerial == '0' && _HandleCheckSameLoca(parentId, id, ce?.locate);
+              e?.checkExpiry === '0' && e?.checkSerial == '0' && ce?.locate !== null && _HandleCheckSameLoca(parentId, id, ce?.locate);
               return { ...ce };
             } else if (type === 'lot') {
               ce.lot = value;
@@ -1113,9 +1456,21 @@ const InventoryForm = props => {
                 }
                 // Trường hợp có serial
                 else if (e?.checkSerial === '1' && ce?.serial !== null && ce.serial !== '') {
-                  setTimeout(() => {
-                    _HandleCheckSameSerial(parentId, id, ce?.locate, ce?.serial);
+                  // Clear timeout cũ nếu có
+                  const timeoutKey = `checkSerial_${parentId}_${id}`;
+                  const oldTimeout = timeoutRefs.current.get(timeoutKey);
+                  if (oldTimeout) {
+                    clearTimeout(oldTimeout);
+                  }
+
+                  const timeoutId = setTimeout(() => {
+                    _HandleCheckSameSerial(parentId, id, ce?.locate, ce?.serial, true);
+                    // Xóa timeout ID sau khi hoàn thành
+                    timeoutRefs.current.delete(timeoutKey);
                   }, 1000);
+
+                  // Lưu timeout ID
+                  timeoutRefs.current.set(timeoutKey, timeoutId);
                 }
                 // Trường hợp chỉ có locate (không có expiry và serial)
                 else if (e?.checkExpiry === '0' && e?.checkSerial === '0') {
@@ -1136,7 +1491,14 @@ const InventoryForm = props => {
   };
 
   const _HandleCheckSameLot = (parentId, id, locate, lot, date) => {
-    setTimeout(() => {
+    // Clear timeout cũ nếu có
+    const timeoutKey = `checkLot_${parentId}_${id}`;
+    const oldTimeout = timeoutRefs.current.get(timeoutKey);
+    if (oldTimeout) {
+      clearTimeout(oldTimeout);
+    }
+
+    const timeoutId = setTimeout(() => {
       const newData = dataChoose.map(e => {
         if (e.id === parentId) {
           const currentChild = e.child?.find(ce => ce?.id === id);
@@ -1167,7 +1529,8 @@ const InventoryForm = props => {
               }
               return ce;
             })
-            .filter(item => item.locate !== null);
+            // Chỉ filter khi có trùng (checkData = true), không filter khi không trùng để tránh xóa child khi user clear locate/lot/date
+            .filter(item => (checkData ? item.locate !== null : true));
           return { ...e, child: newChild };
         }
         return e;
@@ -1196,11 +1559,23 @@ const InventoryForm = props => {
         return e;
       });
       sDataChoose([...newData1]);
+      // Xóa timeout ID sau khi hoàn thành
+      timeoutRefs.current.delete(timeoutKey);
     }, 500);
+
+    // Lưu timeout ID
+    timeoutRefs.current.set(timeoutKey, timeoutId);
   };
 
   const _HandleCheckSameSerial = (parentId, id, locate, serial) => {
-    setTimeout(() => {
+    // Clear timeout cũ nếu có
+    const timeoutKey = `checkSerial_${parentId}_${id}`;
+    const oldTimeout = timeoutRefs.current.get(timeoutKey);
+    if (oldTimeout) {
+      clearTimeout(oldTimeout);
+    }
+
+    const timeoutId = setTimeout(() => {
       const currentChild = dataChoose?.find(e => e.id === parentId)?.child?.find(ce => ce?.id === id);
       const dataChild = dataChoose?.map(e => e?.child)?.flatMap(innerList => innerList);
       const checkData = dataChild?.some(item => {
@@ -1243,11 +1618,23 @@ const InventoryForm = props => {
         return e;
       });
       sDataChoose([...newData1]);
+      // Xóa timeout ID sau khi hoàn thành
+      timeoutRefs.current.delete(timeoutKey);
     }, 1000);
+
+    // Lưu timeout ID
+    timeoutRefs.current.set(timeoutKey, timeoutId);
   };
 
   const _HandleCheckSameLoca = (parentId, id, locate) => {
-    setTimeout(() => {
+    // Clear timeout cũ nếu có
+    const timeoutKey = `checkLoca_${parentId}_${id}`;
+    const oldTimeout = timeoutRefs.current.get(timeoutKey);
+    if (oldTimeout) {
+      clearTimeout(oldTimeout);
+    }
+
+    const timeoutId = setTimeout(() => {
       const newData = dataChoose.map(e => {
         if (e.id === parentId) {
           const currentChild = e.child?.find(ce => ce?.id === id);
@@ -1276,7 +1663,8 @@ const InventoryForm = props => {
               }
               return ce;
             })
-            .filter(item => item.locate !== null);
+            // Chỉ filter khi có trùng (checkData = true), không filter khi không trùng để tránh xóa child khi user clear locate
+            .filter(item => (checkData ? item.locate !== null : true));
           return { ...e, child: newChild };
         }
         return e;
@@ -1306,8 +1694,23 @@ const InventoryForm = props => {
       });
 
       sDataChoose([...newData1]);
+      // Xóa timeout ID sau khi hoàn thành
+      timeoutRefs.current.delete(timeoutKey);
     }, 1000);
+
+    // Lưu timeout ID
+    timeoutRefs.current.set(timeoutKey, timeoutId);
   };
+
+  // Cleanup tất cả timeout khi component unmount
+  useEffect(() => {
+    return () => {
+      timeoutRefs.current.forEach(timeoutId => {
+        clearTimeout(timeoutId);
+      });
+      timeoutRefs.current.clear();
+    };
+  }, []);
 
   const _ServerSending = async () => {
     let formData = new FormData();
@@ -1654,57 +2057,35 @@ const InventoryForm = props => {
                               ) : null}
                               {isExpiryEnabled ? (
                                 <div className='col-span-3 flex flex-col justify-center h-fit'>
-                                  <CreatableSelectCore
+                                  <CreatableInputWithSuggestions
+                                    value={ce?.lot?.value || ce?.lot || ''}
+                                    options={e?.dataLot?.map(lot => (typeof lot === 'string' ? lot : lot?.value || lot?.label || '')) || []}
+                                    onChange={newValue => {
+                                      if (newValue === null || newValue === undefined || newValue === '') {
+                                        _HandleChangeChild(e?.id, ce?.id, 'lot', null);
+                                      } else {
+                                        _HandleChangeChild(e?.id, ce?.id, 'lot', { label: newValue, value: newValue });
+                                      }
+                                    }}
+                                    onOptionsChange={newOptions => {
+                                      // Update e.dataLot với format object
+                                      const updatedDataLot = newOptions.map(opt => ({
+                                        label: opt,
+                                        value: opt,
+                                      }));
+                                      sDataChoose(prev =>
+                                        prev.map(item => {
+                                          if (item.id === e?.id) {
+                                            return { ...item, dataLot: updatedDataLot };
+                                          }
+                                          return item;
+                                        })
+                                      );
+                                    }}
+                                    placeholder='Lot'
                                     isDisabled={e?.checkExpiry == '0'}
-                                    placeholder={'Lot'}
-                                    options={e?.dataLot}
-                                    value={ce?.lot}
-                                    onChange={_HandleChangeChild.bind(this, e?.id, ce?.id, 'lot')}
-                                    isClearable={true}
-                                    classNamePrefix='Select'
-                                    className={`${
-                                      e?.checkExpiry == '0' ? 'border-transparent' : errNullLot && ce.lot == null ? 'border-red-500 border' : 'border-transparent'
-                                    } Select__custom removeDivide placeholder:text-slate-300 w-full bg-[#ffffff] rounded-lg text-[#52575E] font-normal outline-none border text-[13px]`}
-                                    isSearchable={true}
-                                    menuPortalTarget={document.body}
-                                    onMenuOpen={handleMenuOpen}
-                                    noOptionsMessage={() => `Chưa có gợi ý`}
-                                    formatCreateLabel={value => `Tạo "${value}"`}
-                                    style={{
-                                      border: 'none',
-                                      boxShadow: 'none',
-                                      outline: 'none',
-                                      borderRadius: '8px',
-                                    }}
-                                    theme={theme => ({
-                                      ...theme,
-                                      colors: {
-                                        ...theme.colors,
-                                        primary25: '#EBF5FF',
-                                        primary50: '#92BFF7',
-                                        primary: '#0F4F9E',
-                                      },
-                                    })}
-                                    styles={{
-                                      placeholder: base => ({
-                                        ...base,
-                                        color: '#cbd5e1',
-                                        borderRadius: '8px',
-                                      }),
-                                      menuPortal: base => ({
-                                        ...base,
-                                        zIndex: 9999,
-                                        position: 'absolute',
-                                      }),
-                                      control: (base, state) => ({
-                                        ...base,
-                                        boxShadow: 'none',
-                                        ...(state.isFocused && {
-                                          border: '0 0 0 1px #92BFF7',
-                                        }),
-                                        borderRadius: '8px',
-                                      }),
-                                    }}
+                                    error={errNullLot && ce.lot == null}
+                                    className='w-full'
                                   />
                                 </div>
                               ) : null}
