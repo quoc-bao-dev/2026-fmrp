@@ -76,12 +76,20 @@ const ProductRow = memo(({ product, index, displayIndex, handleSelectProduct, cl
   }, [product.item_id, product.item_variation_option_value_id, product.pp_id, product.type_item, product.type_origin, po_id, refreshKey]);
 
   useEffect(() => {
-    if (!lotRows.length) return;
-    product.warehouses = lotRows.map(row => ({
-      ...row,
-      quantity_enter: row.quantity_enter ?? row.total_quantity ?? 0,
-    }));
-  }, [lotRows, product]);
+    // Luôn cập nhật product.warehouses để đồng bộ với lotRows
+    // Nếu lotRows rỗng, cập nhật warehouses thành mảng rỗng
+    product.warehouses = lotRows.length > 0 
+      ? lotRows.map(row => ({
+          ...row,
+          quantity_enter: row.quantity_enter ?? row.total_quantity ?? 0,
+        }))
+      : [];
+    
+    // Tự động bỏ chọn sản phẩm nếu xóa hết lotRows (trừ semi_products)
+    if (lotRows.length === 0 && product.selected && product.type_origin !== 'semi_products') {
+      handleSelectProduct(index, false);
+    }
+  }, [lotRows, product, index, handleSelectProduct]);
 
   const handleAddLotRow = async () => {
     setIsOpen(true);
@@ -333,21 +341,29 @@ const PopupExportMaterialsTabCurrent = ({
                       <thead className='bg-white sticky top-0 z-10'>
                         <tr>
                           <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>
-                            <Tooltip
-                              title={autoTooltipText}
-                              position='top'
-                              arrow={true}
-                              trigger='manual'
-                              open={showAutoTooltip && !!autoTooltipText}
-                              onRequestClose={() => {
-                                setShowAutoTooltip(false);
-                                setAutoTooltipText('');
-                              }}
-                            >
-                              <Tooltip title={autoTooltipText === '' ? 'Chọn tất cả' : autoTooltipText} position='top' arrow={true}>
+                            {showAutoTooltip && !!autoTooltipText ? (
+                              <Tooltip
+                                key='auto-tooltip'
+                                title={autoTooltipText}
+                                position='top'
+                                arrow={true}
+                                trigger='manual'
+                                open={true}
+                                hideOnClick={false}
+                              >
                                 <CheckboxDefault checked={selectAll} onChange={handleSelectAll} />
                               </Tooltip>
-                            </Tooltip>
+                            ) : (
+                              <Tooltip 
+                                key='hover-tooltip'
+                                title='Chọn tất cả' 
+                                position='top' 
+                                arrow={true}
+                                trigger='mouseenter focus'
+                              >
+                                <CheckboxDefault checked={selectAll} onChange={handleSelectAll} />
+                              </Tooltip>
+                            )}
                           </th>
                           <th className='py-2 px-3 border-b border-gray-200 text-center text-sm font-normal text-[#9295A4] w-[62px]'>STT</th>
                           <th className='py-2 px-3 border-b border-gray-200 text-left text-sm font-normal text-[#9295A4] w-auto'>Nguyên vật liệu</th>
