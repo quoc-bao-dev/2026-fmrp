@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 export const useListImportOutput = params => {
   const showToast = useToast();
   const fetchListImportOutput = async () => {
-    const response = await apiImportOutput.apiListImportOutput({ params: params });
+    const response = await apiImportOutput.apiListImportOutput(params);
     if (response.isSuccess === false) {
       showToast('error', response?.message);
     }
@@ -22,7 +22,7 @@ export const useListImportOutput = params => {
 //Gọi thêm các công đoạn nếu nhiều
 export const useListImportOutputItems = (params, options = {}) => {
   const fetchListImportOutputItems = async () => {
-    const response = await apiImportOutput.apiListImportOutputItems({ params: params });
+    const response = await apiImportOutput.apiListImportOutputItems(params);
     return response.data;
   };
   return useQuery({
@@ -76,7 +76,7 @@ export const useSavePomStages = (options = {}) => {
   const queryClient = useQueryClient();
 
   const fetchSavePomStages = async params => {
-    const response = await apiImportOutput.apiSavePomStages({ params });
+    const response = await apiImportOutput.apiSavePomStages(params);
     return response;
   };
 
@@ -121,17 +121,17 @@ export const useSavePomStagesDetail = (options = {}) => {
 
   return useMutation({
     mutationFn: async params => {
-      const response = await apiImportOutput.apiSavePomStagesDetail({ params });
+      const response = await apiImportOutput.apiSavePomStagesDetail(params);
       return response;
     },
-    onSuccess: data => {
+    onSuccess: async (data, variables) => {
       if (data?.isSuccess) {
         showToast('success', data?.message);
-        queryClient.invalidateQueries({ queryKey: ['api_list_import_output'] });
+        // queryClient.invalidateQueries({ queryKey: ['api_list_import_output'] });
       } else {
         showToast('error', data?.message);
       }
-      onSuccessFromOptions?.(data);
+      onSuccessFromOptions?.(data, variables);
     },
     ...restOptions,
   });

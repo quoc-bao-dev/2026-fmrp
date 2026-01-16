@@ -225,7 +225,7 @@ const formatTime = seconds => {
   return `${pad(h)} : ${pad(m)} : ${pad(s)}`;
 };
 
-const ProductionOrderCard = ({ status = 'idle', time = '00 : 00 : 00', po, stage_id, stage_name, isSelectMode = false, isSelected = false, onToggleSelect, canManageManagers }) => {
+const ProductionOrderCard = ({ status = 'idle', time = '00 : 00 : 00', po, stage_id, stage_name, isSelectMode = false, isSelected = false, onToggleSelect, cardPage = 1, onRefetchPage }) => {
   const [statusState, setStatusState] = useState(status);
   const [elapsedSeconds, setElapsedSeconds] = useState(parseTimeString(time));
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
@@ -400,9 +400,10 @@ const ProductionOrderCard = ({ status = 'idle', time = '00 : 00 : 00', po, stage
         open={showResponsiblePersonPopup}
         onClose={() => setShowResponsiblePersonPopup(false)}
         brandId={po?.branch_id}
-        canManageManagers={canManageManagers}
         po_id={po?.id}
         stage_id={stage_id}
+        cardPage={cardPage}
+        onSaveSuccess={onRefetchPage}
       />
 
       <div className='px-1 flex items-center gap-3 w-1/2'>
