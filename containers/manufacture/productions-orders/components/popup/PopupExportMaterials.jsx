@@ -184,22 +184,33 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
   }, [products, isLoading]);
 
   // Tự động hiển thị tooltip khi API load xong và ẩn sau 4 giây
+  // Delay để đợi popup animation hoàn thành (popup có animation 300ms)
   useEffect(() => {
+    let showTooltipTimer = null;
+    let hideTooltipTimer = null;
+
     // Chỉ hiển thị khi API đã load xong và có data
     if (!isLoading && data?.bom && products.length > 0) {
-      setAutoTooltipText('Chọn sản phẩm để xuất kho');
-      setShowAutoTooltip(true);
+      // Delay 500ms để đợi popup animation hoàn thành trước khi hiển thị tooltip
+      showTooltipTimer = setTimeout(() => {
+        setAutoTooltipText('Chọn sản phẩm để xuất kho');
+        setShowAutoTooltip(true);
 
-      const timer = setTimeout(() => {
-        setShowAutoTooltip(false);
-        setAutoTooltipText('');
-      }, 4000);
-
-      return () => clearTimeout(timer);
+        // Tự động ẩn sau 4 giây
+        hideTooltipTimer = setTimeout(() => {
+          setShowAutoTooltip(false);
+          setAutoTooltipText('');
+        }, 4000);
+      }, 500);
     } else {
       setShowAutoTooltip(false);
       setAutoTooltipText('');
     }
+
+    return () => {
+      if (showTooltipTimer) clearTimeout(showTooltipTimer);
+      if (hideTooltipTimer) clearTimeout(hideTooltipTimer);
+    };
   }, [isLoading, data, products.length]);
 
   const formatNumberWithSetting = useCallback(number => formatNumberConfig(+number, dataSeting), [dataSeting]);

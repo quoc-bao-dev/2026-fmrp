@@ -69,6 +69,7 @@ const PersonSelector = ({
   const prevSelectedRef = useRef(selected);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const triggerRef = useRef(null);
+  const inputRef = useRef(null);
   const showToast = useToast();
 
   // Reset localSelected về selected mới nhất khi mở popup hoặc khi selected thay đổi
@@ -90,6 +91,16 @@ const PersonSelector = ({
     }
     prevOpenRef.current = open;
   }, [open, selected]);
+
+  // Focus vào input khi popup mở
+  useEffect(() => {
+    if (open && inputRef.current) {
+      // Sử dụng setTimeout để đảm bảo DOM đã render xong
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+    }
+  }, [open]);
 
   // Sử dụng Floating UI để tự động tính toán vị trí
   const { refs, floatingStyles, context } = useFloating({
@@ -244,6 +255,7 @@ const PersonSelector = ({
             <div className='w-full flex items-center gap-2'>
               <div className='min-w-0 flex-1 flex items-center gap-3 pl-2 pr-1 py-1 border border-[#D0D5DD] rounded-lg bg-white focus-within:ring-2 focus-within:ring-[#1760B9]'>
                 <input
+                  ref={inputRef}
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder='Tìm người phụ trách'
