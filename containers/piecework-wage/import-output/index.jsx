@@ -38,17 +38,14 @@ const ImportOutput = () => {
   const filterParams = {
     start_date: dateFilter.dateStart ? moment(dateFilter.dateStart).format('DD/MM/YYYY') : null,
     end_date: dateFilter.dateEnd ? moment(dateFilter.dateEnd).format('DD/MM/YYYY') : null,
-    ...(selectedEmployee?.value
-      ? selectedEmployee.value.startsWith('group_')
-        ? { group_member_ids: [selectedEmployee.value.replace('group_', '')] }
-        : { staff_ids: [selectedEmployee.value] }
-      : {}
-    ),
+    ...(selectedEmployee?.value ? (selectedEmployee.value.startsWith('group_') ? { group_member_ids: [selectedEmployee.value.replace('group_', '')] } : { staff_ids: [selectedEmployee.value] }) : {}),
     stage_ids: selectedProcess?.value,
     search: debouncedSearchReferenceNo || '',
+    // limit: 3,
+    // page:1,
   };
 
-  const { isLoading: isLoadingListImportOutput, data: listImportOutput } = useListImportOutput(filterParams);
+  const { isLoading: isLoadingListImportOutput, data: listImportOutput, refetch: refetchListImportOutput } = useListImportOutput(filterParams);
   const { data: listStaffs } = useSearchStaffs();
   const { data: listGroupMembers } = useLookupGroupMembers({ limit: 100 });
   const { data: listStages } = useLookupStages({ search: debouncedSearchProcess || '' });
@@ -239,6 +236,9 @@ const ImportOutput = () => {
             />
           </div>
           <div className='flex items-center gap-2'>
+            <button className='h-10 bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-[#D0D5DD]' onClick={refetchListImportOutput}>
+              Làm mới
+            </button>
             <div className='h-10 w-[340px] bg-white px-3 py-2 rounded-lg flex items-center justify-between gap-2 border border-[#D0D5DD]'>
               <input
                 className='flex-1 border-none outline-none responsive-text-base text[#3A3E4C]'

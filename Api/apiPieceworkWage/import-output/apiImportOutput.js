@@ -7,17 +7,17 @@ const apiImportOutput = {
   },
 
   async apiListImportOutput(params) {
-    const response = await axiosCustom('POST', `/api_web/production-input/list`, params);
+    const response = await axiosCustom('POST', `/api_web/production-input/list`, {data: params});
     return response.data;
   },
 
   async apiListImportOutputItems(params) {
-    const response = await axiosCustom('POST', `/api_web/production-input/items`, params);
+    const response = await axiosCustom('POST', `/api_web/production-input/items`, { data: params });
     return response.data;
   },
 
   async apiSavePomStages(params) {
-    const response = await axiosCustom('POST', `/api_web/pom-stages/save`, params);
+    const response = await axiosCustom('POST', `/api_web/pom-stages/save`, { data: params });
     return response.data;
   },
 
@@ -27,7 +27,7 @@ const apiImportOutput = {
   },
 
   async apiSavePomStagesDetail(params) {
-    const response = await axiosCustom('POST', `/api_web/pom-stages/save-detail`, params);
+    const response = await axiosCustom('POST', `/api_web/pom-stages/save-detail`, { data: params });
     return response.data;
   },
 
