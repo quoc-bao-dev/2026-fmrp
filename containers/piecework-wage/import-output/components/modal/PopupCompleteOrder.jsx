@@ -4,6 +4,7 @@ import CheckIcon from '@/components/icons/common/CheckIcon';
 import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';
+import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
 import { IMAGES } from '@/constants/images';
 import { InputNumberCustom } from '@/containers/manufacture/productions-orders/components/popup/PopupCompleteCommand';
@@ -13,7 +14,6 @@ import { useLoadOutOfStock } from '@/containers/manufacture/productions-orders/h
 import useToast from '@/hooks/useToast';
 import { useActiveStages } from '@/managers/api/piecework-wage/useImportOutput';
 import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
-import { Lexend_Deca } from '@next/font/google';
 import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
@@ -120,26 +120,78 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose }) => {
   const [isInputPending, setIsInputPending] = useState(false);
   const [dataTableBom, setDataTableBom] = useState(null);
   const hasShownTooltipRef = useRef(false);
+  const hasLoadedWarehouseRef = useRef(false);
 
-  // Sử dụng trực tiếp dữ liệu từ API, chỉ thêm các field cần thiết cho UI
+  // Helper function để lưu kho hàng vào localStorage (chung cho tất cả popup)
+  const STORAGE_KEY = 'popup_complete_order_warehouse';
+
+  const saveWarehouseToStorage = useCallback(warehouseId => {
+    if (warehouseId) {
+      try {
+        localStorage.setItem(STORAGE_KEY, warehouseId);
+      } catch (error) {
+        console.error('Error saving warehouse to localStorage:', error);
+      }
+    }
+  }, []);
+
+  const getWarehouseFromStorage = useCallback(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEY);
+    } catch (error) {
+      console.error('Error getting warehouse from localStorage:', error);
+      return null;
+    }
+  }, []);
+
+  
   useEffect(() => {
     if (dataActiveStages?.items && Array.isArray(dataActiveStages.items)) {
+      const now = Date.now();
       const productsWithUI = dataActiveStages.items.map((item, index) => ({
         ...item,
         images: item.images || IMAGES.noImage,
         quantity_success: item.quantity_enter || 0,
         error: 0,
-        selected: false,
+        selected: true, // Tự động chọn tất cả khi mở popup
         originalIndex: index,
         uniqueId: `product-${item.pois_id || item.poi_id || index}`,
+        checkOrder: now - index, // Sắp xếp theo thứ tự ban đầu
       }));
       setProducts(productsWithUI);
-      setSelectAll(false);
+      setSelectAll(true); // Tự động chọn tất cả
     } else if (!isLoadingActiveStages && (!dataActiveStages?.items || dataActiveStages.items.length === 0)) {
       setProducts([]);
       setSelectAll(false);
     }
   }, [dataActiveStages, isLoadingActiveStages]);
+
+  // Tự động chọn tất cả sản phẩm mỗi khi popup được mở
+  useEffect(() => {
+    if (isOpen && products.length > 0) {
+      const now = Date.now();
+      setProducts(prevProducts => {
+        const updatedProducts = prevProducts.map((product, index) => ({
+          ...product,
+          selected: true,
+          checkOrder: now - (product.originalIndex || index),
+        }));
+
+        // Sắp xếp lại: sản phẩm đã chọn lên đầu
+        updatedProducts.sort((a, b) => {
+          if (a.selected && !b.selected) return -1;
+          if (!a.selected && b.selected) return 1;
+          if (a.selected && b.selected) {
+            return (b.checkOrder || 0) - (a.checkOrder || 0);
+          }
+          return (a.originalIndex || 0) - (b.originalIndex || 0);
+        });
+
+        return updatedProducts;
+      });
+      setSelectAll(true);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && products.length > 0 && !hasShownTooltipRef.current) {
@@ -166,6 +218,7 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose }) => {
   useEffect(() => {
     if (!isOpen) {
       hasShownTooltipRef.current = false;
+      hasLoadedWarehouseRef.current = false;
       setSelectAll(false);
       setSearchProducts('');
       setSelectedWarehouse(null);
@@ -444,10 +497,43 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose }) => {
     return [];
   }, [dataWarehouses?.warehouses]);
 
-  const handleWarehouseChange = useCallback(option => {
-    setSelectedWarehouse(option);
-    setIsWarehouseMissing(false);
-  }, []);
+  // Tự động chọn kho từ localStorage hoặc từ API khi dữ liệu load xong
+  useEffect(() => {
+    if (isOpen && warehouseOptions.length > 0 && !isLoadingWarehouses && !hasLoadedWarehouseRef.current) {
+      // Ưu tiên: localStorage > warehouse_import_id từ API
+      const savedWarehouseId = getWarehouseFromStorage();
+      const defaultWarehouseId = savedWarehouseId || dataWarehouses?.warehouse_import_id;
+
+      if (defaultWarehouseId) {
+        const foundWarehouse = warehouseOptions.find(w => w.value === defaultWarehouseId || w.id === defaultWarehouseId);
+        if (foundWarehouse) {
+          setSelectedWarehouse(foundWarehouse);
+          // Lưu lại vào localStorage để đảm bảo đồng bộ
+          saveWarehouseToStorage(defaultWarehouseId);
+        }
+      }
+      hasLoadedWarehouseRef.current = true;
+    }
+  }, [isOpen, warehouseOptions, isLoadingWarehouses, dataWarehouses?.warehouse_import_id, getWarehouseFromStorage, saveWarehouseToStorage]);
+
+  const handleWarehouseChange = useCallback(
+    option => {
+      setSelectedWarehouse(option);
+      setIsWarehouseMissing(false);
+      // Lưu kho đã chọn vào localStorage
+      if (option?.value || option?.id) {
+        saveWarehouseToStorage(option.value || option.id);
+      } else {
+        // Nếu xóa chọn kho, xóa khỏi localStorage
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch (error) {
+          console.error('Error removing warehouse from localStorage:', error);
+        }
+      }
+    },
+    [saveWarehouseToStorage]
+  );
 
   const handleConfirm = useCallback(async () => {
     if (isInputPending) {
@@ -696,7 +782,7 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose }) => {
                 <tr>
                   <td colSpan={5} className='py-8'>
                     <div className='flex items-center justify-center'>
-                      <p className='text-sm text-[#667085]'>Đang tải dữ liệu...</p>
+                     <Loading/>
                     </div>
                   </td>
                 </tr>
