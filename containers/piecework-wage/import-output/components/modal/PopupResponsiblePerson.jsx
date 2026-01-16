@@ -11,12 +11,19 @@ import PersonSelector from '@/containers/piecework-wage/import-output/components
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import useToast from '@/hooks/useToast';
 import { useListPomStages, useLookupGroupMembers, useSavePomStagesDetail } from '@/managers/api/piecework-wage/useImportOutput';
+import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 
-const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_id, stage_id }) => {
+const PopupResponsiblePerson = ({ open, onClose, brandId, po_id, stage_id, cardPage = 1, onSaveSuccess }) => {
   const showToast = useToast();
+  const queryClient = useQueryClient();
+  const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
+
+  // Kiểm tra quyền: có quyền nếu là admin hoặc có quyền is_create
+  const hasPermission = role || auth?.production_input?.is_create === '1';
 
   const [openCombo, setOpenCombo] = useState(false);
   const [selectedStaffs, setSelectedStaffs] = useState([]);
@@ -35,7 +42,10 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
   const { data: listGroupMembers } = useLookupGroupMembers({ limit: 100 }, { enabled: open });
 
   const { mutate: savePomStagesDetail, isPending: isSaving } = useSavePomStagesDetail({
-    onSuccess: () => {
+    onSuccess: data => {
+      if (data?.isSuccess) {
+        onSaveSuccess?.();
+      }
       onClose?.();
     },
     onError: error => {
@@ -77,8 +87,8 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
   }, [staffs, listGroupMembers]);
 
   const handleAddPerson = () => {
-    // Phân quyền: chỉ cho phép role is_manager được thêm người phụ trách (nếu có truyền canManageManagers)
-    if (canManageManagers === false) {
+    // Kiểm tra quyền: không có quyền thì không cho mở
+    if (!hasPermission) {
       showToast('error', 'Bạn không có quyền thực hiện thao tác này');
       return;
     }
@@ -155,6 +165,12 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
   }, [listPomStages, open]);
 
   const handleSave = () => {
+    // Kiểm tra quyền: không có quyền thì không cho lưu
+    if (!hasPermission) {
+      showToast('error', 'Bạn không có quyền thực hiện thao tác này');
+      return;
+    }
+
     // Tách staff_ids và group_ids
     const staff_ids = [];
     const group_ids = [];
@@ -207,36 +223,34 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
           </motion.button>
         </div>
 
-        {canManageManagers !== false && (
-          <PersonSelector
-            open={openCombo}
-            onClose={() => setOpenCombo(false)}
-            onConfirm={handleConfirmSelection}
-            selected={selectedStaffs.map(item => ({
-              id: item.staff_id || item.id,
-              name: item.staff?.full_name || '',
-              avatarUrl: item.staff?.profile_image || '',
-              type: item.type || 'staff',
-            }))}
-            data={listStaffs}
-            inlineConfirm
-            hideFooterActions
-            width={300}
-          >
-            <div className='inline-flex w-fit'>
-              <ButtonAnimationNew
-                icon={
-                  <div className='size-6'>
-                    <UserPlusIcon className='size-full text-[#11315B]' />
-                  </div>
-                }
-                title='Thêm người phụ trách'
-                className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] bg-white border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
-                onClick={handleAddPerson}
-              />
-            </div>
-          </PersonSelector>
-        )}
+        <PersonSelector
+          open={openCombo}
+          onClose={() => setOpenCombo(false)}
+          onConfirm={handleConfirmSelection}
+          selected={selectedStaffs.map(item => ({
+            id: item.staff_id || item.id,
+            name: item.staff?.full_name || '',
+            avatarUrl: item.staff?.profile_image || '',
+            type: item.type || 'staff',
+          }))}
+          data={listStaffs}
+          inlineConfirm
+          hideFooterActions
+          width={300}
+        >
+          <div className='inline-flex w-fit'>
+            <ButtonAnimationNew
+              icon={
+                <div className='size-6'>
+                  <UserPlusIcon className='size-full text-[#11315B]' />
+                </div>
+              }
+              title='Thêm người phụ trách'
+              className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-medium text-[#11315B] bg-white border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
+              onClick={handleAddPerson}
+            />
+          </div>
+        </PersonSelector>
 
         {/* Content */}
         <div className='flex-1 flex flex-col gap-1 overflow-hidden h-full'>
@@ -269,6 +283,11 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
                     </div>
                     <ButtonDelete
                       onClick={() => {
+                        // Kiểm tra quyền: không có quyền thì không cho xóa
+                        if (!hasPermission) {
+                          showToast('error', 'Bạn không có quyền thực hiện thao tác này');
+                          return;
+                        }
                         // Xoá tạm thời khỏi giao diện; API sẽ được gọi khi nhấn Lưu
                         setSelectedStaffs(prev => prev.filter(p => String(p.id) !== String(person.id)));
                       }}
@@ -280,31 +299,29 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, canManageManagers, po_
           </Customscrollbar>
 
           {/* Add Button */}
-          {canManageManagers !== false && (
-            <div className='flex items-center justify-center gap-4'>
-              <div className='flex items-center justify-center'>
-                <button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className={`flex items-center gap-4 bg-[#0375F3] text-white px-7 py-3 rounded-[8px] font-medium transition-colors ${
-                    isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#0375F3]/90 cursor-pointer'
-                  }`}
-                >
-                  {isSaving ? (
-                    <span className='flex items-center gap-2'>
-                      <span className='inline-block h-4 w-4 border-2 border-white/60 border-t-white rounded-full animate-spin' />
-                      <span>Đang lưu...</span>
-                    </span>
-                  ) : (
-                    <>
-                      <CheckThinIcon className='size-5' />
-                      <span>Lưu</span>
-                    </>
-                  )}
-                </button>
-              </div>
+          <div className='flex items-center justify-center gap-4'>
+            <div className='flex items-center justify-center'>
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className={`flex items-center gap-4 bg-[#0375F3] text-white px-7 py-3 rounded-[8px] font-medium transition-colors ${
+                  isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#0375F3]/90 cursor-pointer'
+                }`}
+              >
+                {isSaving ? (
+                  <span className='flex items-center gap-2'>
+                    <span className='inline-block h-4 w-4 border-2 border-white/60 border-t-white rounded-full animate-spin' />
+                    <span>Đang lưu...</span>
+                  </span>
+                ) : (
+                  <>
+                    <CheckThinIcon className='size-5' />
+                    <span>Lưu</span>
+                  </>
+                )}
+              </button>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </PopupCustom>
