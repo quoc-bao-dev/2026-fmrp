@@ -236,9 +236,9 @@ const ImportOutput = () => {
             />
           </div>
           <div className='flex items-center gap-2'>
-            <button className='h-10 bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-[#D0D5DD]' onClick={refetchListImportOutput}>
+            {/* <button className='h-10 bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-[#D0D5DD]' onClick={refetchListImportOutput}>
               Làm mới
-            </button>
+            </button> */}
             <div className='h-10 w-[340px] bg-white px-3 py-2 rounded-lg flex items-center justify-between gap-2 border border-[#D0D5DD]'>
               <input
                 className='flex-1 border-none outline-none responsive-text-base text[#3A3E4C]'
