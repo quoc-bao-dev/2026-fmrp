@@ -651,10 +651,8 @@ const Header = () => {
               link: '/piecework-wage/shift-schedule',
             },
             {
-              // viewOwn: auth?.piecework_wage_complete?.is_view_own,
-              // view: auth?.piecework_wage_complete?.is_view,
-              viewOwn: 1,
-              view: 1,
+              viewOwn: auth?.production_input?.is_view_own,
+              view: auth?.production_input?.is_view,
               name: 'Nhập sản lượng',
               link: '/piecework-wage/import-output',
             },
