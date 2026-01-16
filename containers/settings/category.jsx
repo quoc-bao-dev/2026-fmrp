@@ -162,7 +162,11 @@ const Category = props => {
                               Đơn giá
                               <span className='text-blue-fmrp'>
                                 {' '}
-                                <InfoTooltip content='Đơn giá là số tiền trả cho mỗi công đoạn sản xuất đã hoàn thành, dùng để tính lương và sản lượng cho công nhân.' position='bottom' />
+                                <InfoTooltip
+                                  content='Đơn giá là số tiền trả cho mỗi công đoạn sản xuất đã hoàn thành, dùng để tính lương và sản lượng cho công nhân.'
+                                  position='bottom'
+                                  iconProps={{ size: 14 }}
+                                />
                               </span>
                             </p>
                           </ColumnTable>

@@ -343,7 +343,12 @@ const PopupCategory = props => {
 
                   <div className='w-full'>
                     <label className='text-[#344054] font-normal text-sm mb-1 flex gap-2 items-center'>
-                      Đơn giá <InfoTooltip content='Đơn giá là số tiền trả cho mỗi công đoạn sản xuất đã hoàn thành, dùng để tính lương và sản lượng cho công nhân.' position='bottom' />
+                      Đơn giá{' '}
+                      <InfoTooltip
+                        content='Đơn giá là số tiền trả cho mỗi công đoạn sản xuất đã hoàn thành, dùng để tính lương và sản lượng cho công nhân.'
+                        position='bottom'
+                        iconProps={{ size: 14 }}
+                      />
                     </label>
                     <div>
                       <PriceInput value={typeof stages_unit_price === 'number' ? stages_unit_price : 0} onChange={val => _HandleChangeInput('unit_price', val)} />
