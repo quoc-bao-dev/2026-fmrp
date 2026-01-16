@@ -14,6 +14,7 @@ import { PopupParent } from '@/utils/lib/Popup';
 import { useState } from 'react';
 import ModalImage from 'react-modal-image';
 import { useInventoryDetail } from '../hooks/useInventoryDetail';
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 const PopupDetail = props => {
   const [open, sOpen] = useState(false);
 
@@ -24,10 +25,7 @@ const PopupDetail = props => {
   const dataSeting = useSetingServer();
 
   // Cài đặt thuộc tính kho từ settings
-  const isWarehousePropertiesEnabled = dataSeting?.is_warehouse_properties === '1';
-  const warehouseProperties = Array.isArray(dataSeting?.warehouse_properties) ? dataSeting.warehouse_properties : [];
-  const warehousePropertyLabels = warehouseProperties.filter(p => ['value_1', 'value_2', 'value_3'].includes(p.name)).map(p => ({ key: p.name, label: p.value }));
-  const showWarehouseAttributes = isWarehousePropertiesEnabled;
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
 
   const { data, isFetching } = useInventoryDetail(open, props?.id);
 
@@ -170,28 +168,31 @@ const PopupDetail = props => {
                                       ) : (
                                         ''
                                       )}
-                                      {dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' ? (
-                                        <>
+                                      <>
+                                        {/* Hiển thị Lot nếu setting bật HOẶC có giá trị */}
+                                        {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' || (e?.lot != null && e?.lot !== '')) && (
                                           <div className='flex gap-0.5'>
                                             <h6 className='text-[11px]'>Lot:</h6> <h6 className='text-[11px]  px-2   w-[full] text-left '>{e?.lot == null || e?.lot == '' ? '-' : e?.lot}</h6>
                                           </div>
+                                        )}
+                                        {/* Hiển thị Date nếu setting bật HOẶC có giá trị */}
+                                        {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' || e?.expiration_date) && (
                                           <div className='flex gap-0.5'>
                                             <h6 className='text-[11px]'>Date:</h6>{' '}
                                             <h6 className='text-[11px]  px-2   w-[full] text-center '>{e?.expiration_date ? formatMoment(e?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}</h6>
                                           </div>
-                                        </>
-                                      ) : (
-                                        ''
-                                      )}
+                                        )}
+                                      </>
                                     </div>
                                     {/* Thuộc tính kho - chỉ hiển thị cho nguyên vật liệu */}
-                                    {showWarehouseAttributes && (e?.item?.text_type === 'material' || e?.text_type === 'material') && warehousePropertyLabels.length > 0 && (
+                                    {(e?.item?.text_type === 'material' || e?.text_type === 'material') && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
                                       <div className='flex flex-col italic '>
                                         {warehousePropertyLabels.map(({ key, label }) => {
-                                          const value = e?.[key] ?? e?.item?.[key];
-                                          const valueString = value !== undefined && value !== null && value !== '' ? String(value) : '-';
-                                          // Nếu cả label và value đều rỗng thì bỏ qua
                                           if (!label) return null;
+                                          const value = e?.[key] ?? e?.item?.[key];
+                                          // Hiển thị nếu isWarehousePropertiesEnabled bật HOẶC thuộc tính có giá trị
+                                          if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+                                          const valueString = value == null || value === '' ? '-' : String(value);
                                           return (
                                             <div key={key} className='flex items-baseline gap-1'>
                                               <span className='text-[11px] font-medium text-gray-700 whitespace-nowrap'>{label}:</span>

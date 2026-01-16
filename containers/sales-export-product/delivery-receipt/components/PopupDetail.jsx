@@ -30,7 +30,7 @@ const PopupDetail = props => {
 
   const { dataMaterialExpiry, dataProductSerial } = useFeature();
   const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
-console.log(warehousePropertyLabels)
+  console.log(warehousePropertyLabels);
   const formatNumber = num => {
     return formatNumberConfig(+num, dataSeting);
   };
@@ -39,7 +39,7 @@ console.log(warehousePropertyLabels)
   };
 
   const { data, isFetching } = useDeliveryReceipDetail(open, props?.id);
-console.log(data)
+  console.log(data);
   return (
     <>
       <PopupCustom
@@ -171,15 +171,17 @@ console.log(data)
                                 ) : (
                                   ''
                                 )}
-                                {isWarehousePropertiesEnabled && warehousePropertyLabels.length > 0 && e?.type_item === 'material' && (
+                                {e?.type_item === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
                                   <>
                                     {warehousePropertyLabels.map(({ key, label }) => {
-                                      const value = e?.[key];
                                       if (!label) return null;
+                                      const value = e?.[key];
+                                      // Hiển thị nếu isWarehousePropertiesEnabled bật HOẶC thuộc tính có giá trị
+                                      if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
                                       return (
                                         <div key={key} className='flex gap-1'>
                                           <h6 className='responsive-text-sm'>{label}:</h6>
-                                          <h6 className='responsive-text-sm'>{value ?? '-'}</h6>
+                                          <h6 className='responsive-text-sm'>{value == null || value === '' ? '-' : value}</h6>
                                         </div>
                                       );
                                     })}

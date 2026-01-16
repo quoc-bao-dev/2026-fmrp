@@ -179,15 +179,17 @@ const TabKeepStock = ({ dataTable, handShowItem, handDeleteItem, isFetching, dat
                                       </div>
                                     </div>
                                   )}
-                                  {isWarehousePropertiesEnabled && warehousePropertyLabels.length > 0 && isTab !== 'dataPurchases' && (
+                                  {isTab !== 'dataPurchases' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
                                     <div className='flex gap-1 flex-wrap'>
                                       {warehousePropertyLabels.map(({ key, label }) => {
-                                        const value = i?.[key];
                                         if (!label) return null;
+                                        const value = i?.[key];
+                                        // Hiển thị nếu isWarehousePropertiesEnabled bật HOẶC thuộc tính có giá trị
+                                        if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
                                         return (
                                           <div key={key} className='flex gap-0.5'>
                                             <h6 className='text-[10px]'>{label}:</h6>
-                                            <h6 className='text-[10px] px-2 text-left'>{value ?? '-'}</h6>
+                                            <h6 className='text-[10px] px-2 text-left'>{value == null || value === '' ? '-' : value}</h6>
                                           </div>
                                         );
                                       })}

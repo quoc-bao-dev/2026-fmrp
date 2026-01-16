@@ -146,28 +146,31 @@ const PopupDetailWarehouseTransfer = props => {
                                     ) : (
                                       ''
                                     )}
-                                    {dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' ? (
-                                      <>
+                                    <>
+                                      {/* Hiển thị Lot nếu setting bật HOẶC có giá trị */}
+                                      {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' || (e?.item?.lot != null && e?.item?.lot !== '')) && (
                                         <div className='flex gap-0.5'>
                                           <h6 className='text-[11px]'>Lot:</h6>{' '}
                                           <h6 className='text-[11px]  px-2   w-[full] text-left '>{e?.item?.lot == null || e?.item?.lot == '' ? '-' : e?.item?.lot}</h6>
                                         </div>
+                                      )}
+                                      {/* Hiển thị Date nếu setting bật HOẶC có giá trị */}
+                                      {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' || e?.item?.expiration_date) && (
                                         <div className='flex gap-0.5'>
                                           <h6 className='text-[11px]'>Date:</h6>{' '}
                                           <h6 className='text-[11px]  px-2   w-[full] text-center '>
                                             {e?.item?.expiration_date ? formatMoment(e?.item?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}
                                           </h6>
                                         </div>
-                                      </>
-                                    ) : (
-                                      ''
-                                    )}
-
-                                    {isWarehousePropertiesEnabled && e?.item?.text_type === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                                      )}
+                                    </>
+                                    {e?.item?.text_type === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
                                       <div className='flex gap-1'>
                                         {warehousePropertyLabels.map(({ key, label }) => {
                                           if (!label) return null;
                                           const value = e?.item?.[key];
+                                          // Hiển thị nếu isWarehousePropertiesEnabled bật HOẶC thuộc tính có giá trị
+                                          if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
                                           return (
                                             <div key={key} className='flex gap-0.5'>
                                               <h6 className='text-[11px]'>{label}:</h6>

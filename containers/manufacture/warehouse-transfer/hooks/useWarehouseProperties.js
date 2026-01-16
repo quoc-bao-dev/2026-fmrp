@@ -12,6 +12,7 @@ export const useWarehouseProperties = (externalDataSetting = null) => {
   const dataSeting = externalDataSetting || internalDataSetting;
 
   const isWarehousePropertiesEnabled = dataSeting?.is_warehouse_properties === '1';
+  // const isWarehousePropertiesEnabled = false;
 
   const warehouseProperties = Array.isArray(dataSeting?.warehouse_properties) ? dataSeting.warehouse_properties : [];
   const warehousePropertyKeys = ['value_1', 'value_2', 'value_3'];

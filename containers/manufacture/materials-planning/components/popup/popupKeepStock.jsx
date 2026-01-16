@@ -1257,15 +1257,17 @@ const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValu
                                                             </div>
                                                           </div>
                                                         )}
-                                                        {isWarehousePropertiesEnabled && findValue.type === 'material' && warehousePropertyLabels.length > 0 && (
+                                                        {findValue.type === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
                                                           <div className='flex gap-1'>
                                                             {warehousePropertyLabels.map(({ key, label }) => {
-                                                              const value = x?.[key];
                                                               if (!label) return null;
+                                                              const value = x?.[key];
+                                                              // Hiển thị nếu isWarehousePropertiesEnabled bật HOẶC thuộc tính có giá trị
+                                                              if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
                                                               return (
                                                                 <div key={key} className='flex gap-0.5'>
                                                                   <h6 className='text-[8px]'>{label}:</h6>
-                                                                  <h6 className='text-[9px] px-1 w-[full] text-left'>{value ?? '-'}</h6>
+                                                                  <h6 className='text-[9px] px-1 w-[full] text-left'>{value == null || value === '' ? '-' : value}</h6>
                                                                 </div>
                                                               );
                                                             })}
