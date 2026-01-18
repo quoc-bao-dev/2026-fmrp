@@ -320,6 +320,7 @@ const General = props => {
         }
       } else {
         isShow('error', props.dataLang[message] || message);
+        sOnSending(false);
       }
     } catch (error) {
       throw error;
