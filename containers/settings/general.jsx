@@ -9,7 +9,7 @@ import useToast from '@/hooks/useToast';
 import Head from 'next/head';
 import React, { useEffect, useState } from 'react';
 import { FaMinus, FaPlus, FaXmark } from 'react-icons/fa6';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { ListBtn_Setting } from './information';
 
 const WarningDaysInput = ({ state, setState }) => {
@@ -145,6 +145,7 @@ const General = props => {
   const dataSetting = useSelector(state => state.setings);
   const isSettingReady = dataSetting && Object.keys(dataSetting || {}).length > 0;
   const isShow = useToast();
+  const dispatch = useDispatch();
 
   const [onFetching, sOnFetching] = useState(false);
 
@@ -294,6 +295,29 @@ const General = props => {
       if (isSuccess) {
         isShow('success', props.dataLang[message] || message);
         sOnSending(false);
+
+        // Gọi API để lấy settings mới và cập nhật vào store
+        try {
+          const res = await apiDashboard.apiSettings();
+          if (res?.settings) {
+            dispatch({ type: 'setings/server', payload: res.settings });
+          }
+        } catch (error) {
+          console.error('Error fetching settings:', error);
+        }
+
+        // Gọi API để lấy feature mới và cập nhật vào store
+        try {
+          const fature = await apiDashboard.apiFeature();
+          const newData = {
+            dataMaterialExpiry: fature.find(x => x.code == 'material_expiry'),
+            dataProductExpiry: fature.find(x => x.code == 'product_expiry'),
+            dataProductSerial: fature.find(x => x.code == 'product_serial'),
+          };
+          dispatch({ type: 'setings/feature', payload: newData });
+        } catch (error) {
+          console.error('Error fetching feature:', error);
+        }
       } else {
         isShow('error', props.dataLang[message] || message);
       }
