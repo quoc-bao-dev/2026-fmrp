@@ -40,6 +40,7 @@ import PopupWarehouse from './components/popup';
 import { useWarehouseDetail } from './hooks/useWarehouseDetail';
 import { useWarehouseList } from './hooks/useWarehouseList';
 import { useWarehouseLocation } from './hooks/useWarehouseLocation';
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 
 const initialState = {
   idWarehouse: '',
@@ -72,11 +73,7 @@ const Warehouse = props => {
   const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature();
 
   // cài đặt thuộc tính kho từ settings
-  const isWarehousePropertiesEnabled = dataSeting?.is_warehouse_properties === '1';
-  console.log({ dataSeting });
-  const warehouseProperties = Array.isArray(dataSeting?.warehouse_properties) ? dataSeting.warehouse_properties : [];
-  const getWarehousePropertyLabel = key => warehouseProperties.find(p => p.name === key)?.value || '';
-  const warehousePropertyKeys = ['value_1', 'value_2', 'value_3'];
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
 
   const showWarehouseAttributesColumn = isWarehousePropertiesEnabled;
 
@@ -717,18 +714,26 @@ const Warehouse = props => {
                                   {showWarehouseAttributesColumn &&
                                     (e?.item_type !== 'product' ? (
                                       <RowItemTable colSpan={2} className='!pl-10 py-3 border-b !font-normal' textAlign={'left'}>
-                                        <div className='flex flex-col gap-1 '>
-                                          {warehousePropertyKeys.map(key => {
-                                            const label = getWarehousePropertyLabel(key);
-                                            if (!label) return null;
-                                            const value = item?.[key];
-                                            return (
-                                              <div key={key} className='flex items-start gap-1 w-full'>
-                                                <span className='text-xs font-semibold min-w-[70px]'>{label}</span> :<span className='text-xs text-gray-600 truncate ml-2'>{value ?? '-'}</span>
-                                              </div>
-                                            );
-                                          })}
-                                        </div>
+                                        {Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 ? (
+                                          <div className='flex flex-col gap-1 '>
+                                            {warehousePropertyLabels.map(({ key, label }) => {
+                                              if (!label) return null;
+                                              const value = item?.[key];
+
+                                              // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                              if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+
+                                              return (
+                                                <div key={key} className='flex items-start gap-1 w-full'>
+                                                  <span className='text-xs font-semibold min-w-[70px]'>{label}</span> :
+                                                  <span className='text-xs text-gray-600 truncate ml-2'>{value == null || value === '' ? '-' : value}</span>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        ) : (
+                                          '-'
+                                        )}
                                       </RowItemTable>
                                     ) : (
                                       <RowItemTable colSpan={2} className='!pl-10 py-3 border-b !font-normal' textAlign={'left'}>

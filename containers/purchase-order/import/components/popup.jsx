@@ -12,6 +12,7 @@ import PopupCustom from '@/components/UI/popup';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import useFeature from '@/hooks/useConfigFeature';
 import useSetingServer from '@/hooks/useConfigNumber';
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 import { formatMoment } from '@/utils/helpers/formatMoment';
 import formatMoneyConfig from '@/utils/helpers/formatMoney';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
@@ -28,12 +29,8 @@ const PopupDetail = props => {
 
   const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature();
 
-  // cài đặt thuộc tính kho từ settings
-  const isWarehousePropertiesEnabled = dataSeting?.is_warehouse_properties === '1';
-  const warehouseProperties = Array.isArray(dataSeting?.warehouse_properties) ? dataSeting.warehouse_properties : [];
-  const getWarehousePropertyLabel = key => warehouseProperties.find(p => p.name === key)?.value || '';
-  const warehousePropertyKeys = ['value_1', 'value_2', 'value_3'];
-  const showWarehouseAttributes = isWarehousePropertiesEnabled;
+  // Sử dụng hook để lấy trạng thái và danh sách thuộc tính kho
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
 
   const formatNumber = number => {
     return formatNumberConfig(+number, dataSeting);
@@ -170,16 +167,21 @@ const PopupDetail = props => {
                               <h6 className='text-[13px]  px-2 py-0.5 col-span-2 text-left'>
                                 <h6 className='font-medium'>{e?.item?.name}</h6>
                                 <div className='flex-col flex-wrap items-center font-oblique'>
-                                  {showWarehouseAttributes &&
-                                    e?.item?.text_type === 'material' &&
-                                    warehousePropertyKeys.map(key => {
-                                      const label = getWarehousePropertyLabel(key);
+                                  {/* Hiển thị thuộc tính kho cho nguyên vật liệu */}
+                                  {e?.item?.text_type === 'material' &&
+                                    Array.isArray(warehousePropertyLabels) &&
+                                    warehousePropertyLabels.length > 0 &&
+                                    warehousePropertyLabels.map(({ key, label }) => {
                                       if (!label) return null;
                                       const value = e?.[key];
+
+                                      // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                      if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+
                                       return (
                                         <div key={key} className='flex gap-0.5'>
                                           <h6 className='text-[11px]'>{label}:</h6>
-                                          <h6 className='text-[11px] px-2 w-[full] text-left'>{value ?? '-'}</h6>
+                                          <h6 className='text-[11px] px-2 w-[full] text-left'>{value == null || value === '' ? '-' : value}</h6>
                                         </div>
                                       );
                                     })}
@@ -191,18 +193,19 @@ const PopupDetail = props => {
                                   ) : (
                                     ''
                                   )}
-                                  {dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' ? (
-                                    <>
-                                      <div className='flex gap-0.5'>
-                                        <h6 className='text-[11px]'>Lot:</h6> <h6 className='text-[11px]  px-2   w-[full] text-left '>{e.lot == null || e.lot == '' ? '-' : e.lot}</h6>
-                                      </div>
-                                      <div className='flex gap-0.5'>
-                                        <h6 className='text-[11px]'>HSD:</h6>{' '}
-                                        <h6 className='text-[11px]  px-2   w-[full] text-center '>{e.expiration_date ? formatMoment(e.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}</h6>
-                                      </div>
-                                    </>
-                                  ) : (
-                                    ''
+                                  {/* Hiển thị Lot nếu setting bật HOẶC có giá trị */}
+                                  {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' || (e?.lot != null && e?.lot !== '')) && (
+                                    <div className='flex gap-0.5'>
+                                      <h6 className='text-[11px]'>Lot:</h6>
+                                      <h6 className='text-[11px] px-2 w-[full] text-left'>{e.lot == null || e.lot === '' ? '-' : e.lot}</h6>
+                                    </div>
+                                  )}
+                                  {/* Hiển thị Date nếu setting bật HOẶC có giá trị */}
+                                  {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' || e?.expiration_date) && (
+                                    <div className='flex gap-0.5'>
+                                      <h6 className='text-[11px]'>HSD:</h6>
+                                      <h6 className='text-[11px] px-2 w-[full] text-center'>{e.expiration_date ? formatMoment(e.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}</h6>
+                                    </div>
                                   )}
                                 </div>
                               </h6>
