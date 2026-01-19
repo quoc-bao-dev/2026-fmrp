@@ -558,6 +558,21 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
                         Date: <span className='font-semibold text-neutral-07'>{moment(errorItem.expiration_date).format('DD/MM/YYYY')}</span>
                       </span>
                     )}
+                    {Array.isArray(warehousePropertyLabels) &&
+                      warehousePropertyLabels.length > 0 &&
+                      warehousePropertyLabels.map(({ key, label }) => {
+                        if (!label) return null;
+                        const value = errorItem?.[key];
+
+                        // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                        if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+
+                        return (
+                          <span key={key}>
+                            {label}: <span className='font-semibold text-neutral-07'>{value == null || value === '' ? '-' : value}</span>
+                          </span>
+                        );
+                      })}
                   </div>
                 </div>
               ))}
