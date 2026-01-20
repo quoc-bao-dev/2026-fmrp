@@ -7,6 +7,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import useToast from '@/hooks/useToast';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 
 const ResponsibleAvatar = ({ avatarUrl, fullName = '', size = 40, borderColor = '#549AE8', className = '' }) => {
   const [isError, setIsError] = useState(false);
@@ -155,10 +156,10 @@ const PersonSelector = ({
   const hasPersonSelected = useMemo(() => (Array.isArray(localSelected) ? localSelected.length > 0 : false), [localSelected]);
 
   const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase();
+    const term = search.trim();
     const peopleList = Array.isArray(data) ? data : [];
     if (!term) return peopleList;
-    return peopleList.filter(p => p.name.toLowerCase().includes(term));
+    return peopleList.filter(p => searchWithoutDiacritics(p?.name || '', term));
   }, [search, data]);
 
   const isSelected = id => localSelected?.some(item => item.id === id);

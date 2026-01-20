@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import PersonSelector from './modal/PersonSelector';
 import ProductionOrderCard from './ProductionOrderCard';
+import { useSocketContext } from '@/context/socket/SocketContext';
 
 // Component dropdown hiển thị nhân viên/nhóm đang làm và tạm dừng
 const ProcessStatusDropdown = ({ processName }) => {
@@ -129,6 +130,8 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
   const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
   const showToast = useToast();
   const queryClient = useQueryClient();
+  const { socket } = useSocketContext()
+
   const limit = 10; // Giữ nguyên limit
 
   const { mutate: savePomStages } = useSavePomStages({
@@ -239,7 +242,32 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
     },
     [stage.stage_id, queryClient, limit, page, filterParams]
   );
+  // useEffect(() => {
+  //   if (!socket) return;
+  //   const topic = `production_input`;
 
+  //   const handleProductionInput = data => {
+  //     console.log('production_input socket data:', data);
+
+  //     const stageIdFromSocket = Number(data?.data?.stage_id);
+  //     const currentStageId = Number(stage?.stage_id);
+
+  //     // Nếu không có stage_id hợp lệ thì bỏ qua
+  //     if (!Number.isFinite(stageIdFromSocket) || !Number.isFinite(currentStageId)) return;
+
+  //     // Chỉ refetch nếu stage_id của socket trùng với stage hiện tại của column
+  //     if (stageIdFromSocket === currentStageId) {
+  //       // Gọi lại API cho page 1 để cập nhật dữ liệu cột hiện tại
+  //       refetchPage(1);
+  //     }
+  //   };
+
+  //   socket.on(topic, handleProductionInput);
+
+  //   return () => {
+  //     socket.off(topic, handleProductionInput);
+  //   };
+  // }, [socket, stage?.stage_id, refetchPage]);
   // Cập nhật dữ liệu khi có response mới từ API
   useEffect(() => {
     if (page > 1 && shouldFetch && !isLoading) {
