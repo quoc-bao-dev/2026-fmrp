@@ -136,3 +136,60 @@ export const useSavePomStagesDetail = (options = {}) => {
     ...restOptions,
   });
 };
+
+//Bắt đầu timer
+export const useStartTimer = (options = {}) => {
+  const showToast = useToast();
+  const { onSuccess: onSuccessFromOptions, ...restOptions } = options;
+
+  return useMutation({
+    mutationFn: async params => {
+      const response = await apiImportOutput.apiStartTimer(params);
+      return response;
+    },
+    onSuccess: (data, variables) => {
+      if (data?.isSuccess) showToast('success', data?.message);
+      else showToast('error', data?.message);
+      onSuccessFromOptions?.(data, variables);
+    },
+    ...restOptions,
+  });
+};
+
+//Tạm dừng timer
+export const usePauseTimer = (options = {}) => {
+  const showToast = useToast();
+  const { onSuccess: onSuccessFromOptions, ...restOptions } = options;
+
+  return useMutation({
+    mutationFn: async params => {
+      const response = await apiImportOutput.apiPauseTimer(params);
+      return response;
+    },
+    onSuccess: (data, variables) => {
+      if (data?.isSuccess) showToast('success', data?.message);
+      else showToast('error', data?.message);
+      onSuccessFromOptions?.(data, variables);
+    },
+    ...restOptions,
+  });
+};
+
+//Tiếp tục timer
+export const useResumeTimer = (options = {}) => {
+  const showToast = useToast();
+  const { onSuccess: onSuccessFromOptions, ...restOptions } = options;
+
+  return useMutation({
+    mutationFn: async params => {
+      const response = await apiImportOutput.apiResumeTimer(params);
+      return response;
+    },
+    onSuccess: (data, variables) => {
+      if (data?.isSuccess) showToast('success', data?.message);
+      else showToast('error', data?.message);
+      onSuccessFromOptions?.(data, variables);
+    },
+    ...restOptions,
+  });
+};

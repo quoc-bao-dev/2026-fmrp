@@ -8,21 +8,18 @@ import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import { IMAGES } from '@/constants/images';
 import ResponsibleAvatar from '@/containers/manufacture/productions-orders/components/popup/ResponsibleAvatar';
 import PersonSelector from '@/containers/piecework-wage/import-output/components/modal/PersonSelector';
-import { useSocketContext } from '@/context/socket/SocketContext';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import useToast from '@/hooks/useToast';
 import { useListPomStages, useLookupGroupMembers, useSavePomStagesDetail } from '@/managers/api/piecework-wage/useImportOutput';
-import { useQueryClient } from '@tanstack/react-query';
+import apiImportOutput from '@/Api/apiPieceworkWage/import-output/apiImportOutput';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-const PopupResponsiblePerson = ({ open, onClose, brandId, po_id, stage_id, cardPage = 1, onSaveSuccess }) => {
+const PopupResponsiblePerson = ({ open, onClose, brandId, po_id, stage_id, filterParams = {}, onUpdatedPo }) => {
   const showToast = useToast();
-  const queryClient = useQueryClient();
   const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
-  const { socket } = useSocketContext()
 
   // Kiểm tra quyền: có quyền nếu là admin hoặc có quyền is_create
   const hasPermission = role || auth?.production_input?.is_create === '1';
@@ -44,9 +41,29 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, po_id, stage_id, cardP
   const { data: listGroupMembers } = useLookupGroupMembers({ limit: 100 }, { enabled: open });
 
   const { mutate: savePomStagesDetail, isPending: isSaving } = useSavePomStagesDetail({
-    onSuccess: data => {
+    onSuccess: async data => {
       if (data?.isSuccess) {
-        onSaveSuccess?.();
+        try {
+          const response = await apiImportOutput.apiListImportOutputItems({
+            is_data_single: 1,
+            po_ids: po_id ? [po_id] : [],
+            is_check_po: 0,
+            stage_id: stage_id || null,
+            page: 1,
+            limit: 10,
+            start_date: filterParams?.start_date ?? null,
+            end_date: filterParams?.end_date ?? null,
+            search: filterParams?.search ?? '',
+            ...(filterParams?.staff_ids ? { staff_ids: filterParams.staff_ids } : {}),
+            ...(filterParams?.group_member_ids ? { group_ids: filterParams.group_member_ids } : {}),
+          });
+          const updatedPo = response?.data?.pos?.[0];
+          if (updatedPo && onUpdatedPo) {
+            onUpdatedPo(updatedPo);
+          }
+        } catch (error) {
+          console.error('Error calling apiListImportOutputItems:', error);
+        }
       }
       onClose?.();
     },
