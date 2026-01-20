@@ -7,19 +7,23 @@ import InfoTooltip from '@/components/UI/common/InfoTooltip';
 import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComponent';
 import Loading from '@/components/UI/loading/loading';
 import { IMAGES } from '@/constants/images';
+import { useSocketContext } from '@/context/socket/SocketContext';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import { useListImportOutput, useLookupGroupMembers, useLookupStages } from '@/managers/api/piecework-wage/useImportOutput';
+import apiImportOutput from '@/Api/apiPieceworkWage/import-output/apiImportOutput';
 import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import moment from 'moment';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useDebounce } from 'use-debounce';
 import StageColumn from './components/StageColumn';
 
 const ImportOutput = () => {
+  const { socket } = useSocketContext();
+
   const [selectedEmployee, setSelectedEmployee] = useState([]);
   const [searchStaff, setSearchStaff] = useState('');
   const [selectedProcess, setSelectedProcess] = useState(null);
@@ -148,8 +152,14 @@ const ImportOutput = () => {
     setSearchProcess('');
   };
 
-  const stages = listImportOutput?.stages || [];
+  // State cục bộ quản lý danh sách stages để có thể cập nhật theo socket
+  const [stages, setStages] = useState(listImportOutput?.stages || []);
   const hasStages = stages.length > 0;
+
+  // Đồng bộ state stages mỗi khi dữ liệu từ API chính thay đổi (do filter, tìm kiếm, ...)
+  useEffect(() => {
+    setStages(listImportOutput?.stages || []);
+  }, [listImportOutput]);
 
   // Dùng để reset chế độ chọn lệnh trên tất cả StageColumn khi mở PersonSelector ở cột khác
   const [selectModeResetKey, setSelectModeResetKey] = useState(0);
@@ -162,6 +172,86 @@ const ImportOutput = () => {
     setSelectModeResetKey(prev => prev + 1);
     setActivePersonSelectorStageId(stageId);
   };
+
+  useEffect(() => {
+    if (!socket) return;
+    const topic = `production_input`;
+
+    const handleProductionInput = data => {
+      console.log('production_input socket data:', data);
+
+      // `data.data` đôi khi là object, đôi khi là chuỗi JSON: "{\"stage_id\":\"14\"}"
+      let socketData = data?.data;
+      if (typeof socketData === 'string') {
+        try {
+          socketData = JSON.parse(socketData);
+        } catch (e) {
+          // Không parse được => bỏ qua
+          return;
+        }
+      }
+
+      const stageIdFromSocket = Number(socketData?.stage_id);
+      // Nếu không có stage_id hợp lệ thì bỏ qua
+      if (!Number.isFinite(stageIdFromSocket)) return;
+
+      if (stageIdFromSocket == 0) {
+        refetchListImportOutput();
+        return;
+      }
+      // Gọi API để lấy lại dữ liệu chỉ cho stage_id này, sau đó merge vào state cục bộ
+      (async () => {
+        try {
+          const response = await apiImportOutput.apiListImportOutput({
+            ...filterParams,
+            // Ép filter chỉ lấy đúng stage_id từ socket
+            stage_ids: [stageIdFromSocket],
+          });
+
+          const stagesFromApi = response?.data?.stages || [];
+          if (!Array.isArray(stagesFromApi)) return;
+
+          // Nếu API trả về rỗng => xóa công đoạn đó khỏi danh sách
+          if (stagesFromApi.length === 0) {
+            setStages(prevStages => {
+              if (!Array.isArray(prevStages)) return [];
+              return prevStages.filter(s => String(s.stage_id) !== String(stageIdFromSocket));
+            });
+            return;
+          }
+
+          const updatedStage = stagesFromApi[0];
+
+          setStages(prevStages => {
+            if (!Array.isArray(prevStages)) {
+              return [updatedStage];
+            }
+
+            const targetId = String(updatedStage.stage_id);
+            const existingIndex = prevStages.findIndex(s => String(s.stage_id) === targetId);
+
+            // Nếu đã tồn tại stage này thì cập nhật lại
+            if (existingIndex !== -1) {
+              const newStages = [...prevStages];
+              newStages[existingIndex] = updatedStage;
+              return newStages;
+            }
+
+            // Nếu chưa có thì thêm mới vào đầu danh sách
+            return [updatedStage, ...prevStages];
+          });
+        } catch (error) {
+          console.error('Error updating stage from socket production_input:', error);
+        }
+      })();
+    };
+
+    socket.on(topic, handleProductionInput);
+
+    return () => {
+      socket.off(topic, handleProductionInput);
+    };
+  }, [socket, filterParams]);
 
   // Tính số lượng filter đang active
   const activeFilterCount = useMemo(() => {
@@ -236,9 +326,9 @@ const ImportOutput = () => {
             />
           </div>
           <div className='flex items-center gap-2'>
-            {/* <button className='h-10 bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-[#D0D5DD]' onClick={refetchListImportOutput}>
+            <button className='h-10 bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-[#D0D5DD]' onClick={refetchListImportOutput}>
               Làm mới
-            </button> */}
+            </button>
             <div className='h-10 w-[340px] bg-white px-3 py-2 rounded-lg flex items-center justify-between gap-2 border border-[#D0D5DD]'>
               <input
                 className='flex-1 border-none outline-none responsive-text-base text[#3A3E4C]'
