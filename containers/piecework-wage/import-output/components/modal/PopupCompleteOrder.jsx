@@ -414,6 +414,7 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose }) => {
   const showToast = useToast();
   const { onSubmit } = useHandingFinishedStages();
   const queryClient = useQueryClient();
+
   const { data: dataActiveStages, isLoading: isLoadingActiveStages } = useActiveStages({ po_id: po?.id, stage_id: stage_id, is_product: po?.is_product }, { enabled: isOpen });
   const { data: dataWarehouses, isLoading: isLoadingWarehouses } = useListFinishedStages({
     id: po?.id,
@@ -463,16 +464,24 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose }) => {
   useEffect(() => {
     if (dataActiveStages?.items && Array.isArray(dataActiveStages.items)) {
       const now = Date.now();
-      const productsWithUI = dataActiveStages.items.map((item, index) => ({
-        ...item,
-        images: item.images || IMAGES.noImage,
-        quantity_success: item.quantity_enter || 0,
-        error: 0,
-        selected: true, // Tự động chọn tất cả khi mở popup
-        originalIndex: index,
-        uniqueId: `product-${item.pois_id || item.poi_id || index}`,
-        checkOrder: now - index, // Sắp xếp theo thứ tự ban đầu
-      }));
+      const productsWithUI = dataActiveStages.items.map((item, index) => {
+        // Đảm bảo lấy đúng số lượng đạt/lỗi ngay khi mount
+        const quantitySuccess = item?.quantity_success ?? item?.quantity_enter ?? 0;
+        const quantityError = item?.quantity_error ?? item?.error ?? item?.quantityError ?? 0;
+
+        return {
+          ...item,
+          images: item.images || IMAGES.noImage,
+          quantity_success: quantitySuccess,
+          quantityEnterClient: quantitySuccess,
+          error: quantityError,
+          quantityError: quantityError,
+          selected: true, // Tự động chọn tất cả khi mở popup
+          originalIndex: index,
+          uniqueId: `product-${item.pois_id || item.poi_id || index}`,
+          checkOrder: now - index, // Sắp xếp theo thứ tự ban đầu
+        };
+      });
       setProducts(productsWithUI);
       setSelectAll(true); // Tự động chọn tất cả
     } else if (!isLoadingActiveStages && (!dataActiveStages?.items || dataActiveStages.items.length === 0)) {
@@ -926,8 +935,8 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose }) => {
 
     if (result?.isSuccess === 1) {
       onClose();
-      // Refetch lại list nhập sản lượng khoán sau khi hoàn thành
-      queryClient.invalidateQueries({ queryKey: ['api_list_import_output'] });
+      // Refetch lại list nhập sản lượng khoán sau khi hoàn thành (có socket rồi nên tạm bỏ)
+      // queryClient.invalidateQueries({ queryKey: ['api_list_import_output'] });
     } else if (result?.data?.errors || result?.data?.errors_before) {
       setErrorNVLData({
         items: [...(result?.data?.errors || [])],

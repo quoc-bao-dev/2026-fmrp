@@ -8,6 +8,7 @@ import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import { IMAGES } from '@/constants/images';
 import ResponsibleAvatar from '@/containers/manufacture/productions-orders/components/popup/ResponsibleAvatar';
 import PersonSelector from '@/containers/piecework-wage/import-output/components/modal/PersonSelector';
+import { useSocketContext } from '@/context/socket/SocketContext';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import useToast from '@/hooks/useToast';
 import { useListPomStages, useLookupGroupMembers, useSavePomStagesDetail } from '@/managers/api/piecework-wage/useImportOutput';
@@ -21,6 +22,7 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, po_id, stage_id, cardP
   const showToast = useToast();
   const queryClient = useQueryClient();
   const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
+  const { socket } = useSocketContext()
 
   // Kiểm tra quyền: có quyền nếu là admin hoặc có quyền is_create
   const hasPermission = role || auth?.production_input?.is_create === '1';
