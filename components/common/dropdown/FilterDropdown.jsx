@@ -29,8 +29,10 @@ const FilterDropdown = ({ children, trigger, className, classNameContainer, drop
         const clickedOutsideTrigger = triggerElement && !triggerElement.contains(event.target);
         // kiểm tra click vào menu combobox hoặc indicator hoặc vùng multi-select (cả label và nút remove)
         const clickedInsideSelect = event.target.closest('.productionSmoothing__menu, .productionSmoothing__indicator, .productionSmoothing__multi-value, .productionSmoothing__multi-value__remove');
+        // antd Select / Combobox render dropdown ra ngoài (portal) => cần allow click để không đóng dropdown filter
+        const clickedInsideAntdSelect = event.target.closest('.ant-select-dropdown, .ant-select-selector, .ant-select-item, .ant-select-selection-item, .ant-select-selection-overflow');
 
-        if (clickedOutsideDropdown && clickedOutsideTrigger && !clickedInsideSelect) {
+        if (clickedOutsideDropdown && clickedOutsideTrigger && !clickedInsideSelect && !clickedInsideAntdSelect) {
             dispatch({ type: "stateFilterDropdown", payload: { openDropdownId: null } });
         }
     };
