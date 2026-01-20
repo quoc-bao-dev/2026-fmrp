@@ -20,17 +20,26 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useDebounce } from 'use-debounce';
 import StageColumn from './components/StageColumn';
+import { useOrdersSearchCombobox } from '@/hooks/common/useOrder';
+import { useInternalPlansSearchCombobox } from '@/hooks/common/useInternalPlans';
 
 const ImportOutput = () => {
   const { socket } = useSocketContext();
 
   const [selectedEmployee, setSelectedEmployee] = useState([]);
   const [searchStaff, setSearchStaff] = useState('');
-  const [selectedProcess, setSelectedProcess] = useState(null);
+  const [selectedProcess, setSelectedProcess] = useState([]);
   const [searchProcess, setSearchProcess] = useState('');
   const [debouncedSearchProcess] = useDebounce(searchProcess, 300);
   const [searchReferenceNo, setSearchReferenceNo] = useState('');
   const [debouncedSearchReferenceNo] = useDebounce(searchReferenceNo, 300);
+  const [selectedOrders, setSelectedOrders] = useState([]);
+  const [searchOrder, setSearchOrder] = useState('');
+  const [debouncedSearchOrder] = useDebounce(searchOrder, 300);
+  const [selectedPlans, setSelectedPlans] = useState([]);
+  const [searchPlan, setSearchPlan] = useState('');
+  const [debouncedSearchPlan] = useDebounce(searchPlan, 300);
+
   // Mặc định filter theo 90 ngày gần đây
   const [dateFilter, setDateFilter] = useState({
     dateStart: moment().subtract(90, 'days').startOf('day').toDate(),
@@ -43,16 +52,19 @@ const ImportOutput = () => {
     start_date: dateFilter.dateStart ? moment(dateFilter.dateStart).format('DD/MM/YYYY') : null,
     end_date: dateFilter.dateEnd ? moment(dateFilter.dateEnd).format('DD/MM/YYYY') : null,
     ...(selectedEmployee?.value ? (selectedEmployee.value.startsWith('group_') ? { group_member_ids: [selectedEmployee.value.replace('group_', '')] } : { staff_ids: [selectedEmployee.value] }) : {}),
-    stage_ids: selectedProcess?.value,
+    stage_ids: Array.isArray(selectedProcess) && selectedProcess.length > 0 ? selectedProcess : null,
+    order_ids: Array.isArray(selectedOrders) && selectedOrders.length > 0 ? selectedOrders : null,
+    internal_plan_ids: Array.isArray(selectedPlans) && selectedPlans.length > 0 ? selectedPlans : null,
     search: debouncedSearchReferenceNo || '',
-    // limit: 3,
-    // page:1,
   };
 
   const { isLoading: isLoadingListImportOutput, data: listImportOutput, refetch: refetchListImportOutput } = useListImportOutput(filterParams);
   const { data: listStaffs } = useSearchStaffs();
   const { data: listGroupMembers } = useLookupGroupMembers({ limit: 100 });
   const { data: listStages } = useLookupStages({ search: debouncedSearchProcess || '' });
+  const { data: listOrders = [] } = useOrdersSearchCombobox(debouncedSearchOrder);
+  const { data: listPlan = [] } = useInternalPlansSearchCombobox(debouncedSearchPlan);
+
   // Lấy dữ liệu nhân viên từ API
   const staffs = listStaffs?.data?.staffs || [];
 
@@ -66,8 +78,8 @@ const ImportOutput = () => {
     // Filter nhân viên theo search
     const filteredStaffs = searchStaff
       ? staffs.filter(staff => {
-          return searchWithoutDiacritics(staff?.full_name || '', searchStaff);
-        })
+        return searchWithoutDiacritics(staff?.full_name || '', searchStaff);
+      })
       : staffs;
 
     // Thêm các nhân viên
@@ -84,8 +96,8 @@ const ImportOutput = () => {
     // Filter nhóm theo search
     const filteredGroups = searchStaff
       ? listGroupMembers?.group_members?.filter(group => {
-          return searchWithoutDiacritics(group.name, searchStaff) || searchWithoutDiacritics(group.code, searchStaff);
-        })
+        return searchWithoutDiacritics(group.name, searchStaff) || searchWithoutDiacritics(group.code, searchStaff);
+      })
       : listGroupMembers?.group_members;
 
     // Thêm các nhóm
@@ -131,14 +143,54 @@ const ImportOutput = () => {
       }));
   }, [stagesList]);
 
-  // Xử lý khi chọn công đoạn
+  // Xử lý khi chọn công đoạn (hỗ trợ multi-select)
   const handleProcessChange = value => {
-    if (value === 'all') {
-      setSelectedProcess(null);
+    if (value === 'all' || (Array.isArray(value) && value.length === 0)) {
+      setSelectedProcess([]);
     } else {
-      const selectedOption = processOptions.find(opt => opt.value === value);
-      setSelectedProcess(selectedOption ? { value, label: selectedOption.label } : null);
+      // value có thể là array (multi-select) hoặc string (single select)
+      if (Array.isArray(value)) {
+        setSelectedProcess(value);
+      } else {
+        setSelectedProcess([value]);
+      }
     }
+  };
+
+  // Xử lý khi chọn đơn hàng bán
+  const handleOrderChange = value => {
+    if (!value || (Array.isArray(value) && value.length === 0) || value === 'all') {
+      setSelectedOrders([]);
+      return;
+    }
+    setSelectedOrders(Array.isArray(value) ? value : [value]);
+  };
+
+  const handleOrderSearch = searchText => {
+    setSearchOrder(searchText);
+  };
+
+  const handleOrderClear = () => {
+    setSelectedOrders([]);
+    setSearchOrder('');
+  };
+
+  // Xử lý khi chọn kế hoạch nội bộ
+  const handlePlanChange = value => {
+    if (!value || (Array.isArray(value) && value.length === 0) || value === 'all') {
+      setSelectedPlans([]);
+      return;
+    }
+    setSelectedPlans(Array.isArray(value) ? value : [value]);
+  };
+
+  const handlePlanSearch = searchText => {
+    setSearchPlan(searchText);
+  };
+
+  const handlePlanClear = () => {
+    setSelectedPlans([]);
+    setSearchPlan('');
   };
 
   // Xử lý khi search công đoạn
@@ -148,7 +200,7 @@ const ImportOutput = () => {
 
   // Xử lý khi clear công đoạn
   const handleProcessClear = () => {
-    setSelectedProcess(null);
+    setSelectedProcess([]);
     setSearchProcess('');
   };
 
@@ -256,21 +308,20 @@ const ImportOutput = () => {
   // Tính số lượng filter đang active
   const activeFilterCount = useMemo(() => {
     let count = 0;
-
     // Đếm date filter (chỉ tính 1 nếu có startDate hoặc endDate)
     if (dateFilter.dateStart || dateFilter.dateEnd) count++;
-
+    if (selectedOrders.length > 0) count++;
+    if (selectedPlans.length > 0) count++;
     return count;
-  }, [dateFilter.dateStart, dateFilter.dateEnd]);
+  }, [dateFilter.dateStart, dateFilter.dateEnd, selectedOrders.length, selectedPlans.length]);
 
   // Trigger button cho FilterDropdown
   const triggerFilterAll = (
     <button
-      className={`${
-        stateFilterDropdown?.open || activeFilterCount > 0
+      className={`${stateFilterDropdown?.open || activeFilterCount > 0
           ? 'text-[#0F4F9E] border-[#3276FA] bg-[#EBF5FF]'
           : 'bg-white text-[#9295A4] border-[#D0D5DD] hover:text-[#0F4F9E] hover:bg-[#EBF5FF] hover:border-[#3276FA]'
-      } flex items-center space-x-2 border rounded-lg h-10 px-3 group custom-transition`}
+        } flex items-center space-x-2 border rounded-lg h-10 px-3 group custom-transition`}
     >
       <span className='size-4 shrink-0'>
         <EqualizerIcon className='w-full h-full' />
@@ -284,11 +335,11 @@ const ImportOutput = () => {
   );
 
   return (
-    <div className='flex flex-col gap-5 h-screen max-h-screen'>
+    <div className='flex flex-col gap-4 h-screen max-h-screen'>
       <Head>
         <title>Nhập sản lượng</title>
       </Head>
-      <header className='sticky top-0 z-10 pr-4 pl-8 py-5 bg-new-blue flex gap-10 items-center justify-between'>
+      <header className='sticky top-0 z-10 pr-4 pl-8 py-2 bg-new-blue flex gap-10 items-center justify-between'>
         <Link href='/' className='relative flex items-center gap-5'>
           <Image
             alt=''
@@ -302,12 +353,12 @@ const ImportOutput = () => {
             placeholder='blur'
             blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
           />
-          <h2 className='p-2 rounded-full bg-[#E2F0FE] hover:bg-blue-fmrp transition-colors hover:text-white hover:border-white border border-transparent responsive-text-base font-medium text-new-blue capitalize'>
+          <h2 className='px-2 py-1 rounded-full bg-[#E2F0FE] hover:bg-blue-fmrp transition-colors hover:text-white hover:border-white border border-transparent responsive-text-base font-medium text-new-blue capitalize'>
             Trang quản lý
           </h2>
         </Link>
         <div className='flex items-center gap-3'>
-          <button className='h-10 bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-[#D0D5DD]'>
+          <button className='bg-white px-4 py-1.5 rounded-lg flex items-center gap-2 border border-[#D0D5DD]'>
             <ClockIcon className='size-5 text-black' />
             <span className='responsive-text-sm font-medium text[#25387A]'>Ca sáng</span>
           </button>
@@ -327,7 +378,7 @@ const ImportOutput = () => {
           </div>
           <div className='flex items-center gap-2'>
             <button className='h-10 bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-[#D0D5DD]' onClick={refetchListImportOutput}>
-              Làm mới
+              Test
             </button>
             <div className='h-10 w-[340px] bg-white px-3 py-2 rounded-lg flex items-center justify-between gap-2 border border-[#D0D5DD]'>
               <input
@@ -374,7 +425,8 @@ const ImportOutput = () => {
               onSearch={handleProcessSearch}
               onClear={handleProcessClear}
               icon={<FunnelIcon className='size-4 text-[#003DA0]' />}
-              className='w-auto min-w-[180px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
+              className='w-auto min-w-[180px] max-w-[300px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD] [&_.ant-select-selector]:overflow-hidden [&_.ant-select-selection-overflow]:overflow-hidden [&_.ant-select-selection-overflow-item]:flex-shrink-0'
+              mode='multiple'
             />
             <FilterDropdown
               trigger={triggerFilterAll}
@@ -382,26 +434,60 @@ const ImportOutput = () => {
               style={{
                 boxShadow: '0px 20px 24px -4px #10182814, 0px 4px 4px 0px #00000040',
               }}
-              className='z-[999] flex flex-col gap-4 border-[#D8DAE5] rounded-lg min-w-[400px]'
+              className='z-[999] flex flex-col gap-4 border-[#D8DAE5] rounded-lg min-w-[450px]'
               dropdownId='dropdownFilterImportOutput'
             >
               <div className='text-lg text-[#344054] font-medium'>Bộ lọc</div>
-              <div className='space-y-1'>
-                <h3 className='text-xs text-[#051B44] font-normal'>Thời gian</h3>
-                <DateToDateComponent
-                  placeholder='dd/mm/yyyy → dd/mm/yyyy'
-                  value={{
-                    startDate: dateFilter.dateStart || null,
-                    endDate: dateFilter.dateEnd || null,
-                  }}
-                  onChange={value => {
-                    setDateFilter({
-                      dateStart: value?.startDate || null,
-                      dateEnd: value?.endDate || null,
-                    });
-                  }}
-                  className='text-base-default w-full'
-                />
+              <div className='flex flex-col gap-3'>
+                <div className='space-y-1'>
+                  <h3 className='text-xs text-[#051B44] font-normal'>Thời gian</h3>
+                  <DateToDateComponent
+                    placeholder='dd/mm/yyyy → dd/mm/yyyy'
+                    value={{
+                      startDate: dateFilter.dateStart || null,
+                      endDate: dateFilter.dateEnd || null,
+                    }}
+                    onChange={value => {
+                      setDateFilter({
+                        dateStart: value?.startDate || null,
+                        dateEnd: value?.endDate || null,
+                      });
+                    }}
+                    className='text-base-default w-full h-10'
+                  />
+                </div>
+                <div className='grid grid-cols-2 gap-3'>
+                  <div className='space-y-1'>
+                    <h3 className='text-xs text-[#051B44] font-normal'>Đơn hàng bán</h3>
+                    <SelectSearchableRadio
+                      placeholder='Chọn đơn hàng bán'
+                      searchPlaceholder='Tìm đơn hàng bán'
+                      options={listOrders}
+                      value={selectedOrders}
+                      onChange={handleOrderChange}
+                      onSearch={handleOrderSearch}
+                      onClear={handleOrderClear}
+                      icon={<FunnelIcon className='size-4 text-[#003DA0]' />}
+                      className='w-auto min-w-[180px] [&_.ant-select-selector]:h-9 [&_.ant-select-selector]:border-[#D0D5DD]'
+                      mode='multiple'
+                    />
+                  </div>
+                  <div className='space-y-1'>
+                    <h3 className='text-xs text-[#051B44] font-normal'>Kế hoạch nội bộ</h3>
+                    <SelectSearchableRadio
+                      placeholder='Chọn kế hoạch nội bộ'
+                      searchPlaceholder='Tìm kế hoạch nội bộ'
+                      options={listPlan}
+                      value={selectedPlans}
+                      onChange={handlePlanChange}
+                      onSearch={handlePlanSearch}
+                      onClear={handlePlanClear}
+                      icon={<FunnelIcon className='size-4 text-[#003DA0]' />}
+                      className='w-auto min-w-[180px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
+                      mode='multiple'
+                    />
+                  </div>
+                </div>
               </div>
             </FilterDropdown>
           </div>

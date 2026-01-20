@@ -3,15 +3,12 @@ import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { IMAGES } from '@/constants/images';
 import useToast from '@/hooks/useToast';
 import { useListImportOutputItems, useSavePomStages } from '@/managers/api/piecework-wage/useImportOutput';
-import apiImportOutput from '@/Api/apiPieceworkWage/import-output/apiImportOutput';
-import { useQueryClient } from '@tanstack/react-query';
 import { Popover } from 'antd';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import PersonSelector from './modal/PersonSelector';
 import ProductionOrderCard from './ProductionOrderCard';
-import { useSocketContext } from '@/context/socket/SocketContext';
 
 // Component dropdown hiển thị nhân viên/nhóm đang làm và tạm dừng
 const ProcessStatusDropdown = ({ processName }) => {
@@ -129,8 +126,6 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
 
   const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
   const showToast = useToast();
-  const queryClient = useQueryClient();
-  const { socket } = useSocketContext()
 
   const limit = 10; // Giữ nguyên limit
 
@@ -162,112 +157,6 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
     }
   );
 
-  // Function để tính page dựa trên index trong allPos
-  const getPageFromIndex = useCallback(
-    index => {
-      // Page 1: index 0-2 (limit = 3)
-      // Page 2: index 3-5
-      // Page 3: index 6-8
-      // ...
-      return Math.floor(index / limit) + 1;
-    },
-    [limit]
-  );
-
-  // Function để refetch lại một page cụ thể
-  const refetchPage = useCallback(
-    async pageNum => {
-      try {
-        setIsLoadingMore(true);
-
-        // Chuẩn bị params giống như useListImportOutputItems
-        const queryParams = {
-          stage_id: stage.stage_id,
-          is_check_po: 1,
-          page: pageNum,
-          limit: limit,
-          start_date: filterParams?.start_date ?? null,
-          end_date: filterParams?.end_date ?? null,
-          search: filterParams?.search ?? '',
-          ...(filterParams?.staff_ids ? { staff_ids: filterParams.staff_ids } : {}),
-          ...(filterParams?.group_member_ids ? { group_ids: filterParams.group_member_ids } : {}),
-        };
-
-        const response = await queryClient.fetchQuery({
-          queryKey: ['api_list_import_output_items', queryParams],
-          queryFn: async () => {
-            const apiResponse = await apiImportOutput.apiListImportOutputItems(queryParams);
-            return apiResponse.data;
-          },
-        });
-
-        if (response?.pos && Array.isArray(response.pos)) {
-          // Tính toán vị trí bắt đầu của page này trong allPos
-          const startIndex = (pageNum - 1) * limit;
-
-          // Cập nhật lại allPos: thay thế phần tử của page này
-          setAllPos(prev => {
-            const newPos = [...prev];
-
-            // Kiểm tra xem allPos có đủ phần tử đến startIndex không
-            if (newPos.length > startIndex) {
-              // Có đủ phần tử, thay thế các phần tử từ startIndex
-              const itemsToReplace = Math.min(limit, newPos.length - startIndex);
-              newPos.splice(startIndex, itemsToReplace, ...response.pos.slice(0, itemsToReplace));
-
-              // Nếu response có nhiều phần tử hơn và còn chỗ, thêm vào
-              if (response.pos.length > itemsToReplace && newPos.length < startIndex + response.pos.length) {
-                newPos.splice(startIndex + itemsToReplace, 0, ...response.pos.slice(itemsToReplace));
-              }
-            } else {
-              // Chưa có đủ phần tử đến startIndex
-              console.warn(`Page ${pageNum} chưa được load trước đó, thêm vào cuối allPos`);
-              newPos.push(...response.pos);
-            }
-
-            return newPos;
-          });
-
-          // Cập nhật hasMore nếu là page cuối cùng đã load
-          if (pageNum >= page) {
-            setHasMore(response.next || false);
-          }
-        }
-
-        setIsLoadingMore(false);
-      } catch (error) {
-        console.error(`Error refetching page ${pageNum}:`, error);
-        setIsLoadingMore(false);
-      }
-    },
-    [stage.stage_id, queryClient, limit, page, filterParams]
-  );
-  // useEffect(() => {
-  //   if (!socket) return;
-  //   const topic = `production_input`;
-
-  //   const handleProductionInput = data => {
-  //     console.log('production_input socket data:', data);
-
-  //     const stageIdFromSocket = Number(data?.data?.stage_id);
-  //     const currentStageId = Number(stage?.stage_id);
-
-  //     // Nếu không có stage_id hợp lệ thì bỏ qua
-  //     if (!Number.isFinite(stageIdFromSocket) || !Number.isFinite(currentStageId)) return;
-
-  //     // Chỉ refetch nếu stage_id của socket trùng với stage hiện tại của column
-  //     if (stageIdFromSocket === currentStageId) {
-  //       // Gọi lại API cho page 1 để cập nhật dữ liệu cột hiện tại
-  //       refetchPage(1);
-  //     }
-  //   };
-
-  //   socket.on(topic, handleProductionInput);
-
-  //   return () => {
-  //     socket.off(topic, handleProductionInput);
-  //   };
-  // }, [socket, stage?.stage_id, refetchPage]);
   // Cập nhật dữ liệu khi có response mới từ API
   useEffect(() => {
     if (page > 1 && shouldFetch && !isLoading) {
@@ -435,6 +324,21 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
     });
   };
 
+  const handleUpdatePo = updatedPo => {
+    if (!updatedPo || !updatedPo.id) return;
+    setAllPos(prev => {
+      let found = false;
+      const next = prev.map(po => {
+        if (String(po.id) === String(updatedPo.id)) {
+          found = true;
+          return { ...po, ...updatedPo };
+        }
+        return po;
+      });
+      return found ? next : prev;
+    });
+  };
+
   // Kiểm tra ProductionOrderCard có được chọn không
   const isProductionOrderSelected = po => {
     return selectedProductionOrders.some(selectedPo => selectedPo.id === po.id && selectedPo.reference_no === po.reference_no);
@@ -545,27 +449,21 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
         <div className='flex flex-col gap-2.5 px-3 pb-4'>
           {orderedPos.length > 0 ? (
             <>
-              {orderedPos.map((po, index) => {
-                // Tìm index của card trong allPos để tính page chính xác
-                const cardIndexInAllPos = allPos.findIndex(p => p.id === po.id && p.reference_no === po.reference_no);
-                const cardPage = cardIndexInAllPos !== -1 ? getPageFromIndex(cardIndexInAllPos) : 1;
-
-                return (
-                  <ProductionOrderCard
-                    key={`${stage.stage_id}-${po.id}-${po.reference_no}-${index}`}
-                    status='idle'
-                    time='00 : 00 : 00'
-                    po={po}
-                    stage_id={stage.stage_id}
-                    stage_name={stage.stage_name}
-                    isSelectMode={isSelectMode}
-                    isSelected={isProductionOrderSelected(po)}
-                    onToggleSelect={() => handleToggleProductionOrder(po)}
-                    cardPage={cardPage}
-                    onRefetchPage={() => refetchPage(cardPage)}
-                  />
-                );
-              })}
+              {orderedPos.map((po, index) => (
+                <ProductionOrderCard
+                  key={`${stage.stage_id}-${po.id}-${po.reference_no}-${index}`}
+                  status='idle'
+                  time='00 : 00 : 00'
+                  po={po}
+                  stage_id={stage.stage_id}
+                  stage_name={stage.stage_name}
+                  isSelectMode={isSelectMode}
+                  isSelected={isProductionOrderSelected(po)}
+                  onToggleSelect={() => handleToggleProductionOrder(po)}
+                  filterParams={filterParams}
+                  onUpdatePo={handleUpdatePo}
+                />
+              ))}
               {isLoadingMore && (
                 <div className='flex items-center justify-center py-4'>
                   <p className='responsive-text-sm font-normal text-[#667085]'>Đang tải thêm...</p>

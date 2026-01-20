@@ -35,6 +35,21 @@ const apiImportOutput = {
     const response = await axiosCustom('GET', `/api_web/group-members/lookup`, params);
     return response.data;
   },
+
+  async apiStartTimer(params) {
+    const response = await axiosCustom('POST', `/api_web/production-input-timesheets/start-timer`, { data: params });
+    return response.data;
+  },
+
+  async apiPauseTimer(params) {
+    const response = await axiosCustom('POST', `/api_web/production-input-timesheets/pause-timer`, { data: params });
+    return response.data;
+  },
+
+  async apiResumeTimer(params) {
+    const response = await axiosCustom('POST', `/api_web/production-input-timesheets/resume-timer`, { data: params });
+    return response.data;
+  },
 };
 
 export default apiImportOutput;

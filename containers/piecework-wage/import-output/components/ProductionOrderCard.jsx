@@ -7,6 +7,9 @@ import { Tooltip } from 'antd';
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FaPause, FaPlay, FaStop } from 'react-icons/fa';
+import { usePauseTimer, useResumeTimer, useStartTimer } from '@/managers/api/piecework-wage/useImportOutput';
+import useToast from '@/hooks/useToast';
+import apiImportOutput from '@/Api/apiPieceworkWage/import-output/apiImportOutput';
 import PopupCompleteOrder from './modal/PopupCompleteOrder';
 import PopupResponsiblePerson from './modal/PopupResponsiblePerson';
 
@@ -118,7 +121,7 @@ const Avatar = ({ group_members_assigned, staffs_assigned, onClick }) => {
   );
 };
 
-const TimerControl = ({ time = '00 : 00 : 00', status = 'idle', onStart, onPause, onStop, onComplete }) => {
+const TimerControl = ({ showTimerControl = true, time = '00 : 00 : 00', status = 'idle', onStart, onPause, onStop, onComplete }) => {
   // 4 trạng thái: 'idle', 'running', 'paused', 'completed'
   const renderButtons = () => {
     switch (status) {
@@ -127,6 +130,7 @@ const TimerControl = ({ time = '00 : 00 : 00', status = 'idle', onStart, onPause
         return (
           <button
             onClick={onStart}
+            disabled={!onStart}
             className='p-1.5 !pl-2 aspect-1 rounded-full flex items-center gap-1 bg-[#4BBA5E] shadow-[0px_2px_8px_0px_#4CD96466] hover:bg-[#3FA550] hover:shadow-[0px_4px_12px_0px_#4CD96499] transition-all duration-200 active:scale-95'
           >
             <FaPlay className='size-5 p-0.5 text-white' />
@@ -139,6 +143,7 @@ const TimerControl = ({ time = '00 : 00 : 00', status = 'idle', onStart, onPause
           <>
             <button
               onClick={onPause}
+              disabled={!onPause}
               className='p-1.5 rounded-xl flex items-center gap-1 bg-[#F5BF40] shadow-[0px_2px_8px_0px_#EEC52126] hover:bg-[#E5AF30] hover:shadow-[0px_4px_12px_0px_#EEC52140] transition-all duration-200 active:scale-95'
             >
               <FaPause className='size-5 p-0.5 text-white' />
@@ -146,6 +151,7 @@ const TimerControl = ({ time = '00 : 00 : 00', status = 'idle', onStart, onPause
             </button>
             <button
               onClick={onStop}
+              disabled={!onStop}
               className='p-1.5 rounded-xl flex items-center gap-1 bg-[#F4646B] shadow-[0px_2px_8px_0px_#FB2C3633] hover:bg-[#E4545B] hover:shadow-[0px_4px_12px_0px_#FB2C3655] transition-all duration-200 active:scale-95'
             >
               <FaStop className='size-5 p-0.5 text-white' />
@@ -160,6 +166,7 @@ const TimerControl = ({ time = '00 : 00 : 00', status = 'idle', onStart, onPause
           <>
             <button
               onClick={onStart}
+              disabled={!onStart}
               className='p-1.5 rounded-xl flex items-center gap-1 bg-[#4BBA5E] shadow-[0px_2px_8px_0px_#4CD96466] hover:bg-[#3FA550] hover:shadow-[0px_4px_12px_0px_#4CD96499] transition-all duration-200 active:scale-95'
             >
               <FaPlay className='size-5 p-0.5 text-white' />
@@ -167,6 +174,7 @@ const TimerControl = ({ time = '00 : 00 : 00', status = 'idle', onStart, onPause
             </button>
             <button
               onClick={onStop}
+              disabled={!onStop}
               className='p-1.5 rounded-xl flex items-center gap-1 bg-[#F4646B] shadow-[0px_2px_8px_0px_#FB2C3633] hover:bg-[#E4545B] hover:shadow-[0px_4px_12px_0px_#FB2C3655] transition-all duration-200 active:scale-95'
             >
               <FaStop className='size-5 p-0.5 text-white' />
@@ -180,6 +188,7 @@ const TimerControl = ({ time = '00 : 00 : 00', status = 'idle', onStart, onPause
         return (
           <button
             onClick={onComplete}
+            disabled={!onComplete}
             className='p-1.5 rounded-xl flex items-center gap-1 bg-[#9F9F9F] shadow-[0px_2px_8px_0px_#9F9F9F] hover:bg-[#8F8F8F] hover:shadow-[0px_4px_12px_0px_#9F9F9FCC] transition-all duration-200 active:scale-95'
           >
             <CheckDoubleIcon className='size-5 p-0.5 text-white' />
@@ -198,14 +207,16 @@ const TimerControl = ({ time = '00 : 00 : 00', status = 'idle', onStart, onPause
         <Clock2Icon className='size-5 text-[#4E4E4E]' />
         <p className='responsive-text-xs font-semibold text-[#4E4E4E] whitespace-nowrap'>{time}</p>
       </div>
-      <div
-        className='flex items-center gap-1'
-        onClick={e => {
-          e.stopPropagation();
-        }}
-      >
-        {renderButtons()}
-      </div>
+      {showTimerControl && (
+        <div
+          className='flex items-center gap-1'
+          onClick={e => {
+            e.stopPropagation();
+          }}
+        >
+          {renderButtons()}
+        </div>
+      )}
     </div>
   );
 };
@@ -225,14 +236,82 @@ const formatTime = seconds => {
   return `${pad(h)} : ${pad(m)} : ${pad(s)}`;
 };
 
-const ProductionOrderCard = ({ status = 'idle', time = '00 : 00 : 00', po, stage_id, stage_name, isSelectMode = false, isSelected = false, onToggleSelect, cardPage = 1, onRefetchPage }) => {
-  const [statusState, setStatusState] = useState(status);
-  const [elapsedSeconds, setElapsedSeconds] = useState(parseTimeString(time));
+const parseServerDateTimeToMs = value => {
+  // Backend format: "YYYY-MM-DD HH:mm:ss"
+  if (!value || typeof value !== 'string') return null;
+  const normalized = value.replace(' ', 'T');
+  const ms = Date.parse(normalized);
+  return Number.isFinite(ms) ? ms : null;
+};
+
+const ProductionOrderCard = ({
+  status = 'idle',
+  time = '00 : 00 : 00',
+  po,
+  stage_id,
+  stage_name,
+  isSelectMode = false,
+  isSelected = false,
+  onToggleSelect,
+  filterParams = {},
+  onUpdatePo,
+}) => {
+  const showToast = useToast();
+  const activeTimer = po?.active_timer && Object.keys(po.active_timer || {}).length ? po.active_timer : null;
+
+  // Dùng ref để tick theo công thức: (now-start_time) + total_timer - total_time - total_pause_time
+  const timerCalcRef = useRef({
+    startMs: null,
+    totalTimer: 0,
+    totalTime: 0,
+    totalPauseTime: 0,
+    status: null,
+  });
+
+  const getInitialStatus = () => {
+    if (!po?.is_timer) return 'idle';
+    const code = activeTimer?.status;
+    if (code === '1') return 'running';
+    if (code === '2') return 'paused';
+    const total = Number(po?.total_timer);
+    if (Number.isFinite(total) && total > 0) return 'completed';
+    return 'idle';
+  };
+
+  const getInitialSeconds = () => {
+    const totalTimer = Number(po?.total_timer);
+    const safeTotalTimer = Number.isFinite(totalTimer) ? totalTimer : 0;
+
+    // Nếu đang chạy thì tính theo công thức bạn đưa
+    if (activeTimer?.status === '1' && activeTimer?.start_time) {
+      const startMs = parseServerDateTimeToMs(activeTimer.start_time);
+      if (startMs) {
+        const nowSec = Math.floor((Date.now() - startMs) / 1000);
+        const totalTime = Number(activeTimer?.total_time);
+        const totalPause = Number(activeTimer?.total_pause_time);
+        const safeTotalTime = Number.isFinite(totalTime) ? totalTime : 0;
+        const safeTotalPause = Number.isFinite(totalPause) ? totalPause : 0;
+        return Math.max(0, nowSec + safeTotalTimer - safeTotalTime - safeTotalPause);
+      }
+    }
+
+    // Còn lại: ưu tiên total_timer, fallback time string
+    if (Number.isFinite(totalTimer)) return totalTimer;
+    return parseTimeString(time);
+  };
+
+  const [statusState, setStatusState] = useState(getInitialStatus);
+  const [elapsedSeconds, setElapsedSeconds] = useState(getInitialSeconds);
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [showCompletePopup, setShowCompletePopup] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showResponsiblePersonPopup, setShowResponsiblePersonPopup] = useState(false);
+  const [timesheetId, setTimesheetId] = useState(activeTimer?.id || null);
   const intervalRef = useRef(null);
+
+  const { mutate: startTimerApi, isPending: isStartingTimer } = useStartTimer();
+  const { mutate: pauseTimerApi, isPending: isPausingTimer } = usePauseTimer();
+  const { mutate: resumeTimerApi, isPending: isResumingTimer } = useResumeTimer();
 
   // Tạo màu dựa trên số cuối của reference_no (0-9)
   const borderColor = useMemo(() => {
@@ -266,18 +345,157 @@ const ProductionOrderCard = ({ status = 'idle', time = '00 : 00 : 00', po, stage
     }
   };
 
-  const startTimer = () => {
-    if (statusState === 'running') return;
+  const startLocalTick = () => {
     clearTimer();
     setStatusState('running');
     intervalRef.current = setInterval(() => {
-      setElapsedSeconds(prev => prev + 1);
+      const cfg = timerCalcRef.current || {};
+      const startMs = cfg.startMs;
+      const totalTimer = Number(cfg.totalTimer) || 0;
+      const totalTime = Number(cfg.totalTime) || 0;
+      const totalPauseTime = Number(cfg.totalPauseTime) || 0;
+      if (!startMs) return;
+      const nowSec = Math.floor((Date.now() - startMs) / 1000);
+      setElapsedSeconds(Math.max(0, nowSec + totalTimer - totalTime - totalPauseTime));
     }, 1000);
   };
 
+  const startTimer = () => {
+    if (statusState === 'running') return;
+    // Nếu đang paused thì gọi resume, còn lại gọi start
+    const isResume = statusState === 'paused';
+
+    const poId = Number(po?.id);
+    const stageId = Number(stage_id);
+    const typeValue = Number(po?.is_product ?? 1); // 0: BTP, 1: TP
+
+    if (!Number.isFinite(poId) || !Number.isFinite(stageId)) {
+      showToast('error', 'Thiếu po_id hoặc stage_id');
+      return;
+    }
+
+    if (isResume) {
+      const tsId = Number(timesheetId || activeTimer?.id);
+      if (!Number.isFinite(tsId)) {
+        showToast('error', 'Không tìm thấy mã timesheet để tiếp tục');
+        return;
+      }
+      resumeTimerApi(
+        { id: tsId },
+        {
+          onSuccess: async data => {
+            if (!data?.isSuccess) return;
+
+            // Chạy ngay từ thời gian đang dừng (không bị reset)
+            timerCalcRef.current = {
+              startMs: Date.now(),
+              totalTimer: Number(elapsedSeconds) || 0,
+              totalTime: 0,
+              totalPauseTime: 0,
+              status: '1',
+            };
+            startLocalTick();
+
+            // Đồng bộ lại từ server (lấy start_time mới + total_timer mới nếu có)
+            try {
+              const response = await apiImportOutput.apiListImportOutputItems({
+                is_data_single: 1,
+                po_ids: poId ? [poId] : [],
+                is_check_po: 0,
+                stage_id: stageId || null,
+                page: 1,
+                limit: 1,
+                start_date: filterParams?.start_date ?? null,
+                end_date: filterParams?.end_date ?? null,
+                search: filterParams?.search ?? '',
+                ...(filterParams?.staff_ids ? { staff_ids: filterParams.staff_ids } : {}),
+                ...(filterParams?.group_member_ids ? { group_ids: filterParams.group_member_ids } : {}),
+              });
+
+              const updatedPo = response?.data?.pos?.[0];
+              if (updatedPo) {
+                onUpdatePo?.(updatedPo);
+                const updatedActive = updatedPo?.active_timer && Object.keys(updatedPo.active_timer || {}).length ? updatedPo.active_timer : null;
+                if (updatedActive?.status === '1') {
+                  timerCalcRef.current = {
+                    startMs: parseServerDateTimeToMs(updatedActive?.start_time),
+                    totalTimer: Number(updatedPo?.total_timer) || 0,
+                    totalTime: Number(updatedActive?.total_time) || 0,
+                    totalPauseTime: Number(updatedActive?.total_pause_time) || 0,
+                    status: '1',
+                  };
+                  setElapsedSeconds(() => {
+                    const startMs = timerCalcRef.current.startMs;
+                    if (!startMs) return Number(updatedPo?.total_timer) || 0;
+                    const nowSec = Math.floor((Date.now() - startMs) / 1000);
+                    return Math.max(
+                      0,
+                      nowSec +
+                        (Number(updatedPo?.total_timer) || 0) -
+                        (Number(updatedActive?.total_time) || 0) -
+                        (Number(updatedActive?.total_pause_time) || 0)
+                    );
+                  });
+                }
+              }
+            } catch (e) {
+              // nếu fail sync thì vẫn chạy theo local tick
+              console.error('Failed to sync timer after resume:', e);
+            }
+          },
+        }
+      );
+    } else {
+      startTimerApi(
+        { po_id: poId, stage_id: stageId, type: Number.isFinite(typeValue) ? typeValue : 1 },
+        {
+          onSuccess: data => {
+            if (data?.isSuccess) {
+              const tsId =
+                data?.data?.id ??
+                data?.data?.timesheet_id ??
+                data?.id ??
+                data?.timesheet_id ??
+                null;
+              if (tsId) setTimesheetId(tsId);
+              timerCalcRef.current = {
+                startMs: Date.now(),
+                totalTimer: Number(po?.total_timer) || 0,
+                totalTime: 0,
+                totalPauseTime: 0,
+                status: '1',
+              };
+              setElapsedSeconds(getInitialSeconds());
+              startLocalTick();
+            }
+          },
+        }
+      );
+    }
+  };
+
   const pauseTimer = () => {
-    clearTimer();
-    setStatusState('paused');
+    if (statusState !== 'running') return;
+    const tsId = Number(timesheetId || activeTimer?.id);
+    if (!Number.isFinite(tsId)) {
+      showToast('error', 'Không tìm thấy mã timesheet để tạm dừng');
+      return;
+    }
+
+    pauseTimerApi(
+      { id: tsId },
+      {
+        onSuccess: data => {
+          if (data?.isSuccess) {
+            clearTimer();
+            setStatusState('paused');
+            if (Number.isFinite(Number(data?.data?.total_timer))) {
+              setElapsedSeconds(Number(data.data.total_timer));
+            }
+          }
+        },
+      }
+    );
   };
 
   const handleStopClick = () => {
@@ -298,6 +516,36 @@ const ProductionOrderCard = ({ status = 'idle', time = '00 : 00 : 00', po, stage
   useEffect(() => {
     return () => clearTimer();
   }, []);
+
+  useEffect(() => {
+    // Đồng bộ khi po thay đổi (socket/refetch)
+    const newActive = po?.active_timer && Object.keys(po.active_timer || {}).length ? po.active_timer : null;
+    setTimesheetId(newActive?.id || null);
+    setStatusState(getInitialStatus());
+    setElapsedSeconds(getInitialSeconds());
+
+    // Nếu server trả active_timer.status=1 thì tự tick local để UI chạy ngay
+    if (newActive?.status === '1') {
+      timerCalcRef.current = {
+        startMs: parseServerDateTimeToMs(newActive?.start_time),
+        totalTimer: Number(po?.total_timer) || 0,
+        totalTime: Number(newActive?.total_time) || 0,
+        totalPauseTime: Number(newActive?.total_pause_time) || 0,
+        status: '1',
+      };
+      startLocalTick();
+    } else {
+      timerCalcRef.current = {
+        startMs: null,
+        totalTimer: Number(po?.total_timer) || 0,
+        totalTime: Number(newActive?.total_time) || 0,
+        totalPauseTime: Number(newActive?.total_pause_time) || 0,
+        status: newActive?.status || null,
+      };
+      clearTimer();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [po?.active_timer, po?.is_timer, po?.total_timer, time]);
 
   const displayTime = formatTime(elapsedSeconds);
 
@@ -335,19 +583,18 @@ const ProductionOrderCard = ({ status = 'idle', time = '00 : 00 : 00', po, stage
 
   return (
     <div
-      className={`flex flex-col items-start gap-3 p-4 rounded-xl border transition-colors duration-300 ${
-        isSelectMode
-          ? isSelected
-            ? 'border-[#1760B9] bg-[#EBF5FF] cursor-pointer'
-            : 'border-[#1760B9]/40 bg-[#F3F4FF] cursor-pointer hover:border-blue-fmrp'
-          : 'border-[#F3F4F680] bg-white cursor-pointer hover:border-blue-fmrp'
-      }`}
+      className={`flex flex-col items-start gap-3 p-4 rounded-xl border transition-colors duration-300 ${isSelectMode
+        ? isSelected
+          ? 'border-[#1760B9] bg-[#EBF5FF] cursor-pointer'
+          : 'border-[#1760B9]/40 bg-[#F3F4FF] cursor-pointer hover:border-blue-fmrp'
+        : 'border-[#F3F4F680] bg-white cursor-pointer hover:border-blue-fmrp'
+        }`}
       onClick={
         isSelectMode
           ? e => {
-              e.stopPropagation();
-              onToggleSelect?.();
-            }
+            e.stopPropagation();
+            onToggleSelect?.();
+          }
           : handleCardClick
       }
     >
@@ -382,7 +629,15 @@ const ProductionOrderCard = ({ status = 'idle', time = '00 : 00 : 00', po, stage
         </div>
       </div>
       <div className='w-full'>
-        <TimerControl time={displayTime} status={statusState} onStart={startTimer} onPause={pauseTimer} onStop={handleStopClick} onComplete={() => setShowCompletePopup(true)} />
+        <TimerControl
+          showTimerControl={po?.is_timer}
+          time={displayTime}
+          status={statusState}
+          onStart={!isStartingTimer && !isResumingTimer ? startTimer : undefined}
+          onPause={!isPausingTimer ? pauseTimer : undefined}
+          onStop={handleStopClick}
+          onComplete={() => setShowCompletePopup(true)}
+        />
       </div>
       <PopupConfim
         isOpen={showConfirmPopup}
@@ -402,8 +657,8 @@ const ProductionOrderCard = ({ status = 'idle', time = '00 : 00 : 00', po, stage
         brandId={po?.branch_id}
         po_id={po?.id}
         stage_id={stage_id}
-        cardPage={cardPage}
-        onSaveSuccess={onRefetchPage}
+        filterParams={filterParams}
+        onUpdatedPo={onUpdatePo}
       />
 
       <div className='px-1 flex items-center gap-3 w-1/2'>

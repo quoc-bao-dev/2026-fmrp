@@ -2,7 +2,7 @@ import { MagnifyingGlassIcon } from '@/components/icons';
 import DropdownFilledIcon from '@/components/icons/common/DropdownFilledIcon';
 import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import { Empty, Input, Select } from 'antd';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 const { Option } = Select;
 
@@ -31,9 +31,11 @@ const SelectSearchableRadio = ({
   errMess,
   icon,
   className,
+  mode, // 'multiple' để cho phép chọn nhiều
 }) => {
   const [searchValue, setSearchValue] = useState('');
   const [open, setOpen] = useState(false);
+  const searchInputRef = useRef(null);
 
   // Lọc options dựa trên searchValue
   const filteredOptions = useMemo(() => {
@@ -56,8 +58,11 @@ const SelectSearchableRadio = ({
   // Xử lý khi chọn giá trị
   const handleChange = selectedValue => {
     onChange && onChange(selectedValue);
-    setOpen(false);
-    setSearchValue(''); // Reset search khi chọn xong
+    // Chỉ đóng dropdown khi không phải multi-select hoặc khi chọn xong trong single select
+    if (mode !== 'multiple') {
+      setOpen(false);
+      setSearchValue(''); // Reset search khi chọn xong
+    }
   };
 
   // Xử lý khi xóa giá trị
@@ -77,9 +82,29 @@ const SelectSearchableRadio = ({
     }
   };
 
+  // Tự động focus vào input search khi dropdown mở
+  useEffect(() => {
+    if (open && searchInputRef.current) {
+      // Delay một chút để đảm bảo DOM đã render
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    }
+  }, [open]);
+
   // Kiểm tra option có được chọn không
   const isOptionSelected = optValue => {
     if (!value) return false;
+
+    // Nếu là multi-select mode
+    if (mode === 'multiple') {
+      if (Array.isArray(value)) {
+        return value.includes(optValue);
+      }
+      return false;
+    }
+
+    // Single select mode
     return typeof value === 'object' ? value?.value === optValue : value === optValue;
   };
 
@@ -91,17 +116,25 @@ const SelectSearchableRadio = ({
         <div className='relative flex select-with-radio'>
           <span className='absolute left-3 top-1/2 -translate-y-1/2 z-10 text-[#7a7a7a]'>{icon}</span>
           <Select
-            className='placeholder-secondary-color-text-disabled !responsive-text-base placeholder:!responsive-text-base cursor-pointer select-with-radio w-full custom-select-no-bg'
+            className={`placeholder-secondary-color-text-disabled !responsive-text-base placeholder:!responsive-text-base cursor-pointer select-with-radio w-full custom-select-no-bg ${
+              mode === 'multiple'
+                ? '[&_.ant-select-selector]:!flex [&_.ant-select-selector]:flex-nowrap [&_.ant-select-selector]:overflow-x-auto [&_.ant-select-selector]:overflow-y-hidden [&_.ant-select-selection-overflow]:flex [&_.ant-select-selection-overflow]:flex-nowrap [&_.ant-select-selection-overflow]:items-center [&_.ant-select-selection-overflow]:gap-1 [&_.ant-select-selection-overflow]:max-w-full [&_.ant-select-selection-item]:flex-shrink-0 [&_.ant-select-selection-item]:max-w-none [&_.ant-select-selection-item-content]:overflow-hidden [&_.ant-select-selection-item-content]:text-ellipsis [&_.ant-select-selection-item-content]:whitespace-nowrap'
+                : ''
+            }`}
             placeholder={placeholder}
             allowClear
-            value={typeof value === 'object' ? value?.value : value}
+            mode={mode}
+            value={mode === 'multiple' ? (Array.isArray(value) ? value : []) : typeof value === 'object' ? value?.value : value}
             // open={true}
             open={open}
             onOpenChange={handleDropdownVisibleChange}
             onChange={handleChange}
             onClear={handleClear}
             disabled={disabled}
+            showSearch={false} // Tắt search mặc định của Select, chỉ dùng input trong popupRender
             filterOption={false} // Tắt filter mặc định vì đã tự xử lý
+            maxTagCount={mode === 'multiple' ? 1 : undefined}
+            maxTagPlaceholder={mode === 'multiple' ? omittedValues => `+${omittedValues.length}` : undefined}
             notFoundContent={
               searchValue && (!filteredOptions || filteredOptions.length === 0) ? (
                 <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='Không tìm thấy kết quả' />
@@ -112,10 +145,29 @@ const SelectSearchableRadio = ({
             popupRender={menu => (
               <>
                 {/* Search bar */}
-                <h3 className='p-3 responsive-text-lg font-semibold'>{label}</h3>
+                {label && <h3 className='p-3 responsive-text-lg font-semibold'>{label}</h3>}
                 <div className='px-2 pb-2'>
                   <div className='relative flex items-center'>
-                    <Input placeholder={searchPlaceholder} value={searchValue} onChange={handleSearch} className='w-full pr-4' allowClear />
+                    <Input
+                      ref={searchInputRef}
+                      placeholder={searchPlaceholder}
+                      value={searchValue}
+                      onChange={handleSearch}
+                      onKeyDown={e => {
+                        // Ngăn event bubble lên antd Select (tránh Backspace/Delete tự remove tag đã chọn)
+                        e.stopPropagation();
+                      }}
+                      onMouseDown={e => {
+                        // Giữ focus ở input, tránh Select bắt event rồi xóa tag
+                        e.stopPropagation();
+                      }}
+                      onClick={e => {
+                        e.stopPropagation();
+                      }}
+                      className='w-full pr-4'
+                      allowClear
+                      autoFocus
+                    />
                     <div className='absolute right-1 z-10 bg-[#1760B9] p-1 rounded-lg'>
                       <MagnifyingGlassIcon className='size-4 text-white' />
                     </div>
