@@ -1267,8 +1267,17 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     const type = {
       dataKeepStock: `/api_web/Api_transfer/transfer/${isId}?csrf_protection=true`,
       dataPurchases: `/api_web/Api_purchase_order/purchase_order/${isId}?csrf_protection=true`,
+      dataTransferRecovery: `/api_web/Api_transfer/transfer/${isId}?csrf_protection=true`,
     };
-    const { isSuccess, message } = await apiMaterialsPlanning.apiDeletePurchasesTransfer(type[isIdChild]);
+
+    const url = type?.[isIdChild];
+    if (!url) {
+      isShow('error', dataLang?.update_failed || 'Cập nhật dữ liệu thất bại');
+      handleQueryId({ status: false });
+      return;
+    }
+
+    const { isSuccess, message } = await apiMaterialsPlanning.apiDeletePurchasesTransfer(url);
     if (isSuccess) {
       fetchDataTable(1, 'delete');
       queryValue({ page: 1 });

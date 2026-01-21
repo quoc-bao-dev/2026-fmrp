@@ -830,7 +830,7 @@ export const BtnAction = React.memo(props => {
           {props.dataLang?.purchase_order_table_edit || 'purchase_order_table_edit'}
         </Popup_dspc>
       );
-    } else if (!['order', 'products', 'servicev_voucher', 'receipts', 'payment', 'recall'].includes(props.type)) {
+    } else if (!['order', 'products', 'servicev_voucher', 'receipts', 'payment', 'recall', 'production_warehouse'].includes(props.type)) {
       const totalButtons = calculateTotalButtons();
 
       allButtons.push(

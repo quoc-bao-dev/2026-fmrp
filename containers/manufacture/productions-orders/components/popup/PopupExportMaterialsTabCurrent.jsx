@@ -32,7 +32,7 @@ const ProductRow = memo(({ product, index, displayIndex, handleSelectProduct, cl
             ...w,
             id: w.id || w.id_warehouse_custom || createUniqueRowId(),
             quantity: w.total_quantity || 0,
-            list_warehouses: warehouses,
+            list_warehouses: product.list_warehouses || [],
           }))
         );
         setIsOpen(true);
