@@ -25,6 +25,14 @@ export const useHandingFinishedStages = () => {
 
             formData.append("warehouse_import_id", data?.objectData?.objectWareHouse?.id)
 
+            // Nhập từ bảng sản lượng
+            formData.append("is_production_input", data?.objectData?.is_production_input ?? 0)
+            formData.append("timesheet_id", data?.objectData?.timesheet_id ?? "")
+            formData.append("start_date", data?.objectData?.start_date ?? "")
+            formData.append("end_date", data?.objectData?.end_date ?? "")
+            formData.append("is_product", data?.objectData?.is_product ?? "")
+            formData.append("end_timer", data?.objectData?.end_timer ?? 0)
+
             const { objectData: { dataTableProducts, dataTableBom } } = data
 
             // if (!dataTableProducts || !dataTableBom || dataTableProducts?.data?.items?.length == 0 || dataTableBom?.data?.boms?.length == 0) {
@@ -68,6 +76,7 @@ export const useHandingFinishedStages = () => {
                 formData.append(`items[${index}][number]`, element?.number ?? "")
                 formData.append(`items[${index}][final_stage]`, element?.final_stage ?? "")
                 formData.append(`items[${index}][item_variation_id]`, element?.item_variation_id ?? "")
+                formData.append(`items[${index}][price_stage]`, element?.price_stage ?? "")
 
                 // công đoạn cuối
                 if (element?.final_stage == 1) {

@@ -1,232 +1,17 @@
-import { CalendarIcon, CheckDoubleIcon, Clock2Icon, ProgressIcon, UserPlusIcon } from '@/components/icons';
-import AvatarText from '@/components/UI/common/user/AvatarText';
+import { CalendarIcon, ProgressIcon } from '@/components/icons';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
 import { IMAGES } from '@/constants/images';
+import useToast from '@/hooks/useToast';
+import { usePauseTimer, useResumeTimer, useStartTimer } from '@/managers/api/piecework-wage/useImportOutput';
 import formatNumber from '@/utils/helpers/formatnumber';
 import { Tooltip } from 'antd';
+import moment from 'moment';
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { FaPause, FaPlay, FaStop } from 'react-icons/fa';
-import { usePauseTimer, useResumeTimer, useStartTimer } from '@/managers/api/piecework-wage/useImportOutput';
-import useToast from '@/hooks/useToast';
-import apiImportOutput from '@/Api/apiPieceworkWage/import-output/apiImportOutput';
+import Avatar from './Avatar';
 import PopupCompleteOrder from './modal/PopupCompleteOrder';
 import PopupResponsiblePerson from './modal/PopupResponsiblePerson';
-
-const Avatar = ({ group_members_assigned, staffs_assigned, onClick }) => {
-  // Transform staffs_assigned và group_members_assigned thành format thống nhất
-  const avatarList = useMemo(() => {
-    const list = [];
-
-    // Thêm nhân viên
-    (staffs_assigned || []).forEach(staff => {
-      list.push({
-        id: String(staff?.staffid),
-        name: staff?.full_name || '',
-        profile_image: staff?.profile_image || null,
-        type: 'staff',
-      });
-    });
-
-    // Thêm nhóm (transform từ cấu trúc group_members_assigned)
-    (group_members_assigned || []).forEach(group => {
-      list.push({
-        id: `group_${group?.id}`,
-        name: group?.name || '',
-        profile_image: null, // Nhóm không có profile_image, sẽ dùng icon nhóm
-        type: 'group',
-      });
-    });
-
-    return list;
-  }, [staffs_assigned, group_members_assigned]);
-
-  if (avatarList.length === 0) {
-    return (
-      <Tooltip title='Thêm người phụ trách' placement='top'>
-        <button
-          className='cursor-pointer flex items-center justify-start w-fit p-2 rounded-lg border border-[#003DA0] hover:bg-[#EBF5FF] transition-colors'
-          onClick={e => {
-            e.stopPropagation();
-            onClick?.();
-          }}
-        >
-          <UserPlusIcon className='size-5 text-[#11315B]' />
-        </button>
-      </Tooltip>
-    );
-  }
-  const isSingle = avatarList.length === 1;
-  const maxDisplay = 10;
-  const displayAvatars = avatarList.slice(0, maxDisplay);
-  const remainingCount = avatarList.length > maxDisplay ? avatarList.length - maxDisplay : 0;
-
-  return (
-    <div
-      className='flex items-center gap-2 justify-between w-fit cursor-pointer hover:opacity-80 transition-opacity'
-      onClick={e => {
-        e.stopPropagation();
-        onClick?.();
-      }}
-    >
-      <div className='p-1 flex items-center gap-1 rounded-full bg-[#D6EAFE]'>
-        {displayAvatars.map((item, index) => {
-          const isFirst = index === 0;
-          const hasImage = item?.profile_image && item.profile_image.trim() !== '';
-          const itemName = item?.name || 'Chưa có tên';
-          const isGroup = item?.type === 'group';
-
-          return (
-            <Tooltip key={item?.id || index} title={itemName} placement='top'>
-              {hasImage ? (
-                <Image
-                  src={item.profile_image}
-                  alt={itemName}
-                  width={100}
-                  height={100}
-                  className={`size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] ${isFirst ? '' : '-ml-3'} z-1 cursor-pointer`}
-                />
-              ) : isGroup ? (
-                <Image
-                  src={IMAGES.groupUser}
-                  alt={itemName}
-                  width={100}
-                  height={100}
-                  className={`size-[30px] bg-[#E2E5E9] rounded-full overflow-hidden object-cover border-2 border-[#549AE8] ${isFirst ? '' : '-ml-3'} z-1 cursor-pointer`}
-                />
-              ) : (
-                <div className={`size-[30px] rounded-full overflow-hidden border-2 border-[#549AE8] flex items-center justify-center bg-white ${isFirst ? '' : '-ml-3'} z-1 cursor-pointer`}>
-                  <AvatarText fullName={itemName} className='w-full h-full text-base flex items-center justify-center' />
-                </div>
-              )}
-            </Tooltip>
-          );
-        })}
-        {remainingCount > 0 && (
-          <Tooltip title={`Còn ${remainingCount} người khác`} placement='top'>
-            <div
-              className={`size-[30px] rounded-full overflow-hidden border-2 border-[#549AE8] flex items-center justify-center bg-[#549AE8] text-white font-semibold responsive-text-xs -ml-3 z-1 cursor-pointer`}
-            >
-              +{remainingCount}
-            </div>
-          </Tooltip>
-        )}
-        {isSingle && (
-          <span className='responsive-text-sm mr-1 font-medium text-[#101828] truncate max-w-[160px]' title={avatarList[0]?.name || ''}>
-            {avatarList[0]?.name || ''}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const TimerControl = ({ showTimerControl = true, time = '00 : 00 : 00', status = 'idle', onStart, onPause, onStop, onComplete }) => {
-  // 4 trạng thái: 'idle', 'running', 'paused', 'completed'
-  const renderButtons = () => {
-    switch (status) {
-      case 'idle':
-        // Chưa bắt đầu: chỉ hiển thị nút "Bắt đầu"
-        return (
-          <button
-            onClick={onStart}
-            disabled={!onStart}
-            className='p-1.5 !pl-2 aspect-1 rounded-full flex items-center gap-1 bg-[#4BBA5E] shadow-[0px_2px_8px_0px_#4CD96466] hover:bg-[#3FA550] hover:shadow-[0px_4px_12px_0px_#4CD96499] transition-all duration-200 active:scale-95'
-          >
-            <FaPlay className='size-5 p-0.5 text-white' />
-          </button>
-        );
-
-      case 'running':
-        // Đang chạy: hiển thị nút "Dừng" và "Kết thúc"
-        return (
-          <>
-            <button
-              onClick={onPause}
-              disabled={!onPause}
-              className='p-1.5 rounded-xl flex items-center gap-1 bg-[#F5BF40] shadow-[0px_2px_8px_0px_#EEC52126] hover:bg-[#E5AF30] hover:shadow-[0px_4px_12px_0px_#EEC52140] transition-all duration-200 active:scale-95'
-            >
-              <FaPause className='size-5 p-0.5 text-white' />
-              <span className='responsive-text-sm font-medium text-white whitespace-nowrap'>Dừng</span>
-            </button>
-            <button
-              onClick={onStop}
-              disabled={!onStop}
-              className='p-1.5 rounded-xl flex items-center gap-1 bg-[#F4646B] shadow-[0px_2px_8px_0px_#FB2C3633] hover:bg-[#E4545B] hover:shadow-[0px_4px_12px_0px_#FB2C3655] transition-all duration-200 active:scale-95'
-            >
-              <FaStop className='size-5 p-0.5 text-white' />
-              <span className='responsive-text-sm font-medium text-white whitespace-nowrap'>Kết thúc</span>
-            </button>
-          </>
-        );
-
-      case 'paused':
-        // Tạm dừng: hiển thị nút "Tiếp tục" và "Kết thúc"
-        return (
-          <>
-            <button
-              onClick={onStart}
-              disabled={!onStart}
-              className='p-1.5 rounded-xl flex items-center gap-1 bg-[#4BBA5E] shadow-[0px_2px_8px_0px_#4CD96466] hover:bg-[#3FA550] hover:shadow-[0px_4px_12px_0px_#4CD96499] transition-all duration-200 active:scale-95'
-            >
-              <FaPlay className='size-5 p-0.5 text-white' />
-              <span className='responsive-text-sm font-medium text-white whitespace-nowrap'>Tiếp tục</span>
-            </button>
-            <button
-              onClick={onStop}
-              disabled={!onStop}
-              className='p-1.5 rounded-xl flex items-center gap-1 bg-[#F4646B] shadow-[0px_2px_8px_0px_#FB2C3633] hover:bg-[#E4545B] hover:shadow-[0px_4px_12px_0px_#FB2C3655] transition-all duration-200 active:scale-95'
-            >
-              <FaStop className='size-5 p-0.5 text-white' />
-              <span className='responsive-text-sm font-medium text-white whitespace-nowrap'>Kết thúc</span>
-            </button>
-          </>
-        );
-
-      case 'completed':
-        // Hoàn thành: chỉ hiển thị nút "Hoàn thành"
-        return (
-          <button
-            onClick={onComplete}
-            disabled={!onComplete}
-            className='p-1.5 rounded-xl flex items-center gap-1 bg-[#9F9F9F] shadow-[0px_2px_8px_0px_#9F9F9F] hover:bg-[#8F8F8F] hover:shadow-[0px_4px_12px_0px_#9F9F9FCC] transition-all duration-200 active:scale-95'
-          >
-            <CheckDoubleIcon className='size-5 p-0.5 text-white' />
-            <span className='responsive-text-sm font-medium text-white whitespace-nowrap'>Hoàn thành</span>
-          </button>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div className={`w-full flex justify-between items-center gap-2 rounded-2xl `}>
-      <div className='flex items-center gap-1'>
-        <Clock2Icon className='size-5 text-[#4E4E4E]' />
-        <p className='responsive-text-xs font-semibold text-[#4E4E4E] whitespace-nowrap'>{time}</p>
-      </div>
-      {showTimerControl && (
-        <div
-          className='flex items-center gap-1'
-          onClick={e => {
-            e.stopPropagation();
-          }}
-        >
-          {renderButtons()}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const parseTimeString = (timeString = '00 : 00 : 00') => {
-  const parts = timeString.split(':').map(part => parseInt(part.trim(), 10));
-  if (parts.length !== 3 || parts.some(isNaN)) return 0;
-  const [h, m, s] = parts;
-  return h * 3600 + m * 60 + s;
-};
+import TimerControl from './TimerControl';
 
 const formatTime = seconds => {
   const h = Math.floor(seconds / 3600);
@@ -236,35 +21,28 @@ const formatTime = seconds => {
   return `${pad(h)} : ${pad(m)} : ${pad(s)}`;
 };
 
-const parseServerDateTimeToMs = value => {
-  // Backend format: "YYYY-MM-DD HH:mm:ss"
-  if (!value || typeof value !== 'string') return null;
-  const normalized = value.replace(' ', 'T');
-  const ms = Date.parse(normalized);
-  return Number.isFinite(ms) ? ms : null;
+const BORDER_COLORS = ['#0375F3', '#1A7526', '#FF641C', '#EEB600', '#9C27B0', '#E91E63', '#00BCD4', '#F44336', '#795548', '#607D8B'];
+
+// Tạo màu dựa trên số cuối của reference_no (0-9)
+const getBorderColor = po => {
+  // Lấy số cuối của reference_no
+  const referenceNo = (po?.reference_no || po?.id || '').toString();
+  const lastDigit = referenceNo.match(/\d+$/)?.[0]?.slice(-1);
+
+  // Nếu có số cuối, dùng nó để chọn màu (0-9), nếu không dùng màu đầu tiên
+  const colorIndex = lastDigit ? parseInt(lastDigit, 10) : 0;
+
+  return BORDER_COLORS[colorIndex];
 };
 
-const ProductionOrderCard = ({
-  status = 'idle',
-  time = '00 : 00 : 00',
-  po,
-  stage_id,
-  stage_name,
-  isSelectMode = false,
-  isSelected = false,
-  onToggleSelect,
-  filterParams = {},
-  onUpdatePo,
-}) => {
+const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, isSelected = false, onToggleSelect, filterParams = {}, onUpdatePo }) => {
   const showToast = useToast();
   const activeTimer = po?.active_timer && Object.keys(po.active_timer || {}).length ? po.active_timer : null;
 
-  // Dùng ref để tick theo công thức: (now-start_time) + total_timer - total_time - total_pause_time
+  // Ref dùng để tick local dựa trên total_timer_with_current
   const timerCalcRef = useRef({
     startMs: null,
-    totalTimer: 0,
-    totalTime: 0,
-    totalPauseTime: 0,
+    baseSeconds: 0,
     status: null,
   });
 
@@ -278,32 +56,11 @@ const ProductionOrderCard = ({
     return 'idle';
   };
 
-  const getInitialSeconds = () => {
-    const totalTimer = Number(po?.total_timer);
-    const safeTotalTimer = Number.isFinite(totalTimer) ? totalTimer : 0;
-
-    // Nếu đang chạy thì tính theo công thức bạn đưa
-    if (activeTimer?.status === '1' && activeTimer?.start_time) {
-      const startMs = parseServerDateTimeToMs(activeTimer.start_time);
-      if (startMs) {
-        const nowSec = Math.floor((Date.now() - startMs) / 1000);
-        const totalTime = Number(activeTimer?.total_time);
-        const totalPause = Number(activeTimer?.total_pause_time);
-        const safeTotalTime = Number.isFinite(totalTime) ? totalTime : 0;
-        const safeTotalPause = Number.isFinite(totalPause) ? totalPause : 0;
-        return Math.max(0, nowSec + safeTotalTimer - safeTotalTime - safeTotalPause);
-      }
-    }
-
-    // Còn lại: ưu tiên total_timer, fallback time string
-    if (Number.isFinite(totalTimer)) return totalTimer;
-    return parseTimeString(time);
-  };
-
   const [statusState, setStatusState] = useState(getInitialStatus);
-  const [elapsedSeconds, setElapsedSeconds] = useState(getInitialSeconds);
+  const [elapsedSeconds, setElapsedSeconds] = useState(po?.total_timer_with_current);
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [showCompletePopup, setShowCompletePopup] = useState(false);
+  const [endTimerFlag, setEndTimerFlag] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showResponsiblePersonPopup, setShowResponsiblePersonPopup] = useState(false);
   const [timesheetId, setTimesheetId] = useState(activeTimer?.id || null);
@@ -313,30 +70,7 @@ const ProductionOrderCard = ({
   const { mutate: pauseTimerApi, isPending: isPausingTimer } = usePauseTimer();
   const { mutate: resumeTimerApi, isPending: isResumingTimer } = useResumeTimer();
 
-  // Tạo màu dựa trên số cuối của reference_no (0-9)
-  const borderColor = useMemo(() => {
-    const colors = [
-      '#0375F3', // 0 - Màu xanh dương
-      '#1A7526', // 1 - Màu xanh lá
-      '#FF641C', // 2 - Màu cam
-      '#EEB600', // 3 - Màu vàng
-      '#9C27B0', // 4 - Màu tím
-      '#E91E63', // 5 - Màu hồng
-      '#00BCD4', // 6 - Màu cyan
-      '#F44336', // 7 - Màu đỏ
-      '#795548', // 8 - Màu nâu
-      '#607D8B', // 9 - Màu xám xanh
-    ];
-
-    // Lấy số cuối của reference_no
-    const referenceNo = (po?.reference_no || po?.id || '').toString();
-    const lastDigit = referenceNo.match(/\d+$/)?.[0]?.slice(-1);
-
-    // Nếu có số cuối, dùng nó để chọn màu (0-9), nếu không dùng màu đầu tiên
-    const colorIndex = lastDigit ? parseInt(lastDigit, 10) : 0;
-
-    return colors[colorIndex];
-  }, [po?.reference_no, po?.id]);
+  const borderColor = useMemo(() => getBorderColor(po), [po?.reference_no, po?.id]);
 
   const clearTimer = () => {
     if (intervalRef.current) {
@@ -345,19 +79,51 @@ const ProductionOrderCard = ({
     }
   };
 
-  const startLocalTick = () => {
+  const startLocalTick = (baseSeconds = 0) => {
     clearTimer();
     setStatusState('running');
+    timerCalcRef.current = {
+      ...(timerCalcRef.current || {}),
+      startMs: Date.now(),
+      baseSeconds: Number(baseSeconds) || 0,
+      status: '1',
+    };
+
     intervalRef.current = setInterval(() => {
       const cfg = timerCalcRef.current || {};
       const startMs = cfg.startMs;
-      const totalTimer = Number(cfg.totalTimer) || 0;
-      const totalTime = Number(cfg.totalTime) || 0;
-      const totalPauseTime = Number(cfg.totalPauseTime) || 0;
+      const base = Number(cfg.baseSeconds) || 0;
       if (!startMs) return;
       const nowSec = Math.floor((Date.now() - startMs) / 1000);
-      setElapsedSeconds(Math.max(0, nowSec + totalTimer - totalTime - totalPauseTime));
+      setElapsedSeconds(Math.max(0, base + nowSec));
     }, 1000);
+  };
+
+  const ensureTimesheetId = () => {
+    const tsId = Number(timesheetId || activeTimer?.id);
+    if (!Number.isFinite(tsId)) {
+      showToast('error', 'Không tìm thấy mã timesheet');
+      return null;
+    }
+    return tsId;
+  };
+
+  const applyPausedUI = frozenSeconds => {
+    clearTimer();
+    timerCalcRef.current = {
+      ...(timerCalcRef.current || {}),
+      startMs: null,
+      baseSeconds: Number(frozenSeconds) || 0,
+      status: '2',
+    };
+    setStatusState('paused');
+    setElapsedSeconds(Number(frozenSeconds) || 0);
+  };
+
+  const applyRunningUI = base => {
+    const baseSeconds = Number(base) || 0;
+    setElapsedSeconds(baseSeconds);
+    startLocalTick(baseSeconds);
   };
 
   const startTimer = () => {
@@ -375,124 +141,55 @@ const ProductionOrderCard = ({
     }
 
     if (isResume) {
-      const tsId = Number(timesheetId || activeTimer?.id);
-      if (!Number.isFinite(tsId)) {
-        showToast('error', 'Không tìm thấy mã timesheet để tiếp tục');
-        return;
-      }
+      const tsId = ensureTimesheetId();
+      if (!tsId) return;
+
       resumeTimerApi(
         { id: tsId },
         {
-          onSuccess: async data => {
+          onSuccess: data => {
             if (!data?.isSuccess) return;
 
-            // Chạy ngay từ thời gian đang dừng (không bị reset)
-            timerCalcRef.current = {
-              startMs: Date.now(),
-              totalTimer: Number(elapsedSeconds) || 0,
-              totalTime: 0,
-              totalPauseTime: 0,
-              status: '1',
-            };
-            startLocalTick();
-
-            // Đồng bộ lại từ server (lấy start_time mới + total_timer mới nếu có)
-            try {
-              const response = await apiImportOutput.apiListImportOutputItems({
-                is_data_single: 1,
-                po_ids: poId ? [poId] : [],
-                is_check_po: 0,
-                stage_id: stageId || null,
-                page: 1,
-                limit: 1,
-                start_date: filterParams?.start_date ?? null,
-                end_date: filterParams?.end_date ?? null,
-                search: filterParams?.search ?? '',
-                ...(filterParams?.staff_ids ? { staff_ids: filterParams.staff_ids } : {}),
-                ...(filterParams?.group_member_ids ? { group_ids: filterParams.group_member_ids } : {}),
-              });
-
-              const updatedPo = response?.data?.pos?.[0];
-              if (updatedPo) {
-                onUpdatePo?.(updatedPo);
-                const updatedActive = updatedPo?.active_timer && Object.keys(updatedPo.active_timer || {}).length ? updatedPo.active_timer : null;
-                if (updatedActive?.status === '1') {
-                  timerCalcRef.current = {
-                    startMs: parseServerDateTimeToMs(updatedActive?.start_time),
-                    totalTimer: Number(updatedPo?.total_timer) || 0,
-                    totalTime: Number(updatedActive?.total_time) || 0,
-                    totalPauseTime: Number(updatedActive?.total_pause_time) || 0,
-                    status: '1',
-                  };
-                  setElapsedSeconds(() => {
-                    const startMs = timerCalcRef.current.startMs;
-                    if (!startMs) return Number(updatedPo?.total_timer) || 0;
-                    const nowSec = Math.floor((Date.now() - startMs) / 1000);
-                    return Math.max(
-                      0,
-                      nowSec +
-                        (Number(updatedPo?.total_timer) || 0) -
-                        (Number(updatedActive?.total_time) || 0) -
-                        (Number(updatedActive?.total_pause_time) || 0)
-                    );
-                  });
-                }
-              }
-            } catch (e) {
-              // nếu fail sync thì vẫn chạy theo local tick
-              console.error('Failed to sync timer after resume:', e);
-            }
+            // Sau khi resume thành công, ưu tiên tiếp tục từ giá trị local hiện tại
+            // để tránh bị giật về total_timer_with_current cũ (backend có thể chưa kịp sync).
+            applyRunningUI(elapsedSeconds);
           },
         }
       );
-    } else {
-      startTimerApi(
-        { po_id: poId, stage_id: stageId, type: Number.isFinite(typeValue) ? typeValue : 1 },
-        {
-          onSuccess: data => {
-            if (data?.isSuccess) {
-              const tsId =
-                data?.data?.id ??
-                data?.data?.timesheet_id ??
-                data?.id ??
-                data?.timesheet_id ??
-                null;
-              if (tsId) setTimesheetId(tsId);
-              timerCalcRef.current = {
-                startMs: Date.now(),
-                totalTimer: Number(po?.total_timer) || 0,
-                totalTime: 0,
-                totalPauseTime: 0,
-                status: '1',
-              };
-              setElapsedSeconds(getInitialSeconds());
-              startLocalTick();
-            }
-          },
-        }
-      );
+      return;
     }
+
+    startTimerApi(
+      { po_id: poId, stage_id: stageId, type: Number.isFinite(typeValue) ? typeValue : 1 },
+      {
+        onSuccess: data => {
+          if (!data?.isSuccess) return;
+
+          const tsId = data?.data?.id ?? data?.data?.timesheet_id ?? data?.id ?? data?.timesheet_id ?? null;
+          if (tsId) setTimesheetId(tsId);
+
+          applyRunningUI(po?.total_timer_with_current);
+        },
+      }
+    );
   };
 
   const pauseTimer = () => {
     if (statusState !== 'running') return;
-    const tsId = Number(timesheetId || activeTimer?.id);
-    if (!Number.isFinite(tsId)) {
-      showToast('error', 'Không tìm thấy mã timesheet để tạm dừng');
-      return;
-    }
+
+    const tsId = ensureTimesheetId();
+    if (!tsId) return;
+
+    // Chốt thời gian tại thời điểm bấm, nhưng CHỈ apply lên UI khi API trả isSuccess === 1
+    const frozenSeconds = Number(elapsedSeconds) || 0;
 
     pauseTimerApi(
       { id: tsId },
       {
         onSuccess: data => {
-          if (data?.isSuccess) {
-            clearTimer();
-            setStatusState('paused');
-            if (Number.isFinite(Number(data?.data?.total_timer))) {
-              setElapsedSeconds(Number(data.data.total_timer));
-            }
-          }
+          if (!data?.isSuccess) return;
+
+          applyPausedUI(frozenSeconds);
         },
       }
     );
@@ -504,9 +201,11 @@ const ProductionOrderCard = ({
   };
 
   const confirmStopTimer = () => {
-    clearTimer();
-    setStatusState('completed');
+    // clearTimer();
+    // setStatusState('completed');
     setShowConfirmPopup(false);
+    setEndTimerFlag(1);
+    setShowCompletePopup(true);
   };
 
   const cancelStopTimer = () => {
@@ -521,37 +220,39 @@ const ProductionOrderCard = ({
     // Đồng bộ khi po thay đổi (socket/refetch)
     const newActive = po?.active_timer && Object.keys(po.active_timer || {}).length ? po.active_timer : null;
     setTimesheetId(newActive?.id || null);
-    setStatusState(getInitialStatus());
-    setElapsedSeconds(getInitialSeconds());
 
-    // Nếu server trả active_timer.status=1 thì tự tick local để UI chạy ngay
+    const nextStatus = getInitialStatus();
+    const nextSeconds = po?.total_timer_with_current;
+
+    // Nếu UI đang ở trạng thái paused/completed do thao tác local thì không override elapsedSeconds ngay
+    // (tránh nhảy về giá trị cũ khi backend chưa kịp cập nhật total_timer_with_current)
+    const shouldSyncSeconds = statusState === 'running' || nextStatus === 'running' || statusState === 'idle';
+
+    setStatusState(nextStatus);
+    if (shouldSyncSeconds) {
+      setElapsedSeconds(nextSeconds);
+    }
+
+    // total_timer_with_current: nếu đang chạy thì lấy số đó chạy tiếp
     if (newActive?.status === '1') {
-      timerCalcRef.current = {
-        startMs: parseServerDateTimeToMs(newActive?.start_time),
-        totalTimer: Number(po?.total_timer) || 0,
-        totalTime: Number(newActive?.total_time) || 0,
-        totalPauseTime: Number(newActive?.total_pause_time) || 0,
-        status: '1',
-      };
-      startLocalTick();
+      startLocalTick(shouldSyncSeconds ? nextSeconds : Number(elapsedSeconds) || 0);
     } else {
       timerCalcRef.current = {
+        ...(timerCalcRef.current || {}),
         startMs: null,
-        totalTimer: Number(po?.total_timer) || 0,
-        totalTime: Number(newActive?.total_time) || 0,
-        totalPauseTime: Number(newActive?.total_pause_time) || 0,
+        baseSeconds: shouldSyncSeconds ? Number(nextSeconds) || 0 : Number(elapsedSeconds) || 0,
         status: newActive?.status || null,
       };
       clearTimer();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [po?.active_timer, po?.is_timer, po?.total_timer, time]);
+  }, [po?.active_timer, po?.is_timer, po?.total_timer_with_current]);
 
   const displayTime = formatTime(elapsedSeconds);
 
   const handleCardClick = () => {
     if (showResponsiblePersonPopup) return;
     // Mở popup khi click vào card
+    setEndTimerFlag(0);
     setShowCompletePopup(true);
   };
 
@@ -572,8 +273,6 @@ const ProductionOrderCard = ({
 
   const allOrdersText = totalOrders > 0 ? objectRefs.join(', ') : '';
 
-  const formattedDate = po?.date ? po.date.split(' ')[0]?.split('-')?.reverse()?.join('/') : '';
-
   const orderTextContent = (
     <div className='flex items-center gap-1 flex-wrap'>
       <span className='responsive-text-xs font-normal text-[#667085]'>{displayText}</span>
@@ -583,11 +282,11 @@ const ProductionOrderCard = ({
 
   return (
     <div
-      className={`flex flex-col items-start gap-3 p-4 rounded-xl border transition-colors duration-300 ${isSelectMode
+      className={`flex flex-col items-start gap-3 p-4 rounded-xl border-2 transition-colors duration-300 ${isSelectMode
         ? isSelected
-          ? 'border-[#1760B9] bg-[#EBF5FF] cursor-pointer'
-          : 'border-[#1760B9]/40 bg-[#F3F4FF] cursor-pointer hover:border-blue-fmrp'
-        : 'border-[#F3F4F680] bg-white cursor-pointer hover:border-blue-fmrp'
+          ? 'border-[#1760B9] bg-[#EBF5FF]'
+          : 'border-[#1760B9]/40 bg-[#F3F4FF] hover:bg-[#F4F8FF]'
+        : 'border-[#F3F4F680] bg-white cursor-pointer hover:border-[#C3D7FF] hover:bg-[#F4F8FF] shadow-[0px_8px_7.2px_0px_#0000000A]'
         }`}
       onClick={
         isSelectMode
@@ -625,7 +324,7 @@ const ProductionOrderCard = ({
         </div>
         <div className='flex items-center gap-1.5'>
           <CalendarIcon className='size-3.5 text-[#667085]' />
-          <p className='responsive-text-xxs font-normal text-[#667085]'>{formattedDate}</p>
+          <p className='responsive-text-xxs font-normal text-[#667085]'>{moment(po?.date).format('DD/MM/YYYY')}</p>
         </div>
       </div>
       <div className='w-full'>
@@ -636,7 +335,10 @@ const ProductionOrderCard = ({
           onStart={!isStartingTimer && !isResumingTimer ? startTimer : undefined}
           onPause={!isPausingTimer ? pauseTimer : undefined}
           onStop={handleStopClick}
-          onComplete={() => setShowCompletePopup(true)}
+          onComplete={() => {
+            setEndTimerFlag(0);
+            setShowCompletePopup(true);
+          }}
         />
       </div>
       <PopupConfim
@@ -649,7 +351,19 @@ const ProductionOrderCard = ({
         nameModel='timer_stop'
         forceConfirm={true}
       />
-      <PopupCompleteOrder stage_id={stage_id} stage_name={stage_name} po={po} isOpen={showCompletePopup} onClose={() => setShowCompletePopup(false)} />
+      <PopupCompleteOrder
+        stage_id={stage_id}
+        stage_name={stage_name}
+        po={po}
+        isOpen={showCompletePopup}
+        onClose={() => setShowCompletePopup(false)}
+        is_production_input={1}
+        timesheet_id={timesheetId || activeTimer?.id}
+        start_date={filterParams?.start_date}
+        end_date={filterParams?.end_date}
+        is_product={po?.is_product}
+        end_timer={endTimerFlag}
+      />
       <Avatar group_members_assigned={po?.group_members_assigned || []} staffs_assigned={po?.staffs_assigned || []} onClick={() => setShowResponsiblePersonPopup(true)} />
       <PopupResponsiblePerson
         open={showResponsiblePersonPopup}
