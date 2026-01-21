@@ -410,7 +410,7 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
 
 ProductRow.displayName = 'ProductRow';
 
-const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose }) => {
+const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose, is_production_input, timesheet_id, start_date, end_date, is_product, end_timer }) => {
   const showToast = useToast();
   const { onSubmit } = useHandingFinishedStages();
   const queryClient = useQueryClient();
@@ -928,6 +928,12 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose }) => {
             bomItemsPod: [],
           },
         },
+        is_production_input: is_production_input ?? 1,
+        timesheet_id: timesheet_id ?? null,
+        start_date: start_date ?? null,
+        end_date: end_date ?? null,
+        is_product: is_product ?? po?.is_product,
+        end_timer: end_timer ?? 0,
       },
     };
 
@@ -936,7 +942,7 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose }) => {
     if (result?.isSuccess === 1) {
       onClose();
       // Refetch lại list nhập sản lượng khoán sau khi hoàn thành (có socket rồi nên tạm bỏ)
-      // queryClient.invalidateQueries({ queryKey: ['api_list_import_output'] });
+      queryClient.invalidateQueries({ queryKey: ['api_list_import_output'] });
     } else if (result?.data?.errors || result?.data?.errors_before) {
       setErrorNVLData({
         items: [...(result?.data?.errors || [])],
