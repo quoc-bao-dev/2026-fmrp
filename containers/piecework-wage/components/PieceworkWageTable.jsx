@@ -4,6 +4,7 @@ import NoData from '@/components/UI/noData/nodata';
 import { memo, useState } from 'react';
 import PieceworkWageDetailModal from './PieceworkWageDetailModal';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import formatNumber from '@/utils/helpers/formatnumber';
 
 // Mock data dựa trên hình ảnh
 export const mockData = [
@@ -65,7 +66,7 @@ export const mockData = [
   },
 ];
 
-const PieceworkWageTable = memo(() => {
+const PieceworkWageTable = memo(({ productionOutput, po_id }) => {
   const [openDetail, setOpenDetail] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState(null);
 
@@ -76,6 +77,16 @@ const PieceworkWageTable = memo(() => {
 
   const handleCloseDetail = () => {
     setOpenDetail(false);
+  };
+
+  // Convert dữ liệu staff từ API sang format AvatarStack cần
+  const convertStaffToAvatarFormat = staff => {
+    if (!staff) return null;
+    return {
+      id: staff.staffid || staff.id,
+      name: staff.full_name || staff.name,
+      avatarUrl: staff.profile_image || staff.avatarUrl || null,
+    };
   };
 
   return (
@@ -93,54 +104,56 @@ const PieceworkWageTable = memo(() => {
 
         <Customscrollbar className='max-h-[calc(100svh-315px)]'>
           {/* Rows */}
-          {mockData.length === 0 ? (
+          {productionOutput?.length === 0 ? (
             <div className='h-full flex items-center justify-center py-6'>
               <NoData type='table' />
             </div>
           ) : (
-            mockData.map((item, index) => (
-              <div
-                key={item.id}
-                className={`col-span-16 grid grid-cols-23 gap-2 items-center group hover:bg-gray-100 transition-all duration-150 ease-in-out py-2  ${
-                  mockData.length - 1 === index ? 'border-transparent' : 'border-b'
-                }`}
-              >
-                <h4 className='col-span-2 flex items-center justify-center text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1'>{index + 1}</h4>
+            productionOutput?.map((item, index) => {
+              const convertedStaff = convertStaffToAvatarFormat(item.staff);
+              return (
+                <div
+                  key={item.staff_id && item.stage_id ? `${item.staff_id}-${item.stage_id}` : index}
+                  className={`col-span-16 grid grid-cols-23 gap-2 items-center group hover:bg-gray-100 transition-all duration-150 ease-in-out py-2  ${productionOutput?.length - 1 === index ? 'border-transparent' : 'border-b'
+                    }`}
+                >
+                  <h4 className='col-span-2 flex items-center justify-center text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1'>{index + 1}</h4>
 
-                <h4 className='col-span-5 text-[#344054] font-normal flex items-center py-2 px-1'>
-                  <AvatarStack people={item.workers} size={32} />
-                </h4>
+                  <h4 className='col-span-5 text-[#344054] font-normal flex items-center py-2 px-1'>
+                    {convertedStaff ? <AvatarStack people={[convertedStaff]} size={32} /> : null}
+                  </h4>
 
-                <h4 className='col-span-3 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1'>{item.workingHours}</h4>
+                  <h4 className='col-span-3 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1'>{item.total_time}</h4>
 
-                <h4 className='col-span-3 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1'>{item.quantity}</h4>
+                  <h4 className='col-span-3 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1'>{item.total_produced}</h4>
 
-                <h4 className='col-span-6 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1'>
-                  <span className='text-blue-fmrp'>{item.pieceworkWage} đ</span>
-                </h4>
+                  <h4 className='col-span-6 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1'>
+                    <span className='text-blue-fmrp'>{formatNumber(+item.amount)} đ</span>
+                  </h4>
 
-                <h4 className='col-span-4 flex items-center justify-center px-1'>
-                  <button
-                    className='flex items-center justify-center gap-2 cursor-pointer bg-blue-fmrp hover:opacity-80 transition-opacity'
-                    style={{
-                      height: 34,
-                      borderRadius: 8,
-                      opacity: 1,
-                      padding: 8,
-                    }}
-                    onClick={() => handleOpenDetail(item)}
-                  >
-                    <TaskActionIcon color='#F7F7F7' className='size-4' />
-                    <span className='text-[#F7F7F7] text-sm'>Chi tiết</span>
-                  </button>
-                </h4>
-              </div>
-            ))
+                  <h4 className='col-span-4 flex items-center justify-center px-1'>
+                    <button
+                      className='flex items-center justify-center gap-2 cursor-pointer bg-blue-fmrp hover:opacity-80 transition-opacity'
+                      style={{
+                        height: 34,
+                        borderRadius: 8,
+                        opacity: 1,
+                        padding: 8,
+                      }}
+                      onClick={() => handleOpenDetail(item)}
+                    >
+                      <TaskActionIcon color='#F7F7F7' className='size-4' />
+                      <span className='text-[#F7F7F7] text-sm'>Chi tiết</span>
+                    </button>
+                  </h4>
+                </div>
+              );
+            })
           )}
         </Customscrollbar>
       </div>
       <div className='hidden'>
-        <PieceworkWageDetailModal open={openDetail} onClose={handleCloseDetail} worker={selectedWorker} />
+        <PieceworkWageDetailModal open={openDetail} onClose={handleCloseDetail} worker={selectedWorker} po_id={po_id} />
       </div>
     </>
   );

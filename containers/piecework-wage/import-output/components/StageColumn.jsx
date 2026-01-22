@@ -2,7 +2,7 @@ import { PresentationChartIcon, ThreeDotIcon, UserGroupIcon, UserPlus2Icon } fro
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { IMAGES } from '@/constants/images';
 import useToast from '@/hooks/useToast';
-import { useListImportOutputItems, useSavePomStages } from '@/managers/api/piecework-wage/useImportOutput';
+import { useListImportOutputItems, useListPomStages, useSavePomStages } from '@/managers/api/piecework-wage/useImportOutput';
 import { Popover } from 'antd';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -11,9 +11,19 @@ import PersonSelector from './modal/PersonSelector';
 import ProductionOrderCard from './ProductionOrderCard';
 
 // Component dropdown hiển thị nhân viên/nhóm đang làm và tạm dừng
-const ProcessStatusDropdown = ({ processName }) => {
+const ProcessStatusDropdown = ({ stage }) => {
   const [open, setOpen] = useState(false);
- 
+  console.log(stage)
+  const { data: listPomStages, isLoading } = useListPomStages(
+    {
+      stage_id: stage.stage_id,
+      po_ids: stage.po_ids,
+      is_status: 1,
+    },
+    {
+      enabled: open && !!stage.po_ids,
+    }
+  );
   // Dữ liệu ảo cho "Đang làm"
   const doingData = [
     {
@@ -442,7 +452,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
           <div className='flex items-center gap-3'>
             <p className='responsive-text-base font-semibold text-[#1A7526]'>Tổng lệnh: {stage?.items?.total_count || 0}</p>
           </div>
-          <ProcessStatusDropdown processName={stage.stage_name} />
+          <ProcessStatusDropdown stage={stage} />
         </div>
       </div>
       <Customscrollbar className='flex-1 min-h-0 h-full' showOnHover={true} onScroll={handleScroll} ref={scrollContainerRef}>

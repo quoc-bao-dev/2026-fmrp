@@ -250,7 +250,7 @@ module.exports = {
       addComponents({
         '.responsive-text-xxs': {
           fontSize: '9px',
-          lineHeight: '14px',
+          lineHeight: '12px',
           '@screen 3xl': {
             fontSize: '10px',
             lineHeight: '1rem',

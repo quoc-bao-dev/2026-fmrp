@@ -31,7 +31,6 @@ const ProductRow = memo(
       if (!data) {
         return [];
       }
-      console.log(data);
       const people = [];
       if (data.items && Array.isArray(data.items)) {
         data.items.forEach(staff => {

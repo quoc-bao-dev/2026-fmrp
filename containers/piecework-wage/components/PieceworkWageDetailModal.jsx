@@ -1,135 +1,161 @@
-import PopupCustom from '@/components/UI/popup';
+import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import Loading from '@/components/UI/loading/loading';
+import NoData from '@/components/UI/noData/nodata';
+import PopupCustom from '@/components/UI/popup';
+import { useDetailStaffByPo, useHistoryPurchaseProduct, useHistoryTimers } from '@/managers/api/productions-order/useProductionOutput';
+import formatMoneyOrDash from '@/utils/helpers/formatMoneyOrDash';
+import moment from 'moment';
 import Image from 'next/image';
-import { useState, memo, useEffect, useRef } from 'react';
-
-const quantityHistoryMock = [
-  {
-    id: 1,
-    date: '25/12/2025',
-    productName: 'Áo sơ mi basic 01',
-    thumbnail: '/icon/default/default.png',
-    productCode: 'TP-000001',
-    reference: 'LSXCT-13032519',
-    stage: 'May',
-    unitPrice: '300.000 đ',
-    quantity: 2,
-    amount: '2.000.000 đ',
-  },
-  {
-    id: 2,
-    date: '25/12/2025',
-    productName: 'Áo sơ mi basic 01',
-    thumbnail: '/icon/default/default.png',
-    productCode: 'TP-000001',
-    reference: 'LSXCT-13032519',
-    stage: 'Cắt',
-    unitPrice: '300.000 đ',
-    quantity: 4,
-    amount: '300.000 đ',
-  },
-  {
-    id: 3,
-    date: '25/12/2025',
-    productName: 'Áo sơ mi basic 01',
-    thumbnail: '/icon/default/default.png',
-    productCode: 'TP-000001',
-    reference: 'LSXCT-13032519',
-    stage: 'May',
-    unitPrice: '300.000 đ',
-    quantity: 1,
-    amount: '300.000 đ',
-  },
-  {
-    id: 4,
-    date: '25/12/2025',
-    productName: 'Áo sơ mi basic 01',
-    thumbnail: '/icon/default/default.png',
-    productCode: 'TP-000001',
-    reference: 'LSXCT-13032519',
-    stage: 'May',
-    unitPrice: '300.000 đ',
-    quantity: 1,
-    amount: '300.000 đ',
-  },
-  {
-    id: 5,
-    date: '25/12/2025',
-    productName: 'Áo sơ mi basic 01',
-    thumbnail: '/icon/default/default.png',
-    productCode: 'TP-000001',
-    reference: 'LSXCT-13032519',
-    stage: 'Cắt',
-    unitPrice: '300.000 đ',
-    quantity: 2,
-    amount: '300.000 đ',
-  },
-];
-
-const timeHistoryMock = [
-  {
-    id: 1,
-    date: '25/12/2025',
-    startTime: '09:00:12',
-    endTime: '15:34:12',
-    totalTime: '6h30p',
-  },
-  {
-    id: 2,
-    date: '25/12/2025',
-    startTime: '09:00:12',
-    endTime: '15:34:12',
-    totalTime: '6h30p',
-  },
-  {
-    id: 3,
-    date: '25/12/2025',
-    startTime: '09:00:12',
-    endTime: '15:34:12',
-    totalTime: '6h30p',
-  },
-  {
-    id: 4,
-    date: '25/12/2025',
-    startTime: '09:00:12',
-    endTime: '15:34:12',
-    totalTime: '6h30p',
-  },
-  {
-    id: 5,
-    date: '25/12/2025',
-    startTime: '09:00:12',
-    endTime: '15:34:12',
-    totalTime: '6h30p',
-  },
-];
+import { memo, useEffect, useRef, useState } from 'react';
 
 const tabs = [
-  { id: 'quantity', label: 'Lịch sử nhập sản lượng' },
-  { id: 'time', label: 'Lịch sử bấm giờ' },
+  { id: 'quantity', name: 'Lịch sử nhập sản lượng' },
+  { id: 'time', name: 'Lịch sử bấm giờ' },
 ];
 
-const PieceworkWageDetailModal = ({ open, onClose, worker }) => {
-  const [activeTab, setActiveTab] = useState('quantity');
+const PieceworkWageDetailModal = ({ open, onClose, worker, po_id }) => {
+  const [activeTab, setActiveTab] = useState(tabs[0]);
   const quantityScrollRef = useRef(null);
   const timeScrollRef = useRef(null);
 
+  // State cho tab "Lịch sử nhập sản lượng"
+  const [allQuantityItems, setAllQuantityItems] = useState([]);
+  const [quantityCursor, setQuantityCursor] = useState(0);
+  const [quantityHasMore, setQuantityHasMore] = useState(false);
+  const [isLoadingMoreQuantity, setIsLoadingMoreQuantity] = useState(false);
+
+  // State cho tab "Lịch sử bấm giờ"
+  const [allTimeItems, setAllTimeItems] = useState([]);
+  const [timeCursor, setTimeCursor] = useState(0);
+  const [timeHasMore, setTimeHasMore] = useState(false);
+  const [isLoadingMoreTime, setIsLoadingMoreTime] = useState(false);
+
+  const { data: detailStaff } = useDetailStaffByPo({ po_id: po_id, staff_id: worker?.staff_id }, { enabled: !!po_id && !!worker?.staff_id });
+
+  // Hook cho tab "Lịch sử nhập sản lượng"
+  const { data: historyPurchaseProduct, isLoading: isLoadingQuantity } = useHistoryPurchaseProduct(
+    {
+      po_id: po_id,
+      staff_id: worker?.staff_id,
+      cursor: quantityCursor,
+      limit: 20,
+    },
+    { enabled: !!po_id && !!worker?.staff_id && activeTab?.id === 'quantity' && (quantityCursor === 0 || (quantityCursor > 0 && quantityHasMore)) }
+  );
+
+  // Hook cho tab "Lịch sử bấm giờ"
+  const { data: historyTimers, isLoading: isLoadingTime } = useHistoryTimers(
+    {
+      po_id: po_id,
+      staff_id: worker?.staff_id,
+      cursor: timeCursor,
+      limit: 20,
+    },
+    { enabled: !!po_id && !!worker?.staff_id && activeTab?.id === 'time' && (timeCursor === 0 || (timeCursor > 0 && timeHasMore)) }
+  );
+
+  // Reset khi mở modal hoặc thay đổi worker/po_id
+  useEffect(() => {
+    if (open && po_id && worker?.staff_id) {
+      // Reset state khi modal mở với po_id hoặc worker mới
+      setAllQuantityItems([]);
+      setQuantityCursor(0);
+      setQuantityHasMore(false);
+      setIsLoadingMoreQuantity(false);
+      setAllTimeItems([]);
+      setTimeCursor(0);
+      setTimeHasMore(false);
+      setIsLoadingMoreTime(false);
+    } else if (!open) {
+      // Reset khi modal đóng
+      setAllQuantityItems([]);
+      setQuantityCursor(0);
+      setQuantityHasMore(false);
+      setIsLoadingMoreQuantity(false);
+      setAllTimeItems([]);
+      setTimeCursor(0);
+      setTimeHasMore(false);
+      setIsLoadingMoreTime(false);
+    }
+  }, [open, po_id, worker?.staff_id]);
+
+  // Cập nhật danh sách items cho tab "Lịch sử nhập sản lượng"
+  useEffect(() => {
+    if (historyPurchaseProduct?.items && !isLoadingQuantity && activeTab?.id === 'quantity') {
+      if (quantityCursor === 0) {
+        // Lần đầu tiên, reset danh sách
+        setAllQuantityItems(historyPurchaseProduct.items);
+      } else {
+        // Load thêm, merge vào danh sách
+        setAllQuantityItems(prev => [...prev, ...historyPurchaseProduct.items]);
+      }
+      setQuantityHasMore(historyPurchaseProduct.has_more || false);
+      setIsLoadingMoreQuantity(false);
+    }
+  }, [historyPurchaseProduct, quantityCursor, isLoadingQuantity, activeTab?.id]);
+
+  // Cập nhật danh sách items cho tab "Lịch sử bấm giờ"
+  useEffect(() => {
+    if (historyTimers?.items && !isLoadingTime && activeTab?.id === 'time') {
+      if (timeCursor === 0) {
+        // Lần đầu tiên, reset danh sách
+        setAllTimeItems(historyTimers.items);
+      } else {
+        // Load thêm, merge vào danh sách
+        setAllTimeItems(prev => [...prev, ...historyTimers.items]);
+      }
+      setTimeHasMore(historyTimers.has_more || false);
+      setIsLoadingMoreTime(false);
+    }
+  }, [historyTimers, timeCursor, isLoadingTime, activeTab?.id]);
+
+  // Handler scroll để load more cho tab "Lịch sử nhập sản lượng"
+  const handleQuantityScroll = e => {
+    const target = e.target;
+    const { scrollTop, scrollHeight, clientHeight } = target;
+    const scrollBottom = scrollHeight - scrollTop - clientHeight;
+
+    // Khi cuộn gần cuối (còn 50px), load thêm dữ liệu
+    if (scrollBottom < 50 && quantityHasMore && !isLoadingMoreQuantity && !isLoadingQuantity && allQuantityItems.length > 0) {
+      const lastItem = allQuantityItems[allQuantityItems.length - 1];
+      if (lastItem?.ppi_id) {
+        setIsLoadingMoreQuantity(true);
+        setQuantityCursor(Number(lastItem.ppi_id));
+      }
+    }
+  };
+
+  // Handler scroll để load more cho tab "Lịch sử bấm giờ"
+  const handleTimeScroll = e => {
+    const target = e.target;
+    const { scrollTop, scrollHeight, clientHeight } = target;
+    const scrollBottom = scrollHeight - scrollTop - clientHeight;
+
+    // Khi cuộn gần cuối (còn 50px), load thêm dữ liệu
+    if (scrollBottom < 50 && timeHasMore && !isLoadingMoreTime && !isLoadingTime && allTimeItems.length > 0) {
+      const lastItem = allTimeItems[allTimeItems.length - 1];
+      if (lastItem?.id) {
+        setIsLoadingMoreTime(true);
+        setTimeCursor(Number(lastItem.id));
+      }
+    }
+  };
+
   useEffect(() => {
     // Scroll về đầu table khi chuyển tab
-    if (activeTab === 'quantity' && quantityScrollRef.current) {
+    if (activeTab?.id === 'quantity' && quantityScrollRef.current) {
       quantityScrollRef.current.scrollTo({
         top: 0,
         behavior: 'instant',
       });
-    } else if (activeTab === 'time' && timeScrollRef.current) {
+    } else if (activeTab?.id === 'time' && timeScrollRef.current) {
       timeScrollRef.current.scrollTo({
         top: 0,
         behavior: 'instant',
       });
     }
   }, [activeTab]);
-
-  const workerName = worker?.workers?.[0]?.name || 'Nguyễn Thành';
 
   return (
     <PopupCustom
@@ -152,15 +178,15 @@ const PieceworkWageDetailModal = ({ open, onClose, worker }) => {
           <div className='flex flex-col gap-3 text-[16px] leading-none'>
             <div className='flex gap-2'>
               <span className='font-light text-[#3A3E4C] min-w-[83px]'>Tên:</span>
-              <span className='font-medium text-[#0375F3]'>{workerName}</span>
+              <span className='font-medium text-[#0375F3]'>{detailStaff?.staff?.full_name}</span>
             </div>
             <div className='flex gap-2'>
               <span className='font-light text-[#3A3E4C] min-w-[83px]'>Chi nhánh:</span>
-              <span className='font-medium text-[#141522]'>Hồ Chí Minh</span>
+              <span className='font-medium text-[#141522]'>{detailStaff?.staff_branchs?.map(branch => branch.branch_name).join(', ')}</span>
             </div>
             <div className='flex gap-2'>
               <span className='font-light text-[#3A3E4C] min-w-[83px]'>Nhóm:</span>
-              <span className='font-medium text-[#141522]'>May 1</span>
+              <span className='font-medium text-[#141522]'>{detailStaff?.group_member?.group_name || '-'}</span>
             </div>
           </div>
         </div>
@@ -169,32 +195,28 @@ const PieceworkWageDetailModal = ({ open, onClose, worker }) => {
         <div className='flex flex-col gap-3 w-[366px]'>
           <div className='flex items-center justify-between w-full rounded-lg px-4 py-3 bg-[#FFF1E4]'>
             <span className='text-[14px] font-medium text-[#667085]'>Tổng giờ làm</span>
-            <span className='text-[24px] leading-7 font-semibold text-[#DC6803]'>20 giờ/tuần</span>
+            <span className='text-[24px] leading-7 font-semibold text-[#DC6803]'>{detailStaff?.total_time || '-'} giờ/tuần</span>
           </div>
           <div className='flex items-center justify-between w-full rounded-lg px-4 py-3 bg-[#E2F0FF]'>
             <span className='text-[14px] font-medium text-[#667085]'>Tổng chi phí</span>
-            <span className='text-[24px] leading-7 font-semibold text-[#0375F3]'>2.000.000 đ</span>
+            <span className='text-[24px] leading-7 font-semibold text-[#0375F3]'>{formatMoneyOrDash(+detailStaff?.amount)}</span>
           </div>
         </div>
       </div>
 
       <div className='flex flex-col gap-0'>
         {/* Tabs */}
-        <div className='mt-6 border-b border-[#E4E7EC] flex gap-6'>
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              type='button'
-              onClick={() => setActiveTab(tab.id)}
-              className={`pb-3 text-sm font-medium whitespace-nowrap ${activeTab === tab.id ? 'text-[#0375F3] border-b-2 border-[#0375F3]' : 'text-[#667085]'}`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className='mt-4'>
+          <TabSwitcherWithUnderline
+            className=''
+            tabs={tabs}
+            activeTab={activeTab}
+            onChange={setActiveTab}
+          />
         </div>
 
         {/* Nội dung theo tab */}
-        {activeTab === 'quantity' ? (
+        {activeTab?.id === 'quantity' ? (
           <div className='mt-4 flex flex-col overflow-hidden flex-1 min-h-[360px]'>
             {/* Header table – tham khảo PopupConfimStage */}
             <div className='grid grid-cols-24 items-center border-b border-[#F3F3F4] bg-white flex-shrink-0 py-2'>
@@ -207,34 +229,47 @@ const PieceworkWageDetailModal = ({ open, onClose, worker }) => {
               <h3 className='col-span-3 text-sm font-semibold text-[#9295A4] text-center px-2'>Thành tiền</h3>
             </div>
 
-            <Customscrollbar ref={quantityScrollRef} className='flex-1 min-h-0 max-h-[300px]'>
-              {quantityHistoryMock.map((row, index) => (
-                <div key={row.id} className={`grid grid-cols-24 gap-2 items-center py-3 ${index === quantityHistoryMock.length - 1 ? '' : 'border-b border-[#F3F3F4]'}`}>
-                  <div className='col-span-2 flex items-center justify-center text-xs font-semibold text-[#141522]'>{index + 1}</div>
-
-                  <div className='col-span-4 text-sm font-semibold text-[#141522]'>{row.date}</div>
-
-                  <div className='col-span-7 flex items-center gap-3 px-2'>
-                    <div className='h-12 w-12 rounded-lg bg-[#F3F4F6] flex items-center justify-center overflow-hidden'>
-                      <Image src={row.thumbnail} alt={row.productName} width={48} height={48} className='object-cover' />
-                    </div>
-                    <div className='flex flex-col gap-0.5'>
-                      <span className='text-sm font-semibold text-[#141522]'>{row.productName}</span>
-                      <span className='text-xs text-[#667085]'>(none)</span>
-                      <span className='text-xs text-[#0375F3]'>{row.productCode}</span>
-                      <span className='text-xs text-[#0375F3]'>{row.reference}</span>
-                    </div>
-                  </div>
-
-                  <div className='col-span-3 text-sm font-semibold text-[#141522] text-center'>{row.stage}</div>
-
-                  <div className='col-span-3 text-sm font-semibold text-[#0375F3] text-center'>{row.unitPrice}</div>
-
-                  <div className='col-span-2 text-sm font-semibold text-[#141522] text-center'>{row.quantity}</div>
-
-                  <div className='col-span-3 text-sm font-semibold text-[#0375F3] text-center'>{row.amount}</div>
+            <Customscrollbar ref={quantityScrollRef} className='flex-1 min-h-0 max-h-[300px]' onScroll={handleQuantityScroll}>
+              {!allQuantityItems || allQuantityItems.length === 0 ? (
+                <div className='flex items-center justify-center py-8 text-[#9295A4] text-sm'>
+                  {isLoadingQuantity ? <Loading /> : <NoData />}
                 </div>
-              ))}
+              ) : (
+                <>
+                  {allQuantityItems.map((row, index) => {
+                    return (
+                      <div
+                        key={row.ppi_id}
+                        className={`grid grid-cols-24 gap-2 items-center py-3 ${index === allQuantityItems.length - 1 ? '' : 'border-b border-[#F3F3F4]'
+                          }`}
+                      >
+                        <div className='col-span-2 flex items-center justify-center text-xs font-semibold text-[#141522]'>{index + 1}</div>
+                        <div className='col-span-4 text-sm font-semibold text-[#141522]'>{moment(row.date).format('DD/MM/YYYY')}</div>
+                        <div className='col-span-7 flex items-center gap-3 px-2'>
+                          <div className='h-12 w-12 rounded-lg bg-[#F3F4F6] flex items-center justify-center overflow-hidden flex-shrink-0'>
+                            <Image src={row.item?.images || '/icon/default/default.png'} alt={row.item?.item_name} width={48} height={48} className='object-cover' />
+                          </div>
+                          <div className='flex flex-col gap-0.5 min-w-0'>
+                            <span className='text-sm font-semibold text-[#141522] truncate'>{row.item?.item_name}</span>
+                            <span className='text-xs text-[#667085]'>{row.item?.variation}</span>
+                            <span className='text-xs text-[#0375F3] truncate'>{row.item?.item_code}</span>
+                            <span className='text-xs text-[#0375F3] truncate'>{row.reference_no_detail}</span>
+                          </div>
+                        </div>
+                        <div className='col-span-3 text-sm font-semibold text-[#141522] text-center'>{row.stage_name}</div>
+                        <div className='col-span-3 text-sm font-semibold text-[#0375F3] text-center'>{formatMoneyOrDash(+row.price_salary)}</div>
+                        <div className='col-span-2 text-sm font-semibold text-[#141522] text-center'>{row.quantity_success}</div>
+                        <div className='col-span-3 text-sm font-semibold text-[#0375F3] text-center'>{formatMoneyOrDash(+row.amount_salary_success)}</div>
+                      </div>
+                    );
+                  })}
+                  {isLoadingMoreQuantity && (
+                    <div className='flex items-center justify-center py-4'>
+                      <span className='text-sm text-[#9295A4]'>Đang tải thêm...</span>
+                    </div>
+                  )}
+                </>
+              )}
             </Customscrollbar>
           </div>
         ) : (
@@ -248,26 +283,62 @@ const PieceworkWageDetailModal = ({ open, onClose, worker }) => {
               <h3 className='col-span-5 text-sm font-semibold text-[#9295A4] text-center px-2'>Tổng thời gian</h3>
             </div>
 
-            <Customscrollbar ref={timeScrollRef} className='flex-1 min-h-0 max-h-[300px]'>
-              {timeHistoryMock.map((row, index) => (
-                <div key={row.id} className={`grid grid-cols-24 gap-2 items-center py-6 ${index === timeHistoryMock.length - 1 ? '' : 'border-b border-[#F3F3F4]'}`}>
-                  <div className='col-span-4 flex items-center justify-center text-xs font-semibold text-[#141522]'>{index + 1}</div>
-
-                  <div className='col-span-5 text-sm font-semibold text-[#141522]'>{row.date}</div>
-
-                  <div className='col-span-5 text-sm font-semibold text-center' style={{ color: '#19B133' }}>
-                    {row.startTime}
-                  </div>
-
-                  <div className='col-span-5 text-sm font-semibold text-center' style={{ color: '#FF0606' }}>
-                    {row.endTime}
-                  </div>
-
-                  <div className='col-span-5 text-sm font-semibold text-center' style={{ color: '#DC6803' }}>
-                    {row.totalTime}
-                  </div>
+            <Customscrollbar ref={timeScrollRef} className='flex-1 min-h-0 max-h-[300px]' onScroll={handleTimeScroll}>
+              {!allTimeItems || allTimeItems.length === 0 ? (
+                <div className='flex items-center justify-center py-8 text-[#9295A4] text-sm'>
+                  {isLoadingTime ? <Loading /> : <NoData />}
                 </div>
-              ))}
+              ) : (
+                <>
+                  {allTimeItems.map((row, index) => {
+                    // Format thời gian từ "2026-01-21 10:40:06" sang "10:40:06"
+                    const formatTime = dateString => {
+                      if (!dateString) return '-';
+                      return moment(dateString).format('HH:mm:ss');
+                    };
+
+                    // Format tổng thời gian (số giây sang format h:m:s)
+                    const formatTotalTime = totalSeconds => {
+                      const seconds = Number(totalSeconds) || 0;
+                      if (seconds === 0) return '0s';
+                      const hours = Math.floor(seconds / 3600);
+                      const minutes = Math.floor((seconds % 3600) / 60);
+                      const secs = seconds % 60;
+                      if (hours > 0) {
+                        return `${hours}h${minutes}p${secs > 0 ? secs + 's' : ''}`;
+                      } else if (minutes > 0) {
+                        return `${minutes}p${secs > 0 ? secs + 's' : ''}`;
+                      } else {
+                        return `${secs}s`;
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={row.id}
+                        className={`grid grid-cols-24 gap-2 items-center py-6 ${index === allTimeItems.length - 1 ? '' : 'border-b border-[#F3F3F4]'}`}
+                      >
+                        <div className='col-span-4 flex items-center justify-center text-xs font-semibold text-[#141522]'>{index + 1}</div>
+                        <div className='col-span-5 text-sm font-semibold text-[#141522]'>{moment(row.start_time).format('DD/MM/YYYY')}</div>
+                        <div className='col-span-5 text-sm font-semibold text-center' style={{ color: '#19B133' }}>
+                          {formatTime(row.start_time)}
+                        </div>
+                        <div className='col-span-5 text-sm font-semibold text-center' style={{ color: '#FF0606' }}>
+                          {row.end_time ? formatTime(row.end_time) : row.status_name || '-'}
+                        </div>
+                        <div className='col-span-5 text-sm font-semibold text-center' style={{ color: '#DC6803' }}>
+                          {formatTotalTime(row.total_time)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {isLoadingMoreTime && (
+                    <div className='flex items-center justify-center py-4'>
+                      <span className='text-sm text-[#9295A4]'>Đang tải thêm...</span>
+                    </div>
+                  )}
+                </>
+              )}
             </Customscrollbar>
           </div>
         )}
