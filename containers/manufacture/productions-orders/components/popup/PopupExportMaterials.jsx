@@ -121,6 +121,9 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
             total_quantity: product.quantity_total_quota,
             quantity_warehouse: product.quantity_total_quota,
             quantity_enter: product.quantity_total_quota,
+            value_1: '',
+            value_2: '',
+            value_3: '',
           };
 
           return {
@@ -258,10 +261,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
 
             // Chỉ trong TH này (tất cả đều không có kho) mới hiển thị toast
             if (skippedNoWarehouse.length > 0) {
-              showToast(
-                'error',
-                `Vui lòng bổ sung kho trước khi xuất.`
-              );
+              showToast('error', `Vui lòng bổ sung kho trước khi xuất.`);
             }
           } else {
             const allSelectableSelected = selectableProducts.every(p => p.selected);
@@ -477,6 +477,9 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
                   total_quantity: w.total_quantity,
                   quantity_warehouse: w.quantity_warehouse,
                   quantity_enter: w.quantity_enter,
+                  value_1: w.value_1,
+                  value_2: w.value_2,
+                  value_3: w.value_3,
                 })),
         })),
         bom_semi_keep: data?.bom_semi_keep || {},
@@ -529,7 +532,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
       }
 
       const search = removeVietnameseTones(searchTerm.toLowerCase());
-      const name = removeVietnameseTones(product.item_name?.toLowerCase() || "");
+      const name = removeVietnameseTones(product.item_name?.toLowerCase() || '');
       return name.includes(search);
     },
     [searchTerm]
@@ -773,11 +776,7 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
         </div>
         <div className='flex gap-3 items-center'>
           {activeTab?.id === 'current' && (
-            <button
-              onClick={handleConfirm}
-              disabled={isLoadingSubmit}
-              className='flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-blue-fmrp hover:bg-blue-fmrp/80'
-            >
+            <button onClick={handleConfirm} disabled={isLoadingSubmit} className='flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-blue-fmrp hover:bg-blue-fmrp/80'>
               {isLoadingSubmit ? (
                 'Đang xử lý...'
               ) : (
@@ -787,8 +786,9 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
               )}
             </button>
           )}
-          {activeTab?.id === 'reexport' &&
-            // (isProPackage ? (
+          {
+            activeTab?.id === 'reexport' && (
+              // (isProPackage ? (
               <button
                 onClick={handleConfirmReexport}
                 disabled={isSavingReexport}
@@ -798,10 +798,11 @@ const PopupExportMaterials = ({ code, onClose, id, branchId }) => {
               >
                 <CheckIcon className='size-4' /> {isSavingReexport ? 'Đang xử lý...' : `Xuất bổ sung${reexportSelectedCount > 0 ? ` (${reexportSelectedCount})` : ''}`}
               </button>
+            )
             // ) : (
             //   <PackageUpgradeButton />
             // ))
-            }
+          }
           <motion.div
             whileHover={{ scale: 1.2, rotate: 90 }}
             whileTap={{ scale: 0.9, rotate: -90 }}

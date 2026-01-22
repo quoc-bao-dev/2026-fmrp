@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { MdArrowDropDown, MdClose } from 'react-icons/md';
 import { twMerge } from 'tailwind-merge';
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 
 const defaultFormatDate = value => {
   if (!value) return '';
@@ -43,6 +44,9 @@ export const convertWarehousesToDropdownData = listWarehouses => {
           id_warehouse_custom: item.id_warehouse_custom,
           warehouse_id: item.warehouse_id || warehouse.warehouse_id || '',
           location_id: item.location_id || warehouse.location_id || '',
+          value_1: item.value_1,
+          value_2: item.value_2,
+          value_3: item.value_3,
         });
       });
     } else {
@@ -60,6 +64,9 @@ export const convertWarehousesToDropdownData = listWarehouses => {
         id_warehouse_custom: warehouse.id_warehouse_custom,
         warehouse_id: warehouse.warehouse_id || '',
         location_id: warehouse.location_id || '',
+        value_1: warehouse.value_1,
+        value_2: warehouse.value_2,
+        value_3: warehouse.value_3,
       });
     }
   });
@@ -99,6 +106,7 @@ export const CustomDropdownRadioGroup = ({
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
   const [internalSearchValue, setInternalSearchValue] = useState('');
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
 
   const updatePosition = useCallback(() => {
     if (!buttonRef.current) return;
@@ -269,11 +277,26 @@ export const CustomDropdownRadioGroup = ({
                         </div>
                         {showOnlyLotDate ? (
                           <div className='flex gap-2 justify-between w-full items-center'>
-                            <div className='flex flex-col gap-1'>
-                              <span className='text-[#3276FA] text-xs font-normal'>LOT: {option.lot}</span>
-                              <span className='text-[#3276FA] text-xs font-normal'>Date: {formatDate(option.expiration_date)}</span>
-                              {option.serial && <span className='text-[#3276FA] text-xs font-normal'>Serial: {option.serial}</span>}
+                            <div className='flex flex-col gap-0'>
+                              <span className='text-[#3276FA] text-[11px] font-normal'>LOT: {option.lot}</span>
+                              <span className='text-[#3276FA] text-[11px] font-normal'>Date: {formatDate(option.expiration_date)}</span>
+                              {option.serial && <span className='text-[#3276FA] text-[11px] font-normal'>Serial: {option.serial}</span>}
                               {/* <span className='text-[#3276FA] text-xs font-normal'>Serial: {option.serial}</span> */}
+                              {Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                                <>
+                                  {warehousePropertyLabels.map(({ key, label }) => {
+                                    if (!label) return null;
+                                    const value = option?.[key];
+                                    // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                    if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+                                    return (
+                                      <span key={key} className='text-[#3276FA] text-[11px] font-normal'>
+                                        {label}: {value == null || value === '' ? '-' : value}
+                                      </span>
+                                    );
+                                  })}
+                                </>
+                              )}
                               <span className='text-neutral-03 text-xs font-normal'>SL còn lại : {formatNumber(option.total_quantity)}</span>
                             </div>
                           </div>
@@ -285,9 +308,24 @@ export const CustomDropdownRadioGroup = ({
                           <div className='flex flex-col gap-2 w-full'>
                             <span className='text-[#141522] text-xs font-normal'>{option.name_location}</span>
                             <div className='flex gap-2 justify-between'>
-                              <div className='flex flex-col gap-1'>
+                              <div className='flex flex-col gap-0'>
                                 <span className='text-[#3276FA] text-xs font-normal'>LOT: {option.lot || '-'}</span>
                                 <span className='text-[#3276FA] text-xs font-normal'>Date: {formatDate(option.expiration_date) || '-'}</span>
+                                {Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                                  <>
+                                    {warehousePropertyLabels.map(({ key, label }) => {
+                                      if (!label) return null;
+                                      const value = option?.[key];
+                                      // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                      if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+                                      return (
+                                        <span key={key} className='text-[#3276FA] text-xs font-normal'>
+                                          {label}: {value == null || value === '' ? '-' : value}
+                                        </span>
+                                      );
+                                    })}
+                                  </>
+                                )}
                               </div>
                               <span className='text-neutral-03 text-xs font-normal'>Tồn: {formatNumber(Number(option.total_quantity))}</span>
                             </div>
