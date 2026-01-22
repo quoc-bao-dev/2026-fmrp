@@ -660,7 +660,7 @@ const Header = () => {
               viewOwn: auth?.piecework_wage_summary?.is_view_own,
               view: auth?.piecework_wage_summary?.is_view,
               name: 'Tổng hợp lương sản lượng',
-              link: '/under-development',
+              link: '/piecework-wage/summary',
             },
           ],
         },

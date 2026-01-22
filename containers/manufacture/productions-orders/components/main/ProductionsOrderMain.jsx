@@ -263,7 +263,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     {
       id: '4',
       name: 'Lương Sản Lượng',
-      count: pieceworkWageCount,
+      count: dataProductionOrderDetail?.count_input_timesheet || 0,
       type: 'pieceworkWage',
     },
   ];

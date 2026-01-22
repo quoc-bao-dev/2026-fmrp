@@ -297,9 +297,8 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
                     <div className='flex items-center gap-2'>
                       <button
                         type='button'
-                        className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors ${
-                          isInputFocused ? 'bg-white border border-[#92BFF7] text-gray-700' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
+                        className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors ${isInputFocused ? 'bg-white border border-[#92BFF7] text-gray-700' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
                       >
                         <div className='relative inline-flex items-center gap-1' style={{ width: `${inputWidth}px`, minWidth: '70px' }}>
                           {!isInputFocused && <PlusIcon className='size-3 flex-shrink-0' />}
@@ -964,14 +963,14 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose, is_prod
   return (
     <Popup open={isOpen} closeOnDocumentClick={false} onClose={onClose} className='popup-edit' overlayStyle={{ zIndex: 1100 }}>
       <div className='p-4 flex flex-col gap-4 rounded-3xl w-[700px] max-h-[90vh] bg-neutral-00 font-deca'>
-        <div className='flex gap-2 justify-between items-start'>
-          <div className='flex flex-col gap-1'>
+        <div className='flex gap-2 justify-between items-start w-full'>
+          <div className='flex flex-col gap-1 flex-1'>
             <h2 className='responsive-text-2xl font-bold capitalize'>
-              Nhập sản lượng công đoạn <span className='text-blue-fmrp'>{stage_name}</span>
+              Nhập sản lượng<br /> công đoạn <span className='text-blue-fmrp'>{stage_name}</span>
             </h2>
             <p className='responsive-text-base text-blue-fmrp'>{po?.reference_no}</p>
           </div>
-          <div className='flex flex-col gap-2'>
+          <div className='flex flex-col gap-2 flex-1'>
             <div className='flex gap-2 items-center'>
               <SelectComponent
                 options={warehouseOptions}

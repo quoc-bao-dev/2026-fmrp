@@ -566,5 +566,27 @@ const apiProductionsOrders = {
         const response = await axiosCustom('POST', `/api_web/production-order-managers/save-detail?csrf_protection=true`, { data: payload });
         return response.data;
     },
+
+    // Lấy danh sách lương sản lượng
+    async apiGetProductionOutputByPo(data) {
+        const response = await axiosCustom('POST', `/api_web/production-input-timesheets/production-output-by-po`, { data });
+        return response.data;
+    },
+
+    // Chi tiết nhân viên sản lượng 
+    async apiGetDetailStaffByPo(data) {
+        const response = await axiosCustom('POST', `/api_web/production-input-timesheets/detail-staff-by-po`, { data });
+        return response.data;
+    },
+
+    // Lịch sử nhập hàng
+    async apiGetHistoryPurchaseProduct(data) {
+        const response = await axiosCustom('POST', `/api_web/production-input-timesheets/history-purchase-product`, { data });
+        return response.data;
+    },
+    async apiGetHistoryTimers(data) {
+        const response = await axiosCustom('POST', `/api_web/production-input-timesheets/history-timers`, { data });
+        return response.data;
+    },
 }
 export default apiProductionsOrders
