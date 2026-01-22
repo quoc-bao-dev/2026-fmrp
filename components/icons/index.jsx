@@ -58,6 +58,7 @@ import ErrorChatBotIcon from './source/error-chat-bot.svg';
 import ErrorIconMessengerIcon from './source/error-icon-messenger.svg';
 import ErrorQCIcon from './source/error-q-c.svg';
 import ExcelIcon from './source/excel.svg';
+import ExcelIcon2 from './source/excel2.svg';
 import ExportMaterialsIcon from './source/export-materials-icon-1.svg';
 import RecallMaterialsIcon from './source/export-materials-icon-2.svg';
 import FileIcon from './source/file-icon.svg';
@@ -145,6 +146,7 @@ export {
   ErrorIconMessengerIcon,
   ErrorQCIcon,
   ExcelIcon,
+  ExcelIcon2,
   ExportMaterialsIcon,
   FileIcon,
   FunnelIcon,
