@@ -291,22 +291,22 @@ const TabMaterialIssueHistory = ({ dataLang, ...props }) => {
                                                             {product?.item_code ?? ""}
                                                         </p> */}
 
-                      <div className='flex flex-col gap-0.5'>
+                      <div className='flex flex-col'>
                         {dataProductSerial.is_enable === '1' && (
                           <div className='flex items-center gap-0.5'>
-                            <h6 className={`3xl:text-xs text-[10px] font-normal text-[#3276FA] uppercase`}>Serial:</h6>
-                            <h6 className={`3xl:text-xs text-[10px] font-normal text-[#3276FA] w-full text-left`}>{product?.serial == null || product?.serial == '' ? '-' : product?.serial}</h6>
+                            <h6 className={`text-[11px] font-normal text-[#3276FA] uppercase`}>Serial:</h6>
+                            <h6 className={`text-[11px] font-normal text-[#3276FA] w-full text-left`}>{product?.serial == null || product?.serial == '' ? '-' : product?.serial}</h6>
                           </div>
                         )}
                         {(dataProductExpiry.is_enable === '1' || dataMaterialExpiry.is_enable === '1') && (
                           <>
                             <div className='flex items-center gap-0.5'>
-                              <h6 className={`3xl:text-xs text-[10px] font-normal text-[#3276FA] uppercase`}>Lot:</h6>{' '}
-                              <h6 className={`3xl:text-xs text-[10px] font-normal text-[#3276FA] px-2 w-full text-left`}>{product?.lot == null || product?.lot == '' ? '-' : product?.lot}</h6>
+                              <h6 className={`text-[11px] font-normal text-[#3276FA] uppercase`}>Lot:</h6>{' '}
+                              <h6 className={`text-[11px] font-normal text-[#3276FA] px-2 w-full text-left`}>{product?.lot == null || product?.lot == '' ? '-' : product?.lot}</h6>
                             </div>
                             <div className='flex items-center gap-0.5'>
-                              <h6 className={`3xl:text-xs text-[10px] font-normal text-[#3276FA] uppercase`}>Date:</h6>{' '}
-                              <h6 className={`3xl:text-xs text-[10px] font-normal text-[#3276FA] px-2 w-full text-left`}>
+                              <h6 className={`text-[11px] font-normal text-[#3276FA] uppercase`}>Date:</h6>{' '}
+                              <h6 className={`text-[11px] font-normal text-[#3276FA] px-2 w-full text-left`}>
                                 {product?.expiration_date ? formatMoment(product?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}
                               </h6>
                             </div>
@@ -320,7 +320,7 @@ const TabMaterialIssueHistory = ({ dataLang, ...props }) => {
                               // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
                               if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
                               return (
-                                <span key={key} className='text-[10px] font-normal text-[#3276FA]'>
+                                <span key={key} className='text-[11px] font-normal text-[#3276FA]'>
                                   {label}: {value == null || value === '' ? '-' : value}
                                 </span>
                               );
