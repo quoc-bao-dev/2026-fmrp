@@ -10,7 +10,7 @@ import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComp
 import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
-import { useSummaryDetail } from '@/managers/api/piecework-wage/useSummary';
+import { useSummary, useSummaryDetail } from '@/managers/api/piecework-wage/useSummary';
 import formatNumber from '@/utils/helpers/formatnumber';
 import moment from 'moment';
 import Head from 'next/head';
@@ -74,6 +74,15 @@ const mockData = [
 const Summary = () => {
   const [activeTab, setActiveTab] = useState(tabs[0]);
 
+  const { data: summary, isLoading: isLoadingSummary, refetch: refetchSummary } = useSummary({
+    start_date: null,
+    end_date: null,
+    cursor: 0,
+    limit: 10,
+  }, {
+    enabled: activeTab.id === 'summary',
+  });
+  
   const { data: summaryDetail, isLoading: isLoadingSummaryDetail, refetch: refetchSummaryDetail } = useSummaryDetail({
     start_date: null,
     end_date: null,
@@ -198,9 +207,13 @@ const Summary = () => {
 
             {/* Rows */}
             <Customscrollbar className='flex-1 min-h-0'>
-              {mockData.map((item, index) => (
+              {isLoadingSummary ? (
+                <Loading />
+              ) : (summary?.aggregate ?? []).length === 0 ? (
+                <NoData />
+              ) : (summary?.aggregate ?? []).map((row, index) => (
                 <div
-                  key={item.id}
+                  key={row?.staff_id || index}
                   className='grid grid-cols-20 gap-4 px-4 py-4 responsive-text-sm bg-white hover:bg-gray-50 transition-colors border-b border-[#F3F3F4]'
                 >
                   <div className='col-span-1 text-center flex items-center justify-center font-semibold text-[#141522]'>
@@ -208,31 +221,35 @@ const Summary = () => {
                   </div>
                   <div className='col-span-4 flex items-center gap-2 text-start'>
                     <ResponsibleAvatar
-                      avatarUrl={item.worker.avatarUrl}
-                      fullName={item.worker.name}
+                      avatarUrl={row?.staff?.profile_image || '/icon/default/default.png'}
+                      fullName={row?.staff?.full_name || '-'}
                       size={32}
                     />
-                    <span className='text-[#344054]'>{item.worker.name}</span>
+                    <span className='text-[#344054]'>{row?.staff?.full_name || '-'}</span>
                   </div>
                   <div className='col-span-3 font-semibold text-[#141522] flex items-center'>
-                    {item.quantity}
+                    -
                   </div>
                   <div className='col-span-2 font-semibold text-[#141522] flex items-center'>
-                    {item.quantity}
+                    {formatNumber(Number(row?.total_produced) || 0)}
                   </div>
                   <div className='col-span-2 font-semibold text-[#141522] flex items-center'>
-                    {item.hours}
+                    {row?.total_time != null 
+                      ? (Math.floor(row.total_time / 3600) > 0 
+                          ? `${Math.floor(row.total_time / 3600)}h ` 
+                          : '') + `${Math.floor((row.total_time % 3600) / 60)}m`
+                      : '-'}
                   </div>
                   <div className='col-span-3 font-semibold text-[#0375F3] flex items-center'>
-                    {formatNumber(item.salary)} đ
+                    {formatNumber(Number(row?.total_amount) || 0)} đ
                   </div>
                   <div className='col-span-5 flex items-center gap-2 flex-wrap'>
-                    {item.stages.map((stage, stageIndex) => (
+                    {(row?.stages ?? []).map((stage) => (
                       <span
-                        key={stageIndex}
+                        key={stage?.id}
                         className='px-2 py-1 bg-[#EBF5FF] text-[#035FD6] font-medium rounded'
                       >
-                        {stage}
+                        {stage?.name}
                       </span>
                     ))}
                   </div>
@@ -246,16 +263,19 @@ const Summary = () => {
               <div className='col-span-4 text-xl'>Tổng</div>
               <div className='col-span-3'></div>
               <div className='col-span-2'>
-                {mockData.reduce((sum, item) => sum + item.quantity, 0)} cái
+                {formatNumber((summary?.data?.aggregate ?? []).reduce(
+                  (sum, row) => sum + (Number(row?.total_produced) || 0),
+                  0,
+                ))} cái
               </div>
               <div className='col-span-2'>
-                {mockData.reduce((sum, item) => {
-                  const hours = parseFloat(item.hours.replace('h', ''));
-                  return sum + hours;
-                }, 0).toFixed(1)}h
+                -
               </div>
               <div className='col-span-3'>
-                {formatNumber(mockData.reduce((sum, item) => sum + item.salary, 0))} đ
+                {formatNumber((summary?.data?.aggregate ?? []).reduce(
+                  (sum, row) => sum + (Number(row?.total_amount) || 0),
+                  0,
+                ))} đ
               </div>
               <div className='col-span-3'></div>
             </div>

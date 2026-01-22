@@ -6,7 +6,11 @@ const apiSummary = {
     const response = await axiosCustom('POST', `/api_web/production-input-timesheets/detail-aggregate-production-input`, { data: params });
     return response.data;
   },
-
+  // Tổng hợp
+  async apiSummary(params) {
+    const response = await axiosCustom('POST', `/api_web/production-input-timesheets/aggregate-production-input`, { data: params });
+    return response.data;
+  },
 };
 
 export default apiSummary;
