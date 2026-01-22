@@ -163,19 +163,14 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
     if (!open || !Array.isArray(rawItems) || rawItems.length === 0) return;
 
     setQuantityByItemByTab(prev => {
-      const currentTabQuantities = prev[activeTab.id] || {};
-      let hasChange = false;
-      const updatedQuantities = { ...currentTabQuantities };
+      // Reset lại tất cả giá trị cho tab hiện tại khi dữ liệu thay đổi
+      const updatedQuantities = {};
 
       rawItems.forEach(item => {
         const itemId = getItemId(item);
-        if (updatedQuantities[itemId] === undefined) {
-          updatedQuantities[itemId] = getMaxRecoverable(item);
-          hasChange = true;
-        }
+        updatedQuantities[itemId] = getMaxRecoverable(item);
       });
 
-      if (!hasChange) return prev;
       return { ...prev, [activeTab.id]: updatedQuantities };
     });
   }, [rawItems, activeTab.id, open]);

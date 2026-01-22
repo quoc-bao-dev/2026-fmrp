@@ -10,6 +10,7 @@ import PopupCustom from '@/components/UI/popup';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import useFeature from '@/hooks/useConfigFeature';
 import useSetingServer from '@/hooks/useConfigNumber';
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 import { formatMoment } from '@/utils/helpers/formatMoment';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
 import { useState } from 'react';
@@ -30,6 +31,7 @@ const PopupDetail = props => {
   const formatNumber = number => {
     return formatNumberConfig(+number, dataSeting);
   };
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties(dataSeting);
 
   return (
     <>
@@ -165,14 +167,14 @@ const PopupDetail = props => {
                                       <>
                                         {e?.item?.lot !== null && (
                                           <div className='flex gap-0.5'>
-                                            <h6 className='text-[12px]'>Lot:</h6>{' '}
-                                            <h6 className='text-[12px]  px-2   w-[full] text-left '>{e?.item?.lot == null || e?.item?.lot == '' ? '-' : e?.item?.lot}</h6>
+                                            <h6 className='text-[11px]'>Lot:</h6>{' '}
+                                            <h6 className='text-[11px]  px-2   w-[full] text-left '>{e?.item?.lot == null || e?.item?.lot == '' ? '-' : e?.item?.lot}</h6>
                                           </div>
                                         )}
                                         {e?.item?.expiration_date !== null && (
                                           <div className='flex gap-0.5'>
-                                            <h6 className='text-[12px]'>Date:</h6>{' '}
-                                            <h6 className='text-[12px]  px-2   w-[full] text-center '>
+                                            <h6 className='text-[11px]'>Date:</h6>{' '}
+                                            <h6 className='text-[11px]  px-2   w-[full] text-center '>
                                               {e?.item?.expiration_date ? formatMoment(e?.item?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}
                                             </h6>
                                           </div>
@@ -180,6 +182,21 @@ const PopupDetail = props => {
                                       </>
                                     ) : (
                                       ''
+                                    )}
+                                    {(e?.item_type === 'material') && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                                      <div className='flex flex-wrap items-center gap-1'>
+                                        {warehousePropertyLabels.map(({ key, label }) => {
+                                          if (!label) return null;
+                                          const value = e?.item?.[key] ?? e?.[key];
+                                          // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                          if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+                                          return (
+                                            <span key={key} className='text-[11px] text-[#3276FA]'>
+                                              {label}: {value == null || value === '' ? '-' : value}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
                                     )}
                                   </div>
                                 </div>

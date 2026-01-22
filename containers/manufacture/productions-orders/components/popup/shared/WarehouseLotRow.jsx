@@ -8,6 +8,7 @@ import InputNumberCustom from './InputNumberCustom';
 import CollapseRowWrapper from './CollapseRowWrapper';
 import moment from 'moment';
 import { default as formatNumber } from '@/utils/helpers/formatnumber';
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 
 const formatDateSimple = dateString => {
   if (!dateString) return '';
@@ -51,6 +52,7 @@ const WarehouseLotRow = memo(
     const prevTotalQuantityRef = useRef(total_quantity);
     const isSemiProduct = typeOrigin === 'semi_products';
     const useMoment = variant === 'reexport';
+    const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
 
     useEffect(() => {
       if (total_quantity !== undefined && prevTotalQuantityRef.current !== total_quantity) {
@@ -124,6 +126,9 @@ const WarehouseLotRow = memo(
           quantity_enter: option.total_quantity,
           name_location: option.name_location,
           name_warehouse: option.name_warehouse || '',
+          value_1: option.value_1,
+          value_2: option.value_2,
+          value_3: option.value_3,
         });
       },
       [lotRows, id, showToast, updateLotRow]
@@ -146,16 +151,14 @@ const WarehouseLotRow = memo(
 
     const formatNumberFn = formatNumberProp || formatNumber;
 
+    // Lấy dữ liệu của row hiện tại từ lotRows
+    const currentRow = lotRows.find(row => row.id === id);
+
     // Xác định colSpan và className dựa trên variant
     const colSpan = variant === 'reexport' ? 5 : 12;
-    const bgClassName =
-      variant === 'reexport'
-        ? '!bg-gradient-to-r from-[#EBF5FF] via-[#E8F4FF] to-[#EBF5FF]'
-        : '!bg-[#EBF5FF80]';
+    const bgClassName = variant === 'reexport' ? '!bg-gradient-to-r from-[#EBF5FF] via-[#E8F4FF] to-[#EBF5FF]' : '!bg-[#EBF5FF80]';
     const borderClassName =
-      variant === 'current' && index !== undefined && lastIndex !== undefined
-        ? twMerge(index === 0 && 'border-t border-[#F3F3F4]', index === lastIndex && 'border-b border-[#F3F3F4]')
-        : '';
+      variant === 'current' && index !== undefined && lastIndex !== undefined ? twMerge(index === 0 && 'border-t border-[#F3F3F4]', index === lastIndex && 'border-b border-[#F3F3F4]') : '';
 
     return (
       <tr key={id}>
@@ -173,17 +176,34 @@ const WarehouseLotRow = memo(
                   <td className={variant === 'current' ? 'py-2 px-3 text-left' : 'py-2 px-4 text-left'} colSpan={variant === 'reexport' ? 2 : 1}>
                     <div className='flex gap-x-4 justify-between items-center'>
                       {selectedWarehouse ? (
-                        <div className={twMerge('flex flex-row gap-x-2 text-[#3276FA] text-xs', variant === 'reexport' ? 'font-medium' : 'font-normal')}>
-                          {variant === 'reexport' ? (
-                            <>
-                              <p className='px-2 py-1 rounded-lg bg-blue-50'>LOT: {lot || '-'}</p>
-                              <p className='px-2 py-1 rounded-lg bg-blue-50'>Date: {formatDate(date, useMoment) || '-'}</p>
-                            </>
-                          ) : (
-                            <>
-                              <p>LOT: {lot}</p>
-                              <p>Date: {formatDate(date, useMoment)}</p>
-                            </>
+                        <div>
+                          <div className={twMerge('flex flex-row gap-x-2 text-[#3276FA] text-[11px]', variant === 'reexport' ? 'font-medium' : 'font-normal')}>
+                            {variant === 'reexport' ? (
+                              <>
+                                <p className='px-2 py-1 rounded-lg bg-blue-50'>LOT: {lot || '-'}</p>
+                                <p className='px-2 py-1 rounded-lg bg-blue-50'>Date: {formatDate(date, useMoment) || '-'}</p>
+                              </>
+                            ) : (
+                              <>
+                                <p>LOT: {lot}</p>
+                                <p>Date: {formatDate(date, useMoment)}</p>
+                              </>
+                            )}
+                          </div>
+                          {Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                            <div className='flex flex-row gap-x-2 text-[#3276FA] text-[11px] mt-1'>
+                              {warehousePropertyLabels.map(({ key, label }) => {
+                                if (!label) return null;
+                                const value = currentRow?.[key];
+                                // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+                                return (
+                                  <p key={key} className={variant === 'reexport' ? 'px-2 py-1 rounded-lg bg-blue-50' : ''}>
+                                    {label}: {value == null || value === '' ? '-' : value}
+                                  </p>
+                                );
+                              })}
+                            </div>
                           )}
                         </div>
                       ) : variant === 'current' ? (
@@ -204,9 +224,7 @@ const WarehouseLotRow = memo(
                         offset={variant === 'current' ? 4 : undefined}
                         maxHeightClass={variant === 'current' ? 'max-h-52' : undefined}
                         buttonClassName={
-                          variant === 'current'
-                            ? 'flex justify-between items-center w-[300px] text-[#3A3E4C] font-medium border border-[#D0D5DD] px-3 py-2 text-sm bg-white rounded-lg'
-                            : undefined
+                          variant === 'current' ? 'flex justify-between items-center w-[300px] text-[#3A3E4C] font-medium border border-[#D0D5DD] px-3 py-2 text-sm bg-white rounded-lg' : undefined
                         }
                         contentClassName={variant === 'current' ? 'fixed rounded-xl bg-[#FFFFFF] shadow-lg border z-[9999] p-3' : undefined}
                         formatDate={date => formatDate(date, useMoment)}
@@ -226,7 +244,7 @@ const WarehouseLotRow = memo(
                         useConfigFormat={false}
                         classNameButton='size-7'
                       />
-                        <span className='text-[#141522] text-left text-xs font-medium min-w-10 whitespace-nowrap'>/{unitName}</span>
+                      <span className='text-[#141522] text-left text-xs font-medium min-w-10 whitespace-nowrap'>/{unitName}</span>
                     </div>
                   </td>
                   <td className={variant === 'current' ? 'py-2 px-3 text-center w-[100px]' : 'py-2 px-4 text-center min-w-[100px] max-w-[100px] w-[100px] flex-shrink-0'}>
@@ -261,4 +279,3 @@ const WarehouseLotRow = memo(
 WarehouseLotRow.displayName = 'WarehouseLotRow';
 
 export default WarehouseLotRow;
-
