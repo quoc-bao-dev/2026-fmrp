@@ -82,22 +82,22 @@ const TimerControl = ({ showTimerControl = true, time = '00 : 00 : 00', status =
     }
   };
 
+  if (!showTimerControl) return null;
+
   return (
     <div className={`w-full flex justify-between items-center gap-2 rounded-2xl `}>
       <div className='flex items-center gap-1'>
         <Clock2Icon className='size-5 text-[#4E4E4E]' />
         <p className='responsive-text-xs font-semibold text-[#4E4E4E] whitespace-nowrap'>{safeTime}</p>
       </div>
-      {showTimerControl && (
-        <div
-          className='flex items-center gap-1'
-          onClick={e => {
-            e.stopPropagation();
-          }}
-        >
-          {renderButtons()}
-        </div>
-      )}
+      <div
+        className='flex items-center gap-1'
+        onClick={e => {
+          e.stopPropagation();
+        }}
+      >
+        {renderButtons()}
+      </div>
     </div>
   );
 };
