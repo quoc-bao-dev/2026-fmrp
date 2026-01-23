@@ -19,6 +19,7 @@ import InputNumberCustom from './shared/InputNumberCustom';
 import { CustomDropdownRadioGroup, convertWarehousesToDropdownData } from './shared/WarehouseDropdown';
 import useSetingServer from '@/hooks/useConfigNumber';
 import PackageUpgradeButton from '@/components/common/button/PackageUpgradeButton';
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 
 // Kiểm tra xem material có lot/date hợp lệ không (có ít nhất một lot với lot hoặc expiration_date không rỗng)
 const hasValidLotDate = lots => {
@@ -40,6 +41,9 @@ const mapLotsToDropdown = (itemVariationId, lots) => {
     expiration_date: lotItem.expiration_date || '',
     serial: lotItem.serial || '',
     total_quantity: Number(lotItem.quantity_recall || 0),
+    value_1: lotItem.value_1,
+    value_2: lotItem.value_2,
+    value_3: lotItem.value_3,
   }));
 
   if (items.length === 0) return [];
@@ -65,6 +69,7 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
   const showToast = useToast();
   const dataSeting = useSetingServer();
   const isProPackage = dataSeting?.package !== '1';
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
 
   const [materialsSearchTerm, setMaterialsSearchTerm] = useState('');
   const [warehouseSearchTerm, setWarehouseSearchTerm] = useState('');
@@ -312,6 +317,9 @@ console.log(warehouseDropdownData)
         lot_enter: selectedWarehouse?.lot || '',
         expiration_date_enter: selectedWarehouse?.expiration_date || '',
         serial_enter: selectedWarehouse?.serial || '',
+        value_1_enter: selectedWarehouse?.value_1 || null,
+        value_2_enter: selectedWarehouse?.value_2 || null,
+        value_3_enter: selectedWarehouse?.value_3 || null,
       };
     });
 
@@ -519,6 +527,8 @@ console.log(warehouseDropdownData)
                         const returnedQty = Number(material.quantity_returned || 0);
                         const fullyRecalled = exportedQty > 0 && returnedQty >= exportedQty;
 
+                        console.log('selectedWarehouse', selectedWarehouse);
+
                         return (
                           <tr
                             key={`material-${index}`}
@@ -538,6 +548,21 @@ console.log(warehouseDropdownData)
                                   <p className='text-xs font-normal text-typo-blue-2'>{material?.item_code}</p>
                                 </div>
                               </div>
+                              {selectedWarehouse && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                                <div className='flex flex-col'>
+                                  {warehousePropertyLabels.map(({ key, label }) => {
+                                    if (!label) return null;
+                                    const valueProp = selectedWarehouse?.[key];
+                                    // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                    if (!isWarehousePropertiesEnabled && (valueProp == null || valueProp === '')) return null;
+                                    return (
+                                      <span key={key} className='text-[#3276FA] text-[11px] font-normal'>
+                                        {label}: {valueProp == null || valueProp === '' ? '-' : valueProp}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </td>
                             <td className='py-4 px-3 text-center'>
                               <div className='flex items-center justify-center'>
@@ -591,6 +616,7 @@ console.log(warehouseDropdownData)
                                           }}
                                           placeholder='Chọn Lot/Date - Serial'
                                           showOnlyLotDate={true}
+                                          showWarehousePropertiesInButton={true}
                                           minDropdownWidth={200}
                                           allowClear={true}
                                         />
