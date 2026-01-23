@@ -1306,6 +1306,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
 
       <div ref={titleRef} className='flex items-center justify-between w-full'>
         <h2 className='text-title-section text-[#52575E] capitalize font-medium'>
+          {' '}
           {dataLang?.productions_orders || 'productions_orders'}{' '}
           <InfoTooltip
             content='Lệnh sản xuất là các đơn hàng sản xuất được tạo ra để thực hiện việc sản xuất sản phẩm theo yêu cầu, bao gồm thông tin về số lượng, thời gian và quy trình sản xuất.'

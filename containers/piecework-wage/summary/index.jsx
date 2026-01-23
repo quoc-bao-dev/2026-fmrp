@@ -1,7 +1,7 @@
 import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
 import SelectSearchableRadio from '@/components/common/select/SelectSearchableRadio';
 import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
-import { CaretDownIcon, ExcelIcon2, FunnelIcon, UsersIcon } from '@/components/icons';
+import { CaretDownIcon, ExcelIcon2, FunnelIcon, UserGroupIcon, UsersIcon } from '@/components/icons';
 import Breadcrumb from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { Container } from '@/components/UI/common/layout';
@@ -10,12 +10,17 @@ import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComp
 import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
+import { IMAGES } from '@/constants/images';
+import { useSearchStaffs } from '@/hooks/common/useStaffs';
+import { useLookupGroupMembers } from '@/managers/api/piecework-wage/useImportOutput';
 import { useSummary, useSummaryDetail } from '@/managers/api/piecework-wage/useSummary';
 import formatNumber from '@/utils/helpers/formatnumber';
+import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import moment from 'moment';
 import Head from 'next/head';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useDebounce } from 'use-debounce';
 
 const breadcrumbItems = [
   { label: 'Lương sản lượng', },
@@ -27,70 +32,123 @@ const tabs = [
   { id: 'detail', name: 'Chi tiết' },
 ];
 
-// Dữ liệu mẫu cho tab Tổng hợp
-const mockData = [
-  {
-    id: 1,
-    worker: { name: 'Thành', avatarUrl: '/icon/default/default.png' },
-    quantity: 30,
-    hours: '4h',
-    salary: 1250000,
-    stages: ['Cắt', 'May', 'Thêu', 'Đóng gói'],
-  },
-  {
-    id: 2,
-    worker: { name: 'My', avatarUrl: '/icon/default/default.png' },
-    quantity: 30,
-    hours: '6h',
-    salary: 1250000,
-    stages: ['Cắt', 'May', 'Đóng gói'],
-  },
-  {
-    id: 3,
-    worker: { name: 'Danh', avatarUrl: '/icon/default/default.png' },
-    quantity: 30,
-    hours: '8h',
-    salary: 1250000,
-    stages: ['Cắt', 'May'],
-  },
-  {
-    id: 4,
-    worker: { name: 'Tuấn', avatarUrl: '/icon/default/default.png' },
-    quantity: 30,
-    hours: '4h',
-    salary: 1250000,
-    stages: ['Cắt', 'Thêu', 'Đóng gói'],
-  },
-  {
-    id: 5,
-    worker: { name: 'Thành', avatarUrl: '/icon/default/default.png' },
-    quantity: 30,
-    hours: '12h',
-    salary: 1250000,
-    stages: ['May', 'Thêu', 'Đóng gói'],
-  },
-];
-
 const Summary = () => {
   const [activeTab, setActiveTab] = useState(tabs[0]);
+  const [searchStaff, setSearchStaff] = useState('');
+  const [selectedEmployee, setSelectedEmployee] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState([]);
+  const [searchGroup, setSearchGroup] = useState('');
+  const [search, setSearch] = useState('');
+  const [debouncedSearchStaff] = useDebounce(searchStaff, 300);
+  const [debouncedSearchGroup] = useDebounce(searchGroup, 300);
+  const [debouncedSearch] = useDebounce(search, 300);
+
+  const [dateFilter, setDateFilter] = useState({
+    startDate: null,
+    endDate: null,
+  });
+
+  const { data: listStaffs } = useSearchStaffs();
+  const { data: listGroupMembers } = useLookupGroupMembers({ limit: 100 });
+
+  // Tạo options cho công nhân với filter theo search
+  const employeeOptions = useMemo(() => {
+    const staffs = listStaffs?.data?.staffs || [];
+    const filteredStaffs = debouncedSearchStaff
+      ? staffs.filter(staff => {
+        return searchWithoutDiacritics(staff?.full_name || '', debouncedSearchStaff);
+      })
+      : staffs;
+
+    return filteredStaffs.map(item => ({
+      value: String(item.staffid),
+      label: item.full_name,
+      avatar: item.profile_image || IMAGES.noImage,
+    }));
+  }, [listStaffs?.data?.staffs, debouncedSearchStaff]);
+
+  // Tạo options cho tổ/nhóm với filter theo search
+  const groupOptions = useMemo(() => {
+    const groups = listGroupMembers?.group_members || [];
+    const filteredGroups = debouncedSearchGroup
+      ? groups.filter(group => {
+        return searchWithoutDiacritics(group?.name || '', debouncedSearchGroup) ||
+          searchWithoutDiacritics(group?.code || '', debouncedSearchGroup);
+      })
+      : groups;
+
+    return filteredGroups.map(item => ({
+      value: String(item.id),
+      label: item.name,
+      avatar: item.avatar || IMAGES.groupUser,
+    }));
+  }, [listGroupMembers?.group_members, debouncedSearchGroup]);
+
+  // Tạo filter params từ selectedEmployee và selectedGroup
+  const filterParams = useMemo(() => {
+    const params = {};
+    if (selectedEmployee.length > 0) {
+      params.staff_ids = selectedEmployee;
+    }
+    if (selectedGroup.length > 0) {
+      params.group_member_ids = selectedGroup;
+    }
+    return params;
+  }, [selectedEmployee, selectedGroup]);
 
   const { data: summary, isLoading: isLoadingSummary, refetch: refetchSummary } = useSummary({
-    start_date: null,
-    end_date: null,
+    start_date: dateFilter.startDate ? moment(dateFilter.startDate).format('DD/MM/YYYY') : null,
+    end_date: dateFilter.endDate ? moment(dateFilter.endDate).format('DD/MM/YYYY') : null,
     cursor: 0,
     limit: 10,
+    search: debouncedSearch || '',
+    ...filterParams,
   }, {
     enabled: activeTab.id === 'summary',
   });
-  
+
   const { data: summaryDetail, isLoading: isLoadingSummaryDetail, refetch: refetchSummaryDetail } = useSummaryDetail({
-    start_date: null,
-    end_date: null,
+    start_date: dateFilter.startDate ? moment(dateFilter.startDate).format('DD/MM/YYYY') : null,
+    end_date: dateFilter.endDate ? moment(dateFilter.endDate).format('DD/MM/YYYY') : null,
     cursor: 0,
     limit: 10,
+    search: debouncedSearch || '',
+    ...filterParams,
   }, {
     enabled: activeTab.id === 'detail',
   });
+
+  // Xử lý khi chọn nhân viên (multiple mode)
+  const handleEmployeeChange = (values) => {
+    setSelectedEmployee(Array.isArray(values) ? values : []);
+  };
+
+  // Xử lý khi search
+  const handleEmployeeSearch = searchText => {
+    setSearchStaff(searchText);
+  };
+
+  // Xử lý khi clear
+  const handleEmployeeClear = () => {
+    setSelectedEmployee([]);
+    setSearchStaff('');
+  };
+
+  // Xử lý khi chọn tổ/nhóm (multiple mode)
+  const handleGroupChange = (values) => {
+    setSelectedGroup(Array.isArray(values) ? values : []);
+  };
+
+  // Xử lý khi search tổ/nhóm
+  const handleGroupSearch = searchText => {
+    setSearchGroup(searchText);
+  };
+
+  // Xử lý khi clear tổ/nhóm
+  const handleGroupClear = () => {
+    setSelectedGroup([]);
+    setSearchGroup('');
+  };
 
   const triggerFilterAll = (
     <button
@@ -107,6 +165,7 @@ const Summary = () => {
       </span>
     </button>
   );
+
   return (
     <Container className='flex flex-col gap-3 pb-4'>
       <Head>
@@ -123,23 +182,29 @@ const Summary = () => {
           </h2>
           <div className='flex items-center gap-2'>
             {process.env.NODE_ENV === 'development' && (
-              <button className='h-10 bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-[#D0D5DD]' onClick={refetchSummaryDetail}>
+              <button className='h-10 bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-[#D0D5DD]'
+                onClick={() => { refetchSummaryDetail(); refetchSummary(); }}
+              >
                 Tải lại
               </button>
             )}
             <SearchComponent
               colSpan={1}
               placeholder="Tìm kiếm"
-              onChange={() => { }}
+              onChange={(e) => {
+                setSearch(e?.target?.value || '');
+              }}
             />
             <DateToDateComponent
               placeholder='Chọn ngày'
-              value={{
-                startDate: null,
-                endDate: null,
+              value={dateFilter}
+              onChange={(value) => {
+                setDateFilter({
+                  startDate: value?.startDate || null,
+                  endDate: value?.endDate || null,
+                });
               }}
-              onChange={() => { }}
-              className='text-base-default !min-w-[150px] !w-fit h-10'
+              className='text-base-default !w-fit h-10'
             />
             <FilterDropdown
               trigger={triggerFilterAll}
@@ -170,20 +235,27 @@ const Summary = () => {
             placeholder='Chọn công nhân'
             label='Chọn công nhân'
             searchPlaceholder='Tìm công nhân'
-            options={([
-              { value: '1', label: 'Tháng 1' },
-              { value: '2', label: 'Tháng 2' },
-              { value: '3', label: 'Tháng 3' },
-              { value: '4', label: 'Tháng 4' },
-              { value: '5', label: 'Tháng 5' },
-              { value: '6', label: 'Tháng 6' },
-            ])}
-            value={null}
-            onChange={() => { }}
-            onSearch={() => { }}
-            onClear={() => { }}
+            options={employeeOptions}
+            value={selectedEmployee}
+            onChange={handleEmployeeChange}
+            onSearch={handleEmployeeSearch}
+            onClear={handleEmployeeClear}
             icon={<UsersIcon className='size-4 text-[#25387A]' />}
-            className='w-[300px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
+            className='w-[250px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
+            mode='multiple'
+          />
+          <SelectSearchableRadio
+            placeholder='Chọn tổ/nhóm'
+            label='Chọn tổ/nhóm'
+            searchPlaceholder='Tìm tổ/nhóm'
+            options={groupOptions}
+            value={selectedGroup}
+            onChange={handleGroupChange}
+            onSearch={handleGroupSearch}
+            onClear={handleGroupClear}
+            icon={<UserGroupIcon className='size-4 text-[#25387A]' />}
+            className='w-[250px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
+            mode='multiple'
           />
           <button
             className='h-[42px] flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-white border border-[#D0D5DD] transition-all duration-200 ease-in-out hover:bg-[#F5F7FA] hover:border-[#0375F3] group'
@@ -231,17 +303,17 @@ const Summary = () => {
                     -
                   </div>
                   <div className='col-span-2 font-semibold text-[#141522] flex items-center'>
-                    {formatNumber(Number(row?.total_produced) || 0)}
+                    {Number(row?.total_produced) ? formatNumber(Number(row?.total_produced)) : '-'}
                   </div>
                   <div className='col-span-2 font-semibold text-[#141522] flex items-center'>
-                    {row?.total_time != null 
-                      ? (Math.floor(row.total_time / 3600) > 0 
-                          ? `${Math.floor(row.total_time / 3600)}h ` 
-                          : '') + `${Math.floor((row.total_time % 3600) / 60)}m`
+                    {row?.total_time != null && row.total_time > 0
+                      ? (Math.floor(row.total_time / 3600) > 0
+                        ? `${Math.floor(row.total_time / 3600)}h `
+                        : '') + `${Math.floor((row.total_time % 3600) / 60)}m`
                       : '-'}
                   </div>
                   <div className='col-span-3 font-semibold text-[#0375F3] flex items-center'>
-                    {formatNumber(Number(row?.total_amount) || 0)} đ
+                    {Number(row?.total_amount) ? `${formatNumber(Number(row?.total_amount))} đ` : '-'}
                   </div>
                   <div className='col-span-5 flex items-center gap-2 flex-wrap'>
                     {(row?.stages ?? []).map((stage) => (
@@ -263,19 +335,34 @@ const Summary = () => {
               <div className='col-span-4 text-xl'>Tổng</div>
               <div className='col-span-3'></div>
               <div className='col-span-2'>
-                {formatNumber((summary?.data?.aggregate ?? []).reduce(
-                  (sum, row) => sum + (Number(row?.total_produced) || 0),
-                  0,
-                ))} cái
+                {(() => {
+                  const total = (summary?.aggregate ?? []).reduce(
+                    (sum, row) => sum + (Number(row?.total_produced) || 0),
+                    0,
+                  );
+                  return total ? `${formatNumber(total)} cái` : '-';
+                })()}
               </div>
               <div className='col-span-2'>
-                -
+                {(() => {
+                  const totalSeconds = (summary?.aggregate ?? []).reduce(
+                    (sum, row) => sum + (Number(row?.total_time) || 0),
+                    0,
+                  );
+                  if (!totalSeconds) return "-";
+                  const hours = Math.floor(totalSeconds / 3600);
+                  const minutes = Math.floor((totalSeconds % 3600) / 60);
+                  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                })()}
               </div>
               <div className='col-span-3'>
-                {formatNumber((summary?.data?.aggregate ?? []).reduce(
-                  (sum, row) => sum + (Number(row?.total_amount) || 0),
-                  0,
-                ))} đ
+                {(() => {
+                  const total = (summary?.aggregate ?? []).reduce(
+                    (sum, row) => sum + (Number(row?.total_amount) || 0),
+                    0,
+                  );
+                  return total ? `${formatNumber(total)} đ` : '-';
+                })()}
               </div>
               <div className='col-span-3'></div>
             </div>
@@ -330,7 +417,11 @@ const Summary = () => {
                     {row?.stage_name || '-'}
                   </div>
                   <div className='col-span-2 text-center flex items-center justify-center font-semibold text-[#141522]'>
-                    {Number(row?.total_time) ? `${formatNumber(Number(row?.total_time))}h` : '-'}
+                    {row?.total_time != null && row.total_time > 0
+                      ? (Math.floor(row.total_time / 3600) > 0
+                        ? `${Math.floor(row.total_time / 3600)}h `
+                        : '') + `${Math.floor((row.total_time % 3600) / 60)}m`
+                      : '-'}
                   </div>
                   <div className='col-span-6 flex items-center gap-2'>
                     <div className='size-12 shrink-0'>
@@ -351,13 +442,13 @@ const Summary = () => {
                     </div>
                   </div>
                   <div className='col-span-3 text-center flex items-center justify-center font-medium text-[#0375F3]'>
-                    {formatNumber(Number(row?.price_salary) || 0)} ₫
+                    {Number(row?.price_salary) ? `${formatNumber(Number(row?.price_salary))} ₫` : '-'}
                   </div>
                   <div className='col-span-2 text-center flex items-center justify-center font-semibold text-[#141522]'>
-                    {formatNumber(Number(row?.total_quantity) || 0)}
+                    {Number(row?.total_quantity) ? formatNumber(Number(row?.total_quantity)) : '-'}
                   </div>
                   <div className='col-span-3 text-center flex items-center justify-center font-medium text-[#0375F3]'>
-                    {formatNumber(Number(row?.total_amount) || 0)} ₫
+                    {Number(row?.total_amount) ? `${formatNumber(Number(row?.total_amount))} ₫` : '-'}
                   </div>
                 </div>
               ))}
@@ -378,10 +469,16 @@ const Summary = () => {
               <div className='col-span-6'></div>
               <div className='col-span-3'></div>
               <div className='col-span-2 text-center'>
-                {formatNumber((summaryDetail?.items ?? []).reduce((sum, row) => sum + (Number(row?.total_quantity) || 0), 0))}
+                {(() => {
+                  const total = (summaryDetail?.items ?? []).reduce((sum, row) => sum + (Number(row?.total_quantity) || 0), 0);
+                  return total ? formatNumber(total) : '-';
+                })()}
               </div>
               <div className='col-span-3 text-center'>
-                {formatNumber((summaryDetail?.items ?? []).reduce((sum, row) => sum + (Number(row?.total_amount) || 0), 0))} đ
+                {(() => {
+                  const total = (summaryDetail?.items ?? []).reduce((sum, row) => sum + (Number(row?.total_amount) || 0), 0);
+                  return total ? `${formatNumber(total)} đ` : '-';
+                })()}
               </div>
             </div>
           </div>

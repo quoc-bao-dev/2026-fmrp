@@ -122,6 +122,10 @@ const PopupKeepStock = ({
       return isShow('error', dataLang?.materials_planning_no_items || 'materials_planning_no_items');
     }
 
+    // Lấy giá trị mới nhất từ form state để đảm bảo có dữ liệu cập nhật nhất
+    const latestFormValues = form.getValues();
+    const arrayItem = latestFormValues.arrayItem || value.arrayItem || [];
+
     let formData = new FormData();
     formData.append('note', value.note);
     formData.append('type', value.type == 'material' ? 1 : 2);
@@ -135,7 +139,7 @@ const PopupKeepStock = ({
       formData.append('level', autoLevel);
     }
 
-    value.arrayItem?.forEach((e, index) => {
+    arrayItem?.forEach((e, index) => {
       formData.append(`items[${index}][id]`, e?.idParent);
       formData.append(`items[${index}][item_id]`, e?.item?.item_id);
       formData.append(`items[${index}][item_code]`, e?.item?.item_code);
@@ -143,16 +147,37 @@ const PopupKeepStock = ({
       formData.append(`items[${index}][item_variation]`, e?.item?.variation);
       formData.append(`items[${index}][item_variation_option_value_id]`, e?.itemVariationOptionValueId);
       formData.append(`items[${index}][warehouse_id]`, e?.valueWarehouse?.id);
-      e?.valueLocation
+      // Lấy valueLocation từ e, nếu không có thì lấy từ warehouseLocation
+      const valueLocation = e?.valueLocation || e?.warehouseLocation || [];
+      valueLocation
         ?.filter(x => x.show)
         .forEach((i, locaitonIndex) => {
           formData.append(`items[${index}][location][${locaitonIndex}][location_id]`, i?.location_id);
-          formData.append(`items[${index}][location][${locaitonIndex}][location_value]`, typeof i?.newValue == 'number' ? i?.newValue : parseFloat(i?.newValue?.replace(/,/g, '')));
+          // Lấy newValue từ i, nếu không có thì lấy từ field value trong form state
+          const newValue = i?.newValue;
+          const locationValue = typeof newValue == 'number' ? newValue : (newValue ? parseFloat(String(newValue).replace(/,/g, '')) : 0);
+          formData.append(`items[${index}][location][${locaitonIndex}][location_value]`, locationValue);
           formData.append(`items[${index}][location][${locaitonIndex}][location_lot]`, i?.lot);
           formData.append(`items[${index}][location][${locaitonIndex}][location_expiration_date]`, i?.expiration_date);
           formData.append(`items[${index}][location][${locaitonIndex}][location_serial]`, i?.serial);
         });
     });
+
+    // Debug FormData - chuyển đổi thành object để xem nội dung
+    // const formDataObj = {};
+    // for (const [key, value] of formData.entries()) {
+    //   if (formDataObj[key]) {
+    //     // Nếu key đã tồn tại, chuyển thành array
+    //     if (Array.isArray(formDataObj[key])) {
+    //       formDataObj[key].push(value);
+    //     } else {
+    //       formDataObj[key] = [formDataObj[key], value];
+    //     }
+    //   } else {
+    //     formDataObj[key] = value;
+    //   }
+    // }
+    // console.log('FormData contents:', formDataObj);
 
     hangdingMutation.mutate(formData, {
       onSuccess: ({ isSuccess, message }) => {
@@ -1274,12 +1299,26 @@ const PopupKeepStock = ({
                                                     className={`py-1 px-2 my-1 ${fieldState.error ? 'border-red-500' : 'border-gray-400'} border outline-none rounded-3xl w-full`}
                                                     {...field}
                                                     onValueChange={event => {
-                                                      field.onChange({
-                                                        ...x,
-                                                        newValue: event.value == '' ? null : event.value,
-                                                      });
+                                                      const newValue = event.value == '' ? null : event.value;
+                                                      field.onChange(newValue);
+                                                      
+                                                      // Đồng bộ vào valueLocation array tại đúng index
+                                                      const currentItems = form.getValues('arrayItem') || [];
+                                                      const currentItemIndex = currentItems.findIndex(item => item && item.id === e.id);
+                                                      if (currentItemIndex !== -1) {
+                                                        const currentItem = currentItems[currentItemIndex];
+                                                        const valueLocation = currentItem.valueLocation || currentItem.warehouseLocation || [];
+                                                        const locationIndex = valueLocation.findIndex(loc => loc?.idFe === x.idFe);
+                                                        
+                                                        if (locationIndex !== -1) {
+                                                          const updated = [...valueLocation];
+                                                          updated[locationIndex] = { ...updated[locationIndex], newValue };
+                                                          form.setValue(`arrayItem.${currentItemIndex}.valueLocation`, updated, { shouldValidate: false });
+                                                          form.setValue(`arrayItem.${currentItemIndex}.warehouseLocation`, updated, { shouldValidate: false });
+                                                        }
+                                                      }
                                                     }}
-                                                    value={field.value?.newValue || x?.newValue}
+                                                    value={field.value || x?.newValue || ''}
                                                     isAllowed={values => {
                                                       const { floatValue } = values;
                                                       if (floatValue == 0) {
