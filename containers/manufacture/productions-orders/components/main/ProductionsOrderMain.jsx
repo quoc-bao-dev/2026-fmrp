@@ -62,7 +62,6 @@ import PlaningProductionOrder from '../ui/PlaningProductionOrder';
 import TabKeepStock from '../ui/tabKeepStock';
 import TabPieceworkWage from '../ui/TabPieceworkWage';
 import { listDropdownCompleteStage, listLsxStatus } from './constants/listData';
-import InfoTooltip from '@/components/UI/common/InfoTooltip';
 
 const initialState = {
   isTab: 'item',

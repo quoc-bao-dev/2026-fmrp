@@ -1,4 +1,4 @@
-import { PresentationChartIcon, ThreeDotIcon, UserGroupIcon, UserPlus2Icon } from '@/components/icons';
+import { Clock2Icon, PresentationChartIcon, ThreeDotIcon, UserGroupIcon, UserPlus2Icon } from '@/components/icons';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { IMAGES } from '@/constants/images';
 import useToast from '@/hooks/useToast';
@@ -65,7 +65,10 @@ const ProcessStatusDropdown = ({ stage }) => {
       <Customscrollbar className='max-h-[400px]'>
         {/* Section Đang làm */}
         <div className=''>
-          <h4 className='responsive-text-base font-semibold text-[#1A7526] p-3 border-b border-[#F7F8F9]'>Đang làm</h4>
+          <div className='responsive-text-base font-semibold text-[#1A7526] p-3 border-b border-[#F7F8F9] flex items-center gap-1'>
+            <span className='h-3 w-0.5 bg-[#1A7526] flex-shrink-0 rounded-full'></span>
+            <h4>Đang làm</h4>
+          </div>
           <div className='flex flex-col'>
             {doingData.map(item => (
               <div key={item.id} className='flex items-center gap-2 px-3 py-2 rounded-lg'>
@@ -78,7 +81,13 @@ const ProcessStatusDropdown = ({ stage }) => {
                     <UserGroupIcon className='size-6 text-white' />
                   </div>
                 )}
-                <span className='responsive-text-sm font-normal text-neutral-07 flex-1'>{item.name}</span>
+                <div className='flex flex-col gap-0.5'>
+                  <span className='responsive-text-sm font-normal text-neutral-07'>{item.name}</span>
+                  <div className='flex items-center gap-1'>
+                    <Clock2Icon className='size-4 2xl:size-5 text-blue-fmrp' />
+                    <span className='responsive-text-xs font-medium text-blue-fmrp'>08:27:00</span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -89,7 +98,10 @@ const ProcessStatusDropdown = ({ stage }) => {
 
         {/* Section Tạm dừng */}
         <div className=''>
-          <h4 className='responsive-text-base font-semibold text-red-01 p-3 border-b border-[#F7F8F9]'>Tạm dừng</h4>
+          <div className='responsive-text-base font-semibold text-red-01 p-3 border-b border-[#F7F8F9] flex items-center gap-1'>
+            <span className='h-3 w-0.5 bg-[#EE1E1E] flex-shrink-0 rounded-full'></span>
+            <h4>Tạm dừng</h4>
+          </div>
           <div className='flex flex-col'>
             {pausedData.map(item => (
               <div key={item.id} className='flex items-center gap-2 px-3 py-2 rounded-lg'>
@@ -102,7 +114,13 @@ const ProcessStatusDropdown = ({ stage }) => {
                     <UserGroupIcon className='size-6 text-white' />
                   </div>
                 )}
-                <span className='responsive-text-sm font-normal text-neutral-07 flex-1'>{item.name}</span>
+                <div className='flex flex-col gap-0.5'>
+                  <span className='responsive-text-sm font-normal text-neutral-07'>{item.name}</span>
+                  <div className='flex items-center gap-1'>
+                    <Clock2Icon className='size-4 2xl:size-5 text-blue-fmrp' />
+                    <span className='responsive-text-xs font-medium text-blue-fmrp'>08:27:00</span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -424,9 +442,8 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
             isSelectMode={isSelectMode}
           >
             <button
-              className={`border rounded-lg p-1 cursor-pointer transition-all duration-300 ${
-                isResponsiblePersonOpen ? 'border-blue-fmrp bg-blue-fmrp/10' : 'border-transparent hover:border-blue-fmrp hover:bg-blue-fmrp/10'
-              }`}
+              className={`border rounded-lg p-1 cursor-pointer transition-all duration-300 ${isResponsiblePersonOpen ? 'border-blue-fmrp bg-blue-fmrp/10' : 'border-transparent hover:border-blue-fmrp hover:bg-blue-fmrp/10'
+                }`}
               onClick={() => {
                 // Kiểm tra quyền trước khi mở PersonSelector
                 if (!role && auth?.production_input?.is_create !== '1') {

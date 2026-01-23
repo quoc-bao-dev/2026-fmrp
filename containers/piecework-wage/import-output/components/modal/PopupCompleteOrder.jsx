@@ -250,6 +250,7 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
               state={product.quantity_success}
               setState={value => updateProductQuantity(index, value)}
               allowDecimal={true}
+              skipBlurSetState={true}
               classNameButton='flex-shrink-0 size-7'
               classNameInput='w-full'
             />
@@ -262,6 +263,7 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
               setState={value => updateProductError(index, value)}
               isError={true}
               allowDecimal={true}
+              skipBlurSetState={true}
               classNameButton='flex-shrink-0 size-7'
               classNameInput='w-full'
             />
@@ -603,9 +605,29 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose, is_prod
       } finally {
         setIsInputPending(false);
       }
-    },
+    }, 
     [po?.id, po?.is_product, stage_id, onGetDataLoadOutOfStock, dataTableBom]
   );
+
+  // Debounce onGetBom khi nhập số lượng (300ms)
+  const onGetBomRef = useRef(onGetBom);
+  useEffect(() => {
+    onGetBomRef.current = onGetBom;
+  }, [onGetBom]);
+
+  const debouncedOnGetBom = useMemo(
+    () =>
+      debounce(items => {
+        onGetBomRef.current?.(items);
+      }, 300),
+    []
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedOnGetBom.cancel();
+    };
+  }, [debouncedOnGetBom]);
 
   const updateProductQuantity = useCallback(
     async (index, value) => {
@@ -644,12 +666,12 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose, is_prod
         const allSelected = updatedProducts.every(p => p.selected);
         setSelectAll(allSelected);
 
-        // Gọi API kiểm tra tồn kho khi thay đổi số lượng
-        onGetBom(updatedProducts);
+        // Gọi API kiểm tra tồn kho khi thay đổi số lượng (debounce)
+        debouncedOnGetBom(updatedProducts);
         return updatedProducts;
       });
     },
-    [onGetBom]
+    [debouncedOnGetBom]
   );
 
   const updateProductError = useCallback(
@@ -689,12 +711,12 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose, is_prod
         const allSelected = updatedProducts.every(p => p.selected);
         setSelectAll(allSelected);
 
-        // Gọi API kiểm tra tồn kho khi thay đổi số lượng lỗi
-        onGetBom(updatedProducts);
+        // Gọi API kiểm tra tồn kho khi thay đổi số lượng lỗi (debounce)
+        debouncedOnGetBom(updatedProducts);
         return updatedProducts;
       });
     },
-    [onGetBom]
+    [debouncedOnGetBom]
   );
 
   const handleSelectAll = useCallback(checked => {
