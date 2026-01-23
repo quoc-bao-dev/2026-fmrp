@@ -196,13 +196,13 @@ const PopupDetail = (props) => {
                                                                         <h6 className="text-[13px] text-left font-medium capitalize">
                                                                             {e?.item?.product_variation}
                                                                         </h6>
-                                                                        <div className="flex flex-wrap items-center font-oblique text-typo-blue-2">
+                                                                        <div className="flex flex-wrap items-center text-typo-blue-2">
                                                                             {e?.item?.serial !== null && dataProductSerial.is_enable === '1' ? (
                                                                                 <div className='flex gap-0.5'>
                                                                                     <h6 className='text-[11px]'>Serial:</h6>
                                                                                     <h6 className='text-[11px]  px-2   w-[full] text-left '>{e?.item?.serial == null || e?.item?.serial == '' ? '-' : e?.item?.serial}</h6>
                                                                                 </div>
-                                                                                ) : (
+                                                                            ) : (
                                                                                 ''
                                                                             )}
                                                                             {dataMaterialExpiry.is_enable === "1" ? (
@@ -230,22 +230,22 @@ const PopupDetail = (props) => {
                                                                             )}
                                                                         </div>
                                                                         {e?.item_type === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
-                                                                                <div className='flex flex-col'>
-                                                                                    {warehousePropertyLabels.map(({ key, label }) => {
-                                                                                        if (!label) return null;
-                                                                                        const value = e?.[key];
-                                                                                        
-                                                                                        // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
-                                                                                        if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
-                                                                                        
-                                                                                        return (
-                                                                                            <span key={key} className='text-[#3276FA] text-[11px] font-normal'>
-                                                                                                {label}: {value == null || value === '' ? '-' : value}
-                                                                                            </span>
-                                                                                        );
-                                                                                    })}
-                                                                                </div>
-                                                                            )}
+                                                                            <div className='flex flex-col'>
+                                                                                {warehousePropertyLabels.map(({ key, label }) => {
+                                                                                    if (!label) return null;
+                                                                                    const value = e?.[key];
+
+                                                                                    // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                                                                    if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+
+                                                                                    return (
+                                                                                        <span key={key} className='text-[#3276FA] text-[11px] font-normal'>
+                                                                                            {label}: {value == null || value === '' ? '-' : value}
+                                                                                        </span>
+                                                                                    );
+                                                                                })}
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             </h6>
@@ -324,7 +324,7 @@ const PopupDetail = (props) => {
                                                         0
                                                     )
                                                 )} */}
-                                                {Number(data?.total_quantity_manufacture)!==0 ? formatNumber(data?.total_quantity_manufacture) : formatNumber(data?.total_quantity)}
+                                                {Number(data?.total_quantity_manufacture) !== 0 ? formatNumber(data?.total_quantity_manufacture) : formatNumber(data?.total_quantity)}
                                             </h3>
                                         </div>
                                     </div>
