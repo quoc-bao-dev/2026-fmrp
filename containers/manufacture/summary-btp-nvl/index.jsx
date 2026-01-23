@@ -35,6 +35,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { listLsxStatus } from '../productions-orders/components/main/constants/listData';
 import { useProductionOrdersCombobox } from '../productions-orders/hooks/useProductionOrdersCombobox';
 import { useSummaryBtpNvl } from './hook';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 
 const breadcrumbItems = [
   {

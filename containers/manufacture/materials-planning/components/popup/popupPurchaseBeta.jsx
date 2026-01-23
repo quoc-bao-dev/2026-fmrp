@@ -480,6 +480,8 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
 
                         return sortedItems.map((e, index) => {
                           const isSelected = selectedItems.includes(e?.id);
+                          // Tìm index thực tế của item trong fields array (không phải index của sorted array)
+                          const actualIndex = fields.findIndex(field => field?.id === e?.id);
                           return (
                             <tr
                               key={e?.id?.toString()}
@@ -527,7 +529,7 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
                               </td>
                               <td className='py-2 px-3 text-center'>
                                 <Controller
-                                  name={`arrayItem.${index}.quantity`}
+                                  name={`arrayItem.${actualIndex}.quantity`}
                                   control={form.control}
                                   rules={{
                                     required: {
@@ -554,16 +556,27 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
                                     },
                                   }}
                                   render={({ field, fieldState }) => {
+                                    // Đảm bảo value luôn là số hoặc null/undefined
+                                    const numericValue = typeof field.value === 'string' && field.value !== '' 
+                                      ? parseFloat(field.value.replace(/,/g, '')) || null 
+                                      : field.value;
+                                    
                                     return (
                                       <div className='flex flex-col items-center justify-center' onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
                                         <InPutNumericFormat
                                           className={`${
                                             fieldState.error ? 'border-red-500' : 'border-gray-200'
                                           } cursor-default appearance-none text-center 3xl:text-[16px] 2xl:text-[16px] xl:text-[16px] -text-[10px] py-1 px-0.5 font-normal w-[80px] focus:outline-none border-b-2`}
-                                          {...field}
+                                          value={numericValue}
+                                          name={field.name}
+                                          onBlur={field.onBlur}
+                                          ref={field.ref}
                                           onValueChange={event => {
-                                            const newValue = event.value == '' ? null : +event.value;
-                                            field.onChange(newValue);
+                                            const newValue = event.floatValue == null || event.floatValue === undefined ? null : event.floatValue;
+                                            
+                                            // Dùng form.setValue trực tiếp để đảm bảo cập nhật đúng
+                                            form.setValue(`arrayItem.${actualIndex}.quantity`, newValue, { shouldDirty: true, shouldTouch: true });
+                                            
                                             // Tự động chọn item nếu chưa được chọn và có giá trị
                                             if (!isSelected && newValue != null && newValue > 0) {
                                               handleToggleItem(e, true);

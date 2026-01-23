@@ -41,6 +41,7 @@ export const InputNumberCustom = memo(
     disabled = false,
     isError = false,
     allowDecimal = true, // Thêm prop cho phép nhập số thập phân
+    skipBlurSetState = false, // Nếu true thì blur sẽ không gọi setState ra ngoài (tránh trigger API thêm lần nữa)
   }) => {
     const [inputValue, setInputValue] = useState(state || 0);
     const [formattedValue, setFormattedValue] = useState(formatNumber(state || 0));
@@ -90,7 +91,11 @@ export const InputNumberCustom = memo(
         // Chuyển đổi chuỗi thành số
         const numValue = allowDecimal ? parseFloat(numericValue) : parseInt(numericValue);
 
+        // Cập nhật state nội bộ
         setInputValue(numValue);
+
+        // Cập nhật state ra ngoài ngay khi nhập, để parent nhận được giá trị theo thời gian thực
+        setState(numValue);
 
         // Khi đang nhập, hiển thị giá trị đúng định dạng
         // Với số thập phân, giữ nguyên dạng để người dùng tiếp tục nhập
@@ -134,28 +139,30 @@ export const InputNumberCustom = memo(
 
     const handleBlur = useCallback(() => {
       if (inputValue === '') {
-        setState(min);
-        setInputValue(min);
-        setFormattedValue(formatNumber(min));
+        const finalValue = min;
+        if (!skipBlurSetState) {
+          setState(finalValue);
+        }
+        setInputValue(finalValue);
+        setFormattedValue(formatNumber(finalValue));
         return;
       }
 
       const number = parseToNumber(inputValue);
+      let finalValue = number;
 
       if (number < min) {
-        setState(min);
-        setInputValue(min);
-        setFormattedValue(formatNumber(min));
+        finalValue = min;
       } else if (number > max) {
-        setState(max);
-        setInputValue(max);
-        setFormattedValue(formatNumber(max));
-      } else {
-        setState(number);
-        setInputValue(number);
-        setFormattedValue(formatNumber(number));
+        finalValue = max;
       }
-    }, [inputValue, min, max, parseToNumber, setState]);
+
+      if (!skipBlurSetState) {
+        setState(finalValue);
+      }
+      setInputValue(finalValue);
+      setFormattedValue(formatNumber(finalValue));
+    }, [inputValue, min, max, parseToNumber, setState, skipBlurSetState, formatNumber]);
 
     const handleButtonClick = useCallback(
       (e, type) => {

@@ -48,6 +48,7 @@ import PopupDetail from './components/popup';
 import { useProductionWarehouseCombobox } from './hooks/useProductionWarehouseCombobox';
 import { useProductionWarehouseFillterbar } from './hooks/useProductionWarehouseFillterbar';
 import { useProductionWarehouseList } from './hooks/useProductionWarehouseList';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 
 const initialState = {
   onSending: false,

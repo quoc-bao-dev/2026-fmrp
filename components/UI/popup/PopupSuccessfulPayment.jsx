@@ -1,5 +1,6 @@
 import { Lexend_Deca } from "@next/font/google";
 import { Add as IconClose } from "iconsax-react";
+import moment from "moment";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -85,7 +86,7 @@ const PopupSuccessfulPayment = (props) => {
             </h3>
             <p className="text-lg font-medium text-typo-black-4">
               {/* 24/04/2025 - 16:48:55 */}
-              {data?.content_success?.date}
+              {moment(data?.content_success?.date).format('DD/MM/YYYY - HH:mm:ss')}
             </p>
           </div>
           <div className="p-3 py-2 2xl:py-3 rounded-xl border border-[#919EAB3D] w-full">

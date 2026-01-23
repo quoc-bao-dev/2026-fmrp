@@ -51,6 +51,7 @@ import { useSalesOrderCombobox } from './hooks/useSalesOrderCombobox'
 import { useSalesOrderFilterbar } from './hooks/useSalesOrderFilterbar'
 import { useSalesOrderList } from './hooks/useSalesOrderList'
 import ProcessStepIcon from '@/components/icons/common/ProcessStepIcon'
+import ProcessStepTooltip from '@/components/common/tooltip/ProcessStepTooltip'
 registerLocale('vi', vi)
 
 const initialValue = {
@@ -629,6 +630,57 @@ const SalesOrder = (props) => {
                                     }
                                   }
 
+                                  // Kiểm tra xem có references để hiển thị tooltip
+                                  const hasReference = item?.reference && Array.isArray(item.reference) && item.reference.length > 0
+
+                                  const stepIconContent = (
+                                    <>
+                                      <ProcessStepIcon
+                                        active={item?.active}
+                                        isLast={isValueDelivery}
+                                        deliveryStatus={deliveryStatus}
+                                        isProducing={isProducing}
+                                        nextStepActive={nextStepActive}
+                                        className="w-full h-full object-cover"
+                                        style={{
+                                          minWidth: '100%',
+                                          height: '100%',
+                                        }}
+                                      />
+                                      {/* Text overlay trên SVG */}
+                                      <div
+                                        className={`absolute py-0.5 px-2 inset-0 flex flex-col items-center justify-center pointer-events-none ${
+                                          item?.active || (isValueDelivery && deliveryStatus === 'full')
+                                            ? 'text-white'
+                                            : isValueDelivery && deliveryStatus === 'partial'
+                                            ? 'text-white'
+                                            : (isProducing && item?.active) || (item?.active && !isProducing)
+                                            ? 'text-white'
+                                            : 'text-gray-600'
+                                        }`}
+                                      >
+                                        {!isValueDelivery && (
+                                          <h6 className="responsive-text-xxs font-medium leading-tight text-center whitespace-nowrap">
+                                            {dataLang[item?.name] || item?.name}
+                                          </h6>
+                                        )}
+                                        {isValueDelivery && (
+                                          <h6
+                                            className={`responsive-text-xxs font-medium ${
+                                              deliveryStatus === 'full'
+                                                ? 'text-white'
+                                                : deliveryStatus === 'partial'
+                                                ? 'text-white'
+                                                : 'text-gray-500'
+                                            }`}
+                                          >
+                                            {dataLang[item?.status] || item?.status || 'Chưa giao'}
+                                          </h6>
+                                        )}
+                                      </div>
+                                    </>
+                                  )
+
                                   return (
                                     <div
                                       key={`process-${i}`}
@@ -639,49 +691,13 @@ const SalesOrder = (props) => {
                                     >
                                       {/* SVG Step Icon */}
                                       <div className="relative w-full h-full">
-                                        <ProcessStepIcon
-                                          active={item?.active}
-                                          isLast={isValueDelivery}
-                                          deliveryStatus={deliveryStatus}
-                                          isProducing={isProducing}
-                                          nextStepActive={nextStepActive}
-                                          className="w-full h-full object-cover"
-                                          style={{
-                                            minWidth: '100%',
-                                            height: '100%',
-                                          }}
-                                        />
-                                        {/* Text overlay trên SVG */}
-                                        <div
-                                          className={`absolute py-0.5 px-2 inset-0 flex flex-col items-center justify-center pointer-events-none ${
-                                            item?.active || (isValueDelivery && deliveryStatus === 'full')
-                                              ? 'text-white'
-                                              : isValueDelivery && deliveryStatus === 'partial'
-                                              ? 'text-white'
-                                              : (isProducing && item?.active) || (item?.active && !isProducing)
-                                              ? 'text-white'
-                                              : 'text-gray-600'
-                                          }`}
-                                        >
-                                          {!isValueDelivery && (
-                                            <h6 className="responsive-text-xxs font-medium leading-tight text-center whitespace-nowrap">
-                                              {dataLang[item?.name] || item?.name}
-                                            </h6>
-                                          )}
-                                          {isValueDelivery && (
-                                            <h6
-                                              className={`responsive-text-xxs font-medium ${
-                                                deliveryStatus === 'full'
-                                                  ? 'text-white'
-                                                  : deliveryStatus === 'partial'
-                                                  ? 'text-white'
-                                                  : 'text-gray-500'
-                                              }`}
-                                            >
-                                              {dataLang[item?.status] || item?.status || 'Chưa giao'}
-                                            </h6>
-                                          )}
-                                        </div>
+                                        {hasReference ? (
+                                          <ProcessStepTooltip references={item.reference} dataLang={dataLang}>
+                                            {stepIconContent}
+                                          </ProcessStepTooltip>
+                                        ) : (
+                                          stepIconContent
+                                        )}
                                       </div>
                                     </div>
                                   )
