@@ -261,12 +261,12 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
       })),
     }));
   }, [warehouses]);
-console.log(transformedWarehouses)
+  console.log(transformedWarehouses)
   // Format dữ liệu kho hàng để hiển thị trong dropdown
   const warehouseDropdownData = useMemo(() => {
     return convertWarehousesToDropdownData(transformedWarehouses);
   }, [transformedWarehouses]);
-console.log(warehouseDropdownData)
+  console.log(warehouseDropdownData)
   // Sắp xếp materials: ưu tiên các material đã chọn lên đầu, giữ nguyên thứ tự gốc
   const sortedMaterials = useMemo(() => {
     if (!materials || materials.length === 0) return [];
@@ -378,13 +378,13 @@ console.log(warehouseDropdownData)
           />
           <div className='flex gap-3 items-center'>
             {/* {isProPackage ? ( */}
-              <button
-                onClick={handleConfirmRecall}
-                disabled={isSavingRecall}
-                className={`flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-blue-fmrp hover:bg-blue-fmrp/80 disabled:opacity-60 disabled:cursor-not-allowed`}
-              >
-                <CheckIcon className='size-4' /> {isSavingRecall ? 'Đang lưu...' : 'Thu hồi'}
-              </button>
+            <button
+              onClick={handleConfirmRecall}
+              disabled={isSavingRecall}
+              className={`flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-blue-fmrp hover:bg-blue-fmrp/80 disabled:opacity-60 disabled:cursor-not-allowed`}
+            >
+              <CheckIcon className='size-4' /> {isSavingRecall ? 'Đang lưu...' : 'Thu hồi'}
+            </button>
             {/* ) : (
               <PackageUpgradeButton />
             )} */}
@@ -426,9 +426,8 @@ console.log(warehouseDropdownData)
                     return (
                       <div
                         key={`product-${index}`}
-                        className={`p-2 rounded-md mb-2 cursor-pointer transition-all duration-200 ${
-                          isSelected ? 'bg-gradient-to-br from-[#EBF5FF] to-[#D0E8FF] shadow-md shadow-blue-100/50' : 'bg-white hover:bg-[#F9FAFB] hover:shadow-sm'
-                        }`}
+                        className={`p-2 rounded-md mb-2 cursor-pointer transition-all duration-200 ${isSelected ? 'bg-gradient-to-br from-[#EBF5FF] to-[#D0E8FF] shadow-md shadow-blue-100/50' : 'bg-white hover:bg-[#F9FAFB] hover:shadow-sm'
+                          }`}
                         onClick={() => handleToggleProduct(product.poi_id)}
                       >
                         <div className='flex items-center gap-2'>
@@ -527,8 +526,6 @@ console.log(warehouseDropdownData)
                         const returnedQty = Number(material.quantity_returned || 0);
                         const fullyRecalled = exportedQty > 0 && returnedQty >= exportedQty;
 
-                        console.log('selectedWarehouse', selectedWarehouse);
-
                         return (
                           <tr
                             key={`material-${index}`}
@@ -548,15 +545,15 @@ console.log(warehouseDropdownData)
                                   <p className='text-xs font-normal text-typo-blue-2'>{material?.item_code}</p>
                                 </div>
                               </div>
-                              {selectedWarehouse && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
-                                <div className='flex flex-col'>
+                              {material.type_item === 'material' && selectedWarehouse && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                                <div className='flex flex-col mt-1'>
                                   {warehousePropertyLabels.map(({ key, label }) => {
                                     if (!label) return null;
                                     const valueProp = selectedWarehouse?.[key];
                                     // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
                                     if (!isWarehousePropertiesEnabled && (valueProp == null || valueProp === '')) return null;
                                     return (
-                                      <span key={key} className='text-[#3276FA] text-[11px] font-normal'>
+                                      <span key={key} className=' !leading-[120%] text-[#3276FA] text-[11px] font-normal'>
                                         {label}: {valueProp == null || valueProp === '' ? '-' : valueProp}
                                       </span>
                                     );
@@ -619,6 +616,7 @@ console.log(warehouseDropdownData)
                                           showWarehousePropertiesInButton={true}
                                           minDropdownWidth={200}
                                           allowClear={true}
+                                          showProperties={material.type_item === 'material'}
                                         />
                                       </div>
                                     ) : null}

@@ -45,7 +45,9 @@ const WarehouseLotRow = memo(
     index, // Cho variant current
     lastIndex, // Cho variant current
     unitName,
+    typeItem,
   }) => {
+
     const [selectedWarehouse, setSelectedWarehouse] = useState(warehouse ?? '');
     const [inputValue, setInputValue] = useState(total_quantity || 0);
     const showToast = useToast();
@@ -64,11 +66,11 @@ const WarehouseLotRow = memo(
             return prev.map(row =>
               row.id === id
                 ? {
-                    ...row,
-                    total_quantity: total_quantity,
-                    quantity_warehouse: total_quantity,
-                    quantity_enter: total_quantity,
-                  }
+                  ...row,
+                  total_quantity: total_quantity,
+                  quantity_warehouse: total_quantity,
+                  quantity_enter: total_quantity,
+                }
                 : row
             );
           }
@@ -83,9 +85,9 @@ const WarehouseLotRow = memo(
           prev.map(row =>
             row.id === id
               ? {
-                  ...row,
-                  ...updates,
-                }
+                ...row,
+                ...updates,
+              }
               : row
           )
         );
@@ -190,7 +192,7 @@ const WarehouseLotRow = memo(
                               </>
                             )}
                           </div>
-                          {Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                          {typeItem === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
                             <div className='flex flex-row gap-x-2 text-[#3276FA] text-[11px] mt-1'>
                               {warehousePropertyLabels.map(({ key, label }) => {
                                 if (!label) return null;
@@ -229,6 +231,7 @@ const WarehouseLotRow = memo(
                         contentClassName={variant === 'current' ? 'fixed rounded-xl bg-[#FFFFFF] shadow-lg border z-[9999] p-3' : undefined}
                         formatDate={date => formatDate(date, useMoment)}
                         formatNumber={value => formatNumberFn(Number(value))}
+                        showProperties={typeItem === 'material'}
                       />
                     </div>
                   </td>

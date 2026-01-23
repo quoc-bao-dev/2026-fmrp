@@ -99,6 +99,7 @@ export const CustomDropdownRadioGroup = ({
   onSearchChange = null,
   isLoading = false,
   allowClear = false,
+  showProperties = false,
 }) => {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0, width: 0, showAbove: false });
@@ -181,6 +182,8 @@ export const CustomDropdownRadioGroup = ({
 
   // Lọc dữ liệu theo search trên phía client
   const filteredData = useMemo(() => {
+    console.log({ data });
+
     // Nếu parent đã điều khiển search và gọi API server-side, không lọc thêm phía client
     if (!isSearchable || onSearchChange) return data || [];
 
@@ -203,12 +206,11 @@ export const CustomDropdownRadioGroup = ({
 
   const displayText = selectedOption
     ? showOnlyLotDate
-      ? `LOT: ${selectedOption.option.lot} | Date: ${formatDate(selectedOption.option.expiration_date)}${
-          selectedOption.option.serial ? ` | Serial: ${selectedOption.option.serial}` : ''
-        } | Tồn: ${formatNumber(Number(selectedOption.option.total_quantity))}`
+      ? `LOT: ${selectedOption.option.lot} | Date: ${formatDate(selectedOption.option.expiration_date)}${selectedOption.option.serial ? ` | Serial: ${selectedOption.option.serial}` : ''
+      } | Tồn: ${formatNumber(Number(selectedOption.option.total_quantity))}`
       : showOnlyWarehouseLocation
-      ? `${selectedOption.group.label} - ${selectedOption.option.name_location}`
-      : `${selectedOption.group.label} - ${selectedOption.option.name_location}`
+        ? `${selectedOption.group.label} - ${selectedOption.option.name_location}`
+        : `${selectedOption.group.label} - ${selectedOption.option.name_location}`
     : placeholder;
 
   const dropdownContent = open && !disabled && (
@@ -263,6 +265,8 @@ export const CustomDropdownRadioGroup = ({
                 <div>
                   {group.options?.map(option => {
                     const isSelected = value === option.id_warehouse_custom;
+                    console.log({ option });
+
                     return (
                       <div
                         key={option.id_warehouse_custom}
@@ -282,7 +286,7 @@ export const CustomDropdownRadioGroup = ({
                               <span className='text-[#3276FA] text-[11px] font-normal'>Date: {formatDate(option.expiration_date)}</span>
                               {option.serial && <span className='text-[#3276FA] text-[11px] font-normal'>Serial: {option.serial}</span>}
                               {/* <span className='text-[#3276FA] text-xs font-normal'>Serial: {option.serial}</span> */}
-                              {Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                              {showProperties && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
                                 <>
                                   {warehousePropertyLabels.map(({ key, label }) => {
                                     if (!label) return null;
@@ -311,7 +315,7 @@ export const CustomDropdownRadioGroup = ({
                               <div className='flex flex-col gap-0'>
                                 <span className='text-[#3276FA] text-xs font-normal'>LOT: {option.lot || '-'}</span>
                                 <span className='text-[#3276FA] text-xs font-normal'>Date: {formatDate(option.expiration_date) || '-'}</span>
-                                {Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                                {showProperties && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
                                   <>
                                     {warehousePropertyLabels.map(({ key, label }) => {
                                       if (!label) return null;
