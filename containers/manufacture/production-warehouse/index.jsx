@@ -4,7 +4,6 @@ import TabFilter from '@/components/UI/TabFilter';
 import Breadcrumb from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import OnResetData from '@/components/UI/btnResetData/btnReset';
 import ButtonWarehouse from '@/components/UI/btnWarehouse/btnWarehouse';
-import ButtonAddNew from '@/components/UI/button/buttonAddNew';
 import ContainerPagination from '@/components/UI/common/ContainerPagination/ContainerPagination';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { EmptyExprired } from '@/components/UI/common/EmptyExprired';
@@ -34,7 +33,6 @@ import useStatusExprired from '@/hooks/useStatusExprired';
 import useTab from '@/hooks/useTab';
 import useToast from '@/hooks/useToast';
 import { useToggle } from '@/hooks/useToggle';
-import { routerProductionWarehouse } from '@/routers/manufacture';
 import { formatMoment } from '@/utils/helpers/formatMoment';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
 import { Grid6 } from 'iconsax-react';
@@ -48,7 +46,6 @@ import PopupDetail from './components/popup';
 import { useProductionWarehouseCombobox } from './hooks/useProductionWarehouseCombobox';
 import { useProductionWarehouseFillterbar } from './hooks/useProductionWarehouseFillterbar';
 import { useProductionWarehouseList } from './hooks/useProductionWarehouseList';
-import InfoTooltip from '@/components/UI/common/InfoTooltip';
 
 const initialState = {
   onSending: false,
