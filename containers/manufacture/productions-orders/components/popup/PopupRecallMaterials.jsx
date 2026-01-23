@@ -542,18 +542,18 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
                                 <h3 className='font-semibold text-[#141522]'>{material?.item_name}</h3>
                                 <div className='flex flex-col gap-0.5'>
                                   <p className='text-[10px] font-normal text-[#667085]'>{material?.product_variation}</p>
-                                  <p className='text-xs font-normal text-typo-blue-2'>{material?.item_code}</p>
+                                  <p className='text-[11px] font-normal text-typo-blue-2 !leading-[150%]'>{material?.item_code}</p>
                                 </div>
                               </div>
                               {material.type_item === 'material' && selectedWarehouse && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
-                                <div className='flex flex-col mt-1'>
+                                <div className='flex flex-col'>
                                   {warehousePropertyLabels.map(({ key, label }) => {
                                     if (!label) return null;
                                     const valueProp = selectedWarehouse?.[key];
                                     // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
                                     if (!isWarehousePropertiesEnabled && (valueProp == null || valueProp === '')) return null;
                                     return (
-                                      <span key={key} className=' !leading-[120%] text-[#3276FA] text-[11px] font-normal'>
+                                      <span key={key} className=' !leading-[150%] text-[#3276FA] text-[11px] font-normal'>
                                         {label}: {valueProp == null || valueProp === '' ? '-' : valueProp}
                                       </span>
                                     );
