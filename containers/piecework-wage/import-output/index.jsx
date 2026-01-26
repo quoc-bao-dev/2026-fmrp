@@ -1,6 +1,7 @@
+import apiImportOutput from '@/Api/apiPieceworkWage/import-output/apiImportOutput';
 import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
 import SelectSearchableRadio from '@/components/common/select/SelectSearchableRadio';
-import { CaretDownIcon, ClockIcon, CloseXIcon, EqualizerIcon, FunnelIcon, SearchIcon } from '@/components/icons';
+import { CaretDownIcon, CloseXIcon, EqualizerIcon, FunnelIcon, SearchIcon } from '@/components/icons';
 import { DropdownAvatar } from '@/components/layout/header';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import InfoTooltip from '@/components/UI/common/InfoTooltip';
@@ -8,20 +9,18 @@ import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComp
 import Loading from '@/components/UI/loading/loading';
 import { IMAGES } from '@/constants/images';
 import { useSocketContext } from '@/context/socket/SocketContext';
+import { useInternalPlansSearchCombobox } from '@/hooks/common/useInternalPlans';
+import { useOrdersSearchCombobox } from '@/hooks/common/useOrder';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import { useListImportOutput, useLookupGroupMembers, useLookupStages } from '@/managers/api/piecework-wage/useImportOutput';
-import apiImportOutput from '@/Api/apiPieceworkWage/import-output/apiImportOutput';
 import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import moment from 'moment';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useDebounce } from 'use-debounce';
 import StageColumn from './components/StageColumn';
-import { useOrdersSearchCombobox } from '@/hooks/common/useOrder';
-import { useInternalPlansSearchCombobox } from '@/hooks/common/useInternalPlans';
 
 const ImportOutput = () => {
   const { socket } = useSocketContext();
@@ -46,7 +45,7 @@ const ImportOutput = () => {
     dateEnd: moment().endOf('day').toDate(),
   });
 
-  const stateFilterDropdown = useSelector(state => state.stateFilterDropdown);
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
 
   const filterParams = {
     start_date: dateFilter.dateStart ? moment(dateFilter.dateStart).format('DD/MM/YYYY') : null,
@@ -318,19 +317,15 @@ const ImportOutput = () => {
   // Trigger button cho FilterDropdown
   const triggerFilterAll = (
     <button
-      className={`${stateFilterDropdown?.open || activeFilterCount > 0
-          ? 'text-[#0F4F9E] border-[#3276FA] bg-[#EBF5FF]'
-          : 'bg-white text-[#9295A4] border-[#D0D5DD] hover:text-[#0F4F9E] hover:bg-[#EBF5FF] hover:border-[#3276FA]'
+      className={`${isFilterDropdownOpen || activeFilterCount > 0
+        ? 'text-[#0F4F9E] border-[#3276FA] bg-[#EBF5FF]'
+        : 'bg-white text-[#9295A4] border-[#D0D5DD] hover:text-[#0F4F9E] hover:bg-[#EBF5FF] hover:border-[#3276FA]'
         } flex items-center space-x-2 border rounded-lg h-10 px-3 group custom-transition`}
     >
-      <span className='size-4 shrink-0'>
-        <EqualizerIcon className='w-full h-full' />
-      </span>
-      <span className={`${stateFilterDropdown?.open || activeFilterCount > 0 ? 'text-[#0F4F9E]' : 'text-[#3A3E4C] group-hover:text-[#0F4F9E]'} text-nowrap text-sm custom-transition`}>Lọc</span>
+      <EqualizerIcon className='size-4' />
+      <span className={`${isFilterDropdownOpen || activeFilterCount > 0 ? 'text-[#0F4F9E]' : 'text-[#3A3E4C] group-hover:text-[#0F4F9E]'} text-nowrap text-sm custom-transition`}>Lọc</span>
       {activeFilterCount > 0 && <span className='rounded-full bg-[#0F4F9E] text-white text-xs size-5 flex items-center justify-center'>{activeFilterCount}</span>}
-      <span className='size-3.5 shrink-0'>
-        <CaretDownIcon className={`${stateFilterDropdown?.open || activeFilterCount > 0 ? 'rotate-180' : 'rotate-0'} w-full h-full custom-transition`} />
-      </span>
+      <CaretDownIcon className={`${isFilterDropdownOpen ? 'rotate-180' : 'rotate-0'} size-3.5 custom-transition`} />
     </button>
   );
 
@@ -353,7 +348,7 @@ const ImportOutput = () => {
             placeholder='blur'
             blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
           />
-          
+
         </Link>
         <div className='flex items-center gap-3'>
           {/* <button className='bg-white px-4 py-1.5 rounded-lg flex items-center gap-2 border border-[#D0D5DD]'>
@@ -367,7 +362,7 @@ const ImportOutput = () => {
         </div>
       </header>
       <div className='flex flex-col gap-4 flex-1 min-h-0 max-h-full overflow-hidden'>
-        <div className='flex items-center justify-between px-6'>
+        <div className='flex flex-col xl:flex-row items-center justify-between px-6'>
           <div className='flex items-center gap-2'>
             <h2 className='responsive-text-4xl font-medium text-neutral-07 capitalize'>Nhập sản lượng</h2>
             <InfoTooltip
@@ -439,6 +434,8 @@ const ImportOutput = () => {
               }}
               className='z-[999] flex flex-col gap-4 border-[#D8DAE5] rounded-lg min-w-[450px]'
               dropdownId='dropdownFilterImportOutput'
+              isOpen={isFilterDropdownOpen}
+              onToggle={setIsFilterDropdownOpen}
             >
               <div className='text-lg text-[#344054] font-medium'>Bộ lọc</div>
               <div className='flex flex-col gap-3'>
