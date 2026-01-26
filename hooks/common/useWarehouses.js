@@ -91,7 +91,15 @@ export const useLocationByWarehouseTo = (idWarehouse, idBranch = undefined) => {
         value: e?.id,
       }))
     },
+    // Bắt buộc mỗi lần chọn kho phải gọi lại API:
+    // - Không dùng cache lâu (staleTime = 0)
+    // - Luôn refetch khi mount lại với cùng queryKey
+    // - Vẫn cho phép retry / gc theo optionsQuery chung
     enabled: !!idWarehouse || !!idBranch,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    ...optionsQuery,
   })
 }
 

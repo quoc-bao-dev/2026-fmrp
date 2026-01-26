@@ -6,6 +6,7 @@ import ExpandableContent from '@/components/UI/more';
 import NoData from '@/components/UI/noData/nodata';
 import PopupCustom from '@/components/UI/popup';
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 import useFeature from '@/hooks/useConfigFeature';
 import useSetingServer from '@/hooks/useConfigNumber';
 import { formatMoment } from '@/utils/helpers/formatMoment';
@@ -28,7 +29,8 @@ const PopupDetail = props => {
   const dataSeting = useSetingServer();
 
   const { dataMaterialExpiry, dataProductSerial } = useFeature();
-
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
+  console.log(warehousePropertyLabels);
   const formatNumber = num => {
     return formatNumberConfig(+num, dataSeting);
   };
@@ -37,7 +39,7 @@ const PopupDetail = props => {
   };
 
   const { data, isFetching } = useDeliveryReceipDetail(open, props?.id);
-
+  console.log(data);
   return (
     <>
       <PopupCustom
@@ -160,26 +162,42 @@ const PopupDetail = props => {
                             <div>
                               <h6 className='text-[13px] text-left font-medium capitalize'>{e?.item?.name}</h6>
                               <h6 className='text-[13px] text-left font-medium capitalize'>{e?.item?.product_variation}</h6>
-                              <div className='flex flex-wrap items-center font-oblique text-typo-blue-2'>
+                              <div className='flex flex-col gap-0.5 font-oblique text-typo-blue-2'>
                                 {e?.serial && dataProductSerial.is_enable === '1' ? (
-                                  <div className='flex gap-0.5'>
+                                  <div className='flex gap-1'>
                                     <h6 className='text-[12px]'>Serial:</h6>
-                                    <h6 className='text-[12px]  px-2   w-[full] text-left '>{e.serial == null || e.serial == '' ? '-' : e.serial}</h6>
+                                    <h6 className='text-[12px] w-[full]'>{e.serial == null || e.serial == '' ? '-' : e.serial}</h6>
                                   </div>
                                 ) : (
                                   ''
                                 )}
+                                {e?.type_item === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                                  <>
+                                    {warehousePropertyLabels.map(({ key, label }) => {
+                                      if (!label) return null;
+                                      const value = e?.[key];
+                                      // Hiển thị nếu isWarehousePropertiesEnabled bật HOẶC thuộc tính có giá trị
+                                      if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+                                      return (
+                                        <div key={key} className='flex gap-1'>
+                                          <h6 className='responsive-text-sm'>{label}:</h6>
+                                          <h6 className='responsive-text-sm'>{value == null || value === '' ? '-' : value}</h6>
+                                        </div>
+                                      );
+                                    })}
+                                  </>
+                                )}
                                 {dataMaterialExpiry.is_enable === '1' ? (
                                   <>
                                     {e?.lot && (
-                                      <div className='flex gap-0.5'>
-                                        <h6 className='text-[12px]'>Lot:</h6> <h6 className='text-[12px]  px-2   w-[full] text-left '>{e?.lot == null || e?.lot == '' ? '-' : e?.lot}</h6>
+                                      <div className='flex gap-1'>
+                                        <h6 className='responsive-text-sm'>Lot:</h6> <h6 className='responsive-text-sm w-[full] text-left'>{e?.lot == null || e?.lot == '' ? '-' : e?.lot}</h6>
                                       </div>
                                     )}
                                     {e?.expiration_date && (
-                                      <div className='flex gap-0.5'>
-                                        <h6 className='text-[12px]'>Date:</h6>{' '}
-                                        <h6 className='text-[12px]  px-2   w-[full] text-center '>{e?.expiration_date ? formatMoment(e?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}</h6>
+                                      <div className='flex gap-1'>
+                                        <h6 className='responsive-text-sm'>Date:</h6>{' '}
+                                        <h6 className='responsive-text-sm w-[full] text-center'>{e?.expiration_date ? formatMoment(e?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}</h6>
                                       </div>
                                     )}
                                   </>

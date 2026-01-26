@@ -18,6 +18,7 @@ import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import useFeature from '@/hooks/useConfigFeature';
 import useSetingServer from '@/hooks/useConfigNumber';
 import useToast from '@/hooks/useToast';
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 import { formatMoment } from '@/utils/helpers/formatMoment';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -52,20 +53,7 @@ const initForm = {
   idProductionOrder: null,
 };
 
-const PopupKeepStock = ({
-  dataLang,
-  icon,
-  title,
-  dataTable,
-  className,
-  queryValue,
-  fetchDataTable,
-  hasPermission = true,
-  hideTrigger = false,
-  forceOpen = false,
-  onForceClose,
-  ...rest
-}) => {
+const PopupKeepStock = ({ dataLang, icon, title, dataTable, className, queryValue, fetchDataTable, hasPermission = true, hideTrigger = false, forceOpen = false, onForceClose, ...rest }) => {
   const [open, sOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showQuickSelectHint, setShowQuickSelectHint] = useState(false);
@@ -96,6 +84,7 @@ const PopupKeepStock = ({
   }, [forceOpen]);
 
   const dataSeting = useSetingServer();
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties(dataSeting);
 
   const [isState, sIsState] = useState(initialState);
   const [productionSelectKey, setProductionSelectKey] = useState(0);
@@ -160,6 +149,9 @@ const PopupKeepStock = ({
           formData.append(`items[${index}][location][${locaitonIndex}][location_lot]`, i?.lot);
           formData.append(`items[${index}][location][${locaitonIndex}][location_expiration_date]`, i?.expiration_date);
           formData.append(`items[${index}][location][${locaitonIndex}][location_serial]`, i?.serial);
+          formData.append(`items[${index}][location][${locaitonIndex}][location_value_1]`, i?.value_1);
+          formData.append(`items[${index}][location][${locaitonIndex}][location_value_2]`, i?.value_2);
+          formData.append(`items[${index}][location][${locaitonIndex}][location_value_3]`, i?.value_3);
         });
     });
 
@@ -1269,7 +1261,7 @@ const PopupKeepStock = ({
                                                       <h3 className=''>
                                                         {x.label} - <span className='pl-1 text-blue-500'>{x.value}</span>
                                                       </h3>
-                                                      <div className='flex flex-wrap items-center font-oblique'>
+                                                      <div className='flex flex-col items-start font-oblique'>
                                                         {dataProductSerial.is_enable === '1' && (
                                                           <div className='flex gap-0.5'>
                                                             <h6 className='text-[8px]'>Serial:</h6>
@@ -1277,7 +1269,7 @@ const PopupKeepStock = ({
                                                           </div>
                                                         )}
                                                         {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1') && (
-                                                          <>
+                                                          <div className='flex gap-1'>
                                                             <div className='flex gap-0.5'>
                                                               <h6 className='text-[8px]'>Lot:</h6>
                                                               <h6 className='text-[9px] px-1 w-[full] text-left'>{x.lot == null || x.lot == '' ? '-' : x?.lot}</h6>
@@ -1288,7 +1280,23 @@ const PopupKeepStock = ({
                                                                 {x?.expiration_date ? formatMoment(x?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}
                                                               </h6>
                                                             </div>
-                                                          </>
+                                                          </div>
+                                                        )}
+                                                        {findValue.type === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                                                          <div className='flex gap-1'>
+                                                            {warehousePropertyLabels.map(({ key, label }) => {
+                                                              if (!label) return null;
+                                                              const value = x?.[key];
+                                                              // Hiển thị nếu isWarehousePropertiesEnabled bật HOẶC thuộc tính có giá trị
+                                                              if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+                                                              return (
+                                                                <div key={key} className='flex gap-0.5'>
+                                                                  <h6 className='text-[8px]'>{label}:</h6>
+                                                                  <h6 className='text-[9px] px-1 w-[full] text-left'>{value == null || value === '' ? '-' : value}</h6>
+                                                                </div>
+                                                              );
+                                                            })}
+                                                          </div>
                                                         )}
                                                       </div>
                                                     </div>

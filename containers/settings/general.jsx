@@ -2,16 +2,15 @@ import apiDashboard from '@/Api/apiDashboard/apiDashboard';
 import apiGeneral from '@/Api/apiSettings/apiGeneral';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { EmptyExprired } from '@/components/UI/common/EmptyExprired';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 import { Container, ContainerBody } from '@/components/UI/common/layout';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import useToast from '@/hooks/useToast';
 import Head from 'next/head';
 import React, { useEffect, useState } from 'react';
+import { FaMinus, FaPlus, FaXmark } from 'react-icons/fa6';
+import { useDispatch, useSelector } from 'react-redux';
 import { ListBtn_Setting } from './information';
-import { FaMinus } from 'react-icons/fa6';
-import { FaPlus } from 'react-icons/fa6';
-import { useSetings } from '@/hooks/useAuth';
-import { useSelector } from 'react-redux';
 
 const WarningDaysInput = ({ state, setState }) => {
   const handleChange = type => {
@@ -35,11 +34,118 @@ const WarningDaysInput = ({ state, setState }) => {
   );
 };
 
+const AttributeInput = ({ value, onChange, onClear, placeholder, disabled, onBlur }) => {
+  return (
+    <div className='relative w-full'>
+      <input
+        type='text'
+        value={value}
+        onChange={onChange}
+        onBlur={onBlur}
+        disabled={disabled}
+        className='px-3 py-2 pr-8 border border-[#D0D5DD] rounded-lg text-sm font-normal text-typo-black-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400'
+        placeholder={placeholder}
+      />
+      {value && value.trim() !== '' && !disabled && (
+        <button type='button' onClick={onClear} className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors'>
+          <FaXmark size={14} />
+        </button>
+      )}
+    </div>
+  );
+};
+
+const WarehouseAttributesInput = ({ warehouseAttributes, setWarehouseAttributes, visibleInputs, setVisibleInputs, disabled, dataSetting, isShow }) => {
+  const isDisabledAll = !!disabled;
+
+  return (
+    <div className='flex flex-col gap-y-3 w-full mt-2'>
+      {[0, 1, 2].map(index => {
+        const value = warehouseAttributes[index];
+        const hasValue = value && value.trim() !== '';
+        const isInputVisible = visibleInputs > index;
+        const isDisabled = isDisabledAll || (index > 0 && (!warehouseAttributes[index - 1] || warehouseAttributes[index - 1].trim() === ''));
+
+        const handleChange = e => {
+          if (isDisabledAll) return;
+          const newValues = [...warehouseAttributes];
+          newValues[index] = e.target.value;
+          setWarehouseAttributes(newValues);
+        };
+
+        const handleClear = () => {
+          if (isDisabledAll) return;
+
+          // Kiểm tra check_quantili từ API settings
+          const warehouseProperty = dataSetting?.warehouse_properties?.[index];
+          const checkQuantili = warehouseProperty?.check_quantili;
+          // Kiểm tra cả true, 'true', 1, '1'
+          if (checkQuantili === true || checkQuantili === 'true' || checkQuantili === 1 || checkQuantili === '1') {
+            isShow('error', 'Thuộc tính này đã được sử dụng bạn không thể xoá');
+            return;
+          }
+
+          // Tạo mảng mới bằng cách loại bỏ phần tử tại index và dồn các phần tử sau lên
+          const newValues = warehouseAttributes.filter((_, i) => i !== index);
+          // Thêm phần tử rỗng ở cuối để giữ mảng có 3 phần tử
+          newValues.push('');
+          // Đảm bảo mảng luôn có đúng 3 phần tử
+          while (newValues.length < 3) {
+            newValues.push('');
+          }
+          setWarehouseAttributes(newValues.slice(0, 3));
+
+          // Cập nhật số lượng input hiển thị
+          // Nếu xóa input cuối cùng đang hiển thị, giảm visibleInputs
+          if (visibleInputs > index + 1) {
+            setVisibleInputs(visibleInputs - 1);
+          } else if (visibleInputs === index + 1) {
+            // Nếu xóa input cuối cùng, giảm visibleInputs
+            setVisibleInputs(Math.max(1, visibleInputs - 1));
+          }
+        };
+
+        const handleBlur = () => {
+          if (isDisabledAll) return;
+          // Tự động dồn khi có ô trống ở giữa
+          const filtered = warehouseAttributes.filter(val => val.trim() !== '');
+          const newValues = [...filtered, '', ''].slice(0, 3);
+          setWarehouseAttributes(newValues);
+        };
+
+        if (!isInputVisible) {
+          return null;
+        }
+
+        return (
+          <div key={index} className='flex items-center gap-x-3 w-[280px]'>
+            {/* Hiển thị input nếu đã được mở */}
+            {isInputVisible ? <AttributeInput value={value} onChange={handleChange} onClear={handleClear} onBlur={handleBlur} placeholder={`Thuộc tính ${index + 1}`} disabled={isDisabled} /> : null}
+            {/* Hiển thị nút "+" bên phải input nếu input có giá trị và chưa đạt max */}
+            {isInputVisible && hasValue && visibleInputs === index + 1 && index < 2 && !isDisabledAll ? (
+              <button
+                type='button'
+                onClick={() => setVisibleInputs(index + 2)}
+                className='w-10 h-10 border border-[#D0D5DD] rounded-lg text-sm font-normal text-typo-black-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex items-center justify-center bg-white hover:bg-gray-50 transition-colors flex-shrink-0'
+              >
+                <FaPlus className='text-[#25387A]' size={14} />
+              </button>
+            ) : (
+              <div className='w-10 h-10 flex-shrink-0'></div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const General = props => {
   const dataLang = props.dataLang;
   const dataSetting = useSelector(state => state.setings);
   const isSettingReady = dataSetting && Object.keys(dataSetting || {}).length > 0;
   const isShow = useToast();
+  const dispatch = useDispatch();
 
   const [onFetching, sOnFetching] = useState(false);
 
@@ -63,13 +169,48 @@ const General = props => {
 
   const [isAvailableStock, setIsAvailableStock] = useState(dataSetting?.is_available_stock ?? '0');
 
+  // Trạng thái bật/tắt thuộc tính kho
+  const [isWarehouseProperties, setIsWarehouseProperties] = useState(dataSetting?.is_warehouse_properties ?? '0');
+
+  // Danh sách thuộc tính kho (tối đa 3 thuộc tính)
+  const [warehouseAttributes, setWarehouseAttributes] = useState(['', '', '']);
+  const [visibleInputs, setVisibleInputs] = useState(1);
+
   useEffect(() => {
     if (!isSettingReady) return;
     setNumberDays(+dataSetting?.number_day_warehouse ?? 0);
     setIsBomSemiProduct(dataSetting?.is_bom_semi_product ?? '0');
     setSkipExport(dataSetting?.skip_export ?? '0');
     setIsAvailableStock(dataSetting?.is_available_stock ?? '0');
-  }, [isSettingReady, dataSetting?.number_day_warehouse, dataSetting?.is_bom_semi_product, dataSetting?.skip_export, dataSetting?.is_available_stock]);
+
+    // Đồng bộ trạng thái bật/tắt thuộc tính kho
+    setIsWarehouseProperties(dataSetting?.is_warehouse_properties ?? '0');
+
+    // Đồng bộ danh sách thuộc tính kho từ settings (warehouse_properties[])
+    const rawAttributes = dataSetting?.warehouse_properties || [];
+    let normalized = [];
+
+    if (Array.isArray(rawAttributes)) {
+      normalized = rawAttributes.map(item => item.value);
+    } else if (rawAttributes && typeof rawAttributes === 'object') {
+      normalized = Object.values(rawAttributes);
+    }
+
+    const cleaned = normalized.filter(v => typeof v === 'string' && v.trim() !== '');
+    const filled = [...cleaned, '', '', ''].slice(0, 3);
+    setWarehouseAttributes(filled);
+
+    const visibleCount = Math.max(1, Math.min(3, cleaned.length || 1));
+    setVisibleInputs(visibleCount);
+  }, [
+    isSettingReady,
+    dataSetting?.number_day_warehouse,
+    dataSetting?.is_bom_semi_product,
+    dataSetting?.skip_export,
+    dataSetting?.is_available_stock,
+    dataSetting?.is_warehouse_properties,
+    dataSetting?.warehouse_properties,
+  ]);
 
   const _ServerFetching = async () => {
     try {
@@ -123,6 +264,8 @@ const General = props => {
       setSkipExport(prev => (prev == '0' ? '1' : '0'));
     } else if (code == 'is_available_stock') {
       setIsAvailableStock(prev => (prev == '0' ? '1' : '0'));
+    } else if (code == 'is_warehouse_properties') {
+      setIsWarehouseProperties(prev => (prev == '0' ? '1' : '0'));
     }
   };
 
@@ -137,13 +280,47 @@ const General = props => {
     formData.append(`settings[skip_export]`, skipExport);
     formData.append(`settings[is_available_stock]`, isAvailableStock);
 
+    // Lưu trạng thái bật/tắt thuộc tính kho
+    formData.append(`settings[is_warehouse_properties]`, isWarehouseProperties);
+
+    // Lưu danh sách thuộc tính kho (data_warehouse_properties[])
+    warehouseAttributes
+      .filter(v => typeof v === 'string' && v.trim() !== '')
+      .forEach((attr, index) => {
+        formData.append(`settings[data_warehouse_properties][${index}]`, attr.trim());
+      });
+
     try {
       const { isSuccess, message } = await apiGeneral.apiHanding(formData);
       if (isSuccess) {
         isShow('success', props.dataLang[message] || message);
         sOnSending(false);
+
+        // Gọi API để lấy settings mới và cập nhật vào store
+        try {
+          const res = await apiDashboard.apiSettings();
+          if (res?.settings) {
+            dispatch({ type: 'setings/server', payload: res.settings });
+          }
+        } catch (error) {
+          console.error('Error fetching settings:', error);
+        }
+
+        // Gọi API để lấy feature mới và cập nhật vào store
+        try {
+          const fature = await apiDashboard.apiFeature();
+          const newData = {
+            dataMaterialExpiry: fature.find(x => x.code == 'material_expiry'),
+            dataProductExpiry: fature.find(x => x.code == 'product_expiry'),
+            dataProductSerial: fature.find(x => x.code == 'product_serial'),
+          };
+          dispatch({ type: 'setings/feature', payload: newData });
+        } catch (error) {
+          console.error('Error fetching feature:', error);
+        }
       } else {
         isShow('error', props.dataLang[message] || message);
+        sOnSending(false);
       }
     } catch (error) {
       throw error;
@@ -213,6 +390,46 @@ const General = props => {
                             <div className='flex flex-col items-center gap-y-[6px]'>
                               <label className='text-sm font-normal text-[#344054]'>Số ngày cảnh báo</label>
                               <WarningDaysInput state={numberDays} setState={setNumberDays} />
+                            </div>
+                          )}
+                        </div>
+                        <div className='flex flex-row items-center justify-start gap-x-4 py-3 px-4'>
+                          <label htmlFor='warehouse_attribute' className='relative inline-flex items-center cursor-pointer ml-1'>
+                            <input
+                              type='checkbox'
+                              className='sr-only peer'
+                              id='warehouse_attribute'
+                              value={isWarehouseProperties}
+                              checked={isWarehouseProperties == '0' ? false : true}
+                              onChange={_ToggleStatus.bind(this, 'is_warehouse_properties')}
+                            />
+                            <div className="w-11 h-6 bg-gray-200 rounded-full dark:bg-[#D1D5DB] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all  peer-checked:bg-blue-600"></div>
+                          </label>
+                          <div className='flex flex-col gap-y-1 mr-12'>
+                            <p className='font-medium text-base text-typo-black-1'>Thuộc tính kho</p>
+                            <p className='font-normal text-sm text-typo-gray-2'>Quản lý các thuộc tính tùy chỉnh cho nvl trong kho</p>
+                          </div>
+                          {isWarehouseProperties === '1' && (
+                            <div className='pl-[150px] flex-1'>
+                              <label className='text-sm font-normal text-[#344054] '>
+                                Tên thuộc tính{' '}
+                                <InfoTooltip
+                                  content='Thuộc tính kho là các thuộc tính tùy chỉnh cho nvl trong kho. Bạn có thể sử dụng để quản lý các thuộc tính tùy chỉnh cho nvl trong kho.'
+                                  iconProps={{
+                                    size: 13,
+                                    className: 'text-blue-fmrp transition-colors',
+                                  }}
+                                />
+                              </label>
+                              <WarehouseAttributesInput
+                                warehouseAttributes={warehouseAttributes}
+                                setWarehouseAttributes={setWarehouseAttributes}
+                                visibleInputs={visibleInputs}
+                                setVisibleInputs={setVisibleInputs}
+                                disabled={isWarehouseProperties !== '1'}
+                                dataSetting={dataSetting}
+                                isShow={isShow}
+                              />
                             </div>
                           )}
                         </div>

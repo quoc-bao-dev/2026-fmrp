@@ -16,6 +16,7 @@ import formatNumberConfig from "@/utils/helpers/formatnumber";
 import { formatMoment } from '@/utils/helpers/formatMoment'
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate'
 import { ArrowCounterClockWiseIcon } from '@/components/icons'
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties'
 
 const TabMaterialReturn = ({ dataLang, ...props }) => {
     const [isLoadingTable, setIsLoadingTable] = useState(false)
@@ -50,6 +51,7 @@ const TabMaterialReturn = ({ dataLang, ...props }) => {
     const { dataProductExpiry, dataProductSerial, dataMaterialExpiry } = useFeature()
 
     const dataSeting = useSetingServer();
+    const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
 
     const formatNumber = useCallback((num) => formatNumberConfig(+num, dataSeting), [dataSeting]);
 
@@ -340,9 +342,47 @@ const TabMaterialReturn = ({ dataLang, ...props }) => {
                                                                 {product.variation}
                                                             </p>
 
-                                                            <p className="text-[#3276FA] font-normal 3xl:text-sm xl:text-xs text-[10px]">
-                                                                {product.item_code}
-                                                            </p>
+                                                            <div className="flex flex-col gap-0">
+                                                                <p className="text-[#3276FA] font-normal text-[10px]">
+                                                                    {product.item_code}
+                                                                </p>
+
+                                                                <div className="flex flex-col">
+                                                                    {/* Hiển thị Lot nếu setting bật HOẶC có giá trị */}
+                                                                    {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' || (product?.lot != null && product?.lot !== '')) && (
+                                                                        <div className='flex gap-0.5'>
+                                                                            <h6 className='text-[10px]  text-[#3276FA] font-normal'>Lot:</h6>
+                                                                            <h6 className='text-[10px] text-[#3276FA] font-normal'>{product?.lot == null || product?.lot === '' ? '-' : product?.lot}</h6>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Hiển thị Date nếu setting bật HOẶC có giá trị */}
+                                                                    {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' || product?.expiration_date) && (
+                                                                        <div className='flex gap-0.5'>
+                                                                            <h6 className='text-[10px] text-[#3276FA] font-normal'>Date:</h6>
+                                                                            <h6 className='text-[10px] text-[#3276FA] font-normal'>{product?.expiration_date ? formatMoment(product?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}</h6>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+
+                                                                {product?.type_item === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                                                                    <div className='flex flex-col- gap-2'>
+                                                                        {warehousePropertyLabels.map(({ key, label }) => {
+                                                                            if (!label) return null;
+                                                                            const value = product?.[key];
+
+                                                                            // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                                                            if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+
+                                                                            return (
+                                                                                <span key={key} className='text-[#3276FA] text-[10px] font-normal truncate'>
+                                                                                    {label}: {value == null || value === '' ? '-' : value}
+                                                                                </span>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </h4>
@@ -351,7 +391,7 @@ const TabMaterialReturn = ({ dataLang, ...props }) => {
                                                     {product?.unit_name ?? "-"}
                                                 </h4>
 
-                                                <h4 className={` col-span-1 flex items-center justify-center size-full text-center text-[#141522] font-semibold text-sm-default 3xl:py-4 py-2 px-1`}>
+                                                <h4 className={`col-span-1 flex items-center justify-center size-full text-center text-[#141522] font-semibold text-sm-default 3xl:py-4 py-2 px-1`}>
                                                     {+product?.quantity > 0 ? formatNumber(+product?.quantity) : '-'}
                                                 </h4>
 

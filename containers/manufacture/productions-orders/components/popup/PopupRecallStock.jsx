@@ -7,6 +7,8 @@ import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
 import PopupCustom from '@/components/UI/popup';
 import useToast from '@/hooks/useToast';
+import useSetingServer from '@/hooks/useConfigNumber';
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 import { useListRecallKeepStock, useProductionOrderKeepStok, useSaveRecoveryKeepStock } from '@/managers/api/productions-order/useRecallKeepStock';
 import { useLookupWarehouses } from '@/managers/api/productions-order/useRecallMaterials';
 import formatNumber from '@/utils/helpers/formatnumber';
@@ -28,6 +30,8 @@ const tabs = [
 
 const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, codeLSX, branchId, ppId }) => {
   const showToast = useToast();
+  const dataSeting = useSetingServer();
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties(dataSeting);
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState({ id: 'material', name: 'Nguyên vật liệu' });
   const [searchTerm, setSearchTerm] = useState('');
@@ -159,19 +163,14 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
     if (!open || !Array.isArray(rawItems) || rawItems.length === 0) return;
 
     setQuantityByItemByTab(prev => {
-      const currentTabQuantities = prev[activeTab.id] || {};
-      let hasChange = false;
-      const updatedQuantities = { ...currentTabQuantities };
+      // Reset lại tất cả giá trị cho tab hiện tại khi dữ liệu thay đổi
+      const updatedQuantities = {};
 
       rawItems.forEach(item => {
         const itemId = getItemId(item);
-        if (updatedQuantities[itemId] === undefined) {
-          updatedQuantities[itemId] = getMaxRecoverable(item);
-          hasChange = true;
-        }
+        updatedQuantities[itemId] = getMaxRecoverable(item);
       });
 
-      if (!hasChange) return prev;
       return { ...prev, [activeTab.id]: updatedQuantities };
     });
   }, [rawItems, activeTab.id, open]);
@@ -554,6 +553,21 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
                         Date: <span className='font-semibold text-neutral-07'>{moment(errorItem.expiration_date).format('DD/MM/YYYY')}</span>
                       </span>
                     )}
+                    {Array.isArray(warehousePropertyLabels) &&
+                      warehousePropertyLabels.length > 0 &&
+                      warehousePropertyLabels.map(({ key, label }) => {
+                        if (!label) return null;
+                        const value = errorItem?.[key];
+
+                        // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                        if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+
+                        return (
+                          <span key={key}>
+                            {label}: <span className='font-semibold text-neutral-07'>{value == null || value === '' ? '-' : value}</span>
+                          </span>
+                        );
+                      })}
                   </div>
                 </div>
               ))}
@@ -708,9 +722,26 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
                                 {e?.serial && <p className='text-[10px] font-normal text-[#667085]'>Serial: {e?.serial}</p>}
                                 {(e?.lot || e?.expiration_date) && (
                                   <p className='text-[10px] font-normal text-[#667085]'>
-                                    Lot{e?.lot ? `: ${e.lot}` : ''}{e?.lot && e?.expiration_date ? ' - ' : ''}
+                                    Lot{e?.lot ? `: ${e.lot}` : ''}
+                                    {e?.lot && e?.expiration_date ? ' - ' : ''}
                                     {e?.expiration_date ? `Date: ${moment(e.expiration_date).format('DD/MM/YYYY')}` : ''}
                                   </p>
+                                )}
+                                {activeTab.id === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                                  <div className='flex gap-1 flex-wrap'>
+                                    {warehousePropertyLabels.map(({ key, label }) => {
+                                      if (!label) return null;
+                                      const value = e?.[key];
+                                      // Hiển thị nếu isWarehousePropertiesEnabled bật HOẶC thuộc tính có giá trị
+                                      if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+                                      return (
+                                        <div key={key} className='flex gap-0.5 text-[#667085]'>
+                                          <h6 className='text-[10px]'>{label}:</h6>
+                                          <h6 className='text-[10px] px-1 text-left'>{value == null || value === '' ? '-' : value}</h6>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -722,28 +753,26 @@ const PopupRecallStock = ({ className, forceOpen = false, onForceClose, poId, co
                           </td>
                           <td className='py-2 px-3 text-center whitespace-nowrap'>
                             <span className='text-sm font-medium text-[#141522]'>
-                              {+(e?.quantity_exported ?? 0) === 0
-                                ? '-'
-                                : (
-                                  <>
-                                    {`${formatNumber(+(e?.quantity_exported ?? 0))} / `}
-                                    <span className='text-[11px] text-[#667085]'>{e?.unit_name || ''}</span>
-                                  </>
-                                )
-                              }
+                              {+(e?.quantity_exported ?? 0) === 0 ? (
+                                '-'
+                              ) : (
+                                <>
+                                  {`${formatNumber(+(e?.quantity_exported ?? 0))} / `}
+                                  <span className='text-[11px] text-[#667085]'>{e?.unit_name || ''}</span>
+                                </>
+                              )}
                             </span>
                           </td>
                           <td className='py-2 px-3 text-center whitespace-nowrap'>
                             <span className='text-sm font-medium text-[#141522]'>
-                              {+(e?.quantity_recovered ?? 0) === 0
-                                ? '-'
-                                : (
-                                  <>
-                                    {`${formatNumber(+(e?.quantity_recovered ?? 0))} / `}
-                                    <span className='text-[11px] text-[#667085]'>{e?.unit_name || ''}</span>
-                                  </>
-                                )
-                              }
+                              {+(e?.quantity_recovered ?? 0) === 0 ? (
+                                '-'
+                              ) : (
+                                <>
+                                  {`${formatNumber(+(e?.quantity_recovered ?? 0))} / `}
+                                  <span className='text-[11px] text-[#667085]'>{e?.unit_name || ''}</span>
+                                </>
+                              )}
                             </span>
                           </td>
                           {maxRecoverable <= 0 ? (

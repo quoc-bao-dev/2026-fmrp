@@ -1,4 +1,5 @@
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate'
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties'
 import useFeature from '@/hooks/useConfigFeature'
 import { formatMoment } from '@/utils/helpers/formatMoment'
 import { Empty, Radio, Select } from 'antd'
@@ -19,9 +20,11 @@ const SelectCustomLabel = ({
   renderOption = null,
   isVisibleLotDate = true,
   className = 'select-custom-label',
+  showProperties = false,
 }) => {
   const { dataMaterialExpiry, dataProductSerial, dataProductExpiry } = useFeature()
-
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
+  
   const RenderOption = ({ opt, isLabel }) => {
     return (
       <>
@@ -65,6 +68,20 @@ const SelectCustomLabel = ({
                   )}
                 </div>
               </>
+            )}
+            {showProperties && isWarehousePropertiesEnabled && warehousePropertyLabels.length > 0 && (
+              <div className="flex flex-col italic">
+                {warehousePropertyLabels.map(({ key, label }) => {
+                  const value = opt?.[key];
+                  if (!label) return null;
+                  return (
+                    <div key={key} className='flex gap-0.5'>
+                      <h6 className='responsive-text-xs text-[#667085] font-[500]'>{label}:</h6>
+                      <h6 className='responsive-text-xs text-[#667085] font-[500]'>{value ?? '-'}</h6>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}
