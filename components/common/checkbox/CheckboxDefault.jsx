@@ -8,6 +8,7 @@ const CheckboxDefault = ({
     onChange,
     disabled = false,
     className = "",
+    classNameCheckbox = "",
     onClick,
 }) => {
     return (
@@ -27,6 +28,7 @@ const CheckboxDefault = ({
             <div
                 className={twMerge(
                     "w-5 h-5 border-[1px] border-[#D0D5DD] rounded-md peer-checked:bg-[#0375F3] flex items-center justify-center transition select-none",
+                    classNameCheckbox
                 )}
             >
                 <svg
