@@ -23,6 +23,7 @@ import { Box1, Trash as IconDelete, SearchNormal1 as IconSearch, TickCircle } fr
 import { useEffect, useState } from "react";
 import ModalImage from "react-modal-image";
 import { NumericFormat } from "react-number-format";
+import { useWarehouseProperties } from "@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties";
 
 const initialFetch = {
     onSending: false,
@@ -38,6 +39,7 @@ const PopupKeepStock = ({ dataLang, status, id, onRefresh, totalButtons = 0, ...
     const isShow = useToast();
 
     const { dataProductExpiry, dataProductSerial, dataMaterialExpiry } = useFeature()
+    const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
 
     const { isOpen, isId, handleQueryId } = useToggle();
 
@@ -105,10 +107,13 @@ const PopupKeepStock = ({ dataLang, status, id, onRefresh, totalButtons = 0, ...
                             ...e.item,
                             warehouse_location: e.item.warehouse_location?.map((i) => {
                                 if (i.id == idChild) {
+                                    const newShow = !i.show;
+                                    // Nếu bỏ chọn (từ true -> false), reset quantity_export về 0
+                                    // Nếu chọn (từ false -> true), giữ nguyên hoặc set về 0
                                     return {
                                         ...i,
-                                        show: !i.show,
-                                        quantity_export: i.show ? i.quantity_export : 0,
+                                        show: newShow,
+                                        quantity_export: newShow ? (i.quantity_export || 0) : 0,
                                     };
                                 }
                                 return i;
@@ -136,8 +141,15 @@ const PopupKeepStock = ({ dataLang, status, id, onRefresh, totalButtons = 0, ...
 
         const warehouse = db.item?.warehouse_location?.find((child) => child?.id == idChild);
 
+        // Chỉ tính tổng số lượng của các warehouse_location đã được chọn (show === true)
         const quantityCount = db.item?.warehouse_location.reduce(
-            (sum, opt) => sum + parseFloat(opt?.quantity_export || 0),
+            (sum, opt) => {
+                // Chỉ tính số lượng nếu warehouse_location được chọn (show === true)
+                if (opt?.show === true) {
+                    return sum + parseFloat(opt?.quantity_export || 0);
+                }
+                return sum;
+            },
             0
         );
 
@@ -222,7 +234,17 @@ const PopupKeepStock = ({ dataLang, status, id, onRefresh, totalButtons = 0, ...
             if (e?.item?.warehouse_location?.length > 0) {
                 e?.item?.warehouse_location.forEach((i, _) => {
                     if (i.show) {
-                        formData.append(`items[${index}][warehouse_location][${_}][id]`, i?.id ? i?.id : "");
+                        // Nối value_1, value_2, value_3 vào id (chỉ cho nguyên vật liệu)
+                        let idValue = i?.id ? i?.id : "";
+                        if (e?.item?.text_type === 'material') {
+                            const values = [
+                                i?.value_1 || "",
+                                i?.value_2 || "",
+                                i?.value_3 || ""
+                            ].filter(v => v !== "").join("__");
+                            idValue = values ? `${idValue}__${values}` : idValue;
+                        }
+                        formData.append(`items[${index}][warehouse_location][${_}][id]`, idValue);
 
                         formData.append(
                             `items[${index}][warehouse_location][${_}][quantity_export]`,
@@ -265,8 +287,8 @@ const PopupKeepStock = ({ dataLang, status, id, onRefresh, totalButtons = 0, ...
                 button={
                     <button
                         className={`group rounded-lg w-full p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer
-                            ${totalButtons > 3 
-                                ? 'hover:bg-primary-05' 
+                            ${totalButtons > 3
+                                ? 'hover:bg-primary-05'
                                 : 'hover:border-orange-500 hover:bg-orange-50'
                             }`}
                     >
@@ -471,17 +493,17 @@ const PopupKeepStock = ({ dataLang, status, id, onRefresh, totalButtons = 0, ...
                                                         {formatNumber(e?.quantity_had_condition)}
                                                     </h6>
                                                     <h6
-                                                        className={`2xl:text-[13px] flex items-start ${e?.item?.warehouse_location?.length > 1
-                                                            ? "justify-start"
-                                                            : "justify-center"
-                                                            }  flex-wrap gap-2 xl:text-[12px] text-[11px] py-0.5 col-span-3  rounded-md  break-words`}
+                                                        className={`2xl:text-[13px] flex flex-col gap-2 ${e?.item?.warehouse_location?.length > 1
+                                                            ? "items-start"
+                                                            : "items-center"
+                                                            }   xl:text-[12px] text-[11px] py-0.5 col-span-3  rounded-md  break-words`}
                                                     >
                                                         {e?.item?.warehouse_location?.length > 0 ? (
                                                             e?.item?.warehouse_location?.map((i) => {
                                                                 return (
                                                                     <div
                                                                         key={i.id}
-                                                                        className="w-[48%] grid grid-cols-1 items-start "
+                                                                        className="w-[48%]- w-full  grid grid-cols-1 items-start "
                                                                     >
                                                                         <Zoom>
                                                                             <div
@@ -552,6 +574,28 @@ const PopupKeepStock = ({ dataLang, status, id, onRefresh, totalButtons = 0, ...
                                                                                         ) : (
                                                                                             ""
                                                                                         )}
+                                                                                        {e?.item?.text_type === 'material' &&
+                                                                                            Array.isArray(warehousePropertyLabels) &&
+                                                                                            warehousePropertyLabels.length > 0 && (
+                                                                                                warehousePropertyLabels.map(({ key, label }) => {
+                                                                                                    if (!label) return null;
+                                                                                                    const value = i?.[key];
+
+                                                                                                    // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                                                                                    if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+
+                                                                                                    return (
+                                                                                                        <div key={key} className="flex gap-0.5">
+                                                                                                            <h6 className="text-[8px]">
+                                                                                                                {label}:
+                                                                                                            </h6>
+                                                                                                            <h6 className="text-[9px] px-1 w-[full] text-left">
+                                                                                                                {value == null || value === '' ? '-' : value}
+                                                                                                            </h6>
+                                                                                                        </div>
+                                                                                                    );
+                                                                                                })
+                                                                                            )}
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
