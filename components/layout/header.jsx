@@ -26,6 +26,8 @@ import { Dropdown } from '../UI/dropdown';
 import DropdownThongBao from '../UI/notificationDropdown';
 import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
 
+const IMAGE_APPLICATION = '/application/application.gif';
+
 const Header = () => {
   const router = useRouter();
 
@@ -1225,6 +1227,21 @@ const Header = () => {
         </div>
 
         <div className='flex items-center gap-2 xl:gap-4 2xl:gap-6'>
+          <a
+            href='/application'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='flex items-center gap-1 rounded-lg p-1 bg-white hover:bg-[#D6E6FF]'
+          >
+            <Image
+              className='w-7 h-7 rounded'
+              src={IMAGE_APPLICATION}
+              alt='application'
+              width={28}
+              height={28}
+            />
+            <p className='font-semibold text-sm leading-5 text-[#003DA0] truncate pr-1'>Ứng dụng</p>
+          </a>
           {authState?.is_upgrade && (
             <button
               className='py-1 px-2 rounded-full bg-blue-fmrp flex items-center gap-2'
@@ -1492,7 +1509,7 @@ export const DropdownAvatar = React.memo(() => {
       CookieCore.remove('databaseappFMRP');
       router.push('/auth/login');
       sOnSending(false);
-    } catch (error) {}
+    } catch (error) { }
   };
 
   useEffect(() => {
@@ -1576,33 +1593,33 @@ export const DropdownAvatar = React.memo(() => {
     // ...(auth?.is_upgrade === false ? [{
     ...(auth?.is_upgrade
       ? [
-          {
-            name: 'Nâng cấp Professional',
-            icon: <SparkleOutlineIcon size={16} />,
-            group: 2,
-            color: '#003DA0',
-            hover: 'hover:bg-[#EBF5FF]',
-            onClick: () => {
-              dispatch({
-                type: 'statePopupGlobal',
-                payload: {
-                  open: true,
-                  children: (
-                    <PopupUpgradeProfessional
-                      upgradePackageData={upgradePackageData}
-                      onClose={() =>
-                        dispatch({
-                          type: 'statePopupGlobal',
-                          payload: { open: false },
-                        })
-                      }
-                    />
-                  ),
-                },
-              });
-            },
+        {
+          name: 'Nâng cấp Professional',
+          icon: <SparkleOutlineIcon size={16} />,
+          group: 2,
+          color: '#003DA0',
+          hover: 'hover:bg-[#EBF5FF]',
+          onClick: () => {
+            dispatch({
+              type: 'statePopupGlobal',
+              payload: {
+                open: true,
+                children: (
+                  <PopupUpgradeProfessional
+                    upgradePackageData={upgradePackageData}
+                    onClose={() =>
+                      dispatch({
+                        type: 'statePopupGlobal',
+                        payload: { open: false },
+                      })
+                    }
+                  />
+                ),
+              },
+            });
           },
-        ]
+        },
+      ]
       : []),
     {
       name: 'Đăng xuất',
@@ -1711,9 +1728,8 @@ export const DropdownAvatar = React.memo(() => {
               <button
                 key={`group2-${index}`}
                 onClick={item.onClick}
-                className={`w-full text-left px-4 py-2.5 group flex items-center space-x-2 outline-none ${item.hover ? item.hover : 'hover:bg-[#F7F8F9]'} ${
-                  index === array.length - 1 ? 'rounded-b-lg' : ''
-                }`}
+                className={`w-full text-left px-4 py-2.5 group flex items-center space-x-2 outline-none ${item.hover ? item.hover : 'hover:bg-[#F7F8F9]'} ${index === array.length - 1 ? 'rounded-b-lg' : ''
+                  }`}
               >
                 {item.icon}
                 <span className='text-base font-normal text-neutral-03 group-hover:text-neutral-07' style={item.color ? { color: item.color } : {}}>

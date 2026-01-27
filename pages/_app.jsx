@@ -185,6 +185,11 @@ function MainPage({ Component, pageProps }) {
         return <LoadingPage />;
     }
 
+    // Bypass layout cho route /application (page layout rỗng theo yêu cầu)
+    if (router.pathname === '/application' || router.pathname.startsWith('/application/')) {
+        return <Component dataLang={data} {...pageProps} />;
+    }
+
     return (
         <Customscrollbar className='relative h-screen text-customize'>
             <Layout dataLang={data}>
