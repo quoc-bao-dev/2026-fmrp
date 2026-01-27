@@ -116,11 +116,10 @@ const SelectSearchableRadio = ({
         <div className='relative flex select-with-radio'>
           <span className='absolute left-3 top-1/2 -translate-y-1/2 z-10 text-[#7a7a7a]'>{icon}</span>
           <Select
-            className={`placeholder-secondary-color-text-disabled !responsive-text-base placeholder:!responsive-text-base cursor-pointer select-with-radio w-full custom-select-no-bg ${
-              mode === 'multiple'
+            className={`placeholder-secondary-color-text-disabled !responsive-text-base placeholder:!responsive-text-base cursor-pointer select-with-radio w-full custom-select-no-bg ${mode === 'multiple'
                 ? '[&_.ant-select-selector]:!flex [&_.ant-select-selector]:flex-nowrap [&_.ant-select-selector]:overflow-x-auto [&_.ant-select-selector]:overflow-y-hidden [&_.ant-select-selection-overflow]:flex [&_.ant-select-selection-overflow]:flex-nowrap [&_.ant-select-selection-overflow]:items-center [&_.ant-select-selection-overflow]:gap-1 [&_.ant-select-selection-overflow]:max-w-full [&_.ant-select-selection-item]:flex-shrink-0 [&_.ant-select-selection-item]:max-w-none [&_.ant-select-selection-item-content]:overflow-hidden [&_.ant-select-selection-item-content]:text-ellipsis [&_.ant-select-selection-item-content]:whitespace-nowrap'
                 : ''
-            }`}
+              }`}
             placeholder={placeholder}
             allowClear
             mode={mode}
@@ -146,33 +145,35 @@ const SelectSearchableRadio = ({
               <>
                 {/* Search bar */}
                 {label && <h3 className='p-3 responsive-text-lg font-semibold'>{label}</h3>}
-                <div className='px-2 pb-2'>
-                  <div className='relative flex items-center'>
-                    <Input
-                      ref={searchInputRef}
-                      placeholder={searchPlaceholder}
-                      value={searchValue}
-                      onChange={handleSearch}
-                      onKeyDown={e => {
-                        // Ngăn event bubble lên antd Select (tránh Backspace/Delete tự remove tag đã chọn)
-                        e.stopPropagation();
-                      }}
-                      onMouseDown={e => {
-                        // Giữ focus ở input, tránh Select bắt event rồi xóa tag
-                        e.stopPropagation();
-                      }}
-                      onClick={e => {
-                        e.stopPropagation();
-                      }}
-                      className='w-full pr-4'
-                      allowClear
-                      autoFocus
-                    />
-                    <div className='absolute right-1 z-10 bg-[#1760B9] p-1 rounded-lg'>
-                      <MagnifyingGlassIcon className='size-4 text-white' />
+                {searchValue && (
+                  <div className='px-2 pb-2'>
+                    <div className='relative flex items-center'>
+                      <Input
+                        ref={searchInputRef}
+                        placeholder={searchPlaceholder}
+                        value={searchValue}
+                        onChange={handleSearch}
+                        onKeyDown={e => {
+                          // Ngăn event bubble lên antd Select (tránh Backspace/Delete tự remove tag đã chọn)
+                          e.stopPropagation();
+                        }}
+                        onMouseDown={e => {
+                          // Giữ focus ở input, tránh Select bắt event rồi xóa tag
+                          e.stopPropagation();
+                        }}
+                        onClick={e => {
+                          e.stopPropagation();
+                        }}
+                        className='w-full pr-4'
+                        allowClear
+                        autoFocus
+                      />
+                      <div className='absolute right-1 z-10 bg-[#1760B9] p-1 rounded-lg'>
+                        <MagnifyingGlassIcon className='size-4 text-white' />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
                 {/* Options list */}
                 <div className='custom-select-dropdown max-h-[300px] overflow-y-auto select-searchable-scrollbar'>{menu}</div>
               </>

@@ -534,8 +534,8 @@ const ImportOutputMobile = () => {
             </div>
           ) : selectedStageName ? (
             // Hiển thị danh sách ProductionOrderCard khi đã chọn stage_name
-            <Customscrollbar showOnHover={true} className='flex-1 min-h-0 h-full overflow-y-auto' onScroll={handleScroll} ref={scrollContainerRef}>
-              <div className='flex flex-col gap-2.5'>
+            <Customscrollbar showOnHover={true} className='flex-1 min-h-0 h-full' onScroll={handleScroll} ref={scrollContainerRef}>
+              <div className='flex flex-col gap-2.5 pb-10'>
                 {allProductionOrders.length > 0 ? (
                   <>
                     {allProductionOrders.map((po, index) => (
