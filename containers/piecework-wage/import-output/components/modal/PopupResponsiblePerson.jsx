@@ -1,3 +1,4 @@
+import apiImportOutput from '@/Api/apiPieceworkWage/import-output/apiImportOutput';
 import { ButtonDelete } from '@/components/UI/button/buttonDelete';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import Loading from '@/components/UI/loading/loading';
@@ -8,16 +9,14 @@ import CloseXIcon from '@/components/icons/common/CloseXIcon';
 import { IMAGES } from '@/constants/images';
 import ResponsibleAvatar from '@/containers/manufacture/productions-orders/components/popup/ResponsibleAvatar';
 import PersonSelector from '@/containers/piecework-wage/import-output/components/modal/PersonSelector';
-import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import useToast from '@/hooks/useToast';
-import { useListPomStages, useLookupGroupMembers, useSavePomStagesDetail } from '@/managers/api/piecework-wage/useImportOutput';
-import apiImportOutput from '@/Api/apiPieceworkWage/import-output/apiImportOutput';
+import { useListPomStages, useSavePomStagesDetail } from '@/managers/api/piecework-wage/useImportOutput';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-const PopupResponsiblePerson = ({ open, onClose, brandId, po_id, stage_id, filterParams = {}, onUpdatedPo }) => {
+const PopupResponsiblePerson = ({ open, onClose, po_id, stage_id, filterParams = {}, onUpdatedPo }) => {
   const showToast = useToast();
   const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
 
@@ -36,9 +35,6 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, po_id, stage_id, filte
       enabled: open && !!po_id && !!stage_id,
     }
   );
-
-  const { data: staffs } = useSearchStaffs({ branch_ids: brandId ? [brandId] : [] }, { enabled: open });
-  const { data: listGroupMembers } = useLookupGroupMembers({ limit: 100 }, { enabled: open });
 
   const { mutate: savePomStagesDetail, isPending: isSaving } = useSavePomStagesDetail({
     onSuccess: async data => {
@@ -68,42 +64,9 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, po_id, stage_id, filte
       onClose?.();
     },
     onError: error => {
-      console.error('Failed to save managers:', error);
       showToast('error', 'Không thể lưu người phụ trách');
     },
   });
-
-  const listStaffs = useMemo(() => {
-    const data = [];
-    const staffsList = staffs?.data?.staffs || [];
-
-    // Thêm các nhân viên
-    staffsList.forEach(staff => {
-      if (staff?.staffid && staff?.full_name) {
-        data.push({
-          id: String(staff.staffid),
-          name: staff.full_name,
-          avatarUrl: staff.profile_image,
-          type: 'staff',
-        });
-      }
-    });
-
-    // Thêm các nhóm
-    const groupMembers = listGroupMembers?.group_members || [];
-    groupMembers.forEach(group => {
-      if (group?.id && group?.name) {
-        data.push({
-          id: `group_${group.id}`,
-          name: group.name,
-          avatarUrl: IMAGES.groupUser,
-          type: 'group',
-        });
-      }
-    });
-
-    return data;
-  }, [staffs, listGroupMembers]);
 
   const handleAddPerson = () => {
     // Kiểm tra quyền: không có quyền thì không cho mở
@@ -252,7 +215,6 @@ const PopupResponsiblePerson = ({ open, onClose, brandId, po_id, stage_id, filte
             avatarUrl: item.staff?.profile_image || '',
             type: item.type || 'staff',
           }))}
-          data={listStaffs}
           inlineConfirm
           hideFooterActions
           width={300}

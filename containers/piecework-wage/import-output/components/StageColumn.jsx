@@ -1,130 +1,161 @@
 import { Clock2Icon, PresentationChartIcon, ThreeDotIcon, UserGroupIcon, UserPlus2Icon } from '@/components/icons';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import AvatarText from '@/components/UI/common/user/AvatarText';
+import Loading from '@/components/UI/loading/loading';
+import NoData from '@/components/UI/noData/nodata';
 import { IMAGES } from '@/constants/images';
 import useToast from '@/hooks/useToast';
-import { useListImportOutputItems, useListPomStages, useSavePomStages } from '@/managers/api/piecework-wage/useImportOutput';
+import { useListImportOutputItems, useListTimeKeeping, useSavePomStages } from '@/managers/api/piecework-wage/useImportOutput';
 import { Popover } from 'antd';
+import moment from 'moment';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import PersonSelector from './modal/PersonSelector';
 import ProductionOrderCard from './ProductionOrderCard';
 
+// Hàm format thời gian từ giây sang HH:mm:ss sử dụng moment
+const formatTimeFromSeconds = seconds => {
+  const totalSeconds = Number(seconds) || 0;
+  return moment.utc().startOf('day').add(totalSeconds, 'seconds').format('HH:mm:ss');
+};
+
 // Component dropdown hiển thị nhân viên/nhóm đang làm và tạm dừng
-const ProcessStatusDropdown = ({ stage }) => {
+const ProcessStatusDropdown = ({ stage, filterParams }) => {
   const [open, setOpen] = useState(false);
-  console.log(stage)
-  const { data: listPomStages, isLoading } = useListPomStages(
+  const { data: listTimeKeeping, isLoading } = useListTimeKeeping(
     {
       stage_id: stage.stage_id,
-      po_ids: stage.po_ids,
-      is_status: 1,
+      start_date: filterParams?.start_date ?? null,
+      end_date: filterParams?.end_date ?? null,
+      search: filterParams?.search ?? '',
+      ...(filterParams?.staff_ids ? { staff_ids: filterParams.staff_ids } : {}),
+      ...(filterParams?.group_member_ids ? { group_ids: filterParams.group_member_ids } : {}),
     },
     {
-      enabled: open && !!stage.po_ids,
+      enabled: open && !!stage.stage_id,
     }
   );
-  // Dữ liệu ảo cho "Đang làm"
-  const doingData = [
-    {
-      id: 1,
-      name: 'Thành',
-      type: 'staff',
-      avatar: '/shift-schedule.png',
-    },
-    {
-      id: 2,
-      name: 'Nhóm may',
-      type: 'group',
-    },
-  ];
 
-  // Dữ liệu ảo cho "Tạm dừng"
-  const pausedData = [
-    {
-      id: 3,
-      name: 'Quang',
-      type: 'staff',
-      avatar: '/shift-schedule.png',
-    },
-    {
-      id: 4,
-      name: 'Hùng',
-      type: 'staff',
-      avatar: '/shift-schedule.png',
-    },
-    {
-      id: 5,
-      name: 'Nhóm may',
-      type: 'group',
-    },
-  ];
+  // Phân loại dữ liệu từ API theo trạng thái và nhóm thành sections
+  const sections = useMemo(() => {
+    const doing = [];
+    const paused = [];
+    const timeKeepingData = listTimeKeeping;
+
+    // Xử lý nhân viên
+    if (timeKeepingData?.staffs && Array.isArray(timeKeepingData.staffs)) {
+      timeKeepingData.staffs.forEach(staff => {
+        const item = {
+          id: staff.staffid,
+          name: staff.full_name,
+          type: 'staff',
+          avatar: staff.profile_image,
+          time: staff.timesheet?.total_running_time || 0,
+        };
+        // Nếu timesheet rỗng hoặc null thì push vào paused
+        if (!staff.timesheet || staff.timesheet === null) {
+          paused.push(item);
+        } else {
+          const hasRunning = Number(staff.timesheet?.has_running) || 0;
+          if (hasRunning === 1) {
+            doing.push(item);
+          } else {
+            paused.push(item);
+          }
+        }
+      });
+    }
+
+    // Xử lý nhóm
+    if (timeKeepingData?.group_members && Array.isArray(timeKeepingData.group_members)) {
+      timeKeepingData.group_members.forEach(group => {
+        const item = {
+          id: `group_${group.id}`,
+          name: group.name,
+          type: 'group',
+          time: group.timesheet?.total_running_time || 0,
+        };
+        // Nếu timesheet rỗng hoặc null thì push vào paused
+        if (!group.timesheet || group.timesheet === null) {
+          paused.push(item);
+        } else {
+          const hasRunning = Number(group.timesheet?.has_running) || 0;
+          if (hasRunning === 1) {
+            doing.push(item);
+          } else {
+            paused.push(item);
+          }
+        }
+      });
+    }
+
+    return [
+      {
+        title: 'Đang làm',
+        color: '#1A7526',
+        bgColor: '#1A7526',
+        data: doing,
+      },
+      {
+        title: 'Tạm dừng',
+        color: '#EE1E1E',
+        bgColor: '#EE1E1E',
+        data: paused,
+      },
+    ];
+  }, [listTimeKeeping]);
 
   const dropdownContent = (
     <div className='w-[240px] bg-white rounded-lg shadow-lg overflow-hidden'>
       <Customscrollbar className='max-h-[400px]'>
-        {/* Section Đang làm */}
-        <div className=''>
-          <div className='responsive-text-base font-semibold text-[#1A7526] p-3 border-b border-[#F7F8F9] flex items-center gap-1'>
-            <span className='h-3 w-0.5 bg-[#1A7526] flex-shrink-0 rounded-full'></span>
-            <h4>Đang làm</h4>
-          </div>
-          <div className='flex flex-col'>
-            {doingData.map(item => (
-              <div key={item.id} className='flex items-center gap-2 px-3 py-2 rounded-lg'>
-                {item.type === 'staff' ? (
-                  <div className='size-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-[#549AE8]'>
-                    <Image src={item.avatar} alt={item.name} width={40} height={40} className='w-full h-full object-cover' />
-                  </div>
-                ) : (
-                  <div className='size-10 rounded-full flex items-center justify-center flex-shrink-0 bg-[#4F7AED] border-2 border-[#4F7AED]'>
-                    <UserGroupIcon className='size-6 text-white' />
-                  </div>
-                )}
-                <div className='flex flex-col gap-0.5'>
-                  <span className='responsive-text-sm font-normal text-neutral-07'>{item.name}</span>
-                  <div className='flex items-center gap-1'>
-                    <Clock2Icon className='size-4 2xl:size-5 text-blue-fmrp' />
-                    <span className='responsive-text-xs font-medium text-blue-fmrp'>08:27:00</span>
-                  </div>
-                </div>
+        {isLoading ? (
+          <Loading />
+        ) : (
+          sections.map((section, sectionIndex) => (
+            <div key={section.title}>
+              {/* Section Header */}
+              <div className='responsive-text-base font-semibold p-3 border-b border-[#F7F8F9] flex items-center gap-1' style={{ color: section.color }}>
+                <span className='h-3 w-0.5 flex-shrink-0 rounded-full' style={{ backgroundColor: section.bgColor }}></span>
+                <h4>{section.title}</h4>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className='border-t border-[#F7F8F9]' />
-
-        {/* Section Tạm dừng */}
-        <div className=''>
-          <div className='responsive-text-base font-semibold text-red-01 p-3 border-b border-[#F7F8F9] flex items-center gap-1'>
-            <span className='h-3 w-0.5 bg-[#EE1E1E] flex-shrink-0 rounded-full'></span>
-            <h4>Tạm dừng</h4>
-          </div>
-          <div className='flex flex-col'>
-            {pausedData.map(item => (
-              <div key={item.id} className='flex items-center gap-2 px-3 py-2 rounded-lg'>
-                {item.type === 'staff' ? (
-                  <div className='size-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-[#549AE8]'>
-                    <Image src={item.avatar} alt={item.name} width={40} height={40} className='w-full h-full object-cover' />
-                  </div>
+              {/* Section Content */}
+              <div className='flex flex-col'>
+                {section.data.length > 0 ? (
+                  section.data.map(item =>
+                    <div key={item.id} className='flex items-center gap-2 px-3 py-2 rounded-lg'>
+                      {item.type === 'staff' ? (
+                        item.avatar ? (
+                          <div className='size-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-[#549AE8]'>
+                            <Image src={item.avatar} alt={item.name} width={40} height={40} className='w-full h-full object-cover' />
+                          </div>
+                        ) : (
+                          <div className='size-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-[#549AE8]'>
+                            <AvatarText fullName={item.name} className='!size-10 !max-h-9 !min-h-9 !max-w-9 !min-w-9 text-base flex items-center justify-center' />
+                          </div>
+                        )
+                      ) : (
+                        <div className='size-10 rounded-full flex items-center justify-center flex-shrink-0 bg-[#4F7AED] border-2 border-[#4F7AED]'>
+                          <UserGroupIcon className='size-6 text-white' />
+                        </div>
+                      )}
+                      <div className='flex flex-col gap-0.5'>
+                        <span className='responsive-text-sm font-normal text-neutral-07'>{item.name}</span>
+                        <div className='flex items-center gap-1'>
+                          <Clock2Icon className='size-4 2xl:size-5 text-blue-fmrp' />
+                          <span className='responsive-text-xs font-medium text-blue-fmrp'>{formatTimeFromSeconds(item.time)}</span>
+                        </div>
+                      </div>
+                    </div>)
                 ) : (
-                  <div className='size-10 rounded-full flex items-center justify-center flex-shrink-0 bg-[#4F7AED] border-2 border-[#4F7AED]'>
-                    <UserGroupIcon className='size-6 text-white' />
-                  </div>
+                  <NoData type='person' classNameImage='max-w-[150px]' />
                 )}
-                <div className='flex flex-col gap-0.5'>
-                  <span className='responsive-text-sm font-normal text-neutral-07'>{item.name}</span>
-                  <div className='flex items-center gap-1'>
-                    <Clock2Icon className='size-4 2xl:size-5 text-blue-fmrp' />
-                    <span className='responsive-text-xs font-medium text-blue-fmrp'>08:27:00</span>
-                  </div>
-                </div>
               </div>
-            ))}
-          </div>
-        </div>
+              {/* Divider giữa các sections */}
+              {sectionIndex < sections.length - 1 && <div className='border-t border-[#F7F8F9]' />}
+            </div>
+          ))
+        )}
       </Customscrollbar>
     </div>
   );
@@ -139,7 +170,7 @@ const ProcessStatusDropdown = ({ stage }) => {
 };
 
 // Component StageColumn để quản lý infinite scroll cho từng stage
-const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, onPersonSelectorClick, filterParams, listGroupMembers, listStaffs }) => {
+const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, onPersonSelectorClick, filterParams }) => {
   const [page, setPage] = useState(1);
   const [allPos, setAllPos] = useState(stage?.items?.pos || []);
   const [hasMore, setHasMore] = useState(stage?.items?.next || false);
@@ -279,39 +310,6 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
     };
   };
 
-  // Format dữ liệu nhân viên và nhóm cho PersonSelector
-  const responsiblePersonData = useMemo(() => {
-    const data = [];
-    const staffs = listStaffs?.data?.staffs || [];
-
-    // Thêm các nhân viên
-    staffs
-      .filter(staff => staff?.staffid && staff?.full_name)
-      .forEach(staff => {
-        data.push({
-          id: String(staff.staffid),
-          name: staff.full_name,
-          avatarUrl: staff.profile_image,
-          type: 'staff',
-        });
-      });
-
-    // Thêm các nhóm
-    const groupMembers = listGroupMembers?.group_members || [];
-    groupMembers.forEach(group => {
-      if (group?.id && group?.name) {
-        data.push({
-          id: `group_${group.id}`,
-          name: group.name,
-          avatarUrl: IMAGES.groupUser,
-          type: 'group',
-        });
-      }
-    });
-
-    return data;
-  }, [listStaffs, listGroupMembers]);
-
   const handleResponsiblePersonConfirm = selected => {
     setSelectedResponsiblePersons(selected);
     const payload = buildBasePayload(selected);
@@ -437,7 +435,6 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
             onSelectMode={handleSelectMode}
             onApplySelected={handleApplySelectedOrders}
             selected={selectedResponsiblePersons}
-            data={responsiblePersonData}
             selectedProductionOrdersCount={selectedProductionOrders.length}
             isSelectMode={isSelectMode}
           >
@@ -469,7 +466,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
           <div className='flex items-center gap-3'>
             <p className='responsive-text-base font-semibold text-[#1A7526]'>Tổng lệnh: {stage?.items?.total_count || 0}</p>
           </div>
-          <ProcessStatusDropdown stage={stage} />
+          <ProcessStatusDropdown stage={stage} filterParams={filterParams} />
         </div>
       </div>
       <Customscrollbar className='flex-1 min-h-0 h-full' showOnHover={true} onScroll={handleScroll} ref={scrollContainerRef}>
@@ -479,8 +476,6 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
               {orderedPos.map((po, index) => (
                 <ProductionOrderCard
                   key={`${stage.stage_id}-${po.id}-${po.reference_no}-${index}`}
-                  status='idle'
-                  time='00 : 00 : 00'
                   po={po}
                   stage_id={stage.stage_id}
                   stage_name={stage.stage_name}
