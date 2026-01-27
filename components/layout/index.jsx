@@ -192,7 +192,7 @@ const Index = ({ children, ...props }) => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {router.pathname == '/manufacture/productions-orders-mobile' || router.pathname == '/manufacture/production-plan-mobile' ? (
+      {router.pathname == '/manufacture/productions-orders-mobile' || router.pathname == '/manufacture/production-plan-mobile' || router.pathname == '/piecework-wage/import-output-mobile' ? (
         children
       ) : (
         <React.Fragment>

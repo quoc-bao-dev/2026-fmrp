@@ -31,24 +31,29 @@ const _ServerInstance = async (method, url, dataObject = {}, callback) => {
 
   const urlParams = new URLSearchParams(window.location.search);
 
-  const tokenFMRP = urlParams.get('tokenFMRP');
-
-  const databaseappFMRP = urlParams.get('databaseappFMRP');
+  // Mobile/WebView truyền theo dạng: ?token=...&x_api_key=...
+  // Giữ tương thích ngược với key cũ: tokenFMRP/databaseappFMRP
+  const tokenFromUrl = urlParams.get('token') || urlParams.get('tokenFMRP');
+  const apiKeyFromUrl =
+    urlParams.get('x_api_key') ||
+    urlParams.get('api_key') ||
+    urlParams.get('databaseappFMRP');
 
   let token = null;
-
   let databaseApp = null;
 
   try {
-    token = Cookies.get('tokenFMRP') ?? tokenFMRP ?? '';
+    // Nếu middleware set cookie httpOnly thì js-cookie sẽ không đọc được,
+    // nên ưu tiên token từ URL query (webview) trước.
+    token = tokenFromUrl ?? Cookies.get('tokenFMRP') ?? '';
   } catch (err) {
-    token = null;
+    token = tokenFromUrl ?? '';
   }
 
   try {
-    databaseApp = Cookies.get('databaseappFMRP') ?? databaseappFMRP ?? '';
+    databaseApp = apiKeyFromUrl ?? Cookies.get('databaseappFMRP') ?? '';
   } catch (err) {
-    databaseApp = null;
+    databaseApp = apiKeyFromUrl ?? '';
   }
 
   const headers = {

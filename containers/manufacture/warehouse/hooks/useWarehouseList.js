@@ -6,7 +6,7 @@ export const useWarehouseList = (params) => {
     return useQuery({
         queryKey: ["api_warehouse_list", { ...params }],
         queryFn: async () => {
-            const { rResult, output } = await apiWarehouse.apiListWarehouse({ param: params });
+            const { rResult, output } = await apiWarehouse.apiListWarehouse({ params });
 
             return { rResult, output }
         },

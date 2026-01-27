@@ -16,6 +16,7 @@ import { useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import ModalImage from "react-modal-image";
 import { useRecallDetail } from "../hooks/useRecallDetail";
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 
 const PopupDetail = (props) => {
     const [open, sOpen] = useState(false);
@@ -25,6 +26,7 @@ const PopupDetail = (props) => {
     const dataSeting = useSetingServer();
 
     const { dataMaterialExpiry, dataProductSerial } = useFeature();
+    const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
 
     const formatNumber = (number) => {
         return formatNumberConfig(+number, dataSeting);
@@ -194,30 +196,30 @@ const PopupDetail = (props) => {
                                                                         <h6 className="text-[13px] text-left font-medium capitalize">
                                                                             {e?.item?.product_variation}
                                                                         </h6>
-                                                                        <div className="flex flex-wrap items-center font-oblique text-typo-blue-2">
+                                                                        <div className="flex flex-wrap items-center text-typo-blue-2">
                                                                             {e?.item?.serial !== null && dataProductSerial.is_enable === '1' ? (
                                                                                 <div className='flex gap-0.5'>
-                                                                                    <h6 className='text-[12px]'>Serial:</h6>
-                                                                                    <h6 className='text-[12px]  px-2   w-[full] text-left '>{e?.item?.serial == null || e?.item?.serial == '' ? '-' : e?.item?.serial}</h6>
+                                                                                    <h6 className='text-[11px]'>Serial:</h6>
+                                                                                    <h6 className='text-[11px]  px-2   w-[full] text-left '>{e?.item?.serial == null || e?.item?.serial == '' ? '-' : e?.item?.serial}</h6>
                                                                                 </div>
-                                                                                ) : (
+                                                                            ) : (
                                                                                 ''
                                                                             )}
                                                                             {dataMaterialExpiry.is_enable === "1" ? (
                                                                                 <>
                                                                                     <div className="flex gap-0.5">
-                                                                                        <h6 className="text-[12px]">
+                                                                                        <h6 className="text-[11px]">
                                                                                             Lot:
                                                                                         </h6>{" "}
-                                                                                        <h6 className="text-[12px]  px-2   w-[full] text-left ">
+                                                                                        <h6 className="text-[11px]  px-2   w-[full] text-left ">
                                                                                             {e?.lot == null || e?.lot == "" ? "-" : e?.lot}
                                                                                         </h6>
                                                                                     </div>
                                                                                     <div className="flex gap-0.5">
-                                                                                        <h6 className="text-[12px]">
+                                                                                        <h6 className="text-[11px]">
                                                                                             Date:
                                                                                         </h6>{" "}
-                                                                                        <h6 className="text-[12px]  px-2   w-[full] text-center ">
+                                                                                        <h6 className="text-[11px]  px-2   w-[full] text-center ">
                                                                                             {e?.expiration_date
                                                                                                 ? formatMoment(e?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : "-"}
                                                                                         </h6>
@@ -227,6 +229,23 @@ const PopupDetail = (props) => {
                                                                                 ""
                                                                             )}
                                                                         </div>
+                                                                        {e?.item_type === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                                                                            <div className='flex flex-col'>
+                                                                                {warehousePropertyLabels.map(({ key, label }) => {
+                                                                                    if (!label) return null;
+                                                                                    const value = e?.[key];
+
+                                                                                    // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                                                                    if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+
+                                                                                    return (
+                                                                                        <span key={key} className='text-[#3276FA] text-[11px] font-normal'>
+                                                                                            {label}: {value == null || value === '' ? '-' : value}
+                                                                                        </span>
+                                                                                    );
+                                                                                })}
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             </h6>
@@ -305,7 +324,7 @@ const PopupDetail = (props) => {
                                                         0
                                                     )
                                                 )} */}
-                                                {Number(data?.total_quantity_manufacture)!==0 ? formatNumber(data?.total_quantity_manufacture) : formatNumber(data?.total_quantity)}
+                                                {Number(data?.total_quantity_manufacture) !== 0 ? formatNumber(data?.total_quantity_manufacture) : formatNumber(data?.total_quantity)}
                                             </h3>
                                         </div>
                                     </div>

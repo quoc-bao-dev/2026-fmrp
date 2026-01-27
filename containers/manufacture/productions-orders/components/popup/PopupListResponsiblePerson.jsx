@@ -195,7 +195,6 @@ const PopupListResponsiblePerson = props => {
     // Gọi mutation để save
     saveProductionOrderManagers(payload);
   };
-
   useEffect(() => {
     if (!openRoleId) return;
     const handler = e => {

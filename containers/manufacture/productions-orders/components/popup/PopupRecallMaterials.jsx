@@ -19,6 +19,7 @@ import InputNumberCustom from './shared/InputNumberCustom';
 import { CustomDropdownRadioGroup, convertWarehousesToDropdownData } from './shared/WarehouseDropdown';
 import useSetingServer from '@/hooks/useConfigNumber';
 import PackageUpgradeButton from '@/components/common/button/PackageUpgradeButton';
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 
 // Kiểm tra xem material có lot/date hợp lệ không (có ít nhất một lot với lot hoặc expiration_date không rỗng)
 const hasValidLotDate = lots => {
@@ -40,6 +41,9 @@ const mapLotsToDropdown = (itemVariationId, lots) => {
     expiration_date: lotItem.expiration_date || '',
     serial: lotItem.serial || '',
     total_quantity: Number(lotItem.quantity_recall || 0),
+    value_1: lotItem.value_1,
+    value_2: lotItem.value_2,
+    value_3: lotItem.value_3,
   }));
 
   if (items.length === 0) return [];
@@ -65,6 +69,7 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
   const showToast = useToast();
   const dataSeting = useSetingServer();
   const isProPackage = dataSeting?.package !== '1';
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
 
   const [materialsSearchTerm, setMaterialsSearchTerm] = useState('');
   const [warehouseSearchTerm, setWarehouseSearchTerm] = useState('');
@@ -256,12 +261,12 @@ const PopupRecallMaterials = ({ code, onClose, id, branchId }) => {
       })),
     }));
   }, [warehouses]);
-console.log(transformedWarehouses)
+  console.log(transformedWarehouses)
   // Format dữ liệu kho hàng để hiển thị trong dropdown
   const warehouseDropdownData = useMemo(() => {
     return convertWarehousesToDropdownData(transformedWarehouses);
   }, [transformedWarehouses]);
-console.log(warehouseDropdownData)
+  console.log(warehouseDropdownData)
   // Sắp xếp materials: ưu tiên các material đã chọn lên đầu, giữ nguyên thứ tự gốc
   const sortedMaterials = useMemo(() => {
     if (!materials || materials.length === 0) return [];
@@ -312,6 +317,9 @@ console.log(warehouseDropdownData)
         lot_enter: selectedWarehouse?.lot || '',
         expiration_date_enter: selectedWarehouse?.expiration_date || '',
         serial_enter: selectedWarehouse?.serial || '',
+        value_1_enter: selectedWarehouse?.value_1 || null,
+        value_2_enter: selectedWarehouse?.value_2 || null,
+        value_3_enter: selectedWarehouse?.value_3 || null,
       };
     });
 
@@ -370,13 +378,13 @@ console.log(warehouseDropdownData)
           />
           <div className='flex gap-3 items-center'>
             {/* {isProPackage ? ( */}
-              <button
-                onClick={handleConfirmRecall}
-                disabled={isSavingRecall}
-                className={`flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-blue-fmrp hover:bg-blue-fmrp/80 disabled:opacity-60 disabled:cursor-not-allowed`}
-              >
-                <CheckIcon className='size-4' /> {isSavingRecall ? 'Đang lưu...' : 'Thu hồi'}
-              </button>
+            <button
+              onClick={handleConfirmRecall}
+              disabled={isSavingRecall}
+              className={`flex items-center gap-2 text-sm font-medium rounded-lg py-3 px-4 w-fit text-white bg-blue-fmrp hover:bg-blue-fmrp/80 disabled:opacity-60 disabled:cursor-not-allowed`}
+            >
+              <CheckIcon className='size-4' /> {isSavingRecall ? 'Đang lưu...' : 'Thu hồi'}
+            </button>
             {/* ) : (
               <PackageUpgradeButton />
             )} */}
@@ -418,9 +426,8 @@ console.log(warehouseDropdownData)
                     return (
                       <div
                         key={`product-${index}`}
-                        className={`p-2 rounded-md mb-2 cursor-pointer transition-all duration-200 ${
-                          isSelected ? 'bg-gradient-to-br from-[#EBF5FF] to-[#D0E8FF] shadow-md shadow-blue-100/50' : 'bg-white hover:bg-[#F9FAFB] hover:shadow-sm'
-                        }`}
+                        className={`p-2 rounded-md mb-2 cursor-pointer transition-all duration-200 ${isSelected ? 'bg-gradient-to-br from-[#EBF5FF] to-[#D0E8FF] shadow-md shadow-blue-100/50' : 'bg-white hover:bg-[#F9FAFB] hover:shadow-sm'
+                          }`}
                         onClick={() => handleToggleProduct(product.poi_id)}
                       >
                         <div className='flex items-center gap-2'>
@@ -535,9 +542,24 @@ console.log(warehouseDropdownData)
                                 <h3 className='font-semibold text-[#141522]'>{material?.item_name}</h3>
                                 <div className='flex flex-col gap-0.5'>
                                   <p className='text-[10px] font-normal text-[#667085]'>{material?.product_variation}</p>
-                                  <p className='text-xs font-normal text-typo-blue-2'>{material?.item_code}</p>
+                                  <p className='text-[11px] font-normal text-typo-blue-2 !leading-[150%]'>{material?.item_code}</p>
                                 </div>
                               </div>
+                              {material.type_item === 'material' && selectedWarehouse && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                                <div className='flex flex-col'>
+                                  {warehousePropertyLabels.map(({ key, label }) => {
+                                    if (!label) return null;
+                                    const valueProp = selectedWarehouse?.[key];
+                                    // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                    if (!isWarehousePropertiesEnabled && (valueProp == null || valueProp === '')) return null;
+                                    return (
+                                      <span key={key} className=' !leading-[150%] text-[#3276FA] text-[11px] font-normal'>
+                                        {label}: {valueProp == null || valueProp === '' ? '-' : valueProp}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </td>
                             <td className='py-4 px-3 text-center'>
                               <div className='flex items-center justify-center'>
@@ -591,8 +613,10 @@ console.log(warehouseDropdownData)
                                           }}
                                           placeholder='Chọn Lot/Date - Serial'
                                           showOnlyLotDate={true}
+                                          showWarehousePropertiesInButton={true}
                                           minDropdownWidth={200}
                                           allowClear={true}
+                                          showProperties={material.type_item === 'material'}
                                         />
                                       </div>
                                     ) : null}

@@ -821,6 +821,9 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                 itemVariation: i?.item_variation,
                 locationFrom: i?.name_location_from,
                 locationTo: i?.name_location_to,
+                value_1: i?.value_1,
+                value_2: i?.value_2,
+                value_3: i?.value_3,
               };
             }),
           };
@@ -876,6 +879,9 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                 itemVariation: i?.item_variation,
                 locationFrom: i?.name_location_from,
                 locationTo: i?.name_location_to,
+                value_1: i?.value_1,
+                value_2: i?.value_2,
+                value_3: i?.value_3,
               };
             }),
           };

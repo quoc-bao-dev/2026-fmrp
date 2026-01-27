@@ -2,15 +2,19 @@ import apiExportToOther from "@/Api/apiManufacture/warehouse/exportToOther/apiEx
 import { optionsQuery } from "@/configs/optionsQuery"
 import { useQuery } from "@tanstack/react-query"
 
-export const useExportToOtherItems = (idBranch, idExportWarehouse, search) => {
+export const useExportToOtherItems = (idBranch, idExportWarehouse, search, warehouseStockOnly = null) => {
     return useQuery({
-        queryKey: ['api_export_other_items', idBranch, idExportWarehouse, search],
+        queryKey: ['api_export_other_items', idBranch, idExportWarehouse, search, warehouseStockOnly],
         queryFn: async () => {
+            const params = {
+                "filter[branch_id]": idBranch ? idBranch?.value : null,
+                "filter[warehouse_id]": idExportWarehouse ? idExportWarehouse?.value : null,
+            }
+            if (warehouseStockOnly != null) {
+                params["filter[warehouse_stock_only]"] = warehouseStockOnly
+            }
             const { data } = await apiExportToOther.apiItemComboboxExportToOther(search ? 'POST' : 'GET', {
-                params: {
-                    "filter[branch_id]": idBranch ? idBranch?.value : null,
-                    "filter[warehouse_id]": idExportWarehouse ? idExportWarehouse?.value : null,
-                },
+                params,
                 data: {
                     term: search,
                 },

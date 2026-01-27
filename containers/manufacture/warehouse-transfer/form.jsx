@@ -31,13 +31,14 @@ import { Add } from 'iconsax-react';
 import moment from 'moment/moment';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { PiMapPinLight } from 'react-icons/pi';
 import { useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 import { useWarehouseTransferExport } from './hooks/useWarehouseTransferExport';
 import { useWarehouseTransferItems } from './hooks/useWarehouseTransferItems';
 import { useWarehouseTransferTo } from './hooks/useWarehouseTransferTo';
+import { useWarehouseProperties } from './hooks/useWarehouseProperties';
 
 /// Hậu viết API
 const WarehouseTransferForm = props => {
@@ -53,6 +54,9 @@ const WarehouseTransferForm = props => {
   const statusExprired = useStatusExprired();
   const { isOpen, isKeyState, handleQueryId } = useToggle();
   const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature();
+
+  // Thuộc tính kho
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties(dataSeting);
 
   const [onSending, sOnSending] = useState(false);
   const [onLoadingChild, sOnLoadingChild] = useState(false);
@@ -71,15 +75,22 @@ const WarehouseTransferForm = props => {
   const [errReceiveWarehouse, sErrReceiveWarehouse] = useState(false);
   const [errWarehouse, sErrWarehouse] = useState(false);
   const [errReceivingLocation, sErrReceivingLocation] = useState(false);
+  const [isOpenReceivingLocationWarning, sIsOpenReceivingLocationWarning] = useState(false);
+  const prevReceiveWarehouseRef = useRef(null);
+  // Track kho nào đã được check để tránh hiện popup nhiều lần cho cùng một kho
+  const checkedWarehouseRef = useRef(null);
 
   // danh sách chi nhánh
   const { data: dataBranch = [] } = useBranchList();
   // danh sách kho nhận
   const { data: dataReceiveWarehouse = [] } = useWarehouseTransferTo();
-  // danh sách mặt hàng
-  const { data: dataItems } = useWarehouseTransferItems(idBranch, idExportWarehouse);
-  // danh sách vị trí nhận
-  const { data: dataReceivingLocation = [] } = useLocationByWarehouseTo(idReceiveWarehouse);
+  // danh sách mặt hàng: chỉ lấy những mặt hàng có tồn kho (warehouse_stock_only = 1)
+  const { data: dataItemsRaw } = useWarehouseTransferItems(idBranch, idExportWarehouse, 1);
+  // Chỉ lấy những mặt hàng có dữ liệu kho (e.warehouse length > 0) phòng trường hợp API vẫn trả về rỗng
+  const dataItems = Array.isArray(dataItemsRaw) ? dataItemsRaw.filter(item => Array.isArray(item?.e?.warehouse) && item.e.warehouse.length > 0) : [];
+
+  // danh sách vị trí nhận - lấy cả isLoading để biết API đã hoàn thành chưa
+  const { data: dataReceivingLocation = [], isLoading: isLoadingReceivingLocation, isFetching: isFetchingReceivingLocation } = useLocationByWarehouseTo(idReceiveWarehouse);
   // danh sách kho
   const { data: dataWarehouse = [] } = useWarehouseTransferExport(idBranch, idExportWarehouse);
 
@@ -238,6 +249,12 @@ const WarehouseTransferForm = props => {
         sIdExportWarehouse(value);
       }
     } else if (type == 'idReceiveWarehouse' && idReceiveWarehouse != value) {
+      // Lưu lại kho nhận hiện tại để có thể quay lại nếu kho mới không có vị trí
+      prevReceiveWarehouseRef.current = idReceiveWarehouse || null;
+      // Reset flag check khi chọn kho mới để API có thể check lại từ đầu
+      checkedWarehouseRef.current = null;
+      // Đóng popup khi chọn kho mới
+      sIsOpenReceivingLocationWarning(false);
       if (listData?.length > 0) {
         if (type === 'idReceiveWarehouse' && idBranch != value) {
           handleQueryId({ status: true, initialKey: { type, value } });
@@ -297,6 +314,30 @@ const WarehouseTransferForm = props => {
   useEffect(() => {
     idBranch == null && sIdExportWarehouse(null);
   }, [idBranch]);
+
+  // Cảnh báo khi kho nhận không có vị trí nhận
+  useEffect(() => {
+    // Chỉ check và hiện popup khi:
+    // 1. Có kho nhận được chọn
+    // 2. API đã hoàn thành (không còn loading/fetching)
+    // 3. API đã trả về kết quả (dataReceivingLocation !== undefined)
+    // 4. Mảng vị trí rỗng (length === 0)
+    // 5. Kho này chưa được check (để tránh hiện popup nhiều lần cho cùng một kho)
+    if (
+      idReceiveWarehouse &&
+      !isLoadingReceivingLocation &&
+      !isFetchingReceivingLocation &&
+      dataReceivingLocation !== undefined &&
+      Array.isArray(dataReceivingLocation) &&
+      dataReceivingLocation.length === 0 &&
+      checkedWarehouseRef.current?.value !== idReceiveWarehouse?.value
+    ) {
+      // Đánh dấu kho này đã được check
+      checkedWarehouseRef.current = idReceiveWarehouse;
+      // Hiện popup cảnh báo
+      sIsOpenReceivingLocationWarning(true);
+    }
+  }, [idReceiveWarehouse, dataReceivingLocation, isLoadingReceivingLocation, isFetchingReceivingLocation]);
 
   const formatNumber = number => {
     return formatNumberConfig(+number, dataSeting);
@@ -580,6 +621,35 @@ const WarehouseTransferForm = props => {
                         {option.e?.text_type && (
                           <TagColorProduct dataLang={dataLang} dataKey={getTypeDataKey(option.e?.text_type)} name={option.e?.text_type} className='!px-1' textSize='text-[11px]' />
                         )}
+                        {/* Lot / Date */}
+                        <>
+                          {/* Hiển thị Lot nếu setting bật HOẶC có giá trị */}
+                          {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' || (option.e?.lot != null && option.e?.lot !== '')) && (
+                            <span className='text-neutral-03'>Lot: {option.e?.lot == null || option.e?.lot === '' ? '-' : option.e?.lot}</span>
+                          )}
+                          {/* Hiển thị Date nếu setting bật HOẶC có giá trị */}
+                          {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' || option.e?.expiration_date) && (
+                            <span className='text-neutral-03'>Date: {option.e?.expiration_date ? formatMoment(option.e?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}</span>
+                          )}
+                        </>
+                        {/* Thuộc tính kho - chỉ hiển thị cho nguyên vật liệu */}
+                        {option.e?.text_type === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                          <div className='flex gap-3 text-neutral-03'>
+                            {warehousePropertyLabels.map(({ key, label }) => {
+                              if (!label) return null;
+                              const value = option.e?.[key];
+                              // Hiển thị nếu isWarehousePropertiesEnabled bật HOẶC thuộc tính có giá trị
+                              if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+                              return (
+                                <div key={key} className='flex items-start gap-1'>
+                                  <span className=' '>{label}</span>
+                                  <span>:</span>
+                                  <span className='truncate'>{value == null || value === '' ? '-' : value}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -624,15 +694,35 @@ const WarehouseTransferForm = props => {
                               )}
                               <div className='flex flex-col italic'>
                                 {dataProductSerial.is_enable === '1' && <div className='responsive-text-xs text-[#667085] font-[500]'>Serial: {e?.item?.e?.serial ? e?.item?.e?.serial : '-'}</div>}
-                                {dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' ? (
-                                  <>
-                                    <div className='responsive-text-xs text-[#667085] font-[500]'>Lot: {e?.item?.e?.lot ? e?.item?.e?.lot : '-'}</div>
+                                <>
+                                  {/* Hiển thị Lot nếu setting bật HOẶC có giá trị */}
+                                  {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' || (e?.item?.e?.lot != null && e?.item?.e?.lot !== '')) && (
+                                    <div className='responsive-text-xs text-[#667085] font-[500]'>Lot: {e?.item?.e?.lot == null || e?.item?.e?.lot === '' ? '-' : e?.item?.e?.lot}</div>
+                                  )}
+                                  {/* Hiển thị Date nếu setting bật HOẶC có giá trị */}
+                                  {(dataMaterialExpiry.is_enable === '1' || dataProductExpiry.is_enable === '1' || e?.item?.e?.expiration_date) && (
                                     <div className='responsive-text-xs text-[#667085] font-[500]'>
                                       Date: {e?.item?.e?.expiration_date ? formatMoment(e?.item?.e?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}
                                     </div>
-                                  </>
-                                ) : (
-                                  ''
+                                  )}
+                                </>
+                                {/* Thuộc tính kho - chỉ hiển thị cho nguyên vật liệu */}
+                                {e?.item?.e?.text_type === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0 && (
+                                  <div className='flex flex-col text-neutral-03 responsive-text-xs'>
+                                    {warehousePropertyLabels.map(({ key, label }) => {
+                                      if (!label) return null;
+                                      const value = e?.item?.e?.[key];
+                                      // Hiển thị nếu isWarehousePropertiesEnabled bật HOẶC thuộc tính có giá trị
+                                      if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+                                      return (
+                                        <div key={key} className='flex items-start gap-1'>
+                                          <span className='font-semibold'>{label}</span>
+                                          <span>:</span>
+                                          <span className='truncate'>{value == null || value === '' ? '-' : value}</span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -645,13 +735,13 @@ const WarehouseTransferForm = props => {
                           </button>
                         </div>
                       </div>
-                      <div className='col-span-15'>
-                        <div className='grid grid-cols-15 gap-2'>
+                      <div className='col-span-15 h-full flex flex-col justify-center'>
+                        <div className='grid grid-cols-15 gap-2 items-center'>
                           {load ? (
                             <Loading className='h-full col-span-15' color='#0f4f9e' />
                           ) : (
                             e?.child?.map((ce, index) => (
-                              <div key={ce?.id?.toString()} className='col-span-15 grid grid-cols-15 gap-2'>
+                              <div key={ce?.id?.toString()} className='col-span-15 grid grid-cols-15 gap-2 '>
                                 <div className='col-span-3 flex flex-col justify-center h-fit'>
                                   <SelectComponent
                                     options={ce?.dataWarehouse}
@@ -862,6 +952,39 @@ const WarehouseTransferForm = props => {
         save={resetValue}
         nameModel={'change_item'}
         cancel={() => handleQueryId({ status: false })}
+      />
+      <PopupConfim
+        dataLang={dataLang}
+        type='warning'
+        nameModel='bom_require_stage'
+        title={dataLang?.warning || 'Cảnh Báo'}
+        subtitle={
+          <span>
+            Kho nhận hiện <span className='font-semibold'>chưa có vị trí nhận</span>. Bạn có muốn tạo vị trí mới không?
+          </span>
+        }
+        isOpen={isOpenReceivingLocationWarning}
+        cancelLabel={dataLang?.cancel || 'Hủy'}
+        confirmLabel='Tạo vị trí'
+        save={() => {
+          sIsOpenReceivingLocationWarning(false);
+          if (typeof window !== 'undefined') {
+            window.open('/warehouses/location', '_blank');
+          }
+        }}
+        cancel={() => {
+          sIsOpenReceivingLocationWarning(false);
+          // Quay lại kho nhận trước đó (nếu có), không giữ kho không có vị trí
+          if (prevReceiveWarehouseRef.current) {
+            sIdReceiveWarehouse(prevReceiveWarehouseRef.current);
+            // Reset flag check để có thể check lại nếu chọn lại cùng kho sau này
+            checkedWarehouseRef.current = null;
+          } else {
+            sIdReceiveWarehouse(null);
+            // Reset flag check khi quay về null
+            checkedWarehouseRef.current = null;
+          }
+        }}
       />
     </React.Fragment>
   );
