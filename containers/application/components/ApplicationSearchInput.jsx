@@ -1,8 +1,12 @@
 import React from 'react';
 
-export default function ApplicationSearchInput({ placeholder = 'Tìm kiếm ứng dụng...', value, onChange }) {
+export default function ApplicationSearchInput({ placeholder = 'Tìm kiếm', value, onChange }) {
     return (
-        <div className='w-[672px] h-12 rounded-xl bg-white/80 backdrop-blur-sm border border-[#E5E7EB] flex items-center px-4 gap-3'>
+        <div className='w-[672px] h-12 rounded-full bg-white/80 backdrop-blur-sm border border-[#E5E7EB] flex items-center px-4 gap-3'
+            style={{
+                boxShadow: '0px 10px 37px -3px #2B7FFF1A',
+            }}
+        >
             <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg' className='shrink-0'>
                 <path d='M17.4995 18.5L13.8828 14.8833' stroke='#99A1AF' strokeWidth='1.66667' strokeLinecap='round' strokeLinejoin='round' />
                 <path
