@@ -1227,7 +1227,7 @@ const Header = () => {
         </div>
 
         <div className='flex items-center gap-2 xl:gap-4 2xl:gap-6'>
-          <a
+          {/* <a
             href='/application'
             target='_blank'
             rel='noopener noreferrer'
@@ -1241,7 +1241,7 @@ const Header = () => {
               height={28}
             />
             <p className='font-semibold text-sm leading-5 text-[#003DA0] truncate pr-1'>Ứng dụng</p>
-          </a>
+          </a> */}
           {authState?.is_upgrade && (
             <button
               className='py-1 px-2 rounded-full bg-blue-fmrp flex items-center gap-2'
