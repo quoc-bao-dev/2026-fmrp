@@ -937,47 +937,38 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose, is_prod
       className='popup-edit'
       overlayStyle={{ zIndex: 1100 }}
       contentStyle={{
+        position: 'fixed',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        top: 'auto',
+        transform: 'none',
         width: '100vw',
-        height: '100vh',
+        height: '92vh',
         maxWidth: '100vw',
-        maxHeight: '100vh',
+        maxHeight: '92vh',
         margin: 0,
         padding: 0,
         borderRadius: 0,
         border: 'none',
       }}
     >
-      <div className='p-3 flex flex-col gap-3 w-full h-full bg-[#F3F4F6] font-deca'>
-        {process.env.NODE_ENV === 'development' && (
-          <motion.div
-            whileHover={{ scale: 1.2, rotate: 90 }}
-            whileTap={{ scale: 0.9, rotate: -90 }}
-            transition={{ type: 'spring', stiffness: 300 }}
+      <div className='p-3 flex flex-col gap-3 w-full h-full bg-[#F3F4F6] rounded-t-xl font-deca'>
+        <div className='flex gap-2 justify-between'>
+          <div className='flex flex-col gap-1'>
+            <h2 className='text-base font-semibold'>
+              Nhập sản lượng công đoạn <span className='text-blue-fmrp'>{stage_name}</span>
+            </h2>
+            <p className='text-sm font-medium text-blue-fmrp'>{po?.reference_no}</p>
+          </div>
+          <button
             className='size-6 shrink-0 text-neutral-02 cursor-pointer'
             onClick={onClose}
           >
             <CloseXIcon className='size-full' />
-          </motion.div>
-        )}
-        <div className='relative pl-3 pr-14 w-full h-10 flex items-center justify-between gap-2 rounded-lg bg-white border border-[#D0D5DD] focus-within:border-transparent focus-within:ring-1 focus-within:ring-blue-fmrp'>
-          <input
-            type='text'
-            placeholder='Tìm kiếm theo tên và mã sản phẩm'
-            className='flex-1 border-none outline-none text-[#3A3E4C] placeholder-gray-200 text-sm'
-            value={searchProducts}
-            onChange={e => setSearchProducts(e.target.value)}
-          />
-          {searchProducts && (
-            <button type='button' className='rounded-full bg-gray-100 hover:bg-gray-200 text-[#3A3E4C] p-1 transition' aria-label='Xóa tìm kiếm' onClick={() => setSearchProducts('')}>
-              <CloseXIcon className='size-3' />
-            </button>
-          )}
-          <div className='absolute right-[-1px] top-[-1px] bottom-[-1px] w-12 h-10 flex items-center justify-center rounded-tr-lg rounded-br-lg bg-[#92BFF7]'>
-            <MagnifyingGlassIcon className='size-5 text-[#11315B]' />
-          </div>
+          </button>
         </div>
-        <div className='flex items-center justify-between gap-2'>
-          <CheckboxDefault checked={selectAll} onChange={handleSelectAll} label='Chọn tất cả' classNameCheckbox='bg-white' />
+        <div className='flex flex-col gap-2'>
           <SelectComponent
             options={warehouseOptions}
             value={selectedWarehouse}
@@ -1000,9 +991,29 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose, is_prod
                 },
               }),
             }}
+            classParent='w-fit'
             isSearchable={true}
           />
+          <div className='relative pl-3 pr-14 w-full h-10 flex items-center justify-between gap-2 rounded-lg bg-white border border-[#D0D5DD] focus-within:border-transparent focus-within:ring-1 focus-within:ring-blue-fmrp'>
+            <input
+              type='text'
+              placeholder='Tìm kiếm theo tên và mã sản phẩm'
+              className='flex-1 border-none outline-none text-[#3A3E4C] placeholder-gray-200 text-sm'
+              value={searchProducts}
+              onChange={e => setSearchProducts(e.target.value)}
+            />
+            {searchProducts && (
+              <button type='button' className='rounded-full bg-gray-100 hover:bg-gray-200 text-[#3A3E4C] p-1 transition' aria-label='Xóa tìm kiếm' onClick={() => setSearchProducts('')}>
+                <CloseXIcon className='size-3' />
+              </button>
+            )}
+            <div className='absolute right-[-1px] top-[-1px] bottom-[-1px] w-12 h-10 flex items-center justify-center rounded-tr-lg rounded-br-lg bg-[#92BFF7]'>
+              <MagnifyingGlassIcon className='size-5 text-[#11315B]' />
+            </div>
+          </div>
+          <CheckboxDefault checked={selectAll} onChange={handleSelectAll} label='Chọn tất cả' classNameCheckbox='bg-white' className='-ml-2' />
         </div>
+
         {(errorNVLData?.items?.length > 0 || errorNVLDataBefore?.items?.length > 0) && (
           <div className='flex flex-col gap-2'>
             {errorNVLData && errorNVLData?.items?.length > 0 && (

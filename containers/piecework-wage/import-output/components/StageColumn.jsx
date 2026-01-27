@@ -304,6 +304,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
       start_date: filterParams?.start_date ?? null,
       end_date: filterParams?.end_date ?? null,
       search: filterParams?.search ?? '',
+      ...(filterParams?.branch_ids ? { branch_id: filterParams.branch_ids } : {}),
       stage_id: stage?.stage_id,
       staff_ids,
       ...(group_ids.length > 0 && { group_ids }), // Chỉ thêm group_ids nếu có
@@ -437,6 +438,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
             selected={selectedResponsiblePersons}
             selectedProductionOrdersCount={selectedProductionOrders.length}
             isSelectMode={isSelectMode}
+            filterParams={filterParams}
           >
             <button
               className={`border rounded-lg p-1 cursor-pointer transition-all duration-300 ${isResponsiblePersonOpen ? 'border-blue-fmrp bg-blue-fmrp/10' : 'border-transparent hover:border-blue-fmrp hover:bg-blue-fmrp/10'

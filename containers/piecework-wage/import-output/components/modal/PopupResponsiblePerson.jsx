@@ -35,7 +35,7 @@ const PopupResponsiblePerson = ({ open, onClose, po_id, stage_id, filterParams =
       enabled: open && !!po_id && !!stage_id,
     }
   );
-
+console.log(filterParams)
   const { mutate: savePomStagesDetail, isPending: isSaving } = useSavePomStagesDetail({
     onSuccess: async data => {
       if (data?.isSuccess) {
@@ -181,6 +181,7 @@ const PopupResponsiblePerson = ({ open, onClose, po_id, stage_id, filterParams =
       po_id: po_id,
       stage_id: stage_id,
       staff_ids,
+      ...(filterParams?.branch_ids ? { branch_id: filterParams.branch_ids } : {}),
       ...(group_ids.length > 0 && { group_ids }), // Chỉ thêm group_ids nếu có
     };
 
@@ -218,6 +219,7 @@ const PopupResponsiblePerson = ({ open, onClose, po_id, stage_id, filterParams =
           inlineConfirm
           hideFooterActions
           width={300}
+          filterParams={filterParams}
         >
           <div className='inline-flex w-fit'>
             <ButtonAnimationNew

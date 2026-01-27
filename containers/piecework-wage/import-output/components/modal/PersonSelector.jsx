@@ -1,17 +1,16 @@
 import { CheckThinIcon, MagnifyingGlassIcon } from '@/components/icons';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import AvatarText from '@/components/UI/common/user/AvatarText';
+import Loading from '@/components/UI/loading/loading';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
+import { IMAGES } from '@/constants/images';
+import useToast from '@/hooks/useToast';
+import { useLookupGroupMembers, useLookupStaffs } from '@/managers/api/piecework-wage/useImportOutput';
+import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import { autoUpdate, flip, offset, shift, size, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
 import Image from 'next/image';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import useToast from '@/hooks/useToast';
-import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
-import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
-import { useSearchStaffs } from '@/hooks/common/useStaffs';
-import { useLookupGroupMembers, useLookupStaffs } from '@/managers/api/piecework-wage/useImportOutput';
-import { IMAGES } from '@/constants/images';
-import Loading from '@/components/UI/loading/loading';
 
 const ResponsibleAvatar = ({ avatarUrl, fullName = '', size = 40, borderColor = '#549AE8', className = '' }) => {
   const [isError, setIsError] = useState(false);
@@ -65,6 +64,7 @@ const PersonSelector = ({
   inlineConfirm = false,
   hideFooterActions = false,
   width = 230,
+  filterParams = {},
 }) => {
   const [search, setSearch] = useState('');
   const [localSelected, setLocalSelected] = useState(selected);
@@ -78,8 +78,8 @@ const PersonSelector = ({
   const showToast = useToast();
 
   // Gọi API lấy nhân viên và nhóm khi mở PersonSelector
-  const { data: listStaffs, isLoading: isLoadingStaffs } = useLookupStaffs({is_shift_scheduling: 1 }, { enabled: open });
-  const { data: listGroupMembers, isLoading: isLoadingGroupMembers } = useLookupGroupMembers({ limit: 100, is_shift_scheduling: 1 }, { enabled: open });
+  const { data: listStaffs, isLoading: isLoadingStaffs } = useLookupStaffs({ is_shift_scheduling: 1, branch_ids: [filterParams?.branch_ids] }, { enabled: open });
+  const { data: listGroupMembers, isLoading: isLoadingGroupMembers } = useLookupGroupMembers({ limit: 100, is_shift_scheduling: 1, branch_ids: [filterParams?.branch_ids] }, { enabled: open });
 
   // Format dữ liệu nhân viên và nhóm từ API
   const responsiblePersonData = useMemo(() => {
