@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import React from 'react';
 import { DropdownAvatar } from '@/components/layout/header';
+import ApplicationSearchInput from './ApplicationSearchInput';
 
 const IMAGE_APPLICATION = '/application/background-image-2.png';
 const IMAGE_LOGO = '/application/logo.png';
@@ -8,7 +9,7 @@ const IMAGE_LOGO = '/application/logo.png';
 export default function ApplicationLayout({ children }) {
     return <div className='min-h-screen relative'>
 
-        <div className="w-full absolute insetx-x-0 -top-16 overflow-hidden">
+        <div className="absolute inset-x-0 -top-16 w-full overflow-hidden">
             <Image
                 src={IMAGE_APPLICATION}
                 className="w-full object-cover"
@@ -50,39 +51,14 @@ export default function ApplicationLayout({ children }) {
             </div>
         </div>
 
-        <div className="relative z-50">
-            <h1 className="pt-6 text-center"
-            // font-family: Lexend Deca;
-            // font-weight: 700;
-            // font-style: Bold;
-            // font-size: 36px;
-            // leading-trim: NONE;
-            // line-height: 40px;
-            // letter-spacing: 0px;
-            // text-align: center;
-            // #1D293D
-
-            >
-                <span
-                // #0375F3
-                >
-                    Ứng dụng từ FMRP
-                </span>
+        <div className="relative z-50 px-6">
+            <h1 className="pt-6 text-center font-bold text-[36px] leading-10 tracking-normal text-[#1D293D]">
+                <span className="text-[#0375F3]">Ứng dụng từ FMRP </span>
                 Giải pháp tối ưu cho doanh nghiệp
             </h1>
 
-            <div className="pt-8">
-                <div className="flex items-center">
-                    <div className=""
-                    // width: 672;
-                    // height: 48;
-                    // top: 72px;
-                    // left: 112px;
-                    // angle: 0 deg;
-                    // opacity: 1;
-
-                    ></div>
-                </div>
+            <div className="pt-8 flex justify-center">
+                <ApplicationSearchInput />
             </div>
             {children}
         </div>
