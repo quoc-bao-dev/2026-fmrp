@@ -12,7 +12,7 @@ import { useSocketContext } from '@/context/socket/SocketContext';
 import { useInternalPlansSearchCombobox } from '@/hooks/common/useInternalPlans';
 import { useOrdersSearchCombobox } from '@/hooks/common/useOrder';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
-import { useListImportOutput, useLookupGroupMembers, useLookupStages } from '@/managers/api/piecework-wage/useImportOutput';
+import { useListImportOutput, useLookupGroupMembers, useLookupStaffs, useLookupStages } from '@/managers/api/piecework-wage/useImportOutput';
 import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import moment from 'moment';
 import Head from 'next/head';
@@ -58,14 +58,14 @@ const ImportOutput = () => {
   };
 
   const { isLoading: isLoadingListImportOutput, data: listImportOutput, refetch: refetchListImportOutput } = useListImportOutput(filterParams);
-  const { data: listStaffs } = useSearchStaffs();
-  const { data: listGroupMembers } = useLookupGroupMembers({ limit: 100 });
+  const { data: listStaffs } = useLookupStaffs({is_shift_scheduling: 1});
+  const { data: listGroupMembers } = useLookupGroupMembers({ limit: 100, is_shift_scheduling: 1 });
   const { data: listStages } = useLookupStages({ search: debouncedSearchProcess || '' });
   const { data: listOrders = [] } = useOrdersSearchCombobox(debouncedSearchOrder);
   const { data: listPlan = [] } = useInternalPlansSearchCombobox(debouncedSearchPlan);
 
   // Lấy dữ liệu nhân viên từ API
-  const staffs = listStaffs?.data?.staffs || [];
+  const staffs = listStaffs?.staffs || [];
 
   // Lấy dữ liệu công đoạn từ API (đã được filter từ server)
   const stagesList = listStages?.stages || [];
@@ -509,8 +509,6 @@ const ImportOutput = () => {
                     activePersonSelectorStageId={activePersonSelectorStageId}
                     onPersonSelectorClick={handlePersonSelectorClick}
                     filterParams={filterParams}
-                    listGroupMembers={listGroupMembers}
-                    listStaffs={listStaffs}
                   />
                 ))}
               </div>

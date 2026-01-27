@@ -32,6 +32,19 @@ export const useListImportOutputItems = (params, options = {}) => {
   });
 };
 
+//danh sách nhân viên
+export const useLookupStaffs = (params, options = {}) => {
+  const fetchLookupStaffs = async () => {
+    const response = await apiImportOutput.apiLookupStaffs({ params: params });
+    return response.data;
+  };
+  return useQuery({
+    queryKey: ['api_lookup_staffs', { ...params }],
+    queryFn: fetchLookupStaffs,
+    ...options,
+  });
+};
+
 //danh sách nhóm
 export const useLookupGroupMembers = (params, options = {}) => {
   const fetchLookupGroupMembers = async () => {
@@ -191,5 +204,18 @@ export const useResumeTimer = (options = {}) => {
       onSuccessFromOptions?.(data, variables);
     },
     ...restOptions,
+  });
+};
+
+//Danh sách thời gian làm việc nút 3 chấm
+export const useListTimeKeeping = (params, options = {}) => {
+  const fetchListTimeKeeping = async () => {
+    const response = await apiImportOutput.apiListTimeKeeping(params);
+    return response.data;
+  };
+  return useQuery({
+    queryKey: ['api_list_time_keeping', { ...params }],
+    queryFn: fetchListTimeKeeping,
+    ...options,
   });
 };

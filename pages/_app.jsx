@@ -154,15 +154,9 @@ function MainPage({ Component, pageProps }) {
         return <LoadingPage />;
     }
 
-    // 2 page này code cho moblie
-    if (router.pathname == '/manufacture/productions-orders-mobile' || router.pathname == '/manufacture/production-plan-mobile') {
-        return (
-            <Customscrollbar className='relative max-h-screen '>
-                <Layout dataLang={data}>
-                    <Component dataLang={data} {...pageProps} />
-                </Layout>
-            </Customscrollbar>
-        );
+    // 3 page này code cho moblie
+    if (router.pathname == '/manufacture/productions-orders-mobile' || router.pathname == '/manufacture/production-plan-mobile' || router.pathname == '/piecework-wage/import-output-mobile') {
+        return <Component dataLang={data} {...pageProps} />;
     }
 
     // kiểm tra login

@@ -195,7 +195,7 @@ const SupportZalo = () => {
         cursor: 'grab',
         transition: 'none',
       }}
-      className={`z-[999] relative bg-white rounded-xl p-1 shadow-lg border border-new-blue/50 hover:cursor-grab active:cursor-grabbing flex items-center gap-1 ${
+      className={`hidden md:flex z-[999] relative bg-white rounded-xl p-1 shadow-lg border border-new-blue/50 hover:cursor-grab active:cursor-grabbing items-center gap-1 ${
         isOnLeft ? 'flex-row-reverse' : 'flex-row'
       }`}
     >
