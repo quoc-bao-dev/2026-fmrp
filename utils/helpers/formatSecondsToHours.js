@@ -10,7 +10,7 @@ export const formatSecondsToHours = seconds => {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   if (hours > 0 && minutes > 0) {
-    return `${hours}h${minutes}p`;
+    return `${hours}h ${minutes}p`;
   } else if (hours > 0) {
     return `${hours}h`;
   } else if (minutes > 0) {
@@ -32,7 +32,7 @@ export const formatSecondsToHoursMinutesSeconds = seconds => {
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const secs = totalSeconds % 60;
   if (hours > 0) {
-    return `${hours}h${minutes}p${secs > 0 ? secs + 's' : ''}`;
+    return `${hours}h ${minutes}p ${secs > 0 ? secs + 's' : ''}`;
   } else if (minutes > 0) {
     return `${minutes}p${secs > 0 ? secs + 's' : ''}`;
   } else {
