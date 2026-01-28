@@ -87,7 +87,7 @@ export default function ApplicationLayout({ children }) {
                     </button>
 
                     {/* DROPDOWN AVATAR */}
-                    <DropdownAvatar />
+                    <DropdownAvatar typeArrow='dark' />
                 </div>
             </div>
 
