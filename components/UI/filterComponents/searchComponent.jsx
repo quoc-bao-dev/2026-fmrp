@@ -14,9 +14,13 @@ const SearchComponent = ({
   sizeIcon = 24,
   value,
   alwaysOpen = false,
+  openWidth, // string | number, ví dụ: "300px" hoặc 300
 }) => {
   const [isActive, setIsActive] = useState(alwaysOpen)
   const [inputValue, setInputValue] = useState(value || '')
+
+  const resolvedOpenWidth =
+    typeof openWidth === 'number' ? `${openWidth}px` : openWidth
 
   // Sync với value prop nếu có
   useEffect(() => {
@@ -78,10 +82,10 @@ const SearchComponent = ({
         <AnimatePresence mode="wait">
           {isActive && (
             <motion.div 
-              className="flex items-center h-full flex-1 min-w-0"
+              className="flex items-center h-full min-w-0 overflow-hidden"
               initial={{ width: 0, opacity: 0, x: -10 }}
               animate={{ 
-                width: 'auto',
+                width: resolvedOpenWidth || 'auto',
                 opacity: 1, 
                 x: 0,
                 transition: {

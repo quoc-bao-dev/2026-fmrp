@@ -14,13 +14,17 @@ import { IMAGES } from '@/constants/images';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import { useLookupGroupMembers } from '@/managers/api/piecework-wage/useImportOutput';
 import { useSummary, useSummaryDetail } from '@/managers/api/piecework-wage/useSummary';
+import useToast from '@/hooks/useToast';
 import formatNumber from '@/utils/helpers/formatnumber';
-import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
+import { formatSecondsToHours } from '@/utils/helpers/formatSecondsToHours';
 import moment from 'moment';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useMemo, useState } from 'react';
+import { useExportExcel } from '@/containers/piecework-wage/summary/hooks/useExportExcel';
 import { useDebounce } from 'use-debounce';
+import { useProductionOrdersCombobox } from '@/containers/manufacture/productions-orders/hooks/useProductionOrdersCombobox';
+import { useItemsVariantSearchCombobox } from '@/hooks/common/useItems';
 
 const breadcrumbItems = [
   { label: 'Lương sản lượng', },
@@ -34,14 +38,17 @@ const tabs = [
 
 const Summary = () => {
   const [activeTab, setActiveTab] = useState(tabs[0]);
-  const [searchStaff, setSearchStaff] = useState('');
-  const [selectedEmployee, setSelectedEmployee] = useState([]);
+  const [selectedStaffIds, setSelectedStaffIds] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState([]);
-  const [searchGroup, setSearchGroup] = useState('');
+  const [selectedProductionOrder, setSelectedProductionOrder] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [searchProductionOrder, setSearchProductionOrder] = useState('');
+  const [searchProduct, setSearchProduct] = useState('');
+  const [debouncedSearchProductionOrder] = useDebounce(searchProductionOrder, 300);
+  const [debouncedSearchProduct] = useDebounce(searchProduct, 300);
   const [search, setSearch] = useState('');
-  const [debouncedSearchStaff] = useDebounce(searchStaff, 300);
-  const [debouncedSearchGroup] = useDebounce(searchGroup, 300);
   const [debouncedSearch] = useDebounce(search, 300);
+  const showToast = useToast();
 
   const [dateFilter, setDateFilter] = useState({
     startDate: null,
@@ -50,88 +57,178 @@ const Summary = () => {
 
   const { data: listStaffs } = useSearchStaffs();
   const { data: listGroupMembers } = useLookupGroupMembers({ limit: 100 });
+  const { data: comboboxProductionOrders = [] } = useProductionOrdersCombobox(debouncedSearchProductionOrder);
+  const { data: listProducts = [] } = useItemsVariantSearchCombobox(debouncedSearchProduct);
 
-  // Tạo options cho công nhân với filter theo search
-  const employeeOptions = useMemo(() => {
+  // Tạo options cho nhân sự/công nhân
+  const staffOptions = useMemo(() => {
     const staffs = listStaffs?.data?.staffs || [];
-    const filteredStaffs = debouncedSearchStaff
-      ? staffs.filter(staff => {
-        return searchWithoutDiacritics(staff?.full_name || '', debouncedSearchStaff);
-      })
-      : staffs;
-
-    return filteredStaffs.map(item => ({
+    return staffs.map(item => ({
       value: String(item.staffid),
       label: item.full_name,
       avatar: item.profile_image || IMAGES.noImage,
     }));
-  }, [listStaffs?.data?.staffs, debouncedSearchStaff]);
+  }, [listStaffs?.data?.staffs]);
 
-  // Tạo options cho tổ/nhóm với filter theo search
+  // Tạo options cho tổ/nhóm
   const groupOptions = useMemo(() => {
     const groups = listGroupMembers?.group_members || [];
-    const filteredGroups = debouncedSearchGroup
-      ? groups.filter(group => {
-        return searchWithoutDiacritics(group?.name || '', debouncedSearchGroup) ||
-          searchWithoutDiacritics(group?.code || '', debouncedSearchGroup);
-      })
-      : groups;
-
-    return filteredGroups.map(item => ({
+    return groups.map(item => ({
       value: String(item.id),
       label: item.name,
       avatar: item.avatar || IMAGES.groupUser,
     }));
-  }, [listGroupMembers?.group_members, debouncedSearchGroup]);
+  }, [listGroupMembers?.group_members]);
 
-  // Tạo filter params từ selectedEmployee và selectedGroup
+  // Tạo options cho Lệnh sản xuất (từ comboboxProductionOrders)
+  const productionOrderOptions = useMemo(() => {
+    return (comboboxProductionOrders || []).map(item => ({
+      value: String(item.value),
+      label: item.label,
+    }));
+  }, [comboboxProductionOrders]);
+
+  // Tạo options cho Mặt hàng (từ listProducts)
+  const productOptions = useMemo(() => {
+    return (listProducts || []).map(item => ({
+      value: String(item.value),
+      label: item.e?.item_name || item.label,
+      subtitle: item.e?.product_variation || '',
+      avatar: item.e?.images || IMAGES.noImage,
+    }));
+  }, [listProducts]);
+
+  // Tạo filter params từ selectedStaffIds và selectedGroup
   const filterParams = useMemo(() => {
     const params = {};
-    if (selectedEmployee.length > 0) {
-      params.staff_ids = selectedEmployee;
+    if (selectedStaffIds.length > 0) {
+      params.staff_ids = selectedStaffIds;
     }
     if (selectedGroup.length > 0) {
-      params.group_member_ids = selectedGroup;
+      params.group_ids = selectedGroup;
     }
     return params;
-  }, [selectedEmployee, selectedGroup]);
+  }, [selectedStaffIds, selectedGroup]);
 
-  const { data: summary, isLoading: isLoadingSummary, refetch: refetchSummary } = useSummary({
+  // Chuẩn hóa params dùng chung cho 2 API để tránh lặp và lệch state
+  const dateParams = useMemo(() => ({
     start_date: dateFilter.startDate ? moment(dateFilter.startDate).format('DD/MM/YYYY') : null,
     end_date: dateFilter.endDate ? moment(dateFilter.endDate).format('DD/MM/YYYY') : null,
+  }), [dateFilter.startDate, dateFilter.endDate]);
+
+  const commonQueryParams = useMemo(() => ({
+    ...dateParams,
     cursor: 0,
     limit: 10,
     search: debouncedSearch || '',
     ...filterParams,
-  }, {
-    enabled: activeTab.id === 'summary',
+  }), [dateParams, debouncedSearch, filterParams]);
+
+  const { data: summary, isLoading: isLoadingSummary, refetch: refetchSummary } = useSummary(
+    commonQueryParams,
+    { enabled: activeTab.id === 'summary' },
+  );
+
+  const { data: summaryDetail, isLoading: isLoadingSummaryDetail, refetch: refetchSummaryDetail } = useSummaryDetail(
+    commonQueryParams,
+    { enabled: activeTab.id === 'detail' },
+  );
+
+  const summaryDetailItems = useMemo(() => (summaryDetail?.items ?? []), [summaryDetail?.items]);
+
+  const excelFileName = useMemo(() => {
+    const s = dateFilter.startDate ? moment(dateFilter.startDate).format('DD-MM-YYYY') : 'all';
+    const e = dateFilter.endDate ? moment(dateFilter.endDate).format('DD-MM-YYYY') : 'all';
+    return `tong-hop-luong-san-luong_${s}_${e}`;
+  }, [dateFilter.startDate, dateFilter.endDate]);
+
+  const { isExporting, exportExcel } = useExportExcel({
+    commonQueryParams,
+    excelFileName,
+    showToast,
   });
 
-  const { data: summaryDetail, isLoading: isLoadingSummaryDetail, refetch: refetchSummaryDetail } = useSummaryDetail({
-    start_date: dateFilter.startDate ? moment(dateFilter.startDate).format('DD/MM/YYYY') : null,
-    end_date: dateFilter.endDate ? moment(dateFilter.endDate).format('DD/MM/YYYY') : null,
-    cursor: 0,
-    limit: 10,
-    search: debouncedSearch || '',
-    ...filterParams,
-  }, {
-    enabled: activeTab.id === 'detail',
-  });
+  // Tính rowspan cho "Công nhân" và "Công đoạn" (gộp các dòng LIỀN KỀ nhau)
+  const detailRowSpans = useMemo(() => {
+    const items = summaryDetailItems;
+    const staffRowSpan = Array(items.length).fill(1);
+    const staffShowCell = Array(items.length).fill(true);
 
-  // Xử lý khi chọn nhân viên (multiple mode)
-  const handleEmployeeChange = (values) => {
-    setSelectedEmployee(Array.isArray(values) ? values : []);
+    const stageRowSpan = Array(items.length).fill(1);
+    const stageShowCell = Array(items.length).fill(true);
+
+    // Staff grouping
+    for (let i = 0; i < items.length; i++) {
+      const staffKey = String(items[i]?.staff_id ?? '');
+      if (i > 0 && staffKey === String(items[i - 1]?.staff_id ?? '')) {
+        staffShowCell[i] = false;
+        continue;
+      }
+      let j = i + 1;
+      while (j < items.length && String(items[j]?.staff_id ?? '') === staffKey) j++;
+      staffRowSpan[i] = j - i;
+    }
+
+    // Stage grouping within same staff (tránh gộp công đoạn giữa 2 staff khác nhau)
+    for (let i = 0; i < items.length; i++) {
+      const staffKey = String(items[i]?.staff_id ?? '');
+      const stageKey = String(items[i]?.stage_id ?? items[i]?.stage_name ?? '');
+      const composite = `${staffKey}__${stageKey}`;
+      const prevComposite = i > 0
+        ? `${String(items[i - 1]?.staff_id ?? '')}__${String(items[i - 1]?.stage_id ?? items[i - 1]?.stage_name ?? '')}`
+        : null;
+
+      if (i > 0 && composite === prevComposite) {
+        stageShowCell[i] = false;
+        continue;
+      }
+      let j = i + 1;
+      while (j < items.length) {
+        const nextComposite = `${String(items[j]?.staff_id ?? '')}__${String(items[j]?.stage_id ?? items[j]?.stage_name ?? '')}`;
+        if (nextComposite !== composite) break;
+        j++;
+      }
+      stageRowSpan[i] = j - i;
+    }
+
+    return { staffRowSpan, staffShowCell, stageRowSpan, stageShowCell };
+  }, [summaryDetailItems]);
+
+  const totalDetailTime = useMemo(
+    () =>
+      summaryDetailItems.reduce(
+        (sum, row) => sum + (Number(row?.total_time) || 0),
+        0,
+      ),
+    [summaryDetailItems],
+  );
+
+  const totalDetailQuantity = useMemo(
+    () =>
+      summaryDetailItems.reduce(
+        (sum, row) => sum + (Number(row?.total_quantity) || 0),
+        0,
+      ),
+    [summaryDetailItems],
+  );
+
+  const totalDetailAmount = useMemo(
+    () =>
+      summaryDetailItems.reduce(
+        (sum, row) => sum + (Number(row?.total_amount) || 0),
+        0,
+      ),
+    [summaryDetailItems],
+  );
+
+  // Xử lý khi chọn công nhân (multiple mode)
+  const handleStaffChange = (values) => {
+    setSelectedStaffIds(Array.isArray(values) ? values : []);
   };
 
   // Xử lý khi search
-  const handleEmployeeSearch = searchText => {
-    setSearchStaff(searchText);
-  };
-
-  // Xử lý khi clear
-  const handleEmployeeClear = () => {
-    setSelectedEmployee([]);
-    setSearchStaff('');
+  const handleStaffClear = () => {
+    setSelectedStaffIds([]);
   };
 
   // Xử lý khi chọn tổ/nhóm (multiple mode)
@@ -139,15 +236,27 @@ const Summary = () => {
     setSelectedGroup(Array.isArray(values) ? values : []);
   };
 
-  // Xử lý khi search tổ/nhóm
-  const handleGroupSearch = searchText => {
-    setSearchGroup(searchText);
-  };
-
   // Xử lý khi clear tổ/nhóm
   const handleGroupClear = () => {
     setSelectedGroup([]);
-    setSearchGroup('');
+  };
+
+  // Xử lý chọn Lệnh sản xuất
+  const handleProductionOrderChange = value => {
+    setSelectedProductionOrder(value || null);
+  };
+
+  const handleProductionOrderClear = () => {
+    setSelectedProductionOrder(null);
+  };
+
+  // Xử lý chọn Mặt hàng
+  const handleProductChange = value => {
+    setSelectedProduct(value || null);
+  };
+
+  const handleProductClear = () => {
+    setSelectedProduct(null);
   };
 
   const triggerFilterAll = (
@@ -157,12 +266,8 @@ const Summary = () => {
         } flex items-center space-x-2 rounded-lg h-10 px-3 group custom-transition`}
     >
       <FunnelIcon className='size-4' />
-      {/* <span className={`${stateFilterDropdown?.open || activeFilterCount > 0 ? 'text-[#0F4F9E]' : 'text-[#3A3E4C] group-hover:text-[#0F4F9E]'} text-nowrap text-sm custom-transition`}>Lọc</span> */}
-      {/* {activeFilterCount > 0 && <span className='rounded-full bg-[#0F4F9E] text-white text-xs size-5 flex items-center justify-center'>{activeFilterCount}</span>} */}
       <span className='responsive-text-base whitespace-nowrap text-[#3A3E4C]'>Bộ lọc</span>
-      <span className='size-3.5 shrink-0'>
-        <CaretDownIcon className={`rotate-0 w-full h-full custom-transition`} />
-      </span>
+      <CaretDownIcon className={`size-3.5 shrink-0 rotate-0`} />
     </button>
   );
 
@@ -188,13 +293,13 @@ const Summary = () => {
                 Tải lại
               </button>
             )}
-            <SearchComponent
-              colSpan={1}
-              placeholder="Tìm kiếm"
+            {/* <SearchComponent
+              openWidth={300}
+              placeholder="Tìm kiếm theo mã SP, tên SP, LSX"
               onChange={(e) => {
                 setSearch(e?.target?.value || '');
               }}
-            />
+            /> */}
             <DateToDateComponent
               placeholder='Chọn ngày'
               value={dateFilter}
@@ -217,7 +322,34 @@ const Summary = () => {
             >
               <div className='text-lg text-[#344054] font-medium'>Bộ lọc</div>
               <div className='flex flex-col gap-3'>
-
+                <div className='space-y-1'>
+                  <h3 className='text-xs text-[#051B44] font-normal'>Lệnh sản xuất</h3>
+                  <SelectSearchableRadio
+                    placeholder='Chọn lệnh sản xuất'
+                    searchPlaceholder='Tìm lệnh sản xuất'
+                    options={productionOrderOptions}
+                    value={selectedProductionOrder}
+                    onChange={handleProductionOrderChange}
+                    onClear={handleProductionOrderClear}
+                    onSearch={setSearchProductionOrder}
+                    icon={<FunnelIcon className='size-4 text-[#003DA0]' />}
+                    className='w-auto min-w-[180px] [&_.ant-select-selector]:h-9 [&_.ant-select-selector]:border-[#D0D5DD]'
+                  />
+                </div>
+                <div className='space-y-1'>
+                  <h3 className='text-xs text-[#051B44] font-normal'>Mặt hàng</h3>
+                  <SelectSearchableRadio
+                    placeholder='Chọn mặt hàng'
+                    searchPlaceholder='Tìm mặt hàng'
+                    options={productOptions}
+                    value={selectedProduct}
+                    onChange={handleProductChange}
+                    onClear={handleProductClear}
+                    onSearch={setSearchProduct}
+                    icon={<FunnelIcon className='size-4 text-[#003DA0]' />}
+                    className='w-auto min-w-[180px] [&_.ant-select-selector]:h-9 [&_.ant-select-selector]:border-[#D0D5DD]'
+                  />
+                </div>
               </div>
             </FilterDropdown>
           </div>
@@ -235,11 +367,10 @@ const Summary = () => {
             placeholder='Chọn công nhân'
             label='Chọn công nhân'
             searchPlaceholder='Tìm công nhân'
-            options={employeeOptions}
-            value={selectedEmployee}
-            onChange={handleEmployeeChange}
-            onSearch={handleEmployeeSearch}
-            onClear={handleEmployeeClear}
+            options={staffOptions}
+            value={selectedStaffIds}
+            onChange={handleStaffChange}
+            onClear={handleStaffClear}
             icon={<UsersIcon className='size-4 text-[#25387A]' />}
             className='w-[250px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
             mode='multiple'
@@ -251,17 +382,21 @@ const Summary = () => {
             options={groupOptions}
             value={selectedGroup}
             onChange={handleGroupChange}
-            onSearch={handleGroupSearch}
             onClear={handleGroupClear}
             icon={<UserGroupIcon className='size-4 text-[#25387A]' />}
             className='w-[250px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
             mode='multiple'
           />
           <button
-            className='h-[42px] flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-white border border-[#D0D5DD] transition-all duration-200 ease-in-out hover:bg-[#F5F7FA] hover:border-[#0375F3] group'
+            type='button'
+            onClick={exportExcel}
+            disabled={isExporting}
+            className={`h-[42px] flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-white border border-[#D0D5DD] transition-all duration-200 ease-in-out hover:bg-[#F5F7FA] hover:border-[#0375F3] group ${isExporting ? 'opacity-60 cursor-not-allowed' : ''}`}
           >
             <ExcelIcon2 />
-            <span className='text-sm font-medium text-[#25387A] transition-colors duration-200 group-hover:text-[#0375F3]'>Xuất file excel</span>
+            <span className='text-sm font-medium text-[#25387A] transition-colors duration-200 group-hover:text-[#0375F3]'>
+              {isExporting ? 'Đang xuất...' : 'Xuất file excel'}
+            </span>
           </button>
         </div>
         {activeTab.id === 'summary' ? (
@@ -300,17 +435,13 @@ const Summary = () => {
                     <span className='text-[#344054]'>{row?.staff?.full_name || '-'}</span>
                   </div>
                   <div className='col-span-3 font-semibold text-[#141522] flex items-center'>
-                    -
+                    {row?.groups.map(group => group.name).join(', ')}
                   </div>
                   <div className='col-span-2 font-semibold text-[#141522] flex items-center'>
                     {Number(row?.total_produced) ? formatNumber(Number(row?.total_produced)) : '-'}
                   </div>
                   <div className='col-span-2 font-semibold text-[#141522] flex items-center'>
-                    {row?.total_time != null && row.total_time > 0
-                      ? (Math.floor(row.total_time / 3600) > 0
-                        ? `${Math.floor(row.total_time / 3600)}h `
-                        : '') + `${Math.floor((row.total_time % 3600) / 60)}m`
-                      : '-'}
+                    {formatSecondsToHours(row?.total_time)}
                   </div>
                   <div className='col-span-3 font-semibold text-[#0375F3] flex items-center'>
                     {Number(row?.total_amount) ? `${formatNumber(Number(row?.total_amount))} đ` : '-'}
@@ -350,9 +481,7 @@ const Summary = () => {
                     0,
                   );
                   if (!totalSeconds) return "-";
-                  const hours = Math.floor(totalSeconds / 3600);
-                  const minutes = Math.floor((totalSeconds % 3600) / 60);
-                  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                  return formatSecondsToHours(totalSeconds);
                 })()}
               </div>
               <div className='col-span-3'>
@@ -369,118 +498,167 @@ const Summary = () => {
           </div>
         ) : (
           <div className='bg-white overflow-hidden flex flex-col flex-1 min-h-0'>
-            {/* Header */}
-            <div className='grid grid-cols-24 responsive-text-sm font-semibold text-[#9295A4] gap-4 px-4 py-3 border-b border-[#F3F3F4] bg-white'>
-              <div className='col-span-1 text-center'>STT</div>
-              <div className='col-span-2 text-center'>Ngày</div>
-              <div className='col-span-3'>Công nhân</div>
-              <div className='col-span-2 text-center'>Công đoạn</div>
-              <div className='col-span-2 text-center'>Giờ làm</div>
-              <div className='col-span-6'>Sản phẩm</div>
-              <div className='col-span-3 text-center'>Đơn giá</div>
-              <div className='col-span-2 text-center'>Số lượng</div>
-              <div className='col-span-3 text-center'>Thành tiền</div>
-            </div>
-
             {/* Rows */}
-            <Customscrollbar className='flex-1 min-h-0'>
-              {isLoadingSummaryDetail ? (
-                <Loading />
-              ) : (summaryDetail?.items ?? []).length === 0 ? (
-                <NoData />
-              ) : (summaryDetail?.items ?? []).map((row, index) => (
-                <div
-                  key={row?.ppi_id || index}
-                  className='grid grid-cols-24 gap-4 px-4 py-4 responsive-text-sm bg-white hover:bg-gray-50 transition-colors border-b border-[#F3F3F4]'
-                >
-                  <div className='col-span-1 text-center flex items-center justify-center font-semibold text-[#141522]'>
-                    {index + 1}
-                  </div>
-                  <div className='col-span-2 text-center flex items-center justify-center font-semibold text-[#141522]'>
-                    {row?.date ? moment(row.date).format('DD/MM/YYYY') : '-'}
-                  </div>
-                  <div className='col-span-3 flex items-center gap-2'>
-                    {row?.staff ? (
-                      <>
-                        <ResponsibleAvatar
-                          avatarUrl={row?.staff?.profile_image || '/icon/default/default.png'}
-                          fullName={row?.staff?.full_name || '-'}
-                          size={32}
-                        />
-                        <span className='text-[#344054]'>{row?.staff?.full_name || '-'}</span>
-                      </>
-                    ) : (
-                      <span className='text-[#9295A4]'>-</span>
-                    )}
-                  </div>
-                  <div className='col-span-2 text-center flex items-center justify-center text-[#141522] font-semibold'>
-                    {row?.stage_name || '-'}
-                  </div>
-                  <div className='col-span-2 text-center flex items-center justify-center font-semibold text-[#141522]'>
-                    {row?.total_time != null && row.total_time > 0
-                      ? (Math.floor(row.total_time / 3600) > 0
-                        ? `${Math.floor(row.total_time / 3600)}h `
-                        : '') + `${Math.floor((row.total_time % 3600) / 60)}m`
-                      : '-'}
-                  </div>
-                  <div className='col-span-6 flex items-center gap-2'>
-                    <div className='size-12 shrink-0'>
-                      <Image
-                        unoptimized
-                        alt={row?.item?.item_name || 'Sản phẩm'}
-                        width={48}
-                        height={48}
-                        src={row?.item?.images || '/icon/default/default.png'}
-                        className='size-full object-cover rounded-md'
-                      />
-                    </div>
-                    <div className='flex flex-col gap-0.5'>
-                      <p className='responsive-text-sm font-semibold text-[#141522]'>{row?.item?.item_name || '-'}</p>
-                      <p className='responsive-text-xxs text-[#667085]'>{row?.item?.variation || '-'}</p>
-                      <p className='responsive-text-xxs text-[#3276FA]'>{row?.item?.item_code || '-'}</p>
-                      <p className='responsive-text-xxs text-[#3276FA]'>{row?.reference_no_detail || '-'}</p>
-                    </div>
-                  </div>
-                  <div className='col-span-3 text-center flex items-center justify-center font-medium text-[#0375F3]'>
-                    {Number(row?.price_salary) ? `${formatNumber(Number(row?.price_salary))} ₫` : '-'}
-                  </div>
-                  <div className='col-span-2 text-center flex items-center justify-center font-semibold text-[#141522]'>
-                    {Number(row?.total_quantity) ? formatNumber(Number(row?.total_quantity)) : '-'}
-                  </div>
-                  <div className='col-span-3 text-center flex items-center justify-center font-medium text-[#0375F3]'>
-                    {Number(row?.total_amount) ? `${formatNumber(Number(row?.total_amount))} ₫` : '-'}
-                  </div>
-                </div>
-              ))}
-            </Customscrollbar>
+            {isLoadingSummaryDetail ? (
+              <Loading />
+            ) : summaryDetailItems.length === 0 ? (
+              <NoData />
+            ) : (
+              <div className='flex flex-col flex-1 min-h-0'>
+                <div className='px-4 flex-1 min-h-0'>
+                  <Customscrollbar className='flex-1 min-h-0' fullHeight>
+                    <table className='w-full table-fixed border-separate border-spacing-0'>
+                      <colgroup>
+                        <col style={{ width: 40 }} />
+                        <col style={{ width: 120 }} />
+                        <col />
+                        <col />
+                        <col />
+                        <col />
+                        <col />
+                        <col />
+                        <col />
+                      </colgroup>
+                      <thead className='sticky top-0 bg-white z-[1]'>
+                        <tr className='responsive-text-sm font-semibold text-[#9295A4]'>
+                          <th className='w-[40px] px-2 py-3 text-center border-b border-[#F3F3F4]'>STT</th>
+                          <th className='w-[120px] px-2 py-3 text-center border-b border-[#F3F3F4]'>Ngày</th>
+                          <th className='px-2 py-3 text-left border-b border-[#F3F3F4]'>Công nhân</th>
+                          <th className='px-2 py-3 text-center border-b border-[#F3F3F4]'>Công đoạn</th>
+                          <th className='px-2 py-3 text-center border-b border-[#F3F3F4]'>Giờ làm</th>
+                          <th className='px-2 py-3 text-left border-b border-[#F3F3F4]'>Sản phẩm</th>
+                          <th className='px-2 py-3 text-center border-b border-[#F3F3F4]'>Đơn giá</th>
+                          <th className='px-2 py-3 text-center border-b border-[#F3F3F4]'>Số lượng</th>
+                          <th className='px-2 py-3 text-center border-b border-[#F3F3F4]'>Thành tiền</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {summaryDetailItems.map((row, index) => {
+                          const showStaff = detailRowSpans.staffShowCell[index];
+                          const staffSpan = detailRowSpans.staffRowSpan[index];
 
-            {/* Summary Row */}
-            <div className='mt-2 grid grid-cols-24 gap-4 px-4 py-4 responsive-text-base font-semibold text-[#141522] bg-[#F0F0F0] rounded-xl'>
-              <div className='col-span-1 text-xl'>Tổng</div>
-              <div className='col-span-2'></div>
-              <div className='col-span-3'></div>
-              <div className='col-span-2'></div>
-              <div className='col-span-2 text-center'>
-                {(() => {
-                  const total = (summaryDetail?.items ?? []).reduce((sum, row) => sum + (Number(row?.total_time) || 0), 0);
-                  return total ? `${formatNumber(total)}h` : '-';
-                })()}
+                          const showStage = detailRowSpans.stageShowCell[index];
+                          const stageSpan = detailRowSpans.stageRowSpan[index];
+
+                          return (
+                            <tr
+                              key={row?.ppi_id || index}
+                              className='responsive-text-sm bg-white hover:bg-gray-50 transition-colors'
+                            >
+                              <td className='bg-white px-2 py-4 text-center font-semibold text-[#141522] border-b border-r border-[#F3F3F4] align-middle'>
+                                {index + 1}
+                              </td>
+                              <td className='bg-white px-2 py-4 text-center font-semibold text-[#141522] border-b border-r border-[#F3F3F4] align-middle'>
+                                {row?.date ? moment(row.date).format('DD/MM/YYYY') : '-'}
+                              </td>
+
+                              {showStaff ? (
+                                <td
+                                  rowSpan={staffSpan}
+                                  className='bg-white px-2 py-4 text-left border-b border-r border-[#F3F3F4] align-middle'
+                                >
+                                  {row?.staff ? (
+                                    <div className='flex items-center gap-2 justify-start'>
+                                      <ResponsibleAvatar
+                                        avatarUrl={row?.staff?.profile_image || '/icon/default/default.png'}
+                                        fullName={row?.staff?.full_name || '-'}
+                                        size={32}
+                                      />
+                                      <span className='text-[#344054]'>{row?.staff?.full_name || '-'}</span>
+                                    </div>
+                                  ) : (
+                                    <div className='text-center text-[#9295A4]'>-</div>
+                                  )}
+                                </td>
+                              ) : null}
+
+                              {showStage ? (
+                                <td
+                                  rowSpan={stageSpan}
+                                  className='bg-white px-2 py-4 text-center text-[#141522] font-semibold border-b border-r border-[#F3F3F4] align-middle'
+                                >
+                                  {row?.stage_name || '-'}
+                                </td>
+                              ) : null}
+
+                              <td className='px-2 py-4 text-center font-semibold text-[#141522] border-b border-r border-[#F3F3F4] align-middle'>
+                                {formatSecondsToHours(row?.total_time)}
+                              </td>
+
+                              <td className='p-3 2xl:p-4 border-b border-[#F3F3F4] align-middle'>
+                                <div className='flex items-center gap-2'>
+                                  <div className='size-12 shrink-0'>
+                                    <Image
+                                      unoptimized
+                                      alt={row?.item?.item_name || 'Sản phẩm'}
+                                      width={48}
+                                      height={48}
+                                      src={row?.item?.images || '/icon/default/default.png'}
+                                      className='size-full object-cover rounded-md'
+                                    />
+                                  </div>
+                                  <div className='flex flex-col gap-0.5 min-w-0'>
+                                    <p className='responsive-text-sm font-semibold text-[#141522] truncate'>{row?.item?.item_name || '-'}</p>
+                                    <p className='responsive-text-xxs text-[#667085] truncate'>{row?.item?.variation || '-'}</p>
+                                    <p className='responsive-text-xxs text-[#3276FA] truncate'>{row?.item?.item_code || '-'}</p>
+                                    <p className='responsive-text-xxs text-[#3276FA] truncate'>{row?.reference_no_detail || '-'}</p>
+                                  </div>
+                                </div>
+                              </td>
+
+                              <td className='px-2 py-4 text-center font-medium text-[#0375F3] border-b border-[#F3F3F4] align-middle'>
+                                {Number(row?.price_salary) ? `${formatNumber(Number(row?.price_salary))} ₫` : '-'}
+                              </td>
+                              <td className='px-2 py-4 text-center font-semibold text-[#141522] border-b border-[#F3F3F4] align-middle'>
+                                {Number(row?.total_quantity) ? formatNumber(Number(row?.total_quantity)) : '-'}
+                              </td>
+                              <td className='px-2 py-4 text-center font-medium text-[#0375F3] border-b border-[#F3F3F4] align-middle'>
+                                {Number(row?.total_amount) ? `${formatNumber(Number(row?.total_amount))} ₫` : '-'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </Customscrollbar>
+                </div>
+
+                <div className='px-4 pb-4 pt-2 bg-white'>
+                  <table className='w-full table-fixed border-separate border-spacing-0'>
+                    <colgroup>
+                      <col style={{ width: 40 }} />
+                      <col style={{ width: 120 }} />
+                      <col />
+                      <col />
+                      <col />
+                      <col />
+                      <col />
+                      <col />
+                      <col />
+                    </colgroup>
+                    <tbody>
+                      <tr className='responsive-text-base font-semibold text-[#141522] bg-[#F0F0F0]'>
+                        <td className='px-2 py-4 text-left border-t border-[#F3F3F4]'>Tổng</td>
+                        <td className='px-2 py-4 border-t border-[#F3F3F4]'></td>
+                        <td className='px-2 py-4 border-t border-[#F3F3F4]'></td>
+                        <td className='px-2 py-4 border-t border-[#F3F3F4]'></td>
+                        <td className='px-2 py-4 text-center border-t border-[#F3F3F4]'>
+                          {totalDetailTime ? formatSecondsToHours(totalDetailTime) : '-'}
+                        </td>
+                        <td className='px-2 py-4 border-t border-[#F3F3F4]'></td>
+                        <td className='px-2 py-4 border-t border-[#F3F3F4]'></td>
+                        <td className='px-2 py-4 text-center border-t border-[#F3F3F4]'>
+                          {totalDetailQuantity ? formatNumber(totalDetailQuantity) : '-'}
+                        </td>
+                        <td className='px-2 py-4 text-center border-t border-[#F3F3F4]'>
+                          {totalDetailAmount ? `${formatNumber(totalDetailAmount)} đ` : '-'}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
-              <div className='col-span-6'></div>
-              <div className='col-span-3'></div>
-              <div className='col-span-2 text-center'>
-                {(() => {
-                  const total = (summaryDetail?.items ?? []).reduce((sum, row) => sum + (Number(row?.total_quantity) || 0), 0);
-                  return total ? formatNumber(total) : '-';
-                })()}
-              </div>
-              <div className='col-span-3 text-center'>
-                {(() => {
-                  const total = (summaryDetail?.items ?? []).reduce((sum, row) => sum + (Number(row?.total_amount) || 0), 0);
-                  return total ? `${formatNumber(total)} đ` : '-';
-                })()}
-              </div>
-            </div>
+            )}
           </div>
         )}
       </div>
