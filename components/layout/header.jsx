@@ -657,8 +657,8 @@ const Header = () => {
               link: '/piecework-wage/import-output',
             },
             {
-              viewOwn: auth?.piecework_wage_summary?.is_view_own,
-              view: auth?.piecework_wage_summary?.is_view,
+              viewOwn: auth?.aggregate_production_input?.is_view_own,
+              view: auth?.aggregate_production_input?.is_view,
               name: 'Tổng hợp lương sản lượng',
               link: '/piecework-wage/summary',
             },

@@ -476,7 +476,7 @@ const ImportOutputMobile = () => {
                 onSearch={handleEmployeeSearch}
                 onClear={handleEmployeeClear}
                 icon={<FunnelIcon className='size-4 text-[#003DA0]' />}
-                className='w-full min-w-[180px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
+                className='w-full min-w-[180px] [&_.ant-select-selector]:!h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
               />
               <SelectSearchableRadio
                 placeholder='Lọc công đoạn'
@@ -488,7 +488,7 @@ const ImportOutputMobile = () => {
                 onSearch={handleProcessSearch}
                 onClear={handleProcessClear}
                 icon={<FunnelIcon className='size-4 text-[#003DA0]' />}
-                className='w-full min-w-[180px] max-w-[300px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD] [&_.ant-select-selector]:overflow-hidden [&_.ant-select-selection-overflow]:overflow-hidden [&_.ant-select-selection-overflow-item]:flex-shrink-0'
+                className='w-full min-w-[180px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
                 mode='multiple'
               />
             </div>
