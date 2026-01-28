@@ -30,9 +30,25 @@ export default function ApplicationLayout({ children }) {
         return 'all';
     }, [router.asPath, router.pathname]);
 
+    const handleClickHome = () => {
+        // Kiểm tra xem tab này có được mở từ tab khác không
+        try {
+            if (window.opener && !window.opener.closed) {
+                // Nếu có opener và chưa đóng, focus về tab đó và đóng tab hiện tại
+                window.opener.focus();
+                window.close();
+            } else {
+                // Nếu không có opener hoặc opener đã đóng, redirect về trang chủ
+                window.location.href = '/dashboard';
+            }
+        } catch (error) {
+            // Nếu có lỗi (do CORS hoặc security), redirect về trang chủ
+            window.location.href = '/dashboard';
+        }
+    }
     return (
         <div className='min-h-screen- relative overflow-y-visible'>
-            <div className="absolute inset-x-0 -top-16 w-full overflow-hidden">
+            <div className="absolute inset-x-0 -top-16 w-full overflow-hidden" onClick={handleClickHome}>
                 <Image
                     src={IMAGE_APPLICATION}
                     className="w-full object-cover"
@@ -56,22 +72,7 @@ export default function ApplicationLayout({ children }) {
                     {/* button home */}
                     <button
                         type="button"
-                        onClick={() => {
-                            // Kiểm tra xem tab này có được mở từ tab khác không
-                            try {
-                                if (window.opener && !window.opener.closed) {
-                                    // Nếu có opener và chưa đóng, focus về tab đó và đóng tab hiện tại
-                                    window.opener.focus();
-                                    window.close();
-                                } else {
-                                    // Nếu không có opener hoặc opener đã đóng, redirect về trang chủ
-                                    window.location.href = '/dashboard';
-                                }
-                            } catch (error) {
-                                // Nếu có lỗi (do CORS hoặc security), redirect về trang chủ
-                                window.location.href = '/dashboard';
-                            }
-                        }}
+                        onClick={handleClickHome}
                         className="flex h-fit items-center gap-1 px-2 rounded-[31px] bg-white/70 backdrop-blur-sm transition-shadow hover:shadow-[0px_4px_13.6px_0px_rgba(3,117,243,0.28)]"
                     >
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
