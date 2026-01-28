@@ -564,8 +564,8 @@ const General = props => {
                             <div className="w-11 h-6 bg-gray-200 rounded-full dark:bg-[#D1D5DB] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all  peer-checked:bg-blue-600"></div>
                           </label>
                           <div className='flex flex-col gap-y-1'>
-                            <p className='font-medium text-base text-typo-black-1'>Trang thái bấm giờ</p>
-                            <p className='font-normal text-sm text-typo-gray-2'>trạng thái bấm giờ</p>
+                            <p className='font-medium text-base text-typo-black-1'>Bấm giờ lương sản lượng</p>
+                            <p className='font-normal text-sm text-typo-gray-2'>Ghi nhận thời gian làm việc thực tế khi tính lương sản lượng, hỗ trợ đánh giá hiệu suất.</p>
                           </div>
                         </div>
                       </div>
