@@ -574,6 +574,9 @@ const PopupKeepStock = ({ dataLang, status, id, onRefresh, totalButtons = 0, ...
                                                                                         ) : (
                                                                                             ""
                                                                                         )}
+
+                                                                                    </div>
+                                                                                    <div className=" flex flex-wrap gap-0.5 font-oblique">
                                                                                         {e?.item?.text_type === 'material' &&
                                                                                             Array.isArray(warehousePropertyLabels) &&
                                                                                             warehousePropertyLabels.length > 0 && (
