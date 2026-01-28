@@ -1227,21 +1227,23 @@ const Header = () => {
         </div>
 
         <div className='flex items-center gap-2 xl:gap-4 2xl:gap-6'>
-          {/* <a
-            href='/application'
-            target='_blank'
-            rel='noopener noreferrer'
-            className='flex items-center gap-1 rounded-lg p-1 bg-white hover:bg-[#D6E6FF]'
-          >
-            <Image
-              className='w-7 h-7 rounded'
-              src={IMAGE_APPLICATION}
-              alt='application'
-              width={28}
-              height={28}
-            />
-            <p className='font-semibold text-sm leading-5 text-[#003DA0] truncate pr-1'>Ứng dụng</p>
-          </a> */}
+          <Tooltip title={'Ứng dụng'} arrow theme='dark'>
+            <a
+              href='/application'
+              target='_blank'
+              // rel='noreferrer'
+              className='flex items-center gap-1 rounded-lg p-1 bg-white hover:bg-[#D6E6FF]'
+            >
+              <Image
+                className='w-6 h-6 rounded flex-shrink-0'
+                src={IMAGE_APPLICATION}
+                alt='application'
+                width={28}
+                height={28}
+              />
+              {!authState?.is_upgrade && <p className='font-semibold text-sm leading-5 text-[#003DA0] truncate pr-1'>Ứng dụng</p>}
+            </a>
+          </Tooltip>
           {authState?.is_upgrade && (
             <button
               className='py-1 px-2 rounded-full bg-blue-fmrp flex items-center gap-2'
@@ -1266,7 +1268,7 @@ const Header = () => {
               }}
             >
               <SparkleIcon className='text-white' size={16} />
-              <span className='3xl:text-base xxl:text-sm xl:text-xs text-[11px] font-normal text-white whitespace-nowrap'>Nâng cấp Pro</span>
+              <span className='3xl:text-base xxl:text-sm xl:text-xs text-[11px] font-normal text-white whitespace-nowrap'>Nâng cấp <span className='hidden 2xl:inline'>Pro</span> </span>
             </button>
           )}
           <div className='flex items-center gap-3'>
