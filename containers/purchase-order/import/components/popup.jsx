@@ -167,24 +167,7 @@ const PopupDetail = props => {
                               <h6 className='text-[13px]  px-2 py-0.5 col-span-2 text-left'>
                                 <h6 className='font-medium'>{e?.item?.name}</h6>
                                 <div className='flex-col flex-wrap items-center font-oblique'>
-                                  {/* Hiển thị thuộc tính kho cho nguyên vật liệu */}
-                                  {e?.item?.text_type === 'material' &&
-                                    Array.isArray(warehousePropertyLabels) &&
-                                    warehousePropertyLabels.length > 0 &&
-                                    warehousePropertyLabels.map(({ key, label }) => {
-                                      if (!label) return null;
-                                      const value = e?.[key];
 
-                                      // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
-                                      if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
-
-                                      return (
-                                        <div key={key} className='flex gap-0.5'>
-                                          <h6 className='text-[11px]'>{label}:</h6>
-                                          <h6 className='text-[11px] px-2 w-[full] text-left'>{value == null || value === '' ? '-' : value}</h6>
-                                        </div>
-                                      );
-                                    })}
                                   {dataProductSerial.is_enable === '1' ? (
                                     <div className='flex gap-0.5'>
                                       <h6 className='text-[11px]'>Serial:</h6>
@@ -207,6 +190,24 @@ const PopupDetail = props => {
                                       <h6 className='text-[11px] px-2 w-[full] text-center'>{e.expiration_date ? formatMoment(e.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}</h6>
                                     </div>
                                   )}
+                                  {/* Hiển thị thuộc tính kho cho nguyên vật liệu */}
+                                  {e?.item?.text_type === 'material' &&
+                                    Array.isArray(warehousePropertyLabels) &&
+                                    warehousePropertyLabels.length > 0 &&
+                                    warehousePropertyLabels.map(({ key, label }) => {
+                                      if (!label) return null;
+                                      const value = e?.[key];
+
+                                      // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                      if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+
+                                      return (
+                                        <div key={key} className='flex gap-0.5'>
+                                          <h6 className='text-[11px]'>{label}:</h6>
+                                          <h6 className='text-[11px] px-2 w-[full] text-left'>{value == null || value === '' ? '-' : value}</h6>
+                                        </div>
+                                      );
+                                    })}
                                 </div>
                               </h6>
                               <h6 className='text-[13px] font-medium   px-2 py-0.5 col-span-1 text-left break-words'>{e?.item?.product_variation}</h6>
