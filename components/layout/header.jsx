@@ -1287,7 +1287,7 @@ const Header = () => {
               }}
             >
               <SparkleIcon className='text-white' size={16} />
-              <span className='3xl:text-base xxl:text-sm xl:text-xs text-[11px] font-normal text-white whitespace-nowrap'>Nâng cấp <span className='hidden 2xl:inline'>Pro</span> </span>
+              <span className='3xl:text-base xxl:text-sm xl:text-xs text-[11px] font-normal text-white whitespace-nowrap'>Nâng cấp <span className='hidden 2xl:inline'>gói</span> </span>
             </button>
           )}
           <div className='flex items-center gap-3'>
