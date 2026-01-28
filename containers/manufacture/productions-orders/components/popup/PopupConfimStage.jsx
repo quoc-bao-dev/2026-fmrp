@@ -17,6 +17,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { FaCheckCircle } from 'react-icons/fa';
 import { PiWarehouseLight } from 'react-icons/pi';
+import debounce from 'lodash/debounce';
 import { useActiveStages } from '../../hooks/useActiveStages';
 import { useHandingFinishedStages } from '../../hooks/useHandingFinishedStages';
 import { useListFinishedStages } from '../../hooks/useListFinishedStages';
@@ -459,9 +460,13 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
   const onGetBom = useCallback(
     async (object, items) => {
       try {
+        setIsInputPending(true);
         const r = await onGetDataLoadOutOfStock({ object, items });
 
-        if (!r?.data?.boms) return;
+        if (!r?.data?.boms) {
+          setIsInputPending(false);
+          return;
+        }
 
         const check = r.data.boms.map(e => {
           const existingBom = isState.dataTableBom?.data?.bomsClientHistory?.find(item => item?.item_id === e?.item_id && item?.pois_id === e?.pois_id);
@@ -488,8 +493,28 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
         setIsInputPending(false);
       }
     },
-    [isState.dataTableProducts, isState.dataTableBom, activeStep]
+    [isState.dataTableProducts, isState.dataTableBom, activeStep, onGetDataLoadOutOfStock]
   );
+
+  // Debounce onGetBom khi nhập số lượng (300ms)
+  const onGetBomRef = useRef(onGetBom);
+  useEffect(() => {
+    onGetBomRef.current = onGetBom;
+  }, [onGetBom]);
+
+  const debouncedOnGetBom = useMemo(
+    () =>
+      debounce((object, items) => {
+        onGetBomRef.current?.(object, items);
+      }, 300),
+    []
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedOnGetBom.cancel();
+    };
+  }, [debouncedOnGetBom]);
 
   const getPriorityItem = (semi, products) => {
     const semiItem = semi?.find(item => item.active === '0');
@@ -528,67 +553,38 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
   }, [isState.open]);
 
   const handleQuantityChange = async (value, row, type) => {
-    try {
-      setIsInputPending(true);
+    const simulatedValue = { floatValue: value };
+    const serialType = type === 'quantityEnterClient' ? 'serial' : 'serialError';
 
-      const simulatedValue = { floatValue: value };
-      const serialType = type === 'quantityEnterClient' ? 'serial' : 'serialError';
+    const newData = isState.dataTableProducts?.data?.items?.map(item => {
+      if (item?.poi_id === row?.poi_id) {
+        return updateSerialsGeneric(item, simulatedValue, serialType);
+      }
+      return item;
+    });
 
-      const newData = isState.dataTableProducts?.data?.items?.map(item => {
-        if (item?.poi_id === row?.poi_id) {
-          return updateSerialsGeneric(item, simulatedValue, serialType);
-        }
-        return item;
-      });
-
-      queryState({
-        dataTableProducts: {
-          ...isState.dataTableProducts,
-          data: {
-            ...isState.dataTableProducts?.data,
-            items: newData,
-          },
+    queryState({
+      dataTableProducts: {
+        ...isState.dataTableProducts,
+        data: {
+          ...isState.dataTableProducts?.data,
+          items: newData,
         },
-      });
+      },
+    });
 
-      const object = {
-        isProduct: activeStep.type === 'TP' ? 1 : 0,
-        activeStep: {
-          type: activeStep.type,
-          item: activeStep.item,
-        },
-        poId: dataRight?.idDetailProductionOrder,
-        arrayMoveBom: isState.arrayMoveBom,
-      };
+    // Gọi API kiểm tra tồn kho khi thay đổi số lượng (debounce)
+    const object = {
+      isProduct: activeStep.type === 'TP' ? 1 : 0,
+      activeStep: {
+        type: activeStep.type,
+        item: activeStep.item,
+      },
+      poId: dataRight?.idDetailProductionOrder,
+      arrayMoveBom: isState.arrayMoveBom,
+    };
 
-      const r = await onGetDataLoadOutOfStock({ object, items: newData });
-
-      if (!r?.data?.boms) return;
-
-      const check = r.data.boms.map(e => {
-        const existingBom = isState.dataTableBom?.data?.bomsClientHistory?.find(item => item?.item_id === e?.item_id && item?.pois_id === e?.pois_id);
-
-        return {
-          ...e,
-          warehouseId: existingBom?.warehouseId || e?.list_warehouse_bom,
-        };
-      });
-
-      queryState({
-        dataTableBom: {
-          ...r,
-          data: {
-            ...r?.data,
-            boms: check,
-            bomsClientHistory: check,
-          },
-        },
-      });
-    } catch (error) {
-      console.error('Error in handleQuantityChange:', error);
-    } finally {
-      setIsInputPending(false);
-    }
+    debouncedOnGetBom(object, newData);
   };
 
   const getTotals = useMemo(() => {

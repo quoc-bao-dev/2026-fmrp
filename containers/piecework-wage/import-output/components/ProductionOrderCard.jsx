@@ -35,7 +35,7 @@ const getBorderColor = po => {
   return BORDER_COLORS[colorIndex];
 };
 
-const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, isSelected = false, onToggleSelect, filterParams = {}, onUpdatePo }) => {
+const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, isSelected = false, onToggleSelect, filterParams = {}, onUpdatePo, isTimesheetPoEnabled = false }) => {
   const showToast = useToast();
   const activeTimer = po?.active_timer && Object.keys(po.active_timer || {}).length ? po.active_timer : null;
 
@@ -327,20 +327,22 @@ const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, i
           <p className='responsive-text-xxs font-normal text-[#667085]'>{moment(po?.date).format('DD/MM/YYYY')}</p>
         </div>
       </div>
-      <div className='w-full'>
-        <TimerControl
-          showTimerControl={po?.is_timer}
-          time={displayTime}
-          status={statusState}
-          onStart={!isStartingTimer && !isResumingTimer ? startTimer : undefined}
-          onPause={!isPausingTimer ? pauseTimer : undefined}
-          onStop={handleStopClick}
-          onComplete={() => {
-            setEndTimerFlag(0);
-            setShowCompletePopup(true);
-          }}
-        />
-      </div>
+      {isTimesheetPoEnabled && (
+        <div className='w-full'>
+          <TimerControl
+            showTimerControl={po?.is_timer}
+            time={displayTime}
+            status={statusState}
+            onStart={!isStartingTimer && !isResumingTimer ? startTimer : undefined}
+            onPause={!isPausingTimer ? pauseTimer : undefined}
+            onStop={handleStopClick}
+            onComplete={() => {
+              setEndTimerFlag(0);
+              setShowCompletePopup(true);
+            }}
+          />
+        </div>
+      )}
       <PopupConfim
         isOpen={showConfirmPopup}
         onClose={cancelStopTimer}
