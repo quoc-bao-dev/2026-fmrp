@@ -162,12 +162,10 @@ const General = props => {
   const [data, sData] = useState([]);
 
   const [numberDays, setNumberDays] = useState(+dataSetting?.number_day_warehouse ?? 0);
-
   const [isBomSemiProduct, setIsBomSemiProduct] = useState(dataSetting?.is_bom_semi_product ?? '0');
-
   const [skipExport, setSkipExport] = useState(dataSetting?.skip_export ?? '0');
-
   const [isAvailableStock, setIsAvailableStock] = useState(dataSetting?.is_available_stock ?? '0');
+  const [isTimesheetPo, setIsTimesheetPo] = useState(dataSetting?.is_timesheet_po ?? '0');
 
   // Trạng thái bật/tắt thuộc tính kho
   const [isWarehouseProperties, setIsWarehouseProperties] = useState(dataSetting?.is_warehouse_properties ?? '0');
@@ -182,7 +180,7 @@ const General = props => {
     setIsBomSemiProduct(dataSetting?.is_bom_semi_product ?? '0');
     setSkipExport(dataSetting?.skip_export ?? '0');
     setIsAvailableStock(dataSetting?.is_available_stock ?? '0');
-
+    setIsTimesheetPo(dataSetting?.is_timesheet_po ?? '0');
     // Đồng bộ trạng thái bật/tắt thuộc tính kho
     setIsWarehouseProperties(dataSetting?.is_warehouse_properties ?? '0');
 
@@ -208,6 +206,7 @@ const General = props => {
     dataSetting?.is_bom_semi_product,
     dataSetting?.skip_export,
     dataSetting?.is_available_stock,
+    dataSetting?.is_timesheet_po,
     dataSetting?.is_warehouse_properties,
     dataSetting?.warehouse_properties,
   ]);
@@ -218,7 +217,7 @@ const General = props => {
       sDataMaterialExpiry(data.find(x => x.code == 'material_expiry'));
       sDataProductExpiry(data.find(x => x.code == 'product_expiry'));
       sDataProductSerial(data.find(x => x.code == 'product_serial'));
-    } catch (error) {}
+    } catch (error) { }
   };
 
   useEffect(() => {
@@ -266,6 +265,8 @@ const General = props => {
       setIsAvailableStock(prev => (prev == '0' ? '1' : '0'));
     } else if (code == 'is_warehouse_properties') {
       setIsWarehouseProperties(prev => (prev == '0' ? '1' : '0'));
+    } else if (code == 'is_timesheet_po') {
+      setIsTimesheetPo(prev => (prev == '0' ? '1' : '0'));
     }
   };
 
@@ -279,6 +280,7 @@ const General = props => {
     formData.append(`settings[is_bom_semi_product]`, isBomSemiProduct);
     formData.append(`settings[skip_export]`, skipExport);
     formData.append(`settings[is_available_stock]`, isAvailableStock);
+    formData.append(`settings[is_timesheet_po]`, isTimesheetPo);
 
     // Lưu trạng thái bật/tắt thuộc tính kho
     formData.append(`settings[is_warehouse_properties]`, isWarehouseProperties);
@@ -367,7 +369,7 @@ const General = props => {
                 <div className='grid grid-cols-1 gap-4'>
                   <div className='space-y-4'>
                     <div className='space-y-1 gap-y-4 pb-4'>
-                      <h1 className='text-sm uppercase w-full py-3 px-4 rounded bg-[#ECF0F4] font-medium'>nguyên vật liệu</h1>
+                      <h2 className='text-sm uppercase w-full py-3 px-4 rounded bg-[#ECF0F4] font-medium'>nguyên vật liệu</h2>
                       <div className='divide-y divide-[#ECF0F4]'>
                         <div className='flex flex-row items-center justify-start gap-x-4 py-3 px-4'>
                           <label htmlFor={dataMaterialExpiry.code} className='relative inline-flex items-center cursor-pointer ml-1'>
@@ -460,7 +462,7 @@ const General = props => {
                   </div>
                   <div className='space-y-4'>
                     <div className='space-y-1'>
-                      <h1 className='text-sm uppercase w-full py-3 px-4 rounded bg-[#ECF0F4] font-medium'>thành phẩm</h1>
+                      <h2 className='text-sm uppercase w-full py-3 px-4 rounded bg-[#ECF0F4] font-medium'>thành phẩm</h2>
                       <div className='divide-y divide-[#ECF0F4]'>
                         <div className='flex flex-row items-center justify-start gap-x-4 py-3 px-4'>
                           <label htmlFor={dataProductExpiry.code} className='relative inline-flex items-center cursor-pointer ml-1'>
@@ -542,6 +544,28 @@ const General = props => {
                           <div className='flex flex-col gap-y-1'>
                             <p className='font-medium text-base text-typo-black-1'>Sử dụng tồn sẵn để giao hàng</p>
                             <p className='font-normal text-sm text-typo-gray-2'>Được phép giao hàng trên số lượng tồn kho sẵn không thông qua giữ kho</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className='space-y-1'>
+                      <h2 className='text-sm uppercase w-full py-3 px-4 rounded bg-[#ECF0F4] font-medium'>Lương sản lượng</h2>
+                      <div className='divide-y divide-[#ECF0F4]'>
+                        <div className='flex flex-row items-center justify-start gap-x-4 py-3 px-4'>
+                          <label htmlFor='is_timesheet_po' className='relative inline-flex items-center cursor-pointer ml-1'>
+                            <input
+                              type='checkbox'
+                              className='sr-only peer'
+                              value={isTimesheetPo}
+                              id='is_timesheet_po'
+                              checked={isTimesheetPo == '0' ? false : true}
+                              onChange={_ToggleStatus.bind(this, 'is_timesheet_po')}
+                            />
+                            <div className="w-11 h-6 bg-gray-200 rounded-full dark:bg-[#D1D5DB] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all  peer-checked:bg-blue-600"></div>
+                          </label>
+                          <div className='flex flex-col gap-y-1'>
+                            <p className='font-medium text-base text-typo-black-1'>Trang thái bấm giờ</p>
+                            <p className='font-normal text-sm text-typo-gray-2'>trạng thái bấm giờ</p>
                           </div>
                         </div>
                       </div>

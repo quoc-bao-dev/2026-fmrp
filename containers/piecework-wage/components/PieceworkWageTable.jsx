@@ -5,6 +5,7 @@ import { memo, useState } from 'react';
 import PieceworkWageDetailModal from './PieceworkWageDetailModal';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import formatNumber from '@/utils/helpers/formatnumber';
+import { formatSecondsToHours } from '@/utils/helpers/formatSecondsToHours';
 
 // Mock data dựa trên hình ảnh
 export const mockData = [
@@ -123,7 +124,7 @@ const PieceworkWageTable = memo(({ productionOutput, po_id }) => {
                     {convertedStaff ? <AvatarStack people={[convertedStaff]} size={32} /> : null}
                   </h4>
 
-                  <h4 className='col-span-3 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1'>{item.total_time}</h4>
+                  <h4 className='col-span-3 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1'>{formatSecondsToHours(item.total_time)}</h4>
 
                   <h4 className='col-span-3 text-center text-[#141522] font-semibold xl:text-sm text-xs px-1'>{item.total_produced}</h4>
 

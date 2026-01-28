@@ -35,7 +35,7 @@ const PopupResponsiblePerson = ({ open, onClose, po_id, stage_id, filterParams =
       enabled: open && !!po_id && !!stage_id,
     }
   );
-console.log(filterParams)
+
   const { mutate: savePomStagesDetail, isPending: isSaving } = useSavePomStagesDetail({
     onSuccess: async data => {
       if (data?.isSuccess) {

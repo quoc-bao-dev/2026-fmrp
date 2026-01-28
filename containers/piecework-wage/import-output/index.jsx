@@ -343,9 +343,9 @@ const ImportOutput = () => {
     if (dateFilter.dateStart || dateFilter.dateEnd) count++;
     if (selectedOrders.length > 0) count++;
     if (selectedPlans.length > 0) count++;
-    if (selectedBranch) count++;
+    if (selectedBranch?.value) count++;
     return count;
-  }, [dateFilter.dateStart, dateFilter.dateEnd, selectedOrders.length, selectedPlans.length]);
+  }, [dateFilter.dateStart, dateFilter.dateEnd, selectedOrders.length, selectedPlans.length, selectedBranch?.value]);
 
   // Trigger button cho FilterDropdown
   const triggerFilterAll = (

@@ -2,6 +2,7 @@ import { CheckThinIcon, MagnifyingGlassIcon } from '@/components/icons';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import AvatarText from '@/components/UI/common/user/AvatarText';
 import Loading from '@/components/UI/loading/loading';
+import NoData from '@/components/UI/noData/nodata';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
 import { IMAGES } from '@/constants/images';
 import useToast from '@/hooks/useToast';
@@ -297,7 +298,7 @@ const PersonSelector = ({
           >
             {/* Search */}
             <div className='w-full flex items-center gap-2'>
-              <div className='min-w-0 flex-1 flex items-center gap-3 pl-2 pr-1 py-1 border border-[#D0D5DD] rounded-lg bg-white focus-within:ring-2 focus-within:ring-[#1760B9]'>
+              <div className='min-w-0 flex-1 flex items-center gap-3 pl-2 pr-1 py-1 border border-[#D0D5DD] rounded-lg bg-white focus-within:ring-1 focus-within:ring-[#1760B9]'>
                 <input
                   ref={inputRef}
                   value={search}
@@ -357,7 +358,7 @@ const PersonSelector = ({
                       );
                     })}
                   {filtered.length === 0 && !isLoading && (
-                    <div className='text-center text-sm text-[#9295A4] py-4'>Không tìm thấy người phù hợp</div>
+                    <NoData type='person' titleText='Không tìm thấy người phù hợp' />
                   )}
                 </div>
               )}

@@ -184,6 +184,9 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
   const [pendingSelectedPersons, setPendingSelectedPersons] = useState([]);
 
   const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
+  const dataSetting = useSelector(state => state.setings);
+  const isTimesheetPoEnabled = dataSetting?.is_timesheet_po === '1';
+  
   const showToast = useToast();
 
   const limit = 10; // Giữ nguyên limit
@@ -486,6 +489,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
                   onToggleSelect={() => handleToggleProductionOrder(po)}
                   filterParams={filterParams}
                   onUpdatePo={handleUpdatePo}
+                  isTimesheetPoEnabled={isTimesheetPoEnabled}
                 />
               ))}
               {isLoadingMore && (
