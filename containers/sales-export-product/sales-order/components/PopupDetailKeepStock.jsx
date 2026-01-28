@@ -345,7 +345,7 @@ const PopupDetailKeepStock = (props) => {
                                                                     variant="Bold"
                                                                     className={`${e.isShow ? "rotate-90 transition-all duration-200 ease-linear" : ""} cursor-pointer`}
                                                                 />
-                                                                {formatMoment(e?.date, FORMAT_MOMENT.DD_MM_YYYY)}
+                                                                {formatMoment(e?.date, FORMAT_MOMENT.DATE_SLASH_LONG)}
                                                             </h6>
                                                             <h6 className="text-[13px]   px-2 py-2 col-span-1 text-center break-words">
                                                                 {e?.code}
@@ -478,7 +478,7 @@ const PopupDetailKeepStock = (props) => {
                                                                                                                     Date:
                                                                                                                 </h6>{" "}
                                                                                                                 <h6 className="text-[11px]  px-2   w-[full] text-center ">
-                                                                                                                    {e?.item?.expiration_date ? formatMoment(e?.item?.expiration_date, FORMAT_MOMENT.DD_MM_YYYY) : "-"}
+                                                                                                                    {e?.item?.expiration_date ? formatMoment(e?.item?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : "-"}
                                                                                                                 </h6>
                                                                                                             </div>
                                                                                                         </>
