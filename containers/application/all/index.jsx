@@ -1,6 +1,8 @@
 import Head from 'next/head';
 import Image from 'next/image';
 
+const IMAGE_COMING_SOON = '/application/comming-soon.png';
+
 const cards = [
     {
         title: 'Lương sản lượng',
@@ -17,8 +19,10 @@ const cards = [
         imageSrc: '/application/card-2.png',
         bgColor: '#E4EFFF',
         // imageShadow: '0 0 80px rgba(250, 148, 132, 0.55)',
-        btnLabel: 'Sắp ra mắt',
-        type: 'secondary',
+        btnLabel: 'Trải nghiệm thêm',
+        type: 'primary',
+        disableBtn: true,
+        isComingSoon: true,
     },
     {
         title: 'API phần mềm kế toán Misa',
@@ -44,9 +48,14 @@ export default function ApplicationAll(props) {
                 {cards.map((card, index) => (
                     <div
                         key={index}
-                        className="flex h-full flex-col gap-[22px] rounded-[36px] border-white/60 bg-white p-4 shadow-sm"
+                        className="relative flex h-full flex-col gap-[22px] rounded-[36px] border-white/60 bg-white p-4 shadow-sm"
                         style={{ backgroundColor: card.bgColor }}
                     >
+                        {card.isComingSoon ? (
+                            <div className="absolute top-0 left-0">
+                                <Image src={IMAGE_COMING_SOON} alt="coming soon" className="w-[110px] h-[31px]" width={200} height={31} />
+                            </div>
+                        ) : null}
                         <div className="flex flex-col justify-center">
                             <div className="flex justify-center w-full">
                                 <div
@@ -73,7 +82,7 @@ export default function ApplicationAll(props) {
                                 </p>
 
                                 <div className="mt-5 flex justify-end">
-                                    <ButtonAction type={card.type} label={card.btnLabel} />
+                                    <ButtonAction type={card.type} label={card.btnLabel} disable={card.disableBtn} />
                                 </div>
                             </div>
                         </div>
@@ -85,13 +94,14 @@ export default function ApplicationAll(props) {
 }
 
 
-const ButtonAction = ({ type = 'primary', label }) => {
+const ButtonAction = ({ type = 'primary', label, disable = false }) => {
     if (type === 'secondary') {
         // Nút cam gradient - "Sắp ra mắt"
         return (
             <button
                 type="button"
                 className="inline-flex items-center rounded-[40px] border border-[#899CFD] bg-[#0375F3]  px-6 py-3.5 text-sm font-semibold text-white shadow-none transition-all duration-200 hover:bg-[#0A7FFF] hover:shadow-[0_8px_20px_rgba(3,117,243,0.25)] focus:outline-none focus:ring-2 focus:ring-[#0375F3]/60 focus:ring-offset-2"
+                disabled={disable}
             >
                 {label}
             </button>
@@ -104,6 +114,7 @@ const ButtonAction = ({ type = 'primary', label }) => {
             <button
                 type="button"
                 className="inline-flex items-center gap-2 rounded-[40px] border border-transparent bg-[#EAF2FF] px-2 py-2 text-sm font-semibold text-[#0375F3] shadow-none ring-1 ring-[#0375F3]/40 transition-all duration-200 hover:bg-[#F0F7FF] hover:shadow-[0_6px_16px_rgba(3,117,243,0.15)]"
+                disabled={disable}
             >
                 <span className="pl-[12px]">{label}</span>
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -118,7 +129,8 @@ const ButtonAction = ({ type = 'primary', label }) => {
     return (
         <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-[40px] border border-[#899CFD] bg-[#0375F3] px-2 py-2 text-sm font-semibold text-white shadow-none transition-all duration-200 hover:bg-[#0A7FFF] hover:shadow-[0_8px_20px_rgba(3,117,243,0.3)] focus:outline-none focus:ring-2 focus:ring-[#0375F3]/70 focus:ring-offset-2"
+            className="inline-flex items-center gap-2 rounded-[40px] border border-[#899CFD] bg-[#0375F3] px-2 py-2 text-sm font-semibold text-white shadow-none transition-all duration-200 hover:bg-[#0A7FFF] hover:shadow-[0_8px_20px_rgba(3,117,243,0.3)] focus:outline-none focus:ring-2 focus:ring-[#0375F3]/70 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
+            disabled={disable}
         >
             <span className="pl-[12px]">{label}</span>
             <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
