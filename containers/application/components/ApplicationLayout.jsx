@@ -48,7 +48,7 @@ export default function ApplicationLayout({ children }) {
     }
     return (
         <div className='min-h-screen- relative overflow-y-visible'>
-            <div className="absolute inset-x-0 -top-16 w-full overflow-hidden" onClick={handleClickHome}>
+            <div className="absolute inset-x-0 -top-16 w-full overflow-hidden" >
                 <Image
                     src={IMAGE_APPLICATION}
                     className="w-full object-cover"
@@ -63,7 +63,8 @@ export default function ApplicationLayout({ children }) {
             <div className="relative z-50 flex items-center justify-between px-6 py-4">
                 {/* LOGO */}
                 <Image src={IMAGE_LOGO}
-                    className="w-[107px] h-[41px] object-contain"
+                    onClick={handleClickHome}
+                    className="w-[107px] h-[41px] object-contain cursor-pointer"
                     alt="logo" width={200} height={80} />
 
                 {/* NAVIGATION */}
