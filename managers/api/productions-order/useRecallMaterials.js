@@ -6,7 +6,7 @@ export const useLookupWarehouses = (params = null, enabled = true) => {
   return useQuery({
     queryKey: ['api_lookup_warehouses', params],
     queryFn: async () => {
-      const response = await apiProductionsOrders.apiLookupWarehouses({ params });
+      const response = await apiProductionsOrders.apiLookupWarehouses( params );
       return response.data;
     },
     enabled: enabled,
@@ -17,7 +17,7 @@ export const useMaterialsRecall = (params = null, enabled = false) => {
   return useQuery({
     queryKey: ['api_materials_recall', params],
     queryFn: async () => {
-      const response = await apiProductionsOrders.apiMaterialsRecall({ params });
+      const response = await apiProductionsOrders.apiMaterialsRecall( params );
       return response.data;
     },
     enabled: enabled,

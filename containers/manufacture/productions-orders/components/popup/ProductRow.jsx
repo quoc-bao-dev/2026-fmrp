@@ -269,7 +269,7 @@ const ProductRow = ({
           disabled={false}
           isError={false}
           step={1}
-          debounceTime={500}
+          skipBlurSetState={true}
         />
       </div>
       {showSerialColumns && (
@@ -313,7 +313,7 @@ const ProductRow = ({
           disabled={false}
           isError={false}
           step={1}
-          debounceTime={500}
+          skipBlurSetState={true}
         />
       </div>
       {showSerialColumns && (

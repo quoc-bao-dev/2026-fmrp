@@ -18,6 +18,7 @@ const InputCustom = ({
   step = 1,
   allowDecimal = true,
   onChangeComplete = null,
+  skipBlurSetState = false, // Nếu true thì blur sẽ không gọi setState ra ngoài (tránh trigger API thêm lần nữa)
 }) => {
   const [inputValue, setInputValue] = useState(state || 0)
   const [formattedValue, setFormattedValue] = useState('')
@@ -104,6 +105,8 @@ const InputCustom = ({
       if (value === '') {
         setInputValue('')
         setFormattedValue('')
+        // Gọi setState với giá trị min khi xóa hết
+        setState(min)
         return
       }
 
@@ -113,6 +116,8 @@ const InputCustom = ({
         // Chuyển về dạng không định dạng
         const unformattedValue = inputValue.toString()
         setFormattedValue(unformattedValue)
+        // Vẫn gọi setState để trigger debounce
+        setState(inputValue)
         return
       }
 
@@ -140,6 +145,8 @@ const InputCustom = ({
       if (numericValue === '') {
         setInputValue('')
         setFormattedValue('')
+        // Gọi setState với giá trị min khi xóa hết
+        setState(min)
         return
       }
 
@@ -156,6 +163,8 @@ const InputCustom = ({
         const parsedValue = parseFloat(numericValue)
         if (!isNaN(parsedValue)) {
           setInputValue(parsedValue)
+          // Gọi setState ngay khi nhập để trigger debounce
+          setState(parsedValue)
         }
         return
       }
@@ -170,15 +179,19 @@ const InputCustom = ({
 
       setInputValue(numValue)
       setFormattedValue(formatNumber(numValue, dataSeting))
+      // Gọi setState ngay khi nhập để trigger debounce
+      setState(numValue)
     },
-    [disabled, allowDecimal, max, showToast, dataSeting, formattedValue, inputValue]
+    [disabled, allowDecimal, max, min, showToast, dataSeting, formattedValue, inputValue, setState]
   )
 
   const handleBlur = useCallback(() => {
     isUserTyping.current = false
 
     if (inputValue === '') {
-      setState(min)
+      if (!skipBlurSetState) {
+        setState(min)
+      }
       setInputValue(min)
       setFormattedValue(formatNumber(min, dataSeting))
       return
@@ -192,20 +205,26 @@ const InputCustom = ({
     }
 
     if (number < min) {
-      setState(min)
+      if (!skipBlurSetState) {
+        setState(min)
+      }
       setInputValue(min)
       setFormattedValue(formatNumber(min, dataSeting))
     } else if (number > max) {
       showToast('error', `Số lượng không được vượt quá ${formatNumber(max, dataSeting)}`)
-      setState(max)
+      if (!skipBlurSetState) {
+        setState(max)
+      }
       setInputValue(max)
       setFormattedValue(formatNumber(max, dataSeting))
     } else {
-      setState(number)
+      if (!skipBlurSetState) {
+        setState(number)
+      }
       setInputValue(number)
       setFormattedValue(formatNumber(number, dataSeting))
     }
-  }, [inputValue, min, max, setState, showToast, parseToNumber, dataSeting, allowDecimal])
+  }, [inputValue, min, max, setState, showToast, parseToNumber, dataSeting, allowDecimal, skipBlurSetState])
 
   const handleButtonClick = useCallback(
     (operation) => {
