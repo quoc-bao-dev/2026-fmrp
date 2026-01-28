@@ -50,6 +50,7 @@ const Header = () => {
 
   const [isLastDropdown, setIsLastDropdown] = useState(false);
   const [showQRHint, setShowQRHint] = useState(false);
+  const [isWideScreen, setIsWideScreen] = useState(false);
 
   const ListDanhMuc = [
     {
@@ -1137,6 +1138,24 @@ const Header = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Check chiều ngang màn hình và lắng nghe resize
+  useEffect(() => {
+    const checkScreenWidth = () => {
+      setIsWideScreen(window.innerWidth > 1700);
+    };
+
+    // Check lần đầu khi component mount
+    checkScreenWidth();
+
+    // Lắng nghe sự kiện resize
+    window.addEventListener('resize', checkScreenWidth);
+
+    // Cleanup khi component unmount
+    return () => {
+      window.removeEventListener('resize', checkScreenWidth);
+    };
+  }, []);
+
   // Ensure bounce class sticks even when tooltip renders in a portal
   useEffect(() => {
     if (!showQRHint) {
@@ -1241,7 +1260,7 @@ const Header = () => {
                 width={28}
                 height={28}
               />
-              {!authState?.is_upgrade && <p className='font-semibold text-sm leading-5 text-[#003DA0] truncate pr-1'>Ứng dụng</p>}
+              {(!authState?.is_upgrade || isWideScreen) && <p className='font-semibold text-sm leading-5 text-[#003DA0] truncate pr-1'>Ứng dụng</p>}
             </a>
           </Tooltip>
           {authState?.is_upgrade && (
@@ -1491,7 +1510,7 @@ const deca = Lexend_Deca({
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
 });
 
-export const DropdownAvatar = React.memo(() => {
+export const DropdownAvatar = React.memo(({ typeArrow = 'light' }) => {
   const auth = useSelector(state => state.auth);
   const dataSetting = useSelector(state => state.setings);
   const randomColors = getColorByParam(auth?.user_full_name);
@@ -1651,7 +1670,7 @@ export const DropdownAvatar = React.memo(() => {
             ) : (
               <AvatarText fullName={auth?.user_full_name} className={'xl:!min-w-[30px] xl:!min-h-[30px] xl:!w-[30px] xl:!h-[30px] xl:!max-w-[30px] xl:!max-h-[30px] size-7 shrink-0'} />
             )}
-            <Image
+            {typeArrow === 'light' ? <Image
               alt=''
               src='/icon/header/dropdown.png'
               width={30}
@@ -1662,6 +1681,17 @@ export const DropdownAvatar = React.memo(() => {
               crossOrigin='anonymous'
               blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
             />
+              : <Image
+                alt=''
+                src='/icon/header/dropdown-2.png'
+                width={30}
+                height={30}
+                quality={100}
+                className='object-cover w-3 h-full'
+                loading='lazy'
+                crossOrigin='anonymous'
+                blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+              />}
           </div>
         </button>
       }
