@@ -165,9 +165,27 @@ const PopupDetail = props => {
                               <div className='flex flex-col gap-0.5 font-oblique text-typo-blue-2'>
                                 {e?.serial && dataProductSerial.is_enable === '1' ? (
                                   <div className='flex gap-1'>
-                                    <h6 className='text-[12px]'>Serial:</h6>
-                                    <h6 className='text-[12px] w-[full]'>{e.serial == null || e.serial == '' ? '-' : e.serial}</h6>
+                                    <h6 className='text-[11px]'>Serial:</h6>
+                                    <h6 className='text-[11px] w-[full]'>{e.serial == null || e.serial == '' ? '-' : e.serial}</h6>
                                   </div>
+                                ) : (
+                                  ''
+                                )}
+
+                                {dataMaterialExpiry.is_enable === '1' ? (
+                                  <>
+                                    {e?.lot && (
+                                      <div className='flex gap-1'>
+                                        <h6 className='text-[11px]'>Lot:</h6> <h6 className='text-[11px] w-[full] text-left'>{e?.lot == null || e?.lot == '' ? '-' : e?.lot}</h6>
+                                      </div>
+                                    )}
+                                    {e?.expiration_date && (
+                                      <div className='flex gap-1'>
+                                        <h6 className='text-[11px]'>Date:</h6>{' '}
+                                        <h6 className='text-[11px] w-[full] text-center'>{e?.expiration_date ? formatMoment(e?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}</h6>
+                                      </div>
+                                    )}
+                                  </>
                                 ) : (
                                   ''
                                 )}
@@ -180,29 +198,12 @@ const PopupDetail = props => {
                                       if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
                                       return (
                                         <div key={key} className='flex gap-1'>
-                                          <h6 className='responsive-text-sm'>{label}:</h6>
-                                          <h6 className='responsive-text-sm'>{value == null || value === '' ? '-' : value}</h6>
+                                          <h6 className='text-[11px]'>{label}:</h6>
+                                          <h6 className='text-[11px]'>{value == null || value === '' ? '-' : value}</h6>
                                         </div>
                                       );
                                     })}
                                   </>
-                                )}
-                                {dataMaterialExpiry.is_enable === '1' ? (
-                                  <>
-                                    {e?.lot && (
-                                      <div className='flex gap-1'>
-                                        <h6 className='responsive-text-sm'>Lot:</h6> <h6 className='responsive-text-sm w-[full] text-left'>{e?.lot == null || e?.lot == '' ? '-' : e?.lot}</h6>
-                                      </div>
-                                    )}
-                                    {e?.expiration_date && (
-                                      <div className='flex gap-1'>
-                                        <h6 className='responsive-text-sm'>Date:</h6>{' '}
-                                        <h6 className='responsive-text-sm w-[full] text-center'>{e?.expiration_date ? formatMoment(e?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-'}</h6>
-                                      </div>
-                                    )}
-                                  </>
-                                ) : (
-                                  ''
                                 )}
                               </div>
                             </div>
