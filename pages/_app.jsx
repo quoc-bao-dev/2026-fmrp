@@ -25,6 +25,7 @@ import { VersionProvider } from '@/context/_state/version-application/VersionCon
 import ForgotPassPage from './auth/forgot-password';
 import { LanguageProvider } from '@/context/ui/LanguageContext';
 import SupportZalo from '@/components/common/button/SupportZalo';
+import ApplicationLayout from '@/containers/application/components/ApplicationLayout';
 
 // const t = Lark
 const deca = Lexend_Deca({
@@ -185,9 +186,15 @@ function MainPage({ Component, pageProps }) {
         return <LoadingPage />;
     }
 
-    // Bypass layout cho route /application (page layout rỗng theo yêu cầu)
+    // Sử dụng ApplicationLayout cho route /application
     if (router.pathname === '/application' || router.pathname.startsWith('/application/')) {
-        return <Component dataLang={data} {...pageProps} />;
+        return (
+            <Customscrollbar className='relative h-screen text-customize'>
+                <ApplicationLayout>
+                    <Component dataLang={data} {...pageProps} />
+                </ApplicationLayout>
+            </Customscrollbar>
+        )
     }
 
     return (
