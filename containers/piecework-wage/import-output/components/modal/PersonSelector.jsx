@@ -1,13 +1,17 @@
 import { CheckThinIcon, MagnifyingGlassIcon } from '@/components/icons';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import AvatarText from '@/components/UI/common/user/AvatarText';
+import Loading from '@/components/UI/loading/loading';
+import NoData from '@/components/UI/noData/nodata';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
+import { IMAGES } from '@/constants/images';
+import useToast from '@/hooks/useToast';
+import { useLookupGroupMembers, useLookupStaffs } from '@/managers/api/piecework-wage/useImportOutput';
+import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import { autoUpdate, flip, offset, shift, size, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
 import Image from 'next/image';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import useToast from '@/hooks/useToast';
-import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
-import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 
 const ResponsibleAvatar = ({ avatarUrl, fullName = '', size = 40, borderColor = '#549AE8', className = '' }) => {
   const [isError, setIsError] = useState(false);
@@ -52,7 +56,7 @@ const PersonSelector = ({
   onConfirm,
   onApplySelected,
   selected = [],
-  data = [],
+  data = [], // Deprecated: sẽ không dùng nữa, dữ liệu sẽ lấy từ API
   className,
   children,
   onSelectMode,
@@ -61,6 +65,7 @@ const PersonSelector = ({
   inlineConfirm = false,
   hideFooterActions = false,
   width = 230,
+  filterParams = {},
 }) => {
   const [search, setSearch] = useState('');
   const [localSelected, setLocalSelected] = useState(selected);
@@ -72,6 +77,45 @@ const PersonSelector = ({
   const triggerRef = useRef(null);
   const inputRef = useRef(null);
   const showToast = useToast();
+
+  // Gọi API lấy nhân viên và nhóm khi mở PersonSelector
+  const { data: listStaffs, isLoading: isLoadingStaffs } = useLookupStaffs({ is_shift_scheduling: 1, branch_ids: [filterParams?.branch_ids] }, { enabled: open });
+  const { data: listGroupMembers, isLoading: isLoadingGroupMembers } = useLookupGroupMembers({ limit: 100, is_shift_scheduling: 1, branch_ids: [filterParams?.branch_ids] }, { enabled: open });
+
+  // Format dữ liệu nhân viên và nhóm từ API
+  const responsiblePersonData = useMemo(() => {
+    const formattedData = [];
+    const staffs = listStaffs?.staffs || [];
+
+    // Thêm các nhân viên
+    staffs
+      .filter(staff => staff?.staffid && staff?.full_name)
+      .forEach(staff => {
+        formattedData.push({
+          id: String(staff.staffid),
+          name: staff.full_name,
+          avatarUrl: staff.profile_image,
+          type: 'staff',
+        });
+      });
+
+    // Thêm các nhóm
+    const groupMembers = listGroupMembers?.group_members || [];
+    groupMembers.forEach(group => {
+      if (group?.id && group?.name) {
+        formattedData.push({
+          id: `group_${group.id}`,
+          name: group.name,
+          avatarUrl: IMAGES.groupUser,
+          type: 'group',
+        });
+      }
+    });
+
+    return formattedData;
+  }, [listStaffs, listGroupMembers]);
+
+  const isLoading = isLoadingStaffs || isLoadingGroupMembers;
 
   // Reset localSelected về selected mới nhất khi mở popup hoặc khi selected thay đổi
   useEffect(() => {
@@ -157,10 +201,10 @@ const PersonSelector = ({
 
   const filtered = useMemo(() => {
     const term = search.trim();
-    const peopleList = Array.isArray(data) ? data : [];
+    const peopleList = Array.isArray(responsiblePersonData) ? responsiblePersonData : [];
     if (!term) return peopleList;
     return peopleList.filter(p => searchWithoutDiacritics(p?.name || '', term));
-  }, [search, data]);
+  }, [search, responsiblePersonData]);
 
   const isSelected = id => localSelected?.some(item => item.id === id);
 
@@ -254,7 +298,7 @@ const PersonSelector = ({
           >
             {/* Search */}
             <div className='w-full flex items-center gap-2'>
-              <div className='min-w-0 flex-1 flex items-center gap-3 pl-2 pr-1 py-1 border border-[#D0D5DD] rounded-lg bg-white focus-within:ring-2 focus-within:ring-[#1760B9]'>
+              <div className='min-w-0 flex-1 flex items-center gap-3 pl-2 pr-1 py-1 border border-[#D0D5DD] rounded-lg bg-white focus-within:ring-1 focus-within:ring-[#1760B9]'>
                 <input
                   ref={inputRef}
                   value={search}
@@ -270,49 +314,54 @@ const PersonSelector = ({
 
             {/* List */}
             <Customscrollbar className='flex-1 min-h-0'>
-              <div className='space-y-1'>
-                {filtered
-                  .slice()
-                  .sort((a, b) => {
-                    const aSelected = isSelected(a.id);
-                    const bSelected = isSelected(b.id);
-                    
-                    // Phần tử đã chọn lên đầu, chưa chọn ở sau
-                    if (aSelected && !bSelected) return -1;
-                    if (!aSelected && bSelected) return 1;
-                    
-                    // Nếu cả hai đều đã chọn, sắp xếp theo thứ tự trong localSelected (phần tử mới chọn lên trước)
-                    if (aSelected && bSelected) {
-                      const aIndex = localSelected.findIndex(item => item.id === a.id);
-                      const bIndex = localSelected.findIndex(item => item.id === b.id);
-                      return aIndex - bIndex;
-                    }
-                    
-                    // Cả hai đều chưa chọn, giữ nguyên thứ tự
-                    return 0;
-                  })
-                  .map(person => {
-                    const active = isSelected(person.id);
-                    return (
-                      <div key={person.id}>
-                        <button
-                          data-rpcb-item={person.id}
-                          onClick={() => toggleLocal(person)}
-                          className={`w-full flex items-center gap-3 p-1.5 rounded-[10px] text-left transition-colors  border-[#E7EAEE] ${
-                            active ? 'bg-[#EBF5FF]' : 'bg-white hover:bg-[#F6F8FB]'
-                          }`}
-                        >
-                          <ResponsibleAvatar avatarUrl={person.avatarUrl} fullName={person.name} size={32} className='!min-w-8 !max-w-8 !min-h-8 !max-h-8 !h-8 !w-8 text-base' />
-                          <div className='flex-1 text-sm text-[#101828]'>{person.name}</div>
-                          {active && <CheckThinIcon className='size-4 text-[#1760B9]' />}
-                        </button>
-                      </div>
-                    );
-                  })}
-                {filtered.length === 0 && (
-                  <div className='text-center text-sm text-[#9295A4] py-4'>Không tìm thấy người phù hợp</div>
-                )}
-              </div>
+              {isLoading ? (
+                <div className='flex items-center justify-center py-8'>
+                  <Loading />
+                </div>
+              ) : (
+                <div className='space-y-1'>
+                  {filtered
+                    .slice()
+                    .sort((a, b) => {
+                      const aSelected = isSelected(a.id);
+                      const bSelected = isSelected(b.id);
+
+                      // Phần tử đã chọn lên đầu, chưa chọn ở sau
+                      if (aSelected && !bSelected) return -1;
+                      if (!aSelected && bSelected) return 1;
+
+                      // Nếu cả hai đều đã chọn, sắp xếp theo thứ tự trong localSelected (phần tử mới chọn lên trước)
+                      if (aSelected && bSelected) {
+                        const aIndex = localSelected.findIndex(item => item.id === a.id);
+                        const bIndex = localSelected.findIndex(item => item.id === b.id);
+                        return aIndex - bIndex;
+                      }
+
+                      // Cả hai đều chưa chọn, giữ nguyên thứ tự
+                      return 0;
+                    })
+                    .map(person => {
+                      const active = isSelected(person.id);
+                      return (
+                        <div key={person.id}>
+                          <button
+                            data-rpcb-item={person.id}
+                            onClick={() => toggleLocal(person)}
+                            className={`w-full flex items-center gap-3 p-1.5 rounded-[10px] text-left transition-colors  border-[#E7EAEE] ${active ? 'bg-[#EBF5FF]' : 'bg-white hover:bg-[#F6F8FB]'
+                              }`}
+                          >
+                            <ResponsibleAvatar avatarUrl={person.avatarUrl} fullName={person.name} size={32} className='!min-w-8 !max-w-8 !min-h-8 !max-h-8 !h-8 !w-8 text-base' />
+                            <div className='flex-1 text-sm text-[#101828]'>{person.name}</div>
+                            {active && <CheckThinIcon className='size-4 text-[#1760B9]' />}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  {filtered.length === 0 && !isLoading && (
+                    <NoData type='person' titleText='Không tìm thấy người phù hợp' />
+                  )}
+                </div>
+              )}
             </Customscrollbar>
             {inlineConfirm ? (
               <div className='flex items-center justify-center w-full pt-2 z-10'>
@@ -325,22 +374,22 @@ const PersonSelector = ({
               </div>
             ) : (
               !hideFooterActions && (
-              <div className='flex flex-col items-center justify-center gap-2 w-full z-10'>
-                <button
-                  className='w-full bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
-                  onClick={handleConfirmAll}
-                >
-                  Áp dụng tất cả
-                </button>
-                <button
-                  className='w-full text-blue-fmrp bg-white border border-blue-fmrp px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-blue-fmrp/20 transition-colors truncate'
-                  onClick={handleSelectModeAction}
-                >
-                  {selectedProductionOrdersCount > 0
-                    ? `Áp dụng (${selectedProductionOrdersCount}) lệnh`
-                    : 'Tùy chọn lệnh'}
-                </button>
-              </div>
+                <div className='flex flex-col items-center justify-center gap-2 w-full z-10'>
+                  <button
+                    className='w-full bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
+                    onClick={handleConfirmAll}
+                  >
+                    Áp dụng tất cả
+                  </button>
+                  <button
+                    className='w-full text-blue-fmrp bg-white border border-blue-fmrp px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-blue-fmrp/20 transition-colors truncate'
+                    onClick={handleSelectModeAction}
+                  >
+                    {selectedProductionOrdersCount > 0
+                      ? `Áp dụng (${selectedProductionOrdersCount}) lệnh`
+                      : 'Tùy chọn lệnh'}
+                  </button>
+                </div>
               )
             )}
           </div>,

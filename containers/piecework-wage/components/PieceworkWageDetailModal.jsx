@@ -5,6 +5,8 @@ import NoData from '@/components/UI/noData/nodata';
 import PopupCustom from '@/components/UI/popup';
 import { useDetailStaffByPo, useHistoryPurchaseProduct, useHistoryTimers } from '@/managers/api/productions-order/useProductionOutput';
 import formatMoneyOrDash from '@/utils/helpers/formatMoneyOrDash';
+import formatNumber from '@/utils/helpers/formatnumber';
+import { formatSecondsToHours, formatSecondsToHoursMinutesSeconds } from '@/utils/helpers/formatSecondsToHours';
 import moment from 'moment';
 import Image from 'next/image';
 import { memo, useEffect, useRef, useState } from 'react';
@@ -31,7 +33,7 @@ const PieceworkWageDetailModal = ({ open, onClose, worker, po_id }) => {
   const [timeHasMore, setTimeHasMore] = useState(false);
   const [isLoadingMoreTime, setIsLoadingMoreTime] = useState(false);
 
-  const { data: detailStaff } = useDetailStaffByPo({ po_id: po_id, staff_id: worker?.staff_id }, { enabled: !!po_id && !!worker?.staff_id });
+  const { data: detailStaff } = useDetailStaffByPo({ po_id: po_id, staff_id: worker?.staff_id }, { enabled: open });
 
   // Hook cho tab "Lịch sử nhập sản lượng"
   const { data: historyPurchaseProduct, isLoading: isLoadingQuantity } = useHistoryPurchaseProduct(
@@ -41,7 +43,7 @@ const PieceworkWageDetailModal = ({ open, onClose, worker, po_id }) => {
       cursor: quantityCursor,
       limit: 20,
     },
-    { enabled: !!po_id && !!worker?.staff_id && activeTab?.id === 'quantity' && (quantityCursor === 0 || (quantityCursor > 0 && quantityHasMore)) }
+    { enabled: !!po_id && !!worker?.staff_id && activeTab?.id === 'quantity' && (quantityCursor === 0 || (quantityCursor > 0 && quantityHasMore)) && open }
   );
 
   // Hook cho tab "Lịch sử bấm giờ"
@@ -52,7 +54,7 @@ const PieceworkWageDetailModal = ({ open, onClose, worker, po_id }) => {
       cursor: timeCursor,
       limit: 20,
     },
-    { enabled: !!po_id && !!worker?.staff_id && activeTab?.id === 'time' && (timeCursor === 0 || (timeCursor > 0 && timeHasMore)) }
+    { enabled: !!po_id && !!worker?.staff_id && activeTab?.id === 'time' && (timeCursor === 0 || (timeCursor > 0 && timeHasMore)) && open }
   );
 
   // Reset khi mở modal hoặc thay đổi worker/po_id
@@ -195,7 +197,7 @@ const PieceworkWageDetailModal = ({ open, onClose, worker, po_id }) => {
         <div className='flex flex-col gap-3 w-[366px]'>
           <div className='flex items-center justify-between w-full rounded-lg px-4 py-3 bg-[#FFF1E4]'>
             <span className='text-[14px] font-medium text-[#667085]'>Tổng giờ làm</span>
-            <span className='text-[24px] leading-7 font-semibold text-[#DC6803]'>{detailStaff?.total_time || '-'} giờ/tuần</span>
+            <span className='text-[24px] leading-7 font-semibold text-[#DC6803]'>{formatSecondsToHours(detailStaff?.total_time)}/tuần</span>
           </div>
           <div className='flex items-center justify-between w-full rounded-lg px-4 py-3 bg-[#E2F0FF]'>
             <span className='text-[14px] font-medium text-[#667085]'>Tổng chi phí</span>
@@ -231,9 +233,7 @@ const PieceworkWageDetailModal = ({ open, onClose, worker, po_id }) => {
 
             <Customscrollbar ref={quantityScrollRef} className='flex-1 min-h-0 max-h-[300px]' onScroll={handleQuantityScroll}>
               {!allQuantityItems || allQuantityItems.length === 0 ? (
-                <div className='flex items-center justify-center py-8 text-[#9295A4] text-sm'>
-                  {isLoadingQuantity ? <Loading /> : <NoData />}
-                </div>
+                isLoadingQuantity ? <Loading /> : <NoData />
               ) : (
                 <>
                   {allQuantityItems.map((row, index) => {
@@ -258,7 +258,7 @@ const PieceworkWageDetailModal = ({ open, onClose, worker, po_id }) => {
                         </div>
                         <div className='col-span-3 text-sm font-semibold text-[#141522] text-center'>{row.stage_name}</div>
                         <div className='col-span-3 text-sm font-semibold text-[#0375F3] text-center'>{formatMoneyOrDash(+row.price_salary)}</div>
-                        <div className='col-span-2 text-sm font-semibold text-[#141522] text-center'>{row.quantity_success}</div>
+                        <div className='col-span-2 text-sm font-semibold text-[#141522] text-center'>{formatNumber(+row.quantity_success)}</div>
                         <div className='col-span-3 text-sm font-semibold text-[#0375F3] text-center'>{formatMoneyOrDash(+row.amount_salary_success)}</div>
                       </div>
                     );
@@ -285,9 +285,7 @@ const PieceworkWageDetailModal = ({ open, onClose, worker, po_id }) => {
 
             <Customscrollbar ref={timeScrollRef} className='flex-1 min-h-0 max-h-[300px]' onScroll={handleTimeScroll}>
               {!allTimeItems || allTimeItems.length === 0 ? (
-                <div className='flex items-center justify-center py-8 text-[#9295A4] text-sm'>
-                  {isLoadingTime ? <Loading /> : <NoData />}
-                </div>
+                isLoadingTime ? <Loading /> : <NoData />
               ) : (
                 <>
                   {allTimeItems.map((row, index) => {
@@ -295,22 +293,6 @@ const PieceworkWageDetailModal = ({ open, onClose, worker, po_id }) => {
                     const formatTime = dateString => {
                       if (!dateString) return '-';
                       return moment(dateString).format('HH:mm:ss');
-                    };
-
-                    // Format tổng thời gian (số giây sang format h:m:s)
-                    const formatTotalTime = totalSeconds => {
-                      const seconds = Number(totalSeconds) || 0;
-                      if (seconds === 0) return '0s';
-                      const hours = Math.floor(seconds / 3600);
-                      const minutes = Math.floor((seconds % 3600) / 60);
-                      const secs = seconds % 60;
-                      if (hours > 0) {
-                        return `${hours}h${minutes}p${secs > 0 ? secs + 's' : ''}`;
-                      } else if (minutes > 0) {
-                        return `${minutes}p${secs > 0 ? secs + 's' : ''}`;
-                      } else {
-                        return `${secs}s`;
-                      }
                     };
 
                     return (
@@ -327,7 +309,7 @@ const PieceworkWageDetailModal = ({ open, onClose, worker, po_id }) => {
                           {row.end_time ? formatTime(row.end_time) : row.status_name || '-'}
                         </div>
                         <div className='col-span-5 text-sm font-semibold text-center' style={{ color: '#DC6803' }}>
-                          {formatTotalTime(row.total_time)}
+                          {formatSecondsToHoursMinutesSeconds(row.total_time)}
                         </div>
                       </div>
                     );

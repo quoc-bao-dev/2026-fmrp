@@ -1,6 +1,7 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import Popup from './Popup';
 import Image from 'next/image';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 
 const IMAGE_CARD = '/application/card-1.png';
 const IMAGE_PICEWORK_INTRO = '/application/picework-intro.png';
@@ -30,7 +31,7 @@ export default function PiceworkIntroPopup({ isOpen, onClose, onOpenPayment, clo
             isOpen={isOpen}
             onClose={onClose}
             ariaLabel="Giới thiệu tính năng"
-            panelClassName="!bg-[#F7F9FC] !w-[min(1151px,calc(100vw-32px))] px-9 py-4 2xl:py-9 rounded-3xl gap-6"
+            panelClassName="!bg-[#F7F9FC] !w-[min(900px,calc(100vw-32px))] px-9 py-4 2xl:py-9 rounded-3xl gap-6"
             closeOnBackdropClick={closeOnBackdropClick}
         >
             {/* ==== container ===== */}
@@ -80,7 +81,7 @@ export default function PiceworkIntroPopup({ isOpen, onClose, onOpenPayment, clo
                     <button
                         type="button"
                         onClick={onClose}
-                        className="size-[36px] rounded-full bg-white flex items-center justify-center hover:bg-slate-100 transition-colors"
+                        className="flex-shrink-0 size-[36px] rounded-full bg-white flex items-center justify-center hover:bg-slate-100 transition-colors"
                         aria-label="Đóng"
                     >
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -121,15 +122,49 @@ export default function PiceworkIntroPopup({ isOpen, onClose, onOpenPayment, clo
                     </div>
 
                     {/* ==== tab content ===== */}
-                    <div className="pt-2 2xl:pt-6" style={tabMaxHeight ? { minHeight: tabMaxHeight } : undefined}>
+                    <div className="pt-2"></div>
+
+                    <Customscrollbar className="pt-2 2xl:pt-6 h-[356px]">
                         {activeTab === 'intro' ? (
                             <>
                                 <p className="font-deca font-normal text-[14px] leading-5 tracking-[0] text-[#141522]">
                                     Thống kê lương và giờ làm của công nhân dựa trên sản lượng thực tế, giúp doanh nghiệp tính lương chính xác, minh bạch và nhanh chóng.
                                 </p>
 
-                                <div className="pt-6">
-                                    <div className="w-[520px] 2xl:w-[min(749px,100%)] rounded-lg overflow-hidden shadow-[-4px_4px_79.4px_0px_#00000026] bg-white">
+                                <div className="pt-6 pb-6">
+                                    <div className="w-[600px] 2xl:w-[min(749px,100%)] rounded-lg overflow-hidden shadow-[-4px_4px_79.4px_0px_#00000016] bg-white">
+                                        <Image
+                                            src={IMAGE_PICEWORK_INTRO}
+                                            alt="picework-intro"
+                                            width={749}
+                                            height={421}
+                                            className="w-full h-auto object-contain"
+                                            onLoad={measureTabHeights}
+                                        />
+                                    </div>
+                                </div>
+                                <p className="font-deca font-normal text-[14px] leading-5 tracking-[0] text-[#141522]">
+                                    Thống kê lương và giờ làm của công nhân dựa trên sản lượng thực tế, giúp doanh nghiệp tính lương chính xác, minh bạch và nhanh chóng.
+                                </p>
+
+                                <div className="pt-6 pb-6">
+                                    <div className="w-[600px] 2xl:w-[min(749px,100%)] rounded-lg overflow-hidden shadow-[-4px_4px_79.4px_0px_#00000016] bg-white">
+                                        <Image
+                                            src={IMAGE_PICEWORK_INTRO}
+                                            alt="picework-intro"
+                                            width={749}
+                                            height={421}
+                                            className="w-full h-auto object-contain"
+                                            onLoad={measureTabHeights}
+                                        />
+                                    </div>
+                                </div>
+                                <p className="font-deca font-normal text-[14px] leading-5 tracking-[0] text-[#141522]">
+                                    Thống kê lương và giờ làm của công nhân dựa trên sản lượng thực tế, giúp doanh nghiệp tính lương chính xác, minh bạch và nhanh chóng.
+                                </p>
+
+                                <div className="pt-6 pb-6">
+                                    <div className="w-[600px] 2xl:w-[min(749px,100%)] rounded-lg overflow-hidden shadow-[-4px_4px_79.4px_0px_#00000016] bg-white">
                                         <Image
                                             src={IMAGE_PICEWORK_INTRO}
                                             alt="picework-intro"
@@ -146,31 +181,7 @@ export default function PiceworkIntroPopup({ isOpen, onClose, onOpenPayment, clo
                                 Hướng dẫn
                             </p>
                         )}
-                    </div>
-
-                    {/* Hidden measurers to avoid layout jump when switching tabs */}
-                    <div className="absolute -left-[99999px] top-0 w-[min(1151px,calc(100vw-32px))] opacity-0 pointer-events-none" aria-hidden="true">
-                        <div ref={introMeasureRef} className="pt-6">
-                            <p className="font-deca font-normal text-[14px] leading-5 tracking-[0] text-[#141522]">
-                                Thống kê lương và giờ làm của công nhân dựa trên sản lượng thực tế, giúp doanh nghiệp tính lương chính xác, minh bạch và nhanh chóng.
-                            </p>
-                            <div className="pt-6">
-                                <div className="w-[520px] 2xl:w-[min(749px,100%)] rounded-lg overflow-hidden shadow-[-4px_4px_79.4px_0px_#00000026] bg-white">
-                                    <Image
-                                        src={IMAGE_PICEWORK_INTRO}
-                                        alt="picework-intro-measure"
-                                        width={749}
-                                        height={421}
-                                        className="w-full h-auto object-contain"
-                                        onLoad={measureTabHeights}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                        <div ref={guideMeasureRef} className="pt-6">
-                            <p className="font-deca font-normal text-[14px] leading-5 tracking-[0] text-[#141522]">Hướng dẫn</p>
-                        </div>
-                    </div>
+                    </Customscrollbar>
                 </div>
             </div>
 

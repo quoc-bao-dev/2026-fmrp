@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useRef } from 'react'
 import SimpleBar from 'simplebar-react'
 import 'simplebar-react/dist/simplebar.min.css'
 
-const SimpleBarCustom = forwardRef(({ children, scrollableNodePropsClassName, hideScrollbar, alwaysShowScrollbar = false, horizontalOnly = false, showOnHover = false, ...props }, ref) => {
+const SimpleBarCustom = forwardRef(({ children, scrollableNodePropsClassName, hideScrollbar, alwaysShowScrollbar = false, horizontalOnly = false, showOnHover = false, fullHeight = false, ...props }, ref) => {
   const innerRef = useRef(null)
 
   // Gắn ref
@@ -112,7 +112,8 @@ const SimpleBarCustom = forwardRef(({ children, scrollableNodePropsClassName, hi
     props.className,
     hideScrollbar && 'hide-scrollbar',
     alwaysShowScrollbar && 'show-scrollbar',
-    horizontalOnly && 'horizontal-only'
+    horizontalOnly && 'horizontal-only',
+    fullHeight && 'simplebar-full-height'
   ].filter(Boolean).join(' ')
 
   const scrollableClassName = [
@@ -142,6 +143,24 @@ const SimpleBarCustom = forwardRef(({ children, scrollableNodePropsClassName, hi
       forceVisible={forceVisible}
       autoHide={!alwaysShowScrollbar}
     >
+      {fullHeight && (
+        <style jsx global>{`
+          .simplebar-full-height,
+          .simplebar-full-height > .simplebar-wrapper,
+          .simplebar-full-height > .simplebar-wrapper > .simplebar-mask,
+          .simplebar-full-height > .simplebar-wrapper > .simplebar-mask > .simplebar-offset,
+          .simplebar-full-height > .simplebar-wrapper > .simplebar-mask > .simplebar-offset > .simplebar-content-wrapper,
+          .simplebar-full-height > .simplebar-wrapper > .simplebar-mask > .simplebar-offset > .simplebar-content-wrapper > .simplebar-content {
+            height: 100% !important;
+          }
+          .simplebar-full-height > .simplebar-wrapper > .simplebar-mask > .simplebar-offset > .simplebar-content-wrapper {
+            max-height: 100% !important;
+          }
+          .simplebar-full-height > .simplebar-wrapper > .simplebar-mask > .simplebar-offset > .simplebar-content-wrapper > .simplebar-content {
+            min-height: 100% !important;
+          }
+        `}</style>
+      )}
       {alwaysShowScrollbar && (
         <style jsx global>{`
           .always-show-scrollbar {
@@ -266,7 +285,7 @@ const SimpleBarCustom = forwardRef(({ children, scrollableNodePropsClassName, hi
 })
 
 export const Customscrollbar = forwardRef((props, ref) => {
-  const { alwaysShowScrollbar = false, horizontalOnly = false, showOnHover = false, ...restProps } = props
+  const { alwaysShowScrollbar = false, horizontalOnly = false, showOnHover = false, fullHeight = false, ...restProps } = props
 
   return (
     <SimpleBarCustom
@@ -279,6 +298,7 @@ export const Customscrollbar = forwardRef((props, ref) => {
       alwaysShowScrollbar={alwaysShowScrollbar}
       horizontalOnly={horizontalOnly}
       showOnHover={showOnHover}
+      fullHeight={fullHeight}
       style={props.style || {}}
       className={props.className || 'pb-2'}
     >

@@ -72,10 +72,6 @@ export const useSearchStaffs = (options = {}) => {
       return res;
     },
     enabled,
-    // Cache 1 phút: tắt/mở popup trong 1 phút sẽ không tự gọi lại API nếu queryKey không đổi
-    staleTime: 60 * 1000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
     ...optionsQuery,
   });
 }

@@ -12,7 +12,7 @@ import { useSocketContext } from '@/context/socket/SocketContext';
 import { useInternalPlansSearchCombobox } from '@/hooks/common/useInternalPlans';
 import { useOrdersSearchCombobox } from '@/hooks/common/useOrder';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
-import { useListImportOutput, useLookupGroupMembers, useLookupStages } from '@/managers/api/piecework-wage/useImportOutput';
+import { useListImportOutput, useLookupGroupMembers, useLookupStaffs, useLookupStages } from '@/managers/api/piecework-wage/useImportOutput';
 import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import moment from 'moment';
 import Head from 'next/head';
@@ -21,10 +21,14 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import StageColumn from './components/StageColumn';
+import { useBranchList } from '@/hooks/common/useBranch';
+import { useSelector } from 'react-redux';
 
 const ImportOutput = () => {
   const { socket } = useSocketContext();
+  const authState = useSelector(state => state.auth);
 
+  const [selectedBranch, setSelectedBranch] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState([]);
   const [searchStaff, setSearchStaff] = useState('');
   const [selectedProcess, setSelectedProcess] = useState([]);
@@ -55,17 +59,29 @@ const ImportOutput = () => {
     order_ids: Array.isArray(selectedOrders) && selectedOrders.length > 0 ? selectedOrders : null,
     internal_plan_ids: Array.isArray(selectedPlans) && selectedPlans.length > 0 ? selectedPlans : null,
     search: debouncedSearchReferenceNo || '',
+    ...(selectedBranch?.value ? { branch_ids: selectedBranch.value } : {}),
   };
 
   const { isLoading: isLoadingListImportOutput, data: listImportOutput, refetch: refetchListImportOutput } = useListImportOutput(filterParams);
-  const { data: listStaffs } = useSearchStaffs();
-  const { data: listGroupMembers } = useLookupGroupMembers({ limit: 100 });
+  const { data: listStaffs } = useLookupStaffs({ is_shift_scheduling: 1 });
+  const { data: listGroupMembers } = useLookupGroupMembers({ limit: 100, is_shift_scheduling: 1 });
   const { data: listStages } = useLookupStages({ search: debouncedSearchProcess || '' });
   const { data: listOrders = [] } = useOrdersSearchCombobox(debouncedSearchOrder);
   const { data: listPlan = [] } = useInternalPlansSearchCombobox(debouncedSearchPlan);
+  const { data: listBranch = [] } = useBranchList();
+
+  useEffect(() => {
+    if (authState.branch?.length > 0 && !selectedBranch) {
+      const firstBranch = {
+        value: authState.branch[0].id,
+        label: authState.branch[0].name,
+      };
+      setSelectedBranch(firstBranch);
+    }
+  }, [authState.branch]);
 
   // Lấy dữ liệu nhân viên từ API
-  const staffs = listStaffs?.data?.staffs || [];
+  const staffs = listStaffs?.staffs || [];
 
   // Lấy dữ liệu công đoạn từ API (đã được filter từ server)
   const stagesList = listStages?.stages || [];
@@ -172,6 +188,22 @@ const ImportOutput = () => {
   const handleOrderClear = () => {
     setSelectedOrders([]);
     setSearchOrder('');
+  };
+
+  // Xử lý khi chọn chi nhánh
+  const handleBranchChange = branchId => {
+    const selectedOption = (listBranch || []).find(opt => String(opt?.value) === String(branchId));
+    setSelectedBranch(
+      selectedOption
+        ? { value: selectedOption.value, label: selectedOption.label }
+        : branchId
+          ? { value: branchId, label: String(branchId) }
+          : null
+    );
+  };
+
+  const handleBranchClear = () => {
+    setSelectedBranch(null);
   };
 
   // Xử lý khi chọn kế hoạch nội bộ
@@ -311,8 +343,9 @@ const ImportOutput = () => {
     if (dateFilter.dateStart || dateFilter.dateEnd) count++;
     if (selectedOrders.length > 0) count++;
     if (selectedPlans.length > 0) count++;
+    if (selectedBranch?.value) count++;
     return count;
-  }, [dateFilter.dateStart, dateFilter.dateEnd, selectedOrders.length, selectedPlans.length]);
+  }, [dateFilter.dateStart, dateFilter.dateEnd, selectedOrders.length, selectedPlans.length, selectedBranch?.value]);
 
   // Trigger button cho FilterDropdown
   const triggerFilterAll = (
@@ -440,6 +473,19 @@ const ImportOutput = () => {
               <div className='text-lg text-[#344054] font-medium'>Bộ lọc</div>
               <div className='flex flex-col gap-3'>
                 <div className='space-y-1'>
+                  <h3 className='text-xs text-[#051B44] font-normal'>Chi nhánh</h3>
+                  <SelectSearchableRadio
+                    placeholder='Chọn chi nhánh'
+                    searchPlaceholder='Tìm chi nhánh'
+                    options={listBranch}
+                    value={selectedBranch}
+                    onChange={handleBranchChange}
+                    onClear={handleBranchClear}
+                    icon={<FunnelIcon className='size-4 text-[#003DA0]' />}
+                    className='w-auto min-w-[180px] [&_.ant-select-selector]:h-9 [&_.ant-select-selector]:border-[#D0D5DD]'
+                  />
+                </div>
+                <div className='space-y-1'>
                   <h3 className='text-xs text-[#051B44] font-normal'>Thời gian</h3>
                   <DateToDateComponent
                     placeholder='dd/mm/yyyy → dd/mm/yyyy'
@@ -483,7 +529,7 @@ const ImportOutput = () => {
                       onSearch={handlePlanSearch}
                       onClear={handlePlanClear}
                       icon={<FunnelIcon className='size-4 text-[#003DA0]' />}
-                      className='w-auto min-w-[180px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
+                      className='w-auto min-w-[180px] [&_.ant-select-selector]:h-9 [&_.ant-select-selector]:border-[#D0D5DD]'
                       mode='multiple'
                     />
                   </div>
@@ -509,8 +555,6 @@ const ImportOutput = () => {
                     activePersonSelectorStageId={activePersonSelectorStageId}
                     onPersonSelectorClick={handlePersonSelectorClick}
                     filterParams={filterParams}
-                    listGroupMembers={listGroupMembers}
-                    listStaffs={listStaffs}
                   />
                 ))}
               </div>

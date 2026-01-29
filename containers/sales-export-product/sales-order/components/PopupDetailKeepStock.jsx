@@ -26,6 +26,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import ModalImage from "react-modal-image";
 import { v4 as uuid } from "uuid";
+import { useWarehouseProperties } from "@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties";
 
 const Popup_EditDetail = dynamic(() => import("./PopupEditDetail"), { ssr: false });
 
@@ -67,6 +68,7 @@ const PopupDetailKeepStock = (props) => {
     const { data: dataWarehouseTranfer = [] } = useWarehouseTranfer();
 
     const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature();
+    const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
 
     const { isFetching: isFetchingListKeepStock, refetch: refetchListKeepStock } = useQuery({
         queryKey: ['api_list_keep_stock'],
@@ -230,10 +232,10 @@ const PopupDetailKeepStock = (props) => {
                 onClose={_ToggleModal.bind(this, false)}
                 classNameBtn={"w-full"}
                 button={
-                    <button 
+                    <button
                         className={`group rounded-lg w-full p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer
-                            ${totalButtons > 3 
-                                ? 'hover:bg-primary-05' 
+                            ${totalButtons > 3
+                                ? 'hover:bg-primary-05'
                                 : 'hover:border-amber-500 hover:bg-amber-50'
                             }`}
                     >
@@ -255,35 +257,35 @@ const PopupDetailKeepStock = (props) => {
                     <div className=" customsroll overflow-auto pb-1 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 flex flex-col">
                         <div className="flex justify-between grid-cols-11 gap-2 items-center py-2 pl-2 bg-slate-100 w-full rounded-t-lg">
                             <div className="flex items-center gap-2">
-                            {selectArray.map((e) => (
-                                <SelectComponent
-                                    key={e.id}
-                                    isClearable={true}
-                                    onChange={onChangeValue(e.key)}
-                                    options={[{ label: e.placeholder, value: null, isDisabled: true }, ...e.options]}
-                                    value={e.value}
-                                    colSpan={2}
-                                    className={e.className}
-                                    styles={{
-                                        placeholder: (base) => ({
-                                            ...base,
-                                            color: "#cbd5e1",
-                                            fontSize: "14px !important",
-                                        }),
-                                        control: (base, state) => ({
-                                            ...base,
-                                            border: "none",
-                                            outline: "none",
-                                            boxShadow: "none",
-                                            ...(state.isFocused && {
-                                                boxShadow: "0 0 0 1.5px #0F4F9E",
+                                {selectArray.map((e) => (
+                                    <SelectComponent
+                                        key={e.id}
+                                        isClearable={true}
+                                        onChange={onChangeValue(e.key)}
+                                        options={[{ label: e.placeholder, value: null, isDisabled: true }, ...e.options]}
+                                        value={e.value}
+                                        colSpan={2}
+                                        className={e.className}
+                                        styles={{
+                                            placeholder: (base) => ({
+                                                ...base,
+                                                color: "#cbd5e1",
+                                                fontSize: "14px !important",
                                             }),
-                                        }),
-                                    }}
-                                    maxMenuHeight={180}
-                                    placeholder={e.placeholder}
-                                />
-                            ))}
+                                            control: (base, state) => ({
+                                                ...base,
+                                                border: "none",
+                                                outline: "none",
+                                                boxShadow: "none",
+                                                ...(state.isFocused && {
+                                                    boxShadow: "0 0 0 1.5px #0F4F9E",
+                                                }),
+                                            }),
+                                        }}
+                                        maxMenuHeight={180}
+                                        placeholder={e.placeholder}
+                                    />
+                                ))}
                             </div>
                             <div className="col-span-5 justify-end flex items-center gap-1 mr-2">
                                 <OnResetData onClick={refetchListKeepStock.bind(this)} sOnFetching={(e) => { }} />
@@ -326,8 +328,8 @@ const PopupDetailKeepStock = (props) => {
                                 <Loading className="max-h-28" color="#0f4f9e" />
                             ) : dataClone?.transfer?.length > 0 ? (
                                 <>
-                                    <Customscrollbar className="min-h-[90px] max-h-[170px] 2xl:max-h-[250px] overflow-hidden">
-                                        <div className=" divide-slate-200 min:h-[170px]  max:h-[170px]">
+                                    <Customscrollbar className="min-h-[90px] max-h-[270px] 2xl:max-h-[350px] overflow-hidden">
+                                        <div className=" divide-slate-200 min:h-[270px]  max-h-[370px]">
                                             {dataClone?.transfer?.map((e) => {
                                                 return (
                                                     <>
@@ -335,7 +337,7 @@ const PopupDetailKeepStock = (props) => {
                                                             className="grid grid-cols-10 hover:bg-slate-50 items-center border-b"
                                                             key={e.id?.toString()}
                                                         >
-                                                            <h6 className="text-[13px] flex items-center  px-2 py-2 col-span-1 text-center break-words">
+                                                            <h6 className="text-[13px] flex items-center  px-2 py-2 col-span-1 text-center truncate">
                                                                 <ArrowRight2
                                                                     onClick={() => handleShowItem(e.id)}
                                                                     size="22"
@@ -343,7 +345,7 @@ const PopupDetailKeepStock = (props) => {
                                                                     variant="Bold"
                                                                     className={`${e.isShow ? "rotate-90 transition-all duration-200 ease-linear" : ""} cursor-pointer`}
                                                                 />
-                                                                {formatMoment(e?.date, FORMAT_MOMENT.DATE_TIME_SLASH_LONG)}
+                                                                {formatMoment(e?.date, FORMAT_MOMENT.DATE_SLASH_LONG)}
                                                             </h6>
                                                             <h6 className="text-[13px]   px-2 py-2 col-span-1 text-center break-words">
                                                                 {e?.code}
@@ -358,7 +360,7 @@ const PopupDetailKeepStock = (props) => {
                                                                 {e?.warehouses_to_name}
                                                             </h6>
                                                             <h6
-                                                                className={`text-[12px] ${e?.warehouseman_id == "0" ? "bg-blue-200 text-blue-700 px-1.5" : " bg-green-200 text-green-700 px-3"} py-1 col-span-1 font-medium text-center break-words w-fit  mx-auto rounded-2xl`}
+                                                                className={`text-[12px] truncate ${e?.warehouseman_id == "0" ? "bg-blue-200 text-blue-700 px-1.5" : " bg-green-200 text-green-700 px-3"} py-1 col-span-1 font-medium text-center break-words w-fit  mx-auto rounded-2xl`}
                                                             >
                                                                 {`${e?.warehouseman_id == "0" ? "Chưa duyệt kho" : "Đã duyệt kho"}`}
                                                             </h6>
@@ -409,7 +411,7 @@ const PopupDetailKeepStock = (props) => {
                                                                         </h6>
                                                                     </div>
 
-                                                                    <Customscrollbar className="min-h-[90px] mx-5  max-h-[170px] col-span-10 2xl:max-h-[250px] overflow-hidden">
+                                                                    <Customscrollbar className="min-h-[90px] mx-5  max-h-[470px] col-span-10 2xl:max-h-[550px] overflow-hidden">
                                                                         <div className="max-h-[300px] col-span-10 grid grid-cols-10 items-center ">
                                                                             {e?.items?.map((e, index) => (
                                                                                 <div
@@ -464,19 +466,19 @@ const PopupDetailKeepStock = (props) => {
                                                                                                     {dataMaterialExpiry.is_enable === "1" || dataProductExpiry.is_enable === "1" ? (
                                                                                                         <>
                                                                                                             <div className="flex gap-0.5">
-                                                                                                                <h6 className="text-[12px]">
+                                                                                                                <h6 className="text-[11px]">
                                                                                                                     Lot:
                                                                                                                 </h6>{" "}
-                                                                                                                <h6 className="text-[12px]  px-2   w-[full] text-left ">
+                                                                                                                <h6 className="text-[11px]  px-2   w-[full] text-left ">
                                                                                                                     {e?.item?.lot == null || e?.item?.lot == "" ? "-" : e?.item?.lot}
                                                                                                                 </h6>
                                                                                                             </div>
                                                                                                             <div className="flex gap-0.5">
-                                                                                                                <h6 className="text-[12px]">
+                                                                                                                <h6 className="text-[11px]">
                                                                                                                     Date:
                                                                                                                 </h6>{" "}
-                                                                                                                <h6 className="text-[12px]  px-2   w-[full] text-center ">
-                                                                                                                    {e?.item?.expiration_date ? formatMoment(e?.item?.expiration_date, FORMAT_MOMENT.DATE_TIME_SLASH_LONG) : "-"}
+                                                                                                                <h6 className="text-[11px]  px-2   w-[full] text-center ">
+                                                                                                                    {e?.item?.expiration_date ? formatMoment(e?.item?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : "-"}
                                                                                                                 </h6>
                                                                                                             </div>
                                                                                                         </>
@@ -484,6 +486,29 @@ const PopupDetailKeepStock = (props) => {
                                                                                                         ""
                                                                                                     )}
                                                                                                 </div>
+                                                                                                {/* check key item_type là material thì hiển thị thuộc tính kho */}
+                                                                                                {e?.item_type === "material" &&
+                                                                                                    Array.isArray(warehousePropertyLabels) &&
+                                                                                                    warehousePropertyLabels.length > 0 && (
+                                                                                                        <div className=" flex flex-wrap gap-x-1 font-oblique">
+                                                                                                            {warehousePropertyLabels.map(({ key, label }) => {
+                                                                                                                if (!label) return null;
+                                                                                                                const value = e?.item?.[key];
+
+                                                                                                                // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                                                                                                if (!isWarehousePropertiesEnabled && (value == null || value === "")) return null;
+
+                                                                                                                return (
+                                                                                                                    <div key={key} className="flex gap-1">
+                                                                                                                        <h6 className="text-[11px]">{label}:</h6>
+                                                                                                                        <h6 className="text-[11px]">
+                                                                                                                            {value == null || value === "" ? "-" : value}
+                                                                                                                        </h6>
+                                                                                                                    </div>
+                                                                                                                );
+                                                                                                            })}
+                                                                                                        </div>
+                                                                                                    )}
                                                                                             </div>
                                                                                         </div>
                                                                                     </h6>

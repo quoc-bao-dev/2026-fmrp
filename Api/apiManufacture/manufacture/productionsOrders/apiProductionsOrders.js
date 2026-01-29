@@ -440,13 +440,13 @@ const apiProductionsOrders = {
 
     // Lấy danh sách nguyên liệu bổ sung
     async apiLookupWarehouses(data) {
-        const response = await axiosCustom('POST', `/api_web/warehouses/lookup`, data);
+        const response = await axiosCustom('POST', `/api_web/warehouses/lookup`, {data : data});
         return response.data;
     },
 
     // Lấy danh sách nguyên liệu thu hồi
     async apiMaterialsRecall(data) {
-        const response = await axiosCustom('POST', `/api_web/purchase-internal/list-sug-pi`, data);
+        const response = await axiosCustom('POST', `/api_web/purchase-internal/list-sug-pi`, {data : data});
         return response.data;
     },
 

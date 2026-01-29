@@ -37,14 +37,19 @@ const TYPE_CONTENT = {
     title: 'Chưa có dữ liệu báo cáo',
     titleClassName: 'text-[#141522] opacity-90',
   },
+  person: {
+    image: '/nodata/nodata-person.png',
+    title: 'Chưa có dữ liệu',
+    titleClassName: 'responsive-text-sm text-[#141522] font-normal',
+  },
   default: {
     image: '/icon/nodata_ok.svg',
     title: 'Không tìm thấy các mục',
-    titleClassName: 'text-[#141522] opacity-90',
+    titleClassName: 'responsive-text-sm text-[#141522] opacity-90',
   },
 };
 
-const NoData = ({ type = 'table', className = '', classNameImage = '3xl:max-w-[280px] max-w-[200px] w-full h-auto object-contain', classNameTitle = 'text-sm', titleText = '', ...rest }) => {
+const NoData = ({ type = 'table', className = '', classNameImage = '3xl:max-w-[280px] max-w-[200px] w-full h-auto object-contain', classNameTitle = '', titleText = '', ...rest }) => {
   const { image, title, titleClassName } = TYPE_CONTENT[type] || TYPE_CONTENT.default;
   const finalTitle = titleText || title;
 
