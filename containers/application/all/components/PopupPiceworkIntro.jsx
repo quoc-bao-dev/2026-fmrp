@@ -164,7 +164,7 @@ export default function PiceworkIntroPopup({ isOpen, onClose, onOpenPayment, clo
                                 </p>
 
                                 <div className="pt-6 pb-6">
-                                    <div className="w-[600px] 2xl:w-[min(749px,100%)] rounded-lg overflow-hidden shadow-[-4px_4px_79.4px_0px_#00000016] bg-white">
+                                    <div className="w-[500px] 2xl:w-[min(749px,100%)] rounded-lg overflow-hidden shadow-[-4px_4px_79.4px_0px_#00000016] bg-white">
                                         <Image
                                             src={IMAGE_PICEWORK_INTRO}
                                             alt="picework-intro"

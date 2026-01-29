@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import Popup from './Popup';
+import TooltipDefault from '@/components/common/tooltip/TooltipDefault';
+import useToast from '@/hooks/useToast';
 
 const IMAGE_PAYMENT_INFO = '/application/payment-info.png';
 const IMAGE_BANK = '/application/bank.png';
 
 export default function PopupPayment({ isOpen, onClose, onPaymentSuccess, closeOnBackdropClick = true }) {
     const [countdown, setCountdown] = useState(10);
+    const showToast = useToast();
 
     useEffect(() => {
         if (!isOpen) {
@@ -30,6 +33,18 @@ export default function PopupPayment({ isOpen, onClose, onPaymentSuccess, closeO
             window.clearInterval(intervalId);
         };
     }, [isOpen, onPaymentSuccess]);
+
+    const handleCopy = async (value) => {
+        if (!value) return;
+        try {
+            if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(value);
+                showToast?.('success', 'Đã sao chép vào clipboard');
+            }
+        } catch (error) {
+            // ignore
+        }
+    };
 
     return (
         <Popup
@@ -183,15 +198,19 @@ export default function PopupPayment({ isOpen, onClose, onPaymentSuccess, closeO
                                                     881688
                                                 </p>
 
-                                                <div
-                                                    className="cursor-pointer rounded-full p-1 hover:bg-slate-100 transition-colors"
-                                                >
-                                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M5 9.16699C5 6.80997 5 5.63146 5.73223 4.89923C6.46447 4.16699 7.64298 4.16699 10 4.16699H12.5C14.857 4.16699 16.0355 4.16699 16.7678 4.89923C17.5 5.63146 17.5 6.80997 17.5 9.16699V13.3337C17.5 15.6907 17.5 16.8692 16.7678 17.6014C16.0355 18.3337 14.857 18.3337 12.5 18.3337H10C7.64298 18.3337 6.46447 18.3337 5.73223 17.6014C5 16.8692 5 15.6907 5 13.3337V9.16699Z" stroke="#637381" stroke-width="1.5" />
-                                                        <path d="M5 15.8337C3.61929 15.8337 2.5 14.7144 2.5 13.3337V8.33366C2.5 5.19096 2.5 3.61961 3.47631 2.6433C4.45262 1.66699 6.02397 1.66699 9.16667 1.66699H12.5C13.8807 1.66699 15 2.78628 15 4.16699" stroke="#637381" stroke-width="1.5" />
-                                                    </svg>
-
-                                                </div>
+                                                <TooltipDefault id="payment-copy-account" content="Sao chép" place="bottom">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleCopy('881688')}
+                                                        className="cursor-pointer rounded-full p-1 hover:bg-slate-100 transition-colors"
+                                                        aria-label="Sao chép số tài khoản"
+                                                    >
+                                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M5 9.16699C5 6.80997 5 5.63146 5.73223 4.89923C6.46447 4.16699 7.64298 4.16699 10 4.16699H12.5C14.857 4.16699 16.0355 4.16699 16.7678 4.89923C17.5 5.63146 17.5 6.80997 17.5 9.16699V13.3337C17.5 15.6907 17.5 16.8692 16.7678 17.6014C16.0355 18.3337 14.857 18.3337 12.5 18.3337H10C7.64298 18.3337 6.46447 18.3337 5.73223 17.6014C5 16.8692 5 15.6907 5 13.3337V9.16699Z" stroke="#637381" strokeWidth="1.5" />
+                                                            <path d="M5 15.8337C3.61929 15.8337 2.5 14.7144 2.5 13.3337V8.33366C2.5 5.19096 2.5 3.61961 3.47631 2.6433C4.45262 1.66699 6.02397 1.66699 9.16667 1.66699H12.5C13.8807 1.66699 15 2.78628 15 4.16699" stroke="#637381" strokeWidth="1.5" />
+                                                        </svg>
+                                                    </button>
+                                                </TooltipDefault>
                                             </div>
                                         </div>
 
@@ -209,15 +228,19 @@ export default function PopupPayment({ isOpen, onClose, onPaymentSuccess, closeO
                                                     COng ty TNHH cong nghe FOSO
                                                 </p>
 
-                                                <div
-                                                    className="cursor-pointer rounded-full p-1 hover:bg-slate-100 transition-colors"
-                                                >
-                                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M5 9.16699C5 6.80997 5 5.63146 5.73223 4.89923C6.46447 4.16699 7.64298 4.16699 10 4.16699H12.5C14.857 4.16699 16.0355 4.16699 16.7678 4.89923C17.5 5.63146 17.5 6.80997 17.5 9.16699V13.3337C17.5 15.6907 17.5 16.8692 16.7678 17.6014C16.0355 18.3337 14.857 18.3337 12.5 18.3337H10C7.64298 18.3337 6.46447 18.3337 5.73223 17.6014C5 16.8692 5 15.6907 5 13.3337V9.16699Z" stroke="#637381" stroke-width="1.5" />
-                                                        <path d="M5 15.8337C3.61929 15.8337 2.5 14.7144 2.5 13.3337V8.33366C2.5 5.19096 2.5 3.61961 3.47631 2.6433C4.45262 1.66699 6.02397 1.66699 9.16667 1.66699H12.5C13.8807 1.66699 15 2.78628 15 4.16699" stroke="#637381" stroke-width="1.5" />
-                                                    </svg>
-
-                                                </div>
+                                                <TooltipDefault id="payment-copy-owner" content="Sao chép" place="bottom">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleCopy('COng ty TNHH cong nghe FOSO')}
+                                                        className="cursor-pointer rounded-full p-1 hover:bg-slate-100 transition-colors"
+                                                        aria-label="Sao chép tên chủ tài khoản"
+                                                    >
+                                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M5 9.16699C5 6.80997 5 5.63146 5.73223 4.89923C6.46447 4.16699 7.64298 4.16699 10 4.16699H12.5C14.857 4.16699 16.0355 4.16699 16.7678 4.89923C17.5 5.63146 17.5 6.80997 17.5 9.16699V13.3337C17.5 15.6907 17.5 16.8692 16.7678 17.6014C16.0355 18.3337 14.857 18.3337 12.5 18.3337H10C7.64298 18.3337 6.46447 18.3337 5.73223 17.6014C5 16.8692 5 15.6907 5 13.3337V9.16699Z" stroke="#637381" strokeWidth="1.5" />
+                                                            <path d="M5 15.8337C3.61929 15.8337 2.5 14.7144 2.5 13.3337V8.33366C2.5 5.19096 2.5 3.61961 3.47631 2.6433C4.45262 1.66699 6.02397 1.66699 9.16667 1.66699H12.5C13.8807 1.66699 15 2.78628 15 4.16699" stroke="#637381" strokeWidth="1.5" />
+                                                        </svg>
+                                                    </button>
+                                                </TooltipDefault>
                                             </div>
                                         </div>
 
@@ -235,15 +258,19 @@ export default function PopupPayment({ isOpen, onClose, onPaymentSuccess, closeO
                                                     JQKA268
                                                 </p>
 
-                                                <div
-                                                    className="cursor-pointer rounded-full p-1 hover:bg-slate-100 transition-colors"
-                                                >
-                                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M5 9.16699C5 6.80997 5 5.63146 5.73223 4.89923C6.46447 4.16699 7.64298 4.16699 10 4.16699H12.5C14.857 4.16699 16.0355 4.16699 16.7678 4.89923C17.5 5.63146 17.5 6.80997 17.5 9.16699V13.3337C17.5 15.6907 17.5 16.8692 16.7678 17.6014C16.0355 18.3337 14.857 18.3337 12.5 18.3337H10C7.64298 18.3337 6.46447 18.3337 5.73223 17.6014C5 16.8692 5 15.6907 5 13.3337V9.16699Z" stroke="#637381" stroke-width="1.5" />
-                                                        <path d="M5 15.8337C3.61929 15.8337 2.5 14.7144 2.5 13.3337V8.33366C2.5 5.19096 2.5 3.61961 3.47631 2.6433C4.45262 1.66699 6.02397 1.66699 9.16667 1.66699H12.5C13.8807 1.66699 15 2.78628 15 4.16699" stroke="#637381" stroke-width="1.5" />
-                                                    </svg>
-
-                                                </div>
+                                                <TooltipDefault id="payment-copy-note" content="Sao chép" place="bottom">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleCopy('JQKA268')}
+                                                        className="cursor-pointer rounded-full p-1 hover:bg-slate-100 transition-colors"
+                                                        aria-label="Sao chép nội dung chuyển khoản"
+                                                    >
+                                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M5 9.16699C5 6.80997 5 5.63146 5.73223 4.89923C6.46447 4.16699 7.64298 4.16699 10 4.16699H12.5C14.857 4.16699 16.0355 4.16699 16.7678 4.89923C17.5 5.63146 17.5 6.80997 17.5 9.16699V13.3337C17.5 15.6907 17.5 16.8692 16.7678 17.6014C16.0355 18.3337 14.857 18.3337 12.5 18.3337H10C7.64298 18.3337 6.46447 18.3337 5.73223 17.6014C5 16.8692 5 15.6907 5 13.3337V9.16699Z" stroke="#637381" strokeWidth="1.5" />
+                                                            <path d="M5 15.8337C3.61929 15.8337 2.5 14.7144 2.5 13.3337V8.33366C2.5 5.19096 2.5 3.61961 3.47631 2.6433C4.45262 1.66699 6.02397 1.66699 9.16667 1.66699H12.5C13.8807 1.66699 15 2.78628 15 4.16699" stroke="#637381" strokeWidth="1.5" />
+                                                        </svg>
+                                                    </button>
+                                                </TooltipDefault>
                                             </div>
                                         </div>
                                     </div>
