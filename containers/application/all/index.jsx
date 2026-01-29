@@ -21,7 +21,7 @@ const cardsData = [
         description: 'Thống kê lương và giờ làm của công nhân dựa trên sản lượng thực tế, giúp doanh nghiệp tính lương chính xác, minh bạch và nhanh chóng.',
         imageSrc: '/application/card-1.png',
         bgColor: '#E4EFFF',
-        btnLabel: 'Trải nghiệm thêm',
+        btnLabel: 'Bắt đầu quản lý',
         type: 'primary',
         btnAction: BTN_ACTION.install,
         isInstalled: true,
