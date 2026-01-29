@@ -39,9 +39,13 @@ import { Grid6 } from 'iconsax-react';
 import { debounce } from 'lodash';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useSelector } from 'react-redux';
+import { PrinterIcon } from '@/components/icons';
+import useFeature from '@/hooks/useConfigFeature';
+import { useProductsWarehouseDetail } from './hooks/useProductsWarehouseDetail';
+import { printProductsWarehousePDF } from './utils/printProductsWarehousePDF';
 import LinkWarehouse from '../components/linkWarehouse';
 import PopupStatus from '../components/popupStatus';
 import PopupDetail from './components/pupup';
@@ -74,7 +78,12 @@ const ProductsWarehouse = props => {
 
   const statusExprired = useStatusExprired();
 
+  const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature();
+
   const [isState, sIsState] = useState(initalState);
+
+  const [openPrintPdf, setOpenPrintPdf] = useState(false);
+  const [selectedPrintId, setSelectedPrintId] = useState(null);
 
   const { handleTab: _HandleSelectTab } = useTab('all');
 
@@ -87,6 +96,9 @@ const ProductsWarehouse = props => {
   const { checkAdd, checkExport } = useActionRole(auth, 'productsWarehouse');
 
   const { limit, updateLimit: sLimit } = useLimitAndTotalItems();
+
+  // Dữ liệu chi tiết để in PDF
+  const { data: printData, isFetching: isFetchingPrint } = useProductsWarehouseDetail(openPrintPdf, selectedPrintId);
 
   // params lọc
   const params = {
@@ -159,6 +171,31 @@ const ProductsWarehouse = props => {
       initialKey: { id, checkedUn, type, value },
     });
   };
+
+  // Xử lý click nút in PDF
+  const handlePrintClick = id => {
+    setSelectedPrintId(id);
+    setOpenPrintPdf(true);
+  };
+
+  // In PDF khi có dữ liệu chi tiết
+  useEffect(() => {
+    if (openPrintPdf && selectedPrintId && printData && !isFetchingPrint) {
+      (async () => {
+        await printProductsWarehousePDF({
+          data: printData,
+          dataLang: dataLang,
+          dataSeting: dataSeting,
+          dataMaterialExpiry: dataMaterialExpiry,
+          dataProductExpiry: dataProductExpiry,
+          dataProductSerial: dataProductSerial,
+        });
+      })();
+      setOpenPrintPdf(false);
+      setSelectedPrintId(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [printData, openPrintPdf, selectedPrintId, isFetchingPrint]);
 
   // đổi trạng thái duyệt thủ kho nếu data_export sẽ show poup
   const _ServerSending = async checkedWare => {
@@ -510,7 +547,14 @@ const ProductsWarehouse = props => {
                           <ButtonWarehouse warehouseman_id={e?.warehouseman_id} _HandleChangeInput={_HandleChangeInput} id={e?.id} />
                         </RowItemTable>
                         <RowItemTable colSpan={1}>{e?.branch_name}</RowItemTable>
-                        <RowItemTable colSpan={1} className='flex justify-center'>
+                        <RowItemTable colSpan={1} className='flex justify-center gap-1'>
+                          <button
+                            onClick={() => handlePrintClick(e?.id)}
+                            title='In PDF'
+                            className='group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer rounded-lg p-1 border border-transparent hover:border-[#003DA0] hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap'
+                          >
+                            <PrinterIcon className='size-5 text-[#003DA0]' />
+                          </button>
                           <BtnAction
                             onRefresh={refetch.bind(this)}
                             onRefreshGroup={refetchFillterbar.bind(this)}

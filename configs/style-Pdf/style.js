@@ -1,6 +1,6 @@
-export const styleMarginChild = [0, 4, 0, 4];
+export const styleMarginChild = [0, 1, 0, 1];
 
-export const styleMarginChildTotal = [0, 4, 0, 4];
+export const styleMarginChildTotal = [0, 2, 0, 2];
 
 export const uppercaseTextHeaderTabel = (text, style, alignment) => {
     return {

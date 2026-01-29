@@ -4,7 +4,6 @@ import TabFilter from "@/components/UI/TabFilter";
 import Breadcrumb from "@/components/UI/breadcrumb/BreadcrumbCustom";
 import OnResetData from "@/components/UI/btnResetData/btnReset";
 import ButtonWarehouse from "@/components/UI/btnWarehouse/btnWarehouse";
-import ButtonAddNew from "@/components/UI/button/buttonAddNew";
 import ContainerPagination from "@/components/UI/common/ContainerPagination/ContainerPagination";
 import { Customscrollbar } from "@/components/UI/common/Customscrollbar";
 import { EmptyExprired } from "@/components/UI/common/EmptyExprired";
@@ -33,14 +32,13 @@ import useStatusExprired from "@/hooks/useStatusExprired";
 import useTab from "@/hooks/useTab";
 import useToast from "@/hooks/useToast";
 import { useToggle } from "@/hooks/useToggle";
-import { routerRecall } from "@/routers/manufacture";
 import { formatMoment } from "@/utils/helpers/formatMoment";
 import formatNumberConfig from "@/utils/helpers/formatnumber";
 import { Grid6 } from "iconsax-react";
 import { debounce } from "lodash";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useSelector } from "react-redux";
 import LinkWarehouse from "../components/linkWarehouse";
@@ -49,6 +47,10 @@ import PopupDetail from "./components/pupup";
 import { useRecallCombobox } from "./hooks/useRecallCombobox";
 import { useRecallFillterbar } from "./hooks/useRecallFillterbar";
 import { useRecallList } from "./hooks/useRecallList";
+import { useRecallDetail } from "./hooks/useRecallDetail";
+import { PrinterIcon } from "@/components/icons";
+import useFeature from "@/hooks/useConfigFeature";
+import { printRecallPDF } from "./utils/printRecallPDF";
 
 const initialState = {
     onSending: false,
@@ -84,6 +86,9 @@ const Recall = (props) => {
 
     const [isState, sIsState] = useState(initialState);
 
+    const [openPrintPdf, setOpenPrintPdf] = useState(false);
+    const [selectedPrintId, setSelectedPrintId] = useState(null);
+
     const queryState = (key) => sIsState((prev) => ({ ...prev, ...key }));
 
     const { is_admin: role, permissions_current: auth } = useSelector((state) => state.auth);
@@ -91,6 +96,10 @@ const Recall = (props) => {
     const { checkAdd, checkExport } = useActionRole(auth, "recall");
 
     const { limit, updateLimit: sLimit } = useLimitAndTotalItems();
+
+    const { dataMaterialExpiry, dataProductSerial } = useFeature();
+
+    const { data: printData, isFetching: isFetchingPrint } = useRecallDetail(openPrintPdf, selectedPrintId);
 
     const params = {
         search: isState.keySearch,
@@ -182,6 +191,27 @@ const Recall = (props) => {
             throw error;
         }
     };
+
+    const handlePrintClick = (id) => {
+        setSelectedPrintId(id);
+        setOpenPrintPdf(true);
+    };
+
+    useEffect(() => {
+        if (openPrintPdf && selectedPrintId && printData && !isFetchingPrint) {
+            (async () => {
+                await printRecallPDF({
+                    data: printData,
+                    dataLang: dataLang,
+                    dataSeting: dataSeting,
+                    dataMaterialExpiry: dataMaterialExpiry,
+                    dataProductSerial: dataProductSerial,
+                });
+            })();
+            setOpenPrintPdf(false);
+            setSelectedPrintId(null);
+        }
+    }, [printData, openPrintPdf, selectedPrintId, isFetchingPrint, dataLang, dataSeting, dataMaterialExpiry, dataProductSerial]);
 
     // useEffect(() => {
     //     isState.onSending && _ServerSending();
@@ -560,8 +590,15 @@ const Recall = (props) => {
                                                     </RowItemTable>
                                                     <RowItemTable
                                                         colSpan={1}
-                                                        className="flex items-center justify-center"
+                                                        className="flex items-center justify-center gap-1"
                                                     >
+                                                        <button
+                                                            onClick={() => handlePrintClick(e?.id)}
+                                                            title="In PDF"
+                                                            className="group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer rounded-lg p-1 border border-transparent hover:border-[#003DA0] hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap"
+                                                        >
+                                                            <PrinterIcon className="size-5 text-[#003DA0]" />
+                                                        </button>
                                                         <BtnAction
                                                             onRefresh={refetch.bind(this)}
                                                             onRefreshGroup={refetchFilterbar.bind(this)}
