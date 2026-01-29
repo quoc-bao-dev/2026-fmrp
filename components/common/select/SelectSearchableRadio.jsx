@@ -32,6 +32,7 @@ const SelectSearchableRadio = ({
   icon,
   className,
   mode, // 'multiple' để cho phép chọn nhiều
+  avatarClassName,
 }) => {
   const [searchValue, setSearchValue] = useState('');
   const [open, setOpen] = useState(false);
@@ -41,7 +42,7 @@ const SelectSearchableRadio = ({
   const filteredOptions = useMemo(() => {
     if (!searchValue) return options;
 
-    return options.filter(opt => {
+    return (options || []).filter(opt => {
       return searchWithoutDiacritics(opt?.label, searchValue);
     });
   }, [options, searchValue]);
@@ -76,9 +77,9 @@ const SelectSearchableRadio = ({
     setOpen(visible);
     if (!visible) {
       setSearchValue(''); // Reset search khi đóng dropdown
-      if (onSearch) {
-        onSearch(''); // Gọi lại API với search rỗng
-      }
+      // Khi đóng dropdown:
+      // - Mặc định vẫn gọi onSearch('') để reset data như cũ
+      if (onSearch) onSearch('');
     }
   };
 
@@ -189,7 +190,7 @@ const SelectSearchableRadio = ({
                       <CustomRadio checked={isSelected} />
                       {/* Avatar hoặc Icon */}
                       {opt.avatar && (
-                        <div className='w-8 h-8 rounded-full overflow-hidden flex-shrink-0'>
+                        <div className={`w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ${avatarClassName}`}>
                           <img
                             src={opt.avatar}
                             alt={opt.label}

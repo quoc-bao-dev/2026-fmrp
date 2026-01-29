@@ -7,24 +7,24 @@ import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { Container } from '@/components/UI/common/layout';
 import ResponsibleAvatar from '@/components/UI/common/user/ResponsibleAvatar';
 import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComponent';
-import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
 import { IMAGES } from '@/constants/images';
+import { useProductionOrdersCombobox } from '@/containers/manufacture/productions-orders/hooks/useProductionOrdersCombobox';
+import { useExportExcel } from '@/containers/piecework-wage/summary/hooks/useExportExcel';
+import { useItemsVariantSearchCombobox } from '@/hooks/common/useItems';
 import { useSearchStaffs } from '@/hooks/common/useStaffs';
+import useToast from '@/hooks/useToast';
 import { useLookupGroupMembers } from '@/managers/api/piecework-wage/useImportOutput';
 import { useSummary, useSummaryDetail } from '@/managers/api/piecework-wage/useSummary';
-import useToast from '@/hooks/useToast';
 import formatNumber from '@/utils/helpers/formatnumber';
 import { formatSecondsToHours } from '@/utils/helpers/formatSecondsToHours';
 import moment from 'moment';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useMemo, useState } from 'react';
-import { useExportExcel } from '@/containers/piecework-wage/summary/hooks/useExportExcel';
+import { PiClipboardTextLight } from 'react-icons/pi';
 import { useDebounce } from 'use-debounce';
-import { useProductionOrdersCombobox } from '@/containers/manufacture/productions-orders/hooks/useProductionOrdersCombobox';
-import { useItemsVariantSearchCombobox } from '@/hooks/common/useItems';
 
 const breadcrumbItems = [
   { label: 'Lương sản lượng', },
@@ -36,12 +36,22 @@ const tabs = [
   { id: 'detail', name: 'Chi tiết' },
 ];
 
+// Lưu item đang chọn ra ngoài, và luôn đưa item đó lên đầu danh sách options (loại trùng)
+const normalizeTop = (pinned, options) => {
+  if (!pinned) return options || [];
+  const key = String(pinned.value);
+  const list = options || [];
+  return [pinned, ...list.filter(o => String(o?.value) !== key)];
+};
+
 const Summary = () => {
   const [activeTab, setActiveTab] = useState(tabs[0]);
   const [selectedStaffIds, setSelectedStaffIds] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState([]);
   const [selectedProductionOrder, setSelectedProductionOrder] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [pinnedProductionOrder, setPinnedProductionOrder] = useState(null);
+  const [pinnedProduct, setPinnedProduct] = useState(null);
   const [searchProductionOrder, setSearchProductionOrder] = useState('');
   const [searchProduct, setSearchProduct] = useState('');
   const [debouncedSearchProductionOrder] = useDebounce(searchProductionOrder, 300);
@@ -49,7 +59,6 @@ const Summary = () => {
   const [search, setSearch] = useState('');
   const [debouncedSearch] = useDebounce(search, 300);
   const showToast = useToast();
-
   const [dateFilter, setDateFilter] = useState({
     startDate: null,
     endDate: null,
@@ -98,6 +107,9 @@ const Summary = () => {
     }));
   }, [listProducts]);
 
+  const productionOrderOptionsWithPinned = normalizeTop(pinnedProductionOrder, productionOrderOptions);
+  const productOptionsWithPinned = normalizeTop(pinnedProduct, productOptions);
+
   // Tạo filter params từ selectedStaffIds và selectedGroup
   const filterParams = useMemo(() => {
     const params = {};
@@ -109,7 +121,7 @@ const Summary = () => {
     }
     return params;
   }, [selectedStaffIds, selectedGroup]);
-
+console.log(selectedProductionOrder)
   // Chuẩn hóa params dùng chung cho 2 API để tránh lặp và lệch state
   const dateParams = useMemo(() => ({
     start_date: dateFilter.startDate ? moment(dateFilter.startDate).format('DD/MM/YYYY') : null,
@@ -122,7 +134,9 @@ const Summary = () => {
     limit: 10,
     search: debouncedSearch || '',
     ...filterParams,
-  }), [dateParams, debouncedSearch, filterParams]);
+    _po_id: [selectedProductionOrder || null],
+    item_variation_id: [selectedProduct || null],
+  }), [dateParams, debouncedSearch, filterParams, selectedProductionOrder, selectedProduct]);
 
   const { data: summary, isLoading: isLoadingSummary, refetch: refetchSummary } = useSummary(
     commonQueryParams,
@@ -244,19 +258,27 @@ const Summary = () => {
   // Xử lý chọn Lệnh sản xuất
   const handleProductionOrderChange = value => {
     setSelectedProductionOrder(value || null);
+    if (!value) return;
+    const found = productionOrderOptions.find(o => String(o?.value) === String(value));
+    if (found) setPinnedProductionOrder(found);
   };
 
   const handleProductionOrderClear = () => {
     setSelectedProductionOrder(null);
+    setPinnedProductionOrder(null);
   };
 
   // Xử lý chọn Mặt hàng
   const handleProductChange = value => {
     setSelectedProduct(value || null);
+    if (!value) return;
+    const found = productOptions.find(o => String(o?.value) === String(value));
+    if (found) setPinnedProduct(found);
   };
 
   const handleProductClear = () => {
     setSelectedProduct(null);
+    setPinnedProduct(null);
   };
 
   const triggerFilterAll = (
@@ -327,12 +349,12 @@ const Summary = () => {
                   <SelectSearchableRadio
                     placeholder='Chọn lệnh sản xuất'
                     searchPlaceholder='Tìm lệnh sản xuất'
-                    options={productionOrderOptions}
+                    options={productionOrderOptionsWithPinned}
                     value={selectedProductionOrder}
                     onChange={handleProductionOrderChange}
                     onClear={handleProductionOrderClear}
                     onSearch={setSearchProductionOrder}
-                    icon={<FunnelIcon className='size-4 text-[#003DA0]' />}
+                    icon={<PiClipboardTextLight className='size-4 text-[#003DA0]' />}
                     className='w-auto min-w-[180px] [&_.ant-select-selector]:h-9 [&_.ant-select-selector]:border-[#D0D5DD]'
                   />
                 </div>
@@ -341,13 +363,14 @@ const Summary = () => {
                   <SelectSearchableRadio
                     placeholder='Chọn mặt hàng'
                     searchPlaceholder='Tìm mặt hàng'
-                    options={productOptions}
+                    options={productOptionsWithPinned}
                     value={selectedProduct}
                     onChange={handleProductChange}
                     onClear={handleProductClear}
                     onSearch={setSearchProduct}
                     icon={<FunnelIcon className='size-4 text-[#003DA0]' />}
                     className='w-auto min-w-[180px] [&_.ant-select-selector]:h-9 [&_.ant-select-selector]:border-[#D0D5DD]'
+                    avatarClassName='rounded-md'
                   />
                 </div>
               </div>
