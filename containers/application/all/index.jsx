@@ -1,24 +1,36 @@
 import Head from 'next/head';
 import Image from 'next/image';
+import { useState } from 'react';
+import PopupInstallCompleted from './components/PopupInstallCompleted';
+import PopupPayment from './components/PopupPayment';
+import PopupPaymentSuccess from './components/PopupPaymentSuccess';
+import PiceworkIntroPopup from './components/PopupPiceworkIntro';
+import PopupProcessInstall from './components/PopupProcessInstall';
 
 const IMAGE_COMING_SOON = '/application/comming-soon.png';
+const IMAGE_INSTALLED = '/application/installed.png';
 
-const cards = [
+const BTN_ACTION = {
+    install: 'install',
+    installed: 'installed'
+}
+
+const cardsData = [
     {
         title: 'Lương sản lượng',
         description: 'Thống kê lương và giờ làm của công nhân dựa trên sản lượng thực tế, giúp doanh nghiệp tính lương chính xác, minh bạch và nhanh chóng.',
         imageSrc: '/application/card-1.png',
         bgColor: '#E4EFFF',
-        // imageShadow: '0 0 80px #549AE8',
         btnLabel: 'Trải nghiệm thêm',
         type: 'primary',
+        btnAction: BTN_ACTION.install,
+        isInstalled: true,
     },
     {
         title: 'Gia công ngoài',
         description: 'Thống kê lương và giờ làm của công nhân dựa trên sản lượng thực tế, giúp doanh nghiệp tính lương chính xác, minh bạch và nhanh chóng.',
         imageSrc: '/application/card-2.png',
         bgColor: '#E4EFFF',
-        // imageShadow: '0 0 80px rgba(250, 148, 132, 0.55)',
         btnLabel: 'Trải nghiệm thêm',
         type: 'primary',
         disableBtn: true,
@@ -29,14 +41,63 @@ const cards = [
         description: 'Thống kê lương và giờ làm của công nhân dựa trên sản lượng thực tế, giúp doanh nghiệp tính lương chính xác, minh bạch và nhanh chóng.',
         imageSrc: '/application/card-3.png',
         bgColor: '#E4EFFF',
-        // imageShadow: '0 0 80px rgba(43, 179, 138, 0.55)',
         btnLabel: 'Liên hệ báo giá',
         type: 'outline',
+        btnLink: 'https://zalo.me/fososoft'
     },
 ];
 
 export default function ApplicationAll(props) {
     const { dataLang } = props;
+    const [isOpenPiceworkIntro, setIsOpenPiceworkIntro] = useState(false);
+    const [isOpenPayment, setIsOpenPayment] = useState(false);
+    const [isOpenPaymentSuccess, setIsOpenPaymentSuccess] = useState(false);
+    const [isOpenProcessInstall, setIsOpenProcessInstall] = useState(false);
+    const [isOpenInstallCompleted, setIsOpenInstallCompleted] = useState(false);
+
+    const [cardInstalled, setCardInstalled] = useState('');
+
+    const cards = cardsData.map((card) => {
+        const isInstalled = cardInstalled === card.title;
+        return {
+            ...card,
+            isInstalled: isInstalled,
+            btnLabel: isInstalled ? 'Mở' : card.btnLabel,
+            btnAction: isInstalled ? BTN_ACTION.installed : card.btnAction,
+
+        }
+    });
+
+    const handleOpenPayment = () => {
+        setIsOpenPiceworkIntro(false);
+        setIsOpenPayment(true);
+    };
+
+    const handlePaymentSuccess = () => {
+        setIsOpenPayment(false);
+        setIsOpenPaymentSuccess(true);
+    };
+
+    const handleClosePaymentSuccess = () => {
+        setIsOpenPaymentSuccess(false);
+        setIsOpenProcessInstall(true);
+    };
+
+    const handleProcessInstallComplete = () => {
+        setIsOpenProcessInstall(false);
+        setIsOpenInstallCompleted(true);
+        setCardInstalled('Lương sản lượng');
+    };
+
+    const handleBtnAction = (action) => {
+        if (action === BTN_ACTION.install) {
+            setIsOpenPiceworkIntro(true);
+        }
+        if (action === BTN_ACTION.installed) {
+        }
+    }
+
+
 
     return (
         <div className='w-full'>
@@ -48,12 +109,31 @@ export default function ApplicationAll(props) {
                 {cards.map((card, index) => (
                     <div
                         key={index}
-                        className="relative flex h-full flex-col gap-[22px] rounded-[36px] border-white/60 bg-white p-4 shadow-sm"
+                        className="relative flex h-full flex-col gap-[22px] rounded-[36px] border-white/60 bg-white p-4 shadow-sm cursor-pointer"
                         style={{ backgroundColor: card.bgColor }}
+                        onClick={() => {
+                            if (card.disableBtn) return;
+
+                            if (card.btnLink) {
+                                if (typeof window !== 'undefined') {
+                                    window.open(card.btnLink, '_blank', 'noopener,noreferrer');
+                                }
+                                return;
+                            }
+
+                            if (card.btnAction) {
+                                handleBtnAction(card.btnAction);
+                            }
+                        }}
                     >
                         {card.isComingSoon ? (
                             <div className="absolute top-0 left-0">
                                 <Image src={IMAGE_COMING_SOON} alt="coming soon" className="w-[110px] h-[31px]" width={200} height={31} />
+                            </div>
+                        ) : null}
+                        {card.isInstalled ? (
+                            <div className="absolute top-0 left-0">
+                                <Image src={IMAGE_INSTALLED} alt="installed" className="w-[110px] h-[31px]" width={200} height={31} />
                             </div>
                         ) : null}
                         <div className="flex flex-col justify-center">
@@ -82,25 +162,81 @@ export default function ApplicationAll(props) {
                                 </p>
 
                                 <div className="mt-5 flex justify-end">
-                                    <ButtonAction type={card.type} label={card.btnLabel} disable={card.disableBtn} />
+                                    <ButtonAction
+                                        type={card.type}
+                                        label={card.btnLabel}
+                                        disable={card.disableBtn}
+                                        btnLink={card.btnLink}
+                                        btnAction={card.btnAction}
+                                        onActionClick={handleBtnAction}
+                                    />
                                 </div>
                             </div>
                         </div>
                     </div>
                 ))}
             </div>
+
+            {/* ===== Popup ===== */}
+            {/* Popup Picework Intro */}
+            <PiceworkIntroPopup
+                isOpen={isOpenPiceworkIntro}
+                onClose={() => setIsOpenPiceworkIntro(false)}
+                onOpenPayment={handleOpenPayment}
+            />
+
+            {/* Popup payment */}
+            <PopupPayment
+                isOpen={isOpenPayment}
+                onClose={() => setIsOpenPayment(false)}
+                onPaymentSuccess={handlePaymentSuccess}
+                closeOnBackdropClick={false}
+            />
+
+            {/* Popup successful payment */}
+            <PopupPaymentSuccess
+                isOpen={isOpenPaymentSuccess}
+                onClose={handleClosePaymentSuccess}
+            />
+
+            {/* Popup process install */}
+            <PopupProcessInstall
+                isOpen={isOpenProcessInstall}
+                onClose={() => setIsOpenProcessInstall(false)}
+                onComplete={handleProcessInstallComplete}
+                closeOnBackdropClick={false}
+            />
+
+            {/* Popup install completed */}
+            <PopupInstallCompleted isOpen={isOpenInstallCompleted} onClose={() => { setIsOpenInstallCompleted(false) }} />
         </div>
     );
 }
 
 
-const ButtonAction = ({ type = 'primary', label, disable = false }) => {
+const ButtonAction = ({ type = 'primary', label, disable = false, btnLink, btnAction, onActionClick }) => {
+    const handleClick = () => {
+        if (disable) return;
+
+        if (btnLink) {
+            if (typeof window !== 'undefined') {
+                window.open(btnLink, '_blank', 'noopener,noreferrer');
+            }
+            return;
+        }
+
+        if (btnAction && typeof onActionClick === 'function') {
+            onActionClick(btnAction);
+        }
+    };
+
     if (type === 'secondary') {
         // Nút cam gradient - "Sắp ra mắt"
         return (
             <button
                 type="button"
-                className="inline-flex items-center rounded-[40px] border border-[#899CFD] bg-[#0375F3]  px-6 py-3.5 text-sm font-semibold text-white shadow-none transition-all duration-200 hover:bg-[#0A7FFF] hover:shadow-[0_8px_20px_rgba(3,117,243,0.25)] focus:outline-none focus:ring-2 focus:ring-[#0375F3]/60 focus:ring-offset-2"
+                className="inline-flex items-center rounded-[40px] border border-[#899CFD] bg-[#0375F3]  px-6 py-3.5 text-sm font-semibold text-white shadow-none transition-all duration-200 hover:bg-[#0A7FFF] hover:shadow-[0_8px_20px_rgba(3,117,243,0.25)]"
+                onClick={handleClick}
                 disabled={disable}
             >
                 {label}
@@ -113,7 +249,8 @@ const ButtonAction = ({ type = 'primary', label, disable = false }) => {
         return (
             <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-[40px] border border-transparent bg-[#EAF2FF] px-2 py-2 text-sm font-semibold text-[#0375F3] shadow-none ring-1 ring-[#0375F3]/40 transition-all duration-200 hover:bg-[#F0F7FF] hover:shadow-[0_6px_16px_rgba(3,117,243,0.15)]"
+                className="inline-flex items-center gap-2 rounded-[40px] border border-transparent bg-[#EAF2FF] px-2 py-2 text-sm font-semibold text-[#0375F3] shadow-none ring-1 ring-[#0375F3]/40 transition-all duration-200 hover:bg-[#F0F7FF] hover:shadow-[0_6px_16px_rgba(3,117,243,0.15)] active:scale-95"
+                onClick={handleClick}
                 disabled={disable}
             >
                 <span className="pl-[12px]">{label}</span>
@@ -129,7 +266,8 @@ const ButtonAction = ({ type = 'primary', label, disable = false }) => {
     return (
         <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-[40px] border border-[#899CFD] bg-[#0375F3] px-2 py-2 text-sm font-semibold text-white shadow-none transition-all duration-200 hover:bg-[#0A7FFF] hover:shadow-[0_8px_20px_rgba(3,117,243,0.3)] focus:outline-none focus:ring-2 focus:ring-[#0375F3]/70 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
+            className="inline-flex items-center gap-2 rounded-[40px] border border-[#899CFD] bg-[#0375F3] px-2 py-2 text-sm font-semibold text-white shadow-none transition-all duration-200 hover:bg-[#0A7FFF] hover:shadow-[0_8px_20px_rgba(3,117,243,0.3)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
+            onClick={handleClick}
             disabled={disable}
         >
             <span className="pl-[12px]">{label}</span>
