@@ -39,13 +39,17 @@ import { Grid6 } from 'iconsax-react';
 import { debounce } from 'lodash';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useSelector } from 'react-redux';
 import PopupDetail from './components/popup';
 import { useProductionWarehouseCombobox } from './hooks/useProductionWarehouseCombobox';
 import { useProductionWarehouseFillterbar } from './hooks/useProductionWarehouseFillterbar';
 import { useProductionWarehouseList } from './hooks/useProductionWarehouseList';
+import { useProductionWarehouseDetail } from './hooks/useProductionWarehouseDetail';
+import { PrinterIcon } from '@/components/icons';
+import useFeature from '@/hooks/useConfigFeature';
+import { printProductionWarehousePDF } from './utils/printProductionWarehousePDF';
 
 const initialState = {
   onSending: false,
@@ -72,11 +76,19 @@ const ProductionWarehouse = props => {
 
   const statusExprired = useStatusExprired();
 
+  const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature();
+
   const { handleTab: _HandleSelectTab } = useTab('all');
 
   const { isOpen, isKeyState, handleQueryId } = useToggle();
 
   const [isState, sIsState] = useState(initialState);
+
+  const [openPrintPdf, setOpenPrintPdf] = useState(false);
+  const [selectedPrintId, setSelectedPrintId] = useState(null);
+
+  // Dữ liệu chi tiết để in PDF
+  const { data: printData, isFetching: isFetchingPrint } = useProductionWarehouseDetail(openPrintPdf, selectedPrintId);
 
   const { limit, updateLimit: sLimit } = useLimitAndTotalItems();
 
@@ -167,6 +179,31 @@ const ProductionWarehouse = props => {
       initialKey: { id, checkedUn, type, value },
     });
   };
+
+  // Xử lý click nút in PDF
+  const handlePrintClick = id => {
+    setSelectedPrintId(id);
+    setOpenPrintPdf(true);
+  };
+
+  // Xử lý in PDF khi có dữ liệu
+  useEffect(() => {
+    if (openPrintPdf && selectedPrintId && printData && !isFetchingPrint) {
+      (async () => {
+        await printProductionWarehousePDF({
+        data: printData,
+        dataLang: dataLang,
+        dataSeting: dataSeting,
+        dataMaterialExpiry: dataMaterialExpiry,
+        dataProductExpiry: dataProductExpiry,
+        dataProductSerial: dataProductSerial,
+        });
+      })();
+      // Đóng sau khi in
+      setOpenPrintPdf(false);
+      setSelectedPrintId(null);
+    }
+  }, [printData, openPrintPdf, selectedPrintId, isFetchingPrint]);
 
   // đổi trạng thái duyệt thủ kho
   const _ServerSending = async dataChecked => {
@@ -427,7 +464,7 @@ const ProductionWarehouse = props => {
               </div>
               <div className='col-span-1 xl:col-span-2 lg:col-span-2'>
                 <div className='flex items-center justify-end gap-2'>
-                  <OnResetData sOnFetching={e => {}} onClick={() => refetch()} />
+                  <OnResetData sOnFetching={e => { }} onClick={() => refetch()} />
                   {role == true || checkExport ? (
                     <div className={``}>
                       {data?.rResult?.length > 0 && <ExcelFileComponent dataLang={dataLang} filename={'Danh sách xuất kho sản xuất'} title='DSXKSX' multiDataSet={multiDataSet} />}
@@ -549,7 +586,14 @@ const ProductionWarehouse = props => {
                           <ButtonWarehouse warehouseman_id={e?.warehouseman_id} _HandleChangeInput={_HandleChangeInput} id={e?.id} />
                         </RowItemTable>
                         <RowItemTable colSpan={1}>{e?.branch_name}</RowItemTable>
-                        <RowItemTable colSpan={1} className='flex justify-center'>
+                        <RowItemTable colSpan={1} className='flex justify-center gap-1'>
+                          <button
+                            onClick={() => handlePrintClick(e?.id)}
+                            title='In PDF'
+                            className='group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer rounded-lg p-1 border border-transparent hover:border-[#003DA0] hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap'
+                          >
+                            <PrinterIcon className='size-5 text-[#003DA0]' />
+                          </button>
                           <BtnAction
                             onRefresh={refetch.bind(this)}
                             onRefreshGroup={refetchFilterbar.bind(this)}
