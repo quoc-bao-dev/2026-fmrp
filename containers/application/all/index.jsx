@@ -183,6 +183,7 @@ export default function ApplicationAll(props) {
                 isOpen={isOpenPiceworkIntro}
                 onClose={() => setIsOpenPiceworkIntro(false)}
                 onOpenPayment={handleOpenPayment}
+                closeOnBackdropClick={false}
             />
 
             {/* Popup payment */}
@@ -197,6 +198,8 @@ export default function ApplicationAll(props) {
             <PopupPaymentSuccess
                 isOpen={isOpenPaymentSuccess}
                 onClose={handleClosePaymentSuccess}
+                closeOnBackdropClick={false}
+
             />
 
             {/* Popup process install */}
@@ -208,7 +211,7 @@ export default function ApplicationAll(props) {
             />
 
             {/* Popup install completed */}
-            <PopupInstallCompleted isOpen={isOpenInstallCompleted} onClose={() => { setIsOpenInstallCompleted(false) }} />
+            <PopupInstallCompleted isOpen={isOpenInstallCompleted} onClose={() => { setIsOpenInstallCompleted(false) }} closeOnBackdropClick={false} />
         </div>
     );
 }

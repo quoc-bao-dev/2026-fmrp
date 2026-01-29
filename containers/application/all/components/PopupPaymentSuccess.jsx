@@ -2,9 +2,9 @@ import React from 'react';
 import Image from 'next/image';
 import Popup from './Popup';
 
-export default function PopupPaymentSuccess({ isOpen, onClose }) {
+export default function PopupPaymentSuccess({ isOpen, onClose, closeOnBackdropClick = true }) {
     return (
-        <Popup isOpen={isOpen} onClose={onClose} ariaLabel="Thanh toán thành công" panelClassName="!bg-[#F9FAFC] !w-[min(821px,calc(100vw-32px))] px-6 2xl:px-9 py-6 2xl:py-9 rounded-3xl gap-6">
+        <Popup isOpen={isOpen} onClose={onClose} ariaLabel="Thanh toán thành công" panelClassName="!bg-[#F9FAFC] !w-[min(821px,calc(100vw-32px))] px-6 2xl:px-9 py-6 2xl:py-9 rounded-3xl gap-6" closeOnBackdropClick={closeOnBackdropClick}>
             {/* Header */}
             <Header onClose={onClose} />
 

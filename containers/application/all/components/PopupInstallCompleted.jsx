@@ -4,13 +4,14 @@ import Popup from './Popup';
 
 
 const IMAGE_INSTALL_COMPLETED = '/application/install-complete.png';
-export default function PopupInstallCompleted({ isOpen, onClose }) {
+export default function PopupInstallCompleted({ isOpen, onClose, closeOnBackdropClick = true }) {
     return (
         <Popup
             isOpen={isOpen}
             onClose={onClose}
             ariaLabel="Cài đặt hoàn tất"
             panelClassName="!p-0 !bg-transparent !shadow-none !w-auto"
+            closeOnBackdropClick={closeOnBackdropClick}
         >
             <div
                 className={[
