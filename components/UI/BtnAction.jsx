@@ -646,7 +646,7 @@ export const BtnAction = React.memo(props => {
     count++;
 
     // Count print button
-    if (!['deliveryReceipt', 'returnSales', 'import', 'returns', 'receipts', 'payment'].includes(props?.type)) {
+    if (!['deliveryReceipt', 'returnSales', 'import', 'returns', 'receipts', 'payment', 'production_warehouse'].includes(props?.type)) {
       if (props?.type === 'order' || props?.type === 'sales_product') {
         count++;
       } else {
@@ -891,7 +891,7 @@ export const BtnAction = React.memo(props => {
       );
     } else if (props?.type === 'internal_plan') {
       allButtons.push(<ButtonPrintItem key='print-internal-plan' onCLick={handlePrintInternalPlan} dataLang={props?.dataLang} isLoading={loadingButtonPrint} totalButtons={totalButtons} />);
-    } else {
+    } else if (props?.type !== 'production_warehouse' && props?.type !== 'productsWarehouse' && props?.type !== 'recall' && props?.type !== 'exportToOther') {
       allButtons.push(<FilePDF key='pdf' {...shareProps} props={props} openAction={openAction} setOpenAction={setOpenAction} />);
     }
 
