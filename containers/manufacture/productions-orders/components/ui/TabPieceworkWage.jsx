@@ -8,10 +8,10 @@ const TabPieceworkWage = ({ dataLang, refreshData, handleQueryId, isStateProvide
   });
 
   return (
-    <div className='flex flex-col gap-2 h-full relative'>
+    <div className='flex flex-col gap-2 h-full flex-1 min-h-0 relative'>
       {/* Action Buttons */}
       {/* Table Section - 2 boxes */}
-      <div className='flex gap-4 w-full'>
+      <div className='flex gap-4 w-full flex-1 min-h-0'>
         {/* Box 1 - 70% width */}
         <div className='w-[60%]'>
           {/* Table content sẽ được thêm sau */}
