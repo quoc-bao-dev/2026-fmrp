@@ -36,8 +36,8 @@ const TablePlaning = ({ Title, typeTable, dataLang, data }) => {
   };
 
   return (
-    <div className='flex flex-col h-full'>
-      <h3 className='font-medium text-xl leading-5 text-typo-blue-1 capitalize mb-4'> {Title}</h3>
+    <div className='flex flex-col gap-3 h-full'>
+      <h3 className='font-medium text-xl leading-5 text-typo-blue-1 capitalize'> {Title}</h3>
 
       {/* table */}
       <div className='flex-1 min-h-0'>
@@ -287,9 +287,9 @@ const PlaningProductionOrder = memo(
     const productsSorted = useMemo(() => sortZeroLast(filteredProducts), [filteredProducts]);
 
     return (
-      <div className='flex flex-col h-full'>
+      <div className='flex flex-col gap-4 h-full flex-1 min-h-0 overflow-hidden'>
         {/* Toolbar */}
-        <div ref={groupButtonRef} className='flex items-center justify-between gap-10 p-0.5 mb-4'>
+        <div ref={groupButtonRef} className='flex items-center justify-between gap-10 p-0.5'>
           {/* Search Input */}
           <div className='flex gap-x-2 items-center w-1/3 rounded-lg border border-[#D0D5DD] px-4 py-2 focus-within:border-transparent focus-within:ring-2 focus-within:ring-blue-500'>
             <input
@@ -384,14 +384,14 @@ const PlaningProductionOrder = memo(
         </div>
 
         {/* Nội dung bảng */}
-        <div className='flex flex-row w-full flex-1 items-start justify-between'>
+        <div className='flex flex-row w-full flex-1 min-h-0 items-start justify-between'>
           {/* bảng nguyên liêu */}
-          <div className=' w-[52%] h-full  border-r border-border-gray-1 pr-1'>
+          <div className=' w-[52%] h-full flex-1 min-h-0 border-r border-border-gray-1 pr-1'>
             {isLoadingDataListBom ? <Loading className='h-80' color='#0f4f9e' /> : <TablePlaning Title='kế hoạch nguyên vật liệu' dataLang={dataLang} data={materialsSorted} typeTable='materials' />}
           </div>
 
           {/* bảng bán thành phẩm  */}
-          <div className='w-[48%] h-full pl-2'>
+          <div className='w-[48%] h-full flex-1 min-h-0 pl-2'>
             {isLoadingDataListBom ? <Loading className='h-80' color='#0f4f9e' /> : <TablePlaning Title='kế hoạch bán thành phẩm' dataLang={dataLang} data={productsSorted} typeTable='products' />}
           </div>
         </div>

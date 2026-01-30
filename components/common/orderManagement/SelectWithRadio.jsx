@@ -138,7 +138,12 @@ const SelectWithRadio = ({
                     className={`flex items-center py-2 gap-x-2 responsive-text-sm font-normal text-neutral-07 `}
                   >
                     <CustomRadio checked={value?.value === opt.value} />
-                    {opt.label}
+                    <div className='flex flex-col'>
+                      {opt.label}
+                      {opt?.subtitle && (
+                        <span className='text-[8px] text-gray-500'>{opt.subtitle}</span>
+                      )}
+                    </div>
                   </div>
                 </Option>
               )

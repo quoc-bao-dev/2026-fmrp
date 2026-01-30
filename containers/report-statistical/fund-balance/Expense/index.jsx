@@ -99,6 +99,8 @@ const Expense = () => {
   const renderRow = (item, isLevel0 = false) => {
     const { level = 0, displayIndex, code, name, total } = item;
     const depth = level || 0;
+    const numericTotal = Number(total ?? 0);
+    const displayTotal = numericTotal === 0 ? '-' : formatNumber(total);
 
     return (
       <div key={item.id} className='w-full flex items-center responsive-text-sm border-x border-[#E0E0E1] relative'>
@@ -112,12 +114,18 @@ const Expense = () => {
         )}
 
         <div className={`w-60 flex-1 px-3 py-2 text-gray-700 ${isLevel0 ? 'font-semibold' : 'font-normal'}`}>
-          <ExpenseDetailPopup item={item} dateRange={dateRange}>
-            {code} - {name}
-          </ExpenseDetailPopup>
+          {code} - {name}
         </div>
 
-        <div className='w-40 px-3 py-2 text-right font-medium text-blue-fmrp border-l border-[#E0E0E1] min-h-9 2xl:h-[41px]'>{formatNumber(total)}</div>
+        <div className='w-40 px-3 py-2 text-right font-medium text-blue-fmrp border-l border-[#E0E0E1] min-h-9 2xl:h-[41px]'>
+          {numericTotal > 0 ? (
+            <ExpenseDetailPopup item={item} dateRange={dateRange}>
+              {displayTotal}
+            </ExpenseDetailPopup>
+          ) : (
+            displayTotal
+          )}
+        </div>
       </div>
     );
   };

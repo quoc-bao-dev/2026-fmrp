@@ -133,7 +133,7 @@ const PurchaseImportForm = props => {
   const { data: dataItems = [] } = useImportItemByOrder(id, idTheOrder, idBranch, idSupplier, inputValue);
 
   const { data: dataTheOrder = [] } = useImportBySupplier(idSupplier, id, searchOrder);
-
+console.log(dataTheOrder)
   const { data: dataWarehouse } = useWarehouseComboboxlocation({
     'filter[branch_id]': idBranch ? idBranch?.value : null,
   });
