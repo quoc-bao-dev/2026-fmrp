@@ -29,7 +29,7 @@ const queryClient = new QueryClient({
     },
 });
 
-function ApplicationLayoutContent({ children }) {
+function ApplicationLayoutContent({ children, dataLang }) {
     const router = useRouter();
 
     // Lấy các state popup từ store
@@ -170,25 +170,25 @@ function ApplicationLayoutContent({ children }) {
             </div>
 
             {/* Render popups from store */}
-            {statePopupPreviewImage?.open && <ImagesModal />}
-            {statePopupGlobal?.open && <PopupGlobal />}
-            {statePopupUpdateVersion?.open && <PopupUpdateVersion />}
-            {statePopupAccountInformation?.open && <PopupAccountInformation />}
-            {statePopupChangePassword?.open && <PopupChangePassword />}
-            {statePopupRecommendation?.open && <PopupRecommendation />}
-            {statePopupUpgradeProfessional?.open && <PopupUpgradeProfessional />}
-            {statePopupUpgradePro?.open && <PopupUpgradePro />}
-            {statePopupSuccessfulPayment?.open && <PopupSuccessfulPayment />}
-            {statePopupSuccessfulBuyMoreUser?.open && <PopupSuccessfulBuyMoreUser />}
+            {statePopupPreviewImage?.open && <ImagesModal dataLang={dataLang} />}
+            {statePopupGlobal?.open && <PopupGlobal dataLang={dataLang} />}
+            {statePopupUpdateVersion?.open && <PopupUpdateVersion dataLang={dataLang} />}
+            {statePopupAccountInformation?.open && <PopupAccountInformation dataLang={dataLang} />}
+            {statePopupChangePassword?.open && <PopupChangePassword dataLang={dataLang} />}
+            {statePopupRecommendation?.open && <PopupRecommendation dataLang={dataLang} />}
+            {statePopupUpgradeProfessional?.open && <PopupUpgradeProfessional dataLang={dataLang} />}
+            {statePopupUpgradePro?.open && <PopupUpgradePro dataLang={dataLang} />}
+            {statePopupSuccessfulPayment?.open && <PopupSuccessfulPayment dataLang={dataLang} />}
+            {statePopupSuccessfulBuyMoreUser?.open && <PopupSuccessfulBuyMoreUser dataLang={dataLang} />}
         </div>
     );
 }
 
-export default function ApplicationLayout({ children }) {
+export default function ApplicationLayout({ children, dataLang }) {
     return (
         <QueryClientProvider client={queryClient}>
             <Provider store={store}>
-                <ApplicationLayoutContent>
+                <ApplicationLayoutContent dataLang={dataLang}>
                     {children}
                 </ApplicationLayoutContent>
             </Provider>

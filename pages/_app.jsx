@@ -184,7 +184,7 @@ function MainPage({ Component, pageProps }) {
     if (router.pathname === '/application' || router.pathname.startsWith('/application/')) {
         return (
             <Customscrollbar className='relative h-screen text-customize'>
-                <ApplicationLayout>
+                <ApplicationLayout dataLang={data}>
                     <Component dataLang={data} {...pageProps} />
                     <SupportZalo />
                 </ApplicationLayout>
