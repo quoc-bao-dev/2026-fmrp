@@ -186,6 +186,7 @@ function MainPage({ Component, pageProps }) {
             <Customscrollbar className='relative h-screen text-customize'>
                 <ApplicationLayout>
                     <Component dataLang={data} {...pageProps} />
+                    <SupportZalo />
                 </ApplicationLayout>
             </Customscrollbar>
         )

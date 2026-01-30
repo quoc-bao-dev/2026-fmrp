@@ -98,7 +98,7 @@ const PopupFeelsCustomer = ({ onClose }) => {
       style={{
         boxShadow: `0px 20px 40px -8px rgba(16, 24, 40, 0.1)`,
       }}
-      className={`bg-[#ffffff] opacity-95 rounded-[24px] w-[620px] h-fit max-w-[620px] max-h-[92vh] relative flex flex-col gap-1 overflow-hidden`}
+      className={`bg-[#ffffff] rounded-[24px] w-[620px] h-fit max-w-[620px] max-h-[92vh] relative flex flex-col gap-1 overflow-hidden`}
     >
       <div className='flex items-center justify-between w-full px-6 pt-4 pb-2 border-b border-[#919EAB]/[24%]'>
         <h1 className='2xl:text-2xl text-xl font-semibold text-[#25387A]'>Góp ý sản phẩm</h1>
@@ -109,6 +109,7 @@ const PopupFeelsCustomer = ({ onClose }) => {
           transition={{ type: 'spring', stiffness: 300 }}
           className='size-6 shrink-0 text-neutral-02 cursor-pointer'
           onClick={onClose}
+          tabIndex={-1}
         >
           <CloseXIcon className='size-full' />
         </motion.div>
