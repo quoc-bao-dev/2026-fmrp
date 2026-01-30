@@ -19,11 +19,13 @@ import Loading from "@/components/UI/loading/loading";
 import NoData from "@/components/UI/noData/nodata";
 import Pagination from "@/components/UI/pagination";
 import PopupConfim from "@/components/UI/popupConfim/popupConfim";
+import { PrinterIcon } from "@/components/icons";
 import { CONFIRMATION_OF_CHANGES, TITLE_STATUS } from "@/constants/changeStatus/changeStatus";
 import { FORMAT_MOMENT } from "@/constants/formatDate/formatDate";
 import { WARNING_STATUS_ROLE } from "@/constants/warningStatus/warningStatus";
 import { useBranchList } from "@/hooks/common/useBranch";
 import { useWarehouseComboboxByManufacture } from "@/hooks/common/useWarehouses";
+import useFeature from "@/hooks/useConfigFeature";
 import useSetingServer from "@/hooks/useConfigNumber";
 import { useLimitAndTotalItems } from "@/hooks/useLimitAndTotalItems";
 import usePagination from "@/hooks/usePagination";
@@ -43,13 +45,12 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useSelector } from "react-redux";
 import LinkWarehouse from "../components/linkWarehouse";
 import PopupStatus from "../components/popupStatus";
+import { useWarehouseProperties } from "../warehouse-transfer/hooks/useWarehouseProperties";
 import PopupDetail from "./components/pupup";
 import { useRecallCombobox } from "./hooks/useRecallCombobox";
+import { useRecallDetail } from "./hooks/useRecallDetail";
 import { useRecallFillterbar } from "./hooks/useRecallFillterbar";
 import { useRecallList } from "./hooks/useRecallList";
-import { useRecallDetail } from "./hooks/useRecallDetail";
-import { PrinterIcon } from "@/components/icons";
-import useFeature from "@/hooks/useConfigFeature";
 import { printRecallPDF } from "./utils/printRecallPDF";
 
 const initialState = {
@@ -98,6 +99,7 @@ const Recall = (props) => {
     const { limit, updateLimit: sLimit } = useLimitAndTotalItems();
 
     const { dataMaterialExpiry, dataProductSerial } = useFeature();
+    const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties(dataSeting);
 
     const { data: printData, isFetching: isFetchingPrint } = useRecallDetail(openPrintPdf, selectedPrintId);
 
@@ -206,6 +208,8 @@ const Recall = (props) => {
                     dataSeting: dataSeting,
                     dataMaterialExpiry: dataMaterialExpiry,
                     dataProductSerial: dataProductSerial,
+                    isWarehousePropertiesEnabled: isWarehousePropertiesEnabled,
+                    warehousePropertyLabels: warehousePropertyLabels,
                 });
             })();
             setOpenPrintPdf(false);
