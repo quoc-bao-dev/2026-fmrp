@@ -1728,6 +1728,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                   handleQueryId={handleQueryId}
                   refetchProductionOrderList={refetchProductionOrderList}
                   groupButtonRef={groupButtonRef}
+                  totalTime={dataProductionOrderDetail?.total_time}
                 />
               )}
               {isStateProvider?.productionsOrders?.isTabList?.type == 'semiProduct' && (
