@@ -101,7 +101,7 @@ const PopupFeelsCustomer = ({ onClose }) => {
       className={`bg-[#ffffff] opacity-95 rounded-[24px] w-[620px] h-fit max-w-[620px] max-h-[92vh] relative flex flex-col gap-1 overflow-hidden`}
     >
       <div className='flex items-center justify-between w-full px-6 pt-4 pb-2 border-b border-[#919EAB]/[24%]'>
-        <h1 className='2xl:text-2xl text-xl font-semibold text-[#25387A]'>Góp ý</h1>
+        <h1 className='2xl:text-2xl text-xl font-semibold text-[#25387A]'>Góp ý sản phẩm</h1>
 
         <motion.div
           whileHover={{ scale: 1.2, rotate: 90 }}
@@ -124,17 +124,17 @@ const PopupFeelsCustomer = ({ onClose }) => {
             <div className='flex items-center justify-center gap-4'>
               {isLoadingEmojiAndImprove
                 ? [...Array(5)]?.map((_, index) => (
-                    <React.Fragment key={`skeleton-emoji-${index}`}>
-                      <Skeleton className={'w-16 h-auto aspect-1 rounded-full'} />
-                    </React.Fragment>
-                  ))
+                  <React.Fragment key={`skeleton-emoji-${index}`}>
+                    <Skeleton className={'w-16 h-auto aspect-1 rounded-full'} />
+                  </React.Fragment>
+                ))
                 : dataEmojiAndImprove &&
-                  dataEmojiAndImprove?.feeling?.length > 0 &&
-                  dataEmojiAndImprove?.feeling?.map(item => (
-                    <React.Fragment key={`emoji-${item.id}`}>
-                      <EmojiItem item={item} isActive={activeEmoji?.id === item?.id} onClick={handleActiveEmoji} />
-                    </React.Fragment>
-                  ))}
+                dataEmojiAndImprove?.feeling?.length > 0 &&
+                dataEmojiAndImprove?.feeling?.map(item => (
+                  <React.Fragment key={`emoji-${item.id}`}>
+                    <EmojiItem item={item} isActive={activeEmoji?.id === item?.id} onClick={handleActiveEmoji} />
+                  </React.Fragment>
+                ))}
             </div>
 
             <AnimatePresence mode='wait'>
@@ -167,9 +167,8 @@ const PopupFeelsCustomer = ({ onClose }) => {
                     key={`improve-${item.id}`}
                     initial={{ scale: 1 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`px-3 py-1 rounded-full border-[1.5px] cursor-pointer text-sm font-medium transition-color duration-200 ${
-                      activeImproves.includes(item.id) ? 'bg-[#2979FF] text-white border-[#2979FF]' : 'border-[#1C252E] text-[#1C252E]'
-                    }`}
+                    className={`px-3 py-1 rounded-full border-[1.5px] cursor-pointer text-sm font-medium transition-color duration-200 ${activeImproves.includes(item.id) ? 'bg-[#2979FF] text-white border-[#2979FF]' : 'border-[#1C252E] text-[#1C252E]'
+                      }`}
                     onClick={() => toggleImprove(item.id)}
                   >
                     {item?.name}

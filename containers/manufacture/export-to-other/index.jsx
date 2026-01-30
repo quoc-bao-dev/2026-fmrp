@@ -42,7 +42,7 @@ import { Grid6 } from "iconsax-react";
 import { debounce } from "lodash";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useSelector } from "react-redux";
 import LinkWarehouse from "../components/linkWarehouse";
@@ -51,6 +51,9 @@ import PopupDetail from "./components/popup";
 import { useExportToOtherCombobox } from "./hooks/useExportToOtherCombobox";
 import { useExportToOtherFillterbar } from "./hooks/useExportToOtherFillterbar";
 import { useExportToOtherList } from "./hooks/useExportToOtherList";
+import { useExportToOtherDetail } from "./hooks/useExportToOtherDetail";
+import { PrinterIcon } from "@/components/icons";
+import { printExportToOtherPDF } from "./utils/printExportToOtherPDF";
 
 const initialState = {
     onSending: false,
@@ -65,6 +68,7 @@ const initialState = {
     dataExport: [],
     refreshing: false,
 };
+
 const ExportToOther = (props) => {
     const dataLang = props.dataLang;
 
@@ -88,11 +92,16 @@ const ExportToOther = (props) => {
 
     const [checkedWare, sCheckedWare] = useState({});
 
+    const [openPrintPdf, setOpenPrintPdf] = useState(false);
+    const [selectedPrintId, setSelectedPrintId] = useState(null);
+
     const { is_admin: role, permissions_current: auth } = useSelector((state) => state.auth);
 
     const { checkAdd, checkExport } = useActionRole(auth, "exportToOther");
 
     const { limit, updateLimit: sLimit } = useLimitAndTotalItems();
+
+    const { data: printData, isFetching: isFetchingPrint } = useExportToOtherDetail(openPrintPdf, selectedPrintId);
 
     const params = {
         search: isState.keySearch,
@@ -194,6 +203,25 @@ const ExportToOther = (props) => {
         }
         queryState({ onSending: false });
     };
+
+    const handlePrintClick = (id) => {
+        setSelectedPrintId(id);
+        setOpenPrintPdf(true);
+    };
+
+    useEffect(() => {
+        if (openPrintPdf && selectedPrintId && printData && !isFetchingPrint) {
+            (async () => {
+                await printExportToOtherPDF({
+                    data: printData,
+                    dataLang: dataLang,
+                    dataSeting: dataSeting,
+                });
+            })();
+            setOpenPrintPdf(false);
+            setSelectedPrintId(null);
+        }
+    }, [openPrintPdf, selectedPrintId, printData, isFetchingPrint, dataLang, dataSeting]);
 
 
     const multiDataSet = [
@@ -605,7 +633,14 @@ const ExportToOther = (props) => {
                                                     <RowItemTable colSpan={1}>
                                                         {e?.branch_name}
                                                     </RowItemTable>
-                                                    <RowItemTable colSpan={1} className="flex justify-center">
+                                                    <RowItemTable colSpan={1} className="flex justify-center gap-1">
+                                                        <button
+                                                            onClick={() => handlePrintClick(e?.id)}
+                                                            title="In PDF"
+                                                            className="group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer rounded-lg p-1 border border-transparent hover:border-[#003DA0] hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap"
+                                                        >
+                                                            <PrinterIcon className="size-5 text-[#003DA0]" />
+                                                        </button>
                                                         <BtnAction
                                                             onRefresh={refetch.bind(this)}
                                                             onRefreshGroup={refetchFillterBar.bind(this)}
