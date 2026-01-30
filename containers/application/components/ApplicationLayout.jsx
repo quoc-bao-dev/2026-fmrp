@@ -3,13 +3,47 @@ import { routerApplication } from '@/routers/application';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useMemo } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Provider, useSelector } from 'react-redux';
+import store from '@/services/redux';
 import ApplicationSearchInput from './ApplicationSearchInput';
+import PopupGlobal from '@/components/common/popup/PopupGlobal';
+import PopupUpdateVersion from '@/components/UI/popup/PopupUpdateVersion';
+import PopupAccountInformation from '@/components/UI/popup/PopupAccountInformation';
+import PopupChangePassword from '@/components/UI/popup/PopupChangePassword';
+import PopupRecommendation from '@/components/UI/popup/PopupRecommendation';
+import PopupUpgradeProfessional from '@/components/UI/popup/PopupUpgradeProfessional';
+import PopupUpgradePro from '@/components/UI/popup/PopupUpgradePro';
+import PopupSuccessfulPayment from '@/components/UI/popup/PopupSuccessfulPayment';
+import PopupSuccessfulBuyMoreUser from '@/components/UI/popup/PopupSuccessfulBuyMoreUser';
+import ImagesModal from '@/components/UI/images/ImagesModal';
 
 const IMAGE_APPLICATION = '/application/background-image-2.png';
 const IMAGE_LOGO = '/application/logo.png';
 
-export default function ApplicationLayout({ children }) {
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            refetchOnWindowFocus: false,
+        },
+    },
+});
+
+function ApplicationLayoutContent({ children }) {
     const router = useRouter();
+
+    // Lấy các state popup từ store
+    const statePopupPreviewImage = useSelector(state => state?.statePopupPreviewImage);
+    const statePopupAccountInformation = useSelector(state => state.statePopupAccountInformation);
+    const statePopupChangePassword = useSelector(state => state.statePopupChangePassword);
+    const statePopupRecommendation = useSelector(state => state.statePopupRecommendation);
+    const statePopupUpdateVersion = useSelector(state => state.statePopupUpdateVersion);
+    const statePopupUpgradeProfessional = useSelector(state => state.statePopupUpgradeProfessional);
+    const statePopupUpgradePro = useSelector(state => state.statePopupUpgradePro);
+    const statePopupSuccessfulPayment = useSelector(state => state.statePopupSuccessfulPayment);
+    const statePopupSuccessfulBuyMoreUser = useSelector(state => state.statePopupSuccessfulBuyMoreUser);
+    const statePopupGlobal = useSelector(state => state.statePopupGlobal);
+
     const sidebarItems = useMemo(
         () => [
             { key: 'all', label: 'Tất cả', href: routerApplication.all },
@@ -134,7 +168,30 @@ export default function ApplicationLayout({ children }) {
                     </div>
                 </div>
             </div>
+
+            {/* Render popups from store */}
+            {statePopupPreviewImage?.open && <ImagesModal />}
+            {statePopupGlobal?.open && <PopupGlobal />}
+            {statePopupUpdateVersion?.open && <PopupUpdateVersion />}
+            {statePopupAccountInformation?.open && <PopupAccountInformation />}
+            {statePopupChangePassword?.open && <PopupChangePassword />}
+            {statePopupRecommendation?.open && <PopupRecommendation />}
+            {statePopupUpgradeProfessional?.open && <PopupUpgradeProfessional />}
+            {statePopupUpgradePro?.open && <PopupUpgradePro />}
+            {statePopupSuccessfulPayment?.open && <PopupSuccessfulPayment />}
+            {statePopupSuccessfulBuyMoreUser?.open && <PopupSuccessfulBuyMoreUser />}
         </div>
     );
 }
 
+export default function ApplicationLayout({ children }) {
+    return (
+        <QueryClientProvider client={queryClient}>
+            <Provider store={store}>
+                <ApplicationLayoutContent>
+                    {children}
+                </ApplicationLayoutContent>
+            </Provider>
+        </QueryClientProvider>
+    );
+}

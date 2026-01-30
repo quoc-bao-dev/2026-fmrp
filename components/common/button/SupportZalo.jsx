@@ -10,7 +10,7 @@ const SupportZalo = () => {
   // ===============================
 
   // State cho vị trí của bong bóng
-  const [bottomPosition, setBottomPosition] = useState(20); // 20px từ dưới lên
+  const [bottomPosition, setBottomPosition] = useState(100); // 20px từ dưới lên
   const [rightPosition, setRightPosition] = useState(RIGHT_OFFSET); // 20px từ mép phải
   const [leftPosition, setLeftPosition] = useState(null); // Vị trí từ mép trái (nếu ở bên trái)
   const [isDragging, setIsDragging] = useState(false);
