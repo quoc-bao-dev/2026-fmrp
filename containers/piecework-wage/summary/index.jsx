@@ -38,20 +38,20 @@ const tabs = [
 
 // Lưu item đang chọn ra ngoài, và luôn đưa item đó lên đầu danh sách options (loại trùng)
 const normalizeTop = (pinned, options) => {
-  if (!pinned) return options || [];
-  const key = String(pinned.value);
+  if (!pinned || pinned.length === 0) return options || [];
+  const pinnedKeys = new Set(pinned.map(p => String(p.value)));
   const list = options || [];
-  return [pinned, ...list.filter(o => String(o?.value) !== key)];
+  return [...pinned, ...list.filter(o => !pinnedKeys.has(String(o?.value)))];
 };
 
 const Summary = () => {
   const [activeTab, setActiveTab] = useState(tabs[0]);
   const [selectedStaffIds, setSelectedStaffIds] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState([]);
-  const [selectedProductionOrder, setSelectedProductionOrder] = useState(null);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [pinnedProductionOrder, setPinnedProductionOrder] = useState(null);
-  const [pinnedProduct, setPinnedProduct] = useState(null);
+  const [selectedProductionOrder, setSelectedProductionOrder] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState([]);
+  const [pinnedProductionOrders, setPinnedProductionOrders] = useState([]);
+  const [pinnedProducts, setPinnedProducts] = useState([]);
   const [searchProductionOrder, setSearchProductionOrder] = useState('');
   const [searchProduct, setSearchProduct] = useState('');
   const [debouncedSearchProductionOrder] = useDebounce(searchProductionOrder, 300);
@@ -60,14 +60,13 @@ const Summary = () => {
   const [debouncedSearch] = useDebounce(search, 300);
   const showToast = useToast();
   const [dateFilter, setDateFilter] = useState({
-    startDate: null,
-    endDate: null,
+    startDate: moment().startOf('month').toDate(),
+    endDate: moment().endOf('month').toDate(),
   });
-
   const { data: listStaffs } = useSearchStaffs();
   const { data: listGroupMembers } = useLookupGroupMembers({ limit: 100 });
-  const { data: comboboxProductionOrders = [] } = useProductionOrdersCombobox(debouncedSearchProductionOrder);
-  const { data: listProducts = [] } = useItemsVariantSearchCombobox(debouncedSearchProduct);
+  const { data: comboboxProductionOrders = [], isLoading: isLoadingProductionOrder, isFetching: isFetchingProductionOrder } = useProductionOrdersCombobox(debouncedSearchProductionOrder);
+  const { data: listProducts = [], isLoading: isLoadingProduct, isFetching: isFetchingProduct } = useItemsVariantSearchCombobox(debouncedSearchProduct);
 
   // Tạo options cho nhân sự/công nhân
   const staffOptions = useMemo(() => {
@@ -107,8 +106,8 @@ const Summary = () => {
     }));
   }, [listProducts]);
 
-  const productionOrderOptionsWithPinned = normalizeTop(pinnedProductionOrder, productionOrderOptions);
-  const productOptionsWithPinned = normalizeTop(pinnedProduct, productOptions);
+  const productionOrderOptionsWithPinned = normalizeTop(pinnedProductionOrders, productionOrderOptions);
+  const productOptionsWithPinned = normalizeTop(pinnedProducts, productOptions);
 
   // Tạo filter params từ selectedStaffIds và selectedGroup
   const filterParams = useMemo(() => {
@@ -121,22 +120,29 @@ const Summary = () => {
     }
     return params;
   }, [selectedStaffIds, selectedGroup]);
-console.log(selectedProductionOrder)
+
   // Chuẩn hóa params dùng chung cho 2 API để tránh lặp và lệch state
   const dateParams = useMemo(() => ({
     start_date: dateFilter.startDate ? moment(dateFilter.startDate).format('DD/MM/YYYY') : null,
     end_date: dateFilter.endDate ? moment(dateFilter.endDate).format('DD/MM/YYYY') : null,
   }), [dateFilter.startDate, dateFilter.endDate]);
 
-  const commonQueryParams = useMemo(() => ({
-    ...dateParams,
-    cursor: 0,
-    limit: 10,
-    search: debouncedSearch || '',
-    ...filterParams,
-    _po_id: [selectedProductionOrder || null],
-    item_variation_id: [selectedProduct || null],
-  }), [dateParams, debouncedSearch, filterParams, selectedProductionOrder, selectedProduct]);
+  const commonQueryParams = useMemo(() => {
+    const params = {
+      ...dateParams,
+      cursor: 0,
+      limit: 10,
+      search: debouncedSearch || '',
+      ...filterParams,
+    };
+    if (selectedProductionOrder.length > 0) {
+      params.po_ids = selectedProductionOrder;
+    }
+    if (selectedProduct.length > 0) {
+      params.item_ids = selectedProduct;
+    }
+    return params;
+  }, [dateParams, debouncedSearch, filterParams, selectedProductionOrder, selectedProduct]);
 
   const { data: summary, isLoading: isLoadingSummary, refetch: refetchSummary } = useSummary(
     commonQueryParams,
@@ -255,41 +261,93 @@ console.log(selectedProductionOrder)
     setSelectedGroup([]);
   };
 
-  // Xử lý chọn Lệnh sản xuất
-  const handleProductionOrderChange = value => {
-    setSelectedProductionOrder(value || null);
-    if (!value) return;
-    const found = productionOrderOptions.find(o => String(o?.value) === String(value));
-    if (found) setPinnedProductionOrder(found);
+  // Xử lý chọn Lệnh sản xuất (multiple mode)
+  const handleProductionOrderChange = (values) => {
+    const selectedValues = Array.isArray(values) ? values : [];
+    setSelectedProductionOrder(selectedValues);
+    
+    // Cập nhật pinned items: giữ lại các item cũ nếu vẫn còn trong selectedValues, thêm item mới
+    setPinnedProductionOrders(prev => {
+      const selectedKeys = new Set(selectedValues.map(v => String(v)));
+      
+      // Giữ lại các pinned items cũ nếu vẫn còn được chọn
+      const keptPinned = prev.filter(p => selectedKeys.has(String(p.value)));
+      
+      // Tìm các item mới được chọn nhưng chưa có trong pinned
+      const existingKeys = new Set(keptPinned.map(p => String(p.value)));
+      const newPinned = selectedValues
+        .filter(val => !existingKeys.has(String(val)))
+        .map(val => {
+          // Ưu tiên tìm trong options hiện tại
+          const found = productionOrderOptions.find(o => String(o?.value) === String(val));
+          if (found) return found;
+          // Nếu không tìm thấy trong options hiện tại, tìm trong pinned cũ
+          return prev.find(p => String(p.value) === String(val));
+        })
+        .filter(Boolean);
+      
+      return [...keptPinned, ...newPinned];
+    });
   };
 
   const handleProductionOrderClear = () => {
-    setSelectedProductionOrder(null);
-    setPinnedProductionOrder(null);
+    setSelectedProductionOrder([]);
+    setPinnedProductionOrders([]);
   };
 
-  // Xử lý chọn Mặt hàng
-  const handleProductChange = value => {
-    setSelectedProduct(value || null);
-    if (!value) return;
-    const found = productOptions.find(o => String(o?.value) === String(value));
-    if (found) setPinnedProduct(found);
+  // Xử lý chọn Mặt hàng (multiple mode)
+  const handleProductChange = (values) => {
+    const selectedValues = Array.isArray(values) ? values : [];
+    setSelectedProduct(selectedValues);
+    
+    // Cập nhật pinned items: giữ lại các item cũ nếu vẫn còn trong selectedValues, thêm item mới
+    setPinnedProducts(prev => {
+      const selectedKeys = new Set(selectedValues.map(v => String(v)));
+      
+      // Giữ lại các pinned items cũ nếu vẫn còn được chọn
+      const keptPinned = prev.filter(p => selectedKeys.has(String(p.value)));
+      
+      // Tìm các item mới được chọn nhưng chưa có trong pinned
+      const existingKeys = new Set(keptPinned.map(p => String(p.value)));
+      const newPinned = selectedValues
+        .filter(val => !existingKeys.has(String(val)))
+        .map(val => {
+          // Ưu tiên tìm trong options hiện tại
+          const found = productOptions.find(o => String(o?.value) === String(val));
+          if (found) return found;
+          // Nếu không tìm thấy trong options hiện tại, tìm trong pinned cũ
+          return prev.find(p => String(p.value) === String(val));
+        })
+        .filter(Boolean);
+      
+      return [...keptPinned, ...newPinned];
+    });
   };
 
   const handleProductClear = () => {
-    setSelectedProduct(null);
-    setPinnedProduct(null);
+    setSelectedProduct([]);
+    setPinnedProducts([]);
   };
+
+  // Tính số lượng filter đang active
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (selectedProductionOrder.length > 0) count++;
+    if (selectedProduct.length > 0) count++;
+    return count;
+  }, [selectedProductionOrder.length, selectedProduct.length]);
 
   const triggerFilterAll = (
     <button
-      className={`
-          bg-white text-[#9295A4] border border-[#D0D5DD] hover:text-[#0F4F9E] hover:bg-[#EBF5FF] hover:border-[#3276FA]
-        } flex items-center space-x-2 rounded-lg h-10 px-3 group custom-transition`}
+      className={`${activeFilterCount > 0
+        ? 'text-[#0F4F9E] border-[#3276FA] bg-[#EBF5FF]'
+        : 'bg-white text-[#9295A4] border-[#D0D5DD] hover:text-[#0F4F9E] hover:bg-[#EBF5FF] hover:border-[#3276FA]'
+        } flex items-center space-x-2 border rounded-lg h-10 px-3 group custom-transition`}
     >
       <FunnelIcon className='size-4' />
-      <span className='responsive-text-base whitespace-nowrap text-[#3A3E4C]'>Bộ lọc</span>
-      <CaretDownIcon className={`size-3.5 shrink-0 rotate-0`} />
+      <span className='responsive-text-base whitespace-nowrap custom-transition'>Bộ lọc</span>
+      {activeFilterCount > 0 && <span className='rounded-full bg-[#0F4F9E] text-white text-xs size-5 flex items-center justify-center'>{activeFilterCount}</span>}
+      <CaretDownIcon className='size-3.5 shrink-0 rotate-0' />
     </button>
   );
 
@@ -315,13 +373,6 @@ console.log(selectedProductionOrder)
                 Tải lại
               </button>
             )}
-            {/* <SearchComponent
-              openWidth={300}
-              placeholder="Tìm kiếm theo mã SP, tên SP, LSX"
-              onChange={(e) => {
-                setSearch(e?.target?.value || '');
-              }}
-            /> */}
             <DateToDateComponent
               placeholder='Chọn ngày'
               value={dateFilter}
@@ -356,6 +407,8 @@ console.log(selectedProductionOrder)
                     onSearch={setSearchProductionOrder}
                     icon={<PiClipboardTextLight className='size-4 text-[#003DA0]' />}
                     className='w-auto min-w-[180px] [&_.ant-select-selector]:h-9 [&_.ant-select-selector]:border-[#D0D5DD]'
+                    mode='multiple'
+                    loading={isLoadingProductionOrder || isFetchingProductionOrder}
                   />
                 </div>
                 <div className='space-y-1'>
@@ -371,6 +424,8 @@ console.log(selectedProductionOrder)
                     icon={<FunnelIcon className='size-4 text-[#003DA0]' />}
                     className='w-auto min-w-[180px] [&_.ant-select-selector]:h-9 [&_.ant-select-selector]:border-[#D0D5DD]'
                     avatarClassName='rounded-md'
+                    mode='multiple'
+                    loading={isLoadingProduct || isFetchingProduct}
                   />
                 </div>
               </div>
