@@ -177,14 +177,6 @@ const PopupEditDetail = (props) => {
             open={open}
             onClose={_ToggleModal.bind(this, false)}
             classNameBtn={""}
-            button={
-                <button className="group transition-all ease-in-out p-2  2xl:text-sm xl:text-sm text-[8px] hover:bg-slate-50  cursor-pointer rounded ">
-                    <BiEdit
-                        size={23}
-                        className="group-hover:text-sky-500 group-hover:scale-110 group-hover:shadow-md "
-                    />
-                </button>
-            }
         >
             <div className="flex items-center space-x-4 my-2 border-[#E7EAEE] border-opacity-70 border-b-[1px]"></div>
             <div className="3xl:w-[1300px] 2xl:w-[1150px] xl:w-[999px] w-[950px] 3xl:h-auto 2xl:max-h-auto xl:h-auto h-auto ">

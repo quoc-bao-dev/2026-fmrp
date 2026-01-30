@@ -4,7 +4,7 @@ import formatNumberConfig from '@/utils/helpers/formatnumber';
 import moment from 'moment';
 import { applyCommonStyles, createFooter, createHeaderBlock, createTopLineBlock, ensureTimesNewRomanFonts, openPdf, PDF_THEME } from '@/utils/pdfCommon';
 
-export const printProductionWarehousePDF = async ({ data, dataLang, dataSeting, dataMaterialExpiry, dataProductExpiry, dataProductSerial }) => {
+export const printProductionWarehousePDF = async ({ data, dataLang, dataSeting, dataMaterialExpiry, dataProductExpiry, dataProductSerial, isWarehousePropertiesEnabled, warehousePropertyLabels }) => {
     if (!data) return;
     await ensureTimesNewRomanFonts();
 
@@ -208,6 +208,34 @@ export const printProductionWarehousePDF = async ({ data, dataLang, dataSeting, 
                                         },
                                     ];
                                     stackBt.push(subStack);
+                                }
+
+                                // Hiển thị warehousePropertyLabels cho material
+                                if (item?.item_type === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0) {
+                                    const propertyStack = warehousePropertyLabels
+                                        .map(({ key, label }) => {
+                                            if (!label) return null;
+                                            const value = item?.item?.[key] ?? item?.[key];
+                                            // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                            if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+                                            return {
+                                                text: [
+                                                    {
+                                                        text: `${label}: `,
+                                                        fontSize: 9,
+                                                    },
+                                                    {
+                                                        text: value == null || value === '' ? '-' : value,
+                                                        fontSize: 9,
+                                                    },
+                                                ],
+                                                fontSize: 9,
+                                            };
+                                        })
+                                        .filter(Boolean);
+                                    if (propertyStack.length > 0) {
+                                        stackBt.push(...propertyStack);
+                                    }
                                 }
                                 return [
                                     {

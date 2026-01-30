@@ -1,7 +1,8 @@
 import { MagnifyingGlassIcon } from '@/components/icons';
 import DropdownFilledIcon from '@/components/icons/common/DropdownFilledIcon';
+import Loading from '@/components/UI/loading/loading';
 import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
-import { Empty, Input, Select } from 'antd';
+import { Empty, Input, Select, Spin } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 const { Option } = Select;
@@ -33,6 +34,7 @@ const SelectSearchableRadio = ({
   className,
   mode, // 'multiple' để cho phép chọn nhiều
   avatarClassName,
+  loading = false, // Trạng thái loading khi đang tìm kiếm
 }) => {
   const [searchValue, setSearchValue] = useState('');
   const [open, setOpen] = useState(false);
@@ -174,7 +176,15 @@ const SelectSearchableRadio = ({
                   </div>
                 </div>
                 {/* Options list */}
-                <div className='custom-select-dropdown max-h-[300px] overflow-y-auto select-searchable-scrollbar'>{menu}</div>
+                <div className='custom-select-dropdown max-h-[300px] overflow-y-auto select-searchable-scrollbar'>
+                  {loading && searchValue ? (
+                    <div className='py-4 h-40 w-full flex items-center justify-center'>
+                      <Loading />
+                    </div>
+                  ) : (
+                    menu
+                  )}
+                </div>
               </>
             )}
             optionLabelProp='label'
