@@ -881,7 +881,7 @@ const ReturnSalesForm = (props) => {
                                   {option.e?.text_type === 'material' &&
                                     Array.isArray(warehousePropertyLabels) &&
                                     warehousePropertyLabels.length > 0 && (
-                                      <div className="flex items-center gap-2 italic">
+                                      <div className="flex items-center gap-x-2 gap-y-[2px] italic flex-wrap">
                                         {warehousePropertyLabels.map(({ key, label }) => {
                                           if (!label) return null
                                           const value = option.e?.[key]
@@ -890,7 +890,7 @@ const ReturnSalesForm = (props) => {
                                           if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null
 
                                           return (
-                                            <div key={key}>
+                                            <div key={key} className="truncate">
                                               {label}: {value == null || value === '' ? '-' : value}
                                             </div>
                                           )
