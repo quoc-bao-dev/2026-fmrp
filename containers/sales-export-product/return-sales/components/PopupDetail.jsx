@@ -18,6 +18,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import ModalImage from "react-modal-image";
 import { useReturnSalesDetail } from "../hooks/useReturnSalesDetail";
 import PopupCustom from "/components/UI/popup";
+import { useWarehouseProperties } from "@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties";
 registerLocale("vi", vi);
 
 const PopupDetail = (props) => {
@@ -28,6 +29,8 @@ const PopupDetail = (props) => {
     const _ToggleModal = (e) => sOpen(e);
 
     const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature();
+
+    const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
 
     const formatNumber = (number) => {
         return formatNumberConfig(+number, dataSeting);
@@ -243,10 +246,10 @@ const PopupDetail = (props) => {
                                                                             {dataProductSerial.is_enable === "1" ? (
                                                                                 <div className="flex gap-0.5">
                                                                                     {/* <h6 className="text-[12px]">Serial:</h6><h6 className="text-[12px]  px-2   w-[full] text-left ">{e.serial == null || e.serial == "" ? "-" : e.serial}</h6>                               */}
-                                                                                    <h6 className="text-[12px]">
+                                                                                    <h6 className="text-[11px]">
                                                                                         Serial:
                                                                                     </h6>
-                                                                                    <h6 className="text-[12px]  px-2   w-[full] text-left ">
+                                                                                    <h6 className="text-[11px]  px-2   w-[full] text-left ">
                                                                                         {e?.item?.serial == null || e?.item?.serial == "" ? "-" : e?.item?.serial}
                                                                                     </h6>
                                                                                 </div>
@@ -256,18 +259,18 @@ const PopupDetail = (props) => {
                                                                             {dataMaterialExpiry.is_enable === "1" || dataProductExpiry.is_enable === "1" ? (
                                                                                 <>
                                                                                     <div className="flex gap-0.5">
-                                                                                        <h6 className="text-[12px]">
+                                                                                        <h6 className="text-[11px]">
                                                                                             Lot:
                                                                                         </h6>{" "}
-                                                                                        <h6 className="text-[12px]  px-2   w-[full] text-left ">
+                                                                                        <h6 className="text-[11px]  px-2   w-[full] text-left ">
                                                                                             {e?.item?.lot == null || e?.item?.lot == "" ? "-" : e?.item?.lot}
                                                                                         </h6>
                                                                                     </div>
                                                                                     <div className="flex gap-0.5">
-                                                                                        <h6 className="text-[12px]">
+                                                                                        <h6 className="text-[11px]">
                                                                                             Date:
                                                                                         </h6>{" "}
-                                                                                        <h6 className="text-[12px]  px-2   w-[full] text-center ">
+                                                                                        <h6 className="text-[11px]  px-2   w-[full] text-center ">
                                                                                             {e?.item?.expiration_date ? formatMoment(e?.item?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : "-"}
                                                                                         </h6>
                                                                                     </div>
@@ -275,6 +278,32 @@ const PopupDetail = (props) => {
                                                                             ) : (
                                                                                 ""
                                                                             )}
+                                                                            {/* Hiển thị thuộc tính kho cho nguyên vật liệu */}
+                                                                            {e?.item_type === 'material' &&
+                                                                                Array.isArray(warehousePropertyLabels) &&
+                                                                                warehousePropertyLabels.length > 0 && (
+                                                                                    <>
+                                                                                        {warehousePropertyLabels.map(({ key, label }) => {
+                                                                                            if (!label) return null
+                                                                                            const value = e?.[key]
+
+                                                                                            // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                                                                            if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null
+
+                                                                                            return (
+                                                                                                <div key={key} className="flex gap-1">
+                                                                                                    <h6 className="text-[11px]">
+                                                                                                        {label}:
+                                                                                                    </h6>
+                                                                                                    <h6 className="text-[11px] w-[full] text-left pr-2">
+                                                                                                        {value == null || value === '' ? '-' : value}
+                                                                                                    </h6>
+                                                                                                </div>
+                                                                                            )
+                                                                                        })}
+                                                                                    </>
+                                                                                )}
+
                                                                         </div>
                                                                     </div>
                                                                 </div>
