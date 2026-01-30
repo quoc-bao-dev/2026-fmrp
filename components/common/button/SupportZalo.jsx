@@ -1,17 +1,13 @@
-import AnimatedGeneraEachWord from '@/components/animations/animation/AnimatedGeneraEachWord';
-import { ZaloIcon } from '@/components/icons';
-import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import PopupFeelsCustomer from '../popup/PopupFeelsCustomer';
 
 const SupportZalo = () => {
+  const dispatch = useDispatch();
   // ========== CẤU HÌNH ==========
   // Khoảng cách từ mép phải màn hình (px)
   const RIGHT_OFFSET = 24;
   // ===============================
-
-  const [typingCycle, setTypingCycle] = useState(0);
-  const [showText, setShowText] = useState(true);
-  const hideTimeoutRef = useRef(null);
 
   // State cho vị trí của bong bóng
   const [bottomPosition, setBottomPosition] = useState(20); // 20px từ dưới lên
@@ -25,7 +21,6 @@ const SupportZalo = () => {
   const dragStartBottom = useRef(0);
   const dragStartRight = useRef(0);
   const bubbleRef = useRef(null);
-  const iconRef = useRef(null);
 
   // Tính toán xem icon nằm bên trái hay bên phải màn hình
   const isIconOnLeft = () => {
@@ -50,25 +45,6 @@ const SupportZalo = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setShowText(false);
-      if (hideTimeoutRef.current) {
-        clearTimeout(hideTimeoutRef.current);
-      }
-      hideTimeoutRef.current = setTimeout(() => {
-        setTypingCycle(prev => prev + 1);
-        setShowText(true);
-      }, 5000); // ẩn 2s rồi hiện lại
-    }, 9000); // wait một lúc sau khi gõ xong rồi chạy lại
-
-    return () => {
-      clearInterval(interval);
-      if (hideTimeoutRef.current) {
-        clearTimeout(hideTimeoutRef.current);
-      }
-    };
-  }, []);
 
   // Cập nhật vị trí icon (trái/phải) khi position thay đổi
   useEffect(() => {
@@ -168,6 +144,41 @@ const SupportZalo = () => {
     }
   };
 
+  // Xử lý mở popup góp ý
+  const handleOpenFeedback = e => {
+    e.stopPropagation();
+    if (hasMovedRef.current || isDraggingRef.current) return;
+
+    dispatch({
+      type: 'statePopupGlobal',
+      payload: {
+        open: true,
+        allowOutsideClick: false,
+        allowEscape: false,
+        children: (
+          <PopupFeelsCustomer
+            onClose={() =>
+              dispatch({
+                type: 'statePopupGlobal',
+                payload: { open: false },
+              })
+            }
+          />
+        ),
+      },
+    });
+  };
+
+  // Xử lý mở Zalo OA
+  const handleOpenSupport = e => {
+    e.stopPropagation();
+    if (hasMovedRef.current || isDraggingRef.current) return;
+
+    if (typeof window !== 'undefined') {
+      window.open('https://zalo.me/fososoft', '_blank', 'noopener,noreferrer');
+    }
+  };
+
   // Thêm event listeners cho mouse move và mouse up
   useEffect(() => {
     if (isDragging) {
@@ -182,63 +193,60 @@ const SupportZalo = () => {
   }, [isDragging]);
 
   return (
-    <Link
-      href='https://zalo.me/fososoft'
-      target='_blank'
+    <div
       ref={bubbleRef}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
       style={{
         position: 'fixed',
         bottom: `${bottomPosition}px`,
-        ...(isOnLeft && leftPosition !== null ? { left: `${leftPosition}px`, right: 'auto' } : { right: `${rightPosition}px`, left: 'auto' }),
+        ...(isOnLeft && leftPosition !== null
+          ? { left: `${leftPosition}px`, right: 'auto' }
+          : { right: `${rightPosition}px`, left: 'auto' }),
         cursor: 'grab',
         transition: 'none',
+        zIndex: 999,
       }}
-      className={`hidden md:flex z-[999] relative bg-white rounded-xl p-1 shadow-lg border border-new-blue/50 hover:cursor-grab active:cursor-grabbing items-center gap-1 ${
-        isOnLeft ? 'flex-row-reverse' : 'flex-row'
-      }`}
+      className="hover:cursor-grab active:cursor-grabbing"
     >
-      {/* Text - render bên trái hoặc bên phải tùy theo vị trí icon */}
-      {showText && (
-        <div className='pointer-events-none'>
-          <AnimatedGeneraEachWord
-            key={typingCycle}
-            text='Hỗ Trợ Nhanh'
-            className='!responsive-text-base font-medium text-new-blue !font-deca px-1'
-            classNameWrapper='min-w-0'
-            typingSpeed={150}
-            loadingDotClassName1='bg-[#BFDBFE]'
-            loadingDotClassName2='bg-[#60A5FA]'
-            loadingDotClassName3='bg-[#2563EB]'
-          />
-        </div>
-      )}
-
-      {/* Icon - luôn ở vị trí cố định */}
-      <div ref={iconRef} className='relative'>
-        {/* Label "Kéo để di chuyển" */}
+      <div
+        style={{
+          width: '56px',
+          borderRadius: '16px',
+          // Độ trong suốt cực thấp để hiệu ứng blur đẹp nhất
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: '1px solid #D7EEFF',
+        }}
+        className="flex flex-col items-center justify-center gap-3 py-3 px-1 shadow-xl"
+      >
+        {/* Nút Góp ý */}
         <div
-          className={`absolute -top-8 whitespace-nowrap rounded-lg bg-slate-900/90 px-2 py-1 text-[10px] tracking-ﬁwide text-white shadow-lg pointer-events-none ${
-            isOnLeft
-              ? 'left-[-100%] ml-7' // Nếu icon bên trái màn hình, label ở bên phải icon
-              : 'right-[-100%] mr-7' // Nếu icon bên phải màn hình, label ở bên trái icon
-          }`}
+          className="flex flex-col items-center justify-center gap-1 group pointer-events-auto cursor-pointer"
+          onClick={handleOpenFeedback}
         >
-          <span className='relative block'>
-            Kéo để di chuyển
-            <span
-              className={`absolute top-full h-0 w-0 border-x-4 border-x-transparent border-t-4 border-t-slate-900/90 ${
-                isOnLeft
-                  ? 'left-0' // Mũi tên ở mép trái label (gần icon) khi label ở bên phải
-                  : 'right-0' // Mũi tên ở mép phải label (gần icon) khi label ở bên trái
-              }`}
-            ></span>
-          </span>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path fillRule="evenodd" clipRule="evenodd" d="M24 12C24 17.799 18.627 22.5 12 22.5C10.8115 22.5016 9.62788 22.3473 8.4795 22.041C7.6035 22.485 5.592 23.337 2.208 23.892C1.908 23.94 1.68 23.628 1.7985 23.349C2.3295 22.095 2.8095 20.424 2.9535 18.9C1.116 17.055 0 14.64 0 12C0 6.201 5.373 1.5 12 1.5C18.627 1.5 24 6.201 24 12ZM7.5 12C7.5 12.3978 7.34196 12.7794 7.06066 13.0607C6.77936 13.342 6.39782 13.5 6 13.5C5.60218 13.5 5.22064 13.342 4.93934 13.0607C4.65804 12.7794 4.5 12.3978 4.5 12C4.5 11.6022 4.65804 11.2206 4.93934 10.9393C5.22064 10.658 5.60218 10.5 6 10.5C6.39782 10.5 6.77936 10.658 7.06066 10.9393C7.34196 11.2206 7.5 11.6022 7.5 12ZM13.5 12C13.5 12.3978 13.342 12.7794 13.0607 13.0607C12.7794 13.342 12.3978 13.5 12 13.5C11.6022 13.5 11.2206 13.342 10.9393 13.0607C10.658 12.7794 10.5 12.3978 10.5 12C10.5 11.6022 10.658 11.2206 10.9393 10.9393C11.2206 10.658 11.6022 10.5 12 10.5C12.3978 10.5 12.7794 10.658 13.0607 10.9393C13.342 11.2206 13.5 11.6022 13.5 12ZM18 13.5C18.3978 13.5 18.7794 13.342 19.0607 13.0607C19.342 12.7794 19.5 12.3978 19.5 12C19.5 11.6022 19.342 11.2206 19.0607 10.9393C18.7794 10.658 18.3978 10.5 18 10.5C17.6022 10.5 17.2206 10.658 16.9393 10.9393C16.658 11.2206 16.5 11.6022 16.5 12C16.5 12.3978 16.658 12.7794 16.9393 13.0607C17.2206 13.342 17.6022 13.5 18 13.5Z" fill="#1556D9" />
+          </svg>
+          <p className="font-deca font-semibold text-[10px] text-[#1556D9]">Góp ý</p>
         </div>
-        <ZaloIcon className='size-8 2xl:size-8' />
+
+        <div className="w-8 h-[1px] bg-[#CFE8FC]"></div>
+
+        {/* Nút Hỗ trợ */}
+        <div
+          className="flex flex-col items-center justify-center gap-1 group pointer-events-auto cursor-pointer"
+          onClick={handleOpenSupport}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 1.5C10.0109 1.5 8.10322 2.29018 6.6967 3.6967C5.29018 5.10322 4.5 7.01088 4.5 9V15.75H3V9C3 7.8181 3.23279 6.64778 3.68508 5.55585C4.13738 4.46392 4.80031 3.47177 5.63604 2.63604C6.47177 1.80031 7.46392 1.13738 8.55585 0.685084C9.64778 0.232792 10.8181 0 12 0C13.1819 0 14.3522 0.232792 15.4442 0.685084C16.5361 1.13738 17.5282 1.80031 18.364 2.63604C19.1997 3.47177 19.8626 4.46392 20.3149 5.55585C20.7672 6.64778 21 7.8181 21 9V15.75H19.5V9C19.5 8.01509 19.306 7.03982 18.9291 6.12987C18.5522 5.21993 17.9997 4.39314 17.3033 3.6967C16.6069 3.00026 15.7801 2.44781 14.8701 2.0709C13.9602 1.69399 12.9849 1.5 12 1.5Z" fill="#1556D9" />
+            <path d="M16.5 12C16.5 11.6022 16.658 11.2206 16.9393 10.9393C17.2206 10.658 17.6022 10.5 18 10.5H21V16.5C21 16.8978 20.842 17.2794 20.5607 17.5607C20.2794 17.842 19.8978 18 19.5 18H18C17.6022 18 17.2206 17.842 16.9393 17.5607C16.658 17.2794 16.5 16.8978 16.5 16.5V12ZM7.5 12C7.5 11.6022 7.34196 11.2206 7.06066 10.9393C6.77936 10.658 6.39782 10.5 6 10.5H3V16.5C3 16.8978 3.15804 17.2794 3.43934 17.5607C3.72064 17.842 4.10218 18 4.5 18H6C6.39782 18 6.77936 17.842 7.06066 17.5607C7.34196 17.2794 7.5 16.8978 7.5 16.5V12Z" fill="#1556D9" />
+          </svg>
+          <p className="font-deca font-semibold text-[10px] text-[#1556D9]">Hỗ trợ</p>
+        </div>
       </div>
-    </Link>
+    </div>
   );
 };
 

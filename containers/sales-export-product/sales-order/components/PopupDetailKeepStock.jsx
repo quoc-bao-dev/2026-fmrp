@@ -85,7 +85,7 @@ const PopupDetailKeepStock = (props) => {
                 transfer: db.transfer.map((e) => {
                     return {
                         ...e,
-                        isShow: false,
+                        isShow: true,
                     };
                 }),
             };
