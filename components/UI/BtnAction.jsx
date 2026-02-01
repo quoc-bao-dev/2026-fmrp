@@ -14,6 +14,8 @@ import Popup_TableValidateEdit from '@/containers/purchase-order/order/component
 import Popup_servie from '@/containers/purchase-order/servicev-voucher/components/popup';
 import PopupDetailKeepStock from '@/containers/sales-export-product/sales-order/components/PopupDetailKeepStock';
 import PopupKeepStock from '@/containers/sales-export-product/sales-order/components/PopupKeepStock';
+import { printReturnSalesPDF } from '@/containers/sales-export-product/return-sales/utils/printReturnSalesPDF';
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 import useFeature from '@/hooks/useConfigFeature';
 import useSetingServer from '@/hooks/useConfigNumber';
 import useActionRole from '@/hooks/useRole';
@@ -87,7 +89,13 @@ const fetchPDFServiceVoucher = async ({ id }) => {
 const Popup_Pdf = props => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoadingPrint, setIsLoadingPrint] = useState(false);
+  const [loadingOption, setLoadingOption] = useState(null); // 'price' hoặc 'notPrice' hoặc null
   const dropdownRef = useRef(null);
+
+  const isShow = useToast();
+  const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature();
+  const dataSeting = useSetingServer();
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
 
   //kiếm hàm theo page
   const fetchPDFMultiplePageByPrice = {
@@ -97,11 +105,13 @@ const Popup_Pdf = props => {
 
   //xử lý hàm in tem PDF
   const handlePrintTem = async ({ typePrint, id, typePage }) => {
+    setLoadingOption(typePrint); // Set option nào đang loading
     setIsLoadingPrint(true);
     const fetchPDFhandle = fetchPDFMultiplePageByPrice[typePage];
     if (!fetchPDFhandle) {
       console.warn(`Không tìm thấy hàm fetchPDFhandle cho typePage: ${typePage}`);
       setIsLoadingPrint(false);
+      setLoadingOption(null);
       return;
     }
 
@@ -115,16 +125,54 @@ const Popup_Pdf = props => {
         window.open(response.pdf_url, '_blank');
       }
       setIsLoadingPrint(false);
+      setLoadingOption(null);
     } catch (error) {
       setIsLoadingPrint(false);
+      setLoadingOption(null);
+    }
+  };
+
+  // Xử lý in PDF cho returnSales
+  const handlePrintReturnSales = async (typePrint) => {
+    if (!props.props?.id) return;
+
+    setLoadingOption(typePrint); // Set option nào đang loading
+    setIsLoadingPrint(true);
+    try {
+      const response = await apiReturnSales.apiDetailReturnOrder(props.props.id);
+
+      // Kiểm tra response format - có thể là response.data hoặc response trực tiếp
+      const data = response?.data || response;
+
+      if (data) {
+        await printReturnSalesPDF({
+          data: data,
+          dataLang: props.dataLang,
+          dataSeting: dataSeting,
+          dataMaterialExpiry: dataMaterialExpiry,
+          dataProductExpiry: dataProductExpiry,
+          dataProductSerial: dataProductSerial,
+          isWarehousePropertiesEnabled: isWarehousePropertiesEnabled,
+          warehousePropertyLabels: warehousePropertyLabels,
+          showPrice: typePrint === 'price', // 'price' = có giá, 'notPrice' = không giá
+        });
+      } else {
+        isShow('error', 'Không thể lấy dữ liệu để in phiếu');
+      }
+    } catch (error) {
+      isShow('error', `Lỗi khi in phiếu: ${error.message || 'Không xác định'}`);
+    } finally {
+      setIsLoadingPrint(false);
+      setLoadingOption(null); // Reset loading option
+      setIsOpen(false);
     }
   };
 
   const shareProps = {
-    dataMaterialExpiry: props?.dataMaterialExpiry,
-    dataProductExpiry: props?.dataProductExpiry,
-    dataProductSerial: props?.dataProductSerial,
-    dataSeting: props?.dataSeting,
+    dataMaterialExpiry: props?.dataMaterialExpiry || dataMaterialExpiry,
+    dataProductExpiry: props?.dataProductExpiry || dataProductExpiry,
+    dataProductSerial: props?.dataProductSerial || dataProductSerial,
+    dataSeting: props?.dataSeting || dataSeting,
   };
 
   // Đóng dropdown khi click ra ngoài
@@ -166,6 +214,15 @@ const Popup_Pdf = props => {
                 type={props.props?.type}
                 onCLick={type => handlePrintTem({ typePrint: type, id: props.props?.id, typePage: props.props?.type })}
                 isLoading={isLoadingPrint}
+                loadingOption={loadingOption}
+              />
+            ) : props.props?.type === 'returnSales' ? (
+              <PopupPrintItem
+                dataLang={props.dataLang}
+                type={props.props?.type}
+                onCLick={type => handlePrintReturnSales(type)}
+                isLoading={isLoadingPrint}
+                loadingOption={loadingOption}
               />
             ) : (
               <FilePDF {...shareProps} props={props.props} openAction={props.openAction} setOpenAction={props.setOpenAction} dataLang={props.dataLang} />
@@ -564,10 +621,9 @@ export const BtnAction = React.memo(props => {
       if (props?.status_pay != 'not_spent' || props?.status != 'not_stocked') {
         isShow(
           'error',
-          `${
-            (props?.status_pay != 'not_spent' && 'Đơn hàng mua đã có phiếu Nhập. Không thể sửa') ||
-            // isShow("error", `${(props?.status_pay != "not_spent" && (props.dataLang?.paid_cant_edit || "paid_cant_edit"))
-            (props?.status != 'not_stocked' && 'Đơn hàng mua đã có phiếu Nhập. Không thể sửa')
+          `${(props?.status_pay != 'not_spent' && 'Đơn hàng mua đã có phiếu Nhập. Không thể sửa') ||
+          // isShow("error", `${(props?.status_pay != "not_spent" && (props.dataLang?.paid_cant_edit || "paid_cant_edit"))
+          (props?.status != 'not_stocked' && 'Đơn hàng mua đã có phiếu Nhập. Không thể sửa')
           }`
         );
         return;
@@ -905,9 +961,8 @@ export const BtnAction = React.memo(props => {
             key='keep-stock'
             onClick={() => isShow('error', WARNING_STATUS_ROLE)}
             type='button'
-            className={`${
-              props.type == 'sales_product' ? '' : 'justify-center'
-            } group transition-all ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] hover:bg-slate-50 text-left cursor-pointer`}
+            className={`${props.type == 'sales_product' ? '' : 'justify-center'
+              } group transition-all ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] hover:bg-slate-50 text-left cursor-pointer`}
           >
             <Box1 size={20} className='group-hover:text-orange-500 group-hover:shadow-md' />
             <p className='pr-4 group-hover:text-orange-500'>{props.dataLang?.salesOrder_keep_stock || 'salesOrder_keep_stock'}</p>
@@ -1065,9 +1120,8 @@ export const BtnAction = React.memo(props => {
           </svg>
         </button>
         <div
-          className={`absolute ${
-            isMoreMenuDropUp ? 'bottom-full mb-1' : 'top-full mt-1'
-          } right-0 p-1 min-w-[160px] bg-white rounded-xl border border-gray-200 shadow-[0px_20px_40px_-4px_#919EAB3D,0px_0px_2px_0px_#919EAB3D] z-[999999999] ${showMoreIcons ? 'block' : 'hidden'}`}
+          className={`absolute ${isMoreMenuDropUp ? 'bottom-full mb-1' : 'top-full mt-1'
+            } right-0 p-1 min-w-[160px] bg-white rounded-xl border border-gray-200 shadow-[0px_20px_40px_-4px_#919EAB3D,0px_0px_2px_0px_#919EAB3D] z-[999999999] ${showMoreIcons ? 'block' : 'hidden'}`}
           data-row-id={currentId}
           onClick={event => {
             event.stopPropagation();
