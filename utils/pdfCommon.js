@@ -141,7 +141,6 @@ export const applyCommonStyles = (docDefinition, TEXT, SUBTEXT) => {
 
 export const openPdf = docDefinition => {
   const pdfGenerator = pdfMake.createPdf(docDefinition);
-  // pdfGenerator.open() tự động mở PDF trong tab mới
   pdfGenerator.open();
 };
 
