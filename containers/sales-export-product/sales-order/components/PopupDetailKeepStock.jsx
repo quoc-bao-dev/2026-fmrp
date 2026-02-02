@@ -29,8 +29,9 @@ import ModalImage from "react-modal-image";
 import { v4 as uuid } from "uuid";
 import { useWarehouseProperties } from "@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties";
 import { PrinterIcon } from "@/components/icons";
-import TooltipDefault from "@/components/common/tooltip/TooltipDefault";
 import PopupPrintTemKeepStock from "./PopupPrintTemKeepStock";
+import { Tooltip } from "react-tooltip";
+import "react-tooltip/dist/react-tooltip.css";
 
 const Popup_EditDetail = dynamic(() => import("./PopupEditDetail"), { ssr: false });
 
@@ -372,16 +373,43 @@ const PopupDetailKeepStock = (props) => {
                                                             <h6 className="text-[13px]   px-2 py-2 col-span-1 text-center break-words">
                                                                 {e?.note}
                                                             </h6>
-                                                            <h6 className="text-[13px] flex items-center justify-center gap-4 py-2 col-span-1 font-medium text-center break-words">
+                                                            <h6 className="text-[13px] flex items-center justify-center gap-1 py-2 col-span-1 font-medium text-center break-words">
                                                                 {/* <Popup_EditDetail
                                                                     {...props}
                                                                     id={e.id}
                                                                     sIsFetchingParent={refetchListKeepStock.bind(this)}
                                                                     dataClone={dataClone}
                                                                 /> */}
+
+                                                                <button
+                                                                    type="button"
+                                                                    data-tooltip-id={`print-tem-tooltip-${e.id}`}
+                                                                    data-tooltip-content="In tem"
+                                                                    onClick={() => {
+                                                                        dispatch({
+                                                                            type: "statePopupGlobal",
+                                                                            payload: {
+                                                                                open: true,
+                                                                                children: <PopupPrintTemKeepStock id={e.id} open={true} />,
+                                                                            },
+                                                                        });
+                                                                    }}
+                                                                    className='group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer rounded-lg p-1 border border-transparent hover:border-[#003DA0] hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap'
+                                                                >
+                                                                    <PrinterIcon className='size-5 text-[#003DA0]' />
+                                                                </button>
+                                                                <Tooltip
+                                                                    id={`print-tem-tooltip-${e.id}`}
+                                                                    place="top"
+                                                                    className='z-[999999] !opacity-100'
+                                                                    style={{ borderRadius: "6px" }}
+                                                                />
+
                                                                 <button
                                                                     type="button"
                                                                     title="Xóa"
+                                                                    data-tooltip-id={`delete-tooltip-${e.id}`}
+                                                                    data-tooltip-content="Xóa"
                                                                     onClick={(event) =>
                                                                         handleQueryId({ id: e?.id, status: true })
                                                                     }
@@ -392,27 +420,12 @@ const PopupDetailKeepStock = (props) => {
                                                                         className="transition-all duration-200"
                                                                     />
                                                                 </button>
-                                                                <TooltipDefault
-                                                                    id={`print-tem-${e.id}`}
-                                                                    content="In tem"
-                                                                    place="bottom"
-                                                                >
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            dispatch({
-                                                                                type: "statePopupGlobal",
-                                                                                payload: {
-                                                                                    open: true,
-                                                                                    children: <PopupPrintTemKeepStock id={e.id} open={true} />,
-                                                                                },
-                                                                            });
-                                                                        }}
-                                                                        className='group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer rounded-lg p-1 border border-transparent hover:border-[#003DA0] hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap'
-                                                                    >
-                                                                        <PrinterIcon className='size-5 text-[#003DA0]' />
-                                                                    </button>
-                                                                </TooltipDefault>
+                                                                <Tooltip
+                                                                    id={`delete-tooltip-${e.id}`}
+                                                                    place="top"
+                                                                    className='z-[999999] !opacity-100'
+                                                                    style={{ borderRadius: "6px" }}
+                                                                />
                                                             </h6>
                                                             {e.isShow && (
                                                                 <>
