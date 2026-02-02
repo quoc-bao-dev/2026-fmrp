@@ -107,7 +107,7 @@ const PopupPrintTemInventory = ({ id, onClose }) => {
   const handleSelectItem = (item, checked) => {
     if (checked) {
       // Đảm bảo item được chọn có quantity = 1
-      setSelectItems((prev) => [...prev, { ...item, quantity: 1 }]); 
+      setSelectItems((prev) => [...prev, { ...item, quantity: 1 }]);
     } else {
       setSelectItems((prev) => prev.filter((i) => i.id !== item.id));
     }
@@ -339,6 +339,10 @@ const PopupPrintTemInventory = ({ id, onClose }) => {
                           serial={item?.serial}
                           warehouse_name={item?.warehouse_name || item?.name_location}
                           location_name={item?.location_name}
+                          item_type={item?.type}
+                          value_1={item?.value_1}
+                          value_2={item?.value_2}
+                          value_3={item?.value_3}
                         />
                       </RowItemTable>
 
