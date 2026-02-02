@@ -101,6 +101,53 @@ const apiPrint = {
     const response = await axiosCustom('POST', `/api_web/api_print/setConfig?csrf_protection=true`, formData);
     return response.data;
   },
+
+  /**
+   * Print Transfer Keep Stock Labels API
+   * @description Prints labels for transfer keep stock items
+   * @param {FormData} formData - FormData containing print data
+   * @param {string} formData.id - Transfer keep stock ID
+   * @param {string} formData.data[0][id] - Item ID
+   * @param {string} formData.data[0][code] - Item code
+   * @param {string} formData.data[0][name] - Item name
+   * @param {string} formData.data[0][variant_main] - Product variation
+   * @param {string} formData.data[0][lot] - Lot number
+   * @param {string} formData.data[0][date] - Expiration date
+   * @param {string} formData.data[0][serial] - Serial number
+   * @param {string} formData.data[0][quality] - Quantity to print
+   * @returns {Promise<ApiResponse>} Promise that resolves to API response
+   * @throws {Error} When API call fails
+   * @example
+   * // Create FormData
+   * const formData = new FormData();
+   * formData.append('id', '179');
+   * formData.append('data[0][id]', '222');
+   * formData.append('data[0][code]', 'NVL_000099');
+   * formData.append('data[0][name]', 'Vải cotton');
+   * formData.append('data[0][variant_main]', '(NONE)');
+   * formData.append('data[0][lot]', 'NK_000297');
+   * formData.append('data[0][date]', '2026-02-02');
+   * formData.append('data[0][serial]', '');
+   * formData.append('data[0][quality]', '1');
+   *
+   * // Print labels
+   * const result = await apiPrint.printTransferKeepStock(formData);
+   *
+   * // Handle response
+   * if (result.isSuccess === 1) {
+   *   console.log('Print successful:', result.pdf_url);
+   * } else {
+   *   console.error('Print failed:', result.message);
+   * }
+   */
+  async printTransferKeepStock(formData) {
+    const response = await axiosCustom(
+      'POST',
+      `/api_web/Api_print/Print_tem_transfer_web?csrf_protection=true`,
+      formData
+    );
+    return response.data;
+  },
 };
 
 export default apiPrint;
