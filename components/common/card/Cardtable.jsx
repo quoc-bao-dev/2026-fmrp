@@ -1,4 +1,5 @@
 import { useSetings } from "@/hooks/useAuth";
+import { useWarehouseProperties } from "@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { twMerge } from "tailwind-merge";
@@ -17,13 +18,18 @@ const Cardtable = ({
     serial,
     lot,
     warehouse_name,
-    location_name
+    location_name,
+    item_type,
+    value_1,
+    value_2,
+    value_3
 }) => {
     //xứ lý cho card table print tem 
     const [dataMaterialExpiry, setDataMaterialExpiry] = useState({});
     const [dataProductExpiry, setDataProductExpiry] = useState({});
     const [dataProductSerial, setDataProductSerial] = useState({});
     const { data: dataSetting, isLoading } = useSetings();
+    const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
     useEffect(() => {
         if (!isLoading && dataSetting) {
             setDataMaterialExpiry(dataSetting.dataMaterialExpiry);
@@ -92,6 +98,24 @@ const Cardtable = ({
                                 Serial: {serial ?? " - "}
                             </p>
                         )}
+
+                        {/* Hiển thị thuộc tính kho cho nguyên vật liệu */}
+                        {(item_type === "material") &&
+                            Array.isArray(warehousePropertyLabels) &&
+                            warehousePropertyLabels.length > 0 &&
+                            warehousePropertyLabels.map(({ key, label }) => {
+                                if (!label) return null;
+                                const value = key === 'value_1' ? value_1 : key === 'value_2' ? value_2 : value_3;
+
+                                // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+
+                                return (
+                                    <p key={key} className="responsive-text-xs font-normal text-typo-blue-2">
+                                        {label}: {value == null || value === '' ? ' - ' : value}
+                                    </p>
+                                );
+                            })}
                     </>
                 )}
 
