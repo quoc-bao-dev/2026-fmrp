@@ -937,13 +937,28 @@ export const BtnAction = React.memo(props => {
     ) {
       const totalButtons = calculateTotalButtons();
       allButtons.push(
-        <ButtonPrintItem
+        <div
           key='print'
-          onCLick={() => handlePrintTem({ idTem: props?.id, typePage: props?.type })}
-          dataLang={props?.dataLang}
-          isLoading={loadingButtonPrint}
-          totalButtons={totalButtons}
-        />
+          {...(totalButtons <= 3 && {
+            'data-tooltip-id': `print-pdf-tooltip-${props?.id}`,
+            'data-tooltip-content': props?.dataLang?.btn_table_print || 'In phiếu',
+          })}
+        >
+          <ButtonPrintItem
+            onCLick={() => handlePrintTem({ idTem: props?.id, typePage: props?.type })}
+            dataLang={props?.dataLang}
+            isLoading={loadingButtonPrint}
+            totalButtons={totalButtons}
+          />
+          {totalButtons <= 3 && (
+            <Tooltip
+              id={`print-pdf-tooltip-${props?.id}`}
+              place='top'
+              className='z-[999999] !opacity-100'
+              style={{ borderRadius: '6px' }}
+            />
+          )}
+        </div>
       );
     } else if (props?.type === 'internal_plan') {
       allButtons.push(<ButtonPrintItem key='print-internal-plan' onCLick={handlePrintInternalPlan} dataLang={props?.dataLang} isLoading={loadingButtonPrint} totalButtons={totalButtons} />);
@@ -1001,9 +1016,21 @@ export const BtnAction = React.memo(props => {
             onClick={togglePrintDropdown}
             className='group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer rounded-lg p-1 border border-transparent hover:border-[#003DA0] hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap'
             data-id={currentId} /* Store the ID as a data attribute */
+            {...(totalButtons <= 3 && {
+              'data-tooltip-id': `print-tooltip-${currentId}`,
+              'data-tooltip-content': props?.dataLang?.btn_table_print || 'In',
+            })}
           >
             <PrinterIcon className='size-5 text-[#003DA0]' />
           </button>
+          {totalButtons <= 3 && (
+            <Tooltip
+              id={`print-tooltip-${currentId}`}
+              place='top'
+              className='z-[999999] !opacity-100'
+              style={{ borderRadius: '6px' }}
+            />
+          )}
           {printDropdownOpen && (
             <div className='absolute top-full -right-5 p-1 mt-1 w-fit bg-white rounded-xl z-[999] border border-gray-200 shadow-[0px_20px_40px_-4px_#919EAB3D,0px_0px_2px_0px_#919EAB3D]'>
               <ul className='flex flex-col gap-1' data-row-id={currentId}>

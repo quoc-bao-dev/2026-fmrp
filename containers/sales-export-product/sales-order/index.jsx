@@ -280,9 +280,8 @@ const SalesOrder = (props) => {
         },
         { value: `${e?.staff_name ? e?.staff_name : ''}` },
         {
-          value: `${
-            e?.status ? (e?.status === 'un_approved' && 'Chưa duyệt') || (e?.status === 'approved' && 'Đã duyệt') : ''
-          }`,
+          value: `${e?.status ? (e?.status === 'un_approved' && 'Chưa duyệt') || (e?.status === 'approved' && 'Đã duyệt') : ''
+            }`,
         },
         { value: `${e?.process ? e?.process : ''}` },
         { value: `${e?.note ? e?.note : ''}` },
@@ -335,7 +334,7 @@ const SalesOrder = (props) => {
             isShow('error', `${dataLang[message] || message}` || message)
           }
         },
-        onError: (error) => {},
+        onError: (error) => { },
       }
     )
   }
@@ -481,7 +480,7 @@ const SalesOrder = (props) => {
               </div>
               <div className="col-span-1 xl:col-span-2 lg:col-span-2">
                 <div className="flex items-center justify-end gap-2">
-                  <OnResetData sOnFetching={() => {}} onClick={refetch.bind(this)} />
+                  <OnResetData sOnFetching={() => { }} onClick={refetch.bind(this)} />
                   {role == true || checkExport ? (
                     <div className={``}>
                       {data?.rResult?.length > 0 && (
@@ -609,10 +608,10 @@ const SalesOrder = (props) => {
                                   const isValueDelivery = ['delivery'].includes(item?.code)
                                   const isProducing = ['produced_at_company'].includes(item?.code)
                                   const isLastStep = i === filteredArray.length - 1
-                                  
+
                                   // Kiểm tra xem bước tiếp theo có active không
                                   const nextStepActive = i < filteredArray.length - 1 && filteredArray[i + 1]?.active
-                                  
+
                                   // Xác định trạng thái delivery cho bước cuối
                                   let deliveryStatus = null
                                   if (isValueDelivery) {
@@ -649,15 +648,14 @@ const SalesOrder = (props) => {
                                       />
                                       {/* Text overlay trên SVG */}
                                       <div
-                                        className={`absolute py-0.5 px-2 inset-0 flex flex-col items-center justify-center pointer-events-none ${
-                                          item?.active || (isValueDelivery && deliveryStatus === 'full')
+                                        className={`absolute py-0.5 px-2 inset-0 flex flex-col items-center justify-center pointer-events-none ${item?.active || (isValueDelivery && deliveryStatus === 'full')
                                             ? 'text-white'
                                             : isValueDelivery && deliveryStatus === 'partial'
-                                            ? 'text-white'
-                                            : (isProducing && item?.active) || (item?.active && !isProducing)
-                                            ? 'text-white'
-                                            : 'text-gray-600'
-                                        }`}
+                                              ? 'text-white'
+                                              : (isProducing && item?.active) || (item?.active && !isProducing)
+                                                ? 'text-white'
+                                                : 'text-gray-600'
+                                          }`}
                                       >
                                         {!isValueDelivery && (
                                           <h6 className="responsive-text-xxs font-medium leading-tight text-center whitespace-nowrap">
@@ -666,13 +664,12 @@ const SalesOrder = (props) => {
                                         )}
                                         {isValueDelivery && (
                                           <h6
-                                            className={`responsive-text-xxs font-medium ${
-                                              deliveryStatus === 'full'
+                                            className={`responsive-text-xxs font-medium ${deliveryStatus === 'full'
                                                 ? 'text-white'
                                                 : deliveryStatus === 'partial'
-                                                ? 'text-white'
-                                                : 'text-gray-500'
-                                            }`}
+                                                  ? 'text-white'
+                                                  : 'text-gray-500'
+                                              }`}
                                           >
                                             {dataLang[item?.status] || item?.status || 'Chưa giao'}
                                           </h6>

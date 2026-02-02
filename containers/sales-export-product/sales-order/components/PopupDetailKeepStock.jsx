@@ -24,9 +24,14 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight2, BoxSearch, Trash as IconDelete } from "iconsax-react";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import ModalImage from "react-modal-image";
 import { v4 as uuid } from "uuid";
 import { useWarehouseProperties } from "@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties";
+import { PrinterIcon } from "@/components/icons";
+import PopupPrintTemKeepStock from "./PopupPrintTemKeepStock";
+import { Tooltip } from "react-tooltip";
+import "react-tooltip/dist/react-tooltip.css";
 
 const Popup_EditDetail = dynamic(() => import("./PopupEditDetail"), { ssr: false });
 
@@ -38,6 +43,7 @@ const initialValues = {
 
 const PopupDetailKeepStock = (props) => {
     const { dataLang, id, totalButtons = 0 } = props;
+    const dispatch = useDispatch();
 
     const [data, sData] = useState({});
 
@@ -367,26 +373,59 @@ const PopupDetailKeepStock = (props) => {
                                                             <h6 className="text-[13px]   px-2 py-2 col-span-1 text-center break-words">
                                                                 {e?.note}
                                                             </h6>
-                                                            <h6 className="text-[13px] flex items-center justify-center gap-4 py-2 col-span-1 font-medium text-center break-words">
-                                                                <Popup_EditDetail
+                                                            <h6 className="text-[13px] flex items-center justify-center gap-1 py-2 col-span-1 font-medium text-center break-words">
+                                                                {/* <Popup_EditDetail
                                                                     {...props}
                                                                     id={e.id}
                                                                     sIsFetchingParent={refetchListKeepStock.bind(this)}
                                                                     dataClone={dataClone}
+                                                                /> */}
+
+                                                                <button
+                                                                    type="button"
+                                                                    data-tooltip-id={`print-tem-tooltip-${e.id}`}
+                                                                    data-tooltip-content="In tem"
+                                                                    onClick={() => {
+                                                                        dispatch({
+                                                                            type: "statePopupGlobal",
+                                                                            payload: {
+                                                                                open: true,
+                                                                                children: <PopupPrintTemKeepStock id={e.id} open={true} />,
+                                                                            },
+                                                                        });
+                                                                    }}
+                                                                    className='group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer rounded-lg p-1 border border-transparent hover:border-[#003DA0] hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap'
+                                                                >
+                                                                    <PrinterIcon className='size-5 text-[#003DA0]' />
+                                                                </button>
+                                                                <Tooltip
+                                                                    id={`print-tem-tooltip-${e.id}`}
+                                                                    place="top"
+                                                                    className='z-[999999] !opacity-100'
+                                                                    style={{ borderRadius: "6px" }}
                                                                 />
+
                                                                 <button
                                                                     type="button"
                                                                     title="Xóa"
+                                                                    data-tooltip-id={`delete-tooltip-${e.id}`}
+                                                                    data-tooltip-content="Xóa"
                                                                     onClick={(event) =>
                                                                         handleQueryId({ id: e?.id, status: true })
                                                                     }
-                                                                    className="group transition h-10 rounded-[5.5px] hover:text-red-600 text-red-500 flex flex-col justify-center items-center"
+                                                                    className='group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer rounded-lg p-1 border border-transparent hover:border-red-500 hover:bg-red-50 text-red-500 hover:text-red-600 font-normal whitespace-nowrap'
                                                                 >
                                                                     <IconDelete
-                                                                        size={23}
-                                                                        className="group-hover:text-red-500 group-hover:scale-110 group-hover:shadow-md "
+                                                                        size={20}
+                                                                        className="transition-all duration-200"
                                                                     />
                                                                 </button>
+                                                                <Tooltip
+                                                                    id={`delete-tooltip-${e.id}`}
+                                                                    place="top"
+                                                                    className='z-[999999] !opacity-100'
+                                                                    style={{ borderRadius: "6px" }}
+                                                                />
                                                             </h6>
                                                             {e.isShow && (
                                                                 <>
@@ -522,7 +561,7 @@ const PopupDetailKeepStock = (props) => {
                                                                                             }
                                                                                         </h6>
                                                                                     </h6>
-                                                                                    <h6 className="text-[13px]    py-2 col-span-2 text-center break-words">
+                                                                                    <h6 className="text-[13px] py-2 col-span-2 text-center break-words">
                                                                                         <h6 className="font-medium">
                                                                                             {
                                                                                                 e?.warehouse_location_to?.location_name

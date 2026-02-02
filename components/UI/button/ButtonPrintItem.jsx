@@ -18,8 +18,8 @@ const ButtonPrintItem = ({
       disabled={isDisabled}
       className={twMerge(
         `group rounded-lg w-full p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer
-        ${totalButtons > 3 
-          ? 'hover:bg-primary-05' 
+        ${totalButtons > 3
+          ? 'hover:bg-primary-05'
           : 'hover:border-[#003DA0] hover:bg-primary-05'
         }
         ${isDisabled
