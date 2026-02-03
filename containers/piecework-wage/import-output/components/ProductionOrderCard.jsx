@@ -389,7 +389,7 @@ const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, i
       </div>
       <div className='flex flex-col gap-1 w-full'>
         {items.slice(0, visibleItemsCount).map((item, index) => (
-          <div key={index} className='p-1 flex items-center gap-2 w-full hover:bg-[#E3F0FF] rounded-lg'>
+          <div key={index} className='flex items-center gap-2 w-full'>
             <Image
               src={item?.images || IMAGES.noImage}
               alt={item?.item_name || 'default'}

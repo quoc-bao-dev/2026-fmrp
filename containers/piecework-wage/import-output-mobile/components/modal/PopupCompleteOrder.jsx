@@ -226,11 +226,11 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
           <div className='flex items-start w-full'>
             <div className='flex flex-col gap-0.5 w-full'>
               <h3 className='text-sm font-semibold text-neutral-07'>{product.item_name}</h3>
-              <p className='text-10 font-normal text-neutral-03'>{product.product_variation}</p>
+              <p className='text-xs font-normal text-neutral-03'>{product.product_variation}</p>
               <div className='flex items-center gap-2'>
-                <p className='text-10 font-normal text-typo-blue-2'>{product.item_code}</p>
+                <p className='text-xs font-normal text-typo-blue-2'>{product.item_code}</p>
                 <span className='w-[1px] h-3 bg-[#D0D5DD]'></span>
-                <p className='text-10 font-normal text-typo-blue-2'>{product.reference_no_detail}</p>
+                <p className='text-xs font-normal text-typo-blue-2'>{product.reference_no_detail}</p>
               </div>
             </div>
             <div
@@ -243,7 +243,7 @@ const ProductRow = memo(({ product, index, updateProductQuantity, updateProductE
             </div>
           </div>
           <div
-            className='flex items-center gap-3'
+            className='flex items-center gap-1.5'
             onClick={e => e.stopPropagation()}
             onMouseDown={e => e.stopPropagation()}
             onTouchStart={e => e.stopPropagation()}
@@ -956,10 +956,10 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose, is_prod
       <div className='p-3 flex flex-col gap-3 w-full h-full bg-[#F3F4F6] rounded-t-xl font-deca'>
         <div className='flex gap-2 justify-between'>
           <div className='flex flex-col gap-1'>
-            <h2 className='text-base font-semibold'>
+            <h2 className='text-lg font-semibold'>
               Nhập sản lượng công đoạn <span className='text-blue-fmrp'>{stage_name}</span>
             </h2>
-            <p className='text-sm font-medium text-blue-fmrp'>{po?.reference_no}</p>
+            <p className='text-base font-medium text-blue-fmrp'>{po?.reference_no}</p>
           </div>
           <button
             className='size-6 shrink-0 text-neutral-02 cursor-pointer'
@@ -992,6 +992,7 @@ const PopupCompleteOrder = ({ stage_id, stage_name, po, isOpen, onClose, is_prod
               }),
             }}
             classParent='w-fit'
+            className='text-sm'
             isSearchable={true}
           />
           <div className='relative pl-3 pr-14 w-full h-10 flex items-center justify-between gap-2 rounded-lg bg-white border border-[#D0D5DD] focus-within:border-transparent focus-within:ring-1 focus-within:ring-blue-fmrp'>
