@@ -649,12 +649,12 @@ const SalesOrder = (props) => {
                                       {/* Text overlay trên SVG */}
                                       <div
                                         className={`absolute py-0.5 px-2 inset-0 flex flex-col items-center justify-center pointer-events-none ${item?.active || (isValueDelivery && deliveryStatus === 'full')
+                                          ? 'text-white'
+                                          : isValueDelivery && deliveryStatus === 'partial'
                                             ? 'text-white'
-                                            : isValueDelivery && deliveryStatus === 'partial'
+                                            : (isProducing && item?.active) || (item?.active && !isProducing)
                                               ? 'text-white'
-                                              : (isProducing && item?.active) || (item?.active && !isProducing)
-                                                ? 'text-white'
-                                                : 'text-gray-600'
+                                              : 'text-gray-600'
                                           }`}
                                       >
                                         {!isValueDelivery && (
@@ -665,10 +665,17 @@ const SalesOrder = (props) => {
                                         {isValueDelivery && (
                                           <h6
                                             className={`responsive-text-xxs font-medium ${deliveryStatus === 'full'
+<<<<<<< HEAD
+                                              ? 'text-white'
+                                              : deliveryStatus === 'partial'
                                                 ? 'text-white'
-                                                : deliveryStatus === 'partial'
-                                                  ? 'text-white'
-                                                  : 'text-gray-500'
+                                                : 'text-gray-500'
+=======
+                                              ? 'text-white'
+                                              : deliveryStatus === 'partial'
+                                                ? 'text-white'
+                                                : 'text-gray-500'
+>>>>>>> feature/application
                                               }`}
                                           >
                                             {dataLang[item?.status] || item?.status || 'Chưa giao'}

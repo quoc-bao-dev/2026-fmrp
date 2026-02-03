@@ -1,5 +1,4 @@
 import { DropdownAvatar } from '@/components/layout/header';
-import { routerApplication } from '@/routers/application';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useMemo } from 'react';
@@ -17,6 +16,9 @@ import PopupUpgradePro from '@/components/UI/popup/PopupUpgradePro';
 import PopupSuccessfulPayment from '@/components/UI/popup/PopupSuccessfulPayment';
 import PopupSuccessfulBuyMoreUser from '@/components/UI/popup/PopupSuccessfulBuyMoreUser';
 import ImagesModal from '@/components/UI/images/ImagesModal';
+import { useGetCategory } from '@/managers/api/parcel/useGetCategory';
+import Skeleton from '@/components/common/skeleton/Skeleton';
+import { ApplicationSearchProvider, useApplicationSearch } from '@/context/application/ApplicationSearchContext';
 
 const IMAGE_APPLICATION = '/application/background-image-2.png';
 const IMAGE_LOGO = '/application/logo.png';
@@ -31,6 +33,7 @@ const queryClient = new QueryClient({
 
 function ApplicationLayoutContent({ children, dataLang }) {
     const router = useRouter();
+    const { searchValue, handleSearchChange } = useApplicationSearch();
 
     // Lấy các state popup từ store
     const statePopupPreviewImage = useSelector(state => state?.statePopupPreviewImage);
@@ -44,25 +47,46 @@ function ApplicationLayoutContent({ children, dataLang }) {
     const statePopupSuccessfulBuyMoreUser = useSelector(state => state.statePopupSuccessfulBuyMoreUser);
     const statePopupGlobal = useSelector(state => state.statePopupGlobal);
 
-    const sidebarItems = useMemo(
-        () => [
-            { key: 'all', label: 'Tất cả', href: routerApplication.all },
-            { key: 'manufacture', label: 'Sản xuất' },
-            { key: 'software', label: 'Phần mềm' },
-            { key: 'report', label: 'Báo cáo' },
-            { key: 'hr', label: 'Nhân sự' },
-            { key: 'statistical', label: 'Thống kê' },
-            // { key: 'pieceworkWage', label: 'Lương sản lượng', href: routerApplication.pieceworkWage },
-        ],
-        []
-    );
+    // Lấy dữ liệu categories từ API
+    const { data: categoryData, isLoading: isLoadingCategories } = useGetCategory({
+        enabled: true,
+    });
 
+    // Map dữ liệu từ API thành sidebarItems
+    const sidebarItems = useMemo(() => {
+        if (!categoryData?.success || !categoryData?.data) {
+            return [];
+        }
+
+        return categoryData.data.map((category) => {
+            // Tạo key từ id, nếu id là 0 thì dùng 'all'
+            const key = category.id === 0 || category.id === '0' ? 'all' : `category-${category.id}`;
+
+            return {
+                key,
+                label: category.name,
+                id: category.id,
+            };
+        });
+    }, [categoryData]);
+
+    // Lấy activeKey từ query param tab_id
     const activeKey = useMemo(() => {
-        const path = router.asPath || router.pathname || '';
-        if (path.startsWith(routerApplication.all)) return 'all';
-        if (path.startsWith(routerApplication.pieceworkWage)) return 'pieceworkWage';
-        return 'all';
-    }, [router.asPath, router.pathname]);
+        const tabId = router.query.tab_id;
+
+        if (!tabId) {
+            return 'all';
+        }
+
+        // Tìm sidebar item có id khớp với tab_id
+        const activeItem = sidebarItems.find(item => {
+            const itemId = String(item.id);
+            const queryTabId = String(tabId);
+            return itemId === queryTabId || (itemId === '0' && queryTabId === '0');
+        });
+
+        return activeItem?.key || 'all';
+    }, [router.query.tab_id, sidebarItems]);
 
     const handleClickHome = () => {
         // Kiểm tra xem tab này có được mở từ tab khác không
@@ -133,32 +157,54 @@ function ApplicationLayoutContent({ children, dataLang }) {
                 </h1>
 
                 <div className="pt-8 flex justify-center">
-                    <ApplicationSearchInput />
+                    <ApplicationSearchInput
+                        value={searchValue}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                    />
                 </div>
 
                 <div className="pt-16 2xl:pt-[136px] max-w-[1360px] mx-auto flex gap-8">
                     {/* sidebar */}
                     <div className="w-[256px]">
                         <div className="w-full flex flex-col gap-1">
-                            {sidebarItems.map(item => {
-                                const isActive = item.key === activeKey;
-                                return (
-                                    <button
-                                        key={item.key}
-                                        type="button"
-                                        onClick={() => {
-                                            if (item.href) router.push(item.href);
-                                        }}
-                                        className={[
-                                            'w-full text-left py-3 px-4 rounded-[10px]',
-                                            'font-medium text-base leading-5 tracking-normal',
-                                            isActive ? 'bg-[#EAF2FF] text-[#0375F3]' : 'text-[#667085] hover:bg-[#F2F4F7]',
-                                        ].join(' ')}
+                            {isLoadingCategories ? (
+                                // Skeleton loading
+                                Array.from({ length: 5 }).map((_, index) => (
+                                    <div
+                                        key={`skeleton-sidebar-${index}`}
+                                        className="w-full py-3 px-4 rounded-[10px]"
                                     >
-                                        {item.label}
-                                    </button>
-                                );
-                            })}
+                                        <Skeleton className="h-5 w-full rounded" />
+                                    </div>
+                                ))
+                            ) : (
+                                sidebarItems.map(item => {
+                                    const isActive = item.key === activeKey;
+                                    return (
+                                        <button
+                                            key={item.key}
+                                            type="button"
+                                            onClick={() => {
+                                                // Update query param tab_id với category id
+                                                router.push({
+                                                    pathname: router.pathname,
+                                                    query: {
+                                                        ...router.query,
+                                                        tab_id: item.id,
+                                                    },
+                                                }, undefined, { shallow: true });
+                                            }}
+                                            className={[
+                                                'w-full text-left py-3 px-4 rounded-[10px]',
+                                                'font-medium text-base leading-5 tracking-normal',
+                                                isActive ? 'bg-[#EAF2FF] text-[#0375F3]' : 'text-[#667085] hover:bg-[#F2F4F7]',
+                                            ].join(' ')}
+                                        >
+                                            {item.label}
+                                        </button>
+                                    );
+                                })
+                            )}
                         </div>
                     </div>
 
@@ -188,10 +234,18 @@ export default function ApplicationLayout({ children, dataLang }) {
     return (
         <QueryClientProvider client={queryClient}>
             <Provider store={store}>
-                <ApplicationLayoutContent dataLang={dataLang}>
-                    {children}
-                </ApplicationLayoutContent>
-            </Provider>
-        </QueryClientProvider>
+<<<<<<< HEAD
+    <ApplicationLayoutContent dataLang={dataLang}>
+        {children}
+    </ApplicationLayoutContent>
+=======
+                <ApplicationSearchProvider>
+                    <ApplicationLayoutContent dataLang={dataLang}>
+                        {children}
+                    </ApplicationLayoutContent>
+                </ApplicationSearchProvider>
+>>>>>>> feature/application
+            </Provider >
+        </QueryClientProvider >
     );
 }
