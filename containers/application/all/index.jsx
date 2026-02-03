@@ -1,6 +1,11 @@
+import { useGetParcel } from '@/managers/api/parcel/useGetParcel';
 import Head from 'next/head';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useRouter } from 'next/router';
+import { useMemo, useState } from 'react';
+import { useApplicationSearch } from '@/context/application/ApplicationSearchContext';
+import Skeleton from '@/components/common/skeleton/Skeleton';
+import NoData from '@/components/UI/noData/nodata';
 import PopupInstallCompleted from './components/PopupInstallCompleted';
 import PopupPayment from './components/PopupPayment';
 import PopupPaymentSuccess from './components/PopupPaymentSuccess';
@@ -12,61 +17,114 @@ const IMAGE_INSTALLED = '/application/installed.png';
 
 const BTN_ACTION = {
     install: 'install',
+    install_free: 'install_free',
     installed: 'installed'
 }
 
-const cardsData = [
-    {
-        title: 'Lương sản lượng',
-        description: 'Thống kê lương và giờ làm của công nhân dựa trên sản lượng thực tế, giúp doanh nghiệp tính lương chính xác, minh bạch và nhanh chóng.',
-        imageSrc: '/application/card-1.png',
-        bgColor: '#E4EFFF',
-        btnLabel: 'Bắt đầu quản lý',
-        type: 'primary',
-        btnAction: BTN_ACTION.install,
-        isInstalled: true,
-    },
-    {
-        title: 'Gia công ngoài',
-        description: 'Thống kê lương và giờ làm của công nhân dựa trên sản lượng thực tế, giúp doanh nghiệp tính lương chính xác, minh bạch và nhanh chóng.',
-        imageSrc: '/application/card-2.png',
-        bgColor: '#E4EFFF',
-        btnLabel: 'Trải nghiệm thêm',
-        type: 'primary',
-        disableBtn: true,
-        isComingSoon: true,
-    },
-    {
-        title: 'API phần mềm kế toán Misa',
-        description: 'Thống kê lương và giờ làm của công nhân dựa trên sản lượng thực tế, giúp doanh nghiệp tính lương chính xác, minh bạch và nhanh chóng.',
-        imageSrc: '/application/card-3.png',
-        bgColor: '#E4EFFF',
-        btnLabel: 'Liên hệ báo giá',
-        type: 'outline',
-        btnLink: 'https://zalo.me/fososoft'
-    },
-];
 
 export default function ApplicationAll(props) {
     const { dataLang } = props;
+    const router = useRouter();
+    const { debouncedSearch } = useApplicationSearch();
     const [isOpenPiceworkIntro, setIsOpenPiceworkIntro] = useState(false);
     const [isOpenPayment, setIsOpenPayment] = useState(false);
     const [isOpenPaymentSuccess, setIsOpenPaymentSuccess] = useState(false);
     const [isOpenProcessInstall, setIsOpenProcessInstall] = useState(false);
     const [isOpenInstallCompleted, setIsOpenInstallCompleted] = useState(false);
+    const [selectedCard, setSelectedCard] = useState(null);
 
-    const [cardInstalled, setCardInstalled] = useState('');
+    // Lấy id_category từ query param tab_id, mặc định là 0
+    const idCategory = useMemo(() => {
+        const tabId = router.query.tab_id;
+        return tabId ? Number(tabId) : 0;
+    }, [router.query.tab_id]);
 
-    const cards = cardsData.map((card) => {
-        const isInstalled = cardInstalled === card.title;
-        return {
-            ...card,
-            isInstalled: isInstalled,
-            btnLabel: isInstalled ? 'Mở' : card.btnLabel,
-            btnAction: isInstalled ? BTN_ACTION.installed : card.btnAction,
-
+    const { data: dataParcel, isLoading: isLoadingParcel } = useGetParcel({
+        enabled: true,
+        params: {
+            id_category: idCategory,
+            search: debouncedSearch || undefined
+        },
+        onSuccess: (data) => {
+            console.log({ dataParcel: data });
         }
     });
+
+    // Map dữ liệu từ API về cấu trúc cardsData
+    const cardsData = useMemo(() => {
+        if (!dataParcel?.success || !dataParcel?.data || !Array.isArray(dataParcel.data)) {
+            return [];
+        }
+
+        return dataParcel.data.map((item) => {
+            // status = 1: đã ra mắt, status = 2: sắp ra mắt
+            const isComingSoon = item.status === '2';
+            const isInstalledFromApi = item.is_use === 1;
+
+            // type = free: miễn phí, type = charge: tính phí, type = contact: liên hệ
+            const isFree = item.type === 'free';
+            const isCharge = item.type === 'charge';
+            const isContact = item.type === 'contact';
+
+            // Xác định btnLabel và btnAction dựa trên type và status
+            let btnLabel = 'Bắt đầu quản lý';
+            let btnAction = BTN_ACTION.install;
+            let type = 'primary';
+            let btnLink = null;
+            let disableBtn = false;
+
+            if (isComingSoon) {
+                // Sắp ra mắt
+                btnLabel = 'Trải nghiệm thêm';
+                disableBtn = true;
+            } else if (isContact) {
+                // Liên hệ
+                btnLabel = 'Liên hệ báo giá';
+                type = 'outline';
+                btnLink = 'https://zalo.me/fososoft';
+                btnAction = null;
+            } else if (isCharge) {
+                // Tính phí
+                btnLabel = 'Bắt đầu quản lý';
+                type = 'primary';
+                btnAction = BTN_ACTION.install;
+            } else if (isFree) {
+                // Miễn phí
+                btnLabel = 'Bắt đầu quản lý';
+                btnAction = BTN_ACTION.install;
+                type = 'primary';
+            }
+
+            return {
+                id: item.id,
+                title: item.name,
+                description: item.content,
+                content: item.content, // Lưu content để truyền vào popup
+                introduce: item.introduce, // Nội dung tab Giới thiệu
+                directing: item.directing, // Nội dung tab Hướng dẫn
+                imageSrc: item.image,
+                price: item.price,
+                bgColor: '#E4EFFF',
+                btnLabel,
+                type,
+                btnAction,
+                btnLink,
+                disableBtn,
+                isComingSoon,
+                isInstalled: isInstalledFromApi,
+            };
+        });
+    }, [dataParcel]);
+
+    const cards = useMemo(() => {
+        return cardsData.map((card) => {
+            return {
+                ...card,
+                btnLabel: card.isInstalled ? 'Mở' : card.btnLabel,
+                btnAction: card.isInstalled ? BTN_ACTION.installed : card.btnAction,
+            };
+        });
+    }, [cardsData]);
 
     const handleOpenPayment = () => {
         setIsOpenPiceworkIntro(false);
@@ -86,10 +144,16 @@ export default function ApplicationAll(props) {
     const handleProcessInstallComplete = () => {
         setIsOpenProcessInstall(false);
         setIsOpenInstallCompleted(true);
-        setCardInstalled('Lương sản lượng');
     };
 
-    const handleBtnAction = (action) => {
+    const handleBtnAction = (action, card = null) => {
+        if (card) {
+            setSelectedCard(card);
+        }
+        if (action === BTN_ACTION.install_free) {
+            // open with type free
+            setIsOpenPiceworkIntro(true);
+        }
         if (action === BTN_ACTION.install) {
             setIsOpenPiceworkIntro(true);
         }
@@ -105,85 +169,128 @@ export default function ApplicationAll(props) {
                 <title>{'Tất cả ứng dụng'}</title>
             </Head>
 
-            <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'>
-                {cards.map((card, index) => (
-                    <div
-                        key={index}
-                        className="relative flex h-full flex-col gap-[22px] rounded-[36px] border-white/60 bg-white p-4 shadow-sm cursor-pointer"
-                        style={{ backgroundColor: card.bgColor }}
-                        onClick={() => {
-                            if (card.disableBtn) return;
-
-                            if (card.btnLink) {
-                                if (typeof window !== 'undefined') {
-                                    window.open(card.btnLink, '_blank', 'noopener,noreferrer');
-                                }
-                                return;
-                            }
-
-                            if (card.btnAction) {
-                                handleBtnAction(card.btnAction);
-                            }
-                        }}
-                    >
-                        {card.isComingSoon ? (
-                            <div className="absolute top-0 left-0">
-                                <Image src={IMAGE_COMING_SOON} alt="coming soon" className="w-[110px] h-[31px]" width={200} height={31} />
-                            </div>
-                        ) : null}
-                        {card.isInstalled ? (
-                            <div className="absolute top-0 left-0">
-                                <Image src={IMAGE_INSTALLED} alt="installed" className="w-[110px] h-[31px]" width={200} height={31} />
-                            </div>
-                        ) : null}
-                        <div className="flex flex-col justify-center">
+            {isLoadingParcel ? (
+                // Skeleton loading
+                <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'>
+                    {Array.from({ length: 3 }).map((_, index) => (
+                        <div
+                            key={`skeleton-card-${index}`}
+                            className="relative flex h-full flex-col gap-[22px] rounded-[36px] border-white/60 bg-white p-4 shadow-sm"
+                            style={{ backgroundColor: '#E4EFFF' }}
+                        >
+                            {/* Image skeleton */}
                             <div className="flex justify-center w-full">
-                                <div
-                                    className=" h-[136px] w-[136px] items-center justify-center rounded-full "
-                                    style={{ boxShadow: card.imageShadow }}
-                                >
-                                    <Image
-                                        src={card.imageSrc}
-                                        alt={card.title}
-                                        width={136}
-                                        height={136}
-                                        className="object-contain w-full h-full"
-                                    />
-                                </div>
+                                <Skeleton className="h-[136px] w-[136px] rounded-full" />
                             </div>
 
-                            <div className="flex flex-1 flex-col pt-[22px]">
-                                <h3 className="text-[20px] font-semibold leading-7 tracking-tight text-slate-900 capitalize">
-                                    {card.title}
-                                </h3>
+                            {/* Content skeleton */}
+                            <div className="flex flex-1 flex-col pt-[22px] gap-3">
+                                <Skeleton className="h-7 w-3/4 rounded" />
+                                <Skeleton className="h-4 w-full rounded" />
+                                <Skeleton className="h-4 w-5/6 rounded" />
+                                <Skeleton className="h-4 w-4/6 rounded" />
 
-                                <p className="pt-3 text-sm font-normal leading-5 text-[#141522] text-justify opacity-50">
-                                    {card.description}
-                                </p>
-
+                                {/* Button skeleton */}
                                 <div className="mt-5 flex justify-end">
-                                    <ButtonAction
-                                        type={card.type}
-                                        label={card.btnLabel}
-                                        disable={card.disableBtn}
-                                        btnLink={card.btnLink}
-                                        btnAction={card.btnAction}
-                                        onActionClick={handleBtnAction}
-                                    />
+                                    <Skeleton className="h-10 w-32 rounded-[40px]" />
                                 </div>
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            ) : cards.length === 0 ? (
+                // No data
+                <NoData type="table" className="min-h-[400px]" />
+            ) : (
+                // Cards
+                <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'>
+                    {cards.map((card, index) => (
+                        <div
+                            key={index}
+                            className="relative flex h-full flex-col gap-[22px] rounded-[36px] border-white/60 bg-white p-4 shadow-sm cursor-pointer"
+                            style={{ backgroundColor: card.bgColor }}
+                            onClick={() => {
+                                if (card.disableBtn) return;
+
+                                if (card.btnLink) {
+                                    if (typeof window !== 'undefined') {
+                                        window.open(card.btnLink, '_blank', 'noopener,noreferrer');
+                                    }
+                                    return;
+                                }
+                                if (card.btnAction) {
+                                    handleBtnAction(card.btnAction, card);
+                                }
+                            }}
+                        >
+                            {card.isComingSoon ? (
+                                <div className="absolute top-0 left-0">
+                                    <Image src={IMAGE_COMING_SOON} alt="coming soon" className="w-[110px] h-[31px]" width={200} height={31} />
+                                </div>
+                            ) : null}
+                            {card.isInstalled ? (
+                                <div className="absolute top-0 left-0">
+                                    <Image src={IMAGE_INSTALLED} alt="installed" className="w-[110px] h-[31px]" width={200} height={31} />
+                                </div>
+                            ) : null}
+                            <div className="flex flex-col justify-center">
+                                <div className="flex justify-center w-full">
+                                    <div
+                                        className=" h-[136px] w-[136px] items-center justify-center rounded-full "
+                                        style={{ boxShadow: card.imageShadow }}
+                                    >
+                                        <Image
+                                            src={card.imageSrc}
+                                            alt={card.title}
+                                            width={136}
+                                            height={136}
+                                            className="object-contain w-full h-full"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-1 flex-col pt-[22px]">
+                                    <h3 className="text-[20px] font-semibold leading-7 tracking-tight text-slate-900 capitalize">
+                                        {card.title}
+                                    </h3>
+
+                                    <p className="pt-3 text-sm font-normal leading-5 text-[#141522] text-justify opacity-50">
+                                        {card.description}
+                                    </p>
+
+                                    <div className="mt-5 flex justify-end">
+                                        <ButtonAction
+                                            type={card.type}
+                                            label={card.btnLabel}
+                                            disable={card.disableBtn}
+                                            btnLink={card.btnLink}
+                                            btnAction={card.btnAction}
+                                            onActionClick={(action) => handleBtnAction(action, card)}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             {/* ===== Popup ===== */}
             {/* Popup Picework Intro */}
             <PiceworkIntroPopup
                 isOpen={isOpenPiceworkIntro}
-                onClose={() => setIsOpenPiceworkIntro(false)}
+                onClose={() => {
+                    setIsOpenPiceworkIntro(false);
+                    setSelectedCard(null);
+                }}
                 onOpenPayment={handleOpenPayment}
                 closeOnBackdropClick={false}
+                title={selectedCard?.title}
+                content={selectedCard?.content}
+                introduce={selectedCard?.introduce}
+                directing={selectedCard?.directing}
+                image={selectedCard?.imageSrc}
+                price={selectedCard?.price}
             />
 
             {/* Popup payment */}
