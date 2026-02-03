@@ -234,17 +234,11 @@ export default function ApplicationLayout({ children, dataLang }) {
     return (
         <QueryClientProvider client={queryClient}>
             <Provider store={store}>
-<<<<<<< HEAD
-    <ApplicationLayoutContent dataLang={dataLang}>
-        {children}
-    </ApplicationLayoutContent>
-=======
                 <ApplicationSearchProvider>
                     <ApplicationLayoutContent dataLang={dataLang}>
                         {children}
                     </ApplicationLayoutContent>
                 </ApplicationSearchProvider>
->>>>>>> feature/application
             </Provider >
         </QueryClientProvider >
     );
