@@ -11,6 +11,8 @@ import PopupPayment from './components/PopupPayment';
 import PopupPaymentSuccess from './components/PopupPaymentSuccess';
 import PiceworkIntroPopup from './components/PopupPiceworkIntro';
 import PopupProcessInstall from './components/PopupProcessInstall';
+import { useInstallParcel } from '@/managers/api/parcel/useInstallParcel';
+import { axiosCustom } from '@/services/axios';
 
 const IMAGE_COMING_SOON = '/application/comming-soon.png';
 const IMAGE_INSTALLED = '/application/installed.png';
@@ -32,6 +34,37 @@ export default function ApplicationAll(props) {
     const [isOpenProcessInstall, setIsOpenProcessInstall] = useState(false);
     const [isOpenInstallCompleted, setIsOpenInstallCompleted] = useState(false);
     const [selectedCard, setSelectedCard] = useState(null);
+    const [paymentData, setPaymentData] = useState(null);
+
+    const { installParcel, isLoading: isLoadingInstallParcel } = useInstallParcel({
+        onSuccess: async (res) => {
+            // API install_parcel trả về { success, need_payment, qr, url_install, message }
+            if (!res?.success) return;
+
+            // Trường hợp cần thanh toán qua QR/bank
+            if (res.need_payment && res.qr) {
+                setPaymentData(res);
+                setIsOpenPiceworkIntro(false);
+                setIsOpenPayment(true);
+                return;
+            }
+
+            // Trường hợp không cần thanh toán nhưng có url_install: gọi GET để hoàn tất cài đặt
+            if (!res.need_payment && res.url_install) {
+                try {
+                    await axiosCustom('GET', res.url_install, {});
+                } catch (error) {
+                    // Có thể log nếu cần, nhưng vẫn cho chạy tiếp flow cài đặt
+                    console.error('Error calling url_install:', error);
+                }
+            }
+
+            // Sau khi xử lý xong (có hoặc không url_install), chuyển sang bước cài đặt
+            setIsOpenPiceworkIntro(false);
+            setIsOpenProcessInstall(true);
+        },
+    });
+
 
     // Lấy id_category từ query param tab_id, mặc định là 0
     const idCategory = useMemo(() => {
@@ -45,9 +78,6 @@ export default function ApplicationAll(props) {
             id_category: idCategory,
             search: debouncedSearch || undefined
         },
-        onSuccess: (data) => {
-            console.log({ dataParcel: data });
-        }
     });
 
     // Map dữ liệu từ API về cấu trúc cardsData
@@ -69,7 +99,7 @@ export default function ApplicationAll(props) {
             // Xác định btnLabel và btnAction dựa trên type và status
             let btnLabel = 'Bắt đầu quản lý';
             let btnAction = BTN_ACTION.install;
-            let type = 'primary';
+            let btnType = 'primary';
             let btnLink = null;
             let disableBtn = false;
 
@@ -80,19 +110,19 @@ export default function ApplicationAll(props) {
             } else if (isContact) {
                 // Liên hệ
                 btnLabel = 'Liên hệ báo giá';
-                type = 'outline';
+                btnType = 'outline';
                 btnLink = 'https://zalo.me/fososoft';
                 btnAction = null;
             } else if (isCharge) {
                 // Tính phí
                 btnLabel = 'Bắt đầu quản lý';
-                type = 'primary';
+                btnType = 'primary';
                 btnAction = BTN_ACTION.install;
             } else if (isFree) {
                 // Miễn phí
                 btnLabel = 'Bắt đầu quản lý';
-                btnAction = BTN_ACTION.install;
-                type = 'primary';
+                btnAction = BTN_ACTION.install_free;
+                btnType = 'primary';
             }
 
             return {
@@ -106,12 +136,13 @@ export default function ApplicationAll(props) {
                 price: item.price,
                 bgColor: '#E4EFFF',
                 btnLabel,
-                type,
+                btnType,
                 btnAction,
                 btnLink,
                 disableBtn,
                 isComingSoon,
                 isInstalled: isInstalledFromApi,
+                type: item.type,
             };
         });
     }, [dataParcel]);
@@ -126,9 +157,10 @@ export default function ApplicationAll(props) {
         });
     }, [cardsData]);
 
-    const handleOpenPayment = () => {
-        setIsOpenPiceworkIntro(false);
-        setIsOpenPayment(true);
+    const handleOpenPayment = (type = 'free') => {
+        if (!selectedCard) return;
+
+        installParcel(selectedCard.id);
     };
 
     const handlePaymentSuccess = () => {
@@ -151,7 +183,6 @@ export default function ApplicationAll(props) {
             setSelectedCard(card);
         }
         if (action === BTN_ACTION.install_free) {
-            // open with type free
             setIsOpenPiceworkIntro(true);
         }
         if (action === BTN_ACTION.install) {
@@ -203,11 +234,11 @@ export default function ApplicationAll(props) {
                 <NoData type="table" className="min-h-[400px]" />
             ) : (
                 // Cards
-                <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'>
+                <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 h-full'>
                     {cards.map((card, index) => (
                         <div
                             key={index}
-                            className="relative flex h-full flex-col gap-[22px] rounded-[36px] border-white/60 bg-white p-4 shadow-sm cursor-pointer"
+                            className="relative flex min-h-0 h-full flex-col gap-[22px] rounded-[36px] border-white/60  p-4 shadow-sm cursor-pointer"
                             style={{ backgroundColor: card.bgColor }}
                             onClick={() => {
                                 if (card.disableBtn) return;
@@ -233,7 +264,7 @@ export default function ApplicationAll(props) {
                                     <Image src={IMAGE_INSTALLED} alt="installed" className="w-[110px] h-[31px]" width={200} height={31} />
                                 </div>
                             ) : null}
-                            <div className="flex flex-col justify-center">
+                            <div className="flex-1 flex flex-col justify-center">
                                 <div className="flex justify-center w-full">
                                     <div
                                         className=" h-[136px] w-[136px] items-center justify-center rounded-full "
@@ -249,7 +280,7 @@ export default function ApplicationAll(props) {
                                     </div>
                                 </div>
 
-                                <div className="flex flex-1 flex-col pt-[22px]">
+                                <div className="min-h-0 flex flex-1 flex-col pt-[22px]">
                                     <h3 className="text-[20px] font-semibold leading-7 tracking-tight text-slate-900 capitalize">
                                         {card.title}
                                     </h3>
@@ -258,9 +289,9 @@ export default function ApplicationAll(props) {
                                         {card.description}
                                     </p>
 
-                                    <div className="mt-5 flex justify-end">
+                                    <div className="mt-auto pt-5 flex justify-end">
                                         <ButtonAction
-                                            type={card.type}
+                                            type={card.btnType}
                                             label={card.btnLabel}
                                             disable={card.disableBtn}
                                             btnLink={card.btnLink}
@@ -291,6 +322,7 @@ export default function ApplicationAll(props) {
                 directing={selectedCard?.directing}
                 image={selectedCard?.imageSrc}
                 price={selectedCard?.price}
+                type={selectedCard?.type}
             />
 
             {/* Popup payment */}
@@ -299,6 +331,7 @@ export default function ApplicationAll(props) {
                 onClose={() => setIsOpenPayment(false)}
                 onPaymentSuccess={handlePaymentSuccess}
                 closeOnBackdropClick={false}
+                paymentData={paymentData}
             />
 
             {/* Popup successful payment */}

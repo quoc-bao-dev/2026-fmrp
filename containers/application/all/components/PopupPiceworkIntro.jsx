@@ -2,10 +2,47 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import Popup from './Popup';
 import Image from 'next/image';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
+import formatMoney from '@/utils/helpers/formatMoney';
 
 const IMAGE_CARD = '/application/card-1.png';
 const IMAGE_PICEWORK_INTRO = '/application/picework-intro.png';
 
+const formatHtml = (rawHtml) => {
+    if (!rawHtml || typeof rawHtml !== 'string') return '';
+
+    // Normalize newlines to reduce odd spacing
+    let html = rawHtml.replace(/\r\n/g, '\n');
+
+    // Inject classes into <ul> and <li> to control bullet style consistently
+    html = html.replace(/<ul(\s[^>]*)?>/gi, (match, attrs = '') => {
+        const hasClass = /class\s*=/.test(attrs);
+        if (hasClass) {
+            return `<ul${attrs.replace(/class=(["'])(.*?)\1/i, (m, q, cls) => ` class=${q}${cls} app-intro-list${q}`)}>`;
+        }
+        return `<ul${attrs || ''} class="app-intro-list">`;
+    });
+
+    html = html.replace(/<li(\s[^>]*)?>/gi, (match, attrs = '') => {
+        const hasClass = /class\s*=/.test(attrs);
+        if (hasClass) {
+            return `<li${attrs.replace(/class=(["'])(.*?)\1/i, (m, q, cls) => ` class=${q}${cls} app-intro-li${q}`)}>`;
+        }
+        return `<li${attrs || ''} class="app-intro-li">`;
+    });
+
+    // Inject tailwind-like classes into <img> to make it responsive with max width 600px
+    // Note: classes are used for styling consistency; width/height attributes from API can remain.
+    html = html.replace(/<img(\s[^>]*)?>/gi, (match, attrs = '') => {
+        const imgClass = 'app-intro-img max-h-[300px] 2xl:max-h-[400px] w-fit h-auto object-contain rounded-lg';
+        const hasClass = /class\s*=/.test(attrs);
+        if (hasClass) {
+            return `<img${attrs.replace(/class=(["'])(.*?)\1/i, (m, q, cls) => ` class=${q}${cls} ${imgClass}${q}`)}>`;
+        }
+        return `<img${attrs || ''} class="${imgClass}">`;
+    });
+
+    return html;
+};
 
 export default function PiceworkIntroPopup({
     isOpen,
@@ -17,6 +54,7 @@ export default function PiceworkIntroPopup({
     introduce,
     directing,
     image,
+    type = 'free',
     price = '300.000 đ'
 }) {
     const [activeTab, setActiveTab] = useState('intro'); // 'intro' | 'guide'
@@ -45,6 +83,29 @@ export default function PiceworkIntroPopup({
             panelClassName="!bg-[#F7F9FC] !w-[min(900px,calc(100vw-32px))] px-9 py-4 2xl:py-9 rounded-3xl gap-6"
             closeOnBackdropClick={closeOnBackdropClick}
         >
+            <style jsx global>{`
+                .app-intro-list {
+                    margin-top: 8px;
+                    padding-left: 0;
+                }
+                .app-intro-li {
+                    position: relative;
+                    padding-left: 14px;
+                    margin: 6px 0;
+                    list-style: none;
+                }
+                .app-intro-li::before {
+                    content: '';
+                    position: absolute;
+                    left: 0;
+                    top: 0.7em;
+                    width: 4px;
+                    height: 4px;
+                    border-radius: 9999px;
+                    background: #0375f3;
+                    transform: translateY(-50%);
+                }
+            `}</style>
             {/* ==== container ===== */}
             <div className="flex flex-col gap-6">
                 {/* ==== header ===== */}
@@ -76,13 +137,14 @@ export default function PiceworkIntroPopup({
 
                             {price && (
                                 <p className="font-deca font-medium text-[16px] leading-6 tracking-[0] text-[#0375F3] w-fit">
-                                    {`${price} đ`}
+                                    {type === 'free'
+                                        ? 'Miễn phí'
+                                        : `${formatMoney(+price, null)} đ`}
                                 </p>
                             )}
-
                             <button
                                 type="button"
-                                onClick={onOpenPayment}
+                                onClick={() => onOpenPayment(type)}
                                 className="w-fit inline-flex items-center justify-center gap-1 rounded-[40px] border border-white/0 bg-[#0375F3] px-4 py-2 text-[14px] font-deca font-semibold text-white transition-all duration-200 hover:bg-[#0A7FFF] hover:shadow-[0_8px_20px_rgba(3,117,243,0.25)]"
                             >
                                 Cài đặt ngay
@@ -141,13 +203,13 @@ export default function PiceworkIntroPopup({
                             <div
                                 ref={introMeasureRef}
                                 className="font-deca font-normal text-[14px] leading-5 tracking-[0] text-[#141522]"
-                                dangerouslySetInnerHTML={{ __html: introduce || content }}
+                                dangerouslySetInnerHTML={{ __html: formatHtml(introduce || content) }}
                             />
                         ) : (
                             <div
                                 ref={guideMeasureRef}
                                 className="font-deca font-normal text-[14px] leading-5 tracking-[0] text-[#141522]"
-                                dangerouslySetInnerHTML={{ __html: directing || 'Hướng dẫn' }}
+                                dangerouslySetInnerHTML={{ __html: formatHtml(directing || 'Hướng dẫn') }}
                             />
                         )}
                     </Customscrollbar>

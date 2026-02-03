@@ -231,7 +231,7 @@ function ApplicationLayoutContent({ children, dataLang }) {
     );
 }
 
-export default function ApplicationLayout({ children }) {
+export default function ApplicationLayout({ children, dataLang }) {
     return (
         <QueryClientProvider client={queryClient}>
             <Provider store={store}>

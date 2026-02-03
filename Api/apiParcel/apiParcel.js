@@ -40,6 +40,39 @@ import { _ServerInstance as axiosCustom } from "@/services/axios";
  * @property {number} [status] - HTTP status code
  */
 
+/**
+ * @typedef {Object} InstallParcelQRBank
+ * @property {string} account_bank - Bank short code (e.g. "MBB")
+ * @property {string} account_number - Bank account number
+ * @property {string} account_name - Bank account display name
+ * @property {number} amount - Payment amount
+ * @property {string} note - Transfer note / reference (e.g. "UPL-1770107090")
+ * @property {string} account_name_long - Full bank name with branch
+ * @property {string} logo_bank - Bank logo URL
+ */
+
+/**
+ * @typedef {Object} InstallParcelQRInfo
+ * @property {boolean} status - QR generation status
+ * @property {string} msg - QR generation message
+ * @property {string} data - QR URL (payment gateway link)
+ */
+
+/**
+ * @typedef {Object} InstallParcelQRData
+ * @property {InstallParcelQRInfo} qr - QR information
+ * @property {InstallParcelQRBank} bank - Bank information for manual transfer
+ */
+
+/**
+ * @typedef {Object} InstallParcelResponse
+ * @property {boolean} success - Indicates if the request was successful
+ * @property {boolean} [need_payment] - Whether user needs to make a payment
+ * @property {InstallParcelQRData} [qr] - QR and bank information for payment
+ * @property {string} [url_install] - URL to trigger actual installation when payment is not required
+ * @property {string} [message] - Response message (e.g. "Để sử dụng gói bạn cần thanh toán")
+ */
+
 const apiParcel = {
     /**
      * Get Parcel API
@@ -106,6 +139,38 @@ const apiParcel = {
         }
 
         const response = await axiosCustom('GET', url, {});
+        return response.data;
+    },
+
+    /**
+     * Install Parcel API
+     * @description Marks a parcel as installed by its ID
+     * @param {string|number} id - Parcel ID to install
+     * @returns {Promise<InstallParcelResponse>} Promise that resolves to API response
+     * @throws {Error} When API call fails
+     * @example
+     * // Install parcel with ID 1
+     * const result = await apiParcel.apiInstallParcel(1);
+     *
+ * if (result.success) {
+ *   if (result.need_payment && result.qr) {
+ *     // Show QR & bank info
+ *     console.log('Payment required, QR info:', result.qr);
+ *   } else if (!result.need_payment && result.url_install) {
+ *     // Call install URL (GET) when payment is not required
+ *     await fetch(result.url_install);
+ *   }
+ * } else {
+ *   console.error('Failed to install parcel:', result.message);
+ * }
+     */
+    async apiInstallParcel(id) {
+        if (id === undefined || id === null || id === '') {
+            throw new Error('Parcel ID is required for install_parcel API');
+        }
+
+        const url = `/api_web/api_parcel/install_parcel/${id}?csrf_protection=true`;
+        const response = await axiosCustom('POST', url, {});
         return response.data;
     },
 };
