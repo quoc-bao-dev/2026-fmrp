@@ -665,17 +665,10 @@ const SalesOrder = (props) => {
                                         {isValueDelivery && (
                                           <h6
                                             className={`responsive-text-xxs font-medium ${deliveryStatus === 'full'
-<<<<<<< HEAD
                                               ? 'text-white'
                                               : deliveryStatus === 'partial'
                                                 ? 'text-white'
                                                 : 'text-gray-500'
-=======
-                                              ? 'text-white'
-                                              : deliveryStatus === 'partial'
-                                                ? 'text-white'
-                                                : 'text-gray-500'
->>>>>>> feature/application
                                               }`}
                                           >
                                             {dataLang[item?.status] || item?.status || 'Chưa giao'}
