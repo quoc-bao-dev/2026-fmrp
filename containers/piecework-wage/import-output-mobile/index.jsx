@@ -512,11 +512,11 @@ const ImportOutputMobile = () => {
                       : 'hover:ring-1 hover:ring-[#D0D5DD]'
                       }`}
                   >
-                    <p className={`responsive-text-sm font-medium whitespace-nowrap ${isSelected ? 'text-blue-fmrp' : 'text-[#3A3E4C]'
+                    <p className={`responsive-text-base font-medium whitespace-nowrap ${isSelected ? 'text-blue-fmrp' : 'text-[#3A3E4C]'
                       }`}>
                       {stageInfo.name}
                     </p>
-                    <span className={`responsive-text-sm font-medium text-white size-5 flex items-center justify-center rounded-full flex-shrink-0 ${isSelected ? 'bg-blue-fmrp' : 'bg-[#637381]'
+                    <span className={`responsive-text-base font-medium text-white size-5 flex items-center justify-center rounded-full flex-shrink-0 ${isSelected ? 'bg-blue-fmrp' : 'bg-[#637381]'
                       }`}>
                       {stageInfo.count}
                     </span>
@@ -553,14 +553,14 @@ const ImportOutputMobile = () => {
                     ))}
                     {isLoadingMore && (
                       <div className='flex items-center justify-center py-4'>
-                        <p className='responsive-text-sm font-normal text-[#667085]'>Đang tải thêm...</p>
+                        <p className='responsive-text-base font-normal text-[#667085]'>Đang tải thêm...</p>
                       </div>
                     )}
                   </>
                 ) : (
                   <div className='flex flex-col items-center justify-center gap-2 py-6 text-center text-[#637381]'>
                     <Image src={IMAGES.nodataStage || IMAGES.nodata} alt='nodata' width={80} height={80} className='object-contain' />
-                    <p className='responsive-text-sm font-normal'>Chưa có lệnh sản xuất ở công đoạn này.</p>
+                    <p className='responsive-text-base font-normal'>Chưa có lệnh sản xuất ở công đoạn này.</p>
                   </div>
                 )}
               </div>
@@ -568,7 +568,7 @@ const ImportOutputMobile = () => {
           ) : (
             <div className='flex flex-col gap-4 h-full w-full items-center justify-center'>
               <Image src={IMAGES.nodataStage || IMAGES.nodata} alt='nodata' width={165} height={165} className='object-contain' />
-              <p className='responsive-text-sm font-normal text-[#637381]'>Chưa có công đoạn, vui lòng thiết kế ngay.</p>
+              <p className='responsive-text-base font-normal text-[#637381]'>Chưa có công đoạn, vui lòng thiết kế ngay.</p>
               <Link href='/settings/category?tab=stages&page=1' className='px-3 py-2 rounded-lg responsive-text-lg font-medium text-white bg-blue-fmrp'>
                 Thiết kế công đoạn
               </Link>

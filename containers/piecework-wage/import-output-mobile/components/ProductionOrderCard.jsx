@@ -4,7 +4,6 @@ import { IMAGES } from '@/constants/images';
 import useToast from '@/hooks/useToast';
 import { usePauseTimer, useResumeTimer, useStartTimer } from '@/managers/api/piecework-wage/useImportOutput';
 import formatNumber from '@/utils/helpers/formatnumber';
-import { Tooltip } from 'antd';
 import moment from 'moment';
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -61,6 +60,7 @@ const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, i
   const [showCompletePopup, setShowCompletePopup] = useState(false);
   const [endTimerFlag, setEndTimerFlag] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isOrdersExpanded, setIsOrdersExpanded] = useState(false);
   const [timesheetId, setTimesheetId] = useState(activeTimer?.id || null);
   const intervalRef = useRef(null);
 
@@ -262,20 +262,11 @@ const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, i
   const objects = po?.objects || [];
   const objectRefs = objects.map(obj => obj?.reference_no).filter(Boolean);
   const totalOrders = objectRefs.length;
-  const displayedOrders = objectRefs.slice(0, 2);
+  const displayedOrders = isOrdersExpanded || totalOrders <= 2 ? objectRefs : objectRefs.slice(0, 2);
   const remainingOrders = totalOrders > 2 ? objectRefs.slice(2) : [];
   const hasMoreOrders = remainingOrders.length > 0;
 
-  const displayText = totalOrders > 0 ? `Đơn hàng ${displayedOrders.join(', ')}${hasMoreOrders ? ', ...' : ''}` : 'Đơn hàng';
-
-  const allOrdersText = totalOrders > 0 ? objectRefs.join(', ') : '';
-
-  const orderTextContent = (
-    <div className='flex items-center gap-1 flex-wrap'>
-      <span className='responsive-text-xs font-normal text-[#667085]'>{displayText}</span>
-      {hasMoreOrders && <span className='responsive-text-xs font-normal text-blue-fmrp cursor-pointer hover:underline'>xem thêm</span>}
-    </div>
-  );
+  const displayText = totalOrders > 0 ? `Đơn hàng ${displayedOrders.join(', ')}` : 'Đơn hàng';
 
   return (
     <div
@@ -308,20 +299,28 @@ const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, i
       )}
       <div className='w-full flex items-center justify-between gap-2'>
         <div className='py-0.5 px-2 border-l-2' style={{ borderColor }}>
-          <h4 className='responsive-text-lg font-semibold mb-1' style={{ color: borderColor }}>
+          <h4 className='responsive-text-xl font-semibold mb-1' style={{ color: borderColor }}>
             {po?.reference_no || '---'}
           </h4>
-          {hasMoreOrders ? (
-            <Tooltip title={allOrdersText} placement='top' classNames={{ root: 'order-tooltip' }}>
-              {orderTextContent}
-            </Tooltip>
-          ) : (
-            <p className='responsive-text-xs font-normal text-[#667085]'>{displayText}</p>
-          )}
+          <div className='flex items-center gap-1 flex-wrap'>
+            <p className='responsive-text-sm font-normal text-[#667085]'>{displayText}</p>
+            {hasMoreOrders && (
+              <button
+                type='button'
+                className='responsive-text-sm font-normal text-blue-fmrp cursor-pointer hover:underline'
+                onClick={e => {
+                  e.stopPropagation();
+                  setIsOrdersExpanded(prev => !prev);
+                }}
+              >
+                {isOrdersExpanded ? 'Thu gọn' : 'xem thêm'}
+              </button>
+            )}
+          </div>
         </div>
         <div className='flex items-center gap-1.5'>
           <CalendarIcon className='size-3.5 text-[#667085]' />
-          <p className='responsive-text-xxs font-normal text-[#667085]'>{moment(po?.date).format('DD/MM/YYYY')}</p>
+          <p className='responsive-text-sm font-normal text-[#667085]'>{moment(po?.date).format('DD/MM/YYYY')}</p>
         </div>
       </div>
       <div className='w-full'>
@@ -366,8 +365,8 @@ const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, i
       <div className='px-1 flex items-center gap-3 w-1/2'>
         <div className='flex items-center gap-1 flex-shrink-0'>
           <ProgressIcon className='size-4 text-[#99A1AF]' />
-          <p className='responsive-text-xs font-normal text-[#667085]'>Tiến trình</p>
-          <p className='responsive-text-xs font-medium text-blue-fmrp ml-1'>4/5</p>
+          <p className='responsive-text-sm font-normal text-[#667085]'>Tiến trình</p>
+          <p className='responsive-text-sm font-medium text-blue-fmrp ml-1'>4/5</p>
         </div>
         <div className='relative bg-[#EEEFF0] rounded-full h-1.5 w-full overflow-hidden'>
           <div className='absolute left-0 top-0 bg-blue-fmrp rounded-full h-full w-3/4' />
@@ -375,7 +374,7 @@ const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, i
       </div>
       <div className='flex flex-col gap-1 w-full'>
         {items.slice(0, visibleItemsCount).map((item, index) => (
-          <div key={index} className='p-1 flex items-center gap-2 w-full hover:bg-[#E3F0FF] rounded-lg'>
+          <div key={index} className='py-1 flex items-center gap-2 w-full'>
             <Image
               src={item?.images || IMAGES.noImage}
               alt={item?.item_name || 'default'}
@@ -385,13 +384,13 @@ const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, i
             />
             <div className='flex flex-col flex-1'>
               <div className='flex items-center gap-2'>
-                <span className='responsive-text-xxs font-normal text-blue-fmrp'>{item?.item_code || '--'}</span>
-                <span className='responsive-text-xxs font-normal text-[#D0D5DD]'>|</span>
-                <span className='responsive-text-xxs font-normal text-blue-fmrp'>{item?.reference_no_detail || '--'}</span>
+                <span className='responsive-text-sm font-normal text-blue-fmrp'>{item?.item_code || '--'}</span>
+                <span className='responsive-text-sm font-normal text-[#D0D5DD]'>|</span>
+                <span className='responsive-text-sm font-normal text-blue-fmrp'>{item?.reference_no_detail || '--'}</span>
               </div>
               <div className='flex flex-col gap-0.5'>
-                <h4 className='responsive-text-sm font-semibold text-[#141522]'>{item?.item_name || '---'}</h4>
-                <p className='responsive-text-xxs font-normal text-[#667085]'>
+                <h4 className='responsive-text-base font-semibold text-[#141522]'>{item?.item_name || '---'}</h4>
+                <p className='responsive-text-sm font-normal text-[#667085]'>
                   SL: {formatNumber(+(item?.quantity_rest ?? 0))} {item?.unit_name || ''}
                 </p>
               </div>
