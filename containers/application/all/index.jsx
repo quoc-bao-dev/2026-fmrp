@@ -1,18 +1,19 @@
+import Skeleton from '@/components/common/skeleton/Skeleton';
+import NoData from '@/components/UI/noData/nodata';
+import { useApplicationSearch } from '@/context/application/ApplicationSearchContext';
 import { useGetParcel } from '@/managers/api/parcel/useGetParcel';
+import { useInstallParcel } from '@/managers/api/parcel/useInstallParcel';
+import { axiosCustom } from '@/services/axios';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useMemo, useState } from 'react';
-import { useApplicationSearch } from '@/context/application/ApplicationSearchContext';
-import Skeleton from '@/components/common/skeleton/Skeleton';
-import NoData from '@/components/UI/noData/nodata';
 import PopupInstallCompleted from './components/PopupInstallCompleted';
 import PopupPayment from './components/PopupPayment';
 import PopupPaymentSuccess from './components/PopupPaymentSuccess';
 import PiceworkIntroPopup from './components/PopupPiceworkIntro';
 import PopupProcessInstall from './components/PopupProcessInstall';
-import { useInstallParcel } from '@/managers/api/parcel/useInstallParcel';
-import { axiosCustom } from '@/services/axios';
+import { useQueryClient } from '@tanstack/react-query';
 
 const IMAGE_COMING_SOON = '/application/comming-soon.png';
 const IMAGE_INSTALLED = '/application/installed.png';
@@ -35,6 +36,9 @@ export default function ApplicationAll(props) {
     const [isOpenInstallCompleted, setIsOpenInstallCompleted] = useState(false);
     const [selectedCard, setSelectedCard] = useState(null);
     const [paymentData, setPaymentData] = useState(null);
+
+
+    const queryClient = useQueryClient();
 
     const { installParcel, isLoading: isLoadingInstallParcel } = useInstallParcel({
         onSuccess: async (res) => {
@@ -72,7 +76,7 @@ export default function ApplicationAll(props) {
         return tabId ? Number(tabId) : 0;
     }, [router.query.tab_id]);
 
-    const { data: dataParcel, isLoading: isLoadingParcel } = useGetParcel({
+    const { data: dataParcel, isLoading: isLoadingParcel, refetch: refetchParcel } = useGetParcel({
         enabled: true,
         params: {
             id_category: idCategory,
@@ -89,7 +93,7 @@ export default function ApplicationAll(props) {
         return dataParcel.data.map((item) => {
             // status = 1: đã ra mắt, status = 2: sắp ra mắt
             const isComingSoon = item.status === '2';
-            const isInstalledFromApi = item.is_use === 1;
+            const isInstalledFromApi = Number(item.is_use) == 1;
 
             // type = free: miễn phí, type = charge: tính phí, type = contact: liên hệ
             const isFree = item.type === 'free';
@@ -176,6 +180,7 @@ export default function ApplicationAll(props) {
     const handleProcessInstallComplete = () => {
         setIsOpenProcessInstall(false);
         setIsOpenInstallCompleted(true);
+        refetchParcel();
     };
 
     const handleBtnAction = (action, card = null) => {

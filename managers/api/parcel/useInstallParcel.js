@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import apiParcel from '@/Api/apiParcel/apiParcel';
 import useToast from '@/hooks/useToast';
 
@@ -84,3 +84,34 @@ export const useInstallParcel = (options = {}) => {
     };
 };
 
+/**
+ * Custom hook for getting parcel install status
+ * @description Fetches installation status for current parcel/application
+ * @param {Object} [options] - Hook options
+ * @param {boolean} [options.enabled=true] - Enable/disable query
+ * @returns {Object} Hook return object
+ * @returns {Object} returns.data - Response data from status API
+ * @returns {boolean} returns.isLoading - Loading state
+ * @returns {Error} returns.error - Error object if any
+ * @example
+ * const { data, isLoading } = useGetInstallStatus();
+ */
+export const useGetInstallStatus = (options = {}) => {
+    const { enabled = true } = options;
+
+    const query = useQuery({
+        queryKey: ['apiGetInstallStatus'],
+        queryFn: async () => {
+            const res = await apiParcel.apiGetInstallStatus();
+            return res;
+        },
+        enabled,
+    });
+
+    return {
+        data: query.data,
+        isLoading: query.isLoading,
+        error: query.error,
+        refetch: query.refetch,
+    };
+};

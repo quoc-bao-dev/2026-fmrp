@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Lexend_Deca } from '@next/font/google';
 import ProgressBar from '@/components/common/progress/ProgressBar';
 import Popup from './Popup';
+import { useGetInstallStatus } from '@/managers/api/parcel/useInstallParcel';
 
 const deca = Lexend_Deca({
     subsets: ['latin'],
@@ -14,6 +15,13 @@ export default function PopupProcessInstall({ isOpen, onClose, onComplete, data:
     const [percentUpdate, setPercentUpdate] = useState(0);
     const [isComplete, setIsComplete] = useState(false);
     const startedRef = useRef(false);
+
+    // Gọi API kiểm tra trạng thái cài đặt parcel khi popup mở
+    const { data: _ } = useGetInstallStatus({
+        enabled: isOpen,
+    });
+
+
 
     const handleUpdate = () => {
         setIsComplete(false);
