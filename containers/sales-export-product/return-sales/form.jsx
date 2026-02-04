@@ -46,6 +46,7 @@ import Popup from 'reactjs-popup'
 import { routerReturnSales } from 'routers/sellingGoods'
 import { v4 as uuidv4 } from 'uuid'
 import { useReturnSalesItems } from './hooks/useReturnSalesItems'
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties'
 
 const initsFetching = {
   onFetchingCondition: false,
@@ -132,6 +133,8 @@ const ReturnSalesForm = (props) => {
     'filter[branch_id]': idChange?.idBranch ? idChange?.idBranch?.value : null,
   })
 
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties()
+
   // Tự động chọn chi nhánh đầu tiên từ authState khi component mount
   useEffect(() => {
     if (authState.branch?.length > 0 && !idChange.idBranch) {
@@ -214,9 +217,8 @@ const ReturnSalesForm = (props) => {
           idParenBackend: e?.item?.id,
           matHang: {
             e: e?.item,
-            label: `${e.item?.name} <span style={{display: none}}>${
-              e.item?.code + e.item?.product_variation + e.item?.text_type + e.item?.unit_name
-            }</span>`,
+            label: `${e.item?.name} <span style={{display: none}}>${e.item?.code + e.item?.product_variation + e.item?.text_type + e.item?.unit_name
+              }</span>`,
             value: e.item?.id,
           },
           child: child,
@@ -402,10 +404,10 @@ const ReturnSalesForm = (props) => {
       tax: generalTax
         ? generalTax
         : {
-            label: value?.e?.tax_name == null ? 'Miễn thuế' : value?.e?.tax_name,
-            value: value?.e?.tax_id_item ? value?.e?.tax_id_item : '0',
-            tax_rate: value?.e?.tax_rate ? value?.e?.tax_rate : '0',
-          },
+          label: value?.e?.tax_name == null ? 'Miễn thuế' : value?.e?.tax_name,
+          value: value?.e?.tax_id_item ? value?.e?.tax_id_item : '0',
+          tax_rate: value?.e?.tax_rate ? value?.e?.tax_rate : '0',
+        },
       note: value?.e?.note_item,
     }
     return {
@@ -606,6 +608,26 @@ const ReturnSalesForm = (props) => {
                 ''
               )}
             </div>
+            {/* Hiển thị thuộc tính kho cho nguyên vật liệu */}
+            {option.e?.text_type === 'material' &&
+              Array.isArray(warehousePropertyLabels) &&
+              warehousePropertyLabels.length > 0 && (
+                <div className="flex items-center gap-2 italic">
+                  {warehousePropertyLabels.map(({ key, label }) => {
+                    if (!label) return null
+                    const value = option.e?.[key]
+
+                    // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                    if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null
+
+                    return (
+                      <div key={key}>
+                        {label}: {value == null || value === '' ? '-' : value}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
           </div>
         </div>
       </div>
@@ -733,9 +755,8 @@ const ReturnSalesForm = (props) => {
       href: routerReturnSales.home,
     },
     {
-      label: `${
-        id ? dataLang?.returnSales_edit || 'returnSales_edit' : dataLang?.returnSales_add || 'returnSales_add'
-      }`,
+      label: `${id ? dataLang?.returnSales_edit || 'returnSales_edit' : dataLang?.returnSales_add || 'returnSales_add'
+        }`,
     },
   ]
 
@@ -812,9 +833,8 @@ const ReturnSalesForm = (props) => {
                     return (
                       <div
                         key={e?.id?.toString()}
-                        className={`grid items-center grid-cols-12 gap-3 2xl:gap-4 py-2 ${
-                          isLast ? '' : 'border-b border-[#F3F3F4]'
-                        }`}
+                        className={`grid items-center grid-cols-12 gap-3 2xl:gap-4 py-2 ${isLast ? '' : 'border-b border-[#F3F3F4]'
+                          }`}
                       >
                         {/* Mặt hàng */}
                         <div className="h-full col-span-3">
@@ -857,6 +877,26 @@ const ReturnSalesForm = (props) => {
                                       ''
                                     )}
                                   </div>
+                                  {/* Hiển thị thuộc tính kho cho nguyên vật liệu */}
+                                  {option.e?.text_type === 'material' &&
+                                    Array.isArray(warehousePropertyLabels) &&
+                                    warehousePropertyLabels.length > 0 && (
+                                      <div className="flex items-center gap-x-2 gap-y-[2px] italic flex-wrap">
+                                        {warehousePropertyLabels.map(({ key, label }) => {
+                                          if (!label) return null
+                                          const value = option.e?.[key]
+
+                                          // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                                          if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null
+
+                                          return (
+                                            <div key={key} className="truncate">
+                                              {label}: {value == null || value === '' ? '-' : value}
+                                            </div>
+                                          )
+                                        })}
+                                      </div>
+                                    )}
                                 </div>
                               </div>
                             </div>
@@ -924,21 +964,20 @@ const ReturnSalesForm = (props) => {
                                       (errors.errWarehouse &&
                                         (ce?.warehouse?.label == null || ce?.warehouse?.warehouse_name == null))
                                     ) && (
-                                      <span className="text-red-500 text-xs mt-1">Vui lòng chọn kho</span>
-                                    )}
+                                        <span className="text-red-500 text-xs mt-1">Vui lòng chọn kho</span>
+                                      )}
                                   </div>
                                 </div>
                                 {/* Số lượng */}
                                 <div className="flex items-center justify-center">
                                   <div
-                                    className={`relative flex items-center justify-center h-8 2xl:h-10 3xl:p-2 xl:p-[2px] p-[1px] border rounded-3xl ${
-                                      errors.errQuantity &&
+                                    className={`relative flex items-center justify-center h-8 2xl:h-10 3xl:p-2 xl:p-[2px] p-[1px] border rounded-3xl ${errors.errQuantity &&
                                       (ce?.quantity === null || ce?.quantity === '' || ce?.quantity === 0)
-                                        ? 'border-red-500'
-                                        : errors.errSurvive
+                                      ? 'border-red-500'
+                                      : errors.errSurvive
                                         ? 'border-red-500'
                                         : 'focus:border-brand-color hover:border-brand-color border-neutral-N400'
-                                    } ${(ce?.quantity === 0 || ce?.quantity === '') && 'border-red-500'}  `}
+                                      } ${(ce?.quantity === 0 || ce?.quantity === '') && 'border-red-500'}  `}
                                   >
                                     <button
                                       disabled={
@@ -1009,16 +1048,14 @@ const ReturnSalesForm = (props) => {
                                 </div>
                                 {/* Đơn giá */}
                                 <div
-                                  className={`flex items-center justify-center h-8 2xl:h-10 py-1 px-2 2xl:px-3 rounded-lg border ${
-                                    errors.errPrice && (ce?.price === null || ce?.price === '')
-                                      ? 'border-red-500'
-                                      : errors.errSurvivePrice && (ce?.price === null || ce?.price === '')
+                                  className={`flex items-center justify-center h-8 2xl:h-10 py-1 px-2 2xl:px-3 rounded-lg border ${errors.errPrice && (ce?.price === null || ce?.price === '')
+                                    ? 'border-red-500'
+                                    : errors.errSurvivePrice && (ce?.price === null || ce?.price === '')
                                       ? 'border-red-500'
                                       : 'border-neutral-N400 focus:border-brand-color hover:border-brand-color'
-                                  } ${
-                                    (ce?.price === null || ce?.price === '') &&
+                                    } ${(ce?.price === null || ce?.price === '') &&
                                     'border-red-500 hover:border-red-500 focus:border-red-500'
-                                  } `}
+                                    } `}
                                 >
                                   <InPutMoneyFormat
                                     className={`appearance-none text-center responsive-text-sm font-semibold w-full mx-0 focus:outline-none`}
@@ -1055,9 +1092,8 @@ const ReturnSalesForm = (props) => {
                                     onChange={(value) => _HandleChangeChild(e?.id, ce?.id, 'tax', value)}
                                     renderOption={(option, isLabel) => (
                                       <div
-                                        className={`flex items-center justify-start gap-1 responsive-text-sm ${
-                                          isLabel ? 'py-1 2xl:py-2' : ''
-                                        }`}
+                                        className={`flex items-center justify-start gap-1 responsive-text-sm ${isLabel ? 'py-1 2xl:py-2' : ''
+                                          }`}
                                       >
                                         <h2 className="">{option?.label}</h2>
                                         {option?.tax_rate !== '0' && option?.tax_rate !== '5' && (
@@ -1075,9 +1111,9 @@ const ReturnSalesForm = (props) => {
                                 <ItemTotalAndDelete
                                   total={formatMoney(
                                     ce?.price *
-                                      (1 - Number(ce?.discount) / 100) *
-                                      (1 + Number(ce?.tax?.tax_rate) / 100) *
-                                      Number(ce?.quantity)
+                                    (1 - Number(ce?.discount) / 100) *
+                                    (1 + Number(ce?.tax?.tax_rate) / 100) *
+                                    Number(ce?.quantity)
                                   )}
                                   onDelete={_HandleDeleteChild.bind(this, e?.id, ce?.id)}
                                 />

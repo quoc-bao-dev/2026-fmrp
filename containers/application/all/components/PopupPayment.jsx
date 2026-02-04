@@ -2,13 +2,24 @@ import React, { useEffect, useState } from 'react';
 import Popup from './Popup';
 import TooltipDefault from '@/components/common/tooltip/TooltipDefault';
 import useToast from '@/hooks/useToast';
+import { useInstallParcel } from '@/managers/api/parcel/useInstallParcel';
+import formatMoney from '@/utils/helpers/formatMoney';
 
 const IMAGE_PAYMENT_INFO = '/application/payment-info.png';
 const IMAGE_BANK = '/application/bank.png';
 
-export default function PopupPayment({ isOpen, onClose, onPaymentSuccess, closeOnBackdropClick = true }) {
+export default function PopupPayment({
+    isOpen,
+    onClose,
+    onPaymentSuccess,
+    closeOnBackdropClick = true,
+    paymentData,
+}) {
     const [countdown, setCountdown] = useState(10);
     const showToast = useToast();
+
+    const bankInfo = paymentData?.qr?.bank;
+    const qrInfo = paymentData?.qr?.qr;
 
     useEffect(() => {
         if (!isOpen) {
@@ -95,7 +106,7 @@ export default function PopupPayment({ isOpen, onClose, onPaymentSuccess, closeO
                             </p>
 
                             <h3 className="pt-1 font-deca font-medium text-[18px] leading-7 tracking-[0] text-[#1C252E]">
-                                Lương sản lượng
+                                {paymentData?.feature_name || 'Lương sản lượng'}
                             </h3>
                         </div>
 
@@ -105,7 +116,9 @@ export default function PopupPayment({ isOpen, onClose, onPaymentSuccess, closeO
                             </p>
 
                             <h3 className="pt-1 font-deca font-medium text-[18px] leading-7 tracking-[0] text-[#1C252E]">
-                                300.000 đ
+                                {typeof bankInfo?.amount === 'number'
+                                    ? `${formatMoney(+bankInfo.amount, null)} đ`
+                                    : '0 đ'}
                             </h3>
                         </div>
 
@@ -117,7 +130,9 @@ export default function PopupPayment({ isOpen, onClose, onPaymentSuccess, closeO
                                     </p>
 
                                     <p className="font-deca font-bold text-[24px] leading-8 tracking-[0] align-middle text-[#0375F3]">
-                                        300.000 đ
+                                        {typeof bankInfo?.amount === 'number'
+                                            ? `${formatMoney(+bankInfo.amount, null)} đ`
+                                            : '0 đ'}
                                     </p>
                                 </div>
                             </div>
@@ -148,7 +163,7 @@ export default function PopupPayment({ isOpen, onClose, onPaymentSuccess, closeO
                                     className=" h-[150px] 2xl:h-[200px] w-full flex items-center justify-center"
                                 >
                                     <img
-                                        src={IMAGE_PAYMENT_INFO}
+                                        src={qrInfo?.data || IMAGE_PAYMENT_INFO}
                                         alt="QR thanh toán"
                                         className="max-h-full max-w-full object-contain"
                                     />
@@ -162,8 +177,8 @@ export default function PopupPayment({ isOpen, onClose, onPaymentSuccess, closeO
                                             className="w-12 h-12 flex items-center justify-center"
                                         >
                                             <img
-                                                src={IMAGE_BANK}
-                                                alt="Ngân hàng"
+                                                src={bankInfo?.logo_bank || IMAGE_BANK}
+                                                alt={bankInfo?.account_bank || 'Ngân hàng'}
                                                 className="w-full h-full object-contain"
                                             />
                                         </div>
@@ -172,13 +187,13 @@ export default function PopupPayment({ isOpen, onClose, onPaymentSuccess, closeO
                                             <h3
                                                 className="font-deca font-semibold text-[18px] leading-7 tracking-[0] text-[#1C252E]"
                                             >
-                                                MB Bank
+                                                {bankInfo?.account_bank || 'MB Bank'}
                                             </h3>
 
                                             <p
                                                 className="pt-1 font-deca font-normal text-[14px] leading-5 tracking-[0] text-[#637381]"
                                             >
-                                                Ngân hàng quân đội - Chi nhánh TP HCM
+                                                {bankInfo?.account_name_long || 'Ngân hàng quân đội - Chi nhánh TP HCM'}
                                             </p>
                                         </div>
                                     </div>
@@ -195,13 +210,13 @@ export default function PopupPayment({ isOpen, onClose, onPaymentSuccess, closeO
                                                 <p
                                                     className="font-deca font-medium text-[18px] leading-7 tracking-[0] text-[#1C252E]"
                                                 >
-                                                    881688
+                                                    {bankInfo?.account_number || '881688'}
                                                 </p>
 
                                                 <TooltipDefault id="payment-copy-account" content="Sao chép" place="bottom">
                                                     <button
                                                         type="button"
-                                                        onClick={() => handleCopy('881688')}
+                                                        onClick={() => handleCopy(bankInfo?.account_number || '')}
                                                         className="cursor-pointer rounded-full p-1 hover:bg-slate-100 transition-colors"
                                                         aria-label="Sao chép số tài khoản"
                                                     >
@@ -225,13 +240,13 @@ export default function PopupPayment({ isOpen, onClose, onPaymentSuccess, closeO
                                                 <p
                                                     className="font-deca font-medium text-[18px] leading-7 tracking-[0] text-[#1C252E]"
                                                 >
-                                                    COng ty TNHH cong nghe FOSO
+                                                    {bankInfo?.account_name || 'COng ty TNHH cong nghe FOSO'}
                                                 </p>
 
                                                 <TooltipDefault id="payment-copy-owner" content="Sao chép" place="bottom">
                                                     <button
                                                         type="button"
-                                                        onClick={() => handleCopy('COng ty TNHH cong nghe FOSO')}
+                                                        onClick={() => handleCopy(bankInfo?.account_name || '')}
                                                         className="cursor-pointer rounded-full p-1 hover:bg-slate-100 transition-colors"
                                                         aria-label="Sao chép tên chủ tài khoản"
                                                     >
@@ -255,13 +270,13 @@ export default function PopupPayment({ isOpen, onClose, onPaymentSuccess, closeO
                                                 <p
                                                     className="font-deca font-medium text-[18px] leading-7 tracking-[0] text-[#1C252E]"
                                                 >
-                                                    JQKA268
+                                                    {bankInfo?.note || 'JQKA268'}
                                                 </p>
 
                                                 <TooltipDefault id="payment-copy-note" content="Sao chép" place="bottom">
                                                     <button
                                                         type="button"
-                                                        onClick={() => handleCopy('JQKA268')}
+                                                        onClick={() => handleCopy(bankInfo?.note || '')}
                                                         className="cursor-pointer rounded-full p-1 hover:bg-slate-100 transition-colors"
                                                         aria-label="Sao chép nội dung chuyển khoản"
                                                     >
@@ -284,7 +299,8 @@ export default function PopupPayment({ isOpen, onClose, onPaymentSuccess, closeO
                                         <p
                                             className="font-deca font-normal text-[14px] leading-6 tracking-[0] align-middle text-[#637381]"
                                         >
-                                            Vui lòng quét mã QR thanh toán trên bằng ứng dụng ngân hàng để thực hiện việc nâng cấp gói.
+                                            {paymentData?.message ||
+                                                'Vui lòng quét mã QR thanh toán trên bằng ứng dụng ngân hàng để thực hiện việc nâng cấp gói.'}
                                         </p>
                                     </div>
                                 </div>

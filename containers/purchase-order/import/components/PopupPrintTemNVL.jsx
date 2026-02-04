@@ -51,11 +51,11 @@ const PopupPrintTemNVL = ({ id }) => {
       setListItem([data.items]);
     }
   }, [data, isFetching]);
-const parseDate = (dateStr) => {
-  if (!dateStr) return null;
-  const [day, month, year] = dateStr.split("-");
-  return `${year}/${month}/${day}`;
-};
+  const parseDate = (dateStr) => {
+    if (!dateStr) return null;
+    const [day, month, year] = dateStr.split("-");
+    return `${year}/${month}/${day}`;
+  };
   //kiểm tra chọn tất cả
   let isAllSelected = false;
   if (listItem.length > 0 && listItem[0]?.length > 0) {
@@ -87,7 +87,7 @@ const parseDate = (dateStr) => {
   const handleSelectItem = (item, checked) => {
     if (checked) {
       // Đảm bảo item được chọn có quantity = 1
-      setSelectItems((prev) => [...prev, { ...item, quantity: 1 }]); 
+      setSelectItems((prev) => [...prev, { ...item, quantity: 1 }]);
     } else {
       setSelectItems((prev) => prev.filter((i) => i.id !== item.id));
     }
@@ -323,6 +323,10 @@ const parseDate = (dateStr) => {
                           serial={item?.serial}
                           warehouse_name={item?.warehouse_name}
                           location_name={item?.location_name}
+                          item_type={item?.item_type}
+                          value_1={item?.value_1}
+                          value_2={item?.value_2}
+                          value_3={item?.value_3}
                         />
                       </RowItemTable>
 
