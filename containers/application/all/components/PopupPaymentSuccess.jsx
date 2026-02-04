@@ -2,6 +2,8 @@ import React from 'react';
 import Image from 'next/image';
 import Popup from './Popup';
 import { useApplicationInstall } from '@/context/application/ApplicationInstallContext';
+import { formatMoment } from '@/utils/helpers/formatMoment';
+import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 
 export default function PopupPaymentSuccess({ isOpen, onClose, closeOnBackdropClick = true }) {
     const { paymentResult, featureName } = useApplicationInstall();
@@ -30,7 +32,9 @@ export default function PopupPaymentSuccess({ isOpen, onClose, closeOnBackdropCl
                             Ngày mua hàng:
                         </h3>
                         <p className="text-lg font-medium text-[#1C252E]">
-                            {paymentResult?.date_create || '--'}
+                            {paymentResult?.date_create
+                                ? formatMoment(paymentResult.date_create, FORMAT_MOMENT.DATE_TIME_SLASH_LONG)
+                                : '--'}
                         </p>
                     </div>
                     <div className="p-3 py-2 2xl:py-3 rounded-xl border border-[#919EAB3D] w-full">

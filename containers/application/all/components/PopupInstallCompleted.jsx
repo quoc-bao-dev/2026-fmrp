@@ -41,9 +41,9 @@ export default function PopupInstallCompleted({ isOpen, onClose, closeOnBackdrop
                     Cài đặt hoàn tất!
                 </h2>
 
-                <p className="font-deca font-medium text-[20px] leading-6 tracking-[0] text-[#667085] text-center">
+                <p className="font-deca font-medium text-[22px] leading-6 tracking-[0] text-[#667085] text-center">
                     Tính năng <span className="text-[#0375F3]">{featureName || 'Lương Sản Lượng'}</span>
-                    {' '}đã sẵn sàng để <br /> sử dụng
+                    {' '}đã sẵn sàng để sử dụng
                 </p>
 
                 <div className="flex justify-center w-full">
