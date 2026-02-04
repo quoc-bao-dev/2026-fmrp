@@ -73,6 +73,21 @@ import { _ServerInstance as axiosCustom } from "@/services/axios";
  * @property {string} [message] - Response message (e.g. "Để sử dụng gói bạn cần thanh toán")
  */
 
+/**
+ * @typedef {Object} InstallStatusData
+ * @property {boolean} success - Indicates if the installation process is finished successfully
+ * @property {string} [message] - Status message from server
+ * @property {Object} [meta] - Additional metadata if provided by backend
+ */
+
+/**
+ * @typedef {Object} InstallStatusResponse
+ * @property {boolean} isSuccess - Indicates if request to status API was successful
+ * @property {string} [message] - Response message
+ * @property {InstallStatusData} [data] - Installation status data
+ * @property {number} [status] - HTTP status code
+ */
+
 const apiParcel = {
     /**
      * Get Parcel API
@@ -171,6 +186,23 @@ const apiParcel = {
 
         const url = `/api_web/api_parcel/install_parcel/${id}?csrf_protection=true`;
         const response = await axiosCustom('POST', url, {});
+        return response.data;
+    },
+
+    /**
+     * Get Install Status API
+     * @description Checks current installation status of parcel/features
+     * @returns {Promise<InstallStatusResponse>} Promise that resolves to API response
+     * @throws {Error} When API call fails
+     * @example
+     * const result = await apiParcel.apiGetInstallStatus();
+     * if (result.isSuccess) {
+     *   console.log('Install status:', result.data);
+     * }
+     */
+    async apiGetInstallStatus() {
+        const url = `/api_web/api_parcel/install?csrf_protection=true`;
+        const response = await axiosCustom('GET', url, {});
         return response.data;
     },
 };

@@ -4,6 +4,7 @@ import TooltipDefault from '@/components/common/tooltip/TooltipDefault';
 import useToast from '@/hooks/useToast';
 import { useInstallParcel } from '@/managers/api/parcel/useInstallParcel';
 import formatMoney from '@/utils/helpers/formatMoney';
+import { useSocketContext } from '@/context/socket/SocketContext';
 
 const IMAGE_PAYMENT_INFO = '/application/payment-info.png';
 const IMAGE_BANK = '/application/bank.png';
@@ -15,35 +16,30 @@ export default function PopupPayment({
     closeOnBackdropClick = true,
     paymentData,
 }) {
-    const [countdown, setCountdown] = useState(10);
     const showToast = useToast();
 
     const bankInfo = paymentData?.qr?.bank;
     const qrInfo = paymentData?.qr?.qr;
 
+    const { socket } = useSocketContext();
+
+
     useEffect(() => {
-        if (!isOpen) {
-            setCountdown(10);
-            return;
-        }
 
-        setCountdown(10);
+        if (!socket) return;
 
-        const intervalId = window.setInterval(() => {
-            setCountdown(prev => {
-                if (prev <= 1) {
-                    window.clearInterval(intervalId);
-                    onPaymentSuccess?.();
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
+        const handlePaymentParcel = (payload) => {
+            if (payload?.data?.status == '1') {
+                onPaymentSuccess?.();
+            }
+        };
+
+        socket.on('payment_parcel', handlePaymentParcel);
 
         return () => {
-            window.clearInterval(intervalId);
+            socket.off('payment_parcel', handlePaymentParcel);
         };
-    }, [isOpen, onPaymentSuccess]);
+    }, [socket]);
 
     const handleCopy = async (value) => {
         if (!value) return;
@@ -136,14 +132,6 @@ export default function PopupPayment({
                                     </p>
                                 </div>
                             </div>
-
-                            {/* countdown mock payment */}
-                            <p className="pt-4 font-deca text-sm text-[#637381]">
-                                Đang kiểm tra thanh toán...{' '}
-                                <span className="font-semibold text-[#0375F3]">
-                                    {countdown > 0 ? `${countdown}s` : 'Hoàn tất'}
-                                </span>
-                            </p>
                         </div>
                     </div>
 
