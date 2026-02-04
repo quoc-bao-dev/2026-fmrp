@@ -30,7 +30,7 @@ const PopupDetail = props => {
 
   const { dataMaterialExpiry, dataProductSerial } = useFeature();
   const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
-  console.log(warehousePropertyLabels);
+
   const formatNumber = num => {
     return formatNumberConfig(+num, dataSeting);
   };
@@ -39,7 +39,7 @@ const PopupDetail = props => {
   };
 
   const { data, isFetching } = useDeliveryReceipDetail(open, props?.id);
-  console.log(data);
+
   return (
     <>
       <PopupCustom

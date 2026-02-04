@@ -4,8 +4,12 @@ import formatNumberConfig from '@/utils/helpers/formatnumber';
 import moment from 'moment';
 import { applyCommonStyles, createFooter, createHeaderBlock, createTopLineBlock, ensureTimesNewRomanFonts, openPdf, PDF_THEME } from '@/utils/pdfCommon';
 
-export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
-  if (!data) return;
+export const printSalesOrderPDF = async ({ data, dataLang, dataSeting }) => {
+  if (!data) {
+    console.error('printSalesOrderPDF: Không có dữ liệu');
+    return;
+  }
+  
   await ensureTimesNewRomanFonts();
 
   const dataCompany = dataSeting;
@@ -20,6 +24,10 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
     return formatNumberConfig(number, dataSeting);
   };
 
+  const formatMoney = number => {
+    return formatNumber(number);
+  };
+
   const marginDate = [0, 10, 0, 0];
 
   // Ngày hiện tại
@@ -28,7 +36,7 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
   const headerBlock = createHeaderBlock(dataCompany);
 
   const titleBlock = {
-    text: (dataLang?.exportToOthe_exporttoOther || 'exportToOthe_exporttoOther').toUpperCase(),
+    text: 'ĐƠN HÀNG BÁN',
     style: 'pwTitle',
     alignment: 'center',
     margin: [0, 12, 0, 8],
@@ -42,13 +50,13 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
         stack: [
           {
             text: [
-              { text: `${dataLang?.import_code_vouchers || 'import_code_vouchers'}: `, style: 'pwMetaLabel' },
+              { text: `${dataLang?.purchase_order_table_code || 'sales_product_code'}: `, style: 'pwMetaLabel' },
               { text: `${data?.code || ''}`, style: 'pwMetaValue' },
             ],
           },
           {
             text: [
-              { text: `${dataLang?.import_day_vouchers || 'import_day_vouchers'}: `, style: 'pwMetaLabel' },
+              { text: `${dataLang?.purchase_order_table_dayvoucers || 'sales_product_date'}: `, style: 'pwMetaLabel' },
               { text: `${data?.date ? formatMoment(data?.date, FORMAT_MOMENT.DATE_SLASH_LONG) : ''}`, style: 'pwMetaValue' },
             ],
           },
@@ -60,12 +68,6 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
     margin: [0, 0, 0, 10],
   };
 
-  const objectText = (() => {
-    const key = data?.object;
-    if (!key) return '';
-    return dataLang[key] || data?.object_text || key;
-  })();
-
   const infoBlock = {
     columns: [
       {
@@ -73,13 +75,13 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
         stack: [
           {
             text: [
-              { text: `${dataLang?.exportToOthe_warehouse || 'exportToOthe_warehouse'}: `, style: 'pwInfoLabel' },
-              { text: `${data?.warehouse_name || ''}`, style: 'pwInfoValue' },
+              { text: `${dataLang?.customer || 'customer'}: `, style: 'pwInfoLabel' },
+              { text: `${data?.client_name || ''}`, style: 'pwInfoValue' },
             ],
           },
           {
             text: [
-              { text: `${dataLang?.purchase_order_note || 'purchase_order_note'}: `, style: 'pwInfoLabel' },
+              { text: `${dataLang?.note || 'note'}: `, style: 'pwInfoLabel' },
               { text: `${data?.note || ''}`, style: 'pwInfoValue' },
             ],
           },
@@ -99,32 +101,32 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
     fillColor: PRIMARY,
   });
 
-  // Cấu trúc cột: STT | Mặt hàng | Thông tin | VTX | ĐVT | SL | Ghi chú
-  const tableWidths = ['auto', '*', '*', 'auto', 'auto', 'auto', '*'];
+  // Cấu trúc cột: STT | Mặt hàng | Biến thể | ĐVT | SL | Đơn Giá | % CK | ĐGSCK | Thành tiền
+  const tableWidths = ['auto', '*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'];
 
   const headerRow = [
     pwTableHeaderCell('STT'),
     pwTableHeaderCell('Mặt hàng', 'left'),
-    pwTableHeaderCell('Thông tin', 'left'),
-    pwTableHeaderCell(
-      'VTX',
-      'left'
-    ),
+    pwTableHeaderCell('Biến thể', 'left'),
     pwTableHeaderCell('ĐVT'),
     pwTableHeaderCell('SL'),
-    pwTableHeaderCell(`${dataLang?.import_from_note || 'import_from_note'}`, 'left'),
+    pwTableHeaderCell('Đơn Giá', 'right'),
+    pwTableHeaderCell('% CK', 'right'),
+    pwTableHeaderCell('ĐGSCK', 'right'),
+    pwTableHeaderCell('Thành tiền', 'right'),
   ];
 
-  const totalExportQty =
-    Array.isArray(data?.items)
-      ? data.items.reduce((total, item) => total + Number(item?.quantity || 0), 0)
-      : 0;
+  const totalAmount = data?.total_amount || 0;
+  const totalPrice = data?.total_price || 0;
+  const totalTax = data?.total_tax_price || data?.total_tax || 0;
+  const totalDiscount = data?.total_discount || 0;
+  const totalPriceAfterDiscount = data?.total_price_after_discount || (totalPrice - totalDiscount);
 
   const docDefinition = {
     info: {
-      title: `${dataLang?.exportToOthe_exporttoOther || 'exportToOthe_exporttoOther'} - ${data?.code}`,
+      title: `Đơn hàng bán - ${data?.code}`,
       author: 'Foso',
-      subject: 'Export To Other',
+      subject: 'Sales Order',
       keywords: 'PDF',
     },
     pageMargins: [40, 0, 40, 40],
@@ -145,45 +147,15 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
           headerRows: 0,
           body: [
             headerRow,
-            ...(data?.items?.length > 0
+            ...(Array.isArray(data?.items) && data.items.length > 0
               ? data.items.map((item, index) => {
-                const nameStack = [
-                  {
-                    text: item?.item?.name ? item?.item?.name : '',
-                    fontSize: 10,
-                  },
-                ];
-
-                const infoStack = [];
-
-                infoStack.push({
-                  text: `Biến thể: ${item?.item?.product_variation || '(NONE)'}`,
-                  fontSize: 9,
-                });
-
-                if (item.lot) {
-                  infoStack.push({
-                    text: [
-                      { text: 'Lot: ', fontSize: 9 },
-                      { text: item.lot, fontSize: 9 },
-                    ],
-                  });
-                }
-
-                if (item.expiration_date) {
-                  infoStack.push({
-                    text: [
-                      { text: 'Date: ', fontSize: 9 },
-                      {
-                        text: formatMoment(item.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG),
-                        fontSize: 8.5,
-                      },
-                    ],
-                  });
-                }
-
+                const variationText = item?.item?.product_variation || '';
                 const unitText = item?.item?.unit_name || '';
-                const qtyValue = item?.quantity;
+                const qtyValue = item?.quantity || 0;
+                const priceValue = item?.price || 0;
+                const discountPercent = item?.discount_percent || 0;
+                const priceAfterDiscount = item?.price_after_discount || item?.price || 0;
+                const amountValue = item?.amount || 0;
 
                 return [
                   {
@@ -192,15 +164,13 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
                     fontSize: 9,
                   },
                   {
-                    stack: nameStack,
+                    text: item?.item?.name || item?.name || '',
+                    fontSize: 10,
                   },
                   {
-                    stack: infoStack,
-                  },
-                  {
-                    text: item?.warehouse_location?.location_name || '',
-                    fontSize: 9,
+                    text: variationText,
                     alignment: 'left',
+                    fontSize: 9,
                   },
                   {
                     text: unitText,
@@ -208,12 +178,28 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
                     fontSize: 9,
                   },
                   {
-                    text: qtyValue != null ? `${formatNumber(+qtyValue)}` : '',
+                    text: qtyValue != null ? `${formatNumber(+qtyValue)}` : '0',
                     alignment: 'center',
                     fontSize: 9,
                   },
                   {
-                    text: item?.note ? item?.note : '',
+                    text: priceValue != null ? `${formatMoney(+priceValue)}` : '0',
+                    alignment: 'right',
+                    fontSize: 9,
+                  },
+                  {
+                    text: discountPercent > 0 ? `${formatNumber(+discountPercent)}%` : '0%',
+                    alignment: 'right',
+                    fontSize: 9,
+                  },
+                  {
+                    text: priceAfterDiscount != null ? `${formatMoney(+priceAfterDiscount)}` : '0',
+                    alignment: 'right',
+                    fontSize: 9,
+                  },
+                  {
+                    text: amountValue != null ? `${formatMoney(+amountValue)}` : '0',
+                    alignment: 'right',
                     fontSize: 9,
                   },
                 ];
@@ -221,41 +207,72 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
               : []),
             [
               {
-                text: `${dataLang?.production_warehouse_totalItem || 'production_warehouse_totalItem'}`,
+                text: 'Tổng tiền',
                 bold: true,
-                colSpan: 2,
+                colSpan: 8,
                 fontSize: 10,
                 fillColor: '#FFFFFF',
               },
-              '',
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
               {
-                text: `${formatNumber(data?.items?.length || 0)}`,
+                text: `${formatMoney(totalPrice)}`,
                 bold: true,
                 alignment: 'right',
-                colSpan: tableWidths.length - 2,
                 fontSize: 10,
                 fillColor: '#FFFFFF',
               },
-              ...Array(tableWidths.length - 3).fill(''),
             ],
             [
               {
-                text: 'Tổng SL xuất kho',
+                text: 'Tiền thuế',
                 bold: true,
-                colSpan: 2,
+                colSpan: 8,
                 fontSize: 10,
                 fillColor: '#FFFFFF',
               },
-              '',
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
               {
-                text: `${formatNumber(totalExportQty)}`,
+                text: `${formatMoney(totalTax)}`,
                 bold: true,
                 alignment: 'right',
-                colSpan: tableWidths.length - 2,
                 fontSize: 10,
                 fillColor: '#FFFFFF',
               },
-              ...Array(tableWidths.length - 3).fill(''),
+            ],
+            [
+              {
+                text: `${dataLang?.sales_product_total_into_money || 'sales_product_total_into_money'}`,
+                bold: true,
+                colSpan: 8,
+                fontSize: 11,
+                fillColor: '#FFFFFF',
+              },
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              {
+                text: `${formatMoney(totalAmount)}`,
+                bold: true,
+                alignment: 'right',
+                fontSize: 11,
+                fillColor: '#FFFFFF',
+              },
             ],
           ],
         },
@@ -271,9 +288,18 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
         },
         margin: [0, 0, 0, 6],
       },
+      {
+        text: [
+          { text: 'Thành tiền bằng chữ: ', bold: true, fontSize: 10 },
+          { text: data?.total_amount_word || 'Không', fontSize: 10 },
+        ],
+        alignment: 'left',
+        margin: [0, 0, 0, 6],
+      },
       { style: 'dateTexts', text: `${currentDate}`, alignment: 'right', margin: marginDate },
       {
         columns: [
+          { width: '*', text: '' },
           {
             width: '33%',
             stack: [
@@ -284,55 +310,7 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
                 fontSize: 10,
               },
               {
-                text: `${dataLang?.PDF_Deliver || 'PDF_Deliver'}`,
-                style: 'signatureText',
-                alignment: 'center',
-                fontSize: 10,
-                bold: true,
-              },
-              {
-                text: `(${dataLang?.PDF_sign || 'PDF_sign'})`,
-                style: 'signatureText',
-                alignment: 'center',
-                fontSize: 10,
-              },
-            ],
-          },
-          {
-            width: '33%',
-            stack: [
-              {
-                text: '',
-                style: 'dateText',
-                alignment: 'center',
-                fontSize: 10,
-              },
-              {
-                text: `${dataLang?.PDF_Receiver || 'PDF_Receiver'}`,
-                style: 'signatureText',
-                alignment: 'center',
-                fontSize: 10,
-                bold: true,
-              },
-              {
-                text: `(${dataLang?.PDF_sign || 'PDF_sign'})`,
-                style: 'signatureText',
-                alignment: 'center',
-                fontSize: 10,
-              },
-            ],
-          },
-          {
-            width: '33%',
-            stack: [
-              {
-                text: '',
-                style: 'dateText',
-                alignment: 'center',
-                fontSize: 10,
-              },
-              {
-                text: `${dataLang?.PDF_Stocker || 'PDF_Stocker'}`,
+                text: 'Người lập phiếu',
                 style: 'signatureText',
                 alignment: 'center',
                 fontSize: 10,
@@ -359,7 +337,12 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
   };
 
   applyCommonStyles(docDefinition, TEXT, SUBTEXT);
-  openPdf(docDefinition);
+  
+  try {
+    openPdf(docDefinition);
+  } catch (error) {
+    console.error('Lỗi khi tạo PDF:', error);
+    throw error;
+  }
 };
-
 
