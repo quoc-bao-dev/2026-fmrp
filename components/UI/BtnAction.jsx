@@ -1,6 +1,9 @@
 import apiInternalPlan from '@/Api/apiManufacture/manufacture/internalPlan/apiInternalPlan';
 import apiServiceVoucher from '@/Api/apiPurchaseOrder/apiServicevVoucher';
 import apiReturnSales from '@/Api/apiSalesExportProduct/returnSales/apiReturnSales';
+import apiImport from '@/Api/apiPurchaseOrder/apiImport';
+import apiSalesOrder from '@/Api/apiSalesExportProduct/salesOrder/apiSalesOrder';
+import apiDeliveryReceipt from '@/Api/apiSalesExportProduct/deliveryReceipt/apiDeliveryReceipt';
 import { CONFIRM_DELETION, TITLE_DELETE } from '@/constants/delete/deleteTable';
 import { WARNING_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 import Popup_dspc from '@/containers/accountant/payment/components/popup';
@@ -9,11 +12,14 @@ import Popup_Bom from '@/containers/products/components/product/popupBom';
 import Popup_Products from '@/containers/products/components/product/popupProducts';
 import Popup_Stage from '@/containers/products/components/product/popupStage';
 import PopupPrintTemNVL from '@/containers/purchase-order/import/components/PopupPrintTemNVL';
+import { printImportPDF } from '@/containers/purchase-order/import/utils/printImportPDF';
 import Popup_TableValidateDelete from '@/containers/purchase-order/order/components/validateDelete';
 import Popup_TableValidateEdit from '@/containers/purchase-order/order/components/validateEdit';
 import Popup_servie from '@/containers/purchase-order/servicev-voucher/components/popup';
 import PopupDetailKeepStock from '@/containers/sales-export-product/sales-order/components/PopupDetailKeepStock';
 import PopupKeepStock from '@/containers/sales-export-product/sales-order/components/PopupKeepStock';
+import { printSalesOrderPDF } from '@/containers/sales-export-product/sales-order/utils/printSalesOrderPDF';
+import { printDeliveryReceiptPDF } from '@/containers/sales-export-product/delivery-receipt/utils/printDeliveryReceiptPDF';
 import { printReturnSalesPDF } from '@/containers/sales-export-product/return-sales/utils/printReturnSalesPDF';
 import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 import useFeature from '@/hooks/useConfigFeature';
@@ -107,6 +113,40 @@ const Popup_Pdf = props => {
   const handlePrintTem = async ({ typePrint, id, typePage }) => {
     setLoadingOption(typePrint); // Set option nào đang loading
     setIsLoadingPrint(true);
+
+    // In FE cho deliveryReceipt (có giá / không giá)
+    if (typePage === 'deliveryReceipt') {
+      try {
+        const response = await apiDeliveryReceipt.apiDetail(id);
+        const deliveryData = response?.data || response?.result || response;
+
+        if (!deliveryData) {
+          isShow('error', 'Không có dữ liệu để in phiếu');
+          return;
+        }
+
+        await printDeliveryReceiptPDF({
+          data: deliveryData,
+          dataLang: props.dataLang,
+          dataSeting: dataSeting,
+          dataMaterialExpiry,
+          dataProductExpiry,
+          dataProductSerial,
+          isWarehousePropertiesEnabled,
+          warehousePropertyLabels,
+          showPrice: typePrint === 'price',
+        });
+      } catch (error) {
+        console.error('Lỗi khi in PDF deliveryReceipt:', error);
+        isShow('error', `Lỗi khi in phiếu: ${error.message || 'Không xác định'}`);
+      } finally {
+        setIsLoadingPrint(false);
+        setLoadingOption(null);
+        setIsOpen(false);
+      }
+      return;
+    }
+
     const fetchPDFhandle = fetchPDFMultiplePageByPrice[typePage];
     if (!fetchPDFhandle) {
       console.warn(`Không tìm thấy hàm fetchPDFhandle cho typePage: ${typePage}`);
@@ -267,6 +307,8 @@ export const BtnAction = React.memo(props => {
 
   const dataSeting = useSetingServer();
 
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
+
   const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
 
   const { checkDelete, checkEdit } = useActionRole(auth, props?.type);
@@ -357,10 +399,69 @@ export const BtnAction = React.memo(props => {
     setLoadingButtonPrint(true);
 
     try {
+      // Trường hợp in PDF bằng FE cho import (có giá/không giá)
+      if (typePrint && typePage === 'import') {
+        try {
+          // Lấy dữ liệu import detail
+          const response = await apiImport.apiDetailImport(currentId);
+          const importData = response?.data || response?.result || response;
+
+          if (!importData) {
+            isShow('error', 'Không có dữ liệu để in phiếu');
+            setLoadingButtonPrint(false);
+            return;
+          }
+
+          // In PDF bằng FE với showPrice
+          await printImportPDF({
+            data: importData,
+            dataLang: props?.dataLang,
+            dataSeting: dataSeting,
+            isWarehousePropertiesEnabled,
+            warehousePropertyLabels,
+            showPrice: typePrint === 'price', // 'price' = có giá, 'notPrice' = không giá
+          });
+        } catch (error) {
+          console.error('Lỗi khi in PDF import:', error);
+          isShow('error', `Lỗi khi in phiếu: ${error.message || 'Không xác định'}`);
+        } finally {
+          setLoadingButtonPrint(false);
+        }
+        return;
+      }
+
+      // Trường hợp in PDF bằng FE cho sales_product
+      if (typePage === 'sales_product') {
+        try {
+          // Lấy dữ liệu sales order detail
+          const response = await apiSalesOrder.apiDetail(currentId);
+          const salesOrderData = response?.data || response?.result || response;
+
+          if (!salesOrderData) {
+            isShow('error', 'Không có dữ liệu để in phiếu');
+            setLoadingButtonPrint(false);
+            return;
+          }
+
+          // In PDF bằng FE
+          await printSalesOrderPDF({
+            data: salesOrderData,
+            dataLang: props?.dataLang,
+            dataSeting: dataSeting,
+          });
+        } catch (error) {
+          console.error('Lỗi khi in PDF sales order:', error);
+          isShow('error', `Lỗi khi in phiếu: ${error.message || 'Không xác định'}`);
+        } finally {
+          setLoadingButtonPrint(false);
+        }
+        return;
+      }
+
       let response;
 
-      // Trường hợp in PDF với type (có giá/không giá) cho import và deliveryReceipt
-      if (typePrint && ['import', 'deliveryReceipt'].includes(typePage)) {
+      // Trường hợp in PDF với type (có giá/không giá) cho deliveryReceipt
+      if (typePrint && typePage === 'deliveryReceipt') {
         const typeNumber = typePrint === 'notPrice' ? 1 : 2;
         response = await fetchPDFMultiplePage[typePage]({
           id: currentId,
@@ -702,8 +803,8 @@ export const BtnAction = React.memo(props => {
     count++;
 
     // Count print button
-    if (!['deliveryReceipt', 'returnSales', 'import', 'returns', 'receipts', 'payment', 'production_warehouse'].includes(props?.type)) {
-      if (props?.type === 'order' || props?.type === 'sales_product') {
+    if (!['deliveryReceipt', 'returnSales', 'import', 'returns', 'receipts', 'payment', 'production_warehouse', 'order'].includes(props?.type)) {
+      if (props?.type === 'sales_product') {
         count++;
       } else {
         count++;
@@ -928,7 +1029,6 @@ export const BtnAction = React.memo(props => {
         allButtons.push(<Popup_Pdf dataLang={props.dataLang} props={props} openAction={openAction} setOpenAction={setOpenAction} {...shareProps} />);
       }
     } else if (
-      props?.type === 'order' ||
       props?.type === 'sales_product' ||
       props?.type === 'receipts' ||
       props?.type === 'payment' ||
@@ -962,7 +1062,7 @@ export const BtnAction = React.memo(props => {
       );
     } else if (props?.type === 'internal_plan') {
       allButtons.push(<ButtonPrintItem key='print-internal-plan' onCLick={handlePrintInternalPlan} dataLang={props?.dataLang} isLoading={loadingButtonPrint} totalButtons={totalButtons} />);
-    } else if (props?.type !== 'production_warehouse' && props?.type !== 'productsWarehouse' && props?.type !== 'recall' && props?.type !== 'exportToOther') {
+    } else if (props?.type !== 'production_warehouse' && props?.type !== 'productsWarehouse' && props?.type !== 'recall' && props?.type !== 'exportToOther' && props?.type !== 'order') {
       allButtons.push(<FilePDF key='pdf' {...shareProps} props={props} openAction={openAction} setOpenAction={setOpenAction} />);
     }
 

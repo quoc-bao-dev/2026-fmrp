@@ -41,7 +41,16 @@ const arrayBufferToBase64 = buffer => {
 };
 
 export const ensureTimesNewRomanFonts = async () => {
-  if (_timesNewRomanLoaded) return;
+  // Kiểm tra xem font đã được load chưa
+  if (_timesNewRomanLoaded) {
+    // Kiểm tra lại xem font có trong vfs không
+    if (pdfMake.vfs && pdfMake.vfs['TimesNewRomanBold.ttf']) {
+      return;
+    }
+    // Nếu flag đã set nhưng font không có trong vfs, reset flag để load lại
+    _timesNewRomanLoaded = false;
+  }
+  
   if (typeof window === 'undefined') return;
 
   const basePath = '/fonts/times-new-roman';
@@ -52,27 +61,54 @@ export const ensureTimesNewRomanFonts = async () => {
     'TimesNewRomanBoldItalic.ttf': `${basePath}/TimesNewRomanBoldItalic.ttf`,
   };
 
-  const entries = await Promise.all(
-    Object.entries(files).map(async ([vfsName, url]) => {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`Không tải được font: ${url}`);
-      const buf = await res.arrayBuffer();
-      return [vfsName, arrayBufferToBase64(buf)];
-    })
-  );
+  try {
+    // Load từng font và xử lý lỗi riêng cho từng file
+    const entries = [];
+    for (const [vfsName, url] of Object.entries(files)) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          console.warn(`Không tải được font: ${url}, sử dụng font mặc định`);
+          continue; // Bỏ qua font này, tiếp tục với font khác
+        }
+        const buf = await res.arrayBuffer();
+        entries.push([vfsName, arrayBufferToBase64(buf)]);
+      } catch (error) {
+        console.warn(`Lỗi khi tải font ${vfsName}:`, error);
+        // Tiếp tục với các font khác
+      }
+    }
 
-  pdfMake.vfs = { ...(pdfMake.vfs || {}), ...Object.fromEntries(entries) };
-  pdfMake.fonts = {
-    ...(pdfMake.fonts || {}),
-    TimesNewRoman: {
-      normal: 'TimesNewRoman.ttf',
-      bold: 'TimesNewRomanBold.ttf',
-      italics: 'TimesNewRomanItalic.ttf',
-      bolditalics: 'TimesNewRomanBoldItalic.ttf',
-    },
-  };
-
-  _timesNewRomanLoaded = true;
+    // Chỉ thêm font vào vfs nếu có ít nhất 1 font được load thành công
+    if (entries.length > 0) {
+      pdfMake.vfs = { ...(pdfMake.vfs || {}), ...Object.fromEntries(entries) };
+      
+      // Chỉ thêm font definition nếu tất cả các font cần thiết đã được load
+      const requiredFonts = ['TimesNewRoman.ttf', 'TimesNewRomanBold.ttf', 'TimesNewRomanItalic.ttf', 'TimesNewRomanBoldItalic.ttf'];
+      const allFontsLoaded = requiredFonts.every(font => pdfMake.vfs[font]);
+      
+      if (allFontsLoaded) {
+        pdfMake.fonts = {
+          ...(pdfMake.fonts || {}),
+          TimesNewRoman: {
+            normal: 'TimesNewRoman.ttf',
+            bold: 'TimesNewRomanBold.ttf',
+            italics: 'TimesNewRomanItalic.ttf',
+            bolditalics: 'TimesNewRomanBoldItalic.ttf',
+          },
+        };
+        _timesNewRomanLoaded = true;
+      } else {
+        console.warn('Không thể load đầy đủ font TimesNewRoman, một số font có thể không khả dụng');
+        // Không set _timesNewRomanLoaded = true để có thể thử lại lần sau
+      }
+    } else {
+      console.warn('Không thể load bất kỳ font TimesNewRoman nào, sẽ sử dụng font mặc định');
+    }
+  } catch (error) {
+    console.error('Lỗi khi load font TimesNewRoman:', error);
+    // Không throw error, để ứng dụng tiếp tục với font mặc định
+  }
 };
 
 export const createHeaderBlock = dataCompany => ({
