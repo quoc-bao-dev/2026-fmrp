@@ -1,6 +1,7 @@
 import Skeleton from '@/components/common/skeleton/Skeleton';
 import NoData from '@/components/UI/noData/nodata';
 import { useApplicationSearch } from '@/context/application/ApplicationSearchContext';
+import { ApplicationInstallProvider, useApplicationInstall } from '@/context/application/ApplicationInstallContext';
 import { useGetParcel } from '@/managers/api/parcel/useGetParcel';
 import { useInstallParcel } from '@/managers/api/parcel/useInstallParcel';
 import { axiosCustom } from '@/services/axios';
@@ -25,7 +26,7 @@ const BTN_ACTION = {
 }
 
 
-export default function ApplicationAll(props) {
+function ApplicationAllInner(props) {
     const { dataLang } = props;
     const router = useRouter();
     const { debouncedSearch } = useApplicationSearch();
@@ -37,7 +38,7 @@ export default function ApplicationAll(props) {
     const [selectedCard, setSelectedCard] = useState(null);
     const [paymentData, setPaymentData] = useState(null);
 
-
+    const { setFeatureName } = useApplicationInstall();
     const queryClient = useQueryClient();
 
     const { installParcel, isLoading: isLoadingInstallParcel } = useInstallParcel({
@@ -129,6 +130,11 @@ export default function ApplicationAll(props) {
                 btnType = 'primary';
             }
 
+
+            if (isInstalledFromApi) {
+                btnLink = item.link_url;
+            }
+
             return {
                 id: item.id,
                 title: item.name,
@@ -186,6 +192,9 @@ export default function ApplicationAll(props) {
     const handleBtnAction = (action, card = null) => {
         if (card) {
             setSelectedCard(card);
+            if (card?.title) {
+                setFeatureName(card.title);
+            }
         }
         if (action === BTN_ACTION.install_free) {
             setIsOpenPiceworkIntro(true);
@@ -361,6 +370,14 @@ export default function ApplicationAll(props) {
     );
 }
 
+export default function ApplicationAll(props) {
+    return (
+        <ApplicationInstallProvider>
+            <ApplicationAllInner {...props} />
+        </ApplicationInstallProvider>
+    );
+}
+
 
 const ButtonAction = ({ type = 'primary', label, disable = false, btnLink, btnAction, onActionClick }) => {
     const handleClick = () => {
@@ -368,7 +385,7 @@ const ButtonAction = ({ type = 'primary', label, disable = false, btnLink, btnAc
 
         if (btnLink) {
             if (typeof window !== 'undefined') {
-                window.open(btnLink, '_blank', 'noopener,noreferrer');
+                window.location.href = btnLink;
             }
             return;
         }

@@ -4,6 +4,7 @@ import { Lexend_Deca } from '@next/font/google';
 import ProgressBar from '@/components/common/progress/ProgressBar';
 import Popup from './Popup';
 import { useGetInstallStatus } from '@/managers/api/parcel/useInstallParcel';
+import { useApplicationInstall } from '@/context/application/ApplicationInstallContext';
 
 const deca = Lexend_Deca({
     subsets: ['latin'],
@@ -16,6 +17,7 @@ export default function PopupProcessInstall({ isOpen, onClose, onComplete, data:
     const [isComplete, setIsComplete] = useState(false);
     const startedRef = useRef(false);
 
+    const { featureName } = useApplicationInstall();
     // Gọi API kiểm tra trạng thái cài đặt parcel khi popup mở
     const { data: _ } = useGetInstallStatus({
         enabled: isOpen,
@@ -93,7 +95,10 @@ export default function PopupProcessInstall({ isOpen, onClose, onComplete, data:
                     {/* title */}
                     <div className="w-full flex flex-col justify-center items-center gap-y-5">
                         <h3 className=" capitalize font-semibold text-[28px] text-typo-black-2 leading-9">
-                            Vui lòng đợi trong giây lát, chúng tôi đang cài đặt tính năng <span className="font-bold text-typo-blue-3">lương sản lượng</span>
+                            Vui lòng đợi trong giây lát, chúng tôi đang cài đặt tính năng{' '}
+                            <span className="font-bold text-typo-blue-3">
+                                {featureName || 'lương sản lượng'}
+                            </span>
                         </h3>
                     </div>
 

@@ -1,10 +1,12 @@
 import React from 'react';
 import Image from 'next/image';
 import Popup from './Popup';
+import { useApplicationInstall } from '@/context/application/ApplicationInstallContext';
 
 
 const IMAGE_INSTALL_COMPLETED = '/application/install-complete.png';
 export default function PopupInstallCompleted({ isOpen, onClose, closeOnBackdropClick = true }) {
+    const { featureName } = useApplicationInstall();
     return (
         <Popup
             isOpen={isOpen}
@@ -40,8 +42,8 @@ export default function PopupInstallCompleted({ isOpen, onClose, closeOnBackdrop
                 </h2>
 
                 <p className="font-deca font-medium text-[20px] leading-6 tracking-[0] text-[#667085] text-center">
-                    Tính năng <span className="text-[#0375F3]">Lương Sản Lượng </span>
-                    đã sẵn sàng để <br /> sử dụng
+                    Tính năng <span className="text-[#0375F3]">{featureName || 'Lương Sản Lượng'}</span>
+                    {' '}đã sẵn sàng để <br /> sử dụng
                 </p>
 
                 <div className="flex justify-center w-full">
