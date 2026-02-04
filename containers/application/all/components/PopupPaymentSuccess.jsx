@@ -1,8 +1,11 @@
 import React from 'react';
 import Image from 'next/image';
 import Popup from './Popup';
+import { useApplicationInstall } from '@/context/application/ApplicationInstallContext';
 
 export default function PopupPaymentSuccess({ isOpen, onClose, closeOnBackdropClick = true }) {
+    const { paymentResult, featureName } = useApplicationInstall();
+
     return (
         <Popup isOpen={isOpen} onClose={onClose} ariaLabel="Thanh toán thành công" panelClassName="!bg-[#F9FAFC] !w-[min(821px,calc(100vw-32px))] px-6 2xl:px-9 py-6 2xl:py-9 rounded-3xl gap-6" closeOnBackdropClick={closeOnBackdropClick}>
             {/* Header */}
@@ -27,8 +30,7 @@ export default function PopupPaymentSuccess({ isOpen, onClose, closeOnBackdropCl
                             Ngày mua hàng:
                         </h3>
                         <p className="text-lg font-medium text-[#1C252E]">
-                            {/* Placeholder - có thể thay bằng data thực tế */}
-                            24/04/2025 - 16:48:55
+                            {paymentResult?.date_create || '--'}
                         </p>
                     </div>
                     <div className="p-3 py-2 2xl:py-3 rounded-xl border border-[#919EAB3D] w-full">
@@ -36,8 +38,7 @@ export default function PopupPaymentSuccess({ isOpen, onClose, closeOnBackdropCl
                             Mã đơn hàng:
                         </h3>
                         <p className="text-lg font-medium text-[#003DA0]">
-                            {/* Placeholder - có thể thay bằng data thực tế */}
-                            01dc1370-3df6-11eb-b378
+                            {paymentResult?.code || '--'}
                         </p>
                     </div>
                 </div>
@@ -51,7 +52,8 @@ export default function PopupPaymentSuccess({ isOpen, onClose, closeOnBackdropCl
                         letterSpacing: "0%",
                     }}
                 >
-                    🎉 Cảm ơn bạn đã tin tưởng sử dụng tính năng <span className="text-[#003DA0]">Lương sản lượng</span>
+                    🎉 Cảm ơn bạn đã tin tưởng sử dụng tính năng{' '}
+                    <span className="text-[#003DA0]">{featureName || 'Lương sản lượng'}</span>
                     <br className='py-6' />
                     Bạn có thể tải về hóa đơn ngay tại đây hoặc kiểm tra email đã đăng ký
                     tài khoản để xem chi tiết.

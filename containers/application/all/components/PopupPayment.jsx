@@ -5,6 +5,7 @@ import useToast from '@/hooks/useToast';
 import { useInstallParcel } from '@/managers/api/parcel/useInstallParcel';
 import formatMoney from '@/utils/helpers/formatMoney';
 import { useSocketContext } from '@/context/socket/SocketContext';
+import { useApplicationInstall } from '@/context/application/ApplicationInstallContext';
 
 const IMAGE_PAYMENT_INFO = '/application/payment-info.png';
 const IMAGE_BANK = '/application/bank.png';
@@ -17,6 +18,7 @@ export default function PopupPayment({
     paymentData,
 }) {
     const showToast = useToast();
+    const { featureName, setPaymentResult } = useApplicationInstall();
 
     const bankInfo = paymentData?.qr?.bank;
     const qrInfo = paymentData?.qr?.qr;
@@ -29,9 +31,15 @@ export default function PopupPayment({
         if (!socket) return;
 
         const handlePaymentParcel = (payload) => {
+            // Lưu payload.data vào context để các popup khác sử dụng
+            if (payload?.data) {
+                setPaymentResult(payload.data);
+            }
+
             if (payload?.data?.status == '1') {
                 onPaymentSuccess?.();
             }
+            console.log('payload', payload);
         };
 
         socket.on('payment_parcel', handlePaymentParcel);
@@ -102,7 +110,7 @@ export default function PopupPayment({
                             </p>
 
                             <h3 className="pt-1 font-deca font-medium text-[18px] leading-7 tracking-[0] text-[#1C252E]">
-                                {paymentData?.feature_name || 'Lương sản lượng'}
+                                {featureName || paymentData?.feature_name || 'Lương sản lượng'}
                             </h3>
                         </div>
 
