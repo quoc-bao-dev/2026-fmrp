@@ -160,9 +160,12 @@ const PopupDetail = props => {
                               )}
                             </div>
                             <div>
-                              <h6 className='text-[13px] text-left font-medium capitalize'>{e?.item?.name}</h6>
-                              <h6 className='text-[13px] text-left font-medium capitalize'>{e?.item?.product_variation}</h6>
-                              <div className='flex flex-col gap-0.5 font-oblique text-typo-blue-2'>
+                              <h6 className='text-[13px] text-left font-medium capitalize'>{e?.item?.name}
+                                <p className="text-[10px] text-blue-fmrp">{e?.item?.code} <span className=" text-left font-medium capitalize text-[#000]">
+                                  {' '} - {' '} {e?.item?.product_variation}
+                                </span></p>
+                              </h6>
+                              <div className='flex flex-col gap-0.5 font-oblique text-blue-fmrp'>
                                 {e?.serial && dataProductSerial.is_enable === '1' ? (
                                   <div className='flex gap-1'>
                                     <h6 className='text-[11px]'>Serial:</h6>

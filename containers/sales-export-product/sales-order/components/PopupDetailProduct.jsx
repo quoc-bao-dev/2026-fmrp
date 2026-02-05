@@ -254,7 +254,9 @@ const PopupDetailProduct = (props) => {
                                                 </h6>
                                                 <h6 className="2xl:text-[13px] xl:text-[12px] text-[11px]  px-2 py-0.5 col-span-1  rounded-md text-left">
                                                     {e?.item?.name}
+                                                    <p className="text-[8px] text-blue-fmrp">{e?.item?.code}</p>
                                                 </h6>
+
                                                 <h6 className="2xl:text-[13px] xl:text-[12px] text-[11px]  px-2 py-0.5 col-span-1  rounded-md text-left break-words">
                                                     {e?.item?.product_variation}
                                                 </h6>

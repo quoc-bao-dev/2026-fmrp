@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Popup from './Popup';
 import { useApplicationInstall } from '@/context/application/ApplicationInstallContext';
@@ -12,7 +12,15 @@ export default function PopupPaymentSuccess({ isOpen, onClose, closeOnBackdropCl
     const { data: upgradePackageData } = useGetUpgradePackage();
     console.log('upgradePackageData', upgradePackageData?.data?.id);
     const id = upgradePackageData?.data?.id;
-    const { requestForInvoice, isLoading } = useRequestForInvoice();
+    const [isRequested, setIsRequested] = useState(false);
+    const { requestForInvoice, isLoading } = useRequestForInvoice({
+        onSuccess: () => {
+            setIsRequested(true);
+        },
+        onError: () => {
+            setIsRequested(true);
+        }
+    });
     const handleRequestInvoice = async () => {
         await requestForInvoice(id);
     };
@@ -93,11 +101,14 @@ export default function PopupPaymentSuccess({ isOpen, onClose, closeOnBackdropCl
                 <div className="flex justify-center">
                     <button
                         type="button"
-                        className="h-[60px] inline-flex items-center justify-center gap-3 rounded-[12px] px-5 py-4 text-[18px] leading-7 font-medium text-white font-deca bg-[linear-gradient(170.14deg,#1FC583_5.11%,#1F9285_95.28%)] shadow-[0_10px_24px_rgba(31,197,131,0.22)] transition-all duration-200 hover:-translate-y-[1px] hover:brightness-[1.02] hover:shadow-[0_14px_30px_rgba(31,197,131,0.30)] active:translate-y-0 active:brightness-[0.98] focus:outline-none"
+                        className="h-[60px] inline-flex items-center justify-center gap-3 rounded-[12px] px-5 py-4 text-[18px] leading-7 font-medium text-white font-deca bg-[linear-gradient(170.14deg,#1FC583_5.11%,#1F9285_95.28%)] shadow-[0_10px_24px_rgba(31,197,131,0.22)] transition-all duration-200 hover:-translate-y-[1px] hover:brightness-[1.02] hover:shadow-[0_14px_30px_rgba(31,197,131,0.30)] active:translate-y-0 active:brightness-[0.98] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-[2px] disabled:hover:translate-y-[2px] disabled:hover:brightness-100"
+                        style={(isLoading || isRequested) ? {
+                            boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(31, 197, 131, 0.15)'
+                        } : {}}
                         onClick={handleRequestInvoice}
-                        disabled={isLoading}
+                        disabled={isLoading || isRequested}
                     >
-                        Tải về hoá đơn
+                        Yêu cầu xuất hoá đơn
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M23.2434 11.6737C23.0728 7.26937 19.4128 3.75 15.0056 3.75C13.4725 3.75024 11.9697 4.17718 10.6655 4.98303C9.36129 5.78888 8.30709 6.94183 7.62094 8.31281C7.05066 9.44941 6.75249 10.703 6.75 11.9747C6.75294 12.1679 6.68282 12.3551 6.55367 12.4989C6.42453 12.6426 6.24587 12.7323 6.05344 12.75C5.95055 12.7573 5.84724 12.7434 5.74999 12.709C5.65273 12.6746 5.56362 12.6205 5.48821 12.5502C5.41281 12.4798 5.35273 12.3946 5.31175 12.2999C5.27076 12.2053 5.24974 12.1032 5.25 12C5.24921 10.951 5.41827 9.90874 5.75063 8.91375C5.77252 8.84995 5.77681 8.78143 5.76303 8.7154C5.74925 8.64937 5.71791 8.58828 5.67232 8.53856C5.62674 8.48885 5.56858 8.45235 5.50399 8.43292C5.4394 8.41348 5.37077 8.41182 5.30531 8.42813C4.00577 8.75203 2.8517 9.50083 2.02639 10.5556C1.20107 11.6104 0.751828 12.9107 0.75 14.25C0.75 17.5491 3.53906 20.25 6.84375 20.25H15C16.1105 20.2488 17.2094 20.0236 18.2309 19.588C19.2524 19.1523 20.1755 18.5151 20.9451 17.7145C21.7147 16.9139 22.3149 15.9662 22.7098 14.9283C23.1047 13.8904 23.2862 12.7834 23.2434 11.6737ZM17.7806 15.5306L14.7806 18.5306C14.711 18.6004 14.6283 18.6557 14.5372 18.6934C14.4462 18.7312 14.3486 18.7506 14.25 18.7506C14.1514 18.7506 14.0538 18.7312 13.9628 18.6934C13.8717 18.6557 13.789 18.6004 13.7194 18.5306L10.7194 15.5306C10.5786 15.3899 10.4996 15.199 10.4996 15C10.4996 14.801 10.5786 14.6101 10.7194 14.4694C10.8601 14.3286 11.051 14.2496 11.25 14.2496C11.449 14.2496 11.6399 14.3286 11.7806 14.4694L13.5 16.1897V10.5C13.5 10.3011 13.579 10.1103 13.7197 9.96967C13.8603 9.82902 14.0511 9.75 14.25 9.75C14.4489 9.75 14.6397 9.82902 14.7803 9.96967C14.921 10.1103 15 10.3011 15 10.5V16.1897L16.7194 14.4694C16.8601 14.3286 17.051 14.2496 17.25 14.2496C17.449 14.2496 17.6399 14.3286 17.7806 14.4694C17.9214 14.6101 18.0004 14.801 18.0004 15C18.0004 15.199 17.9214 15.3899 17.7806 15.5306Z" fill="white" />
                         </svg>
