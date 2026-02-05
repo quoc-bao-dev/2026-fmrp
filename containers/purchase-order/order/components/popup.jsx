@@ -268,6 +268,7 @@ const PopupDetail = (props) => {
                                                             </h6>
                                                             <h6 className="text-[13px]   py-0.5 col-span-1 font-medium  text-left">
                                                                 {e?.item?.name}
+                                                                <p className="text-[8px] text-blue-fmrp">{e?.item?.code}</p>
                                                             </h6>
                                                             <h6 className="text-[13px]   py-0.5 col-span-1 font-medium  text-left break-words">
                                                                 {e?.item?.product_variation}
