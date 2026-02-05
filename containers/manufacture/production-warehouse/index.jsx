@@ -50,6 +50,7 @@ import { useProductionWarehouseDetail } from './hooks/useProductionWarehouseDeta
 import { PrinterIcon } from '@/components/icons';
 import useFeature from '@/hooks/useConfigFeature';
 import { printProductionWarehousePDF } from './utils/printProductionWarehousePDF';
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 
 const initialState = {
   onSending: false,
@@ -77,6 +78,8 @@ const ProductionWarehouse = props => {
   const statusExprired = useStatusExprired();
 
   const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature();
+
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties(dataSeting);
 
   const { handleTab: _HandleSelectTab } = useTab('all');
 
@@ -197,6 +200,8 @@ const ProductionWarehouse = props => {
         dataMaterialExpiry: dataMaterialExpiry,
         dataProductExpiry: dataProductExpiry,
         dataProductSerial: dataProductSerial,
+        isWarehousePropertiesEnabled: isWarehousePropertiesEnabled,
+        warehousePropertyLabels: warehousePropertyLabels,
         });
       })();
       // Đóng sau khi in

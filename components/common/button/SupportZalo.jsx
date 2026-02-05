@@ -6,11 +6,11 @@ const SupportZalo = () => {
   const dispatch = useDispatch();
   // ========== CẤU HÌNH ==========
   // Khoảng cách từ mép phải màn hình (px)
-  const RIGHT_OFFSET = 24;
+  const RIGHT_OFFSET = 0;
   // ===============================
 
   // State cho vị trí của bong bóng
-  const [bottomPosition, setBottomPosition] = useState(100); // 20px từ dưới lên
+  const [bottomPosition, setBottomPosition] = useState(100); // Giá trị tạm thời, sẽ được tính toán lại
   const [rightPosition, setRightPosition] = useState(RIGHT_OFFSET); // 20px từ mép phải
   const [leftPosition, setLeftPosition] = useState(null); // Vị trí từ mép trái (nếu ở bên trái)
   const [isDragging, setIsDragging] = useState(false);
@@ -21,6 +21,7 @@ const SupportZalo = () => {
   const dragStartBottom = useRef(0);
   const dragStartRight = useRef(0);
   const bubbleRef = useRef(null);
+  const isInitializedRef = useRef(false); // Ref để đảm bảo chỉ tính toán một lần
 
   // Tính toán xem icon nằm bên trái hay bên phải màn hình
   const isIconOnLeft = () => {
@@ -32,17 +33,38 @@ const SupportZalo = () => {
 
   const [isOnLeft, setIsOnLeft] = useState(false);
 
-  // Khởi tạo vị trí ban đầu
+  // Khởi tạo vị trí ban đầu - tính toán để nằm ở giữa màn hình
   useEffect(() => {
-    if (bubbleRef.current) {
-      const onLeft = isIconOnLeft();
-      setIsOnLeft(onLeft);
-      if (onLeft) {
-        const bubbleWidth = bubbleRef.current.offsetWidth;
-        const calculatedLeft = window.innerWidth - rightPosition - bubbleWidth;
-        setLeftPosition(calculatedLeft);
+    if (typeof window === 'undefined' || isInitializedRef.current) return;
+
+    const calculateInitialPosition = () => {
+      if (bubbleRef.current) {
+        const bubbleHeight = bubbleRef.current.offsetHeight;
+        const windowHeight = window.innerHeight;
+
+        // Tính toán vị trí bottom để component nằm ở giữa màn hình
+        // bottom = (windowHeight - bubbleHeight) / 2
+        const centerBottom = (windowHeight - bubbleHeight) / 2;
+        setBottomPosition(centerBottom);
+        isInitializedRef.current = true;
+
+        const onLeft = isIconOnLeft();
+        setIsOnLeft(onLeft);
+        if (onLeft) {
+          const bubbleWidth = bubbleRef.current.offsetWidth;
+          const calculatedLeft = window.innerWidth - rightPosition - bubbleWidth;
+          setLeftPosition(calculatedLeft);
+        }
+      } else {
+        // Nếu chưa có ref, thử lại sau một chút
+        requestAnimationFrame(calculateInitialPosition);
       }
-    }
+    };
+
+    // Delay một chút để đảm bảo DOM đã render xong
+    requestAnimationFrame(() => {
+      requestAnimationFrame(calculateInitialPosition);
+    });
   }, []);
 
 
@@ -219,8 +241,12 @@ const SupportZalo = () => {
           WebkitBackdropFilter: 'blur(16px)',
           border: '1px solid #D7EEFF',
         }}
-        className="flex flex-col items-center justify-center gap-3 py-3 px-1 shadow-xl"
+        className="relative flex flex-col items-center justify-center gap-3 py-3 px-1 shadow-xl"
       >
+        {/* Label kéo để di chuyển */}
+        <div className={`absolute -top-6 ${isOnLeft ? 'left-0' : 'right-0'} flex items-center justify-center gap-1 mb-1`}>
+          <p className="py-1 px-2 bg-gray-800 rounded-md font-deca font-medium text-[8px] text-[#ffffff] leading-tight whitespace-nowrap">Kéo để di chuyển</p>
+        </div>
         {/* Nút Góp ý */}
         <div
           className="flex flex-col items-center justify-center gap-1 group pointer-events-auto cursor-pointer"

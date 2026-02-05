@@ -10,6 +10,7 @@ import Head from 'next/head';
 import React, { useEffect, useState } from 'react';
 import { FaMinus, FaPlus, FaXmark } from 'react-icons/fa6';
 import { useDispatch, useSelector } from 'react-redux';
+import { useQueryClient } from '@tanstack/react-query';
 import { ListBtn_Setting } from './information';
 
 const WarningDaysInput = ({ state, setState }) => {
@@ -146,6 +147,7 @@ const General = props => {
   const isSettingReady = dataSetting && Object.keys(dataSetting || {}).length > 0;
   const isShow = useToast();
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
 
   const [onFetching, sOnFetching] = useState(false);
 
@@ -320,12 +322,16 @@ const General = props => {
         } catch (error) {
           console.error('Error fetching feature:', error);
         }
+
+        // Invalidate React Query cache để các component sử dụng useSetings() tự động refetch
+        queryClient.invalidateQueries({ queryKey: ['api_settings'] });
       } else {
         isShow('error', props.dataLang[message] || message);
         sOnSending(false);
       }
     } catch (error) {
-      throw error;
+      isShow('error', error?.message || 'Có lỗi xảy ra khi lưu cài đặt');
+      sOnSending(false);
     }
   };
 

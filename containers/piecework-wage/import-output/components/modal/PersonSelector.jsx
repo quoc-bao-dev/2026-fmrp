@@ -10,6 +10,7 @@ import { useLookupGroupMembers, useLookupStaffs } from '@/managers/api/piecework
 import { searchWithoutDiacritics } from '@/utils/helpers/stringHelper';
 import { autoUpdate, flip, offset, shift, size, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -74,9 +75,11 @@ const PersonSelector = ({
   const prevOpenRef = useRef(open);
   const prevSelectedRef = useRef(selected);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isNoStaffWarningOpen, setIsNoStaffWarningOpen] = useState(false);
   const triggerRef = useRef(null);
   const inputRef = useRef(null);
   const showToast = useToast();
+  const router = useRouter();
 
   // Gọi API lấy nhân viên và nhóm khi mở PersonSelector
   const { data: listStaffs, isLoading: isLoadingStaffs } = useLookupStaffs({ is_shift_scheduling: 1, branch_ids: [filterParams?.branch_ids] }, { enabled: open });
@@ -146,6 +149,18 @@ const PersonSelector = ({
       }, 0);
     }
   }, [open]);
+
+  // Kiểm tra nếu ca làm việc không có nhân viên (is_staff === 0)
+  useEffect(() => {
+    if (open && !isLoadingStaffs && listStaffs) {
+      const isStaff = Number(listStaffs?.is_staff) || 0;
+      if (isStaff === 0) {
+        // Đóng PersonSelector và hiển thị popup cảnh báo
+        onClose?.();
+        setIsNoStaffWarningOpen(true);
+      }
+    }
+  }, [open, isLoadingStaffs, listStaffs, onClose]);
 
   // Sử dụng Floating UI để tự động tính toán vị trí
   const { refs, floatingStyles, context } = useFloating({
@@ -407,6 +422,22 @@ const PersonSelector = ({
         }}
         cancel={() => {
           setIsConfirmOpen(false);
+        }}
+      />
+      <PopupConfim
+        type='warning'
+        title='Cảnh báo'
+        subtitle='Ca làm việc này không có nhân viên. Bạn có muốn xếp ca không?'
+        isOpen={isNoStaffWarningOpen}
+        forceConfirm
+        save={() => {
+          setIsNoStaffWarningOpen(false);
+          onClose?.();
+          router.push('/piecework-wage/shift-schedule');
+        }}
+        cancel={() => {
+          setIsNoStaffWarningOpen(false);
+          onClose?.();
         }}
       />
     </>

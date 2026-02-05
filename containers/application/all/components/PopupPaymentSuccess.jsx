@@ -2,9 +2,20 @@ import React from 'react';
 import Image from 'next/image';
 import Popup from './Popup';
 import { useApplicationInstall } from '@/context/application/ApplicationInstallContext';
+import { formatMoment } from '@/utils/helpers/formatMoment';
+import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
+import { useGetUpgradePackage } from '@/hooks/useAuth';
+import { useRequestForInvoice } from '@/managers/api/upgrade-package/useRequestForInvoice';
 
 export default function PopupPaymentSuccess({ isOpen, onClose, closeOnBackdropClick = true }) {
     const { paymentResult, featureName } = useApplicationInstall();
+    const { data: upgradePackageData } = useGetUpgradePackage();
+    console.log('upgradePackageData', upgradePackageData?.data?.id);
+    const id = upgradePackageData?.data?.id;
+    const { requestForInvoice, isLoading } = useRequestForInvoice();
+    const handleRequestInvoice = async () => {
+        await requestForInvoice(id);
+    };
 
     return (
         <Popup isOpen={isOpen} onClose={onClose} ariaLabel="Thanh toán thành công" panelClassName="!bg-[#F9FAFC] !w-[min(821px,calc(100vw-32px))] px-6 2xl:px-9 py-6 2xl:py-9 rounded-3xl gap-6" closeOnBackdropClick={closeOnBackdropClick}>
@@ -30,7 +41,9 @@ export default function PopupPaymentSuccess({ isOpen, onClose, closeOnBackdropCl
                             Ngày mua hàng:
                         </h3>
                         <p className="text-lg font-medium text-[#1C252E]">
-                            {paymentResult?.date_create || '--'}
+                            {paymentResult?.date_create
+                                ? formatMoment(paymentResult.date_create, FORMAT_MOMENT.DATE_TIME_SLASH_LONG)
+                                : '--'}
                         </p>
                     </div>
                     <div className="p-3 py-2 2xl:py-3 rounded-xl border border-[#919EAB3D] w-full">
@@ -81,6 +94,8 @@ export default function PopupPaymentSuccess({ isOpen, onClose, closeOnBackdropCl
                     <button
                         type="button"
                         className="h-[60px] inline-flex items-center justify-center gap-3 rounded-[12px] px-5 py-4 text-[18px] leading-7 font-medium text-white font-deca bg-[linear-gradient(170.14deg,#1FC583_5.11%,#1F9285_95.28%)] shadow-[0_10px_24px_rgba(31,197,131,0.22)] transition-all duration-200 hover:-translate-y-[1px] hover:brightness-[1.02] hover:shadow-[0_14px_30px_rgba(31,197,131,0.30)] active:translate-y-0 active:brightness-[0.98] focus:outline-none"
+                        onClick={handleRequestInvoice}
+                        disabled={isLoading}
                     >
                         Tải về hoá đơn
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -88,7 +103,6 @@ export default function PopupPaymentSuccess({ isOpen, onClose, closeOnBackdropCl
                         </svg>
 
                     </button>
-
                 </div>
             </div>
         </Popup>

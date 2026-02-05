@@ -562,7 +562,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
           searchProductionOrders: value,
         },
       }));
-    } catch (error) {}
+    } catch (error) { }
   }, 500);
 
   // onchange search combobox new
@@ -574,7 +574,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
           searchItemsVariant: value,
         },
       }));
-    } catch (error) {}
+    } catch (error) { }
   }, 500);
 
   // onchange search combobox new
@@ -586,7 +586,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
           searchOrders: value,
         },
       }));
-    } catch (error) {}
+    } catch (error) { }
   }, 500);
 
   // onchange search combobox new
@@ -598,7 +598,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
           searchPODetail: value,
         },
       }));
-    } catch (error) {}
+    } catch (error) { }
   }, 500);
 
   // onchange search combobox new
@@ -610,7 +610,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
           searchPlan: value,
         },
       }));
-    } catch (error) {}
+    } catch (error) { }
   }, 500);
 
   // Hàm mở danh sách công đoạn khi click vào lệnh sản xuất
@@ -959,11 +959,10 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
   // trigger của bộ lọc tổng của tất cả
   const triggerFilterAll = (
     <button
-      className={`${
-        stateFilterDropdown?.open || activeFilterCount > 0
-          ? 'text-[#0F4F9E] border-[#3276FA] bg-[#EBF5FF]'
-          : 'bg-white text-[#9295A4] border-[#D0D5DD] hover:text-[#0F4F9E] hover:bg-[#EBF5FF] hover:border-[#3276FA]'
-      } flex items-center space-x-2 border rounded-lg 3xl:h-10 h-9 px-3 group custom-transition`}
+      className={`${stateFilterDropdown?.open || activeFilterCount > 0
+        ? 'text-[#0F4F9E] border-[#3276FA] bg-[#EBF5FF]'
+        : 'bg-white text-[#9295A4] border-[#D0D5DD] hover:text-[#0F4F9E] hover:bg-[#EBF5FF] hover:border-[#3276FA]'
+        } flex items-center space-x-2 border rounded-lg 3xl:h-10 h-9 px-3 group custom-transition`}
     >
       <span className='3xl:size-5 size-4 shrink-0'>
         <FunnelIcon className='w-full h-full ' />
@@ -985,18 +984,16 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
   // trigger của bộ lọc trạng thái
   const triggerFilterStatus = (
     <button
-      className={`${
-        stateFilterDropdown?.open || isStateProvider?.productionsOrders?.selectStatusFilter?.length > 0
-          ? 'text-[#0F4F9E] border-[#3276FA] bg-[#EBF5FF]'
-          : 'bg-white text-[#9295A4] border-[#D0D5DD] hover:text-[#0F4F9E] hover:bg-[#EBF5FF] hover:border-[#3276FA]'
-      } relative flex items-center justify-between 3xl:space-x-2 space-x-0 border rounded-lg 3xl:h-10 h-9 px-3 group custom-transition w-full`}
+      className={`${stateFilterDropdown?.open || isStateProvider?.productionsOrders?.selectStatusFilter?.length > 0
+        ? 'text-[#0F4F9E] border-[#3276FA] bg-[#EBF5FF]'
+        : 'bg-white text-[#9295A4] border-[#D0D5DD] hover:text-[#0F4F9E] hover:bg-[#EBF5FF] hover:border-[#3276FA]'
+        } relative flex items-center justify-between 3xl:space-x-2 space-x-0 border rounded-lg 3xl:h-10 h-9 px-3 group custom-transition w-full`}
     >
       <ChartDonutIcon className='absolute -translate-y-1/2 top-1/2 3xl:size-5 size-4' />
 
       <span
-        className={`${
-          stateFilterDropdown?.open || isStateProvider?.productionsOrders?.selectStatusFilter?.length > 0 ? 'text-[#0F4F9E]' : 'text-[#3A3E4C] group-hover:text-[#0F4F9E]'
-        } xl:pl-6 pl-4 text-nowrap 3xl:text-base text-sm custom-transition`}
+        className={`${stateFilterDropdown?.open || isStateProvider?.productionsOrders?.selectStatusFilter?.length > 0 ? 'text-[#0F4F9E]' : 'text-[#3A3E4C] group-hover:text-[#0F4F9E]'
+          } xl:pl-6 pl-4 text-nowrap 3xl:text-base text-sm custom-transition`}
       >
         {dataLang?.purchase_status || 'purchase_status'}
       </span>
@@ -1029,28 +1026,28 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
   };
 
   // tính toán chiều cao của các element
-  const getElementHeightWithMargin = el => {
-    if (!el) return 0;
-    const style = window.getComputedStyle(el);
-    const marginTop = parseFloat(style.marginTop) || 0;
-    const marginBottom = parseFloat(style.marginBottom) || 0;
-    const height = el.getBoundingClientRect().height || 0;
-    return height + marginTop + marginBottom;
-  };
+  // const getElementHeightWithMargin = el => {
+  //   if (!el) return 0;
+  //   const style = window.getComputedStyle(el);
+  //   const marginTop = parseFloat(style.marginTop) || 0;
+  //   const marginBottom = parseFloat(style.marginBottom) || 0;
+  //   const height = el.getBoundingClientRect().height || 0;
+  //   return height + marginTop + marginBottom;
+  // };
 
-  const calcAvailableHeight = type => {
-    const breadcrumb = getElementHeightWithMargin(breadcrumbRef.current);
-    const titleInfo = getElementHeightWithMargin(titleRef.current);
-    const filter = getElementHeightWithMargin(filterRef.current);
-    const pagination = getElementHeightWithMargin(paginationRef.current);
-    const groupButton = getElementHeightWithMargin(groupButtonRef.current);
+  // const calcAvailableHeight = type => {
+  //   const breadcrumb = getElementHeightWithMargin(breadcrumbRef.current);
+  //   const titleInfo = getElementHeightWithMargin(titleRef.current);
+  //   const filter = getElementHeightWithMargin(filterRef.current);
+  //   const pagination = getElementHeightWithMargin(paginationRef.current);
+  //   const groupButton = getElementHeightWithMargin(groupButtonRef.current);
 
-    if (type === 'main') {
-      return window.innerHeight - breadcrumb - titleInfo - filter - pagination - 84 - 24;
-    } else if (type === 'submain') {
-      return window.innerHeight - breadcrumb - titleInfo - filter - groupButton - 84 - 34;
-    }
-  };
+  //   if (type === 'main') {
+  //     return window.innerHeight - breadcrumb - titleInfo - filter - pagination - 84 - 24;
+  //   } else if (type === 'submain') {
+  //     return window.innerHeight - breadcrumb - titleInfo - filter - groupButton - 84 - 34;
+  //   }
+  // };
 
   // Hàm làm mới dữ liệu
   const refreshData = async () => {
@@ -1223,7 +1220,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
             quality: 1,
             expiration_date: item.expiration_date
               ? // ? new Date(item.expiration_date).toLocaleDateString("vi-VN") // 👉 Format theo dd/mm/yyyy
-                dayjs(item.expiration_date).format('DD/MM/YYYY')
+              dayjs(item.expiration_date).format('DD/MM/YYYY')
               : null,
             idItem: index + 1,
           };
@@ -1299,14 +1296,12 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
   };
 
   return (
-    <React.Fragment>
+    <div className='flex-1 min-h-0 h-full flex flex-col gap-2 pb-4'>
       <div ref={breadcrumbRef}>
         {statusExprired ? (
           <EmptyExprired />
         ) : (
-          <React.Fragment>
-            <BreadcrumbCustom items={breadcrumbItems} className='3xl:text-sm 2xl:text-xs xl:text-[10px] lg:text-[10px]' />
-          </React.Fragment>
+          <BreadcrumbCustom items={breadcrumbItems} className='3xl:text-sm 2xl:text-xs xl:text-[10px] lg:text-[10px]' />
         )}
       </div>
 
@@ -1337,9 +1332,8 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                   <form className='relative flex items-center w-full'>
                     <input
                       onChange={e => onChangeSearch(e)}
-                      className={`${
-                        isOpenSearch ? 'rounded-l-lg border-r-0 border-[#D0D5DD] focus:border-[#3276FA]' : 'rounded-lg border-[#D0D5DD]'
-                      } relative border  bg-white pl-2 3xl:h-10 h-9 text-base-default 3xl:w-[300px] w-[280px] focus:outline-none placeholder:text-[#3A3E4C] 3xl:placeholder:text-base placeholder:text-sm placeholder:font-normal`}
+                      className={`${isOpenSearch ? 'rounded-l-lg border-r-0 border-[#D0D5DD] focus:border-[#3276FA]' : 'rounded-lg border-[#D0D5DD]'
+                        } relative border  bg-white pl-2 3xl:h-10 h-9 text-base-default 3xl:w-[300px] w-[280px] focus:outline-none placeholder:text-[#3A3E4C] 3xl:placeholder:text-base placeholder:text-sm placeholder:font-normal`}
                       type='text'
                       // value={isStateProvider?.productionsOrders.search}
                       placeholder={dataLang?.productions_orders_find || 'productions_orders_find'}
@@ -1357,9 +1351,8 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                   </div>
                 }
                 hideTitle={true}
-                className={`${
-                  isOpenSearch ? 'rounded-r-lg bg-[#1760B9] text-white border-[#3276FA]' : 'rounded-lg text-[#9295A4] border-[#D0D5DD]'
-                } flex items-center justify-center 3xl:w-12 w-10 3xl:h-10 h-9 shrink-0 border`}
+                className={`${isOpenSearch ? 'rounded-r-lg bg-[#1760B9] text-white border-[#3276FA]' : 'rounded-lg text-[#9295A4] border-[#D0D5DD]'
+                  } flex items-center justify-center 3xl:w-12 w-10 3xl:h-10 h-9 shrink-0 border`}
                 onClick={toggleSearch}
               />
             </motion.div>
@@ -1583,9 +1576,8 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
           onChange={tab => handleActiveTab(tab, 'list')}
           renderLabel={(tab, activeTab) => (
             <h3
-              className={`${
-                isStateProvider?.productionsOrders?.isTabList?.id === tab.id ? 'text-[#0375F3] scale-[1.02]' : 'text-[#9295A4] scale-[1]'
-              } font-medium group-hover:text-[#0375F3] transition-all duration-100 ease-linear origin-left flex items-center gap-1`}
+              className={`${isStateProvider?.productionsOrders?.isTabList?.id === tab.id ? 'text-[#0375F3] scale-[1.02]' : 'text-[#9295A4] scale-[1]'
+                } font-medium group-hover:text-[#0375F3] transition-all duration-100 ease-linear origin-left flex items-center gap-1`}
             >
               <span>{tab.name}</span>
               {tab.count > 0 && <span className='aspect-1 h-5 p-1 text-[11px] bg-[#F97A4C] text-white rounded-full flex items-center justify-center'>{tab.count}</span>}
@@ -1594,14 +1586,14 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
         />
       </div>
 
-      <div className='flex items-start w-full gap-4 overflow-y-hidden 3xl:gap-6'>
-        <div className='w-[15%] size-full space-y-4 border-none border-[#D0D5DD] border'>
+      <div className='flex-1 min-h-0 h-full flex items-start w-full gap-4 3xl:gap-6'>
+        <div className='max-w-[15%] h-full flex-1 min-h-0 flex flex-col space-y-4 border-none border-[#D0D5DD] border'>
           <Customscrollbar
-            className='h-full'
-            style={{
-              height: calcAvailableHeight('main'),
-              maxHeight: calcAvailableHeight('main'),
-            }}
+            className='flex-1 min-h-0'
+          // style={{
+          //   height: calcAvailableHeight('main'),
+          //   maxHeight: calcAvailableHeight('main'),
+          // }}
           >
             {isLoadingProductionOrderList ? (
               <Loading className='h-full 3xl:h-full 2xl:h-full xl:h-full' />
@@ -1696,7 +1688,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
             {hasNextPageProductionOrderList && <LoadingComponent ref={refInviewListLsx} />}
           </Customscrollbar>
 
-          <div ref={paginationRef} className='flex items-center'>
+          <div ref={paginationRef} className='flex items-center h-fit flex-shrink-0'>
             <LimitListDropdown
               limit={isStateProvider?.productionsOrders.limit}
               sLimit={value =>
@@ -1715,126 +1707,119 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
         </div>
 
         <div className='relative z-50 flex-1 min-w-0 size-full space-y-4 border-none border-[#D0D5DD] border overflow-y-hidden'>
-          <Customscrollbar
-            className='h-fit pr-2 relative -z-10 pt-0'
-            style={{
-              height: calcAvailableHeight('submain'),
-              maxHeight: calcAvailableHeight('submain'),
+          {isLoadingProductionOrderDetail || isRefetchingProductionOrderDetail || isRefetchingProductionOrderList || isLoadingProductionOrderList ? (
+            <Loading className='3xl:h-full 2xl:h-full xl:h-full h-full' />
+          ) : flagProductionOrders?.length === 0 ? (
+            <NoData className='mt-0' />
+          ) : dataProductionOrderDetail?.listPOItems?.length > 0 ? (
+            <React.Fragment>
+              {isStateProvider?.productionsOrders?.isTabList?.type == 'products' && (
+                <DetailProductionOrderList
+                  {...shareProps}
+                  processSteps={processSteps}
+                  // managerAvatars={managerAvatars}
+                  typePageMoblie={typePageMoblie}
+                  hasPoPermission={hasPoPermission}
+                  authState={authState}
+                  isShow={isShow}
+                  handClickDropdownCompleteStage={handClickDropdownCompleteStage}
+                  listPrintTask={listPrintTask}
+                  refreshData={refreshData}
+                  handleQueryId={handleQueryId}
+                  refetchProductionOrderList={refetchProductionOrderList}
+                  groupButtonRef={groupButtonRef}
+                  totalTime={dataProductionOrderDetail?.total_time}
+                />
+              )}
+              {isStateProvider?.productionsOrders?.isTabList?.type == 'semiProduct' && (
+                <PlaningProductionOrder
+                  {...shareProps}
+                  searchMaterials={searchMaterials}
+                  setSearchMaterials={setSearchMaterials}
+                  handleStockDropdown={handleStockDropdown}
+                  queryValue={queryValue}
+                  fetchDataTable={fetchDataTable}
+                  canPurchase={canPurchase}
+                  isStateProvider={isStateProvider}
+                  dataProductionOrderDetail={dataProductionOrderDetail}
+                  handPrintPlanManufacture={handPrintPlanManufacture}
+                  loadingButton={loadingButton}
+                  arrButton={arrButton}
+                  groupButtonRef={groupButtonRef}
+                />
+              )}
+              {isStateProvider?.productionsOrders?.isTabList?.type == 'keepStock' && <TabKeepStock {...shareProps} />}
+              {isStateProvider?.productionsOrders?.isTabList?.type == 'pieceworkWage' && (
+                <TabPieceworkWage
+                  {...shareProps}
+                  refreshData={refreshData}
+                  handleQueryId={handleQueryId}
+                  isStateProvider={isStateProvider}
+                  groupButtonRef={groupButtonRef}
+                  listPrintTask={listPrintTask}
+                  incomeChartData={incomeChartData}
+                />
+              )}
+            </React.Fragment>
+          ) : (
+            <NoData className='mt-0' />
+          )}
+          {/* <ModalDetail {...shareProps} /> */}
+          <PopupKeepStock
+            dataLang={dataLang}
+            queryValue={queryValue}
+            fetchDataTable={fetchDataTable}
+            hasPermission={canKeepStock}
+            dataTable={{
+              countAll: dataProductionOrderDetail?.listBom?.materialsBom?.length ?? 1,
+              listDataRight: {
+                idCommand: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.pp_id,
+                title: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.title,
+                dataBom: {
+                  materialsBom: dataProductionOrderDetail?.listBom?.materialsBom || [],
+                  productsBom: dataProductionOrderDetail?.listBom?.productsBom || [],
+                },
+              },
             }}
-          >
-            {isLoadingProductionOrderDetail || isRefetchingProductionOrderDetail || isRefetchingProductionOrderList || isLoadingProductionOrderList ? (
-              <Loading className='3xl:h-full 2xl:h-full xl:h-full h-full' />
-            ) : flagProductionOrders?.length === 0 ? (
-              <NoData className='mt-0' />
-            ) : dataProductionOrderDetail?.listPOItems?.length > 0 ? (
-              <React.Fragment>
-                {isStateProvider?.productionsOrders?.isTabList?.type == 'products' && (
-                  <DetailProductionOrderList
-                    {...shareProps}
-                    processSteps={processSteps}
-                    // managerAvatars={managerAvatars}
-                    typePageMoblie={typePageMoblie}
-                    hasPoPermission={hasPoPermission}
-                    authState={authState}
-                    isShow={isShow}
-                    handClickDropdownCompleteStage={handClickDropdownCompleteStage}
-                    listPrintTask={listPrintTask}
-                    refreshData={refreshData}
-                    handleQueryId={handleQueryId}
-                    refetchProductionOrderList={refetchProductionOrderList}
-                    groupButtonRef={groupButtonRef}
-                  />
-                )}
-                {isStateProvider?.productionsOrders?.isTabList?.type == 'semiProduct' && (
-                  <PlaningProductionOrder
-                    {...shareProps}
-                    searchMaterials={searchMaterials}
-                    setSearchMaterials={setSearchMaterials}
-                    handleStockDropdown={handleStockDropdown}
-                    queryValue={queryValue}
-                    fetchDataTable={fetchDataTable}
-                    canPurchase={canPurchase}
-                    isStateProvider={isStateProvider}
-                    dataProductionOrderDetail={dataProductionOrderDetail}
-                    handPrintPlanManufacture={handPrintPlanManufacture}
-                    loadingButton={loadingButton}
-                    arrButton={arrButton}
-                    groupButtonRef={groupButtonRef}
-                  />
-                )}
-                {isStateProvider?.productionsOrders?.isTabList?.type == 'keepStock' && <TabKeepStock {...shareProps} />}
-                {isStateProvider?.productionsOrders?.isTabList?.type == 'pieceworkWage' && (
-                  <TabPieceworkWage
-                    {...shareProps}
-                    refreshData={refreshData}
-                    handleQueryId={handleQueryId}
-                    isStateProvider={isStateProvider}
-                    groupButtonRef={groupButtonRef}
-                    listPrintTask={listPrintTask}
-                    incomeChartData={incomeChartData}
-                  />
-                )}
-              </React.Fragment>
-            ) : (
-              <NoData className='mt-0' />
-            )}
-          </Customscrollbar>
+            title={dataLang?.salesOrder_keep_stock || 'salesOrder_keep_stock'}
+            icon={<PlusIcon className='text-white' />}
+            hideTrigger
+            forceOpen={isOpenKeepStock}
+            onForceClose={() => setIsOpenKeepStock(false)}
+          />
+          <PopupRecallStock
+            forceOpen={isOpenRecallStock}
+            onForceClose={() => setIsOpenRecallStock(false)}
+            poId={isStateProvider?.productionsOrders?.idDetailProductionOrder}
+            codeLSX={isStateProvider?.productionsOrders?.dataProductionOrderDetail?.title}
+            branchId={dataProductionOrderDetail?.productionOrder?.branch_id}
+            ppId={isStateProvider?.productionsOrders?.dataProductionOrderDetail?.pp_id}
+          />
+          <PopupConfim
+            dataLang={dataLang}
+            type='warning'
+            title={isIdChild ? TITLE_DELETE_COMMAND : TITLE_DELETE_PRODUCTIONS_ORDER}
+            subtitle={CONFIRM_DELETION}
+            isOpen={isOpen}
+            save={() => {
+              if (isIdChild) {
+                handleConfimDeleteItem();
+              } else {
+                handleConfim();
+              }
+            }}
+            cancel={() => handleQueryId({ status: false })}
+          />
+          <PopupListResponsiblePerson
+            brandId={dataProductionOrderDetail?.productionOrder?.branch_id}
+            poId={isStateProvider?.productionsOrders?.idDetailProductionOrder}
+            onRefreshDetail={refetchProductionOrderDetail}
+            canManageManagers={canManageManagers}
+          />
         </div>
       </div>
 
-      <ModalDetail {...shareProps} />
-      <PopupKeepStock
-        dataLang={dataLang}
-        queryValue={queryValue}
-        fetchDataTable={fetchDataTable}
-        hasPermission={canKeepStock}
-        dataTable={{
-          countAll: dataProductionOrderDetail?.listBom?.materialsBom?.length ?? 1,
-          listDataRight: {
-            idCommand: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.pp_id,
-            title: isStateProvider?.productionsOrders?.dataProductionOrderDetail?.title,
-            dataBom: {
-              materialsBom: dataProductionOrderDetail?.listBom?.materialsBom || [],
-              productsBom: dataProductionOrderDetail?.listBom?.productsBom || [],
-            },
-          },
-        }}
-        title={dataLang?.salesOrder_keep_stock || 'salesOrder_keep_stock'}
-        icon={<PlusIcon className='text-white' />}
-        hideTrigger
-        forceOpen={isOpenKeepStock}
-        onForceClose={() => setIsOpenKeepStock(false)}
-      />
-      <PopupRecallStock
-        forceOpen={isOpenRecallStock}
-        onForceClose={() => setIsOpenRecallStock(false)}
-        poId={isStateProvider?.productionsOrders?.idDetailProductionOrder}
-        codeLSX={isStateProvider?.productionsOrders?.dataProductionOrderDetail?.title}
-        branchId={dataProductionOrderDetail?.productionOrder?.branch_id}
-        ppId={isStateProvider?.productionsOrders?.dataProductionOrderDetail?.pp_id}
-      />
-      <PopupConfim
-        dataLang={dataLang}
-        type='warning'
-        title={isIdChild ? TITLE_DELETE_COMMAND : TITLE_DELETE_PRODUCTIONS_ORDER}
-        subtitle={CONFIRM_DELETION}
-        isOpen={isOpen}
-        save={() => {
-          if (isIdChild) {
-            handleConfimDeleteItem();
-          } else {
-            handleConfim();
-          }
-        }}
-        cancel={() => handleQueryId({ status: false })}
-      />
-      <PopupListResponsiblePerson
-        brandId={dataProductionOrderDetail?.productionOrder?.branch_id}
-        poId={isStateProvider?.productionsOrders?.idDetailProductionOrder}
-        onRefreshDetail={refetchProductionOrderDetail}
-        canManageManagers={canManageManagers}
-      />
-    </React.Fragment>
+    </div>
   );
 };
 export default ProductionsOrderMain;

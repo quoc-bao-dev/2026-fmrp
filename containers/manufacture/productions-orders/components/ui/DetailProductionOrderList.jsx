@@ -3,14 +3,13 @@ import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
 import ProgressStageBar from '@/components/common/progress/ProgressStageBar';
 import { ArrowCounterClockWiseIcon, CaretDownIcon, CaretDropDownThinIcon, CheckThinIcon, KanbanIcon, NoteIcon, TimerIcon, TrashIcon, UserPlusIcon } from '@/components/icons';
 import UnionStepIcon from '@/components/icons/common/UnionStepIcon';
+import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { AvatarStack } from '@/components/UI/common/user';
 import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
+import { IMAGES } from '@/constants/images';
 import { StateContext } from '@/context/_state/productions-orders/StateContext';
-import { useSearchStaffs } from '@/hooks/common/useStaffs';
 import useSetingServer from '@/hooks/useConfigNumber';
-import { useProductionOrderManagerDetail } from '@/managers/api/productions-order/useProductionOrderManagerDetail';
-import { useSaveProductionOrderManagerDetail } from '@/managers/api/productions-order/useSaveProductionOrderManagerDetail';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
@@ -18,14 +17,10 @@ import { memo, useCallback, useContext, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { listDropdownCompleteStage } from '../main/constants/listData';
 import PopupConfimStage from '../popup/PopupConfimStage';
-import ResponsiblePersonComboBox from '../popup/ResponsiblePersonComboBox';
-import { IMAGES } from '@/constants/images';
 
 // Sub-component for ProductRow to use hooks
 const ProductRow = memo(
   ({ product, index, item, totalLength, formatNumber, handleToggleSheetDetail, isStateProvider, dataLang, openManagerComboId, setOpenManagerComboId, branchId, canManageManagers = true }) => {
-    // const po_id = item.po_id;
-    // const poi_id = product.poi_id;
 
     const transformPoiStaffAndGroups = data => {
       if (!data) {
@@ -55,82 +50,6 @@ const ProductRow = memo(
 
     let managerAvatars = transformPoiStaffAndGroups(product?.staff_group_detail_stage);
 
-    // Gọi hook để lấy manager detail
-    // const { data: managerDetailData, refetch: refetchManagerDetail } = useProductionOrderManagerDetail({
-    //   po_id,
-    //   poi_id,
-    //   enabled: !!po_id && !!poi_id,
-    // });
-
-    // Gọi hook để lấy danh sách staffs
-    // const { data: staffs } = useSearchStaffs({
-    //   branch_ids: branchId ? [branchId] : [],
-    //   enabled: !!branchId,
-    //   po_id: po_id,
-    // });
-
-    // // Map dữ liệu từ API response
-    // const listStaffs = useMemo(() => {
-    //   return (
-    //     staffs?.data?.staffs?.map(e => ({
-    //       id: e.staffid,
-    //       name: e.full_name,
-    //       avatarUrl: e.profile_image,
-    //     })) || []
-    //   );
-    // }, [staffs]);
-
-    // Map dữ liệu từ API response - dùng để hiển thị selected
-    // const managerAvatars = useMemo(() => {
-    //   const details = managerDetailData?.data?.production_order_manager_details || [];
-    //   return details.map(mgr => ({
-    //     id: mgr?.staff?.staffid || mgr?.staff_id,
-    //     name: mgr?.staff?.full_name || 'Không tên',
-    //     avatarUrl: mgr?.staff?.profile_image || '',
-    //   }));
-    // }, [managerDetailData]);
-
-    // Filter managerAvatars để chỉ lấy những người có trong listStaffs
-    // Đảm bảo combo box có thể active đúng các item đã chọn
-    // const selectedManagers = useMemo(() => {
-    //   if (!listStaffs || listStaffs.length === 0) return [];
-    //   const staffIds = new Set(listStaffs.map(staff => staff.id));
-    //   return managerAvatars.filter(manager => staffIds.has(manager.id));
-    // }, [managerAvatars, listStaffs]);
-
-    // Hook để save production order manager detail
-    // const { saveProductionOrderManagerDetail, isLoading: isSaving } = useSaveProductionOrderManagerDetail({
-    //   onSuccess: response => {
-    //     console.log('Save manager detail success:', response);
-    //     // Refresh lại dữ liệu manager detail
-    //     refetchManagerDetail();
-    //     // Đóng combo box
-    //     setOpenManagerComboId(null);
-    //   },
-    //   onError: error => {
-    //     console.error('Save manager detail error:', error);
-    //   },
-    // });
-
-    // Hàm handle submit để lưu danh sách người phụ trách
-    // const handleSubmit = useCallback(
-    //   selected => {
-    //     // Format payload theo yêu cầu
-    //     const payload = {
-    //       po_id: po_id,
-    //       poi_id: poi_id,
-    //       items: selected.map(person => ({
-    //         staff_id: person.id,
-    //         is_manufacture: 1, // 1: Phụ trách sản xuất
-    //       })),
-    //     };
-
-    //     // Gọi API để lưu
-    //     saveProductionOrderManagerDetail(payload);
-    //   },
-    //   [po_id, poi_id, saveProductionOrderManagerDetail]
-    // );
-
     const colorMap = {
       0: { color: 'bg-[#FF811A]/15 text-[#C25705]', title: dataLang?.productions_orders_produced || 'produced' },
       1: { color: 'bg-[#3ECeF7]/20 text-[#076A94]', title: dataLang?.productions_orders_in_progress || 'in progress' },
@@ -143,14 +62,12 @@ const ProductRow = memo(
       <div
         key={`product-${index}`}
         onClick={() => handleToggleSheetDetail(product)}
-        className={`col-span-16 grid grid-cols-23 gap-2 items-center group hover:bg-gray-100 cursor-pointer transition-all duration-150 ease-in-out 3xl:py-4 py-2 ${
-          totalLength - 1 === index ? 'border-transparent' : 'border-b'
-        }`}
+        className={`col-span-16 grid grid-cols-23 gap-2 items-center group hover:bg-gray-100 cursor-pointer transition-all duration-150 ease-in-out 3xl:py-4 py-2 ${totalLength - 1 === index ? 'border-transparent' : 'border-b'
+          }`}
       >
         <h4 className='col-span-1 flex items-center justify-center text-center text-[#141522] font-semibold xl:text-sm text-xs uppercase px-1'>{index + 1 ?? '-'}</h4>
 
         <h4 className='col-span-5 text-[#344054] font-normal flex items-center py-2 px-1'>
-          {/* <h4 className='col-span-6 text-[#344054] font-normal flex items-center py-2 px-1'> */}
           <div className='flex items-start gap-2'>
             <div className='2xl:size-16 size-14 shrink-0'>
               <Image alt={product?.name ?? 'img'} width={200} height={200} src={product?.images ?? '/icon/default/default.png'} className='size-full object-cover rounded-md' />
@@ -158,9 +75,8 @@ const ProductRow = memo(
 
             <div className='flex flex-col 3xl:gap-1 gap-0.5'>
               <p
-                className={`font-semibold 3xl:text-base xl:text-sm text-xs ${
-                  isStateProvider?.productionsOrders.dataModal.id === product.id ? 'text-[#0F4F9E]' : 'text-[#141522] group-hover:text-[#0F4F9E]'
-                }`}
+                className={`font-semibold 3xl:text-base xl:text-sm text-xs ${isStateProvider?.productionsOrders.dataModal.id === product.id ? 'text-[#0F4F9E]' : 'text-[#141522] group-hover:text-[#0F4F9E]'
+                  }`}
               >
                 {product.item_name}
               </p>
@@ -193,7 +109,6 @@ const ProductRow = memo(
         </h4>
 
         <h4 className='col-span-5 flex items-center justify-center xl:text-sm text-xs px-1'>
-          {/* <h4 className='col-span-7 flex items-center justify-center xl:text-sm text-xs px-1'> */}
           <ProgressStageBar total={product?.count_stage} done={product?.count_stage_active} quantity={product?.quantity_stage} name_active={product?.stage_name_active ?? ''} />
         </h4>
       </div>
@@ -223,6 +138,7 @@ const DetailProductionOrderList = memo(
     handleQueryId,
     refetchProductionOrderList,
     groupButtonRef,
+    totalTime,
   }) => {
     const dispatch = useDispatch();
     const dataSeting = useSetingServer();
@@ -233,7 +149,7 @@ const DetailProductionOrderList = memo(
 
     // Lấy branch_id từ production order
     const branchId = isStateProvider?.productionsOrders?.dataProductionOrderDetail?.productionOrder?.branch_id;
-    
+
     const staff_managers = isStateProvider?.productionsOrders?.dataProductionOrderDetail?.staff_managers;
     const staffManagerAvatars = useMemo(
       () =>
@@ -244,7 +160,7 @@ const DetailProductionOrderList = memo(
         })),
       [staff_managers]
     );
-    
+
     // Trigger buttons cho dropdown
     const triggerCompleteStage = (
       <div className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center xl:gap-4 gap-2 font-medium text-white border-[#0375F3] bg-[#0375F3] hover:bg-[#0375F3] hover:opacity-80 cursor-pointer hover:shadow-hover-button rounded-lg custom-transition'>
@@ -304,9 +220,9 @@ const DetailProductionOrderList = memo(
     if (!list.length) return <NoData />;
 
     return (
-      <div className='flex flex-col gap-4 h-full'>
+      <div className='flex flex-col gap-4 h-full flex-1 min-h-0 overflow-hidden'>
         {/* Toolbar - Process Steps và Action Buttons */}
-        <div className='flex items-center justify-between mb-4'>
+        <div className='flex items-center justify-between'>
           {/* Process Steps */}
           <div className='flex items-center gap-0'>
             <div className='relative z-[3] flex items-center justify-center min-w-[140px]'>
@@ -321,9 +237,8 @@ const DetailProductionOrderList = memo(
             <div className='relative z-[2] flex items-center justify-center min-w-[160px] -ml-[23px]'>
               <UnionStepIcon active={processSteps?.export_production?.is_active || false} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
               <span
-                className={`absolute inset-0 flex items-center justify-center font-medium text-xs whitespace-nowrap px-4 ml-3 ${
-                  processSteps?.export_production?.is_active ? 'text-white' : 'text-[#9295A4]'
-                }`}
+                className={`absolute inset-0 flex items-center justify-center font-medium text-xs whitespace-nowrap px-4 ml-3 ${processSteps?.export_production?.is_active ? 'text-white' : 'text-[#9295A4]'
+                  }`}
               >
                 2. Xuất kho sản xuất
               </span>
@@ -332,9 +247,8 @@ const DetailProductionOrderList = memo(
             <div className='relative z-[1] flex items-center justify-center min-w-[120px] -ml-[23px]'>
               <UnionStepIcon active={processSteps?.import_finished_goods?.is_active || false} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
               <span
-                className={`absolute inset-0 flex items-center justify-center font-medium text-xs whitespace-nowrap px-4 ${
-                  processSteps?.import_finished_goods?.is_active ? 'text-white' : 'text-[#9295A4]'
-                }`}
+                className={`absolute inset-0 flex items-center justify-center font-medium text-xs whitespace-nowrap px-4 ${processSteps?.import_finished_goods?.is_active ? 'text-white' : 'text-[#9295A4]'
+                  }`}
               >
                 3. Nhập kho TP
               </span>
@@ -344,7 +258,15 @@ const DetailProductionOrderList = memo(
           <div ref={groupButtonRef} className='flex items-center justify-end gap-2 p-0.5 mb-2'>
             <button className='3xl:h-10 h-[38px] flex items-center gap-1 px-2 rounded-2xl bg-[#DFF3E2] text-[#4E4E4E] hover:opacity-80 transition-opacity'>
               <TimerIcon size={24} color='#4E4E4E' />
-              <span className='responsive-text-base font-normal'>08 : 27 : 00</span>
+              <span className='responsive-text-base font-normal'>
+                {(() => {
+                  const pad = n => String(n).padStart(2, '0');
+                  const hours = Math.floor((totalTime || 0) / 3600);
+                  const minutes = Math.floor(((totalTime || 0) % 3600) / 60);
+                  const seconds = (totalTime || 0) % 60;
+                  return `${pad(hours)} : ${pad(minutes)} : ${pad(seconds)}`;
+                })()}
+              </span>
             </button>
             <div
               onClick={() => {
@@ -483,73 +405,71 @@ const DetailProductionOrderList = memo(
           </div>
         </div>
 
-        {/* Nội dung danh sách */}
-        {list.map(item => (
-          <div key={`product-${item.id}`} className='grid grid-cols-12 items-start select-none'>
-            <div
-              onClick={() => handleToggleAccordion(item.id)}
-              className={`col-span-12 border flex items-center justify-between px-3 rounded-lg cursor-pointer custom-transition group ${
-                item.showChild ? 'border-[#3276FA] bg-[#EBF5FF] text-[#0F4F9E]' : 'border-[#D0D5DD] bg-white text-[#3A3E4C] hover:border-[#3276FA] hover:bg-[#EBF5FF] hover:text-[#0F4F9E]'
-              }`}
-            >
-              <div className='flex items-center gap-2'>
-                <div className={`${item.showChild ? 'text-[#0F4F9E]' : 'text-[#9295A4] group-hover:text-[#0F4F9E]'} 3xl:size-5 size-4 custom-transition`}>
-                  <NoteIcon className='size-full' />
-                </div>
-                <h1 className='font-normal 3xl:text-base text-sm py-2 space-x-1'>
-                  <span>Đơn hàng:</span>
-                  <span>{item.title}</span>
-                </h1>
-                {item.showChild && (
-                  <span className='rounded-full bg-[#0F4F9E] !text-white xl:text-xs text-[8px] xl:size-5 size-4  flex items-center justify-center'>{item.items_products?.length ?? 0}</span>
-                )}
-              </div>
-              <div className={`${item.showChild ? 'rotate-180 text-[#0F4F9E]' : 'text-[#9295A4] group-hover:text-[#0F4F9E]'} size-4 custom-transition`}>
-                <CaretDownIcon className='size-full' />
-              </div>
-            </div>
-
-            <AnimatePresence initial={false}>
-              {item.showChild && (
-                <motion.div
-                  key={`accordion-body-${item.id}-open`}
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: 'easeInOut' }}
-                  className='col-span-12 grid grid-cols-16 mt-2'
-                >
-                  {/* header */}
-                  <div className='col-span-16 grid grid-cols-23 gap-2 py-4 border-b'>
-                    <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-1 px-1'>STT</h4>
-                    {/* <h4 className='xl:text-sm text-xs text-start text-[#9295A4] font-semibold col-span-6 px-1'>{dataLang?.Q_materials_finish_product || 'Q_materials_finish_product'}</h4> */}
-                    <h4 className='xl:text-sm text-xs text-start text-[#9295A4] font-semibold col-span-5 px-1'>{dataLang?.Q_materials_finish_product || 'Q_materials_finish_product'}</h4>
-                    <h4 className='xl:text-sm text-xs text-start text-[#9295A4] font-semibold col-span-2 px-1'>{dataLang?.Q_materials_unit || 'Q_materials_unit'}</h4>
-                    <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-2 px-1'>SL cần</h4>
-                    <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-2 px-1'>SL đã nhập</h4>
-                    <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-3 px-1'>Phụ trách sản xuất</h4>
-                    <h4 className='xl:text-sm text-xs text-start text-[#9295A4] font-semibold col-span-3 px-1'>{dataLang?.Q_materials_status || 'Q_materials_status'}</h4>
-                    {/* <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold block col-span-7 px-1'>{dataLang?.Q_materials_progress || 'Q_materials_progress'}</h4> */}
-                    <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold block col-span-5 px-1'>{dataLang?.Q_materials_progress || 'Q_materials_progress'}</h4>
+        <Customscrollbar className='flex-1 min-h-0'>
+          {list.map(item => (
+            <div key={`product-${item.id}`} className='grid grid-cols-12 items-start select-none mb-2'>
+              <div
+                onClick={() => handleToggleAccordion(item.id)}
+                className={`col-span-12 border flex items-center justify-between px-3 rounded-lg cursor-pointer custom-transition group ${item.showChild ? 'border-[#3276FA] bg-[#EBF5FF] text-[#0F4F9E]' : 'border-[#D0D5DD] bg-white text-[#3A3E4C] hover:border-[#3276FA] hover:bg-[#EBF5FF] hover:text-[#0F4F9E]'
+                  }`}
+              >
+                <div className='flex items-center gap-2'>
+                  <div className={`${item.showChild ? 'text-[#0F4F9E]' : 'text-[#9295A4] group-hover:text-[#0F4F9E]'} 3xl:size-5 size-4 custom-transition`}>
+                    <NoteIcon className='size-full' />
                   </div>
-                  {item.items_products &&
-                    item.items_products
-                      ?.slice(0, visibleProducts[item.id] || 4)
-                      ?.map((product, index) => renderProductRow(product, index, item, item.items_products?.length > 4 ? visibleProducts[item.id] || 4 : item.items_products?.length))}
-
-                  {/* load more click */}
-                  {(item.items_products?.length || 0) > (visibleProducts[item.id] || 4) && (
-                    <div className='col-span-16 flex justify-center py-2'>
-                      <button onClick={() => handleShowMoreProducts(item.id, item.items_products.length)} className='text-[#667085] 3xl:text-base text-sm hover:underline'>
-                        Xem thêm ({item.items_products.length - (visibleProducts[item.id] || 4)}) Thành phẩm
-                      </button>
-                    </div>
+                  <h2 className='font-normal 3xl:text-base text-sm py-2 space-x-1'>
+                    <span>Đơn hàng:</span>
+                    <span>{item.title}</span>
+                  </h2>
+                  {item.showChild && (
+                    <span className='rounded-full bg-[#0F4F9E] !text-white xl:text-xs text-[8px] xl:size-5 size-4  flex items-center justify-center'>{item.items_products?.length ?? 0}</span>
                   )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        ))}
+                </div>
+                <div className={`${item.showChild ? 'rotate-180 text-[#0F4F9E]' : 'text-[#9295A4] group-hover:text-[#0F4F9E]'} size-4 custom-transition`}>
+                  <CaretDownIcon className='size-full' />
+                </div>
+              </div>
+
+              <AnimatePresence initial={false}>
+                {item.showChild && (
+                  <motion.div
+                    key={`accordion-body-${item.id}-open`}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className='col-span-12 grid grid-cols-16 mt-2'
+                  >
+                    <div className='col-span-16 grid grid-cols-23 gap-2 py-4 border-b'>
+                      <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-1 px-1'>STT</h4>
+                      <h4 className='xl:text-sm text-xs text-start text-[#9295A4] font-semibold col-span-5 px-1'>{dataLang?.Q_materials_finish_product || 'Q_materials_finish_product'}</h4>
+                      <h4 className='xl:text-sm text-xs text-start text-[#9295A4] font-semibold col-span-2 px-1'>{dataLang?.Q_materials_unit || 'Q_materials_unit'}</h4>
+                      <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-2 px-1'>SL cần</h4>
+                      <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-2 px-1'>SL đã nhập</h4>
+                      <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-3 px-1'>Phụ trách sản xuất</h4>
+                      <h4 className='xl:text-sm text-xs text-start text-[#9295A4] font-semibold col-span-3 px-1'>{dataLang?.Q_materials_status || 'Q_materials_status'}</h4>
+                      <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold block col-span-5 px-1'>{dataLang?.Q_materials_progress || 'Q_materials_progress'}</h4>
+                    </div>
+
+                    {item.items_products &&
+                      item.items_products
+                        ?.slice(0, visibleProducts[item.id] || 4)
+                        ?.map((product, index) => renderProductRow(product, index, item, item.items_products?.length > 4 ? visibleProducts[item.id] || 4 : item.items_products?.length))}
+
+                    {(item.items_products?.length || 0) > (visibleProducts[item.id] || 4) && (
+                      <div className='col-span-16 flex justify-center py-2'>
+                        <button onClick={() => handleShowMoreProducts(item.id, item.items_products.length)} className='text-[#667085] 3xl:text-base text-sm hover:underline'>
+                          Xem thêm ({item.items_products.length - (visibleProducts[item.id] || 4)}) Thành phẩm
+                        </button>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ))}
+        </Customscrollbar>
+
       </div>
     );
   }

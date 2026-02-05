@@ -360,7 +360,7 @@ const DeliveryReceiptForm = (props) => {
     try {
       const { results } = await apiDeliveryReceipt.apiSearchOrdersToCustomer(data)
 
-      sDataProductOrder(results?.map((e) => ({ label: e.text, value: e.id })))
+      sDataProductOrder(results?.map((e) => ({ label: e.text, value: e.id, subtitle: moment(e.date).format('DD/MM/YYYY') + (+e.grand_total > 0 ? ' - ' + formatNumber(+e.grand_total) + ' đ' : '') })))
 
       sOnFetchingProductOrder(false)
     } catch (error) {

@@ -1018,7 +1018,7 @@ const Popup_Bom = React.memo(props => {
 
   const _HandleSubmit = e => {
     e.preventDefault();
-    const checkValue = dataSelectedVariant.some(item => item.child.some(itemChild => !itemChild.type || !itemChild.name || !itemChild.stage));
+    const checkValue = dataSelectedVariant.some(item => item.child.some(itemChild => !itemChild.type || !itemChild.name));
     if (checkValue) {
       checkValue && sErrValue(true);
       isShow('error', props.dataLang?.required_field_null);
@@ -1491,9 +1491,7 @@ const Popup_Bom = React.memo(props => {
                               noOptionsMessage={() => `${props.dataLang?.no_data_found}`}
                               menuPortalTarget={document.body}
                               onMenuOpen={handleMenuOpen}
-                              className={`${
-                                errValue && e.stage == null ? 'border-red-500' : 'border-transparent'
-                              } [&>div>div_div]:!whitespace-nowrap placeholder:text-slate-300 bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border text-[13px] `}
+                              className={`border-transparent [&>div>div_div]:!whitespace-nowrap placeholder:text-slate-300 bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border text-[13px] `}
                               theme={theme => ({
                                 ...theme,
                                 colors: {

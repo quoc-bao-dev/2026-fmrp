@@ -36,13 +36,16 @@ import { Grid6 } from "iconsax-react";
 import { debounce } from "lodash";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useSelector } from "react-redux";
 import { useOrderFilterbar } from "./hooks/useOrderFilterbar";
 import { useOrderList, useOrderListCode, useOrderConfirm } from "./hooks/useOrderList";
 import { useOrderTypeList } from "./hooks/useOrderTypeList";
+import { useOrderDetail } from "./hooks/useOrderDetail";
 import ButtonStatus from "./components/ButtonStatus";
+import { printOrderPDF } from "./utils/printOrderPDF";
+import ButtonPrintPDF from "@/components/common/button/ButtonPrintPDF";
 
 const initalState = {
     keySearch: "",
@@ -105,6 +108,12 @@ const Order = (props) => {
 
     const orderConfirmMutation = useOrderConfirm();
 
+    const [openPrintPdf, setOpenPrintPdf] = useState(false);
+    const [selectedPrintId, setSelectedPrintId] = useState(null);
+    const [isPrinting, setIsPrinting] = useState(false);
+
+    const { data: printData, isFetching: isFetchingPrint } = useOrderDetail(openPrintPdf, selectedPrintId);
+
     const _HandleOnChangeKeySearch = debounce(({ target: { value } }) => {
         queryState({ keySearch: value });
         router.replace({
@@ -155,6 +164,40 @@ const Order = (props) => {
     const getStatusText = (e) => {
         return e?.status_pay ? statusMap[e.status_pay] || "" : "";
     };
+
+    const handlePrintClick = async (id) => {
+        setSelectedPrintId(id);
+        setOpenPrintPdf(true);
+        setIsPrinting(true);
+    };
+
+    useEffect(() => {
+        if (openPrintPdf && selectedPrintId && printData && !isFetchingPrint) {
+            (async () => {
+                try {
+                    // Kiểm tra cấu trúc dữ liệu từ API
+                    const orderData = printData?.data || printData?.result || printData;
+                    if (!orderData) {
+                        isShow('error', 'Không có dữ liệu để in');
+                        setIsPrinting(false);
+                        return;
+                    }
+                    await printOrderPDF({
+                        data: orderData,
+                        dataLang: dataLang,
+                        dataSeting: dataSeting,
+                    });
+                } catch (error) {
+                    console.error('Lỗi khi in PDF:', error);
+                    isShow('error', `Lỗi khi in PDF: ${error.message || 'Không xác định'}`);
+                } finally {
+                    setIsPrinting(false);
+                }
+            })();
+            setOpenPrintPdf(false);
+            setSelectedPrintId(null);
+        }
+    }, [openPrintPdf, selectedPrintId, printData, isFetchingPrint, dataLang, dataSeting, isShow]);
 
     const multiDataSet = [
         {
@@ -667,7 +710,14 @@ const Order = (props) => {
                                                         {e?.branch_name}
                                                     {/* </TagBranch> */}
                                                 </RowItemTable>
-                                                <RowItemTable colSpan={1} className="flex justify-center ">
+                                                <RowItemTable colSpan={1} className="flex justify-center items-center gap-1">
+                                                    <ButtonPrintPDF
+                                                        onClick={() => handlePrintClick(e?.id)}
+                                                        isLoading={isPrinting && selectedPrintId === e?.id}
+                                                        disabled={isPrinting}
+                                                        tooltipText={dataLang?.btn_table_print || "In PDF"}
+                                                        tooltipId={`print-pdf-tooltip-${e?.id}`}
+                                                    />
                                                     <BtnAction
                                                         onRefresh={refetch.bind(this)}
                                                         dataLang={dataLang}

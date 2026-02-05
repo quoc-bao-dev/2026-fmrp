@@ -21,12 +21,12 @@ const TabKeepStock = ({ dataTable, handShowItem, handDeleteItem, isFetching, dat
   const [isTab, setIsTab] = useState('dataKeepStock');
 
   return (
-    <div className='flex flex-col gap-2 mt-2'>
+    <div className='flex flex-col gap-2 h-full flex-1 min-h-0 overflow-hidden'>
       <div className='flex items-center justify-start gap-8'>
-        <h1 className=' text-[#11315B] font-normal 3xl:text-lg text-base'>
+        <h2 className=' text-[#11315B] font-normal 3xl:text-lg text-base'>
           {/* Giữ kho & Mua hàng */}
           {dataLang?.materials_planning_plan_status || 'materials_planning_plan_status'}
-        </h1>
+        </h2>
         <div className='flex items-center gap-4'>
           <button
             type='button'
@@ -63,7 +63,7 @@ const TabKeepStock = ({ dataTable, handShowItem, handDeleteItem, isFetching, dat
       {isFetching ? (
         <Loading className='h-80' color='#0f4f9e' />
       ) : dataTable?.listDataRight?.[isTab]?.length > 0 ? (
-        <Customscrollbar className='h-full overflow-y-auto  scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 '>
+        <Customscrollbar className='flex-1 min-h-0 h-full overflow-y-auto  scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 '>
           {dataTable?.listDataRight?.[isTab]?.map(e => (
             <div key={e.id} className='my-3 border rounded-lg'>
               <div className='px-2'>

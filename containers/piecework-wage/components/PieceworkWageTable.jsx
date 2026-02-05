@@ -103,7 +103,7 @@ const PieceworkWageTable = memo(({ productionOutput, po_id }) => {
           <h4 className='xl:text-sm text-xs text-center text-[#9295A4] font-semibold col-span-4 px-1'>Tác vụ</h4>
         </div>
 
-        <Customscrollbar className='max-h-[calc(100svh-315px)]'>
+        <Customscrollbar className='flex-1 min-h-0 h-full overflow-y-auto  scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 '>
           {/* Rows */}
           {productionOutput?.length === 0 ? (
             <div className='h-full flex items-center justify-center py-6'>
@@ -134,13 +134,7 @@ const PieceworkWageTable = memo(({ productionOutput, po_id }) => {
 
                   <h4 className='col-span-4 flex items-center justify-center px-1'>
                     <button
-                      className='flex items-center justify-center gap-2 cursor-pointer bg-blue-fmrp hover:opacity-80 transition-opacity'
-                      style={{
-                        height: 34,
-                        borderRadius: 8,
-                        opacity: 1,
-                        padding: 8,
-                      }}
+                      className='h-[34px] p-2 rounded-lg flex items-center justify-center gap-2 cursor-pointer bg-blue-fmrp hover:opacity-80 transition-opacity'
                       onClick={() => handleOpenDetail(item)}
                     >
                       <TaskActionIcon color='#F7F7F7' className='size-4' />
