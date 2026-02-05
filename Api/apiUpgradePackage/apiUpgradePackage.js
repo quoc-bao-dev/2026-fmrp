@@ -178,5 +178,30 @@ const apiUpgradePackage = {
     const response = await axiosCustom('GET', `/api_web/Api_upgrade_package/get_upgrade_package_user?csrf_protection=true`);
     return response.data;
   },
+
+  /**
+   * Request For Invoice API
+   * @description Requests an invoice for a specific upgrade package transaction by ID
+   * @param {string|number} id - Upgrade package transaction ID (obtained from get_upgrade_package API response)
+   * @returns {Promise<any>} Promise that resolves to invoice request response
+   * @throws {Error} When the API call fails or ID is missing
+   * @example
+   * // Request invoice for upgrade package ID
+   * const response = await apiUpgradePackage.apiRequestForInvoice('123');
+   *
+   * // First get upgrade package data to get the ID
+   * const upgradeData = await apiUpgradePackage.apiGetUpgradePackage();
+   * if (upgradeData?.data?.id) {
+   *   const invoiceResponse = await apiUpgradePackage.apiRequestForInvoice(upgradeData.data.id);
+   * }
+   */
+  async apiRequestForInvoice(id) {
+    if (id === undefined || id === null || id === '') {
+      throw new Error('Upgrade package ID is required for Request_for_invoice API');
+    }
+
+    const response = await axiosCustom('GET', `/api_web/Api_upgrade_package/Request_for_invoice/${id}?csrf_protection=true`);
+    return response.data;
+  },
 };
 export default apiUpgradePackage;
