@@ -161,7 +161,7 @@ const PopupDetail = props => {
                             </div>
                             <div>
                               <h6 className='text-[13px] text-left font-medium capitalize'>{e?.item?.name}
-                                <p className="text-[10px] text-blue-fmrp">{e?.item?.code} <span className=" text-left font-medium capitalize text-[#000]">
+                                <p className="text-[11px] text-blue-fmrp">{e?.item?.code} <span className=" text-left font-medium capitalize text-[#000]">
                                   {' '} - {' '} {e?.item?.product_variation}
                                 </span></p>
                               </h6>

@@ -165,7 +165,9 @@ const PopupDetail = props => {
                                 )}
                               </h6>
                               <h6 className='text-[13px]  px-2 py-0.5 col-span-2 text-left'>
-                                <h6 className='font-medium'>{e?.item?.name}</h6>
+                                <h6 className='font-medium'>{e?.item?.name}
+                                  <p className="text-[11px] text-blue-fmrp">{e?.item?.code}</p>
+                                </h6>
                                 <div className='flex-col flex-wrap items-center font-oblique'>
 
                                   {dataProductSerial.is_enable === '1' ? (
