@@ -122,8 +122,11 @@ const PopupCheckQuality = props => {
                         )}
 
                         <div className=''>
-                          <h6 className='text-[13px] text-left font-medium capitalize'>{e?.item_name}</h6>
-                          <h6 className='text-xs font-medium text-left capitalize'>{e?.item_variation}</h6>
+                          <h6 className='text-[13px] text-left font-medium capitalize'>{e?.item_name}
+                            <p className="text-[11px] text-blue-fmrp font-normal">{e?.item_code} <span className=" text-left capitalize text-[#000]">
+                              {' '} - {' '} {e?.item_variation}
+                            </span></p>
+                          </h6>
                           <div className='flex flex-wrap items-center font-oblique text-typo-blue-2'>
                             {e?.serial != null && e?.serial != '' && dataProductSerial.is_enable === '1' ? (
                               <div className='flex gap-0.5 '>
