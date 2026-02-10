@@ -5,14 +5,16 @@ import PopupFeelsCustomer from '../popup/PopupFeelsCustomer';
 const SupportZalo = () => {
   const dispatch = useDispatch();
   // ========== CẤU HÌNH ==========
-  // Khoảng cách từ mép phải màn hình (px)
+  // Khoảng cách từ mép trái màn hình (px) khi ở trạng thái mặc định
+  const LEFT_OFFSET = 0;
+  // Khoảng cách mặc định từ mép phải (sử dụng khi icon nằm bên phải)
   const RIGHT_OFFSET = 0;
   // ===============================
 
   // State cho vị trí của bong bóng
   const [bottomPosition, setBottomPosition] = useState(100); // Giá trị tạm thời, sẽ được tính toán lại
-  const [rightPosition, setRightPosition] = useState(RIGHT_OFFSET); // 20px từ mép phải
-  const [leftPosition, setLeftPosition] = useState(null); // Vị trí từ mép trái (nếu ở bên trái)
+  const [rightPosition, setRightPosition] = useState(RIGHT_OFFSET); // Vị trí từ mép phải
+  const [leftPosition, setLeftPosition] = useState(LEFT_OFFSET); // Vị trí từ mép trái (mặc định bên trái)
   const [isDragging, setIsDragging] = useState(false);
   const isDraggingRef = useRef(false); // Ref để tránh stale closure
   const hasMovedRef = useRef(false); // Ref để kiểm tra xem có di chuyển chuột khi đang giữ không
@@ -31,30 +33,33 @@ const SupportZalo = () => {
     return iconCenterX < window.innerWidth / 2;
   };
 
-  const [isOnLeft, setIsOnLeft] = useState(false);
+  const [isOnLeft, setIsOnLeft] = useState(true);
 
-  // Khởi tạo vị trí ban đầu - tính toán để nằm ở giữa màn hình
+  // Khởi tạo vị trí ban đầu - tính toán để nằm ở giữa màn hình và mặc định bên trái
   useEffect(() => {
     if (typeof window === 'undefined' || isInitializedRef.current) return;
 
     const calculateInitialPosition = () => {
       if (bubbleRef.current) {
         const bubbleHeight = bubbleRef.current.offsetHeight;
+        const bubbleWidth = bubbleRef.current.offsetWidth;
         const windowHeight = window.innerHeight;
+        const windowWidth = window.innerWidth;
 
         // Tính toán vị trí bottom để component nằm ở giữa màn hình
         // bottom = (windowHeight - bubbleHeight) / 2
         const centerBottom = (windowHeight - bubbleHeight) / 2;
         setBottomPosition(centerBottom);
-        isInitializedRef.current = true;
 
-        const onLeft = isIconOnLeft();
-        setIsOnLeft(onLeft);
-        if (onLeft) {
-          const bubbleWidth = bubbleRef.current.offsetWidth;
-          const calculatedLeft = window.innerWidth - rightPosition - bubbleWidth;
-          setLeftPosition(calculatedLeft);
-        }
+        // Mặc định đặt bong bóng ở bên trái với LEFT_OFFSET
+        const initialLeft = LEFT_OFFSET;
+        const initialRight = windowWidth - bubbleWidth - initialLeft;
+
+        setLeftPosition(initialLeft);
+        setRightPosition(initialRight);
+        setIsOnLeft(true);
+
+        isInitializedRef.current = true;
       } else {
         // Nếu chưa có ref, thử lại sau một chút
         requestAnimationFrame(calculateInitialPosition);
