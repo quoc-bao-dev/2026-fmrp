@@ -26,6 +26,10 @@ import { Dropdown } from '../UI/dropdown';
 import DropdownThongBao from '../UI/notificationDropdown';
 import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
 
+const PARCEL_USE = {
+  'luong-san-luong': 'production_output',
+}
+
 const IMAGE_APPLICATION = '/application/application.gif';
 
 const Header = () => {
@@ -51,6 +55,8 @@ const Header = () => {
   const [isLastDropdown, setIsLastDropdown] = useState(false);
   const [showQRHint, setShowQRHint] = useState(false);
   const [isWideScreen, setIsWideScreen] = useState(false);
+
+  const parcelUse = authState?.parcel_use?.map(item => item.key_menu_fe) || []
 
   const ListDanhMuc = [
     {
@@ -1069,6 +1075,7 @@ const Header = () => {
       title: 'Lương sản lượng',
       text: 'Quản lý lương sản lượng, tổ nhóm, ca làm việc',
       link: ['/piecework-wage'],
+      hidden: !parcelUse?.includes(PARCEL_USE['luong-san-luong']),
     },
     {
       data: ListKeToan,
@@ -1214,6 +1221,7 @@ const Header = () => {
 
           <div className='flex flex-row items-center xl:gap-1 gap-0.5'>
             {dropdowns.map((dropdown, index) => {
+              if (dropdown.hidden) return null;
               return (
                 <React.Fragment key={index}>
                   <Tooltip
