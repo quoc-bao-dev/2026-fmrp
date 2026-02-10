@@ -190,11 +190,11 @@ const PopupDetail = (props) => {
                                                                         )}
                                                                     </div>
                                                                     <div>
-                                                                        <h6 className="text-[13px] text-left font-medium capitalize">
+                                                                        <h6 className="text-[13px] text-left capitalize font-medium">
                                                                             {e?.item?.name}
-                                                                        </h6>
-                                                                        <h6 className="text-[13px] text-left font-medium capitalize">
-                                                                            {e?.item?.product_variation}
+                                                                            <p className="text-[11px] text-blue-fmrp font-normal">{e?.item?.code} <span className=" text-left capitalize text-[#000]">
+                                                                                {' '} - {' '} {e?.item?.product_variation}
+                                                                            </span></p>
                                                                         </h6>
                                                                         <div className="flex flex-wrap items-center text-typo-blue-2">
                                                                             {e?.item?.serial !== null && dataProductSerial.is_enable === '1' ? (
