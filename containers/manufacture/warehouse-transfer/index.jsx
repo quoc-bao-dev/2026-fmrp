@@ -40,7 +40,7 @@ import { Grid6 } from 'iconsax-react';
 import { debounce } from 'lodash';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useSelector } from 'react-redux';
 import { routerWarehouseTransfer } from 'routers/manufacture';
@@ -50,6 +50,11 @@ import PopupDetailWarehouseTransfer from './components/pupup';
 import { useWarehouseTransferCombobox } from './hooks/useWarehouseTransferCombobox';
 import { useWarehouseTransferFilterbar } from './hooks/useWarehouseTransferFilterbar';
 import { useWarehouseTransferList } from './hooks/useWarehouseTransferList';
+import { PrinterIcon } from '@/components/icons';
+import useFeature from '@/hooks/useConfigFeature';
+import { useWarehouseProperties } from './hooks/useWarehouseProperties';
+import { useWarehouseTransferDetail } from './hooks/useWarehouseTransferDetail';
+import { printWarehouseTransferPDF } from './utils/printWarehouseTransferPDF';
 
 const initialState = {
   onSending: false,
@@ -77,9 +82,19 @@ const WarehouseTransfer = props => {
 
   const statusExprired = useStatusExprired();
 
+  const { dataMaterialExpiry, dataProductExpiry, dataProductSerial } = useFeature();
+
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties(dataSeting);
+
   const { handleTab: _HandleSelectTab } = useTab('all');
 
   const [isState, sIsState] = useState(initialState);
+
+  const [openPrintPdf, setOpenPrintPdf] = useState(false);
+  const [selectedPrintId, setSelectedPrintId] = useState(null);
+
+  // Dữ liệu chi tiết để in PDF
+  const { data: printData, isFetching: isFetchingPrint } = useWarehouseTransferDetail(openPrintPdf, selectedPrintId);
 
   const { limit, updateLimit: sLimit } = useLimitAndTotalItems();
 
@@ -173,6 +188,33 @@ const WarehouseTransfer = props => {
     });
   };
 
+  // Xử lý click nút in PDF
+  const handlePrintClick = id => {
+    setSelectedPrintId(id);
+    setOpenPrintPdf(true);
+  };
+
+  // Xử lý in PDF khi có dữ liệu
+  useEffect(() => {
+    if (openPrintPdf && selectedPrintId && printData && !isFetchingPrint) {
+      (async () => {
+        await printWarehouseTransferPDF({
+          data: printData,
+          dataLang: dataLang,
+          dataSeting: dataSeting,
+          dataMaterialExpiry: dataMaterialExpiry,
+          dataProductExpiry: dataProductExpiry,
+          dataProductSerial: dataProductSerial,
+          isWarehousePropertiesEnabled: isWarehousePropertiesEnabled,
+          warehousePropertyLabels: warehousePropertyLabels,
+        });
+      })();
+      // Đóng sau khi in
+      setOpenPrintPdf(false);
+      setSelectedPrintId(null);
+    }
+  }, [printData, openPrintPdf, selectedPrintId, isFetchingPrint]);
+
   // đổi trạng thái duyệt thủ kho nếu data_export có thì mở popup show dữ liệu data_export
   const _ServerSending = async checkedWare => {
     let data = new FormData();
@@ -197,7 +239,7 @@ const WarehouseTransfer = props => {
       if (data_export?.length > 0) {
         queryState({ dataExport: data_export });
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   // xuất excel
@@ -464,7 +506,7 @@ const WarehouseTransfer = props => {
               </div>
               <div className='col-span-1 xl:col-span-2 lg:col-span-2'>
                 <div className='flex items-center justify-end gap-2'>
-                  <OnResetData sOnFetching={e => {}} onClick={() => refetch()} />
+                  <OnResetData sOnFetching={e => { }} onClick={() => refetch()} />
 
                   {role == true || checkExport ? (
                     <div className={``}>
@@ -592,7 +634,7 @@ const WarehouseTransfer = props => {
                             <ButtonWarehouse warehouseman_id={e?.warehouseman_id} _HandleChangeInput={_HandleChangeInput} id={e?.id} />
                           </RowItemTable>
                           <RowItemTable colSpan={1}>{e?.branch_name_id}</RowItemTable>
-                          <RowItemTable colSpan={1} className='flex justify-center'>
+                          <RowItemTable colSpan={1} className='flex justify-center gap-1'>
                             <BtnAction
                               onRefresh={refetch.bind(this)}
                               onRefreshGroup={refetchFilterBar.bind(this)}
@@ -602,6 +644,15 @@ const WarehouseTransfer = props => {
                               id={e?.id}
                               type='warehouseTransfer'
                               className='bg-slate-100 xl:px-4 px-2 xl:py-1.5 py-1 rounded 2xl:text-base xl:text-xs text-[9px]'
+                              renderPrintButton={
+                                <button
+                                  onClick={() => handlePrintClick(e?.id)}
+                                  title='In PDF'
+                                  className='group transition-all duration-200 ease-in-out flex items-center gap-2 2xl:text-sm xl:text-sm text-[8px] text-left cursor-pointer rounded-lg p-1 border border-transparent hover:border-[#003DA0] hover:bg-primary-05 text-neutral-03 hover:text-neutral-07 font-normal whitespace-nowrap'
+                                >
+                                  <PrinterIcon className='size-5 text-[#003DA0]' />
+                                </button>
+                              }
                             />
                           </RowItemTable>
                         </RowTable>

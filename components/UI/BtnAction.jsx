@@ -1035,6 +1035,9 @@ export const BtnAction = React.memo(props => {
       props?.type === 'servicev_voucher' ||
       props?.type === 'warehouseTransfer'
     ) {
+      if (props?.type === 'warehouseTransfer' && props?.renderPrintButton) {
+        allButtons.push(<React.Fragment key='print'>{props.renderPrintButton}</React.Fragment>);
+      } else {
       const totalButtons = calculateTotalButtons();
       allButtons.push(
         <div
@@ -1060,6 +1063,7 @@ export const BtnAction = React.memo(props => {
           )}
         </div>
       );
+      }
     } else if (props?.type === 'internal_plan') {
       allButtons.push(<ButtonPrintItem key='print-internal-plan' onCLick={handlePrintInternalPlan} dataLang={props?.dataLang} isLoading={loadingButtonPrint} totalButtons={totalButtons} />);
     } else if (props?.type !== 'production_warehouse' && props?.type !== 'productsWarehouse' && props?.type !== 'recall' && props?.type !== 'exportToOther' && props?.type !== 'order') {
