@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import Popup from './Popup';
 import TooltipDefault from '@/components/common/tooltip/TooltipDefault';
-import useToast from '@/hooks/useToast';
-import { useInstallParcel } from '@/managers/api/parcel/useInstallParcel';
-import formatMoney from '@/utils/helpers/formatMoney';
-import { useSocketContext } from '@/context/socket/SocketContext';
 import { useApplicationInstall } from '@/context/application/ApplicationInstallContext';
+import { useSocketContext } from '@/context/socket/SocketContext';
+import useToast from '@/hooks/useToast';
+import formatMoney from '@/utils/helpers/formatMoney';
+import { useEffect } from 'react';
+import Popup from './Popup';
 
 const IMAGE_PAYMENT_INFO = '/application/payment-info.png';
 const IMAGE_BANK = '/application/bank.png';
@@ -39,7 +38,6 @@ export default function PopupPayment({
             if (payload?.data?.status == '1') {
                 onPaymentSuccess?.();
             }
-            console.log('payload', payload);
         };
 
         socket.on('payment_parcel', handlePaymentParcel);

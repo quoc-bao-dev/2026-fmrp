@@ -34,6 +34,7 @@ import useSetingServer from '@/hooks/useConfigNumber';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import useToast from '@/hooks/useToast';
 import { useToggle } from '@/hooks/useToggle';
+import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
 import { fetchItemsManufactures, fetchPDFManufactures, fetchPDFPlanManufactures } from '@/managers/api/productions-order/useLinkFilePDF';
 import { useProductionOrderDetail } from '@/managers/api/productions-order/useProductionOrderDetail';
 import { useProductionOrderPermission } from '@/managers/api/productions-order/useProductionOrderPermission';
@@ -137,6 +138,7 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
   const typePageMoblie = typeScreen == 'mobile';
 
   const isShow = useToast();
+  const { checkInstall } = useCheckModuleInstall();
 
   const { data: listBr = [] } = useBranchList();
 
@@ -241,32 +243,37 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     return stepsMap;
   }, [dataProductionOrderDetail?.process]);
 
-  const listLsxTab = [
-    {
-      id: '2323',
-      name: 'Thông tin',
-      count: null,
-      type: 'products',
-    },
-    {
-      id: '43434',
-      name: 'Kế hoạch BTP & NVL',
-      count: 0,
-      type: 'semiProduct',
-    },
-    {
-      id: '3',
-      name: 'Giữ kho & Mua hàng',
-      count: keepStockPurchaseCount,
-      type: 'keepStock',
-    },
-    {
-      id: '4',
-      name: 'Lương Sản Lượng',
-      count: dataProductionOrderDetail?.count_input_timesheet || 0,
-      type: 'pieceworkWage',
-    },
-  ];
+  const listLsxTab = useMemo(() => {
+    const tabs = [
+      {
+        id: '2323',
+        name: 'Thông tin',
+        count: null,
+        type: 'products',
+      },
+      {
+        id: '43434',
+        name: 'Kế hoạch BTP & NVL',
+        count: 0,
+        type: 'semiProduct',
+      },
+      {
+        id: '3',
+        name: 'Giữ kho & Mua hàng',
+        count: keepStockPurchaseCount,
+        type: 'keepStock',
+      },
+      {
+        id: '4',
+        name: 'Lương Sản Lượng',
+        count: dataProductionOrderDetail?.count_input_timesheet || 0,
+        type: 'pieceworkWage',
+        hidden: !checkInstall('luong-san-luong'),
+      },
+    ];
+
+    return tabs.filter(tab => !tab.hidden);
+  }, [keepStockPurchaseCount, dataProductionOrderDetail?.count_input_timesheet, checkInstall]);
 
   const listPrintTask = useMemo(
     () => [

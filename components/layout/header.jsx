@@ -5,6 +5,7 @@ import useSetingServer from '@/hooks/useConfigNumber';
 import { useGetCheckNotiRead } from '@/hooks/useNotifications';
 import useToast from '@/hooks/useToast';
 import useSettingExpiration from '@/hooks/useSettingExpiration';
+import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
 import { getColorByParam } from '@/utils/helpers/radomcolor';
 import { CookieCore } from '@/utils/lib/cookie';
 import { Lexend_Deca } from '@next/font/google';
@@ -25,10 +26,6 @@ import AvatarText from '../UI/common/user/AvatarText';
 import { Dropdown } from '../UI/dropdown';
 import DropdownThongBao from '../UI/notificationDropdown';
 import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
-
-const PARCEL_USE = {
-  'luong-san-luong': 'production_output',
-}
 
 const IMAGE_APPLICATION = '/application/application.gif';
 
@@ -56,7 +53,34 @@ const Header = () => {
   const [showQRHint, setShowQRHint] = useState(false);
   const [isWideScreen, setIsWideScreen] = useState(false);
 
-  const parcelUse = authState?.parcel_use?.map(item => item.key_menu_fe) || []
+  const { checkInstall, checkIntroduce } = useCheckModuleInstall();
+
+  // Mapping từ name sang tab key cho module introduction
+  const nameToTabKey = {
+    'Danh sách tổ / nhóm': 'danh-sach-to-nhom',
+    'Thiết lập ca làm việc': 'thiet-lap-ca-lam-viec',
+    'Bảng xếp ca': 'bang-xep-ca',
+    'Nhập sản lượng': 'nhap-san-luong',
+    'Tổng hợp lương sản lượng': 'tong-hop-luong-san-luong',
+  };
+
+  // Hàm helper để lấy link với kiểm tra introduce
+  const getLinkWithIntroduce = (originalLink, itemName) => {
+    // Chỉ áp dụng cho module lương sản lượng
+    if (!originalLink?.startsWith('/piecework-wage')) {
+      return originalLink;
+    }
+
+    // Kiểm tra nếu chưa giới thiệu
+    if (!checkIntroduce('luong-san-luong')) {
+      const tabKey = nameToTabKey[itemName];
+      if (tabKey) {
+        return `/piecework-wage/introduction?module=luong-san-luong&tab=${tabKey}`;
+      }
+    }
+
+    return originalLink;
+  };
 
   const ListDanhMuc = [
     {
@@ -645,31 +669,31 @@ const Header = () => {
               viewOwn: auth?.group_member?.is_view_own,
               view: auth?.group_member?.is_view,
               name: 'Danh sách tổ / nhóm',
-              link: '/piecework-wage',
+              link: getLinkWithIntroduce('/piecework-wage', 'Danh sách tổ / nhóm'),
             },
             {
               viewOwn: auth?.setup_shift?.is_view_own,
               view: auth?.setup_shift?.is_view,
               name: 'Thiết lập ca làm việc',
-              link: '/piecework-wage/shift-setting',
+              link: getLinkWithIntroduce('/piecework-wage/shift-setting', 'Thiết lập ca làm việc'),
             },
             {
               viewOwn: auth?.shift_schedule?.is_view_own,
               view: auth?.shift_schedule?.is_view,
               name: 'Bảng xếp ca',
-              link: '/piecework-wage/shift-schedule',
+              link: getLinkWithIntroduce('/piecework-wage/shift-schedule', 'Bảng xếp ca'),
             },
             {
               viewOwn: auth?.production_input?.is_view_own,
               view: auth?.production_input?.is_view,
               name: 'Nhập sản lượng',
-              link: '/piecework-wage/import-output',
+              link: getLinkWithIntroduce('/piecework-wage/import-output', 'Nhập sản lượng'),
             },
             {
               viewOwn: auth?.aggregate_production_input?.is_view_own,
               view: auth?.aggregate_production_input?.is_view,
               name: 'Tổng hợp lương sản lượng',
-              link: '/piecework-wage/summary',
+              link: getLinkWithIntroduce('/piecework-wage/summary', 'Tổng hợp lương sản lượng'),
             },
           ],
         },
@@ -1075,7 +1099,7 @@ const Header = () => {
       title: 'Lương sản lượng',
       text: 'Quản lý lương sản lượng, tổ nhóm, ca làm việc',
       link: ['/piecework-wage'],
-      hidden: !parcelUse?.includes(PARCEL_USE['luong-san-luong']),
+      hidden: !checkInstall('luong-san-luong'),
     },
     {
       data: ListKeToan,
