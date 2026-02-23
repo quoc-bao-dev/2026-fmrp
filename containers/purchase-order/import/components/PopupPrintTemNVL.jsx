@@ -287,62 +287,74 @@ const PopupPrintTemNVL = ({ id }) => {
               <div className="divide-y divide-slate-200 h-[100%] ">
                 {listItem.length > 0 ? (
                   listItem[0].map((item, index) => (
-                    <RowTable gridCols={12} key={item?.id}>
-                      <RowItemTable
-                        colSpan={1}
-                        textAlign={"center"}
-                        className="font-semibold xlg:text-sm leading-2 text-typo-black-1  std:!text-[12px] xl:text-[11px]"
-                      >
-                        <div className="w-full flex justify-center items-center">
-                          <CheckboxDefault
-                            checked={selectItems.some((i) => i.id === item?.id)}
-                            onChange={(checked) =>
-                              handleSelectItem(item, checked)
-                            }
-                            disabled={item?.quantity <= 0}
-                          />
-                        </div>
-                      </RowItemTable>
+                    <div
+                      key={item?.id}
+                      className="cursor-pointer"
+                      onClick={() => {
+                        if (item?.quantity <= 0) return;
+                        const isSelected = selectItems.some(
+                          (i) => i.id === item?.id
+                        );
+                        handleSelectItem(item, !isSelected);
+                      }}
+                    >
+                      <RowTable gridCols={12}>
+                        <RowItemTable
+                          colSpan={1}
+                          textAlign={"center"}
+                          className="font-semibold xlg:text-sm leading-2 text-typo-black-1  std:!text-[12px] xl:text-[11px]"
+                        >
+                          <div className="w-full flex justify-center items-center">
+                            <CheckboxDefault
+                              checked={selectItems.some((i) => i.id === item?.id)}
+                              onChange={(checked) =>
+                                handleSelectItem(item, checked)
+                              }
+                              disabled={item?.quantity <= 0}
+                            />
+                          </div>
+                        </RowItemTable>
 
-                      <RowItemTable
-                        colSpan={1}
-                        textAlign={"center"}
-                        className="font-semibold xlg:text-sm leading-2 text-typo-black-1  std:!text-[12px] xl:text-[11px] pr-3"
-                      >
-                        {index + 1}
-                      </RowItemTable>
-                      <RowItemTable colSpan={7} textAlign={"start"}>
-                        <Cardtable
-                          lot={item?.lot}
-                          name={item?.item?.item_name}
-                          typeTable="temProducts"
-                          imageURL={item?.images}
-                          classNameContent="gap-y-0"
-                          date={parseDate(item?.expiration_date)}
-                          variation={item?.product_variation}
-                          serial={item?.serial}
-                          warehouse_name={item?.warehouse_name}
-                          location_name={item?.location_name}
-                          item_type={item?.item_type}
-                          value_1={item?.value_1}
-                          value_2={item?.value_2}
-                          value_3={item?.value_3}
-                        />
-                      </RowItemTable>
-
-                      <RowItemTable colSpan={3} textAlign={"center"}>
-                        <div className="w-full items-center flex justify-center">
-                          <InputNumberCustom
-                            state={itemQuantities[item?.id] || 1}
-                            setState={(value) =>
-                              handleTemTotal(item?.id, value)
-                            }
-                            classNameButton="rounded-full bg-[#EBF5FF] hover:bg-[#C7DFFB]"
-                            className="p-[4px]"
+                        <RowItemTable
+                          colSpan={1}
+                          textAlign={"center"}
+                          className="font-semibold xlg:text-sm leading-2 text-typo-black-1  std:!text-[12px] xl:text-[11px] pr-3"
+                        >
+                          {index + 1}
+                        </RowItemTable>
+                        <RowItemTable colSpan={7} textAlign={"start"}>
+                          <Cardtable
+                            lot={item?.lot}
+                            name={item?.item?.item_name}
+                            typeTable="temProducts"
+                            imageURL={item?.images}
+                            classNameContent="gap-y-0"
+                            date={parseDate(item?.expiration_date)}
+                            variation={item?.product_variation}
+                            serial={item?.serial}
+                            warehouse_name={item?.warehouse_name}
+                            location_name={item?.location_name}
+                            item_type={item?.item_type}
+                            value_1={item?.value_1}
+                            value_2={item?.value_2}
+                            value_3={item?.value_3}
                           />
-                        </div>
-                      </RowItemTable>
-                    </RowTable>
+                        </RowItemTable>
+
+                        <RowItemTable colSpan={3} textAlign={"center"}>
+                          <div className="w-full items-center flex justify-center">
+                            <InputNumberCustom
+                              state={itemQuantities[item?.id] || 1}
+                              setState={(value) =>
+                                handleTemTotal(item?.id, value)
+                              }
+                              classNameButton="rounded-full bg-[#EBF5FF] hover:bg-[#C7DFFB]"
+                              className="p-[4px]"
+                            />
+                          </div>
+                        </RowItemTable>
+                      </RowTable>
+                    </div>
                   ))
                 ) : (
                   <>

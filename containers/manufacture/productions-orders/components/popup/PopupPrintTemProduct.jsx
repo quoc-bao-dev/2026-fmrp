@@ -277,77 +277,86 @@ const PopupPrintTemProduct = ({ dataItem, idManufacture }) => {
                             <div className="divide-y divide-slate-200 h-[100%] ">
                                 {listItem.length > 0 ? (
                                     listItem.map((item, index) => (
-                                        <RowTable gridCols={12} key={item.idItem}>
-                                            <RowItemTable
-                                                colSpan={1}
-                                                textAlign={"center"}
-                                                // textSize={`"!text-sm"`}
-                                                className="font-semibold xlg:text-sm leading-2 text-typo-black-1  std:!text-[12px] xl:text-[11px]"
-                                            >
-                                                <div className="w-full flex justify-center items-center">
-                                                    <CheckboxDefault
-                                                        checked={selectItems.some(
-                                                            (i) => i.idItem === item.idItem
-                                                        )}
-                                                        onChange={(checked) =>
-                                                            handleSelectItem(item, checked)
-                                                        }
-                                                        disabled={item.quality <= 0}
-                                                    />
-                                                </div>
-                                            </RowItemTable>
+                                        <div
+                                            key={item?.id}
+                                            className="cursor-pointer"
+                                            onClick={() => {
+                                                const isSelected = selectItems.some(
+                                                    (i) => i.id === item?.id
+                                                );
+                                                handleSelectItem(item, !isSelected);
 
-                                            {/* stt */}
-                                            <RowItemTable
-                                                colSpan={1}
-                                                textAlign={"center"}
-                                                // textSize={`"!text-sm"`}
-                                                className="font-semibold xlg:text-sm leading-2 text-typo-black-1  std:!text-[12px] xl:text-[11px] pr-3"
-                                            >
-                                                {index + 1}
-                                            </RowItemTable>
-                                            <RowItemTable
-                                                colSpan={7}
-                                                textAlign={"start"}
-                                            // textSize={`"!text-xs"`}
-                                            >
-                                                {/* card */}
-                                                <Cardtable
-                                                    lot={item?.lot}
-                                                    name={item?.item_name}
-                                                    typeTable="temProducts"
-                                                    // classNameImage="2xl:size-10 size-8"
-                                                    imageURL={item?.images}
-                                                    classNameContent="gap-y-0"
-                                                    date={item?.expiration_date}
-                                                    variation={item?.item_variation}
-                                                    serial={item?.serial}
-                                                    warehouse_name={item?.warehouse_name}
-                                                    location_name={item?.location_name}
-                                                />
-                                            </RowItemTable>
+                                            }}
+                                        >
+                                            <RowTable gridCols={12}>
+                                                <RowItemTable
+                                                    colSpan={1}
+                                                    textAlign={"center"}
+                                                    // textSize={`"!text-sm"`}
+                                                    className="font-semibold xlg:text-sm leading-2 text-typo-black-1  std:!text-[12px] xl:text-[11px]"
+                                                >
+                                                    <div className="w-full flex justify-center items-center">
+                                                        <CheckboxDefault
+                                                            checked={selectItems.some(
+                                                                (i) => i.idItem === item.idItem
+                                                            )}
+                                                            onChange={(checked) =>
+                                                                handleSelectItem(item, checked)
+                                                            }
+                                                            disabled={item.quality <= 0}
+                                                        />
+                                                    </div>
+                                                </RowItemTable>
 
-                                            <RowItemTable
-                                                colSpan={3}
-                                                textAlign={"center"}
-                                            // textSize={`"!text-sm"`}
-                                            // className="font-semibold  leading-2 text-typo-black-1 std:text-[12px] xl:text-[11px]"
-                                            >
-                                                <div className="w-full items-center flex justify-center">
-                                                    <InputNumberCustom
-                                                        state={item?.quality}
-                                                        setState={(value) =>
-                                                            handleTemTotal(item.idItem, value)
-                                                        }
-                                                        classNameButton="rounded-full bg-[#EBF5FF] hover:bg-[#C7DFFB]"
-                                                        className="p-[4px]"
-                                                    // disabled={
-                                                    //     !selectItems.some((i) => i.idItem === item.idItem)
-                                                    // }
+                                                {/* stt */}
+                                                <RowItemTable
+                                                    colSpan={1}
+                                                    textAlign={"center"}
+                                                    // textSize={`"!text-sm"`}
+                                                    className="font-semibold xlg:text-sm leading-2 text-typo-black-1  std:!text-[12px] xl:text-[11px] pr-3"
+                                                >
+                                                    {index + 1}
+                                                </RowItemTable>
+                                                <RowItemTable
+                                                    colSpan={7}
+                                                    textAlign={"start"}
+                                                // textSize={`"!text-xs"`}
+                                                >
+                                                    {/* card */}
+                                                    <Cardtable
+                                                        lot={item?.lot}
+                                                        name={item?.item_name}
+                                                        typeTable="temProducts"
+                                                        // classNameImage="2xl:size-10 size-8"
+                                                        imageURL={item?.images}
+                                                        classNameContent="gap-y-0"
+                                                        date={item?.expiration_date}
+                                                        variation={item?.item_variation}
+                                                        serial={item?.serial}
+                                                        warehouse_name={item?.warehouse_name}
+                                                        location_name={item?.location_name}
                                                     />
-                                                </div>
-                                            </RowItemTable>
-                                        </RowTable>
+                                                </RowItemTable>
+
+                                                <RowItemTable
+                                                    colSpan={3}
+                                                    textAlign={"center"}
+                                                // textSize={`"!text-sm"`}
+                                                // className="font-semibold  leading-2 text-typo-black-1 std:text-[12px] xl:text-[11px]"
+                                                >
+                                                    <div className="w-full items-center flex justify-center">
+                                                        <InputNumberCustom
+                                                            state={item?.quality}
+                                                            setState={(value) =>
+                                                                handleTemTotal(item.idItem, value)
+                                                            }
+                                                            classNameButton="rounded-full bg-[#EBF5FF] hover:bg-[#C7DFFB]"
+                                                            className="p-[4px]"
+                                                        />
+                                                    </div>
+                                                </RowItemTable>
+                                            </RowTable>
+                                        </div>
                                     ))
                                 ) : (
                                     <>
