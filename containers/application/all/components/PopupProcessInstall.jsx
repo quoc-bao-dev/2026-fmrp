@@ -5,6 +5,8 @@ import ProgressBar from '@/components/common/progress/ProgressBar';
 import Popup from './Popup';
 import { useGetInstallStatus } from '@/managers/api/parcel/useInstallParcel';
 import { useApplicationInstall } from '@/context/application/ApplicationInstallContext';
+import apiDashboard from '@/Api/apiDashboard/apiDashboard';
+import { useDispatch } from 'react-redux';
 
 const deca = Lexend_Deca({
     subsets: ['latin'],
@@ -16,6 +18,7 @@ export default function PopupProcessInstall({ isOpen, onClose, onComplete, data:
     const [percentUpdate, setPercentUpdate] = useState(0);
     const [isComplete, setIsComplete] = useState(false);
     const startedRef = useRef(false);
+    const dispatch = useDispatch();
 
     const { featureName } = useApplicationInstall();
     // Gọi API kiểm tra trạng thái cài đặt parcel khi popup mở
@@ -25,7 +28,7 @@ export default function PopupProcessInstall({ isOpen, onClose, onComplete, data:
 
 
 
-    const handleUpdate = () => {
+    const handleUpdate = async () => {
         setIsComplete(false);
         setPercentUpdate(0);
         setIsUpdate(true);
@@ -39,6 +42,20 @@ export default function PopupProcessInstall({ isOpen, onClose, onComplete, data:
                 window.clearInterval(interval);
                 setIsComplete(true);
                 setIsUpdate(false);
+
+                // Gọi API để lấy lại authState và cập nhật redux
+                (async () => {
+                    try {
+                        const { isSuccess, info } = await apiDashboard.apiAuthentication();
+                        if (isSuccess && info) {
+                            // Dispatch action để cập nhật authState trong redux
+                            dispatch({ type: 'auth/update', payload: info });
+                        }
+                    } catch (error) {
+                        console.error('Error fetching auth state:', error);
+                    }
+                })();
+
                 window.setTimeout(() => {
                     onClose?.();
                     onComplete?.();

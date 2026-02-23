@@ -205,6 +205,33 @@ const apiParcel = {
         const response = await axiosCustom('GET', url, {});
         return response.data;
     },
+
+    /**
+     * Check Introduce API
+     * @description Marks a parcel as introduced (user has viewed the introduction page)
+     * @param {string|number} id - Parcel ID to mark as introduced
+     * @returns {Promise<{success: boolean, message: string}>} Promise that resolves to API response
+     * @throws {Error} When API call fails
+     * @example
+     * // Check introduce for parcel with ID 1
+     * const result = await apiParcel.apiCheckIntroduce(1);
+     *
+     * if (result.success) {
+     *   console.log('Parcel marked as introduced:', result.message);
+     *   // Response: { success: true, message: "Check đã xem hướng dẩn thành công" }
+     * } else {
+     *   console.error('Failed to check introduce:', result.message);
+     * }
+     */
+    async apiCheckIntroduce(id) {
+        if (id === undefined || id === null || id === '') {
+            throw new Error('Parcel ID is required for check_introduce API');
+        }
+
+        const url = `/api_web/Api_parcel/check_introduce/${id}?csrf_protection=true`;
+        const response = await axiosCustom('GET', url, {});
+        return response.data;
+    },
 };
 
 export default apiParcel;

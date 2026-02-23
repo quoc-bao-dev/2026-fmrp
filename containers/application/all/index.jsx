@@ -5,6 +5,7 @@ import { ApplicationInstallProvider, useApplicationInstall } from '@/context/app
 import { useGetParcel } from '@/managers/api/parcel/useGetParcel';
 import { useInstallParcel } from '@/managers/api/parcel/useInstallParcel';
 import { axiosCustom } from '@/services/axios';
+import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
@@ -40,6 +41,22 @@ function ApplicationAllInner(props) {
 
     const { setFeatureName } = useApplicationInstall();
     const queryClient = useQueryClient();
+    const { checkIntroduce } = useCheckModuleInstall();
+
+    // Hàm helper để lấy link với kiểm tra introduce
+    const getLinkWithIntroduce = (originalLink) => {
+        // Chỉ áp dụng cho module lương sản lượng
+        // if (!originalLink?.startsWith('/piecework-wage')) {
+        //     return originalLink;
+        // }
+
+        // Kiểm tra nếu chưa giới thiệu, redirect đến introduction page với tab đầu tiên
+        if (!checkIntroduce('luong-san-luong')) {
+            return `/piecework-wage/introduction?module=luong-san-luong&tab=danh-sach-to-nhom`;
+        }
+
+        return originalLink;
+    };
 
     const { installParcel, isLoading: isLoadingInstallParcel } = useInstallParcel({
         onSuccess: async (res) => {
@@ -159,10 +176,14 @@ function ApplicationAllInner(props) {
 
     const cards = useMemo(() => {
         return cardsData.map((card) => {
+            // Cập nhật btnLink với logic check introduce nếu có btnLink
+            const updatedBtnLink = card.isInstalled ? getLinkWithIntroduce(card.btnLink) : card.btnLink;
+
             return {
                 ...card,
                 btnLabel: card.isInstalled ? 'Mở' : card.btnLabel,
                 btnAction: card.isInstalled ? BTN_ACTION.installed : card.btnAction,
+                btnLink: updatedBtnLink,
             };
         });
     }, [cardsData]);
@@ -382,6 +403,14 @@ export default function ApplicationAll(props) {
 const ButtonAction = ({ type = 'primary', label, disable = false, btnLink, btnAction, onActionClick }) => {
     const handleClick = () => {
         if (disable) return;
+        console.log('btnLink', btnLink);
+        console.log('btnAction', btnAction);
+        console.log('onActionClick', onActionClick);
+
+        if (btnAction && typeof onActionClick === 'function') {
+            onActionClick(btnAction);
+            return;
+        }
 
         if (btnLink) {
             if (typeof window !== 'undefined') {
@@ -390,9 +419,7 @@ const ButtonAction = ({ type = 'primary', label, disable = false, btnLink, btnAc
             return;
         }
 
-        if (btnAction && typeof onActionClick === 'function') {
-            onActionClick(btnAction);
-        }
+
     };
 
     if (type === 'secondary') {
