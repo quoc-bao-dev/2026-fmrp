@@ -5,7 +5,7 @@ import { useApplicationInstall } from '@/context/application/ApplicationInstallC
 
 
 const IMAGE_INSTALL_COMPLETED = '/application/install-complete.png';
-export default function PopupInstallCompleted({ isOpen, onClose, closeOnBackdropClick = true }) {
+export default function PopupInstallCompleted({ isOpen, onClose, onStart, closeOnBackdropClick = true }) {
     const { featureName } = useApplicationInstall();
     return (
         <Popup
@@ -50,7 +50,7 @@ export default function PopupInstallCompleted({ isOpen, onClose, closeOnBackdrop
                     <button
                         type="button"
                         className="inline-flex items-center gap-2 rounded-[40px] border border-[#899CFD] bg-[#0375F3] px-2 py-2 text-sm font-semibold text-white shadow-none transition-all duration-200 hover:bg-[#0A7FFF] hover:shadow-[0_8px_20px_rgba(3,117,243,0.3)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
-                        onClick={onClose}
+                        onClick={onStart || onClose}
                     >
                         <span className="pl-[12px]">Bắt đầu trải nghiệm</span>
                         <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
