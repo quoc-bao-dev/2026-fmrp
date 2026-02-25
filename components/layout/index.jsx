@@ -2,26 +2,27 @@ import { StateContext } from '@/context/_state/productions-orders/StateContext';
 import { useAppContext } from '@/context/_state/version-application/VersionContext';
 import { useSocketContext } from '@/context/socket/SocketContext';
 import { useSheet } from '@/context/ui/SheetContext';
+import { useGetUpgradePackage } from '@/hooks/useAuth';
+import useSettingExpiration from '@/hooks/useSettingExpiration';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/router';
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import useSettingExpiration from '@/hooks/useSettingExpiration';
-import { useGetUpgradePackage } from '@/hooks/useAuth';
+import apiDashboard from '@/Api/apiDashboard/apiDashboard';
 import PopupGlobal from '../common/popup/PopupGlobal';
 import PopupUpdateNewVersion from '../common/popup/PopupUpdateNewVersion';
 import ChatBubbleAI from '../UI/chat/ChatAiBubble';
 import ImagesModal from '../UI/images/ImagesModal';
 import PopupAccountInformation from '../UI/popup/PopupAccountInformation';
-import PopupAppRenewal from '../UI/popup/PopupAppRenewal';
 import PopupAppTrial from '../UI/popup/PopupAppTrial';
 import PopupChangePassword from '../UI/popup/PopupChangePassword';
 import PopupRecommendation from '../UI/popup/PopupRecommendation';
-import PopupSuccessfulPayment from '../UI/popup/PopupSuccessfulPayment';
 import PopupSuccessfulBuyMoreUser from '../UI/popup/PopupSuccessfulBuyMoreUser';
+import PopupSuccessfulPayment from '../UI/popup/PopupSuccessfulPayment';
+import PopupSystemUpdating from '../UI/popup/PopupSystemUpdating';
 import PopupUpdateVersion from '../UI/popup/PopupUpdateVersion';
-import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
 import PopupUpgradePro from '../UI/popup/PopupUpgradePro';
+import PopupUpgradeProfessional from '../UI/popup/PopupUpgradeProfessional';
 import Header from './header';
 
 const queryClient = new QueryClient({
@@ -39,6 +40,7 @@ const Index = ({ children, ...props }) => {
   const { closeSheet } = useSheet();
 
   const { queryStateProvider } = useContext(StateContext);
+  const settings = useSelector(state => state.setings);
   const stateBoxChatAi = useSelector(state => state?.stateBoxChatAi);
 
   const statePopupPreviewImage = useSelector(state => state?.statePopupPreviewImage);
@@ -159,7 +161,7 @@ const Index = ({ children, ...props }) => {
       if (statePopupGlobal?.open) {
         // Check if PopupGlobal contains PopupUpdateNewVersion by checking for version prop
         const isUpdateNewVersion = statePopupGlobal?.children?.props?.version !== undefined;
-        
+
         // Close if it's PopupUpdateNewVersion, otherwise allow it (assumed to be from upgrade flow)
         if (isUpdateNewVersion) {
           dispatch({
@@ -169,10 +171,10 @@ const Index = ({ children, ...props }) => {
         }
       }
     }
-  }, [isExpired, dispatch, statePopupUpdateVersion?.open, statePopupAccountInformation?.open, 
-      statePopupChangePassword?.open, statePopupRecommendation?.open, statePopupUpgradeProfessional?.open,
-      statePopupSuccessfulPayment?.open, statePopupSuccessfulBuyMoreUser?.open, statePopupPreviewImage?.open,
-      statePopupGlobal?.open]);
+  }, [isExpired, dispatch, statePopupUpdateVersion?.open, statePopupAccountInformation?.open,
+    statePopupChangePassword?.open, statePopupRecommendation?.open, statePopupUpgradeProfessional?.open,
+    statePopupSuccessfulPayment?.open, statePopupSuccessfulBuyMoreUser?.open, statePopupPreviewImage?.open,
+    statePopupGlobal?.open]);
 
   useEffect(() => {
     if (!socket) return;
@@ -190,13 +192,39 @@ const Index = ({ children, ...props }) => {
     };
   }, [socket]);
 
+  // Socket dùng để mở popup nâng cấp hệ thống
+  useEffect(() => {
+    if (!socket) return;
+    const topic = 'notification_upgrade';
+    const handleNotificationUpgrade = data => {
+      if (data?.data === 1) {
+        (async () => {
+          try {
+            const res = await apiDashboard.apiSettings();
+            if (res?.settings) {
+              dispatch({ type: 'setings/server', payload: res.settings });
+            }
+          } catch (error) {
+            console.error('Error fetching settings after notification_upgrade:', error);
+          }
+        })();
+      }
+    };
+
+    socket.on(topic, handleNotificationUpgrade);
+
+    return () => {
+      socket.off(topic, handleNotificationUpgrade);
+    };
+  }, [socket, dispatch]);
+
   return (
     <QueryClientProvider client={queryClient}>
       {router.pathname == '/manufacture/productions-orders-mobile' || router.pathname == '/manufacture/production-plan-mobile' || router.pathname == '/piecework-wage/import-output-mobile' ? (
         children
       ) : (
         <React.Fragment>
-          {router.pathname !== '/piecework-wage/import-output' && router.pathname !== '/piecework-wage/import-output-mobile' &&  <Header />}
+          {router.pathname !== '/piecework-wage/import-output' && router.pathname !== '/piecework-wage/import-output-mobile' && <Header />}
           {children}
           {stateBoxChatAi.isShowAi && !isExpired && <ChatBubbleAI {...props} />}
           {/* {stateBoxChatAi.isShowAi} */}
@@ -267,6 +295,7 @@ const Index = ({ children, ...props }) => {
           )}
           {statePopupSuccessfulPayment?.open && !isExpired && <PopupSuccessfulPayment {...props} />}
           {statePopupSuccessfulBuyMoreUser?.open && !isExpired && <PopupSuccessfulBuyMoreUser {...props} />}
+          <PopupSystemUpdating open={!!+settings?.enable_noti} />
         </React.Fragment>
       )}
 
