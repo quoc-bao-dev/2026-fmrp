@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import React from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useCheckIntroduce } from '@/managers/api/parcel/useCheckIntroduce';
 import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
@@ -270,6 +270,18 @@ const BulletNumber = ({ number }) => {
 };
 
 const IntroSection = ({ number, title, content, image, contentPosition = 'left', hiddenLine = false }) => {
+    const contentRef = useRef(null);
+    const [isContentTall, setIsContentTall] = useState(false);
+
+    useLayoutEffect(() => {
+        if (!contentRef.current) return;
+        const height = contentRef.current.offsetHeight || 0;
+        if (height > 48) {
+            setIsContentTall(true);
+        } else {
+            setIsContentTall(false);
+        }
+    }, [content]);
     return (
         <div className="flex flex-col gap-6">
             <div className="flex justify-between gap-8 2xl:gap-[160px]">
@@ -280,7 +292,10 @@ const IntroSection = ({ number, title, content, image, contentPosition = 'left',
                     <h3 className="font-deca font-semibold text-[24px] leading-[32px] tracking-[0] text-[#101828] text-left capitalize">
                         {title}
                     </h3>
-                    <p className="mt-3 font-deca font-normal text-[16px] leading-[24px] tracking-[0] text-justify text-[#475467] opacity-50">
+                    <p
+                        ref={contentRef}
+                        className="mt-3 font-deca font-normal text-[16px] leading-[24px] tracking-[0] text-justify text-[#475467] opacity-50"
+                    >
                         {content}
                     </p>
                 </div>
@@ -296,7 +311,7 @@ const IntroSection = ({ number, title, content, image, contentPosition = 'left',
             </div>
 
             {!hiddenLine && (
-                <div className="relative h-[0px] w-full">
+                <div className={`relative h-[0px] w-full ${isContentTall ? '' : 'mt-[-20px]'}`}>
                     <div className={`absolute inset-0 flex items-center justify-center pointer-events-none`}>
                         <svg
                             width="459"
