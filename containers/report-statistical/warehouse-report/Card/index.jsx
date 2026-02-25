@@ -10,6 +10,7 @@ import SelectSearchReport from '@/components/common/select/SelectSearchReport';
 import ReportLayout from '@/components/layout/ReportLayout';
 import TableSection from '@/components/layout/ReportLayout/TableSection';
 import { useLanguageContext } from '@/context/ui/LanguageContext';
+import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 import { useGetWarehouse } from '@/hooks/common/useWarehouses';
 import usePagination from '@/hooks/usePagination';
 import useStatusExprired from '@/hooks/useStatusExprired';
@@ -46,6 +47,7 @@ const Card = props => {
   const dataLang = useLanguageContext();
   const statusExprired = useStatusExprired();
   const { selectedBranches, setSelectedBranches } = usePersistedBranches();
+  const { isWarehousePropertiesEnabled, warehousePropertyLabels } = useWarehouseProperties();
 
   const [dateRange, setDateRange] = useState({
     startDate: undefined,
@@ -251,7 +253,10 @@ const Card = props => {
 
   const getSpecialRowBg = item => (item?._rowType === 'opening' ? 'bg-[#F3F6FF]' : item?._rowType === 'closing' ? 'bg-[#E8FFF3]' : '');
 
-  const { multiDataSet } = useExportExcel(displayedData);
+  const { multiDataSet } = useExportExcel(displayedData, {
+    isWarehousePropertiesEnabled,
+    warehousePropertyLabels,
+  });
 
   return (
     <>
@@ -295,7 +300,7 @@ const Card = props => {
             </div>
             <div className='flex gap-3 items-center'>
               <SearchComponent dataLang={dataLang} onChange={handleSearch} value={searchValue} classNameBox='!py-2 2xl:!p-2.5' />
-              <OnResetData sOnFetching={() => {}} onClick={refetchCardStock} className='!py-3' />
+              <OnResetData sOnFetching={() => { }} onClick={refetchCardStock} className='!py-3' />
               <ExcelFileComponent dataLang={dataLang} filename='Báo cáo thẻ kho' title='BCTK' multiDataSet={multiDataSet} classBtn='!py-3' />
             </div>
           </div>
