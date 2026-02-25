@@ -22,12 +22,26 @@ const WarningDaysInput = ({ state, setState }) => {
     });
   };
 
+  const handleInputChange = e => {
+    const raw = e.target.value ?? '';
+    // Chỉ cho phép số, loại bỏ ký tự khác (kể cả dấu âm)
+    const digitsOnly = raw.replace(/\D/g, '');
+    const next = digitsOnly === '' ? 0 : parseInt(digitsOnly, 10);
+    setState(next);
+  };
+
   return (
     <div className='flex items-center border rounded-full shadow-sm border-[#D0D5DD] w-fit h-fit overflow-hidden'>
       <div onClick={() => handleChange('decrement')} className='min-h-[35px] min-w-[35px] flex justify-center items-center flex-row'>
         <FaMinus className='text-[#25387A] hover:text-green-1' size={11} />
       </div>
-      <span className='text-sm font-normal text-typo-black-1 min-w-[50px] text-center select-none'>{state}</span>
+      <input
+        type='text'
+        inputMode='numeric'
+        className='text-sm font-normal text-typo-black-1  w-[50px] text-center py-[6px] outline-none'
+        value={state}
+        onChange={handleInputChange}
+      />
       <div onClick={() => handleChange('increment')} className='min-h-[35px]  min-w-[35px] flex justify-center items-center flex-row'>
         <FaPlus className='text-[#25387A] hover:text-green-1' size={10} />
       </div>
