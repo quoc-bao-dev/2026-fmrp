@@ -179,6 +179,53 @@ const apiReport = {
     return response.data;
   },
 
+  /**
+   * Get count items expired API
+   * @description Lấy tổng số lượng mặt hàng sắp hết hạn / đã hết hạn (tổng quan)
+   * @param {Object} [params] - Query params (tùy chọn, dùng mở rộng sau này nếu cần filter)
+   * @returns {Promise<Object>} Promise resolves về response từ BE
+   * @throws {Error} Khi gọi API thất bại
+   * @example
+   * // Gọi đơn giản không filter
+   * const res = await apiReport.apiGetCountItemsExpired();
+   *
+   * // Gọi với params filter (ví dụ)
+   * const res = await apiReport.apiGetCountItemsExpired({
+   *   'filter[branch_ids][0]': 1,
+   * });
+   */
+  async apiGetCountItemsExpired(params) {
+    const response = await axiosCustom('GET', `/api_web/api_reports/CountItemsExpired`, {
+      params,
+    });
+    return response.data;
+  },
+
+  /**
+   * Get limit user date report API
+   * @description Lấy thông tin giới hạn ngày xem báo cáo cho user (phân trang theo page, limit)
+   * @param {Object} params - Query params
+   * @param {number} [params.page] - Trang hiện tại (mặc định 1)
+   * @param {number} [params.limit] - Số bản ghi mỗi trang (mặc định 15)
+   * @returns {Promise<Object>} Promise resolves về response từ BE
+   * @throws {Error} Khi gọi API thất bại
+   * @example
+   * // Gọi đơn giản với page/limit mặc định
+   * const res = await apiReport.apiGetLimitUserDateReport({});
+   *
+   * // Gọi với page/limit cụ thể
+   * const res = await apiReport.apiGetLimitUserDateReport({
+   *   page: 1,
+   *   limit: 15,
+   * });
+   */
+  async apiGetLimitUserDateReport(params) {
+    const response = await axiosCustom('GET', `/api_web/api_reports/limit_user_date_report`, {
+      params,
+    });
+    return response.data;
+  },
+
   async apiGetAggregateFundBalance(data) {
     const response = await axiosCustom('GET', `/api_web/api_reports/aggregate_fund_balance`, data);
     return response.data;

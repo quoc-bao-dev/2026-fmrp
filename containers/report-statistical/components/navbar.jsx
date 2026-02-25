@@ -7,6 +7,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 const Navbar = props => {
   const { permissions_current: auth, is_upgrade: isUpgrade, is_admin: isAdmin } = useSelector(state => state.auth);
+  // Trạng thái feature từ settings (apiFeature)
+  const featureState = useSelector(state => state.feature);
   const router = useRouter();
   const showToast = useToast();
 
@@ -27,6 +29,23 @@ const Navbar = props => {
   const hasPro = isUpgrade === false;
 
   // báo cáo tồn kho
+  // Điều kiện hiển thị tab "cảnh báo hạn sử dụng" dựa trên 2 checkbox:
+  // - dataMaterialExpiry.is_enable
+  // - dataProductExpiry.is_enable
+  const isMaterialExpiryEnabled =
+    featureState?.dataMaterialExpiry?.is_enable &&
+    String(featureState.dataMaterialExpiry.is_enable) == '1';
+
+  const isProductExpiryEnabled =
+    featureState?.dataProductExpiry?.is_enable &&
+    String(featureState.dataProductExpiry.is_enable) == '1';
+
+
+
+  const shouldShowExpiryWarningTab = isMaterialExpiryEnabled || isProductExpiryEnabled;
+
+
+
   const isNavbarWarehouse = [
     {
       id: uuidv4(),
@@ -69,6 +88,15 @@ const Navbar = props => {
           path: '/report-statistical/warehouse-report/card',
           // disabled: true, // Thêm thuộc tính disabled
         },
+        ...(shouldShowExpiryWarningTab
+          ? [
+            {
+              id: uuidv4(),
+              name: 'cảnh báo hạn sử dụng',
+              path: '/report-statistical/warehouse-report/expiry-warning',
+            },
+          ]
+          : []),
       ],
     },
   ];
@@ -283,7 +311,7 @@ const Navbar = props => {
       default:
         break;
     }
-  }, [router.pathname]);
+  }, [router.pathname, shouldShowExpiryWarningTab]);
 
   return (
     <ul className={`w-[17%] h-fit xl:p-4 2xl:p-6 pt-4 p-2 flex flex-col border border-[#E7F2FE] bg-primary-06 rounded-lg ${navbar.some(item => item.children) ? 'gap-6' : 'gap-3'}`}>
@@ -315,15 +343,13 @@ const Navbar = props => {
                         ) : (
                           <Link href={child.path} className='relative'>
                             <li
-                              className={`group font-medium flex p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
-                                router.pathname === child.path ? 'bg-typo-blue-5 text-white' : ''
-                              } `}
+                              className={`group font-medium flex p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${router.pathname === child.path ? 'bg-typo-blue-5 text-white' : ''
+                                } `}
                             >
                               <div className='flex items-center gap-2'>
                                 <div
-                                  className={`size-1.5 rounded-full flex-shrink-0 ${
-                                    router.pathname === child.path ? 'bg-white/60' : 'bg-primary-01'
-                                  } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
+                                  className={`size-1.5 rounded-full flex-shrink-0 ${router.pathname === child.path ? 'bg-white/60' : 'bg-primary-01'
+                                    } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
                                 />
                                 <div className='flex flex-col items-start w-full'>
                                   <div className='responsive-text-sm capitalize'>{child.name}</div>
@@ -356,15 +382,13 @@ const Navbar = props => {
                       ) : (
                         <Link href={item.path} className='relative'>
                           <li
-                            className={`group font-medium flex p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${
-                              router.pathname === item.path ? 'bg-typo-blue-5 text-white' : ''
-                            } `}
+                            className={`group font-medium flex p-2 items-center justify-between w-full rounded-lg cursor-pointer hover:bg-[#3276FA] hover:text-white duration-300 ease-in-out transition-all ${router.pathname === item.path ? 'bg-typo-blue-5 text-white' : ''
+                              } `}
                           >
                             <div className='flex w-full items-center gap-2'>
                               <div
-                                className={`size-1.5 rounded-full flex-shrink-0 ${
-                                  router.pathname === item.path ? 'bg-white/60' : 'bg-primary-01'
-                                } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
+                                className={`size-1.5 rounded-full flex-shrink-0 ${router.pathname === item.path ? 'bg-white/60' : 'bg-primary-01'
+                                  } group-hover:bg-white/60 transition-all duration-300 ease-in-out`}
                               />
                               <div className='flex flex-col items-start w-full'>
                                 <div className='responsive-text-sm capitalize'>{item.name}</div>
