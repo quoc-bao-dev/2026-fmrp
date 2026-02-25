@@ -10,6 +10,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 import PopupInstallCompleted from './components/PopupInstallCompleted';
 import PopupPayment from './components/PopupPayment';
 import PopupPaymentSuccess from './components/PopupPaymentSuccess';
@@ -42,6 +43,7 @@ function ApplicationAllInner(props) {
     const { setFeatureName } = useApplicationInstall();
     const queryClient = useQueryClient();
     const { checkIntroduce } = useCheckModuleInstall();
+    const authState = useSelector(state => state.auth);
 
     // Hàm helper để lấy link với kiểm tra introduce
     const getLinkWithIntroduce = (originalLink) => {
@@ -208,6 +210,37 @@ function ApplicationAllInner(props) {
         setIsOpenProcessInstall(false);
         setIsOpenInstallCompleted(true);
         refetchParcel();
+    };
+
+    // Khi bấm "Bắt đầu trải nghiệm" ở popup hoàn tất cài đặt
+    // → tìm link trong authState.parcel_use theo id của selectedCard và chuyển trang
+    const handleInstallCompletedStart = () => {
+        if (!selectedCard) {
+            setIsOpenInstallCompleted(false);
+            return;
+        }
+
+        const parcelList = authState?.parcel_use || [];
+        const parcelItem = parcelList.find(
+            item => String(item.id) === String(selectedCard.id)
+        );
+
+        if (!parcelItem) {
+            setIsOpenInstallCompleted(false);
+            return;
+        }
+
+        // Nếu chưa xem giới thiệu (introduce === "0") và có link_introduce → ưu tiên đi vào trang giới thiệu
+        const targetLink =
+            parcelItem.introduce === '0' && parcelItem.link_introduce
+                ? parcelItem.link_introduce
+                : parcelItem.link_url;
+
+        if (targetLink) {
+            router.push(targetLink);
+        }
+
+        setIsOpenInstallCompleted(false);
     };
 
     const handleBtnAction = (action, card = null) => {
@@ -386,7 +419,12 @@ function ApplicationAllInner(props) {
             />
 
             {/* Popup install completed */}
-            <PopupInstallCompleted isOpen={isOpenInstallCompleted} onClose={() => { setIsOpenInstallCompleted(false) }} closeOnBackdropClick={false} />
+            <PopupInstallCompleted
+                isOpen={isOpenInstallCompleted}
+                onClose={() => { setIsOpenInstallCompleted(false) }}
+                onStart={handleInstallCompletedStart}
+                closeOnBackdropClick={false}
+            />
         </div>
     );
 }
@@ -403,10 +441,6 @@ export default function ApplicationAll(props) {
 const ButtonAction = ({ type = 'primary', label, disable = false, btnLink, btnAction, onActionClick }) => {
     const handleClick = () => {
         if (disable) return;
-        console.log('btnLink', btnLink);
-        console.log('btnAction', btnAction);
-        console.log('onActionClick', onActionClick);
-
         if (btnAction && typeof onActionClick === 'function') {
             onActionClick(btnAction);
             return;

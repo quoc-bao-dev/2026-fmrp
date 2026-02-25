@@ -1,10 +1,13 @@
 import { useRouter } from 'next/router';
-import React from 'react';
 import Head from 'next/head';
+import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useCheckIntroduce } from '@/managers/api/parcel/useCheckIntroduce';
 import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
 import useToast from '@/hooks/useToast';
+import Image from 'next/image';
+
+const IMAGE_INTRO_BACKGROUND = "/application/intro-background.png"
 
 // Mapping tên tab từ key sang tên hiển thị
 const TAB_NAMES = {
@@ -141,55 +144,6 @@ const ModuleIntroduction = () => {
         }
     };
 
-    // Chuyển đổi content từ text có \n thành các đoạn văn
-    const renderContent = () => {
-        if (!moduleConfig?.content) {
-            return <p className='text-gray-600'>Không có nội dung cho module này.</p>;
-        }
-
-        const lines = moduleConfig.content.split('\n');
-        const elements = [];
-        let currentParagraph = [];
-
-        lines.forEach((line, index) => {
-            const trimmedLine = line.trim();
-
-            if (!trimmedLine) {
-                // Dòng trống - kết thúc paragraph hiện tại
-                if (currentParagraph.length > 0) {
-                    elements.push(
-                        <p key={`para-${elements.length}`} className='text-lg leading-relaxed text-gray-700 mb-4'>
-                            {currentParagraph.join(' ')}
-                        </p>
-                    );
-                    currentParagraph = [];
-                }
-            } else if (trimmedLine.startsWith('•')) {
-                // Bullet point
-                const bulletText = trimmedLine.substring(1).trim();
-                elements.push(
-                    <div key={`bullet-${index}`} className='flex items-start mb-2'>
-                        <span className='mr-3 text-blue-fmrp text-xl leading-none'>•</span>
-                        <span className='text-gray-700 flex-1'>{bulletText}</span>
-                    </div>
-                );
-            } else {
-                // Thêm vào paragraph hiện tại
-                currentParagraph.push(trimmedLine);
-            }
-        });
-
-        // Thêm paragraph cuối cùng nếu còn
-        if (currentParagraph.length > 0) {
-            elements.push(
-                <p key={`para-${elements.length}`} className='text-lg leading-relaxed text-gray-700 mb-4'>
-                    {currentParagraph.join(' ')}
-                </p>
-            );
-        }
-
-        return elements;
-    };
 
     // Lấy tên module để hiển thị
     const moduleDisplayName = module === 'luong-san-luong' ? 'Lương Sản Lượng' : module;
@@ -199,59 +153,66 @@ const ModuleIntroduction = () => {
             <Head>
                 <title>Giới thiệu {moduleDisplayName}</title>
             </Head>
-            <div className='min-h-screen  bg-gray-50  h-full flex flex-col items-center justify-center'>
-                <div className='container mx-auto px-4 py-8 max-w-7xl'>
-                    {/* Layout 2 cột */}
-                    <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 items-center min-h-[calc(100vh-300px)]- mt-8'>
-                        {/* Cột Content */}
-                        <div className='flex flex-col justify-center space-y-6'>
-                            <div>
-                                <h1 className='text-4xl font-bold text-gray-900 mb-6'>
-                                    Giới thiệu {moduleDisplayName}
-                                </h1>
-                                <div className='space-y-2'>
-                                    {renderContent()}
-                                </div>
-                            </div>
-                        </div>
 
-                        {/* Cột Visual */}
-                        <div className='flex items-center justify-center'>
-                            <div className='w-full max-w-md'>
-                                <div className='bg-white rounded-lg shadow-lg p-8 flex items-center justify-center'>
-                                    <div className='text-center'>
-                                        <div className='w-64 h-64 bg-gradient-to-br from-blue-fmrp/10 to-blue-fmrp/5 rounded-lg flex items-center justify-center mb-4'>
-                                            <svg
-                                                className='w-32 h-32 text-blue-fmrp'
-                                                fill='none'
-                                                stroke='currentColor'
-                                                viewBox='0 0 24 24'
-                                                xmlns='http://www.w3.org/2000/svg'
-                                            >
-                                                <path
-                                                    strokeLinecap='round'
-                                                    strokeLinejoin='round'
-                                                    strokeWidth={2}
-                                                    d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
-                                                />
-                                            </svg>
-                                        </div>
-                                        <p className='text-gray-600 text-sm'>Lương Sản Lượng</p>
+
+            <div className="">
+
+                {/* ==== content ==== */}
+                <div className="max-w-[1300px] mx-auto">
+                    <div className="pt-[62px]"></div>
+
+                    <div className="flex gap-2 relative">
+
+                        {/* ==== left content ==== */}
+                        <div className="w-[41%] top-[62px] sticky h-fit">
+                            <div className="">
+                                <div className="relative">
+                                    <div className="absolute -top-16 -left-12 h-[480px] ">
+                                        <Image
+                                            src={IMAGE_INTRO_BACKGROUND}
+                                            alt="intro-background"
+                                            width={500}
+                                            height={500}
+                                            className=" w-full h-full object-contain"
+                                        />
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Nút Bắt đầu ngay ở dưới cùng */}
-                    <div className='flex justify-center  mt-16 pb-8'>
-                        <button
-                            onClick={handleStartNow}
-                            disabled={isCheckingIntroduce}
-                            className='px-8 py-3 bg-blue-fmrp text-white rounded-lg font-semibold text-lg hover:bg-blue-fmrp/90 transition-colors duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed'
-                        >
-                            {isCheckingIntroduce ? 'Đang xử lý...' : 'Bắt đầu ngay'}
-                        </button>
+
+                                    <div className="pt-20px pl-[40px] pt-[40px] relative z-[1]">
+                                        <h1 className="font-deca font-semibold text-[32px] leading-[40px] tracking-[0] text-[#101828] text-left capitalize">
+                                            Lương sản lượng
+                                        </h1>
+
+                                        <p className="pt-[20px] opacity-50 font-deca font-normal text-sm 2xl:text-[16px] leading-[28px] tracking-[0] text-[#475467] text-justify">
+                                            Giúp doanh nghiệp tính lương công nhân dựa trên sản lượng thực tế theo ca, tổ/nhóm hoặc từng người. Thay vì ghi chép rời rạc và cộng tay dễ sai, hệ thống chuẩn hóa dữ liệu từ khâu xếp ca – lệnh sản xuất – nhập sản lượng, để việc tính lương diễn ra đúng công thức, đúng số liệu.
+                                            <br />
+                                            <br />
+
+                                            Điểm mạnh của lương sản lượng nằm ở tính minh bạch và công bằng: ai làm nhiều, đạt năng suất tốt sẽ được ghi nhận tương xứng. Nhờ có dữ liệu chi tiết theo thời gian, quản lý dễ đối soát, hạn chế thất thoát và kiểm soát tốt chênh lệch giữa kế hoạch – thực tế.
+                                            <br />
+                                            <br />
+
+                                            Cuối kỳ, hệ thống tự động tổng hợp sản lượng và tính lương nhanh chóng, đồng thời cung cấp báo cáo năng suất theo ca/tổ/nhóm/người để doanh nghiệp ra quyết định điều phối nhân sự, tối ưu quy trình và nâng hiệu quả sản xuất.
+                                        </p>
+
+                                        <div className="pt-[24px]">
+                                            <IntroPrimaryButton label="Bắt đầu" />
+                                        </div>
+                                    </div>
+
+                                </div>
+
+
+                            </div>
+
+                        </div>
+
+                        {/* ==== right content ==== */}
+                        <div className="flex-1">
+                            <div className="h-[100px] bg-blue-500"></div>
+
+                            <div className="w-full h-[2000px] bg-gradient-to-b from-gray-100 to-gray-900"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -260,3 +221,19 @@ const ModuleIntroduction = () => {
 };
 
 export default ModuleIntroduction;
+
+const IntroPrimaryButton = ({ label = 'Bắt đầu', onClick }) => {
+    return (
+        <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-[40px] border border-[#899CFD] bg-[#0375F3] px-4 py-2 text-sm font-semibold text-white shadow-none transition-all duration-200 hover:bg-[#0A7FFF] hover:shadow-[0_8px_20px_rgba(3,117,243,0.3)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
+            onClick={onClick}
+        >
+            <span className="pl-[12px]">{label}</span>
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="32" height="32" rx="16" fill="white" />
+                <path d="M21.938 11V19.125C21.938 19.3736 21.8392 19.6121 21.6634 19.7879C21.4876 19.9637 21.2491 20.0625 21.0005 20.0625C20.7518 20.0625 20.5134 19.9637 20.3375 19.7879C20.1617 19.6121 20.063 19.3736 20.063 19.125V13.2656L11.6637 21.6633C11.4876 21.8394 11.2487 21.9383 10.9997 21.9383C10.7506 21.9383 10.5117 21.8394 10.3356 21.6633C10.1595 21.4872 10.0605 21.2483 10.0605 20.9992C10.0605 20.7501 10.1595 20.5113 10.3356 20.3352L18.7348 11.9375H12.8755C12.6268 11.9375 12.3884 11.8387 12.2125 11.6629C12.0367 11.4871 11.938 11.2486 11.938 11C11.938 10.7514 12.0367 10.5129 12.2125 10.3371C12.3884 10.1613 12.6268 10.0625 12.8755 10.0625H21.0005C21.2491 10.0625 21.4876 10.1613 21.6634 10.3371C21.8392 10.5129 21.938 10.7514 21.938 11Z" fill="#206AFF" />
+            </svg>
+        </button>
+    );
+};
