@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useCheckIntroduce } from '@/managers/api/parcel/useCheckIntroduce';
 import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
@@ -9,6 +9,7 @@ import Image from 'next/image';
 
 const IMAGE_INTRO_BACKGROUND = "/application/intro-background.png"
 const IMAGE_BULLET_NUMBER = "/application/frame-polygon.png"
+const IMAGE_BULLET_NUMBER_ACTIVE = "/application/frame-polygon-active.png"
 
 const INFO_CONTENT = [
     '/application/intro-conent-1.png',
@@ -53,6 +54,9 @@ const MODULE_CONFIG = {
     },
 };
 
+// Ngưỡng khoảng cách từ mép trên màn hình để kích hoạt section (có thể cấu hình lại)
+const SECTION_ACTIVE_OFFSET = 1000;
+
 const ModuleIntroduction = () => {
     const router = useRouter();
     const { module, tab } = router.query;
@@ -70,6 +74,11 @@ const ModuleIntroduction = () => {
         },
     });
     const isShow = useToast();
+
+    const [activeIndex, setActiveIndex] = useState(null);
+    const sectionRefs = useRef([]);
+    const [isStarting, setIsStarting] = useState(false);
+
 
     // Lấy config cho module hiện tại
     const moduleConfig = MODULE_CONFIG[module] || null;
@@ -100,7 +109,6 @@ const ModuleIntroduction = () => {
         return parcelItem?.id || null;
     };
 
-    const [isStarting, setIsStarting] = useState(false);
 
     const handleStartNow = async () => {
         if (isStarting) return;
@@ -160,6 +168,41 @@ const ModuleIntroduction = () => {
             setIsStarting(false);
         }
     };
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!sectionRefs.current || sectionRefs.current.length === 0) return;
+
+            // Tìm section đầu tiên mà khoảng cách từ mép trên viewport
+            // đến mép trên component (rect.top) nằm trong [0, SECTION_ACTIVE_OFFSET]
+            const index = sectionRefs.current.findIndex((el) => {
+                if (!el) return false;
+                const rect = el.getBoundingClientRect();
+                const distanceFromTop = rect.top; // khoảng cách từ mép trên màn hình tới mép trên component
+                return distanceFromTop >= 0 && distanceFromTop <= SECTION_ACTIVE_OFFSET;
+            });
+
+            setActiveIndex(index === -1 ? null : index);
+        };
+
+        // Gọi 1 lần khi mount để set active ban đầu (nếu đang ở giữa trang)
+        handleScroll();
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('scroll', handleScroll, { passive: true });
+            window.addEventListener('resize', handleScroll);
+            // Lắng nghe scroll trên document (capture) để bắt cả các container cuộn bên trong
+            document.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+        }
+
+        return () => {
+            if (typeof window !== 'undefined') {
+                window.removeEventListener('scroll', handleScroll);
+                window.removeEventListener('resize', handleScroll);
+                document.removeEventListener('scroll', handleScroll, { capture: true });
+            }
+        };
+    }, []);
 
 
     // Lấy tên module để hiển thị
@@ -227,13 +270,29 @@ const ModuleIntroduction = () => {
                             <div className="h-[100px]"></div>
                             <div className="flex flex-col gap-6">
                                 {content.map((item, index) => (
-                                    <IntroSection key={index} number={index + 1} title={item.title} content={item.content} image={item.image} contentPosition={index % 2 === 0 ? 'left' : 'right'} hiddenLine={index === content.length - 1} />
+                                    <div
+                                        key={index}
+                                        ref={(el) => {
+                                            sectionRefs.current[index] = el;
+                                        }}
+                                    >
+                                        <IntroSection
+                                            number={index + 1}
+                                            title={item.title}
+                                            content={item.content}
+                                            image={item.image}
+                                            contentPosition={index % 2 === 0 ? 'left' : 'right'}
+                                            hiddenLine={index === content.length - 1}
+                                            isActive={activeIndex === index}
+                                        />
+                                    </div>
                                 ))}
+                                <div className="h-[150px]"></div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
         </>
     );
 };
@@ -258,16 +317,25 @@ const IntroPrimaryButton = ({ label = 'Bắt đầu', onClick, disabled = false 
 };
 
 
-const BulletNumber = ({ number }) => {
+const BulletNumber = ({ number, isActive = true }) => {
     return (
         <div className="relative w-fit">
-            <Image
-                src={IMAGE_BULLET_NUMBER}
-                alt="bullet-number"
-                width={94}
-                height={94}
-                className="w-[94px] h-[94px]"
-            />
+            <div className="relative">
+                <Image
+                    src={IMAGE_BULLET_NUMBER}
+                    alt="bullet-number"
+                    width={94}
+                    height={94}
+                    className={`w-[94px] h-[94px] relative z-[0] ${isActive ? 'opacity-0' : 'opacity-100'} transition-all duration-300`}
+                />
+                <Image
+                    src={IMAGE_BULLET_NUMBER_ACTIVE}
+                    alt="bullet-number-active"
+                    width={94}
+                    height={94}
+                    className={`w-[94px] h-[94px] z-[2] absolute inset-0 ${isActive ? 'opacity-100' : 'opacity-0'} transition-all duration-300`}
+                />
+            </div>
             <div className="absolute inset-0 flex items-center justify-center">
                 <p className="font-deca font-semibold text-[32px] leading-[28px] tracking-[0] text-[#0375F3]">
                     #{number}
@@ -277,7 +345,7 @@ const BulletNumber = ({ number }) => {
     );
 };
 
-const IntroSection = ({ number, title, content, image, contentPosition = 'left', hiddenLine = false }) => {
+const IntroSection = ({ number, title, content, image, contentPosition = 'left', hiddenLine = false, isActive = true }) => {
     const contentRef = useRef(null);
     const [isContentTall, setIsContentTall] = useState(false);
 
@@ -295,7 +363,7 @@ const IntroSection = ({ number, title, content, image, contentPosition = 'left',
             <div className="flex justify-between gap-8 2xl:gap-[160px]">
                 <div className={`w-[308px] ${contentPosition === 'left' ? 'order-1' : 'order-2'}`}>
                     <div className="relative left-[-15px]" >
-                        <BulletNumber number={number} />
+                        <BulletNumber number={number} isActive={isActive} />
                     </div>
                     <h3 className="font-deca font-semibold text-[24px] leading-[32px] tracking-[0] text-[#101828] text-left capitalize">
                         {title}
