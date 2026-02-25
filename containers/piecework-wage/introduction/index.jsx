@@ -8,15 +8,25 @@ import useToast from '@/hooks/useToast';
 import Image from 'next/image';
 
 const IMAGE_INTRO_BACKGROUND = "/application/intro-background.png"
+const IMAGE_BULLET_NUMBER = "/application/frame-polygon.png"
 
-// Mapping tên tab từ key sang tên hiển thị
-const TAB_NAMES = {
-    'danh-sach-to-nhom': 'Danh sách tổ / nhóm',
-    'thiet-lap-ca-lam-viec': 'Thiết lập ca làm việc',
-    'bang-xep-ca': 'Bảng xếp ca',
-    'nhap-san-luong': 'Nhập sản lượng',
-    'tong-hop-luong-san-luong': 'Tổng hợp lương sản lượng',
-};
+const INFO_CONTENT = [
+    '/application/intro-conent-1.png',
+    '/application/intro-conent-2.png',
+    '/application/intro-conent-3.png',
+    '/application/intro-conent-4.png',
+    '/application/intro-conent-5.png',
+    '/application/intro-conent-6.png',
+]
+
+const content = [
+    { title: 'Danh sách tổ / nhóm', content: 'Tạo & quản lý tổ/nhóm, phân nhân sự để theo dõi sản lượng đúng đối tượng.', image: INFO_CONTENT[0] },
+    { title: 'Thiết lập ca làm việc', content: 'Khai báo ca (giờ vào/ra, tăng ca, quy tắc tính công) làm chuẩn vận hành.', image: INFO_CONTENT[1] },
+    { title: 'Bảng xếp ca', content: 'Lên lịch theo ngày/tuần/tháng cho từng tổ/nhóm & nhân sự, đảm bảo đúng ca – đúng người.', image: INFO_CONTENT[2] },
+    { title: 'Khởi tạo lệnh sản xuất', content: 'Tạo lệnh theo sản phẩm/công đoạn/số lượng, gắn tổ/nhóm và ca để làm “điều kiện” nhập sản lượng.', image: INFO_CONTENT[3] },
+    { title: 'Nhập sản lượng', content: 'Ghi nhận sản lượng theo lệnh/ca/tổ/ nhóm/người, bám sát thực tế phát sinh.', image: INFO_CONTENT[4] },
+    { title: 'Tổng hợp lương sản lượng', content: 'Tự động tổng hợp sản lượng & công theo kỳ, tính lương nhanh và xuất báo cáo đối soát.', image: INFO_CONTENT[5] },
+]
 
 const MODULE_CONFIG = {
     'luong-san-luong': {
@@ -158,16 +168,14 @@ const ModuleIntroduction = () => {
             <div className="">
 
                 {/* ==== content ==== */}
-                <div className="max-w-[1300px] mx-auto">
-                    <div className="pt-[62px]"></div>
-
-                    <div className="flex gap-2 relative">
+                <div className="max-w-[1300px] 2xl:max-w-[1350px] mx-auto">
+                    <div className="flex gap-[100px] relative">
 
                         {/* ==== left content ==== */}
-                        <div className="w-[41%] top-[62px] sticky h-fit">
+                        <div className=" w-[42%] 2xl:w-[479px] top-0 sticky h-screen flex flex-col justify-center">
                             <div className="">
                                 <div className="relative">
-                                    <div className="absolute -top-16 -left-12 h-[480px] ">
+                                    <div className="absolute -top-28 -left-12 h-[480px] ">
                                         <Image
                                             src={IMAGE_INTRO_BACKGROUND}
                                             alt="intro-background"
@@ -196,7 +204,7 @@ const ModuleIntroduction = () => {
                                         </p>
 
                                         <div className="pt-[24px]">
-                                            <IntroPrimaryButton label="Bắt đầu" />
+                                            <IntroPrimaryButton label="Bắt đầu" onClick={handleStartNow} />
                                         </div>
                                     </div>
 
@@ -209,9 +217,12 @@ const ModuleIntroduction = () => {
 
                         {/* ==== right content ==== */}
                         <div className="flex-1">
-                            <div className="h-[100px] bg-blue-500"></div>
-
-                            <div className="w-full h-[2000px] bg-gradient-to-b from-gray-100 to-gray-900"></div>
+                            <div className="h-[100px]"></div>
+                            <div className="flex flex-col gap-6">
+                                {content.map((item, index) => (
+                                    <IntroSection key={index} number={index + 1} title={item.title} content={item.content} image={item.image} contentPosition={index % 2 === 0 ? 'left' : 'right'} hiddenLine={index === content.length - 1} />
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -235,5 +246,77 @@ const IntroPrimaryButton = ({ label = 'Bắt đầu', onClick }) => {
                 <path d="M21.938 11V19.125C21.938 19.3736 21.8392 19.6121 21.6634 19.7879C21.4876 19.9637 21.2491 20.0625 21.0005 20.0625C20.7518 20.0625 20.5134 19.9637 20.3375 19.7879C20.1617 19.6121 20.063 19.3736 20.063 19.125V13.2656L11.6637 21.6633C11.4876 21.8394 11.2487 21.9383 10.9997 21.9383C10.7506 21.9383 10.5117 21.8394 10.3356 21.6633C10.1595 21.4872 10.0605 21.2483 10.0605 20.9992C10.0605 20.7501 10.1595 20.5113 10.3356 20.3352L18.7348 11.9375H12.8755C12.6268 11.9375 12.3884 11.8387 12.2125 11.6629C12.0367 11.4871 11.938 11.2486 11.938 11C11.938 10.7514 12.0367 10.5129 12.2125 10.3371C12.3884 10.1613 12.6268 10.0625 12.8755 10.0625H21.0005C21.2491 10.0625 21.4876 10.1613 21.6634 10.3371C21.8392 10.5129 21.938 10.7514 21.938 11Z" fill="#206AFF" />
             </svg>
         </button>
+    );
+};
+
+
+const BulletNumber = ({ number }) => {
+    return (
+        <div className="relative w-fit">
+            <Image
+                src={IMAGE_BULLET_NUMBER}
+                alt="bullet-number"
+                width={94}
+                height={94}
+                className="w-[94px] h-[94px]"
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+                <p className="font-deca font-semibold text-[32px] leading-[28px] tracking-[0] text-[#0375F3]">
+                    #{number}
+                </p>
+            </div>
+        </div>
+    );
+};
+
+const IntroSection = ({ number, title, content, image, contentPosition = 'left', hiddenLine = false }) => {
+    return (
+        <div className="flex flex-col gap-6">
+            <div className="flex justify-between gap-8 2xl:gap-[160px]">
+                <div className={`w-[308px] ${contentPosition === 'left' ? 'order-1' : 'order-2'}`}>
+                    <div className="relative left-[-15px]" >
+                        <BulletNumber number={number} />
+                    </div>
+                    <h3 className="font-deca font-semibold text-[24px] leading-[32px] tracking-[0] text-[#101828] text-left capitalize">
+                        {title}
+                    </h3>
+                    <p className="mt-3 font-deca font-normal text-[16px] leading-[24px] tracking-[0] text-justify text-[#475467] opacity-50">
+                        {content}
+                    </p>
+                </div>
+                <div className={`flex-shrink-0 ${contentPosition === 'left' ? 'order-2' : 'order-1'}`}>
+                    <Image
+                        src={image}
+                        alt="image"
+                        width={300}
+                        height={300}
+                        className="w-[300px] h-[300px] object-contain"
+                    />
+                </div>
+            </div>
+
+            {!hiddenLine && (
+                <div className="relative h-[0px] w-full">
+                    <div className={`absolute inset-0 flex items-center justify-center pointer-events-none`}>
+                        <svg
+                            width="459"
+                            height="195"
+                            viewBox="0 0 459 195"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="max-w-[459px] w-full h-auto"
+                            style={{ transform: contentPosition === 'left' ? 'scaleX(-1)' : 'none' }}
+                        >
+                            <path
+                                d="M458.5 0V87C458.5 93.6274 453.127 99 446.5 99H12.5C5.87259 99 0.5 104.373 0.5 111V195"
+                                stroke="black"
+                                strokeDasharray="6 6"
+                            />
+                        </svg>
+                    </div>
+                </div>
+            )}
+
+        </div>
     );
 };
