@@ -100,7 +100,11 @@ const ModuleIntroduction = () => {
         return parcelItem?.id || null;
     };
 
+    const [isStarting, setIsStarting] = useState(false);
+
     const handleStartNow = async () => {
+        if (isStarting) return;
+        setIsStarting(true);
         // Lấy parcel ID
         const parcelId = getParcelId();
 
@@ -143,6 +147,8 @@ const ModuleIntroduction = () => {
             } catch (error) {
                 isShow('error', 'Không thể đánh dấu đã xem giới thiệu. Vui lòng thử lại.');
                 console.error('Error checking introduce:', error);
+            } finally {
+                setIsStarting(false);
             }
         } else {
             // Nếu đã giới thiệu hoặc không có parcel ID, redirect bình thường
@@ -151,6 +157,7 @@ const ModuleIntroduction = () => {
             } else {
                 router.push(moduleConfig.redirectUrl);
             }
+            setIsStarting(false);
         }
     };
 
@@ -172,7 +179,7 @@ const ModuleIntroduction = () => {
                     <div className="flex gap-[100px] relative">
 
                         {/* ==== left content ==== */}
-                        <div className=" w-[42%] 2xl:w-[479px] top-0 sticky h-screen flex flex-col justify-center">
+                        <div className=" w-[486px] top-0 sticky h-screen flex flex-col justify-center">
                             <div className="">
                                 <div className="relative">
                                     <div className="absolute -top-28 -left-12 h-[480px] ">
@@ -191,20 +198,20 @@ const ModuleIntroduction = () => {
                                             Lương sản lượng
                                         </h1>
 
-                                        <p className="pt-[20px] opacity-50 font-deca font-normal text-sm 2xl:text-[16px] leading-[28px] tracking-[0] text-[#475467] text-justify">
-                                            Giúp doanh nghiệp tính lương công nhân dựa trên sản lượng thực tế theo ca, tổ/nhóm hoặc từng người. Thay vì ghi chép rời rạc và cộng tay dễ sai, hệ thống chuẩn hóa dữ liệu từ khâu xếp ca – lệnh sản xuất – nhập sản lượng, để việc tính lương diễn ra đúng công thức, đúng số liệu.
-                                            <br />
-                                            <br />
-
-                                            Điểm mạnh của lương sản lượng nằm ở tính minh bạch và công bằng: ai làm nhiều, đạt năng suất tốt sẽ được ghi nhận tương xứng. Nhờ có dữ liệu chi tiết theo thời gian, quản lý dễ đối soát, hạn chế thất thoát và kiểm soát tốt chênh lệch giữa kế hoạch – thực tế.
-                                            <br />
-                                            <br />
-
-                                            Cuối kỳ, hệ thống tự động tổng hợp sản lượng và tính lương nhanh chóng, đồng thời cung cấp báo cáo năng suất theo ca/tổ/nhóm/người để doanh nghiệp ra quyết định điều phối nhân sự, tối ưu quy trình và nâng hiệu quả sản xuất.
-                                        </p>
+                                        <div className="pt-[20px] flex flex-col gap-4 opacity-80 font-deca font-normal text-sm- 2xl:text-[16px] leading-[26px] tracking-[0] text-[#475467] text-justify">
+                                            <p className="">
+                                                Giúp doanh nghiệp tính lương theo sản lượng thực tế từng ca, tổ/nhóm hoặc cá nhân. Hệ thống chuẩn hóa dữ liệu từ xếp ca đến nhập sản lượng, đảm bảo tính lương chính xác, hạn chế sai sót.
+                                            </p>
+                                            <p className="">
+                                                Lương sản lượng đảm bảo minh bạch, công bằng: làm nhiều hưởng nhiều. Dữ liệu chi tiết giúp quản lý dễ đối soát và kiểm soát chênh lệch kế hoạch – thực tế.
+                                            </p>
+                                            <p className="">
+                                                Cuối kỳ, hệ thống tự động tổng hợp, tính lương và xuất báo cáo năng suất, hỗ trợ tối ưu nhân sự và nâng cao hiệu quả sản xuất.
+                                            </p>
+                                        </div>
 
                                         <div className="pt-[24px]">
-                                            <IntroPrimaryButton label="Bắt đầu" onClick={handleStartNow} />
+                                            <IntroPrimaryButton label={isStarting ? 'Đang xử lý...' : 'Bắt đầu'} onClick={handleStartNow} disabled={isStarting} />
                                         </div>
                                     </div>
 
@@ -233,14 +240,15 @@ const ModuleIntroduction = () => {
 
 export default ModuleIntroduction;
 
-const IntroPrimaryButton = ({ label = 'Bắt đầu', onClick }) => {
+const IntroPrimaryButton = ({ label = 'Bắt đầu', onClick, disabled = false }) => {
     return (
         <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-[40px] border border-[#899CFD] bg-[#0375F3] px-4 py-2 text-sm font-semibold text-white shadow-none transition-all duration-200 hover:bg-[#0A7FFF] hover:shadow-[0_8px_20px_rgba(3,117,243,0.3)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
-            onClick={onClick}
+            className="inline-flex items-center gap-2 rounded-[40px] border border-[#899CFD] bg-[#0375F3] pl-4 pr-2 py-2 text-sm font-semibold text-white shadow-none transition-all duration-200 hover:bg-[#0A7FFF] hover:shadow-[0_8px_20px_rgba(3,117,243,0.3)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
+            onClick={disabled ? undefined : onClick}
+            disabled={disabled}
         >
-            <span className="pl-[12px]">{label}</span>
+            <span className="pl-[0px]">{label}</span>
             <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="32" height="32" rx="16" fill="white" />
                 <path d="M21.938 11V19.125C21.938 19.3736 21.8392 19.6121 21.6634 19.7879C21.4876 19.9637 21.2491 20.0625 21.0005 20.0625C20.7518 20.0625 20.5134 19.9637 20.3375 19.7879C20.1617 19.6121 20.063 19.3736 20.063 19.125V13.2656L11.6637 21.6633C11.4876 21.8394 11.2487 21.9383 10.9997 21.9383C10.7506 21.9383 10.5117 21.8394 10.3356 21.6633C10.1595 21.4872 10.0605 21.2483 10.0605 20.9992C10.0605 20.7501 10.1595 20.5113 10.3356 20.3352L18.7348 11.9375H12.8755C12.6268 11.9375 12.3884 11.8387 12.2125 11.6629C12.0367 11.4871 11.938 11.2486 11.938 11C11.938 10.7514 12.0367 10.5129 12.2125 10.3371C12.3884 10.1613 12.6268 10.0625 12.8755 10.0625H21.0005C21.2491 10.0625 21.4876 10.1613 21.6634 10.3371C21.8392 10.5129 21.938 10.7514 21.938 11Z" fill="#206AFF" />
