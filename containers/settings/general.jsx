@@ -164,6 +164,7 @@ const General = props => {
   const [data, sData] = useState([]);
 
   const [numberDays, setNumberDays] = useState(+dataSetting?.number_day_warehouse ?? 0);
+  const [numberDaysProduct, setNumberDaysProduct] = useState(+dataSetting?.number_day_product ?? 0);
   const [isBomSemiProduct, setIsBomSemiProduct] = useState(dataSetting?.is_bom_semi_product ?? '0');
   const [skipExport, setSkipExport] = useState(dataSetting?.skip_export ?? '0');
   const [isAvailableStock, setIsAvailableStock] = useState(dataSetting?.is_available_stock ?? '0');
@@ -179,6 +180,7 @@ const General = props => {
   useEffect(() => {
     if (!isSettingReady) return;
     setNumberDays(+dataSetting?.number_day_warehouse ?? 0);
+    setNumberDaysProduct(+dataSetting?.number_day_warehouse_products ?? 0);
     setIsBomSemiProduct(dataSetting?.is_bom_semi_product ?? '0');
     setSkipExport(dataSetting?.skip_export ?? '0');
     setIsAvailableStock(dataSetting?.is_available_stock ?? '0');
@@ -205,6 +207,7 @@ const General = props => {
   }, [
     isSettingReady,
     dataSetting?.number_day_warehouse,
+    dataSetting?.number_day_warehouse_products,
     dataSetting?.is_bom_semi_product,
     dataSetting?.skip_export,
     dataSetting?.is_available_stock,
@@ -279,6 +282,7 @@ const General = props => {
       formData.append(`feature[${index}][is_enable]`, item.is_enable);
     });
     formData.append(`settings[number_day_warehouse]`, numberDays);
+    formData.append(`settings[number_day_warehouse_products]`, numberDaysProduct);
     formData.append(`settings[is_bom_semi_product]`, isBomSemiProduct);
     formData.append(`settings[skip_export]`, skipExport);
     formData.append(`settings[is_available_stock]`, isAvailableStock);
@@ -482,10 +486,17 @@ const General = props => {
                             />
                             <div className="w-11 h-6 bg-gray-200 rounded-full dark:bg-[#D1D5DB] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all  peer-checked:bg-blue-600"></div>
                           </label>
-                          <div className='flex flex-col gap-y-1'>
+                          <div className='flex flex-col gap-y-1 min-w-[calc(485px+48px)]'>
                             <p className='font-medium text-base text-typo-black-1'>Quản lý thời hạn sử dụng</p>
                             <p className='font-normal text-sm text-typo-gray-2'>Theo dõi hạn sử dụng Thành phẩm, cảnh báo, tối ưu kho, giảm lãng phí.</p>
                           </div>
+                          {/* số cảnh báo */}
+                          {dataProductExpiry.is_enable === '1' && (
+                            <div className='flex flex-col items-center gap-y-[6px]'>
+                              <label className='text-sm font-normal text-[#344054]'>Số ngày cảnh báo</label>
+                              <WarningDaysInput state={numberDaysProduct} setState={setNumberDaysProduct} />
+                            </div>
+                          )}
                         </div>
                         <div className='space-y-2 py-1.5'>
                           <div className='flex flex-row items-center justify-start gap-x-4 py-3 px-4'>

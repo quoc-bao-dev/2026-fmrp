@@ -88,6 +88,45 @@ const TagColorMore = ({ name, className, backgroundColor, color }) => {
     );
 };
 
+const TagExpiryStatus = ({
+    dataLang,
+    status,
+    className,
+    lang = true,
+    textSize,
+}) => {
+    const getStatusColor = (statusValue) => {
+        if (statusValue === 'expired') {
+            return 'text-red-500 bg-red-100'
+        }
+        if (statusValue === 'expiring_soon' || statusValue === 'expiring') {
+            return 'text-orange-500 bg-orange-100'
+        }
+        return 'text-gray-500 bg-gray-100'
+    }
+
+    const getStatusName = (statusValue) => {
+        if (statusValue === 'expired') {
+            return lang ? (dataLang?.expired || 'Hết hạn') : 'Hết hạn'
+        }
+        if (statusValue === 'expiring_soon' || statusValue === 'expiring') {
+            return lang ? (dataLang?.expiring || dataLang?.expiring_soon || 'Sắp hết hạn') : 'Sắp hết hạn'
+        }
+        return ''
+    }
+
+    if (!status) return null
+
+    return (
+        <span
+            className={`py-0.5 px-2 rounded h-fit w-fit font-[500] break-words ${textSize ? textSize : 'text-11'
+                } ${getStatusColor(status)} ${className}`}
+        >
+            {getStatusName(status)}
+        </span>
+    )
+}
+
 export {
-    TagColorLime, TagColorMore, TagColorOrange, TagColorProduct, TagColorRed, TagColorSky
+    TagColorLime, TagColorMore, TagColorOrange, TagColorProduct, TagColorRed, TagColorSky, TagExpiryStatus
 };
