@@ -59,6 +59,9 @@ const PopupSystemUpdating = ({ open = false }) => {
       closeOnDocumentClick={false}
       className='popup-system-updating'
       type='no-close'
+      overlayStyle={{
+        zIndex: 1100,
+      }}
     >
       <div
         className="pb-8 pt-[105px] px-[24px] md:px-[40px] lg:px-[56px] max-w-[655px] relative flex flex-col gap-8 items-center justify-center"
