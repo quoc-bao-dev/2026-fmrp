@@ -1130,7 +1130,7 @@ const Header = () => {
       data: ListKhac,
       className: 'popover-khac',
       text: 'Quản lý các tiện ích, công việc',
-      title: 'Tiện ích',
+      title: 'Khác',
       link: ['/convenience'],
     },
     // {
