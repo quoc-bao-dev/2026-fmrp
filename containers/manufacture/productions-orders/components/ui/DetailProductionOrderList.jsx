@@ -17,6 +17,7 @@ import { memo, useCallback, useContext, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { listDropdownCompleteStage } from '../main/constants/listData';
 import PopupConfimStage from '../popup/PopupConfimStage';
+import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
 
 // Sub-component for ProductRow to use hooks
 const ProductRow = memo(
@@ -146,6 +147,7 @@ const DetailProductionOrderList = memo(
     const { isStateProvider } = useContext(StateContext);
     const [visibleProducts, setVisibleProducts] = useState({});
     const [openManagerComboId, setOpenManagerComboId] = useState(null);
+    const { checkInstall } = useCheckModuleInstall();
 
     // Lấy branch_id từ production order
     const branchId = isStateProvider?.productionsOrders?.dataProductionOrderDetail?.productionOrder?.branch_id;
@@ -256,18 +258,21 @@ const DetailProductionOrderList = memo(
           </div>
           {/* Action Buttons */}
           <div ref={groupButtonRef} className='flex items-center justify-end gap-2 p-0.5 mb-2'>
-            <button className='3xl:h-10 h-[38px] flex items-center gap-1 px-2 rounded-2xl bg-[#DFF3E2] text-[#4E4E4E] hover:opacity-80 transition-opacity'>
-              <TimerIcon size={24} color='#4E4E4E' />
-              <span className='responsive-text-base font-normal'>
-                {(() => {
-                  const pad = n => String(n).padStart(2, '0');
-                  const hours = Math.floor((totalTime || 0) / 3600);
-                  const minutes = Math.floor(((totalTime || 0) % 3600) / 60);
-                  const seconds = (totalTime || 0) % 60;
-                  return `${pad(hours)} : ${pad(minutes)} : ${pad(seconds)}`;
-                })()}
-              </span>
-            </button>
+            {checkInstall('luong-san-luong') && (
+              <button className='3xl:h-10 h-[38px] flex items-center gap-1 px-2 rounded-2xl bg-[#DFF3E2] text-[#4E4E4E] hover:opacity-80 transition-opacity'>
+                <TimerIcon size={24} color='#4E4E4E' />
+                <span className='responsive-text-base font-normal'>
+                  {(() => {
+                    const pad = n => String(n).padStart(2, '0');
+                    const hours = Math.floor((totalTime || 0) / 3600);
+                    const minutes = Math.floor(((totalTime || 0) % 3600) / 60);
+                    const seconds = (totalTime || 0) % 60;
+                    return `${pad(hours)} : ${pad(minutes)} : ${pad(seconds)}`;
+                  })()}
+                </span>
+              </button>
+            )}
+
             <div
               onClick={() => {
                 dispatch({ type: 'statePopupListResponsiblePerson', payload: { open: true } });
