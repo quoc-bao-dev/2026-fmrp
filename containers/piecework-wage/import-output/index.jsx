@@ -398,12 +398,12 @@ const ImportOutput = () => {
         <div className='flex flex-col xl:flex-row items-center justify-between px-6'>
           <div className='flex items-center gap-2'>
             <h2 className='responsive-text-4xl font-medium text-neutral-07 capitalize'>Nhập sản lượng</h2>
-            <InfoTooltip
+            {/* <InfoTooltip
               content=''
               iconProps={{
                 className: '2xl:size-[21px] xl:size-[18px] size-[16px]',
               }}
-            />
+            /> */}
           </div>
           <div className='flex items-center gap-2'>
             {process.env.NODE_ENV === 'development' && (
