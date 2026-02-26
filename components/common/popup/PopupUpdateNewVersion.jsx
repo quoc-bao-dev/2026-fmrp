@@ -118,7 +118,7 @@ const PopupUpdateNewVersion = ({ version, setHasNewVersion }) => {
             version_new?.description.map((item, index) => (
               <div className='flex flex-row gap-x-2 items-center justify-center pr-2' key={index}>
                 <SealCheckIcon className='size-4' />
-                <p className='flex-1 text-sm font-medium text-typo-gray-3 text-justify'>{item}</p>
+                <p className='flex-1 text-sm font-medium text-typo-gray-3 text-justify' dangerouslySetInnerHTML={{ __html: item }}></p>
               </div>
             ))}
 
