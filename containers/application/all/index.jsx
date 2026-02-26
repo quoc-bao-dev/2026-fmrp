@@ -448,7 +448,7 @@ const ButtonAction = ({ type = 'primary', label, disable = false, btnLink, btnAc
 
         if (btnLink) {
             if (typeof window !== 'undefined') {
-                window.location.href = btnLink;
+                window.open(btnLink, '_blank');
             }
             return;
         }
