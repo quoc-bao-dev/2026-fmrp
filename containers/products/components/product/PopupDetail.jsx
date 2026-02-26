@@ -25,9 +25,13 @@ import { useProductDetail } from '../../hooks/product/useProductDetail';
 import { useProductDetailStage } from '../../hooks/product/useProductDetailStage';
 import Popup_Bom from './popupBom';
 import Popup_GiaiDoan from './popupStage';
+import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
 
 const Popup_Detail = React.memo(props => {
   const isShow = useToast();
+
+  const { checkInstall } = useCheckModuleInstall();
+  const isInstallPieceworkWage = checkInstall('luong-san-luong');
 
   const dataSeting = useSetingServer();
 
@@ -585,15 +589,13 @@ const Popup_Detail = React.memo(props => {
                                     key={id.toString()}
                                     type='button'
                                     onClick={_HandleSelectTabBom.bind(this, id)}
-                                    className={`${
-                                      isActive ? 'text-[#0F4F9E] bg-[#0F4F9E10]' : 'text-slate-600 hover:text-[#0F4F9E] bg-slate-50/50'
-                                    } outline-none min-w-fit px-3 py-1.5 rounded relative flex items-center gap-2 whitespace-nowrap transition-colors duration-150`}
+                                    className={`${isActive ? 'text-[#0F4F9E] bg-[#0F4F9E10]' : 'text-slate-600 hover:text-[#0F4F9E] bg-slate-50/50'
+                                      } outline-none min-w-fit px-3 py-1.5 rounded relative flex items-center gap-2 whitespace-nowrap transition-colors duration-150`}
                                   >
                                     <span>{formatBomTabLabel(tabItem?.name_variation)}</span>
                                     <span
-                                      className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] ${
-                                        isActive ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
-                                      }`}
+                                      className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] ${isActive ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
+                                        }`}
                                     >
                                       {tabItemsCount.get(id) || 0}
                                     </span>
@@ -605,17 +607,15 @@ const Popup_Detail = React.memo(props => {
                                   <button
                                     type='button'
                                     onClick={handleToggleMoreDropdown}
-                                    className={`${
-                                      moreButtonInfo.isActive || isMoreSelectOpen ? 'text-[#0F4F9E] bg-[#0F4F9E10]' : 'text-slate-600 hover:text-[#0F4F9E] bg-slate-50/50'
-                                    } outline-none min-w-fit px-3 py-1.5 rounded relative flex items-center gap-2 whitespace-nowrap transition-colors duration-150`}
+                                    className={`${moreButtonInfo.isActive || isMoreSelectOpen ? 'text-[#0F4F9E] bg-[#0F4F9E10]' : 'text-slate-600 hover:text-[#0F4F9E] bg-slate-50/50'
+                                      } outline-none min-w-fit px-3 py-1.5 rounded relative flex items-center gap-2 whitespace-nowrap transition-colors duration-150`}
                                     ref={selectMeasureRef}
                                   >
                                     <span>{moreButtonInfo.text}</span>
                                     {moreButtonInfo.count !== null && (
                                       <span
-                                        className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] ${
-                                          moreButtonInfo.isActive ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
-                                        }`}
+                                        className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] ${moreButtonInfo.isActive ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
+                                          }`}
                                       >
                                         {moreButtonInfo.count}
                                       </span>
@@ -638,9 +638,8 @@ const Popup_Detail = React.memo(props => {
                                                 <div className='flex items-center gap-2 flex-1 min-w-0'>
                                                   <span className='truncate'>{opt.label}</span>
                                                   <span
-                                                    className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] shrink-0 ${
-                                                      opt.isSelected ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
-                                                    }`}
+                                                    className={`aspect-square h-5 p-1 text-[11px] rounded-full flex items-center justify-center min-w-[20px] shrink-0 ${opt.isSelected ? 'bg-[#F97A4C] text-white' : 'bg-[#F97A4C]/20 text-[#F97A4C]'
+                                                      }`}
                                                   >
                                                     {opt.count}
                                                   </span>
@@ -732,14 +731,14 @@ const Popup_Detail = React.memo(props => {
                                         e?.item_type_current === 'products'
                                           ? 0
                                           : e?.item_type_current === 'semi_products'
-                                          ? 1
-                                          : e?.item_type_current === 'out_side'
-                                          ? 2
-                                          : e?.item_type_current === 'material'
-                                          ? 3
-                                          : e?.item_type_current === 'semi_products_outside'
-                                          ? 4
-                                          : null
+                                            ? 1
+                                            : e?.item_type_current === 'out_side'
+                                              ? 2
+                                              : e?.item_type_current === 'material'
+                                                ? 3
+                                                : e?.item_type_current === 'semi_products_outside'
+                                                  ? 4
+                                                  : null
                                       }
                                       lang={false}
                                       name={e?.str_type_item}
@@ -782,42 +781,46 @@ const Popup_Detail = React.memo(props => {
                     {dataStage?.length > 0 ? (
                       <>
                         <div className='space-y-0.5 min-h-[384px]'>
-                        <HeaderTablePopup gridCols={10}>
-                          <ColumnTablePopup>{props.dataLang?.no || 'no'}</ColumnTablePopup>
-                          <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_finishedProduct}</ColumnTablePopup>
-                          <ColumnTablePopup colSpan={2}>
-                            <span className='flex items-center gap-2 justify-center'>
-                              Đơn giá
-                              <InfoTooltip content='Đơn giá là số tiền trả cho từng công đoạn cụ thể trong quá trình làm ra một sản phẩm khi công đoạn đó hoàn thành, làm căn cứ tính lương và sản lượng.' position='bottom' />
-                            </span>
-                          </ColumnTablePopup>
-                          <ColumnTablePopup colSpan={3}>{props.dataLang?.check_first_stage_finishedProduct}</ColumnTablePopup>
-                          <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_last_finishedProduct}</ColumnTablePopup>
-                        </HeaderTablePopup>
-                        <Customscrollbar className='min-h-[250px] max-h-[450px]'>
-                          <div className='divide-y divide-slate-200'>
-                            {dataStage?.map((e, index) => (
-                              <div key={e?.id ? e?.id.toString() : index} className='grid grid-cols-10 gap-2 px-2 py-2.5 items-center hover:bg-slate-50'>
-                                {/* STT */}
-                                <h6 className='px-2 text-xs text-center xl:text-base'>{index + 1}</h6>
+                          <HeaderTablePopup gridCols={isInstallPieceworkWage ? 10 : 8}>
+                            <ColumnTablePopup>{props.dataLang?.no || 'no'}</ColumnTablePopup>
+                            <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_finishedProduct}</ColumnTablePopup>
+                            {isInstallPieceworkWage && (
+                              <ColumnTablePopup colSpan={2}>
+                                <span className='flex items-center gap-2 justify-center'>
+                                  Đơn giá
+                                  <InfoTooltip content='Đơn giá là số tiền trả cho từng công đoạn cụ thể trong quá trình làm ra một sản phẩm khi công đoạn đó hoàn thành, làm căn cứ tính lương và sản lượng.' position='bottom' iconProps={{ size: 14 }} />
+                                </span>
+                              </ColumnTablePopup>
+                            )}
+                            <ColumnTablePopup colSpan={3}>{props.dataLang?.check_first_stage_finishedProduct}</ColumnTablePopup>
+                            <ColumnTablePopup colSpan={2}>{props.dataLang?.stage_last_finishedProduct}</ColumnTablePopup>
+                          </HeaderTablePopup>
+                          <Customscrollbar className='min-h-[250px] max-h-[450px]'>
+                            <div className='divide-y divide-slate-200'>
+                              {dataStage?.map((e, index) => (
+                                <div key={e?.id ? e?.id.toString() : index} className={`grid ${isInstallPieceworkWage ? 'grid-cols-10' : 'grid-cols-8'} gap-2 px-2 py-2.5 items-center hover:bg-slate-50`}>
+                                  {/* STT */}
+                                  <h6 className='px-2 text-xs text-center xl:text-base'>{index + 1}</h6>
 
-                                {/* Tên công đoạn */}
-                                <h6 className='col-span-2 px-2 text-xs xl:text-base truncate'>{e?.stage_name}</h6>
+                                  {/* Tên công đoạn */}
+                                  <h6 className='col-span-2 px-2 text-xs xl:text-base truncate'>{e?.stage_name}</h6>
 
-                                {/* Đơn giá */}
-                                <h6 className='col-span-2 px-2 text-xs text-center xl:text-sm 2xl:text-base'>
-                                  {formatMoney(Number(e?.price_stage ?? 0))} <span className='text-[10px] text-slate-500'>/ đơn vị</span>
-                                </h6>
+                                  {/* Đơn giá */}
+                                  {isInstallPieceworkWage && (
+                                    <h6 className='col-span-2 px-2 text-xs text-center xl:text-sm 2xl:text-base'>
+                                      {formatMoney(Number(e?.price_stage ?? 0))} <span className='text-[10px] text-slate-500'>/ đơn vị</span>
+                                    </h6>
+                                  )}
 
-                                {/* Công đoạn đầu tiên */}
-                                <h6 className='col-span-3 px-2 text-xs xl:text-base flex justify-center text-green-600'>{e?.type == '2' && <IconTick />}</h6>
+                                  {/* Công đoạn đầu tiên */}
+                                  <h6 className='col-span-3 px-2 text-xs xl:text-base flex justify-center text-green-600'>{e?.type == '2' && <IconTick />}</h6>
 
-                                {/* Công đoạn cuối cùng */}
-                                <h6 className='col-span-2 px-2 text-xs xl:text-base flex justify-center text-green-600'>{e?.final_stage == '1' && <IconTick />}</h6>
-                              </div>
-                            ))}
-                          </div>
-                        </Customscrollbar>
+                                  {/* Công đoạn cuối cùng */}
+                                  <h6 className='col-span-2 px-2 text-xs xl:text-base flex justify-center text-green-600'>{e?.final_stage == '1' && <IconTick />}</h6>
+                                </div>
+                              ))}
+                            </div>
+                          </Customscrollbar>
                         </div>
                         <div className='flex items-center justify-end space-x-3'>
                           <Popup_GiaiDoan

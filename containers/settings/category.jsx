@@ -27,6 +27,7 @@ import PopupCategory from './components/popupCategory';
 import { useCategoryList } from './hooks/useCategory';
 import { ListBtn_Setting } from './information';
 import InfoTooltip from '@/components/UI/common/InfoTooltip';
+import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
 
 const Category = props => {
   const dataLang = props.dataLang;
@@ -45,11 +46,14 @@ const Category = props => {
 
   const { limit, updateLimit: sLimit } = useLimitAndTotalItems();
 
-  const url = `${
-    (router.query?.tab === 'units' && `/api_web/Api_unit/unit/?csrf_protection=true`) ||
+  const { checkInstall } = useCheckModuleInstall();
+
+  const isInstallPieceworkWage = checkInstall('luong-san-luong');
+
+  const url = `${(router.query?.tab === 'units' && `/api_web/Api_unit/unit/?csrf_protection=true`) ||
     (router.query?.tab === 'stages' && '/api_web/api_product/stage/?csrf_protection=true') ||
     (router.query?.tab === 'costs' && '/api_web/Api_cost/cost/?csrf_protection=true')
-  } `;
+    } `;
 
   const { data, isFetching, refetch } = useCategoryList(url, { search: keySearch, limit: limit, page: router.query?.page || 1, tab: router.query?.tab });
 
@@ -137,7 +141,17 @@ const Category = props => {
                 </div>
                 <Customscrollbar className='min:h-[200px] h-[72%] max:h-[500px]'>
                   <div className={`w-full`}>
-                    <HeaderTable gridCols={router.query?.tab === 'units' ? 6 : router.query?.tab === 'stages' ? 11 : 11}>
+                    <HeaderTable
+                      gridCols={
+                        router.query?.tab === 'units'
+                          ? 6
+                          : router.query?.tab === 'stages'
+                            ? isInstallPieceworkWage
+                              ? 11
+                              : 9
+                            : 11
+                      }
+                    >
                       {router.query?.tab === 'units' && (
                         <React.Fragment>
                           <ColumnTable colSpan={5} textAlign={'left'}>
@@ -157,19 +171,21 @@ const Category = props => {
                           <ColumnTable colSpan={2} textAlign={'center'}>
                             {dataLang?.settings_category_stages_status}
                           </ColumnTable>
-                          <ColumnTable colSpan={2} textAlign={'center'}>
-                            <p className='flex items-center justify-center gap-2'>
-                              Đơn giá
-                              <span className='text-blue-fmrp'>
-                                {' '}
-                                <InfoTooltip
-                                  content='Đơn giá là số tiền trả cho mỗi công đoạn sản xuất đã hoàn thành, dùng để tính lương và sản lượng cho công nhân.'
-                                  position='bottom'
-                                  iconProps={{ size: 14 }}
-                                />
-                              </span>
-                            </p>
-                          </ColumnTable>
+                          {isInstallPieceworkWage && (
+                            <ColumnTable colSpan={2} textAlign={'center'}>
+                              <p className='flex items-center justify-center gap-2'>
+                                Đơn giá
+                                <span className='text-blue-fmrp'>
+                                  {' '}
+                                  <InfoTooltip
+                                    content='Đơn giá là số tiền trả cho mỗi công đoạn sản xuất đã hoàn thành, dùng để tính lương và sản lượng cho công nhân.'
+                                    position='bottom'
+                                    iconProps={{ size: 14 }}
+                                  />
+                                </span>
+                              </p>
+                            </ColumnTable>
+                          )}
                           <ColumnTable colSpan={2} textAlign={'left'}>
                             {dataLang?.settings_category_stages_note}
                           </ColumnTable>
@@ -208,7 +224,15 @@ const Category = props => {
                             <RowTable
                               key={e.id.toString()}
                               className={(router.query?.tab === 'units' && '') || (router.query?.tab === 'stages' && '') || (router.query?.tab === 'costs' && '!px-0')}
-                              gridCols={router.query?.tab === 'units' ? 6 : router.query?.tab === 'stages' ? 11 : 11}
+                              gridCols={
+                                router.query?.tab === 'units'
+                                  ? 6
+                                  : router.query?.tab === 'stages'
+                                    ? isInstallPieceworkWage
+                                      ? 11
+                                      : 9
+                                    : 11
+                              }
                             >
                               {(router.query?.tab === 'units' || router.query?.tab === 'currencies') && (
                                 <React.Fragment>
@@ -222,9 +246,11 @@ const Category = props => {
                                   <RowItemTable colSpan={2} className='mx-auto'>
                                     {e?.status_qc === '1' ? <TickCircle size={32} color='#0BAA2E' /> : <CloseCircle size={32} color='#EE1E1E' />}
                                   </RowItemTable>
-                                  <RowItemTable colSpan={2} className='flex justify-center items-end'>
-                                    <p>{formatNumber(Number(e?.price_default) || 0, dataSetting)} / </p> <p className='text-[10px] pt-1'>đơn vị</p>
-                                  </RowItemTable>
+                                  {isInstallPieceworkWage && (
+                                    <RowItemTable colSpan={2} className='flex justify-center items-end'>
+                                      <p>{formatNumber(Number(e?.price_default) || 0, dataSetting)} / </p> <p className='text-[10px] pt-1'>đơn vị</p>
+                                    </RowItemTable>
+                                  )}
                                   <RowItemTable colSpan={2}>{e?.note}</RowItemTable>
                                 </React.Fragment>
                               )}
@@ -238,13 +264,13 @@ const Category = props => {
                               {router.query?.tab === 'units' && (
                                 <RowItemTable colSpan={1} className='flex space-x-2 items-center justify-center '>
                                   <PopupCategory onRefresh={refetch.bind(this)} className='xl:text-base text-xs ' dataLang={dataLang} data={e} />
-                                  <BtnAction onRefresh={refetch.bind(this)} onRefreshGroup={() => {}} dataLang={dataLang} id={e?.id} type={router.query?.tab} />
+                                  <BtnAction onRefresh={refetch.bind(this)} onRefreshGroup={() => { }} dataLang={dataLang} id={e?.id} type={router.query?.tab} />
                                 </RowItemTable>
                               )}
                               {router.query?.tab === 'stages' && (
                                 <RowItemTable colSpan={1} className='flex space-x-2 justify-center items-center'>
                                   <PopupCategory onRefresh={refetch.bind(this)} className='xl:text-base text-xs ' dataLang={dataLang} data={e} />
-                                  <BtnAction onRefresh={refetch.bind(this)} onRefreshGroup={() => {}} dataLang={dataLang} id={e?.id} type={router.query?.tab} />
+                                  <BtnAction onRefresh={refetch.bind(this)} onRefreshGroup={() => { }} dataLang={dataLang} id={e?.id} type={router.query?.tab} />
                                 </RowItemTable>
                               )}
                             </RowTable>
@@ -285,9 +311,8 @@ const Items = React.memo(props => {
           <button
             disabled={props.data?.children?.length > 0 ? false : true}
             onClick={_ToggleHasChild.bind(this)}
-            className={`${
-              hasChild ? 'bg-red-600' : 'bg-green-600 disabled:bg-slate-300'
-            } hover:opacity-80 hover:disabled:opacity-100 transition relative flex flex-col justify-center items-center h-5 w-5 rounded-full text-white outline-none`}
+            className={`${hasChild ? 'bg-red-600' : 'bg-green-600 disabled:bg-slate-300'
+              } hover:opacity-80 hover:disabled:opacity-100 transition relative flex flex-col justify-center items-center h-5 w-5 rounded-full text-white outline-none`}
           >
             <IconMinus size={16} />
             <IconMinus size={16} className={`${hasChild ? '' : 'rotate-90'} transition absolute`} />

@@ -20,9 +20,10 @@ import { v4 as uddidV4 } from 'uuid';
 import PopupStageAdd from './popupStageAdd';
 import { EditIcon, TrashIcon } from '@/components/icons';
 import InfoTooltip from '@/components/UI/common/InfoTooltip';
+import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
 
 // DraggableItem component - tách ra để tránh mất focus khi rerender
-const DraggableItem = React.memo(({ value, index, dataLang, listCdRest, errName, handleSelectChange, handlePriceChange, handleRatioChange, handleDelete, handleMenuOpen }) => {
+const DraggableItem = React.memo(({ value, index, dataLang, listCdRest, errName, handleSelectChange, handlePriceChange, handleRatioChange, handleDelete, handleMenuOpen, isInstallPieceworkWage }) => {
   return (
     <Draggable key={value.id} draggableId={`${value.id}`} index={index} isDragDisabled={false}>
       {(provided, snapshot) => (
@@ -35,7 +36,7 @@ const DraggableItem = React.memo(({ value, index, dataLang, listCdRest, errName,
             position: 'static',
           }}
         >
-          <div className='grid items-center h-full grid-cols-15 py-1 bg-white hover:bg-slate-50'>
+          <div className={`grid items-center h-full ${isInstallPieceworkWage ? 'grid-cols-15' : 'grid-cols-12'} py-1 bg-white hover:bg-slate-50`}>
             {/* STT */}
             <h6 className='col-span-1 px-2 text-center'>{index + 1}</h6>
             {/* Tên công đoạn */}
@@ -63,15 +64,16 @@ const DraggableItem = React.memo(({ value, index, dataLang, listCdRest, errName,
                     position: 'absolute',
                   }),
                 }}
-                className={`${
-                  errName && value.name == null ? 'border-red-500' : 'border-transparent'
-                } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
+                className={`${errName && value.name == null ? 'border-red-500' : 'border-transparent'
+                  } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border `}
               />
             </div>
             {/* Đơn giá */}
-            <div className='col-span-3 px-2 flex justify-center'>
-              <PriceInput className='w-[80px]' defaultValue={0} value={typeof value?.price === 'number' ? value.price : 0} onChange={val => handlePriceChange(value.id, val)} />
-            </div>
+            {isInstallPieceworkWage && (
+              <div className='col-span-3 px-2 flex justify-center'>
+                <PriceInput className='w-[80px]' defaultValue={0} value={typeof value?.price === 'number' ? value.price : 0} onChange={val => handlePriceChange(value.id, val)} />
+              </div>
+            )}
             {/* Công đoạn bắt đầu */}
             <div className='flex items-center justify-center col-span-2'>
               <input
@@ -123,7 +125,7 @@ const DraggableItem = React.memo(({ value, index, dataLang, listCdRest, errName,
 DraggableItem.displayName = 'DraggableItem';
 
 // DroppableContainer component - tách ra để tránh mất focus khi rerender
-const DroppableContainer = React.memo(({ options, dataLang, listCdRest, errName, handleSelectChange, handlePriceChange, handleRatioChange, handleDelete, handleMenuOpen }) => {
+const DroppableContainer = React.memo(({ options, dataLang, listCdRest, errName, handleSelectChange, handlePriceChange, handleRatioChange, handleDelete, handleMenuOpen, isInstallPieceworkWage }) => {
   return (
     <Droppable droppableId='droppable'>
       {(provided, snapshot) => (
@@ -142,6 +144,7 @@ const DroppableContainer = React.memo(({ options, dataLang, listCdRest, errName,
                 handleRatioChange={handleRatioChange}
                 handleDelete={handleDelete}
                 handleMenuOpen={handleMenuOpen}
+                isInstallPieceworkWage={isInstallPieceworkWage}
               />
             ))}
           </div>
@@ -187,6 +190,9 @@ const Popup_Stage = React.memo(props => {
   const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
 
   const { checkAdd, checkEdit } = useActionRole(auth, 'products');
+
+  const { checkInstall } = useCheckModuleInstall();
+  const isInstallPieceworkWage = checkInstall('luong-san-luong');
 
   const [onSending, sOnSending] = useState(false);
 
@@ -286,8 +292,10 @@ const Popup_Stage = React.memo(props => {
         formData.append(`data[${index}][stages]`, item?.name?.value);
         formData.append(`data[${index}][type]`, item.radio1);
         formData.append(`data[${index}][final_stage]`, item.radio2);
-        // Lưu đơn giá cho từng công đoạn từ PriceInput
-        formData.append(`data[${index}][price_stage]`, typeof item?.price === 'number' ? item.price : Number(item?.price) || 0);
+        // Lưu đơn giá cho từng công đoạn từ PriceInput (chỉ khi module đã cài)
+        if (isInstallPieceworkWage) {
+          formData.append(`data[${index}][price_stage]`, typeof item?.price === 'number' ? item.price : Number(item?.price) || 0);
+        }
       });
     }
 
@@ -449,11 +457,10 @@ const Popup_Stage = React.memo(props => {
               isShow('error', WARNING_STATUS_ROLE);
             }
           }}
-          className={`${
-            props.type == 'add'
-              ? 'hover:bg-primary-05 group rounded-lg w-full p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer'
-              : 'flex items-center gap-2'
-          }`}
+          className={`${props.type == 'add'
+            ? 'hover:bg-primary-05 group rounded-lg w-full p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer'
+            : 'flex items-center gap-2'
+            }`}
         >
           {props.type == 'add' && <I3Square size={20} className='text-neutral-03 group-hover:text-neutral-07' />}
           {props.type == 'edit' && <EditIcon className='size-5 text-white' />}
@@ -471,7 +478,7 @@ const Popup_Stage = React.memo(props => {
       classNameBtn={props.className}
     >
       <div className='py-4 w-[900px]'>
-        <div className='grid grid-cols-15 py-2'>
+        <div className={`grid ${isInstallPieceworkWage ? 'grid-cols-15' : 'grid-cols-12'} py-2`}>
           <h4 className='xl:text-[14px] text-[12px] px-2 text-[#667085] uppercase col-span-1 font-[400] text-center'>{props.dataLang?.no || 'no'}</h4>
           <div className='col-span-5 flex gap-4 px-2'>
             <h4 className='xl:text-[14px] text-[12px] text-[#667085] font-[400] text-left'>{props.dataLang?.stage_name_finishedProduct}</h4>
@@ -484,15 +491,18 @@ const Popup_Stage = React.memo(props => {
             />
           </div>
           {/* Đơn giá */}
-          <h4 className='col-span-3 xl:text-[14px] text-[12px] px-2 text-[#667085] font-[400] text-center'>
-            <span className='flex items-center justify-center gap-2'>
-              Đơn giá
-              <InfoTooltip
-                content='Đơn giá là số tiền trả cho từng công đoạn cụ thể trong quá trình làm ra một sản phẩm khi công đoạn đó hoàn thành, làm căn cứ tính lương và sản lượng.'
-                position='bottom'
-              />
-            </span>
-          </h4>
+          {isInstallPieceworkWage && (
+            <h4 className='col-span-3 xl:text-[14px] text-[12px] px-2 text-[#667085] font-[400] text-center'>
+              <span className='flex items-center justify-center gap-2'>
+                Đơn giá
+                <InfoTooltip
+                  content='Đơn giá là số tiền trả cho từng công đoạn cụ thể trong quá trình làm ra một sản phẩm khi công đoạn đó hoàn thành, làm căn cứ tính lương và sản lượng.'
+                  position='bottom'
+                  iconProps={{ size: 14 }}
+                />
+              </span>
+            </h4>
+          )}
           <h4 className='col-span-2 xl:text-[14px] text-[12px] px-2 text-[#667085] font-[400] text-center'>Công đoạn bắt đầu</h4>
           <h4 className='col-span-2 xl:text-[14px] text-[12px] px-2 text-[#667085] font-[400] text-center'>{props.dataLang?.stage_last_finishedProduct}</h4>
           <h4 className='col-span-2 xl:text-[14px] text-[12px] px-2 text-[#667085] font-[400] text-center'>{props.dataLang?.branch_popup_properties}</h4>
@@ -513,15 +523,15 @@ const Popup_Stage = React.memo(props => {
                   handleRatioChange={handleRatioChange}
                   handleDelete={handleDelete}
                   handleMenuOpen={handleMenuOpen}
+                  isInstallPieceworkWage={isInstallPieceworkWage}
                 />
               </DragDropContext>
               <button
                 type='button'
                 onClick={_HandleAddNew.bind(this)}
                 title='Thêm'
-                className={`${
-                  statusBtnAdd ? 'opacity-50 cursor-not-allowed' : 'opacity-100 hover:text-[#0F4F9E] hover:bg-[#e2f0fe]'
-                } transition mt-5 w-full min-h-[100px] h-35 rounded-[5.5px] bg-slate-100 flex flex-col justify-center items-center`}
+                className={`${statusBtnAdd ? 'opacity-50 cursor-not-allowed' : 'opacity-100 hover:text-[#0F4F9E] hover:bg-[#e2f0fe]'
+                  } transition mt-5 w-full min-h-[100px] h-35 rounded-[5.5px] bg-slate-100 flex flex-col justify-center items-center`}
               >
                 <IconAdd />
                 {props.dataLang?.stage_add_finishedProduct}

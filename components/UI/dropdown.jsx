@@ -325,8 +325,34 @@ export const Dropdown = props => {
                                   </Link>
                                 ) : is_admin && !e?.forceDisableForAdmin ? (
                                   <SecureLink href={e.link ? e.link : '#'} title={e.name} item={e} className='outline-none ' key={i}>
-                                    <li className={`relative pl-4 std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none ${isActive ? 'text-[#0375F3]' : 'text-[#637381] group hover:text-[#0375F3]'}`}>
-                                      <span className={`before:content-['•'] before:absolute before:left-0 before:text-blue-600 ${isActive ? 'before:opacity-100' : 'before:opacity-0 group-hover:before:opacity-100'}`}>{e?.name} </span>
+                                    <li
+                                      className={twMerge(
+                                        'relative std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none',
+                                        e?.icon ? 'pl-0' : 'pl-4',
+                                        isActive ? 'text-[#0375F3]' : 'text-[#637381] group hover:text-[#0375F3]'
+                                      )}
+                                    >
+                                      {e?.icon ? (
+                                        <div className='flex items-center gap-2 ml-3'>
+                                          <Image
+                                            src={e.icon}
+                                            alt={e.name || 'icon'}
+                                            width={24}
+                                            height={24}
+                                            className='w-6 h-6 object-contain'
+                                          />
+                                          <span>{e?.name}</span>
+                                        </div>
+                                      ) : (
+                                        <span
+                                          className={twMerge(
+                                            "before:content-['•'] before:absolute before:left-0 before:text-blue-600",
+                                            isActive ? 'before:opacity-100' : 'before:opacity-0 group-hover:before:opacity-100'
+                                          )}
+                                        >
+                                          {e?.name}{' '}
+                                        </span>
+                                      )}
                                       {e?.isPro && (
                                         // Render badge "pro" ngay cạnh tên item khi item có key isPro
                                         <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-[10px]'>pro</span>
@@ -335,8 +361,34 @@ export const Dropdown = props => {
                                   </SecureLink>
                                 ) : e?.viewOwn == '1' || e?.view == '1' ? (
                                   <SecureLink href={e.link ? e.link : '#'} title={e.name} item={e} className='outline-none' key={i}>
-                                    <li className={`relative pl-4 std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none ${isActive ? 'text-[#0375F3]' : 'text-[#637381] group hover:text-[#0375F3]'}`}>
-                                      <span className={`before:content-['•'] before:absolute before:left-0 before:text-blue-600 ${isActive ? 'before:opacity-100' : 'before:opacity-0 group-hover:before:opacity-100'}`}>{e?.name} </span>
+                                    <li
+                                      className={twMerge(
+                                        'relative std:text-base 3xl:text-base 2xl:text-[14px] xl:text-[12px] lg:text-[10px] outline-none list-none',
+                                        e?.icon ? 'pl-0' : 'pl-4',
+                                        isActive ? 'text-[#0375F3]' : 'text-[#637381] group hover:text-[#0375F3]'
+                                      )}
+                                    >
+                                      {e?.icon ? (
+                                        <span className='flex items-center gap-2'>
+                                          <Image
+                                            src={e.icon}
+                                            alt={e.name || 'icon'}
+                                            width={24}
+                                            height={24}
+                                            className='w-6 h-6 object-contain'
+                                          />
+                                          <span>{e?.name}</span>
+                                        </span>
+                                      ) : (
+                                        <span
+                                          className={twMerge(
+                                            "before:content-['•'] before:absolute before:left-0 before:text-blue-600",
+                                            isActive ? 'before:opacity-100' : 'before:opacity-0 group-hover:before:opacity-100'
+                                          )}
+                                        >
+                                          {e?.name}{' '}
+                                        </span>
+                                      )}
                                       {e?.isPro && (
                                         // Render badge "pro" ngay cạnh tên item khi item có key isPro
                                         <span className='ml-1 bg-red-500 text-white px-2 pb-1 pt-0.5 rounded-full text-[10px]'>pro</span>
