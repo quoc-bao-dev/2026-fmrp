@@ -2,6 +2,7 @@ import { useSelector } from 'react-redux';
 
 const PARCEL_USE = {
     'luong-san-luong': 'production_output',
+    'gia-cong-ngoai': 'production_output_buy',
 };
 
 /**

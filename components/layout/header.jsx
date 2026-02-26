@@ -55,6 +55,10 @@ const Header = () => {
 
   const { checkInstall, checkIntroduce } = useCheckModuleInstall();
 
+  // Check module đã cài đặt
+  const isInstallPieceworkWage = checkInstall('luong-san-luong');
+  const isInstallOutsourcing = checkInstall('gia-cong-ngoai');
+
   // Mapping từ name sang tab key cho module introduction
   const nameToTabKey = {
     'Danh sách tổ / nhóm': 'danh-sach-to-nhom',
@@ -719,19 +723,35 @@ const Header = () => {
             //     view: -1,
             //     name: "Lịch",
             // },
-            // {
-            //   viewOwn: auth?.customers?.is_view_own == '1' || auth?.suppliers?.is_view_own == '1' || auth?.materials?.is_view_own == '1' || auth?.products?.is_view_own == '1' ? '1' : '0',
-            //   view: auth?.customers?.is_view == '1' || auth?.suppliers?.is_view == '1' || auth?.materials?.is_view == '1' || auth?.products?.is_view == '1' ? '1' : '0',
-            //   name: 'Gia công ngoài',
-            //   link: '/convenience/outsourcing',
-            //   icon: '/header/outsourcing.png',
-            // },
+            ...(isInstallOutsourcing
+              ? [
+                {
+                  viewOwn:
+                    auth?.customers?.is_view_own == '1' ||
+                      auth?.suppliers?.is_view_own == '1' ||
+                      auth?.materials?.is_view_own == '1' ||
+                      auth?.products?.is_view_own == '1'
+                      ? '1'
+                      : '0',
+                  view:
+                    auth?.customers?.is_view == '1' ||
+                      auth?.suppliers?.is_view == '1' ||
+                      auth?.materials?.is_view == '1' ||
+                      auth?.products?.is_view == '1'
+                      ? '1'
+                      : '0',
+                  name: 'Gia công ngoài',
+                  link: '/convenience/outsourcing',
+                  icon: '/header/outsourcing.png',
+                },
+              ]
+              : []),
             {
               viewOwn: auth?.customers?.is_view_own == '1' || auth?.suppliers?.is_view_own == '1' || auth?.materials?.is_view_own == '1' || auth?.products?.is_view_own == '1' ? '1' : '0',
               view: auth?.customers?.is_view == '1' || auth?.suppliers?.is_view == '1' || auth?.materials?.is_view == '1' || auth?.products?.is_view == '1' ? '1' : '0',
               name: 'Import dữ liệu',
               link: '/convenience/import',
-              // icon: '/header/import.png',
+              icon: '/header/import.png',
             },
             {
               // viewOwn:
@@ -744,7 +764,7 @@ const Header = () => {
               view: auth?.customers?.is_export == '1' || auth?.suppliers?.is_export == '1' || auth?.materials?.is_export == '1' || auth?.products?.is_export == '1' ? '1' : '0',
               name: 'Export dữ liệu',
               link: '/convenience/export',
-              // icon: '/header/export.png',
+              icon: '/header/export.png',
             },
           ],
         },
@@ -1130,7 +1150,7 @@ const Header = () => {
       data: ListKhac,
       className: 'popover-khac',
       text: 'Quản lý các tiện ích, công việc',
-      title: 'Tiện ích',
+      title: 'Khác ',
       link: ['/convenience'],
     },
     // {
