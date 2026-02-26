@@ -11,6 +11,7 @@ import Select from 'react-select';
 import { useCostCombobox } from '../hooks/useCategory';
 import PriceInput from '@/components/common/input/PriceInput';
 import InfoTooltip from '@/components/UI/common/InfoTooltip';
+import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
 
 const PopupCategory = props => {
   const router = useRouter();
@@ -67,6 +68,9 @@ const PopupCategory = props => {
 
   const { data: dataOption } = useCostCombobox(open, props.data?.id);
 
+  const { checkInstall } = useCheckModuleInstall();
+  const isInstallPieceworkWage = checkInstall('luong-san-luong');
+
   useEffect(() => {
     sErrInput(false);
     open && sCosts_Code(props.data?.code ? props.data?.code : '');
@@ -109,16 +113,14 @@ const PopupCategory = props => {
       });
     }
     const url = id
-      ? `${
-          (tabPage === 'units' && `/api_web/Api_unit/unit/${id}?csrf_protection=true `) ||
-          (tabPage === 'stages' && `/api_web/api_product/stage/${id}?csrf_protection=true`) ||
-          (tabPage === 'costs' && `/api_web/Api_cost/cost/${id}?csrf_protection=true`)
-        } `
-      : `${
-          (tabPage === 'units' && `/api_web/Api_unit/unit/?csrf_protection=true`) ||
-          (tabPage === 'stages' && `/api_web/api_product/stage/?csrf_protection=true`) ||
-          (tabPage === 'costs' && `/api_web/Api_cost/cost/?csrf_protection=true`)
-        } `;
+      ? `${(tabPage === 'units' && `/api_web/Api_unit/unit/${id}?csrf_protection=true `) ||
+      (tabPage === 'stages' && `/api_web/api_product/stage/${id}?csrf_protection=true`) ||
+      (tabPage === 'costs' && `/api_web/Api_cost/cost/${id}?csrf_protection=true`)
+      } `
+      : `${(tabPage === 'units' && `/api_web/Api_unit/unit/?csrf_protection=true`) ||
+      (tabPage === 'stages' && `/api_web/api_product/stage/?csrf_protection=true`) ||
+      (tabPage === 'costs' && `/api_web/Api_cost/cost/?csrf_protection=true`)
+      } `;
     try {
       const { isSuccess, message } = await apiCategory.apiHandingCategory(url, data);
       if (isSuccess) {
@@ -143,7 +145,7 @@ const PopupCategory = props => {
       } else {
         isShow('error', props.dataLang[message]);
       }
-    } catch (error) {}
+    } catch (error) { }
     sOnSending(false);
   };
 
@@ -232,18 +234,16 @@ const PopupCategory = props => {
     <PopupCustom
       title={
         props.data?.id
-          ? `${
-              (tabPage === 'units' && props.dataLang?.category_unit_edit) ||
-              (tabPage === 'stages' && props.dataLang?.settings_category_stages_edit) ||
-              (tabPage === 'costs' && props.dataLang?.expense_edit) ||
-              'expense_edit'
-            }`
-          : `${
-              (tabPage === 'units' && props.dataLang?.category_unit_add) ||
-              (tabPage === 'stages' && props.dataLang?.settings_category_stages_add) ||
-              (tabPage === 'costs' && props.dataLang?.expense_add) ||
-              'expense_add'
-            }`
+          ? `${(tabPage === 'units' && props.dataLang?.category_unit_edit) ||
+          (tabPage === 'stages' && props.dataLang?.settings_category_stages_edit) ||
+          (tabPage === 'costs' && props.dataLang?.expense_edit) ||
+          'expense_edit'
+          }`
+          : `${(tabPage === 'units' && props.dataLang?.category_unit_add) ||
+          (tabPage === 'stages' && props.dataLang?.settings_category_stages_add) ||
+          (tabPage === 'costs' && props.dataLang?.expense_add) ||
+          'expense_add'
+          }`
       }
       button={props.data?.id ? <IconEdit /> : `${props.dataLang?.branch_popup_create_new}`}
       onClickOpen={_ToggleModal.bind(this, true)}
@@ -265,9 +265,8 @@ const PopupCategory = props => {
                     onChange={_HandleChangeInput.bind(this, 'unit')}
                     name='fname'
                     type='text'
-                    className={`${
-                      errInput ? 'border-red-500' : 'focus:border-[#92BFF7] border-[#d0d5dd]'
-                    } placeholder:text-slate-300 w-full bg-[#ffffff] rounded-[5.5px] text-[#52575E] font-normal p-1.5 border outline-none mb-2`}
+                    className={`${errInput ? 'border-red-500' : 'focus:border-[#92BFF7] border-[#d0d5dd]'
+                      } placeholder:text-slate-300 w-full bg-[#ffffff] rounded-[5.5px] text-[#52575E] font-normal p-1.5 border outline-none mb-2`}
                   />
                   {errInput && <label className='mb-4  text-[14px] text-red-500'>{'Vui lòng nhập tên đơn vị'}</label>}
                 </div>
@@ -314,9 +313,8 @@ const PopupCategory = props => {
                         }
                         name='fname'
                         type='text'
-                        className={`${
-                          errInputcode ? 'border-red-500 border' : 'focus:border-[#92BFF7] border-[#d0d5dd]'
-                        } placeholder:text-slate-300 w-full bg-[#ffffff] rounded-[5.5px] text-[#52575E] font-normal p-1.5 border outline-none mb-2`}
+                        className={`${errInputcode ? 'border-red-500 border' : 'focus:border-[#92BFF7] border-[#d0d5dd]'
+                          } placeholder:text-slate-300 w-full bg-[#ffffff] rounded-[5.5px] text-[#52575E] font-normal p-1.5 border outline-none mb-2`}
                       />
                       {errInputcode && <label className='mb-4  text-[14px] text-red-500'>{props.dataLang?.settings_category_stages_errCode}</label>}
                     </div>
@@ -333,27 +331,28 @@ const PopupCategory = props => {
                         placeholder={props.dataLang?.settings_category_stages_name}
                         name='fname'
                         type='text'
-                        className={`${
-                          errInputName ? 'border-red-500' : 'focus:border-[#92BFF7] border-[#d0d5dd]'
-                        } placeholder:text-slate-300 w-full bg-[#ffffff] rounded-[5.5px] text-[#52575E] font-normal p-1.5 border outline-none mb-2`}
+                        className={`${errInputName ? 'border-red-500' : 'focus:border-[#92BFF7] border-[#d0d5dd]'
+                          } placeholder:text-slate-300 w-full bg-[#ffffff] rounded-[5.5px] text-[#52575E] font-normal p-1.5 border outline-none mb-2`}
                       />
                       {errInputName && <label className='mb-4  text-[14px] text-red-500'>{props.dataLang?.settings_category_stages_errName}</label>}
                     </div>
                   </div>
 
-                  <div className='w-full'>
-                    <label className='text-[#344054] font-normal text-sm mb-1 flex gap-2 items-center'>
-                      Đơn giá{' '}
-                      <InfoTooltip
-                        content='Đơn giá là số tiền trả cho mỗi công đoạn sản xuất đã hoàn thành, dùng để tính lương và sản lượng cho công nhân.'
-                        position='bottom'
-                        iconProps={{ size: 14 }}
-                      />
-                    </label>
-                    <div>
-                      <PriceInput value={typeof stages_unit_price === 'number' ? stages_unit_price : 0} onChange={val => _HandleChangeInput('unit_price', val)} />
+                  {isInstallPieceworkWage && (
+                    <div className='w-full'>
+                      <label className='text-[#344054] font-normal text-sm mb-1 flex gap-2 items-center'>
+                        Đơn giá{' '}
+                        <InfoTooltip
+                          content='Đơn giá là số tiền trả cho mỗi công đoạn sản xuất đã hoàn thành, dùng để tính lương và sản lượng cho công nhân.'
+                          position='bottom'
+                          iconProps={{ size: 14 }}
+                        />
+                      </label>
+                      <div>
+                        <PriceInput value={typeof stages_unit_price === 'number' ? stages_unit_price : 0} onChange={val => _HandleChangeInput('unit_price', val)} />
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className='w-full flex justify-between flex-wrap'>
                     <div className='inline-flex items-center w-[50%] gap-3.5'>
@@ -406,9 +405,8 @@ const PopupCategory = props => {
                       onChange={_HandleChangeInput.bind(this, 'costs_code')}
                       type='text'
                       placeholder={props.dataLang?.expense_code || 'expense_code'}
-                      className={`${
-                        errCode ? 'border-red-500' : 'focus:border-[#92BFF7] border-[#d0d5dd] '
-                      } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal  p-2 border outline-none`}
+                      className={`${errCode ? 'border-red-500' : 'focus:border-[#92BFF7] border-[#d0d5dd] '
+                        } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal  p-2 border outline-none`}
                     />
                     {errCode && <label className='text-sm text-red-500'>{props.dataLang?.expense_errCode || 'expense_errCode'}</label>}
                   </div>
@@ -421,9 +419,8 @@ const PopupCategory = props => {
                       onChange={_HandleChangeInput.bind(this, 'costs_name')}
                       type='text'
                       placeholder={props.dataLang?.expense_name || 'expense_name'}
-                      className={`${
-                        errName ? 'border-red-500' : 'focus:border-[#92BFF7] border-[#d0d5dd] '
-                      } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal  p-2 border outline-none`}
+                      className={`${errName ? 'border-red-500' : 'focus:border-[#92BFF7] border-[#d0d5dd] '
+                        } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal  p-2 border outline-none`}
                     />
                     {errName && <label className='text-sm text-red-500'>{props.dataLang?.expense_errName || 'expense_errName'}</label>}
                   </div>
@@ -466,9 +463,8 @@ const PopupCategory = props => {
                           position: 'absolute',
                         }),
                       }}
-                      className={`${
-                        errBranch ? 'border-red-500' : 'border-transparent'
-                      } text-sm placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] mb-2 font-normal outline-none border `}
+                      className={`${errBranch ? 'border-red-500' : 'border-transparent'
+                        } text-sm placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] mb-2 font-normal outline-none border `}
                     />
                     {errBranch && <label className='mb-2 text-sm text-red-500'>{props.dataLang?.expense_errBranch || 'expense_errBranch'}</label>}
                   </div>
@@ -481,22 +477,22 @@ const PopupCategory = props => {
                         idCategory == '0' || !idCategory
                           ? { label: `${'Nhóm cha'}` }
                           : {
-                              label: dataOption.find(x => x?.parent_id == idCategory)?.label,
-                              code: dataOption.find(x => x?.parent_id == idCategory)?.code,
-                              value: idCategory,
-                            }
+                            label: dataOption.find(x => x?.parent_id == idCategory)?.label,
+                            code: dataOption.find(x => x?.parent_id == idCategory)?.code,
+                            value: idCategory,
+                          }
                       }
                       value={
                         idCategory == '0' || !idCategory
                           ? {
-                              label: 'Nhóm cha',
-                              code: 'nhóm cha',
-                            }
+                            label: 'Nhóm cha',
+                            code: 'nhóm cha',
+                          }
                           : {
-                              label: dataOption.find(x => x?.value == idCategory)?.label,
-                              code: dataOption.find(x => x?.value == idCategory)?.code,
-                              value: idCategory,
-                            }
+                            label: dataOption.find(x => x?.value == idCategory)?.label,
+                            code: dataOption.find(x => x?.value == idCategory)?.code,
+                            value: idCategory,
+                          }
                       }
                       onChange={valueIdCategory.bind(this)}
                       isClearable={true}

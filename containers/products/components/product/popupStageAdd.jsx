@@ -10,9 +10,13 @@ import { useMutation } from '@tanstack/react-query';
 import { InfoCircle } from 'iconsax-react';
 import React, { useEffect, useState } from 'react';
 import InfoTooltip from '@/components/UI/common/InfoTooltip';
+import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
 
 const PopupStageAdd = React.memo(props => {
   const isShow = useToast();
+
+  const { checkInstall } = useCheckModuleInstall();
+  const isInstallPieceworkWage = checkInstall('luong-san-luong');
 
   const [open, sOpen] = useState(false);
 
@@ -84,8 +88,10 @@ const PopupStageAdd = React.memo(props => {
     formData.append('name', stages_name);
     formData.append('status_qc', stages_status);
     formData.append('note', stages_note);
-    // Đơn giá mặc định cho công đoạn (giống form popupCategory)
-    formData.append('price_default', stages_unit_price || 0);
+    // Đơn giá mặc định cho công đoạn (chỉ gửi khi module đã cài)
+    if (isInstallPieceworkWage) {
+      formData.append('price_default', stages_unit_price || 0);
+    }
 
     handingStage.mutate(formData, {
       onSuccess: ({ isSuccess, message, data, rResult, id }) => {
@@ -102,7 +108,7 @@ const PopupStageAdd = React.memo(props => {
           isShow('error', props.dataLang[message] || message);
         }
       },
-      onError: error => {},
+      onError: error => { },
     });
     sOnSending(false);
   };
@@ -159,9 +165,8 @@ const PopupStageAdd = React.memo(props => {
             onChange={_HandleChangeInput.bind(this, 'code')}
             type='text'
             placeholder={props.dataLang?.settings_category_stages_codeAdd || 'settings_category_stages_codeAdd'}
-            className={`${
-              errInputcode ? 'border-red-500' : 'focus:border-[#92BFF7] border-[#d0d5dd] '
-            } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal  p-2 border outline-none`}
+            className={`${errInputcode ? 'border-red-500' : 'focus:border-[#92BFF7] border-[#d0d5dd] '
+              } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal  p-2 border outline-none`}
           />
           {errInputcode && <label className='text-sm text-red-500'>{props.dataLang?.settings_category_stages_errCode || 'settings_category_stages_errCode'}</label>}
         </div>
@@ -174,19 +179,20 @@ const PopupStageAdd = React.memo(props => {
             onChange={_HandleChangeInput.bind(this, 'name')}
             type='text'
             placeholder={props.dataLang?.settings_category_stages_name || 'settings_category_stages_name'}
-            className={`${
-              errInputName ? 'border-red-500' : 'focus:border-[#92BFF7] border-[#d0d5dd] '
-            } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal  p-2 border outline-none`}
+            className={`${errInputName ? 'border-red-500' : 'focus:border-[#92BFF7] border-[#d0d5dd] '
+              } placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal  p-2 border outline-none`}
           />
           {errInputName && <label className='text-sm text-red-500'>{props.dataLang?.settings_category_stages_errName || 'settings_category_stages_errName'}</label>}
         </div>
-        <div className='space-y-1'>
-          <label className='text-[#344054] font-normal text-base flex items-center gap-2'>
-            Đơn giá
-            <InfoTooltip content='Đơn giá là số tiền trả cho từng công đoạn cụ thể trong quá trình làm ra một sản phẩm khi công đoạn đó hoàn thành, làm căn cứ tính lương và sản lượng.' position='bottom' />
-          </label>
-          <PriceInput value={typeof stages_unit_price === 'number' ? stages_unit_price : 0} onChange={val => _HandleChangeInput('unit_price', val)} />
-        </div>
+        {isInstallPieceworkWage && (
+          <div className='space-y-1'>
+            <label className='text-[#344054] font-normal text-base flex items-center gap-2'>
+              Đơn giá
+              <InfoTooltip content='Đơn giá là số tiền trả cho từng công đoạn cụ thể trong quá trình làm ra một sản phẩm khi công đoạn đó hoàn thành, làm căn cứ tính lương và sản lượng.' position='bottom' />
+            </label>
+            <PriceInput value={typeof stages_unit_price === 'number' ? stages_unit_price : 0} onChange={val => _HandleChangeInput('unit_price', val)} />
+          </div>
+        )}
         <div className='flex items-center gap-3.5'>
           <label className='relative flex cursor-pointer items-center rounded-full p-1' htmlFor='stage-status' data-ripple-dark='true'>
             <input

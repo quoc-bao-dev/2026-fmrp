@@ -706,7 +706,7 @@ const Header = () => {
       // title: "Tiện ích",
       sub: [
         {
-          title: 'Tiện ích',
+          title: 'Khác',
           // img: "/icon/header/khac/ti.png",
           items: [
             // {
@@ -722,8 +722,16 @@ const Header = () => {
             {
               viewOwn: auth?.customers?.is_view_own == '1' || auth?.suppliers?.is_view_own == '1' || auth?.materials?.is_view_own == '1' || auth?.products?.is_view_own == '1' ? '1' : '0',
               view: auth?.customers?.is_view == '1' || auth?.suppliers?.is_view == '1' || auth?.materials?.is_view == '1' || auth?.products?.is_view == '1' ? '1' : '0',
+              name: 'Gia công ngoài',
+              link: '/convenience/outsourcing',
+              icon: '/header/outsourcing.png',
+            },
+            {
+              viewOwn: auth?.customers?.is_view_own == '1' || auth?.suppliers?.is_view_own == '1' || auth?.materials?.is_view_own == '1' || auth?.products?.is_view_own == '1' ? '1' : '0',
+              view: auth?.customers?.is_view == '1' || auth?.suppliers?.is_view == '1' || auth?.materials?.is_view == '1' || auth?.products?.is_view == '1' ? '1' : '0',
               name: 'Import dữ liệu',
               link: '/convenience/import',
+              icon: '/header/import.png',
             },
             {
               // viewOwn:
@@ -736,6 +744,7 @@ const Header = () => {
               view: auth?.customers?.is_export == '1' || auth?.suppliers?.is_export == '1' || auth?.materials?.is_export == '1' || auth?.products?.is_export == '1' ? '1' : '0',
               name: 'Export dữ liệu',
               link: '/convenience/export',
+              icon: '/header/export.png',
             },
           ],
         },
