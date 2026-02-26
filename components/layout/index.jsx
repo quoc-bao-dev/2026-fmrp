@@ -79,8 +79,15 @@ const Index = ({ children, ...props }) => {
   const { socket } = useSocketContext();
   const { data: upgradePackageData } = useGetUpgradePackage();
 
+  // Lưu trạng thái hasNewVersion khi PopupSystemUpdating mở để mở lại sau
+  const [pendingNewVersion, setPendingNewVersion] = useState(null);
+
+  // Kiểm tra PopupSystemUpdating có đang mở không
+  const isSystemUpdating = !!+settings?.enable_noti;
+
   useEffect(() => {
-    if (hasNewVersion) {
+    // Chỉ mở PopupUpdateNewVersion nếu không có PopupSystemUpdating
+    if (hasNewVersion && !isSystemUpdating) {
       dispatch({
         type: 'statePopupGlobal',
         payload: {
@@ -90,8 +97,48 @@ const Index = ({ children, ...props }) => {
           children: <PopupUpdateNewVersion version={version} setHasNewVersion={setHasNewVersion} />,
         },
       });
+      setPendingNewVersion(null); // Reset pending state khi đã mở
+    } else if (hasNewVersion && isSystemUpdating) {
+      // Lưu trạng thái để mở lại sau khi PopupSystemUpdating tắt
+      setPendingNewVersion({ version, setHasNewVersion });
     }
-  }, [hasNewVersion, version]);
+  }, [hasNewVersion, version, isSystemUpdating]);
+
+  // Ẩn PopupUpdateNewVersion khi PopupSystemUpdating mở
+  useEffect(() => {
+    if (isSystemUpdating && statePopupGlobal?.open) {
+      // Kiểm tra nếu PopupGlobal chứa PopupUpdateNewVersion
+      const isUpdateNewVersion = statePopupGlobal?.children?.props?.version !== undefined;
+      if (isUpdateNewVersion) {
+        // Lưu trạng thái để mở lại sau
+        setPendingNewVersion({
+          version: statePopupGlobal?.children?.props?.version,
+          setHasNewVersion: statePopupGlobal?.children?.props?.setHasNewVersion,
+        });
+        // Đóng PopupGlobal
+        dispatch({
+          type: 'statePopupGlobal',
+          payload: { open: false },
+        });
+      }
+    }
+  }, [isSystemUpdating, statePopupGlobal?.open]);
+
+  // Mở lại PopupUpdateNewVersion khi PopupSystemUpdating tắt
+  useEffect(() => {
+    if (!isSystemUpdating && pendingNewVersion && hasNewVersion) {
+      dispatch({
+        type: 'statePopupGlobal',
+        payload: {
+          open: true,
+          allowOutsideClick: false,
+          allowEscape: false,
+          children: <PopupUpdateNewVersion version={pendingNewVersion.version} setHasNewVersion={pendingNewVersion.setHasNewVersion} />,
+        },
+      });
+      setPendingNewVersion(null); // Reset sau khi đã mở
+    }
+  }, [isSystemUpdating, pendingNewVersion, hasNewVersion]);
   const queryClient = useQueryClient();
 
   // Auto open Pro upgrade popup when system is expired - block UI
