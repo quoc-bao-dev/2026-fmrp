@@ -27,7 +27,7 @@ const Radio = ({ dataLang, valueCheck, _HandleChange, tabPage }) => {
               </label>
             </div>
           </li>
-          {tabPage != 6 && (
+          {tabPage != 6 && tabPage != 7 && tabPage != 8 && (
             <li className="w-full border-b  cursor-pointer hover:bg-pink-600 group overflow-hidden transform  transition duration-300 ease-in-out border-gray-200 sm:border-b-0 sm:border-r ">
               <div className="flex cursor-pointer items-center pl-3">
                 <input

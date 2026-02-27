@@ -17,7 +17,7 @@ const Progress = ({
   return (
     <div className="col-span-2 flex items-center justify-center mt-5 mb-2">
       {tabPage !== 5 && tabPage !== 6 ? (
-        listData.length > 0 && (
+        ((tabPage === 7 || tabPage === 8) || listData.length > 0) && (
           <div className={`${listData.length < 2 ? "mt-4" : ""}`}>
             <CircularProgressbar
               className="text-center"

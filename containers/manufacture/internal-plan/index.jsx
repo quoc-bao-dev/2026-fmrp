@@ -5,6 +5,7 @@ import Breadcrumb from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import OnResetData from '@/components/UI/btnResetData/btnReset';
 import ButtonWarehouse from '@/components/UI/btnWarehouse/btnWarehouse';
 import ButtonAddNew from '@/components/UI/button/buttonAddNew';
+import ButtonPrintPDF from '@/components/common/button/ButtonPrintPDF';
 import ContainerPagination from '@/components/UI/common/ContainerPagination/ContainerPagination';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { EmptyExprired } from '@/components/UI/common/EmptyExprired';
@@ -27,6 +28,7 @@ import { CONFIRMATION_OF_CHANGES, TITLE_STATUS } from '@/constants/changeStatus/
 import { FORMAT_MOMENT } from '@/constants/formatDate/formatDate';
 import { WARNING_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 import { useBranchList } from '@/hooks/common/useBranch';
+import useSetingServer from '@/hooks/useConfigNumber';
 import { useLimitAndTotalItems } from '@/hooks/useLimitAndTotalItems';
 import usePagination from '@/hooks/usePagination';
 import useActionRole from '@/hooks/useRole';
@@ -41,11 +43,13 @@ import { debounce } from 'lodash';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useSelector } from 'react-redux';
+import { useInternalPlanDetail } from './hooks/useInternalPlanDetail';
 import { useInternalPlanList } from './hooks/useInternalPlanList';
 import { useStatusInternalPlan } from './hooks/useStatusInternalPlan';
+import { printInternalPlanPDF } from './utils/printInternalPlanPDF';
 
 const PopupDetail = dynamic(() => import('./components/PopupDetail'), {
   ssr: false,
@@ -65,6 +69,8 @@ const InternalPlan = props => {
 
   const { paginate } = usePagination();
 
+  const dataSeting = useSetingServer();
+
   const statusExprired = useStatusExprired();
   const { handleTab: _HandleSelectTab } = useTab();
 
@@ -77,6 +83,10 @@ const InternalPlan = props => {
   const { limit, updateLimit: sLimit } = useLimitAndTotalItems();
 
   const { isOpen, isId, isIdChild: status, handleQueryId } = useToggle();
+
+  const [openPrintPdf, setOpenPrintPdf] = useState(false);
+  const [selectedPrintId, setSelectedPrintId] = useState(null);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
 
@@ -103,6 +113,42 @@ const InternalPlan = props => {
 
   const { data, isFetching, refetch } = useInternalPlanList(params);
   const { data: dataStatus = [] } = useStatusInternalPlan(paramsStatus);
+
+  const { data: printData, isFetching: isFetchingPrint } = useInternalPlanDetail(openPrintPdf, selectedPrintId);
+
+  const handlePrintClick = async id => {
+    setSelectedPrintId(id);
+    setOpenPrintPdf(true);
+    setIsPrinting(true);
+  };
+
+  useEffect(() => {
+    if (openPrintPdf && selectedPrintId && printData && !isFetchingPrint) {
+      (async () => {
+        try {
+          const internalPlanData = printData?.data || printData?.result || printData;
+          if (!internalPlanData) {
+            isShow('error', 'Không có dữ liệu để in');
+            setIsPrinting(false);
+            return;
+          }
+
+          await printInternalPlanPDF({
+            data: internalPlanData,
+            dataLang: dataLang,
+            dataSeting: dataSeting,
+          });
+        } catch (error) {
+          console.error('Lỗi khi in PDF:', error);
+          isShow('error', `Lỗi khi in PDF: ${error.message || 'Không xác định'}`);
+        } finally {
+          setIsPrinting(false);
+        }
+      })();
+      setOpenPrintPdf(false);
+      setSelectedPrintId(null);
+    }
+  }, [openPrintPdf, selectedPrintId, printData, isFetchingPrint, dataLang, dataSeting, isShow]);
   const handlePostStatus = async (id, newStatus) => {
     try {
       const { isSuccess, message } = await apiInternalPlan.apiPostStatus(id, newStatus);
@@ -475,7 +521,14 @@ const InternalPlan = props => {
                               })}
                             </div>
                           </RowItemTable>
-                          <RowItemTable colSpan={1.5} className='flex justify-center text-center'>
+                          <RowItemTable colSpan={1.5} className='flex justify-center items-center gap-1'>
+                            <ButtonPrintPDF
+                              onClick={() => handlePrintClick(e?.id)}
+                              isLoading={isPrinting && selectedPrintId === e?.id}
+                              disabled={isPrinting}
+                              tooltipText={dataLang?.btn_table_print || 'In PDF'}
+                              tooltipId={`print-pdf-tooltip-${e?.id}`}
+                            />
                             <BtnAction
                               onRefresh={refetch.bind(this)}
                               dataLang={dataLang}
