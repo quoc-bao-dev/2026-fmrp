@@ -16,6 +16,7 @@ import PopupPayment from './components/PopupPayment';
 import PopupPaymentSuccess from './components/PopupPaymentSuccess';
 import PiceworkIntroPopup from './components/PopupPiceworkIntro';
 import PopupProcessInstall from './components/PopupProcessInstall';
+import formatMoney from '@/utils/helpers/formatMoney';
 import { useQueryClient } from '@tanstack/react-query';
 
 const IMAGE_COMING_SOON = '/application/comming-soon.png';
@@ -260,6 +261,20 @@ function ApplicationAllInner(props) {
         }
     }
 
+    const handleCardClick = (card) => {
+        if (!card) return;
+        if (card.disableBtn) return;
+        setSelectedCard(card);
+        if (card?.title) {
+            setFeatureName(card.title);
+        }
+        setIsOpenPiceworkIntro(true);
+    };
+
+    const handleCardButtonClick = (action, card) => {
+        handleBtnAction(action, card);
+    };
+
 
 
     return (
@@ -308,19 +323,7 @@ function ApplicationAllInner(props) {
                             key={index}
                             className="relative flex min-h-0 h-full flex-col gap-[22px] rounded-[36px] border-white/60  p-4 shadow-sm cursor-pointer"
                             style={{ backgroundColor: card.bgColor }}
-                            onClick={() => {
-                                if (card.disableBtn) return;
-
-                                if (card.btnLink) {
-                                    if (typeof window !== 'undefined') {
-                                        window.open(card.btnLink, '_blank', 'noopener,noreferrer');
-                                    }
-                                    return;
-                                }
-                                if (card.btnAction) {
-                                    handleBtnAction(card.btnAction, card);
-                                }
-                            }}
+                            onClick={() => handleCardClick(card)}
                         >
                             {card.isComingSoon ? (
                                 <div className="absolute top-0 left-0">
@@ -356,7 +359,18 @@ function ApplicationAllInner(props) {
                                     <p className="pt-3 text-sm font-normal leading-5 text-[#141522] text-justify opacity-50">
                                         {card.description}
                                     </p>
-
+                                    {/* Giá / Miễn phí */}
+                                    {card.price != null && card.type !== 'contact' && (
+                                        <p className="pt-2 font-deca font-medium text-[16px] leading-6 tracking-[0] text-[#0375F3]">
+                                            {(() => {
+                                                const numericPrice = Number(card.price) || 0;
+                                                if (card.type === 'free' || numericPrice <= 0) {
+                                                    return 'Miễn phí';
+                                                }
+                                                return `${formatMoney(numericPrice, null)} đ`;
+                                            })()}
+                                        </p>
+                                    )}
                                     <div className="mt-auto pt-5 flex justify-end">
                                         <ButtonAction
                                             type={card.btnType}
@@ -364,7 +378,7 @@ function ApplicationAllInner(props) {
                                             disable={card.disableBtn}
                                             btnLink={card.btnLink}
                                             btnAction={card.btnAction}
-                                            onActionClick={(action) => handleBtnAction(action, card)}
+                                            onActionClick={(action) => handleCardButtonClick(action, card)}
                                         />
                                     </div>
                                 </div>
@@ -373,6 +387,8 @@ function ApplicationAllInner(props) {
                     ))}
                 </div>
             )}
+            <div className="pt-12"></div>
+
 
             {/* ===== Popup ===== */}
             {/* Popup Picework Intro */}
@@ -391,6 +407,9 @@ function ApplicationAllInner(props) {
                 image={selectedCard?.imageSrc}
                 price={selectedCard?.price}
                 type={selectedCard?.type}
+                isInstalled={selectedCard?.isInstalled}
+                appLink={selectedCard?.btnLink}
+                isComingSoon={selectedCard?.isComingSoon}
             />
 
             {/* Popup payment */}
@@ -462,7 +481,10 @@ const ButtonAction = ({ type = 'primary', label, disable = false, btnLink, btnAc
             <button
                 type="button"
                 className="inline-flex items-center rounded-[40px] border border-[#899CFD] bg-[#0375F3]  px-6 py-3.5 text-sm font-semibold text-white shadow-none transition-all duration-200 hover:bg-[#0A7FFF] hover:shadow-[0_8px_20px_rgba(3,117,243,0.25)]"
-                onClick={handleClick}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    handleClick();
+                }}
                 disabled={disable}
             >
                 {label}
@@ -476,7 +498,10 @@ const ButtonAction = ({ type = 'primary', label, disable = false, btnLink, btnAc
             <button
                 type="button"
                 className="inline-flex items-center gap-2 rounded-[40px] border border-transparent bg-[#EAF2FF] px-2 py-2 text-sm font-semibold text-[#0375F3] shadow-none ring-1 ring-[#0375F3]/40 transition-all duration-200 hover:bg-[#F0F7FF] hover:shadow-[0_6px_16px_rgba(3,117,243,0.15)] active:scale-95"
-                onClick={handleClick}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    handleClick();
+                }}
                 disabled={disable}
             >
                 <span className="pl-[12px]">{label}</span>
@@ -493,7 +518,10 @@ const ButtonAction = ({ type = 'primary', label, disable = false, btnLink, btnAc
         <button
             type="button"
             className="inline-flex items-center gap-2 rounded-[40px] border border-[#899CFD] bg-[#0375F3] px-2 py-2 text-sm font-semibold text-white shadow-none transition-all duration-200 hover:bg-[#0A7FFF] hover:shadow-[0_8px_20px_rgba(3,117,243,0.3)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
-            onClick={handleClick}
+            onClick={(e) => {
+                e.stopPropagation();
+                handleClick();
+            }}
             disabled={disable}
         >
             <span className="pl-[12px]">{label}</span>
