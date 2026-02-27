@@ -501,29 +501,6 @@ export const BtnAction = React.memo(props => {
     }
   };
 
-  const handlePrintInternalPlan = async () => {
-    if (!props?.id) {
-      isShow('error', 'Không tìm thấy kế hoạch nội bộ để in');
-      return;
-    }
-
-    setLoadingButtonPrint(true);
-
-    try {
-      const response = await apiInternalPlan.apiPrintInternalPlan(props?.id);
-
-      if (response?.isSuccess === 1 && response?.pdf_url) {
-        window.open(response.pdf_url, '_blank');
-      } else {
-        isShow('error', response?.message || 'Không thể in kế hoạch nội bộ. Vui lòng thử lại.');
-      }
-    } catch (error) {
-      isShow('error', error?.message || 'Không thể in kế hoạch nội bộ. Vui lòng thử lại.');
-    } finally {
-      setLoadingButtonPrint(false);
-    }
-  };
-
   const confimDelete = url => {
     Axios('DELETE', url, {}, (err, response) => {
       if (!err) {
@@ -803,7 +780,7 @@ export const BtnAction = React.memo(props => {
     count++;
 
     // Count print button
-    if (!['deliveryReceipt', 'returnSales', 'import', 'returns', 'receipts', 'payment', 'production_warehouse', 'order'].includes(props?.type)) {
+    if (!['deliveryReceipt', 'returnSales', 'import', 'returns', 'receipts', 'payment', 'production_warehouse', 'order', 'internal_plan'].includes(props?.type)) {
       if (props?.type === 'sales_product') {
         count++;
       } else {
@@ -1064,9 +1041,14 @@ export const BtnAction = React.memo(props => {
         </div>
       );
       }
-    } else if (props?.type === 'internal_plan') {
-      allButtons.push(<ButtonPrintItem key='print-internal-plan' onCLick={handlePrintInternalPlan} dataLang={props?.dataLang} isLoading={loadingButtonPrint} totalButtons={totalButtons} />);
-    } else if (props?.type !== 'production_warehouse' && props?.type !== 'productsWarehouse' && props?.type !== 'recall' && props?.type !== 'exportToOther' && props?.type !== 'order') {
+    } else if (
+      props?.type !== 'production_warehouse' &&
+      props?.type !== 'productsWarehouse' &&
+      props?.type !== 'recall' &&
+      props?.type !== 'exportToOther' &&
+      props?.type !== 'order' &&
+      props?.type !== 'internal_plan'
+    ) {
       allButtons.push(<FilePDF key='pdf' {...shareProps} props={props} openAction={openAction} setOpenAction={setOpenAction} />);
     }
 

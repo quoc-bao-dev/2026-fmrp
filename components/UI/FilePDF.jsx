@@ -7364,7 +7364,6 @@ const FilePDF = ({
         "sales_product",
         "price_quote",
         "purchases",
-        "internal_plan",
         "order",
         "servicev_voucher",
         "warehouseTransfer",
