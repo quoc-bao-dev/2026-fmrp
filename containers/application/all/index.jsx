@@ -263,7 +263,7 @@ function ApplicationAllInner(props) {
 
     const handleCardClick = (card) => {
         if (!card) return;
-        if (card.disableBtn) return;
+        // Luôn cho mở popup intro, kể cả khi là "Sắp ra mắt"
         setSelectedCard(card);
         if (card?.title) {
             setFeatureName(card.title);
@@ -457,9 +457,16 @@ export default function ApplicationAll(props) {
 }
 
 
-const ButtonAction = ({ type = 'primary', label, disable = false, btnLink, btnAction, onActionClick }) => {
+export const ButtonAction = ({ type = 'primary', label, disable = false, btnLink, btnAction, onActionClick, onClick, openInSameTab = false }) => {
     const handleClick = () => {
         if (disable) return;
+
+        // Nếu có custom onClick handler, ưu tiên dùng nó
+        if (typeof onClick === 'function') {
+            onClick();
+            return;
+        }
+
         if (btnAction && typeof onActionClick === 'function') {
             onActionClick(btnAction);
             return;
@@ -467,7 +474,11 @@ const ButtonAction = ({ type = 'primary', label, disable = false, btnLink, btnAc
 
         if (btnLink) {
             if (typeof window !== 'undefined') {
-                window.open(btnLink, '_blank');
+                if (openInSameTab) {
+                    window.location.href = btnLink;
+                } else {
+                    window.open(btnLink, '_blank');
+                }
             }
             return;
         }
@@ -506,8 +517,8 @@ const ButtonAction = ({ type = 'primary', label, disable = false, btnLink, btnAc
             >
                 <span className="pl-[12px]">{label}</span>
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="32" height="32" rx="16" fill="#0375F3" />
-                    <path d="M21.938 11V19.125C21.938 19.3736 21.8392 19.6121 21.6634 19.7879C21.4876 19.9637 21.2491 20.0625 21.0005 20.0625C20.7518 20.0625 20.5134 19.9637 20.3375 19.7879C20.1617 19.6121 20.063 19.3736 20.063 19.125V13.2656L11.6637 21.6633C11.4876 21.8394 11.2487 21.9383 10.9997 21.9383C10.7506 21.9383 10.5117 21.8394 10.3356 21.6633C10.1595 21.4872 10.0605 21.2483 10.0605 20.9992C10.0605 20.7501 10.1595 20.5113 10.3356 20.3352L18.7348 11.9375H12.8755C12.6268 11.9375 12.3884 11.8387 12.2125 11.6629C12.0367 11.4871 11.938 11.2486 11.938 11C11.938 10.7514 12.0367 10.5129 12.2125 10.3371C12.3884 10.1613 12.6268 10.0625 12.8755 10.0625H21.0005C21.2491 10.0625 21.4876 10.1613 21.6634 10.3371C21.8392 10.5129 21.938 10.7514 21.938 11Z" fill="#EAF2FF" />
+                    <rect width="32" height="32" rx="16" fill="#206AFF" />
+                    <path d="M21.938 11V19.125C21.938 19.3736 21.8392 19.6121 21.6634 19.7879C21.4876 19.9637 21.2491 20.0625 21.0005 20.0625C20.7518 20.0625 20.5134 19.9637 20.3375 19.7879C20.1617 19.6121 20.063 19.3736 20.063 19.125V13.2656L11.6637 21.6633C11.4876 21.8394 11.2487 21.9383 10.9997 21.9383C10.7506 21.9383 10.5117 21.8394 10.3356 21.6633C10.1595 21.4872 10.0605 21.2483 10.0605 20.9992C10.0605 20.7501 10.1595 20.5113 10.3356 20.3352L18.7348 11.9375H12.8755C12.6268 11.9375 12.3884 11.8387 12.2125 11.6629C12.0367 11.4871 11.938 11.2486 11.938 11C11.938 10.7514 12.0367 10.5129 12.2125 10.3371C12.3884 10.1613 12.6268 10.0625 12.8755 10.0625H21.0005C21.2491 10.0625 21.4876 10.1613 21.6634 10.3371C21.8392 10.5129 21.938 10.7514 21.938 11Z" fill="white" />
                 </svg>
             </button>
         );
