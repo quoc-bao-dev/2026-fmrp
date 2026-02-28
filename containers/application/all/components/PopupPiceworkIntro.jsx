@@ -3,6 +3,7 @@ import Popup from './Popup';
 import Image from 'next/image';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import formatMoney from '@/utils/helpers/formatMoney';
+import { ButtonAction } from '../index';
 
 const IMAGE_CARD = '/application/card-1.png';
 const IMAGE_PICEWORK_INTRO = '/application/picework-intro.png';
@@ -55,7 +56,10 @@ export default function PiceworkIntroPopup({
     directing,
     image,
     type = 'free',
-    price = '300.000 đ'
+    price = '300.000 đ',
+    isInstalled = false,
+    appLink,
+    isComingSoon = false,
 }) {
     const [activeTab, setActiveTab] = useState('intro'); // 'intro' | 'guide'
     const [tabMaxHeight, setTabMaxHeight] = useState(0);
@@ -135,20 +139,98 @@ export default function PiceworkIntroPopup({
                                 {content}
                             </p>
 
-                            {price && (
+                            {price && type !== 'contact' && (
                                 <p className="font-deca font-medium text-[16px] leading-6 tracking-[0] text-[#0375F3] w-fit">
-                                    {type === 'free'
-                                        ? 'Miễn phí'
-                                        : `${formatMoney(+price, null)} đ`}
+                                    {(() => {
+                                        const numericPrice = Number(price) || 0;
+                                        if (type === 'free' || numericPrice <= 0) {
+                                            return 'Miễn phí';
+                                        }
+                                        return `${formatMoney(numericPrice, null)} đ`;
+                                    })()}
                                 </p>
                             )}
-                            <button
-                                type="button"
-                                onClick={() => onOpenPayment(type)}
-                                className="w-fit inline-flex items-center justify-center gap-1 rounded-[40px] border border-white/0 bg-[#0375F3] px-4 py-2 text-[14px] font-deca font-semibold text-white transition-all duration-200 hover:bg-[#0A7FFF] hover:shadow-[0_8px_20px_rgba(3,117,243,0.25)]"
-                            >
-                                Cài đặt ngay
-                            </button>
+
+                            <div className="w-fit">
+                                {(() => {
+                                    const isInstallButton = !isInstalled && (type === 'free' || type === 'charge') && !isComingSoon;
+
+                                    const handleClick = () => {
+                                        // Nếu đã cài đặt: mở ứng dụng
+                                        if (isInstalled && appLink) {
+                                            if (typeof window !== 'undefined') {
+                                                window.location.href = appLink;
+                                            }
+                                            return;
+                                        }
+
+                                        // Nếu là loại liên hệ: mở OA Zalo
+                                        if (type === 'contact') {
+                                            if (typeof window !== 'undefined') {
+                                                window.open('https://zalo.me/fososoft', '_blank', 'noopener,noreferrer');
+                                            }
+                                            return;
+                                        }
+
+                                        // free hoặc có phí (cài đặt): giữ nguyên logic cài đặt hiện tại
+                                        if (typeof onOpenPayment === 'function') {
+                                            onOpenPayment(type);
+                                        }
+                                    };
+
+                                    // Nút "Cài đặt ngay" – giữ nguyên giao diện hiện tại
+                                    if (isInstallButton) {
+                                        return (
+                                            <button
+                                                type="button"
+                                                onClick={handleClick}
+                                                className="w-fit inline-flex items-center justify-center gap-1 rounded-[40px] border border-white/0 bg-[#0375F3] px-4 py-2 text-[14px] font-deca font-semibold text-white transition-all duration-200 hover:bg-[#0A7FFF] hover:shadow-[0_8px_20px_rgba(3,117,243,0.25)]"
+                                            >
+                                                Cài đặt ngay
+                                            </button>
+                                        );
+                                    }
+
+                                    // Các trường hợp khác: Mở / Liên hệ / Sắp ra mắt
+                                    // Sử dụng ButtonAction component để đồng bộ UI
+                                    if (isComingSoon) {
+                                        // Nút "Trải nghiệm thêm" - primary style, disabled
+                                        return (
+                                            <ButtonAction
+                                                type="primary"
+                                                label="Trải nghiệm thêm"
+                                                disable={true}
+                                            />
+                                        );
+                                    }
+
+                                    if (type === 'contact') {
+                                        // Nút outline – Liên hệ báo giá
+                                        return (
+                                            <ButtonAction
+                                                type="outline"
+                                                label="Liên hệ báo giá"
+                                                onClick={handleClick}
+                                            />
+                                        );
+                                    }
+
+                                    if (isInstalled) {
+                                        // Nút "Mở" – primary style, mở trong cùng tab
+                                        return (
+                                            <ButtonAction
+                                                type="primary"
+                                                label="Mở"
+                                                btnLink={appLink}
+                                                openInSameTab={true}
+                                            />
+                                        );
+                                    }
+
+                                    return null;
+                                })()}
+                            </div>
+
                         </div>
                     </div>
 
