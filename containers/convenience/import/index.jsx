@@ -30,6 +30,7 @@ import ImportFileTemplate from "./components/inputTab";
 import Popup_status from "./components/popup/popup";
 import Popup_bom from "./components/popup/popupBom";
 import Popup_stages from "./components/popup/popupStages";
+import Popup_orders from "./components/popup/popupOrders";
 import Progress from "./components/progress";
 import Radio from "./components/radio";
 import Row from "./components/row";
@@ -1081,7 +1082,7 @@ const Import = (props) => {
             4: "/api_web/Api_import_data/action_add_products?csrf_protection=true",
             5: "/api_web/api_import_data/importStages?csrf_protection=true",
             6: "/api_web/api_import_data/importBOM?csrf_protection=true",
-            7: "/api_web/api_import_data/importSalesOrder?csrf_protection=true",
+            7: "/api_web/orders/import?csrf_protection=true",
             8: "/api_web/api_import_data/importInternalPlan?csrf_protection=true",
         };
         //ánh xạ apiPaths
@@ -1108,19 +1109,40 @@ const Import = (props) => {
                 },
                 (err, response) => {
                     if (!err) {
-                        var { message, type, errors, count } = response.data;
-                        if (tabPage == 5) {
-                            sDataFailStages(errors);
-                            sTotalSuccessStages(count);
-                        } else if (tabPage == 6) {
-                            sDataFailBom(errors);
-                            sTotalSuccessBom(count);
-                        } else if (tabPage == 7 || tabPage == 8) {
-                            sDataFail(errors);
-                            sTotalFalse(errors?.length || 0);
-                            sDataSuccess(count);
+                        // Tab 5, 6 vẫn giữ cấu trúc cũ
+                        if (tabPage == 5 || tabPage == 6) {
+                            const { message, type, errors, count } = response.data || {};
+                            if (tabPage == 5) {
+                                sDataFailStages(errors);
+                                sTotalSuccessStages(count);
+                            } else if (tabPage == 6) {
+                                sDataFailBom(errors);
+                                sTotalSuccessBom(count);
+                            }
+                            isShow(type === "success" ? "success" : "error", message);
                         }
-                        isShow(type === "success" ? "success" : "error", message);
+                        // Tab 7, 8: import Đơn hàng bán / Kế hoạch nội bộ với cấu trúc mới
+                        else if (tabPage == 7 || tabPage == 8) {
+                            const { isSuccess, message, data } = response.data || {};
+                            const { success, fail, dataFail } = data || {};
+
+                            // Chuẩn hoá dữ liệu để hiển thị lên Popup_status
+                            const mappedFail =
+                                dataFail?.map((item, index) => ({
+                                    id: item?.order_code || index,
+                                    rowIndex:
+                                        Array.isArray(item?.rows) && item.rows.length > 0
+                                            ? item.rows.join(", ")
+                                            : "",
+                                    error: item?.errors || [],
+                                })) || [];
+
+                            sDataFail(mappedFail);
+                            sTotalFalse(typeof fail === "number" ? fail : mappedFail.length);
+                            sDataSuccess(typeof success === "number" ? success : 0);
+
+                            isShow(isSuccess ? "success" : "error", message);
+                        }
                     }
                     sOnSending(false);
                     setTimeout(() => {
@@ -1954,32 +1976,51 @@ const Import = (props) => {
                     </div>
                 </ContainerBody>
             </Container>
-            {(tabPage != 5 && tabPage != 6 && (
-                <Popup_status
+            {/* Popup cho tab 1-4: danh mục */}
+            {tabPage != 5 &&
+                tabPage != 6 &&
+                tabPage != 7 &&
+                tabPage != 8 && (
+                    <Popup_status
+                        dataLang={dataLang}
+                        className=""
+                        router={router.query?.tab}
+                        data={dataFail}
+                        totalFalse={totalFalse}
+                        listData={listData}
+                        listDataContact={listDataContact}
+                        listDataDelivery={listDataDelivery}
+                    />
+                )}
+
+            {/* Popup cho tab 5: Công đoạn */}
+            {tabPage == 5 && (
+                <Popup_stages
+                    dataLang={dataLang}
+                    router={router.query?.tab}
+                    data={dataFailStages}
+                />
+            )}
+
+            {/* Popup cho tab 6: BOM */}
+            {tabPage == 6 && (
+                <Popup_bom
+                    dataLang={dataLang}
+                    router={router.query?.tab}
+                    data={dataFailBom}
+                />
+            )}
+
+            {/* Popup riêng cho tab 7 & 8: Đơn hàng bán / Kế hoạch nội bộ */}
+            {(tabPage == 7 || tabPage == 8) && (
+                <Popup_orders
                     dataLang={dataLang}
                     className=""
                     router={router.query?.tab}
                     data={dataFail}
                     totalFalse={totalFalse}
-                    listData={listData}
-                    listDataContact={listDataContact}
-                    listDataDelivery={listDataDelivery}
                 />
-            )) ||
-                (tabPage == 5 && (
-                    <Popup_stages
-                        dataLang={dataLang}
-                        router={router.query?.tab}
-                        data={dataFailStages}
-                    />
-                )) ||
-                (tabPage == 6 && (
-                    <Popup_bom
-                        dataLang={dataLang}
-                        router={router.query?.tab}
-                        data={dataFailBom}
-                    />
-                ))}
+            )}
         </React.Fragment>
     );
 };
