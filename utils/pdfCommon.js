@@ -13,6 +13,7 @@ export const PDF_THEME = {
   BORDER: '#E5E7EB',
   TEXT: '#111827',
   SUBTEXT: '#374151',
+  CODETEXT: '#0375f3'
 };
 // Đường kẻ màu ở trên đầu trang
 export const createTopLineBlock = PRIMARY => ({
@@ -50,7 +51,7 @@ export const ensureTimesNewRomanFonts = async () => {
     // Nếu flag đã set nhưng font không có trong vfs, reset flag để load lại
     _timesNewRomanLoaded = false;
   }
-  
+
   if (typeof window === 'undefined') return;
 
   const basePath = '/fonts/times-new-roman';
@@ -82,11 +83,11 @@ export const ensureTimesNewRomanFonts = async () => {
     // Chỉ thêm font vào vfs nếu có ít nhất 1 font được load thành công
     if (entries.length > 0) {
       pdfMake.vfs = { ...(pdfMake.vfs || {}), ...Object.fromEntries(entries) };
-      
+
       // Chỉ thêm font definition nếu tất cả các font cần thiết đã được load
       const requiredFonts = ['TimesNewRoman.ttf', 'TimesNewRomanBold.ttf', 'TimesNewRomanItalic.ttf', 'TimesNewRomanBoldItalic.ttf'];
       const allFontsLoaded = requiredFonts.every(font => pdfMake.vfs[font]);
-      
+
       if (allFontsLoaded) {
         pdfMake.fonts = {
           ...(pdfMake.fonts || {}),

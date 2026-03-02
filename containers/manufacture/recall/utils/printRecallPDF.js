@@ -9,7 +9,7 @@ export const printRecallPDF = async ({ data, dataLang, dataSeting, dataMaterialE
   await ensureTimesNewRomanFonts();
 
   const dataCompany = dataSeting;
-  const { PRIMARY, BORDER, TEXT, SUBTEXT } = PDF_THEME;
+  const { PRIMARY, BORDER, TEXT, SUBTEXT, CODETEXT } = PDF_THEME;
 
   const formatNumber = number => {
     if (typeof number == 'string') {
@@ -160,7 +160,7 @@ export const printRecallPDF = async ({ data, dataLang, dataSeting, dataMaterialE
                       {
                         text: productCode,
                         fontSize: 9,
-                        color: SUBTEXT,
+                        color: CODETEXT,
                         margin: [0, 1, 0, 0],
                       },
                     ]
@@ -424,7 +424,7 @@ export const printRecallPDF = async ({ data, dataLang, dataSeting, dataMaterialE
     },
   };
 
-  applyCommonStyles(docDefinition, TEXT, SUBTEXT);
+  applyCommonStyles(docDefinition, TEXT, SUBTEXT, CODETEXT);
   openPdf(docDefinition);
 };
 

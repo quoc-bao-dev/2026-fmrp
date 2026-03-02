@@ -23,7 +23,7 @@ export const printDeliveryReceiptPDF = async ({
   await ensureTimesNewRomanFonts();
 
   const dataCompany = dataSeting;
-  const { PRIMARY, BORDER, TEXT, SUBTEXT } = PDF_THEME;
+  const { PRIMARY, BORDER, TEXT, SUBTEXT, CODETEXT } = PDF_THEME;
 
   const formatNumber = number => {
     if (typeof number === 'string') {
@@ -194,7 +194,7 @@ export const printDeliveryReceiptPDF = async ({
                 text: productCode,
                 fontSize: 9,
                 italics: true,
-                color: SUBTEXT,
+                color: CODETEXT,
                 margin: [0, 1, 0, 0],
               },
             ]
@@ -312,7 +312,7 @@ export const printDeliveryReceiptPDF = async ({
               text: productCode,
               fontSize: 9,
               italics: true,
-              color: SUBTEXT,
+              color: CODETEXT,
               margin: [0, 1, 0, 0],
             },
           ]
@@ -448,7 +448,7 @@ export const printDeliveryReceiptPDF = async ({
     },
   };
 
-  applyCommonStyles(docDefinition, TEXT, SUBTEXT);
+  applyCommonStyles(docDefinition, TEXT, SUBTEXT, CODETEXT);
   openPdf(docDefinition);
 };
 

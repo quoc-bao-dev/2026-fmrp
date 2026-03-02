@@ -21,7 +21,7 @@ export const printImportPDF = async ({
   await ensureTimesNewRomanFonts();
 
   const dataCompany = dataSeting;
-  const { PRIMARY, BORDER, TEXT, SUBTEXT } = PDF_THEME;
+  const { PRIMARY, BORDER, TEXT, SUBTEXT, CODETEXT } = PDF_THEME;
 
   const formatNumber = number => {
     if (typeof number == 'string') {
@@ -206,7 +206,7 @@ export const printImportPDF = async ({
                         text: productCode,
                         fontSize: 9,
                         italics: true,
-                        color: SUBTEXT,
+                        color: CODETEXT,
                         margin: [0, 1, 0, 0],
                       },
                     ]
@@ -535,7 +535,7 @@ export const printImportPDF = async ({
     },
   };
 
-  applyCommonStyles(docDefinition, TEXT, SUBTEXT);
+  applyCommonStyles(docDefinition, TEXT, SUBTEXT, CODETEXT);
 
   try {
     openPdf(docDefinition);

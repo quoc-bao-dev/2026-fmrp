@@ -18,7 +18,7 @@ export const printOrderPDF = async ({ data, dataLang, dataSeting }) => {
   }
 
   const dataCompany = dataSeting;
-  const { PRIMARY, BORDER, TEXT, SUBTEXT } = PDF_THEME;
+  const { PRIMARY, BORDER, TEXT, SUBTEXT, CODETEXT } = PDF_THEME;
 
   // Debug: Kiểm tra dữ liệu
   // console.log('printOrderPDF - data:', data);
@@ -201,7 +201,7 @@ export const printOrderPDF = async ({ data, dataLang, dataSeting }) => {
                       {
                         text: productCode,
                         fontSize: 9,
-                        color: SUBTEXT,
+                        color: CODETEXT,
                         margin: [0, 1, 0, 0],
                       },
                     ]
@@ -424,7 +424,7 @@ export const printOrderPDF = async ({ data, dataLang, dataSeting }) => {
     },
   };
 
-  applyCommonStyles(docDefinition, TEXT, SUBTEXT);
+  applyCommonStyles(docDefinition, TEXT, SUBTEXT, CODETEXT);
 
   try {
     openPdf(docDefinition);

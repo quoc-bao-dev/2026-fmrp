@@ -13,7 +13,7 @@ export const printSalesOrderPDF = async ({ data, dataLang, dataSeting }) => {
   await ensureTimesNewRomanFonts();
 
   const dataCompany = dataSeting;
-  const { PRIMARY, BORDER, TEXT, SUBTEXT } = PDF_THEME;
+  const { PRIMARY, BORDER, TEXT, SUBTEXT, CODETEXT } = PDF_THEME;
 
   const formatNumber = number => {
     if (typeof number == 'string') {
@@ -169,7 +169,7 @@ export const printSalesOrderPDF = async ({ data, dataLang, dataSeting }) => {
                     text: productCode
                       ? [
                         { text: productName, fontSize: 10 },
-                        { text: `\n${productCode}`, fontSize: 9, color: SUBTEXT },
+                        { text: `\n${productCode}`, fontSize: 9, color: CODETEXT },
                       ]
                       : productName,
                     alignment: 'left',
@@ -343,7 +343,7 @@ export const printSalesOrderPDF = async ({ data, dataLang, dataSeting }) => {
     },
   };
 
-  applyCommonStyles(docDefinition, TEXT, SUBTEXT);
+  applyCommonStyles(docDefinition, TEXT, SUBTEXT, CODETEXT);
 
   try {
     openPdf(docDefinition);

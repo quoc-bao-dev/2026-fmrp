@@ -12,7 +12,7 @@ export const printReturnSalesPDF = async ({ data, dataLang, dataSeting, dataMate
         await ensureTimesNewRomanFonts();
 
         const dataCompany = dataSeting;
-        const { PRIMARY, BORDER, TEXT, SUBTEXT } = PDF_THEME;
+        const { PRIMARY, BORDER, TEXT, SUBTEXT, CODETEXT } = PDF_THEME;
 
         const formatMoney = number => {
             if (typeof number == 'string') {
@@ -190,7 +190,7 @@ export const printReturnSalesPDF = async ({ data, dataLang, dataSeting, dataMate
                                         stack.push({
                                             text: productCode,
                                             fontSize: 9,
-                                            color: SUBTEXT,
+                                            color: CODETEXT,
                                             margin: [0, 1, 0, 0],
                                         });
                                     }
@@ -587,7 +587,7 @@ export const printReturnSalesPDF = async ({ data, dataLang, dataSeting, dataMate
         };
 
         // Bổ sung style riêng cho template này (không đụng global `styles`)
-        applyCommonStyles(docDefinition, TEXT, SUBTEXT);
+        applyCommonStyles(docDefinition, TEXT, SUBTEXT, CODETEXT);
 
         // Tạo và mở PDF
         openPdf(docDefinition);

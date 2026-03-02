@@ -9,7 +9,7 @@ export const printProductionWarehousePDF = async ({ data, dataLang, dataSeting, 
     await ensureTimesNewRomanFonts();
 
     const dataCompany = dataSeting;
-    const { PRIMARY, BORDER, TEXT, SUBTEXT } = PDF_THEME;
+    const { PRIMARY, BORDER, TEXT, SUBTEXT, CODETEXT } = PDF_THEME;
 
     const formatNumber = number => {
         if (typeof number == 'string') {
@@ -162,7 +162,7 @@ export const printProductionWarehousePDF = async ({ data, dataLang, dataSeting, 
                                     stack.push({
                                         text: productCode,
                                         fontSize: 9,
-                                        color: SUBTEXT,
+                                        color: CODETEXT,
                                         margin: [0, 1, 0, 0],
                                     });
                                 }
@@ -440,7 +440,7 @@ export const printProductionWarehousePDF = async ({ data, dataLang, dataSeting, 
     };
 
     // Bổ sung style riêng cho template này (không đụng global `styles`)
-    applyCommonStyles(docDefinition, TEXT, SUBTEXT);
+    applyCommonStyles(docDefinition, TEXT, SUBTEXT, CODETEXT);
 
     // Tạo và mở PDF
     openPdf(docDefinition);

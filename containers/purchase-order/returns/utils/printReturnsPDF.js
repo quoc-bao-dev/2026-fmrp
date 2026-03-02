@@ -28,7 +28,7 @@ export const printReturnsPDF = async ({
     await ensureTimesNewRomanFonts();
 
     const dataCompany = dataSeting;
-    const { PRIMARY, BORDER, TEXT, SUBTEXT } = PDF_THEME;
+    const { PRIMARY, BORDER, TEXT, SUBTEXT, CODETEXT } = PDF_THEME;
 
     const formatNumber = number => {
         if (typeof number === 'string') return formatNumberConfig(+number ? +number : 0, dataSeting);
@@ -207,7 +207,7 @@ export const printReturnsPDF = async ({
                         text: productCode,
                         fontSize: 9,
                         italics: metaLines.length > 0, // nếu có phần dưới nghiêng → code cũng nghiêng theo
-                        color: SUBTEXT,
+                        color: CODETEXT,
                         margin: [0, 1, 0, 0],
                     },
                 ]
@@ -393,7 +393,7 @@ export const printReturnsPDF = async ({
         },
     };
 
-    applyCommonStyles(docDefinition, TEXT, SUBTEXT);
+    applyCommonStyles(docDefinition, TEXT, SUBTEXT, CODETEXT);
     openPdf(docDefinition);
 };
 
