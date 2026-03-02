@@ -159,7 +159,7 @@ export const printRecallPDF = async ({ data, dataLang, dataSeting, dataMaterialE
                     ? [
                       {
                         text: productCode,
-                        fontSize: 9,
+                        fontSize: 8,
                         color: CODETEXT,
                         margin: [0, 1, 0, 0],
                       },

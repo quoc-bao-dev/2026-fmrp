@@ -159,7 +159,7 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
                     ? [
                       {
                         text: productCode,
-                        fontSize: 9,
+                        fontSize: 8,
                         color: CODETEXT,
                         margin: [0, 1, 0, 0],
                       },

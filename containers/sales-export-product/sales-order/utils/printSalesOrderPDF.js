@@ -169,7 +169,7 @@ export const printSalesOrderPDF = async ({ data, dataLang, dataSeting }) => {
                     text: productCode
                       ? [
                         { text: productName, fontSize: 10 },
-                        { text: `\n${productCode}`, fontSize: 9, color: CODETEXT },
+                        { text: `\n${productCode}`, fontSize: 8, color: CODETEXT },
                       ]
                       : productName,
                     alignment: 'left',
