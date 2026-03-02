@@ -132,6 +132,7 @@ export const printInternalPlanPDF = async ({ data, dataLang, dataSeting }) => {
             ],
             ...items.map((item, index) => {
               const itemName = item?.item_name || '';
+              const itemCode = item?.item_code || item?.code || '';
               const variation = item?.product_variation || '';
               const unit = item?.unit_name || '';
               const qty = item?.quantity || 0;
@@ -139,6 +140,16 @@ export const printInternalPlanPDF = async ({ data, dataLang, dataSeting }) => {
 
               const itemNameStack = [
                 { text: itemName, fontSize: 10, margin: [0, 1, 0, 0] },
+                ...(itemCode
+                  ? [
+                    {
+                      text: itemCode,
+                      fontSize: 9,
+                      color: SUBTEXT,
+                      margin: [0, 1, 0, 0],
+                    },
+                  ]
+                  : []),
               ];
 
               return [
