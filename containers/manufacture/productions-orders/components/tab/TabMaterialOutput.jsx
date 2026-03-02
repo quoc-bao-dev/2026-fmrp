@@ -373,9 +373,8 @@ const TabMaterialOutputTab = ({ dataLang, ...props }) => {
                   <div
                     key={`product-${index}`}
                     // onClick={() => handleShowModel(product)}
-                    className={`${
-                      filteredData?.slice(0, limit)?.length - 1 !== index ? 'border-[#F3F3F4]' : 'border-transparent'
-                    } border-b col-span-16 grid grid-cols-16 gap-2 items-start group hover:bg-gray-100 cursor-pointer transition-all duration-150 ease-in-out`}
+                    className={`${filteredData?.slice(0, limit)?.length - 1 !== index ? 'border-[#F3F3F4]' : 'border-transparent'
+                      } border-b col-span-16 grid grid-cols-16 gap-2 items-start group hover:bg-gray-100 cursor-pointer transition-all duration-150 ease-in-out`}
                   >
                     <h4 className="col-span-1 flex items-center justify-center size-full text-center text-[#141522] font-semibold text-sm-default uppercase 3xl:py-4 py-2 px-1">
                       {index + 1 ?? '-'}
@@ -422,14 +421,14 @@ const TabMaterialOutputTab = ({ dataLang, ...props }) => {
                           product?.type_products === 'products'
                             ? 0
                             : product?.type_products === 'semi_products'
-                            ? 1
-                            : product?.type_products === 'out_side'
-                            ? 2
-                            : product?.type_products === 'materials'
-                            ? 3
-                            : product?.type_products === 'semi_products_outside'
-                            ? 4
-                            : null
+                              ? 1
+                              : product?.type_products === 'out_side'
+                                ? 2
+                                : product?.type_products === 'materials'
+                                  ? 3
+                                  : product?.type_products === 'semi_products_outside'
+                                    ? 4
+                                    : null
                         }
                         className={'!px-2 !py-1 !rounded-[4px] !font-normal 3xl:text-sm xl:text-xs text-[13px]'}
                         dataLang={dataLang}
