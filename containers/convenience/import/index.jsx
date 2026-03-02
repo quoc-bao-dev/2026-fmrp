@@ -720,14 +720,14 @@ const Import = (props) => {
             id: 6,
             name: "Định mức BOM",
         },
-        // {
-        //     id: 7,
-        //     name: "Đơn hàng bán",
-        // },
-        // {
-        //     id: 8,
-        //     name: "Kế hoạch nội bộ",
-        // },
+        {
+            id: 7,
+            name: "Đơn hàng bán",
+        },
+        {
+            id: 8,
+            name: "Kế hoạch nội bộ",
+        },
     ];
 
     // validate dữ liệu rồi post
