@@ -151,10 +151,21 @@ export const printProductionWarehousePDF = async ({ data, dataLang, dataSeting, 
                             ? data.items.map((item, index) => {
                                 const stack = [];
                                 const stackBt = [];
+                                const productName = item?.item?.item_name || item?.item?.name || item?.name || '';
+                                const productCode = item?.item?.code || item?.code || '';
+
                                 stack.push({
-                                    text: item?.item?.name ? item?.item?.name : '',
+                                    text: productName,
                                     fontSize: 10,
                                 });
+                                if (productCode) {
+                                    stack.push({
+                                        text: productCode,
+                                        fontSize: 9,
+                                        color: SUBTEXT,
+                                        margin: [0, 1, 0, 0],
+                                    });
+                                }
                                 stackBt.push({
                                     text: `Biến thể: ${item?.item?.product_variation || '(NONE)'}`,
                                     fontSize: 9,

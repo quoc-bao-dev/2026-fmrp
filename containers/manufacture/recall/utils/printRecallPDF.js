@@ -147,126 +147,139 @@ export const printRecallPDF = async ({ data, dataLang, dataSeting, dataMaterialE
             headerRow,
             ...(data?.items?.length > 0
               ? data.items.map((item, index) => {
-                  const nameStack = [
-                    {
-                      text: item?.item?.name ? item?.item?.name : '',
-                      fontSize: 10,
-                    },
-                  ];
+                const productName = item?.item?.item_name || item?.item?.name || item?.name || '';
+                const productCode = item?.item?.code || item?.code || '';
 
-                  const infoStack = [];
+                const nameStack = [
+                  {
+                    text: productName,
+                    fontSize: 10,
+                  },
+                  ...(productCode
+                    ? [
+                      {
+                        text: productCode,
+                        fontSize: 9,
+                        color: SUBTEXT,
+                        margin: [0, 1, 0, 0],
+                      },
+                    ]
+                    : []),
+                ];
 
+                const infoStack = [];
+
+                infoStack.push({
+                  text: `Biến thể: ${item?.item?.product_variation || '(NONE)'}`,
+                  fontSize: 9,
+                });
+
+                if (dataProductSerial?.is_enable === '1') {
                   infoStack.push({
-                    text: `Biến thể: ${item?.item?.product_variation || '(NONE)'}`,
-                    fontSize: 9,
+                    text: [
+                      { text: 'Serial: ', fontSize: 9 },
+                      {
+                        text: item.serial == null || item.serial == '' ? '-' : item.serial,
+                        fontSize: 9,
+                      },
+                    ],
                   });
-
-                  if (dataProductSerial?.is_enable === '1') {
-                    infoStack.push({
-                      text: [
-                        { text: 'Serial: ', fontSize: 9 },
-                        {
-                          text: item.serial == null || item.serial == '' ? '-' : item.serial,
-                          fontSize: 9,
-                        },
-                      ],
-                    });
-                  }
-
-                  if (dataMaterialExpiry?.is_enable === '1') {
-                    infoStack.push({
-                      text: [
-                        { text: 'Lot: ', fontSize: 9 },
-                        {
-                          text: item.lot == null || item.lot == '' ? '-' : item.lot,
-                          fontSize: 9,
-                        },
-                      ],
-                    });
-                    infoStack.push({
-                      text: [
-                        { text: 'Date: ', fontSize: 9 },
-                        {
-                          text: item.expiration_date
-                            ? formatMoment(item.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG)
-                            : '-',
-                          fontSize: 8.5,
-                        },
-                      ],
-                    });
-                  }
-                  
-                  // Hiển thị warehousePropertyLabels cho material
-                  if (item?.item_type === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0) {
-                    const propertyStack = warehousePropertyLabels
-                        .map(({ key, label }) => {
-                            if (!label) return null;
-                            const value = item?.item?.[key] ?? item?.[key];
-                            // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
-                            if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
-                            return {
-                                text: [
-                                    {
-                                        text: `${label}: `,
-                                        fontSize: 9,
-                                    },
-                                    {
-                                        text: value == null || value === '' ? '-' : value,
-                                        fontSize: 9,
-                                    },
-                                ],
-                                fontSize: 9,
-                            };
-                        })
-                        .filter(Boolean);
-                    if (propertyStack.length > 0) {
-                        infoStack.push(...propertyStack);
-                    }
                 }
 
-                  const unitText =
-                    item?.unit_name_manufacture && hasManufactureQty
-                      ? item?.unit_name_manufacture
-                      : item?.unit_name_parent || item?.item?.unit_name || item?.item?.unit || '';
+                if (dataMaterialExpiry?.is_enable === '1') {
+                  infoStack.push({
+                    text: [
+                      { text: 'Lot: ', fontSize: 9 },
+                      {
+                        text: item.lot == null || item.lot == '' ? '-' : item.lot,
+                        fontSize: 9,
+                      },
+                    ],
+                  });
+                  infoStack.push({
+                    text: [
+                      { text: 'Date: ', fontSize: 9 },
+                      {
+                        text: item.expiration_date
+                          ? formatMoment(item.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG)
+                          : '-',
+                        fontSize: 8.5,
+                      },
+                    ],
+                  });
+                }
 
-                  const qtyValue =
-                    hasManufactureQty && Number(item?.quantity_manufacture || 0) !== 0
-                      ? item?.quantity_manufacture
-                      : item?.quantity;
+                // Hiển thị warehousePropertyLabels cho material
+                if (item?.item_type === 'material' && Array.isArray(warehousePropertyLabels) && warehousePropertyLabels.length > 0) {
+                  const propertyStack = warehousePropertyLabels
+                    .map(({ key, label }) => {
+                      if (!label) return null;
+                      const value = item?.item?.[key] ?? item?.[key];
+                      // Nếu isWarehousePropertiesEnabled tắt và thuộc tính không có giá trị → ẩn
+                      if (!isWarehousePropertiesEnabled && (value == null || value === '')) return null;
+                      return {
+                        text: [
+                          {
+                            text: `${label}: `,
+                            fontSize: 9,
+                          },
+                          {
+                            text: value == null || value === '' ? '-' : value,
+                            fontSize: 9,
+                          },
+                        ],
+                        fontSize: 9,
+                      };
+                    })
+                    .filter(Boolean);
+                  if (propertyStack.length > 0) {
+                    infoStack.push(...propertyStack);
+                  }
+                }
 
-                  return [
-                    {
-                      text: `${index + 1}`,
-                      alignment: 'center',
-                      fontSize: 9,
-                    },
-                    {
-                      stack: nameStack,
-                    },
-                    {
-                      stack: infoStack,
-                    },
-                    {
-                      text: `${item?.warehouse?.location_name || ''}`,
-                      fontSize: 9,
-                      alignment: 'left',
-                    },
-                    {
-                      text: unitText,
-                      alignment: 'center',
-                      fontSize: 9,
-                    },
-                    {
-                      text: qtyValue != null ? `${formatNumber(+qtyValue)}` : '',
-                      alignment: 'center',
-                      fontSize: 9,
-                    },
-                    {
-                      text: item?.note ? item?.note : '',
-                      fontSize: 9,
-                    },
-                  ];
-                })
+                const unitText =
+                  item?.unit_name_manufacture && hasManufactureQty
+                    ? item?.unit_name_manufacture
+                    : item?.unit_name_parent || item?.item?.unit_name || item?.item?.unit || '';
+
+                const qtyValue =
+                  hasManufactureQty && Number(item?.quantity_manufacture || 0) !== 0
+                    ? item?.quantity_manufacture
+                    : item?.quantity;
+
+                return [
+                  {
+                    text: `${index + 1}`,
+                    alignment: 'center',
+                    fontSize: 9,
+                  },
+                  {
+                    stack: nameStack,
+                  },
+                  {
+                    stack: infoStack,
+                  },
+                  {
+                    text: `${item?.warehouse?.location_name || ''}`,
+                    fontSize: 9,
+                    alignment: 'left',
+                  },
+                  {
+                    text: unitText,
+                    alignment: 'center',
+                    fontSize: 9,
+                  },
+                  {
+                    text: qtyValue != null ? `${formatNumber(+qtyValue)}` : '',
+                    alignment: 'center',
+                    fontSize: 9,
+                  },
+                  {
+                    text: item?.note ? item?.note : '',
+                    fontSize: 9,
+                  },
+                ];
+              })
               : []),
             [
               {

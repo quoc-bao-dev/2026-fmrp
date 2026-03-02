@@ -195,17 +195,31 @@ export const printImportPDF = async ({
                 const amountValue = item?.amount || 0;
                 const metaLines = buildItemMetaLines(item);
 
+                const productName = item?.item?.item_name || item?.item?.name || item?.name || '';
+                const productCode = item?.item?.code || item?.code || '';
+
                 const itemNameStack = [
-                  { text: item?.item?.name || item?.name || '', fontSize: 10, margin: [0, 1, 0, 0] },
+                  { text: productName, fontSize: 10, margin: [0, 1, 0, 0] },
+                  ...(productCode
+                    ? [
+                      {
+                        text: productCode,
+                        fontSize: 9,
+                        italics: true,
+                        color: SUBTEXT,
+                        margin: [0, 1, 0, 0],
+                      },
+                    ]
+                    : []),
                   ...(metaLines.length
                     ? [
-                        {
-                          text: metaLines.join('\n'),
-                          fontSize: 9,
-                          italics: true,
-                          margin: [0, 2, 0, 0],
-                        },
-                      ]
+                      {
+                        text: metaLines.join('\n'),
+                        fontSize: 9,
+                        italics: true,
+                        margin: [0, 2, 0, 0],
+                      },
+                    ]
                     : []),
                 ];
 

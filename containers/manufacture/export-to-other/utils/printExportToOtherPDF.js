@@ -147,11 +147,24 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
             headerRow,
             ...(data?.items?.length > 0
               ? data.items.map((item, index) => {
+                const productName = item?.item?.item_name || item?.item?.name || item?.name || '';
+                const productCode = item?.item?.code || item?.code || '';
+
                 const nameStack = [
                   {
-                    text: item?.item?.name ? item?.item?.name : '',
+                    text: productName,
                     fontSize: 10,
                   },
+                  ...(productCode
+                    ? [
+                      {
+                        text: productCode,
+                        fontSize: 9,
+                        color: SUBTEXT,
+                        margin: [0, 1, 0, 0],
+                      },
+                    ]
+                    : []),
                 ];
 
                 const infoStack = [];
