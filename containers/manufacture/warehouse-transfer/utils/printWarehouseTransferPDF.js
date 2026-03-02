@@ -166,14 +166,14 @@ export const printWarehouseTransferPDF = async ({ data, dataLang, dataSeting, da
                                 if (productCode) {
                                     stack.push({
                                         text: productCode,
-                                        fontSize: 9,
+                                        fontSize: 8,
                                         color: CODETEXT,
                                         margin: [0, 1, 0, 0],
                                     });
                                 }
                                 stackBt.push({
                                     text: `Biến thể: ${item?.item?.product_variation || '(NONE)'}`,
-                                    fontSize: 9,
+                                    fontSize: 8,
                                 });
 
                                 if (dataProductSerial?.is_enable === '1') {
@@ -182,11 +182,11 @@ export const printWarehouseTransferPDF = async ({ data, dataLang, dataSeting, da
                                             text: [
                                                 {
                                                     text: 'Serial: ',
-                                                    fontSize: 9,
+                                                    fontSize: 8,
                                                 },
                                                 {
                                                     text: item?.item?.serial == null || item?.item?.serial == '' ? '-' : item?.item?.serial,
-                                                    fontSize: 9,
+                                                    fontSize: 8,
                                                 },
                                             ],
                                         },
@@ -200,27 +200,27 @@ export const printWarehouseTransferPDF = async ({ data, dataLang, dataSeting, da
                                             text: [
                                                 {
                                                     text: 'Lot: ',
-                                                    fontSize: 9,
+                                                    fontSize: 8,
                                                 },
                                                 {
                                                     text: item?.item?.lot == null || item?.item?.lot == '' ? '-' : item?.item?.lot,
-                                                    fontSize: 9,
+                                                    fontSize: 8,
                                                 },
                                             ],
-                                            fontSize: 9,
+                                            fontSize: 8,
                                         },
                                         {
                                             text: [
                                                 {
                                                     text: 'Date: ',
-                                                    fontSize: 9,
+                                                    fontSize: 8,
                                                 },
                                                 {
                                                     text: item?.item?.expiration_date ? formatMoment(item?.item?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-',
-                                                    fontSize: 8.5,
+                                                    fontSize: 8,
                                                 },
                                             ],
-                                            fontSize: 9,
+                                            fontSize: 8,
                                         },
                                     ];
                                     stackBt.push(subStack);
@@ -238,14 +238,14 @@ export const printWarehouseTransferPDF = async ({ data, dataLang, dataSeting, da
                                                 text: [
                                                     {
                                                         text: `${label}: `,
-                                                        fontSize: 9,
+                                                        fontSize: 8,
                                                     },
                                                     {
                                                         text: value == null || value === '' ? '-' : value,
-                                                        fontSize: 9,
+                                                        fontSize: 8,
                                                     },
                                                 ],
-                                                fontSize: 9,
+                                                fontSize: 8,
                                             };
                                         })
                                         .filter(Boolean);
@@ -257,7 +257,7 @@ export const printWarehouseTransferPDF = async ({ data, dataLang, dataSeting, da
                                     {
                                         text: `${index + 1}`,
                                         alignment: 'center',
-                                        fontSize: 9,
+                                        fontSize: 8,
                                     },
                                     {
                                         stack: stack,
@@ -267,27 +267,27 @@ export const printWarehouseTransferPDF = async ({ data, dataLang, dataSeting, da
                                     },
                                     {
                                         text: `${item?.warehouse_location?.warehouse_name || ''} - ${item?.warehouse_location?.location_name || ''}`,
-                                        fontSize: 9,
+                                        fontSize: 8,
                                         alignment: 'left',
                                     },
                                     {
                                         text: `${item?.warehouse_location_to?.warehouse_name || ''} - ${item?.warehouse_location_to?.location_name || ''}`,
-                                        fontSize: 9,
+                                        fontSize: 8,
                                         alignment: 'left',
                                     },
                                     {
                                         text: item?.item?.unit_name ? item?.item?.unit_name : '',
-                                        fontSize: 9,
+                                        fontSize: 8,
                                         alignment: 'center',
                                     },
                                     {
                                         text: item?.quantity ? `${formatNumber(+item?.quantity)}` : '',
                                         alignment: 'center',
-                                        fontSize: 9,
+                                        fontSize: 8,
                                     },
                                     {
                                         text: item?.note ? item?.note : '',
-                                        fontSize: 9,
+                                        fontSize: 8,
                                     },
                                 ];
                             })

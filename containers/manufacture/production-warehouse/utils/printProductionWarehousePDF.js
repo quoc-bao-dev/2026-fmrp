@@ -161,14 +161,14 @@ export const printProductionWarehousePDF = async ({ data, dataLang, dataSeting, 
                                 if (productCode) {
                                     stack.push({
                                         text: productCode,
-                                        fontSize: 9,
+                                        fontSize: 8,
                                         color: CODETEXT,
                                         margin: [0, 1, 0, 0],
                                     });
                                 }
                                 stackBt.push({
                                     text: `Biến thể: ${item?.item?.product_variation || '(NONE)'}`,
-                                    fontSize: 9,
+                                    fontSize: 8,
                                 });
 
                                 if (dataProductSerial?.is_enable === '1') {
@@ -177,11 +177,11 @@ export const printProductionWarehousePDF = async ({ data, dataLang, dataSeting, 
                                             text: [
                                                 {
                                                     text: 'Serial: ',
-                                                    fontSize: 9,
+                                                    fontSize: 8,
                                                 },
                                                 {
                                                     text: item.serial == null || item.serial == '' ? '-' : item.serial,
-                                                    fontSize: 9,
+                                                    fontSize: 8,
                                                 },
                                             ],
                                         },
@@ -195,11 +195,11 @@ export const printProductionWarehousePDF = async ({ data, dataLang, dataSeting, 
                                             text: [
                                                 {
                                                     text: 'Lot: ',
-                                                    fontSize: 9,
+                                                    fontSize: 8,
                                                 },
                                                 {
                                                     text: item.lot == null || item.lot == '' ? '-' : item.lot,
-                                                    fontSize: 9,
+                                                    fontSize: 8,
                                                 },
                                             ],
                                             fontSize: 9,
@@ -208,14 +208,14 @@ export const printProductionWarehousePDF = async ({ data, dataLang, dataSeting, 
                                             text: [
                                                 {
                                                     text: 'Date: ',
-                                                    fontSize: 9,
+                                                    fontSize: 8,
                                                 },
                                                 {
                                                     text: item.expiration_date ? formatMoment(item.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-',
-                                                    fontSize: 8.5,
+                                                    fontSize: 8,
                                                 },
                                             ],
-                                            fontSize: 9,
+                                            fontSize: 8,
                                         },
                                     ];
                                     stackBt.push(subStack);
@@ -233,14 +233,14 @@ export const printProductionWarehousePDF = async ({ data, dataLang, dataSeting, 
                                                 text: [
                                                     {
                                                         text: `${label}: `,
-                                                        fontSize: 9,
+                                                        fontSize: 8,
                                                     },
                                                     {
                                                         text: value == null || value === '' ? '-' : value,
-                                                        fontSize: 9,
+                                                        fontSize: 8,
                                                     },
                                                 ],
-                                                fontSize: 9,
+                                                fontSize: 8,
                                             };
                                         })
                                         .filter(Boolean);
@@ -262,32 +262,32 @@ export const printProductionWarehousePDF = async ({ data, dataLang, dataSeting, 
                                     },
                                     {
                                         text: `${item?.warehouse_location?.warehouse_name || ''} - ${item?.warehouse_location?.location_name || ''}`,
-                                        fontSize: 9,
+                                        fontSize: 8,
                                         alignment: 'left',
                                     },
                                     {
                                         text: item?.unit_data?.unit ? item?.unit_data?.unit : '',
-                                        fontSize: 9,
+                                        fontSize: 8,
                                         alignment: 'center',
                                     },
                                     {
                                         text: item?.quantity ? `${formatNumber(+item?.quantity)}` : '',
                                         alignment: 'center',
-                                        fontSize: 9,
+                                        fontSize: 8,
                                     },
                                     {
                                         text: item?.coefficient ? `${formatNumber(+item?.coefficient)}` : '',
                                         alignment: 'center',
-                                        fontSize: 9,
+                                        fontSize: 8,
                                     },
                                     {
                                         text: item?.quantity_exchange ? `${formatNumber(+item?.quantity_exchange)} ${item?.unit_data?.unit}` : '',
                                         alignment: 'center',
-                                        fontSize: 9,
+                                        fontSize: 8,
                                     },
                                     {
                                         text: item?.note ? item?.note : '',
-                                        fontSize: 9,
+                                        fontSize: 8,
                                     },
                                 ];
                             })

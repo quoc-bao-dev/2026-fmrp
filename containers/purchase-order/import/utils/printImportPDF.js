@@ -204,7 +204,7 @@ export const printImportPDF = async ({
                     ? [
                       {
                         text: productCode,
-                        fontSize: 9,
+                        fontSize: 8,
                         italics: true,
                         color: CODETEXT,
                         margin: [0, 1, 0, 0],
