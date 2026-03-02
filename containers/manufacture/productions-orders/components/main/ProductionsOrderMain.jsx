@@ -62,6 +62,7 @@ import DetailProductionOrderList from '../ui/DetailProductionOrderList';
 import PlaningProductionOrder from '../ui/PlaningProductionOrder';
 import TabKeepStock from '../ui/tabKeepStock';
 import TabPieceworkWage from '../ui/TabPieceworkWage';
+import TabMaterialOutputHistory from '../ui/TabMaterialOutputHistory';
 import { listDropdownCompleteStage, listLsxStatus } from './constants/listData';
 
 const initialState = {
@@ -262,6 +263,13 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
         name: 'Giữ kho & Mua hàng',
         count: keepStockPurchaseCount,
         type: 'keepStock',
+      },
+      // Lịch sử xuất NVL/ BTP
+      {
+        id: 'history_material_output',
+        name: 'Lịch sử xuất NVL/ BTP',
+        count: 0,
+        type: 'materialOutputHistory',
       },
       {
         id: '4',
@@ -1756,6 +1764,9 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                 />
               )}
               {isStateProvider?.productionsOrders?.isTabList?.type == 'keepStock' && <TabKeepStock {...shareProps} />}
+              {isStateProvider?.productionsOrders?.isTabList?.type == 'materialOutputHistory' && (
+                <TabMaterialOutputHistory dataLang={dataLang} />
+              )}
               {isStateProvider?.productionsOrders?.isTabList?.type == 'pieceworkWage' && (
                 <TabPieceworkWage
                   {...shareProps}
