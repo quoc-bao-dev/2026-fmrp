@@ -5,7 +5,7 @@ const ImportFileTemplate = ({ dataLang, tabPage }) => {
     const file = {
         fileTab5: `/file/products/import_stages.xlsx?vs=${Date.now()}`,
         fileTab6: `/file/products/import_bom.xlsx?vs=${Date.now()}`,
-        fileTab7: `/file/sales/import_sales_order.xlsx?vs=${Date.now()}`,
+        fileTab7: `/file/orders/mau_import_don_hang.xlsx?vs=${Date.now()}`,
         fileTab8: `/file/production/import_internal_plan.xlsx?vs=${Date.now()}`,
     };
 

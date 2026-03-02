@@ -235,7 +235,15 @@ console.log(dataTheOrder)
   });
 
   const resetValue = () => {
-    if (isKeyState?.type === 'supplier') {
+    if (isKeyState?.type === 'supplier_with_order') {
+      // Người dùng chọn "Đồng ý" khi thay đổi nhà cung cấp và có đơn đặt hàng:
+      // - Cập nhật lại nhà cung cấp
+      // - Xóa đơn đặt hàng và danh sách mặt hàng
+      sIdSupplier(isKeyState?.value);
+      sIdTheOrder(null);
+      sListData([]);
+      handleQueryId({ status: false });
+    } else if (isKeyState?.type === 'supplier') {
       // Người dùng chọn "Đồng ý" sau khi đổi nhà cung cấp:
       // - Cập nhật lại nhà cung cấp
       // - Gọi API mainstream goods để đồng bộ giá và log dữ liệu trả về
@@ -343,9 +351,12 @@ console.log(dataTheOrder)
     } else if (type === 'date') {
       sDate(formatMoment(value.target.value, FORMAT_MOMENT.DATE_TIME_LONG));
     } else if (type === 'supplier' && idSupplier != value) {
-      // Nếu đang có danh sách mặt hàng thì mới hỏi có muốn đồng bộ lại giá hay không
-      if (listData?.length > 0 && !!value) {
-        // Mở popup hỏi có muốn đồng bộ lại giá từ nhà cung cấp hay không
+      // Nếu có chọn đơn đặt hàng thì hiển thị popup confirm để người dùng quyết định
+      if (idTheOrder) {
+        // Mở popup hỏi có muốn thay đổi nhà cung cấp không (sẽ xóa đơn đặt hàng và mặt hàng)
+        handleQueryId({ status: true, initialKey: { type: 'supplier_with_order', value } });
+      } else if (listData?.length > 0 && !!value) {
+        // Nếu đang có danh sách mặt hàng (và không có đơn đặt hàng) thì hỏi có muốn đồng bộ lại giá hay không
         handleQueryId({ status: true, initialKey: { type, value } });
       } else {
         // Nếu chưa có mặt hàng nào, chỉ cần đổi nhà cung cấp, không bật popup
@@ -1265,14 +1276,29 @@ console.log(dataTheOrder)
       popupConfim={
         <PopupConfim
           dataLang={dataLang}
-          type={isKeyState?.type === 'supplier' ? 'success' : 'warning'}
-          title={isKeyState?.type === 'supplier' ? 'Cập nhật giá lại cho sản phẩm ?' : TITLE_DELETE_ITEMS}
-          subtitle={isKeyState?.type === 'supplier' ? 'Bạn có muốn hệ thống cập nhật lại giá sản phẩm sau khi chọn nhà cung cấp?' : CONFIRMATION_OF_CHANGES}
+          type={isKeyState?.type === 'supplier_with_order' ? 'warning' : isKeyState?.type === 'supplier' ? 'success' : 'warning'}
+          title={
+            isKeyState?.type === 'supplier_with_order'
+              ? 'Xác nhận thay đổi nhà cung cấp'
+              : isKeyState?.type === 'supplier'
+              ? 'Cập nhật giá lại cho sản phẩm ?'
+              : TITLE_DELETE_ITEMS
+          }
+          subtitle={
+            isKeyState?.type === 'supplier_with_order'
+              ? 'Bạn có muốn thay đổi nhà cung cấp? Đơn đặt hàng và danh sách mặt hàng sẽ bị xóa.'
+              : isKeyState?.type === 'supplier'
+              ? 'Bạn có muốn hệ thống cập nhật lại giá sản phẩm sau khi chọn nhà cung cấp?'
+              : CONFIRMATION_OF_CHANGES
+          }
           isOpen={isOpen}
           save={resetValue}
           nameModel={'change_item'}
           cancel={() => {
-            if (isKeyState?.type === 'supplier') {
+            if (isKeyState?.type === 'supplier_with_order') {
+              // Người dùng chọn "Không": không thay đổi nhà cung cấp, giữ nguyên đơn đặt hàng và mặt hàng
+              // Không làm gì cả, chỉ đóng popup
+            } else if (isKeyState?.type === 'supplier') {
               // Người dùng chọn "Không": chỉ đổi nhà cung cấp, không gọi API đồng bộ giá
               sIdSupplier(isKeyState?.value);
             }

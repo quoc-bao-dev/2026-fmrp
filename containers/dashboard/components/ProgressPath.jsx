@@ -2,6 +2,7 @@ import { MobileIcon } from '@/components/icons';
 import ProgressCollapseArrowIcon from '@/components/icons/common/ProgressCollapseArrowIcon';
 import ProgressWatermarkIcon from '@/components/icons/common/ProgressWatermarkIcon';
 import { useGetInfoStepUse } from '@/hooks/dashboard/useGetInfoStepUse';
+import useSetingServer from '@/hooks/useConfigNumber';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { MdArrowOutward } from 'react-icons/md';
@@ -18,6 +19,7 @@ const ProgressPath = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const { data: infoStepUse } = useGetInfoStepUse();
+  const dataSeting = useSetingServer();
 
   // Load trạng thái từ localStorage
   useEffect(() => {
@@ -134,6 +136,13 @@ const ProgressPath = () => {
     setSelectedItem(item);
     setIsPopupOpen(true);
   };
+
+  // Kiểm tra có phải gói pro không
+  const isProPackage = dataSeting?.package !== '1';
+  const total_radio = infoStepUse?.total_radio === 100;
+  if (total_radio && isProPackage) {
+    return null;
+  }
 
   const WrapContainer = () => {
     return (
