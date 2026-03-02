@@ -9,11 +9,11 @@ export const printSalesOrderPDF = async ({ data, dataLang, dataSeting }) => {
     console.error('printSalesOrderPDF: Không có dữ liệu');
     return;
   }
-  
+
   await ensureTimesNewRomanFonts();
 
   const dataCompany = dataSeting;
-  const { PRIMARY, BORDER, TEXT, SUBTEXT } = PDF_THEME;
+  const { PRIMARY, BORDER, TEXT, SUBTEXT, CODETEXT } = PDF_THEME;
 
   const formatNumber = number => {
     if (typeof number == 'string') {
@@ -149,6 +149,8 @@ export const printSalesOrderPDF = async ({ data, dataLang, dataSeting }) => {
             headerRow,
             ...(Array.isArray(data?.items) && data.items.length > 0
               ? data.items.map((item, index) => {
+                const productName = item?.item?.item_name || item?.item?.name || item?.name || '';
+                const productCode = item?.item?.code || item?.code || '';
                 const variationText = item?.item?.product_variation || '';
                 const unitText = item?.item?.unit_name || '';
                 const qtyValue = item?.quantity || 0;
@@ -164,8 +166,13 @@ export const printSalesOrderPDF = async ({ data, dataLang, dataSeting }) => {
                     fontSize: 9,
                   },
                   {
-                    text: item?.item?.name || item?.name || '',
-                    fontSize: 10,
+                    text: productCode
+                      ? [
+                        { text: productName, fontSize: 10 },
+                        { text: `\n${productCode}`, fontSize: 9, color: CODETEXT },
+                      ]
+                      : productName,
+                    alignment: 'left',
                   },
                   {
                     text: variationText,
@@ -336,8 +343,8 @@ export const printSalesOrderPDF = async ({ data, dataLang, dataSeting }) => {
     },
   };
 
-  applyCommonStyles(docDefinition, TEXT, SUBTEXT);
-  
+  applyCommonStyles(docDefinition, TEXT, SUBTEXT, CODETEXT);
+
   try {
     openPdf(docDefinition);
   } catch (error) {

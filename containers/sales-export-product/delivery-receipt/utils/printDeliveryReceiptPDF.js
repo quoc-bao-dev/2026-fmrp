@@ -23,7 +23,7 @@ export const printDeliveryReceiptPDF = async ({
   await ensureTimesNewRomanFonts();
 
   const dataCompany = dataSeting;
-  const { PRIMARY, BORDER, TEXT, SUBTEXT } = PDF_THEME;
+  const { PRIMARY, BORDER, TEXT, SUBTEXT, CODETEXT } = PDF_THEME;
 
   const formatNumber = number => {
     if (typeof number === 'string') {
@@ -90,23 +90,23 @@ export const printDeliveryReceiptPDF = async ({
           },
           ...(addressText
             ? [
-                {
-                  text: [
-                    { text: 'Địa chỉ giao hàng: ', style: 'pwInfoLabel' },
-                    { text: `${addressText}`, style: 'pwInfoValue' },
-                  ],
-                },
-              ]
+              {
+                text: [
+                  { text: 'Địa chỉ giao hàng: ', style: 'pwInfoLabel' },
+                  { text: `${addressText}`, style: 'pwInfoValue' },
+                ],
+              },
+            ]
             : []),
           ...(orderNo
             ? [
-                {
-                  text: [
-                    { text: 'Số đơn hàng: ', style: 'pwInfoLabel' },
-                    { text: `${orderNo}`, style: 'pwInfoValue' },
-                  ],
-                },
-              ]
+              {
+                text: [
+                  { text: 'Số đơn hàng: ', style: 'pwInfoLabel' },
+                  { text: `${orderNo}`, style: 'pwInfoValue' },
+                ],
+              },
+            ]
             : []),
           {
             text: [
@@ -183,18 +183,31 @@ export const printDeliveryReceiptPDF = async ({
         const amountValue = item?.amount || 0;
         const variationText = item?.item?.product_variation || '';
         const metaLines = buildItemMetaLines(item);
+        const productName = item?.item?.item_name || item?.item?.name || '';
+        const productCode = item?.item?.code || '';
 
         const itemNameStack = [
-          { text: item?.item?.name || '', fontSize: 10, margin: [0, 1, 0, 0] },
+          { text: productName, fontSize: 10, margin: [0, 1, 0, 0] },
+          ...(productCode
+            ? [
+              {
+                text: productCode,
+                fontSize: 9,
+                italics: true,
+                color: CODETEXT,
+                margin: [0, 1, 0, 0],
+              },
+            ]
+            : []),
           ...(metaLines.length
             ? [
-                {
-                  text: metaLines.join('\n'),
-                  fontSize: 9,
-                  italics: true,
-                  margin: [0, 2, 0, 0],
-                },
-              ]
+              {
+                text: metaLines.join('\n'),
+                fontSize: 9,
+                italics: true,
+                margin: [0, 2, 0, 0],
+              },
+            ]
             : []),
         ];
 
@@ -288,18 +301,31 @@ export const printDeliveryReceiptPDF = async ({
       const variationText = item?.item?.product_variation || '';
       const noteText = item?.note_item ?? item?.note ?? item?.noteItem ?? '';
       const metaLines = buildItemMetaLines(item);
+      const productName = item?.item?.item_name || item?.item?.name || '';
+      const productCode = item?.item?.code || '';
 
       const itemNameStack = [
-        { text: item?.item?.name || '', fontSize: 10, margin: [0, 1, 0, 0] },
+        { text: productName, fontSize: 10, margin: [0, 1, 0, 0] },
+        ...(productCode
+          ? [
+            {
+              text: productCode,
+              fontSize: 9,
+              italics: true,
+              color: CODETEXT,
+              margin: [0, 1, 0, 0],
+            },
+          ]
+          : []),
         ...(metaLines.length
           ? [
-              {
-                text: metaLines.join('\n'),
-                fontSize: 9,
-                italics: true,
-                margin: [0, 2, 0, 0],
-              },
-            ]
+            {
+              text: metaLines.join('\n'),
+              fontSize: 9,
+              italics: true,
+              margin: [0, 2, 0, 0],
+            },
+          ]
           : []),
       ];
 
@@ -344,13 +370,13 @@ export const printDeliveryReceiptPDF = async ({
   const amountWordLine =
     showPrice
       ? {
-          text: [
-            { text: 'Thành tiền bằng chữ: ', bold: true, fontSize: 10 },
-            { text: data?.total_amount_word || 'Không', fontSize: 10 },
-          ],
-          alignment: 'left',
-          margin: [0, 0, 0, 6],
-        }
+        text: [
+          { text: 'Thành tiền bằng chữ: ', bold: true, fontSize: 10 },
+          { text: data?.total_amount_word || 'Không', fontSize: 10 },
+        ],
+        alignment: 'left',
+        margin: [0, 0, 0, 6],
+      }
       : null;
 
   const docDefinition = {
@@ -422,7 +448,7 @@ export const printDeliveryReceiptPDF = async ({
     },
   };
 
-  applyCommonStyles(docDefinition, TEXT, SUBTEXT);
+  applyCommonStyles(docDefinition, TEXT, SUBTEXT, CODETEXT);
   openPdf(docDefinition);
 };
 

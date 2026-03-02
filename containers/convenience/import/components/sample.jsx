@@ -29,7 +29,9 @@ const SampleImport = ({ dataLang, tabPage }) => {
           <ArrowRight size="16" color="red" className="animate-bounce" />
           <h2 className="text-slate-700 font-semibold 3xl:text-[11px] 2xl:text-[9px] xl:text-[8px] lg:text-[7.5px] text-sm">
             {(tabPage == 5 && dataLang?.import_err_stages_for) ||
-              (tabPage == 6 && dataLang?.import_err_stages_for_TAB)}
+              (tabPage == 6 && dataLang?.import_err_stages_for_TAB) ||
+              (tabPage == 7 && dataLang?.import_err_stages_for) ||
+              (tabPage == 8 && dataLang?.import_err_stages_for)}
           </h2>
         </div>
         <div className="flex items-center gap-2">

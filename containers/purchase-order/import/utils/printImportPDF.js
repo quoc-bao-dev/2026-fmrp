@@ -21,7 +21,7 @@ export const printImportPDF = async ({
   await ensureTimesNewRomanFonts();
 
   const dataCompany = dataSeting;
-  const { PRIMARY, BORDER, TEXT, SUBTEXT } = PDF_THEME;
+  const { PRIMARY, BORDER, TEXT, SUBTEXT, CODETEXT } = PDF_THEME;
 
   const formatNumber = number => {
     if (typeof number == 'string') {
@@ -195,17 +195,31 @@ export const printImportPDF = async ({
                 const amountValue = item?.amount || 0;
                 const metaLines = buildItemMetaLines(item);
 
+                const productName = item?.item?.item_name || item?.item?.name || item?.name || '';
+                const productCode = item?.item?.code || item?.code || '';
+
                 const itemNameStack = [
-                  { text: item?.item?.name || item?.name || '', fontSize: 10, margin: [0, 1, 0, 0] },
+                  { text: productName, fontSize: 10, margin: [0, 1, 0, 0] },
+                  ...(productCode
+                    ? [
+                      {
+                        text: productCode,
+                        fontSize: 9,
+                        italics: true,
+                        color: CODETEXT,
+                        margin: [0, 1, 0, 0],
+                      },
+                    ]
+                    : []),
                   ...(metaLines.length
                     ? [
-                        {
-                          text: metaLines.join('\n'),
-                          fontSize: 9,
-                          italics: true,
-                          margin: [0, 2, 0, 0],
-                        },
-                      ]
+                      {
+                        text: metaLines.join('\n'),
+                        fontSize: 9,
+                        italics: true,
+                        margin: [0, 2, 0, 0],
+                      },
+                    ]
                     : []),
                 ];
 
@@ -521,7 +535,7 @@ export const printImportPDF = async ({
     },
   };
 
-  applyCommonStyles(docDefinition, TEXT, SUBTEXT);
+  applyCommonStyles(docDefinition, TEXT, SUBTEXT, CODETEXT);
 
   try {
     openPdf(docDefinition);

@@ -496,7 +496,7 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
                               <td className='py-2 px-3 text-center text-sm font-semibold'>{index + 1}</td>
                               <td className='py-2 px-3 text-left'>
                                 <div className='flex gap-2 min-w-0'>
-                                  <div className='w-16 h-16 rounded flex items-center justify-center flex-shrink-0'>
+                                  {/* <div className='w-16 h-16 rounded flex items-center justify-center flex-shrink-0'>
                                     <Image
                                       src={e?.item?.image || '/icon/default/default.png'}
                                       alt={e?.item?.name || 'default'}
@@ -504,7 +504,7 @@ const PopupPurchaseBeta = ({ dataLang, icon, title, dataTable, className, queryV
                                       height={64}
                                       className='object-cover rounded aspect-square w-16 h-16 '
                                     />
-                                  </div>
+                                  </div> */}
                                   <div className='flex flex-col gap-1 flex-1 min-w-0 overflow-hidden'>
                                     <h3 className='text-sm font-semibold text-[#141522] line-clamp-1'>{e?.item?.name}</h3>
                                     <div className='flex flex-col gap-0.5'>

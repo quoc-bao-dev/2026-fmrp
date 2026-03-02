@@ -12,7 +12,7 @@ export const printReturnSalesPDF = async ({ data, dataLang, dataSeting, dataMate
         await ensureTimesNewRomanFonts();
 
         const dataCompany = dataSeting;
-        const { PRIMARY, BORDER, TEXT, SUBTEXT } = PDF_THEME;
+        const { PRIMARY, BORDER, TEXT, SUBTEXT, CODETEXT } = PDF_THEME;
 
         const formatMoney = number => {
             if (typeof number == 'string') {
@@ -175,10 +175,26 @@ export const printReturnSalesPDF = async ({ data, dataLang, dataSeting, dataMate
                                 ? data.items.map((item, index) => {
                                     const stack = [];
                                     const stackBt = [];
+
+                                    const productName = item?.item?.item_name || item?.item?.name || item?.name || '';
+                                    const productCode = item?.item?.code || item?.code || '';
+
+                                    // Dòng 1: Tên sản phẩm
                                     stack.push({
-                                        text: item?.item?.name ? item?.item?.name : '',
+                                        text: productName,
                                         fontSize: 10,
                                     });
+
+                                    // Dòng 2: Mã sản phẩm (code) dưới tên, nếu có
+                                    if (productCode) {
+                                        stack.push({
+                                            text: productCode,
+                                            fontSize: 9,
+                                            color: CODETEXT,
+                                            margin: [0, 1, 0, 0],
+                                        });
+                                    }
+
                                     stackBt.push({
                                         text: `Biến thể: ${item?.item?.product_variation || '(NONE)'}`,
                                         fontSize: 9,
@@ -571,7 +587,7 @@ export const printReturnSalesPDF = async ({ data, dataLang, dataSeting, dataMate
         };
 
         // Bổ sung style riêng cho template này (không đụng global `styles`)
-        applyCommonStyles(docDefinition, TEXT, SUBTEXT);
+        applyCommonStyles(docDefinition, TEXT, SUBTEXT, CODETEXT);
 
         // Tạo và mở PDF
         openPdf(docDefinition);

@@ -9,7 +9,7 @@ export const printProductsWarehousePDF = async ({ data, dataLang, dataSeting, da
     await ensureTimesNewRomanFonts();
 
     const dataCompany = dataSeting;
-    const { PRIMARY, BORDER, TEXT, SUBTEXT } = PDF_THEME;
+    const { PRIMARY, BORDER, TEXT, SUBTEXT, CODETEXT } = PDF_THEME;
 
     const formatNumber = number => {
         if (typeof number == 'string') {
@@ -141,99 +141,110 @@ export const printProductsWarehousePDF = async ({ data, dataLang, dataSeting, da
                         // Data rows
                         ...(data?.items?.length > 0
                             ? data.items.map((item, index) => {
-                                  const stack = [];
-                                  const stackBt = [];
-                                  stack.push({
-                                      text: item?.item?.name ? item?.item?.name : '',
-                                      fontSize: 10,
-                                  });
-                                  stackBt.push({
-                                      text: `Biến thể: ${item?.item?.product_variation || '(NONE)'}`,
-                                      fontSize: 9,
-                                  });
+                                const stack = [];
+                                const stackBt = [];
+                                const productName = item?.item?.item_name || item?.item?.name || item?.name || '';
+                                const productCode = item?.item?.code || item?.code || '';
 
-                                  if (dataProductSerial?.is_enable === '1') {
-                                      const serialStack = [
-                                          {
-                                              text: [
-                                                  {
-                                                      text: 'Serial: ',
-                                                      fontSize: 9,
-                                                  },
-                                                  {
-                                                      text: item.serial == null || item.serial == '' ? '-' : item.serial,
-                                                      fontSize: 9,
-                                                  },
-                                              ],
-                                          },
-                                      ];
-                                      stackBt.push(serialStack);
-                                  }
+                                stack.push({
+                                    text: productName,
+                                    fontSize: 10,
+                                });
+                                if (productCode) {
+                                    stack.push({
+                                        text: productCode,
+                                        fontSize: 9,
+                                        color: CODETEXT,
+                                        margin: [0, 1, 0, 0],
+                                    });
+                                }
+                                stackBt.push({
+                                    text: `Biến thể: ${item?.item?.product_variation || '(NONE)'}`,
+                                    fontSize: 9,
+                                });
 
-                                  if (dataMaterialExpiry?.is_enable === '1' || dataProductExpiry?.is_enable === '1') {
-                                      const subStack = [
-                                          {
-                                              text: [
-                                                  {
-                                                      text: 'Lot: ',
-                                                      fontSize: 9,
-                                                  },
-                                                  {
-                                                      text: item.lot == null || item.lot == '' ? '-' : item.lot,
-                                                      fontSize: 9,
-                                                  },
-                                              ],
-                                              fontSize: 9,
-                                          },
-                                          {
-                                              text: [
-                                                  {
-                                                      text: 'Date: ',
-                                                      fontSize: 9,
-                                                  },
-                                                  {
-                                                      text: item.expiration_date ? formatMoment(item.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-',
-                                                      fontSize: 8.5,
-                                                  },
-                                              ],
-                                              fontSize: 9,
-                                          },
-                                      ];
-                                      stackBt.push(subStack);
-                                  }
-                                  return [
-                                      {
-                                          text: `${index + 1}`,
-                                          alignment: 'center',
-                                          fontSize: 9,
-                                      },
-                                      {
-                                          stack: stack,
-                                      },
-                                      {
-                                          stack: stackBt,
-                                      },
-                                      {
-                                          text: `${item?.location_name || item?.location_code || ''}`,
-                                          fontSize: 9,
-                                          alignment: 'left',
-                                      },
-                                      {
-                                          text: item?.item?.unit_name ? item?.item?.unit_name : '',
-                                          fontSize: 9,
-                                          alignment: 'center',
-                                      },
-                                      {
-                                          text: item?.quantity ? `${formatNumber(+item?.quantity)}` : '',
-                                          alignment: 'center',
-                                          fontSize: 9,
-                                      },
-                                      {
-                                          text: item?.note ? item?.note : '',
-                                          fontSize: 9,
-                                      },
-                                  ];
-                              })
+                                if (dataProductSerial?.is_enable === '1') {
+                                    const serialStack = [
+                                        {
+                                            text: [
+                                                {
+                                                    text: 'Serial: ',
+                                                    fontSize: 9,
+                                                },
+                                                {
+                                                    text: item.serial == null || item.serial == '' ? '-' : item.serial,
+                                                    fontSize: 9,
+                                                },
+                                            ],
+                                        },
+                                    ];
+                                    stackBt.push(serialStack);
+                                }
+
+                                if (dataMaterialExpiry?.is_enable === '1' || dataProductExpiry?.is_enable === '1') {
+                                    const subStack = [
+                                        {
+                                            text: [
+                                                {
+                                                    text: 'Lot: ',
+                                                    fontSize: 9,
+                                                },
+                                                {
+                                                    text: item.lot == null || item.lot == '' ? '-' : item.lot,
+                                                    fontSize: 9,
+                                                },
+                                            ],
+                                            fontSize: 9,
+                                        },
+                                        {
+                                            text: [
+                                                {
+                                                    text: 'Date: ',
+                                                    fontSize: 9,
+                                                },
+                                                {
+                                                    text: item.expiration_date ? formatMoment(item.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-',
+                                                    fontSize: 8.5,
+                                                },
+                                            ],
+                                            fontSize: 9,
+                                        },
+                                    ];
+                                    stackBt.push(subStack);
+                                }
+                                return [
+                                    {
+                                        text: `${index + 1}`,
+                                        alignment: 'center',
+                                        fontSize: 9,
+                                    },
+                                    {
+                                        stack: stack,
+                                    },
+                                    {
+                                        stack: stackBt,
+                                    },
+                                    {
+                                        text: `${item?.location_name || item?.location_code || ''}`,
+                                        fontSize: 9,
+                                        alignment: 'left',
+                                    },
+                                    {
+                                        text: item?.item?.unit_name ? item?.item?.unit_name : '',
+                                        fontSize: 9,
+                                        alignment: 'center',
+                                    },
+                                    {
+                                        text: item?.quantity ? `${formatNumber(+item?.quantity)}` : '',
+                                        alignment: 'center',
+                                        fontSize: 9,
+                                    },
+                                    {
+                                        text: item?.note ? item?.note : '',
+                                        fontSize: 9,
+                                    },
+                                ];
+                            })
                             : []),
                         [
                             {
@@ -381,7 +392,7 @@ export const printProductsWarehousePDF = async ({ data, dataLang, dataSeting, da
     };
 
     // Bổ sung style riêng cho template này (không đụng global `styles`)
-    applyCommonStyles(docDefinition, TEXT, SUBTEXT);
+    applyCommonStyles(docDefinition, TEXT, SUBTEXT, CODETEXT);
 
     // Tạo và mở PDF
     openPdf(docDefinition);

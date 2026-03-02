@@ -8,11 +8,12 @@ import PopupCustom from '@/components/UI/popup';
 import SelectOptionLever from '@/components/UI/selectOptionLever/selectOptionLever';
 import { WARNING_STATUS_ROLE_ADMIN } from '@/constants/warningStatus/warningStatus';
 import useRolePermissionLayoutState from '@/hooks/common/useRolePermissionLayoutState';
+import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
 import useToast from '@/hooks/useToast';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Trash as IconDelete, GalleryEdit as IconEditImg, Eye as IconEye, EyeSlash as IconEyeSlash, Image as IconImage } from 'iconsax-react';
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
 
@@ -55,12 +56,24 @@ const Popup_dsnd = props => {
   };
 
   const [isState, setIsState] = useState(initialData);
-
+console.log(isState)
   const queryState = key => setIsState(prev => ({ ...prev, ...key }));
+
+  // Check quyền module lương sản lượng
+  const { checkInstall } = useCheckModuleInstall();
+  const hasLslPermission = checkInstall('luong-san-luong');
+
+  // Filter dataPower để ẩn lsl_staff nếu chưa có quyền
+  const filteredDataPower = useMemo(() => {
+    if (hasLslPermission) {
+      return isState.room;
+    }
+    return isState.room?.filter(item => item?.key !== 'lsl_staff') || [];
+  }, [isState.room, hasLslPermission]);
 
   // State & behavior cho layout quyền phòng/nhóm
   const { activeGroupKey, scrollContainerRef, sidebarRef, sidebarButtonRefs, sectionRefs, handleScrollToSection } = useRolePermissionLayoutState({
-    dataPower: isState.room,
+    dataPower: filteredDataPower,
     isActivePowerTab: isState.tab == 1,
     offset: 180,
   });
@@ -338,8 +351,21 @@ const Popup_dsnd = props => {
 
   // tìm kiếm thì ẩn hiện modlue theo key search
   useEffect(() => {
-    const filteredData = isState.room.filter(item => item.name.toLowerCase().includes(isState.valueSearch.toLowerCase()));
+    // Filter để loại bỏ lsl_staff nếu chưa có quyền trước khi search
+    const dataToSearch = hasLslPermission 
+      ? isState.room 
+      : isState.room.filter(item => item?.key !== 'lsl_staff');
+    
+    const filteredData = dataToSearch.filter(item => item.name.toLowerCase().includes(isState.valueSearch.toLowerCase()));
     const newdb = isState.room.map(item => {
+      // Ẩn lsl_staff nếu chưa có quyền
+      if (!hasLslPermission && item?.key === 'lsl_staff') {
+        return {
+          ...item,
+          hidden: true,
+        };
+      }
+      
       const itemChecked = filteredData.find(x => item.key == x.key);
       if (itemChecked) {
         return {
@@ -354,7 +380,7 @@ const Popup_dsnd = props => {
       };
     });
     queryState({ room: newdb });
-  }, [isState.valueSearch]);
+  }, [isState.valueSearch, hasLslPermission]);
 
   return (
     <>
@@ -688,7 +714,7 @@ const Popup_dsnd = props => {
                 <div className='w-full'>
                   <RolePermissionLayout
                     className='!h-[400px]'
-                    dataPower={isState.room}
+                    dataPower={filteredDataPower}
                     activeGroupKey={activeGroupKey}
                     valueSearch={isState.valueSearch}
                     onChangeSearch={value => queryState({ valueSearch: value })}

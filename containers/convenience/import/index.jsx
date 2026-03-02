@@ -30,6 +30,7 @@ import ImportFileTemplate from "./components/inputTab";
 import Popup_status from "./components/popup/popup";
 import Popup_bom from "./components/popup/popupBom";
 import Popup_stages from "./components/popup/popupStages";
+import Popup_orders from "./components/popup/popupOrders";
 import Progress from "./components/progress";
 import Radio from "./components/radio";
 import Row from "./components/row";
@@ -94,7 +95,7 @@ const Import = (props) => {
     const [dataDelivery, sDataDelivery] = useState([]);
 
     const [dataColumn, sDataColumn] = useState([]);
-  
+
     const [dataConditionColumn, sDataConditionColumn] = useState([]);
     const [dataSampleImport, sDataSampleImport] = useState([]);
     const [save_template, sSave_template] = useState(null);
@@ -275,7 +276,12 @@ const Import = (props) => {
     }, [onFetching]);
 
     useEffect(() => {
-        router.query.tab && tabPage != 5 && tabPage != 6 && sOnFetching(true);
+        router.query.tab &&
+            tabPage != 5 &&
+            tabPage != 6 &&
+            tabPage != 7 &&
+            tabPage != 8 &&
+            sOnFetching(true);
         router.query.tab && sListData([]);
         router.query.tab && (tabPage == 1 || tabPage == 2) && sListDataContat([]);
         router.query.tab && tabPage == 1 && sListDataDelivery([]);
@@ -296,41 +302,6 @@ const Import = (props) => {
         }
         router.query.tab && sFileImport(null);
     }, [router.query?.page, router.query?.tab]);
-
-    //   const _HandleChangeFileImport = (e) => {
-    //     const file = e.target.files[0];
-    //     const reader = new FileReader();
-    //     reader.readAsBinaryString(file)
-    //     // reader.onload = (e) =>{
-    //     //   const data = e.target.result;
-    //     //   const workbook = XLSX.read(data, {type: "binary"})
-    //     //   const SheetNames = workbook.SheetNames[0]
-    //     //   const Sheet = workbook.Sheets[SheetNames]
-    //     //   const partData = XLSX.utils.sheet_to_json(Sheet)
-    //     //   sDataImport(partData)
-    //     // }
-    //     reader.onload = (e) => {
-    //       const data = e.target.result;
-    //       const workbook = XLSX.read(data, {type: "binary"});
-    //       const sheetName = workbook.SheetNames[0];
-    //       const sheet = workbook.Sheets[sheetName];
-    //       const jsonData = [];
-    //       for (let cell in sheet) {
-    //         if (cell[0] === '!') continue;
-    //         const col = cell.replace(/[0-9]/g, ''); // Lấy tên cột từ tên ô (ví dụ: 'A1' -> 'A')
-    //         const rowIndex = parseInt(cell.replace(/\D/g, '')) - 1;
-    //         const cellValue = sheet[cell].v;
-
-    //         if (!jsonData[rowIndex]) {
-    //           jsonData[rowIndex] = { [col]: cellValue };
-    //         } else {
-    //           jsonData[rowIndex][col] = cellValue;
-    //         }
-    //       }
-    //       // Xử lý dữ liệu trong jsonData
-    //       sDataImport(jsonData)
-    //     };
-    // };
 
     useEffect(() => {
         setTimeout(() => {
@@ -434,18 +405,7 @@ const Import = (props) => {
             //đổ dữ liệu theo start end
             const rowIndexStart = Math.max(0, startRowIndex);
             const rowIndexEnd = Math.min(maxRowIndex, endRowIndex);
-            //   for (let rowIndex = rowIndexStart; rowIndex <= rowIndexEnd; rowIndex++) {
-            //     const row = sheetData[rowIndex];
 
-            //     const rowData = {};
-            //     for (let colIndex = 0; colIndex < row.length; colIndex++) {
-            //       const col = String.fromCharCode(65 + colIndex);
-            //       rowData[col] = row[colIndex];
-            //       rowData["rowIndex"] = rowIndex;
-            //     }
-            //     jsonData.push(rowData);
-            //     console.log("rowData", rowData);
-            //   }
             for (let rowIndex = rowIndexStart; rowIndex <= rowIndexEnd; rowIndex++) {
                 const row = sheetData[rowIndex];
                 const rowData = {};
@@ -478,7 +438,7 @@ const Import = (props) => {
     };
 
     const _HandleChangeChild = (childId, type, value) => {
-        
+
         const newData = listData.map((e) => {
 
             const checkMain2 = e?.dataFields?.value == "variation";
@@ -539,7 +499,7 @@ const Import = (props) => {
             }
         });
 
-      
+
         sListData([...newData]);
     };
 
@@ -761,16 +721,15 @@ const Import = (props) => {
             id: 6,
             name: "Định mức BOM",
         },
+        {
+            id: 7,
+            name: "Đơn hàng bán",
+        },
+        {
+            id: 8,
+            name: "Kế hoạch nội bộ",
+        },
     ];
-    /// tên model
-    const dataName = {
-        1: dataLang?.import_client || "import_client",
-        2: dataLang?.import_suppliers || "import_suppliers",
-        3: dataLang?.import_materials || "import_materials",
-        4: dataLang?.import_finished_product || "import_finished_product",
-        5: dataLang?.import_stage || "import_stage",
-        6: dataLang?.importBOM || "importBOM",
-    };
 
     // validate dữ liệu rồi post
     const _HandleSubmit = (e) => {
@@ -794,7 +753,7 @@ const Import = (props) => {
         const hasNullDataImport = dataImport?.length == 0;
 
         const requiredColumn = listData?.length == 0;
-        if (tabPage != 5 && tabPage != 6) {
+        if (tabPage != 5 && tabPage != 6 && tabPage != 7 && tabPage != 8) {
             if (
                 hasNullDataFiles ||
                 fileImport == null ||
@@ -844,15 +803,15 @@ const Import = (props) => {
                         `${(tabPage == 1 &&
                             !ObError?.name &&
                             dataLang?.import_ERR_add_nameData) ||
-                            (tabPage == 2 &&
-                                !ObError?.name &&
-                                dataLang?.import_ERR_add_nameDataSuplier) ||
-                            (tabPage == 3 &&
-                                !ObError?.name &&
-                                dataLang?.import_ERR_add_nameMterial) ||
-                            (tabPage == 4 &&
-                                !ObError?.name &&
-                                dataLang?.import_ERR_add_nameProduct)}`
+                        (tabPage == 2 &&
+                            !ObError?.name &&
+                            dataLang?.import_ERR_add_nameDataSuplier) ||
+                        (tabPage == 3 &&
+                            !ObError?.name &&
+                            dataLang?.import_ERR_add_nameMterial) ||
+                        (tabPage == 4 &&
+                            !ObError?.name &&
+                            dataLang?.import_ERR_add_nameProduct)}`
                     );
                 }
                 //bắt buộc phải có cột chi nhánh
@@ -926,64 +885,6 @@ const Import = (props) => {
     useEffect(() => {
         sErrFileImport(false);
     }, [fileImport != null]);
-
-    // const _ServerSending =  () => {
-
-    //   const data = dataImport.map((item) => {
-    //     const result = {};
-    //     for (const listDataItem of listData) {
-    //       const columnValue = listDataItem.column?.value;
-    //       const dataFieldsValue = listDataItem.dataFields?.value;
-
-    //       if (columnValue && item[columnValue]) {
-    //         result[dataFieldsValue] = item[columnValue];
-    //       }
-    //       if (listDataItem.dataFields && listDataItem.dataFields.label && listDataItem.dataFields.value && item[listDataItem.dataFields.label]) {
-    //         const fieldKey = listDataItem.dataFields.value;
-    //         const fieldValue = item[listDataItem.dataFields.label];
-    //         result[fieldKey] = fieldValue;
-    //       }
-    //     }
-    //     return result;
-    //   });
-    //  Promise.all(
-    //   data.map((item) => {
-    //         return Axios("POST",`/api_web/Api_import_data/action_add_client?csrf_protection=true`, {
-    //                   data: item,
-    //                   headers: {'Content-Type': 'multipart/form-data'},
-    //                   onUploadProgress: (progressEvent) => {
-    //                     const {loaded, total} = progressEvent;
-    //                     const percentage = Math.floor(((loaded / 1000) * 100) / (total / 1000));
-    //                     sMultipleProgress(percentage);
-    //                   }
-    //               }, (err, response) => {
-    //                   if(!err){
-    //                       var {isSuccess, message} = response.data
-    //                       console.log(response.data);
-    //                       if(isSuccess){
-    //                           Toast.fire({
-    //                               icon: 'success',
-    //                               title: `${dataLang[message]}`
-    //                           })
-    //                         sMultipleProgress(0)
-    //                           //new
-    //                           sListData([])
-    //                           // router.push('/purchase_order/returns?tab=all')
-    //                       }else {
-    //                           Toast.fire({
-    //                             icon: 'error',
-    //                             title: `${dataLang[message]}`
-    //                           })
-    //                       }
-    //                   }
-    //           sOnSending(false)
-    //       })
-    //   })).then(res =>{
-    //     sMultipleProgress(0)
-    //   })
-    // }
-
-    //
 
     //Nối thành phần 3 mảng kách hàng -liên hệ - địa chỉ lại
     const mergedListData = listData.map((item, index) => ({
@@ -1181,11 +1082,13 @@ const Import = (props) => {
             4: "/api_web/Api_import_data/action_add_products?csrf_protection=true",
             5: "/api_web/api_import_data/importStages?csrf_protection=true",
             6: "/api_web/api_import_data/importBOM?csrf_protection=true",
+            7: "/api_web/orders/import?csrf_protection=true",
+            8: "/api_web/api_import_data/importInternalPlan?csrf_protection=true",
         };
         //ánh xạ apiPaths
         const apiUrl = apiPaths[tabPage] || "";
 
-        if (tabPage == 5 || tabPage == 6) {
+        if (tabPage == 5 || tabPage == 6 || tabPage == 7 || tabPage == 8) {
             const apiUrl = apiPaths[tabPage] || "";
             var formData = new FormData();
 
@@ -1206,13 +1109,41 @@ const Import = (props) => {
                 },
                 (err, response) => {
                     if (!err) {
-                        var { message, type, errors, count } = response.data;
-                        tabPage == 5 && sDataFailStages(errors);
-                        tabPage == 6 && sDataFailBom(errors);
-                        isShow(type === "success" ? "success" : "error", message);
+                        // Tab 5, 6 vẫn giữ cấu trúc cũ
+                        if (tabPage == 5 || tabPage == 6) {
+                            const { message, type, errors, count } = response.data || {};
+                            if (tabPage == 5) {
+                                sDataFailStages(errors);
+                                sTotalSuccessStages(count);
+                            } else if (tabPage == 6) {
+                                sDataFailBom(errors);
+                                sTotalSuccessBom(count);
+                            }
+                            isShow(type === "success" ? "success" : "error", message);
+                        }
+                        // Tab 7, 8: import Đơn hàng bán / Kế hoạch nội bộ với cấu trúc mới
+                        else if (tabPage == 7 || tabPage == 8) {
+                            const { isSuccess, message, data } = response.data || {};
+                            const { success, fail, dataFail } = data || {};
+
+                            // Chuẩn hoá dữ liệu để hiển thị lên Popup_status
+                            const mappedFail =
+                                dataFail?.map((item, index) => ({
+                                    id: item?.order_code || index,
+                                    rowIndex:
+                                        Array.isArray(item?.rows) && item.rows.length > 0
+                                            ? item.rows.join(", ")
+                                            : "",
+                                    error: item?.errors || [],
+                                })) || [];
+
+                            sDataFail(mappedFail);
+                            sTotalFalse(typeof fail === "number" ? fail : mappedFail.length);
+                            sDataSuccess(typeof success === "number" ? success : 0);
+
+                            isShow(isSuccess ? "success" : "error", message);
+                        }
                     }
-                    tabPage == 5 && sTotalSuccessStages(count);
-                    tabPage == 6 && sTotalSuccessBom(count);
                     sOnSending(false);
                     setTimeout(() => {
                         sMultipleProgress(0);
@@ -1322,6 +1253,8 @@ const Import = (props) => {
     useEffect(() => {
         tabPage != 5 &&
             tabPage != 6 &&
+            tabPage != 7 &&
+            tabPage != 8 &&
             onSending &&
             save_template &&
             _ServerSendingImporTemplate();
@@ -1344,7 +1277,6 @@ const Import = (props) => {
     const breadcrumbItems = [
         {
             label: `${dataLang?.import_data || "import_data"}`,
-            // href: "/",
         },
         {
             label: `${dataLang?.import_category || "import_category"}`,
@@ -1373,9 +1305,8 @@ const Import = (props) => {
                         </h2>
 
                         <div className="grid items-center justify-center grid-cols-12 mx-auto space-x-3">
-                            <div className="col-span-2"></div>
-                            <Customscrollbar className="col-span-8 overflow-auto">
-                                <div className="flex items-center gap-4 flex-nowrap">
+                            <Customscrollbar className="col-span-12 overflow-auto">
+                                <div className="flex items-center gap-2 flex-nowrap">
                                     {dataTab &&
                                         dataTab.map((e) => {
                                             return (
@@ -1393,73 +1324,68 @@ const Import = (props) => {
                                         })}
                                 </div>
                             </Customscrollbar>
-                            <div className="col-span-2"></div>
-                            <div className="col-span-2"></div>
-                            <div className="col-span-8 border-b">
-                                <h2 className="py-2">{dataName[tabPage] || ""}</h2>
+                            <div className="col-span-12 border-b">
+                                <h2 className="py-2">
+                                    {dataTab.find((t) => String(t.id) === String(tabPage))?.name || ""}
+                                </h2>
                             </div>
                             <div className="col-span-2"></div>
-                            <div className="col-span-2"></div>
                             <div className="col-span-4 mt-2 mb-2">
-                                {(tabPage == 5 && (
+                                {(tabPage == 5 || tabPage == 6 || tabPage == 7 || tabPage == 8) ? (
                                     <ImportFileTemplate dataLang={dataLang} tabPage={tabPage} />
-                                )) ||
-                                    (tabPage == 6 && (
-                                        <ImportFileTemplate dataLang={dataLang} tabPage={tabPage} />
-                                    )) ||
-                                    (tabPage != 5 && tabPage != 6 && (
-                                        <React.Fragment>
-                                            <h5 className="block mb-1 text-sm font-medium text-gray-700">
-                                                {dataLang?.import_form || "import_form"}
-                                            </h5>
-                                            <Select
-                                                closeMenuOnSelect={true}
-                                                placeholder={dataLang?.import_form || "import_form"}
-                                                options={dataSampleImport}
-                                                isLoading={sampleImport != null ? false : onLoading}
-                                                formatOptionLabel={(option) => (
-                                                    <div className="flex items-center justify-start gap-1 ">
-                                                        <h2 className="font-medium">
-                                                            {option?.label}{" "}
-                                                            <span className="text-sm italic">{`(${option?.date})`}</span>
-                                                        </h2>
-                                                    </div>
-                                                )}
-                                                isSearchable={true}
-                                                onChange={_HandleChange.bind(this, "sampleImport")}
-                                                value={sampleImport}
-                                                LoadingIndicator
-                                                noOptionsMessage={() =>
-                                                    dataLang?.import_no_data || "import_no_data"
-                                                }
-                                                maxMenuHeight="200px"
-                                                isClearable={true}
-                                                menuPortalTarget={document.body}
-                                                onMenuOpen={handleMenuOpen}
-                                                theme={(theme) => ({
-                                                    ...theme,
-                                                    colors: {
-                                                        ...theme.colors,
-                                                        primary25: "#EBF5FF",
-                                                        primary50: "#92BFF7",
-                                                        primary: "#0F4F9E",
-                                                    },
-                                                })}
-                                                styles={{
-                                                    placeholder: (base) => ({
-                                                        ...base,
-                                                        color: "#cbd5e1",
-                                                    }),
-                                                    menuPortal: (base) => ({
-                                                        ...base,
-                                                        zIndex: 9999,
-                                                        position: "absolute",
-                                                    }),
-                                                }}
-                                                className="border-transparent text-sm placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border "
-                                            />
-                                        </React.Fragment>
-                                    ))}
+                                ) : (
+                                    <React.Fragment>
+                                        <h5 className="block mb-1 text-sm font-medium text-gray-700">
+                                            {dataLang?.import_form || "import_form"}
+                                        </h5>
+                                        <Select
+                                            closeMenuOnSelect={true}
+                                            placeholder={dataLang?.import_form || "import_form"}
+                                            options={dataSampleImport}
+                                            isLoading={sampleImport != null ? false : onLoading}
+                                            formatOptionLabel={(option) => (
+                                                <div className="flex items-center justify-start gap-1 ">
+                                                    <h2 className="font-medium">
+                                                        {option?.label}{" "}
+                                                        <span className="text-sm italic">{`(${option?.date})`}</span>
+                                                    </h2>
+                                                </div>
+                                            )}
+                                            isSearchable={true}
+                                            onChange={_HandleChange.bind(this, "sampleImport")}
+                                            value={sampleImport}
+                                            LoadingIndicator
+                                            noOptionsMessage={() =>
+                                                dataLang?.import_no_data || "import_no_data"
+                                            }
+                                            maxMenuHeight="200px"
+                                            isClearable={true}
+                                            menuPortalTarget={document.body}
+                                            onMenuOpen={handleMenuOpen}
+                                            theme={(theme) => ({
+                                                ...theme,
+                                                colors: {
+                                                    ...theme.colors,
+                                                    primary25: "#EBF5FF",
+                                                    primary50: "#92BFF7",
+                                                    primary: "#0F4F9E",
+                                                },
+                                            })}
+                                            styles={{
+                                                placeholder: (base) => ({
+                                                    ...base,
+                                                    color: "#cbd5e1",
+                                                }),
+                                                menuPortal: (base) => ({
+                                                    ...base,
+                                                    zIndex: 9999,
+                                                    position: "absolute",
+                                                }),
+                                            }}
+                                            className="border-transparent text-sm placeholder:text-slate-300 w-full bg-[#ffffff] rounded text-[#52575E] font-normal outline-none border "
+                                        />
+                                    </React.Fragment>
+                                )}
                             </div>
 
                             <Radio
@@ -1472,7 +1398,7 @@ const Import = (props) => {
                             <div className="col-span-2"></div>
                             <div className="col-span-2"></div>
                             <div className="col-span-4">
-                                {tabPage != 5 && tabPage != 6 && valueCheck === "edit" ? (
+                                {tabPage != 5 && tabPage != 6 && tabPage != 7 && tabPage != 8 && valueCheck === "edit" ? (
                                     <>
                                         <h5 className="block mb-1 text-sm font-medium text-gray-700">
                                             {dataLang?.import_condition_column ||
@@ -1586,7 +1512,7 @@ const Import = (props) => {
                                 </div>
                             </div>
                             <div className="col-span-4 ">
-                                {(tabPage != 5 && tabPage != 6 && (
+                                {(tabPage != 5 && tabPage != 6 && tabPage != 7 && tabPage != 8 && (
                                     <Row
                                         dataLang={dataLang}
                                         _HandleChange={_HandleChange.bind(this)}
@@ -1596,14 +1522,14 @@ const Import = (props) => {
                                         end_row={end_row}
                                     />
                                 )) ||
-                                    ((tabPage == 5 || tabPage == 6) && (
+                                    ((tabPage == 5 || tabPage == 6 || tabPage == 7 || tabPage == 8) && (
                                         <SampleImport dataLang={dataLang} tabPage={tabPage} />
                                     ))}
                             </div>
                             <div className="col-span-2"></div>
                             <div className="col-span-2"></div>
                             <div className="col-span-4 -mt-2">
-                                {tabPage != 5 && tabPage != 6 && (
+                                {tabPage != 5 && tabPage != 6 && tabPage != 7 && tabPage != 8 && (
                                     <ParentControls
                                         listData={listData}
                                         onLoadingListData={onLoadingListData}
@@ -1678,15 +1604,12 @@ const Import = (props) => {
                             </div>
                             <div className="col-span-2"></div>
                             <div className="col-span-2"></div>
-                            <div
-                                className={`${listData?.length > 2 ? "mt-3" : ""} ${onLoadingListData ? "col-span-8" : "col-span-6"
-                                    }`}
-                            >
+                            <div className={`${listData?.length > 2 ? "mt-3" : ""} ${onLoadingListData ? "col-span-8" : "col-span-6"}`}>
                                 {onLoadingListData ? (
                                     <Loading className="h-2" color="#0f4f9e" />
                                 ) : (
                                     listData?.map((e, index) => {
-                                       
+
                                         return (
                                             <div
                                                 className="grid grid-cols-6 gap-2.5 mb-2"
@@ -1882,19 +1805,6 @@ const Import = (props) => {
                                                                             {e?.dataFields?.note?.semi_products}
                                                                         </h2>
                                                                     </div>
-                                                                    {/* <div className="flex items-center gap-1">
-                                                                    <p className="3xl:text-[11px] 2xl:text-[9px] xl:text-[8px] lg:text-[7.5px] text-sm font-semibold text-white  capitalize flex items-center gap-1">
-                                                                        <ArrowRight
-                                                                            size="16"
-                                                                            color="white"
-                                                                            className="animate-bounce 3xl:scale-100 2xl:scale-95"
-                                                                        />{" "}
-                                                                        semi_products_outside:
-                                                                    </p>
-                                                                    <h2 className="3xl:text-[11px] 2xl:text-[9px] xl:text-[8px] lg:text-[7.5px] text-sm text-white">
-                                                                        {e?.dataFields?.note?.semi_products_outside}
-                                                                    </h2>
-                                                                </div> */}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -2019,7 +1929,7 @@ const Import = (props) => {
                             )}
                             <div className="col-span-4"></div>
                             <div className="col-span-4 mt-4 grid-cols-2 grid gap-2.5">
-                                {tabPage != 5 && tabPage != 6 ? (
+                                {tabPage != 5 && tabPage != 6 && tabPage != 7 && tabPage != 8 ? (
                                     <div className="flex items-center  space-x-2 rounded p-2 hover:bg-gray-200 bg-gray-100 cursor-pointer btn-animation hover:scale-[1.02]">
                                         <input
                                             type="checkbox"
@@ -2066,32 +1976,51 @@ const Import = (props) => {
                     </div>
                 </ContainerBody>
             </Container>
-            {(tabPage != 5 && tabPage != 6 && (
-                <Popup_status
+            {/* Popup cho tab 1-4: danh mục */}
+            {tabPage != 5 &&
+                tabPage != 6 &&
+                tabPage != 7 &&
+                tabPage != 8 && (
+                    <Popup_status
+                        dataLang={dataLang}
+                        className=""
+                        router={router.query?.tab}
+                        data={dataFail}
+                        totalFalse={totalFalse}
+                        listData={listData}
+                        listDataContact={listDataContact}
+                        listDataDelivery={listDataDelivery}
+                    />
+                )}
+
+            {/* Popup cho tab 5: Công đoạn */}
+            {tabPage == 5 && (
+                <Popup_stages
+                    dataLang={dataLang}
+                    router={router.query?.tab}
+                    data={dataFailStages}
+                />
+            )}
+
+            {/* Popup cho tab 6: BOM */}
+            {tabPage == 6 && (
+                <Popup_bom
+                    dataLang={dataLang}
+                    router={router.query?.tab}
+                    data={dataFailBom}
+                />
+            )}
+
+            {/* Popup riêng cho tab 7 & 8: Đơn hàng bán / Kế hoạch nội bộ */}
+            {(tabPage == 7 || tabPage == 8) && (
+                <Popup_orders
                     dataLang={dataLang}
                     className=""
                     router={router.query?.tab}
                     data={dataFail}
                     totalFalse={totalFalse}
-                    listData={listData}
-                    listDataContact={listDataContact}
-                    listDataDelivery={listDataDelivery}
                 />
-            )) ||
-                (tabPage == 5 && (
-                    <Popup_stages
-                        dataLang={dataLang}
-                        router={router.query?.tab}
-                        data={dataFailStages}
-                    />
-                )) ||
-                (tabPage == 6 && (
-                    <Popup_bom
-                        dataLang={dataLang}
-                        router={router.query?.tab}
-                        data={dataFailBom}
-                    />
-                ))}
+            )}
         </React.Fragment>
     );
 };

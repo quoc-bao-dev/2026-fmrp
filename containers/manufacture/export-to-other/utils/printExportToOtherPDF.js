@@ -9,7 +9,7 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
   await ensureTimesNewRomanFonts();
 
   const dataCompany = dataSeting;
-  const { PRIMARY, BORDER, TEXT, SUBTEXT } = PDF_THEME;
+  const { PRIMARY, BORDER, TEXT, SUBTEXT, CODETEXT } = PDF_THEME;
 
   const formatNumber = number => {
     if (typeof number == 'string') {
@@ -147,11 +147,24 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
             headerRow,
             ...(data?.items?.length > 0
               ? data.items.map((item, index) => {
+                const productName = item?.item?.item_name || item?.item?.name || item?.name || '';
+                const productCode = item?.item?.code || item?.code || '';
+
                 const nameStack = [
                   {
-                    text: item?.item?.name ? item?.item?.name : '',
+                    text: productName,
                     fontSize: 10,
                   },
+                  ...(productCode
+                    ? [
+                      {
+                        text: productCode,
+                        fontSize: 9,
+                        color: CODETEXT,
+                        margin: [0, 1, 0, 0],
+                      },
+                    ]
+                    : []),
                 ];
 
                 const infoStack = [];
@@ -358,7 +371,7 @@ export const printExportToOtherPDF = async ({ data, dataLang, dataSeting }) => {
     },
   };
 
-  applyCommonStyles(docDefinition, TEXT, SUBTEXT);
+  applyCommonStyles(docDefinition, TEXT, SUBTEXT, CODETEXT);
   openPdf(docDefinition);
 };
 

@@ -9,7 +9,7 @@ export const printOrderPDF = async ({ data, dataLang, dataSeting }) => {
     console.error('printOrderPDF: Không có dữ liệu');
     return;
   }
-  
+
   try {
     await ensureTimesNewRomanFonts();
   } catch (error) {
@@ -18,7 +18,7 @@ export const printOrderPDF = async ({ data, dataLang, dataSeting }) => {
   }
 
   const dataCompany = dataSeting;
-  const { PRIMARY, BORDER, TEXT, SUBTEXT } = PDF_THEME;
+  const { PRIMARY, BORDER, TEXT, SUBTEXT, CODETEXT } = PDF_THEME;
 
   // Debug: Kiểm tra dữ liệu
   // console.log('printOrderPDF - data:', data);
@@ -188,6 +188,26 @@ export const printOrderPDF = async ({ data, dataLang, dataSeting }) => {
                 const taxRate = item?.tax_rate || 0;
                 const amountValue = item?.amount || 0;
 
+                const productName = item?.item?.item_name || item?.item?.name || item?.name || '';
+                const productCode = item?.item?.code || item?.code || '';
+
+                const itemNameStack = [
+                  {
+                    text: productName,
+                    fontSize: 10,
+                  },
+                  ...(productCode
+                    ? [
+                      {
+                        text: productCode,
+                        fontSize: 9,
+                        color: CODETEXT,
+                        margin: [0, 1, 0, 0],
+                      },
+                    ]
+                    : []),
+                ];
+
                 return [
                   {
                     text: `${index + 1}`,
@@ -195,8 +215,8 @@ export const printOrderPDF = async ({ data, dataLang, dataSeting }) => {
                     fontSize: 9,
                   },
                   {
-                    text: item?.item?.name ? item?.item?.name : '',
-                    fontSize: 10,
+                    stack: itemNameStack,
+                    alignment: 'left',
                   },
                   {
                     text: variationText,
@@ -404,8 +424,8 @@ export const printOrderPDF = async ({ data, dataLang, dataSeting }) => {
     },
   };
 
-  applyCommonStyles(docDefinition, TEXT, SUBTEXT);
-  
+  applyCommonStyles(docDefinition, TEXT, SUBTEXT, CODETEXT);
+
   try {
     openPdf(docDefinition);
   } catch (error) {

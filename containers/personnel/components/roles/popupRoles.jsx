@@ -4,6 +4,7 @@ import EditIcon from '@/components/icons/common/EditIcon';
 import RolePermissionLayout from '@/components/common/permissions/RolePermissionLayout';
 import TabSwitcherWithSlidingBackground from '@/components/common/tab/TabSwitcherWithSlidingBackground';
 import useRolePermissionLayoutState from '@/hooks/common/useRolePermissionLayoutState';
+import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
 import SelectComponent from '@/components/UI/filterComponents/selectComponent';
 import Loading from '@/components/UI/loading/loading';
 import PopupCustom from '@/components/UI/popup';
@@ -42,6 +43,18 @@ const PopupRoles = React.memo(props => {
   const [isState, setIsState] = useState(initalState);
 
   const queryState = key => setIsState(prev => ({ ...prev, ...key }));
+
+  // Check quyền module lương sản lượng
+  const { checkInstall } = useCheckModuleInstall();
+  const hasLslPermission = checkInstall('luong-san-luong');
+
+  // Filter dataPower để ẩn lsl_staff nếu chưa có quyền
+  const filteredDataPower = useMemo(() => {
+    if (hasLslPermission) {
+      return isState.dataPower;
+    }
+    return isState.dataPower?.filter(item => item?.key !== 'lsl_staff') || [];
+  }, [isState.dataPower, hasLslPermission]);
 
   useEffect(() => {
     isState.open && props?.id && queryState({ open: true });
@@ -295,14 +308,27 @@ const PopupRoles = React.memo(props => {
     if (!searchValue) {
       const resetData = isState.dataPower.map(item => ({
         ...item,
-        hidden: false,
+        hidden: !hasLslPermission && item?.key === 'lsl_staff',
       }));
       queryState({ dataPower: resetData });
       return;
     }
 
-    const filteredData = isState.dataPower.filter(item => normalizeText(item.name).includes(searchValue));
+    // Tập dữ liệu dùng để search, loại bỏ lsl_staff nếu chưa có quyền
+    const dataToSearch = hasLslPermission
+      ? isState.dataPower
+      : isState.dataPower.filter(item => item?.key !== 'lsl_staff');
+
+    const filteredData = dataToSearch.filter(item => normalizeText(item.name).includes(searchValue));
     const newdb = isState.dataPower.map(item => {
+      // Bắt buộc ẩn lsl_staff nếu chưa có quyền
+      if (!hasLslPermission && item?.key === 'lsl_staff') {
+        return {
+          ...item,
+          hidden: true,
+        };
+      }
+
       const itemChecked = filteredData.find(x => item.key == x.key);
       if (itemChecked) {
         return {
@@ -317,7 +343,7 @@ const PopupRoles = React.memo(props => {
       };
     });
     queryState({ dataPower: newdb });
-  }, [isState.valueSearch]);
+  }, [isState.valueSearch, hasLslPermission]);
 
   // Khi clear input (value rỗng), active lại tab đầu tiên và scroll đến group đầu tiên
   // useEffect(() => {
@@ -389,7 +415,7 @@ const PopupRoles = React.memo(props => {
     sectionRefs,
     handleScrollToSection,
   } = useRolePermissionLayoutState({
-    dataPower: isState.dataPower,
+    dataPower: filteredDataPower,
     isActivePowerTab: isState.activeTab?.id === 'power',
   });
 
@@ -513,7 +539,7 @@ const PopupRoles = React.memo(props => {
             )}
             {isState.activeTab?.id === 'power' && (
               <RolePermissionLayout
-                dataPower={isState.dataPower}
+                dataPower={filteredDataPower}
                 activeGroupKey={activeGroupKey}
                 valueSearch={isState.valueSearch}
                 onChangeSearch={value => queryState({ valueSearch: value })}

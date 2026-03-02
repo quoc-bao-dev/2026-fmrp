@@ -4,6 +4,7 @@ import apiReturnSales from '@/Api/apiSalesExportProduct/returnSales/apiReturnSal
 import apiImport from '@/Api/apiPurchaseOrder/apiImport';
 import apiSalesOrder from '@/Api/apiSalesExportProduct/salesOrder/apiSalesOrder';
 import apiDeliveryReceipt from '@/Api/apiSalesExportProduct/deliveryReceipt/apiDeliveryReceipt';
+import apiReturns from '@/Api/apiPurchaseOrder/apiReturns';
 import { CONFIRM_DELETION, TITLE_DELETE } from '@/constants/delete/deleteTable';
 import { WARNING_STATUS_ROLE } from '@/constants/warningStatus/warningStatus';
 import Popup_dspc from '@/containers/accountant/payment/components/popup';
@@ -21,6 +22,7 @@ import PopupKeepStock from '@/containers/sales-export-product/sales-order/compon
 import { printSalesOrderPDF } from '@/containers/sales-export-product/sales-order/utils/printSalesOrderPDF';
 import { printDeliveryReceiptPDF } from '@/containers/sales-export-product/delivery-receipt/utils/printDeliveryReceiptPDF';
 import { printReturnSalesPDF } from '@/containers/sales-export-product/return-sales/utils/printReturnSalesPDF';
+import { printReturnsPDF } from '@/containers/purchase-order/returns/utils/printReturnsPDF';
 import { useWarehouseProperties } from '@/containers/manufacture/warehouse-transfer/hooks/useWarehouseProperties';
 import useFeature from '@/hooks/useConfigFeature';
 import useSetingServer from '@/hooks/useConfigNumber';
@@ -147,6 +149,36 @@ const Popup_Pdf = props => {
       return;
     }
 
+    // In FE cho returns (phiếu trả hàng NCC) (có giá / không giá)
+    if (typePage === 'returns') {
+      try {
+        const response = await apiReturns.apiDetailPageReturns(id);
+        const returnsData = response?.data || response?.result || response;
+
+        if (!returnsData) {
+          isShow('error', 'Không có dữ liệu để in phiếu');
+          return;
+        }
+
+        await printReturnsPDF({
+          data: returnsData,
+          dataLang: props.dataLang,
+          dataSeting: dataSeting,
+          isWarehousePropertiesEnabled,
+          warehousePropertyLabels,
+          showPrice: typePrint === 'price',
+        });
+      } catch (error) {
+        console.error('Lỗi khi in PDF returns:', error);
+        isShow('error', `Lỗi khi in phiếu: ${error.message || 'Không xác định'}`);
+      } finally {
+        setIsLoadingPrint(false);
+        setLoadingOption(null);
+        setIsOpen(false);
+      }
+      return;
+    }
+
     const fetchPDFhandle = fetchPDFMultiplePageByPrice[typePage];
     if (!fetchPDFhandle) {
       console.warn(`Không tìm thấy hàm fetchPDFhandle cho typePage: ${typePage}`);
@@ -248,7 +280,7 @@ const Popup_Pdf = props => {
       {isOpen && (
         <div className='absolute top-full -right-5 p-1 mt-1 w-fit bg-white rounded-xl z-[999] border border-gray-200 shadow-[0px_20px_40px_-4px_#919EAB3D,0px_0px_2px_0px_#919EAB3D]'>
           <div className=''>
-            {props.props?.type === 'import' || props.props?.type === 'deliveryReceipt' ? (
+            {props.props?.type === 'import' || props.props?.type === 'deliveryReceipt' || props.props?.type === 'returns' ? (
               <PopupPrintItem
                 dataLang={props.dataLang}
                 type={props.props?.type}
@@ -497,29 +529,6 @@ export const BtnAction = React.memo(props => {
       setLoadingButtonPrint(false);
     } catch (error) {
       isShow('error', `Lỗi khi in phiếu: ${error.message || 'Không xác định'}`);
-      setLoadingButtonPrint(false);
-    }
-  };
-
-  const handlePrintInternalPlan = async () => {
-    if (!props?.id) {
-      isShow('error', 'Không tìm thấy kế hoạch nội bộ để in');
-      return;
-    }
-
-    setLoadingButtonPrint(true);
-
-    try {
-      const response = await apiInternalPlan.apiPrintInternalPlan(props?.id);
-
-      if (response?.isSuccess === 1 && response?.pdf_url) {
-        window.open(response.pdf_url, '_blank');
-      } else {
-        isShow('error', response?.message || 'Không thể in kế hoạch nội bộ. Vui lòng thử lại.');
-      }
-    } catch (error) {
-      isShow('error', error?.message || 'Không thể in kế hoạch nội bộ. Vui lòng thử lại.');
-    } finally {
       setLoadingButtonPrint(false);
     }
   };
@@ -803,7 +812,7 @@ export const BtnAction = React.memo(props => {
     count++;
 
     // Count print button
-    if (!['deliveryReceipt', 'returnSales', 'import', 'returns', 'receipts', 'payment', 'production_warehouse', 'order'].includes(props?.type)) {
+    if (!['deliveryReceipt', 'returnSales', 'import', 'returns', 'receipts', 'payment', 'production_warehouse', 'order', 'internal_plan'].includes(props?.type)) {
       if (props?.type === 'sales_product') {
         count++;
       } else {
@@ -1038,35 +1047,40 @@ export const BtnAction = React.memo(props => {
       if (props?.type === 'warehouseTransfer' && props?.renderPrintButton) {
         allButtons.push(<React.Fragment key='print'>{props.renderPrintButton}</React.Fragment>);
       } else {
-      const totalButtons = calculateTotalButtons();
-      allButtons.push(
-        <div
-          key='print'
-          {...(totalButtons <= 3 && {
-            'data-tooltip-id': `print-pdf-tooltip-${props?.id}`,
-            'data-tooltip-content': props?.dataLang?.btn_table_print || 'In phiếu',
-          })}
-        >
-          <ButtonPrintItem
-            onCLick={() => handlePrintTem({ idTem: props?.id, typePage: props?.type })}
-            dataLang={props?.dataLang}
-            isLoading={loadingButtonPrint}
-            totalButtons={totalButtons}
-          />
-          {totalButtons <= 3 && (
-            <Tooltip
-              id={`print-pdf-tooltip-${props?.id}`}
-              place='top'
-              className='z-[999999] !opacity-100'
-              style={{ borderRadius: '6px' }}
+        const totalButtons = calculateTotalButtons();
+        allButtons.push(
+          <div
+            key='print'
+            {...(totalButtons <= 3 && {
+              'data-tooltip-id': `print-pdf-tooltip-${props?.id}`,
+              'data-tooltip-content': props?.dataLang?.btn_table_print || 'In phiếu',
+            })}
+          >
+            <ButtonPrintItem
+              onCLick={() => handlePrintTem({ idTem: props?.id, typePage: props?.type })}
+              dataLang={props?.dataLang}
+              isLoading={loadingButtonPrint}
+              totalButtons={totalButtons}
             />
-          )}
-        </div>
-      );
+            {totalButtons <= 3 && (
+              <Tooltip
+                id={`print-pdf-tooltip-${props?.id}`}
+                place='top'
+                className='z-[999999] !opacity-100'
+                style={{ borderRadius: '6px' }}
+              />
+            )}
+          </div>
+        );
       }
-    } else if (props?.type === 'internal_plan') {
-      allButtons.push(<ButtonPrintItem key='print-internal-plan' onCLick={handlePrintInternalPlan} dataLang={props?.dataLang} isLoading={loadingButtonPrint} totalButtons={totalButtons} />);
-    } else if (props?.type !== 'production_warehouse' && props?.type !== 'productsWarehouse' && props?.type !== 'recall' && props?.type !== 'exportToOther' && props?.type !== 'order') {
+    } else if (
+      props?.type !== 'production_warehouse' &&
+      props?.type !== 'productsWarehouse' &&
+      props?.type !== 'recall' &&
+      props?.type !== 'exportToOther' &&
+      props?.type !== 'order' &&
+      props?.type !== 'internal_plan'
+    ) {
       allButtons.push(<FilePDF key='pdf' {...shareProps} props={props} openAction={openAction} setOpenAction={setOpenAction} />);
     }
 
