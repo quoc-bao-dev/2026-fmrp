@@ -1083,7 +1083,7 @@ const Import = (props) => {
             5: "/api_web/api_import_data/importStages?csrf_protection=true",
             6: "/api_web/api_import_data/importBOM?csrf_protection=true",
             7: "/api_web/orders/import?csrf_protection=true",
-            8: "/api_web/api_import_data/importInternalPlan?csrf_protection=true",
+            8: "/api_web/internal-plans/import?csrf_protection=true",
         };
         //ánh xạ apiPaths
         const apiUrl = apiPaths[tabPage] || "";

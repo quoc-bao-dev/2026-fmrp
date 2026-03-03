@@ -189,7 +189,7 @@ export const printReturnSalesPDF = async ({ data, dataLang, dataSeting, dataMate
                                     if (productCode) {
                                         stack.push({
                                             text: productCode,
-                                            fontSize: 9,
+                                            fontSize: 8,
                                             color: CODETEXT,
                                             margin: [0, 1, 0, 0],
                                         });
@@ -197,7 +197,7 @@ export const printReturnSalesPDF = async ({ data, dataLang, dataSeting, dataMate
 
                                     stackBt.push({
                                         text: `Biến thể: ${item?.item?.product_variation || '(NONE)'}`,
-                                        fontSize: 9,
+                                        fontSize: 8,
                                     });
 
                                     if (dataProductSerial?.is_enable === '1') {
@@ -206,11 +206,11 @@ export const printReturnSalesPDF = async ({ data, dataLang, dataSeting, dataMate
                                                 text: [
                                                     {
                                                         text: 'Serial: ',
-                                                        fontSize: 9,
+                                                        fontSize: 8,
                                                     },
                                                     {
                                                         text: item?.item?.serial == null || item?.item?.serial == '' ? '-' : item?.item?.serial,
-                                                        fontSize: 9,
+                                                        fontSize: 8,
                                                     },
                                                 ],
                                             },
@@ -224,27 +224,27 @@ export const printReturnSalesPDF = async ({ data, dataLang, dataSeting, dataMate
                                                 text: [
                                                     {
                                                         text: 'Lot: ',
-                                                        fontSize: 9,
+                                                        fontSize: 8,
                                                     },
                                                     {
                                                         text: item?.item?.lot == null || item?.item?.lot == '' ? '-' : item?.item?.lot,
-                                                        fontSize: 9,
+                                                        fontSize: 8,
                                                     },
                                                 ],
-                                                fontSize: 9,
+                                                fontSize: 8,
                                             },
                                             {
                                                 text: [
                                                     {
                                                         text: 'Date: ',
-                                                        fontSize: 9,
+                                                        fontSize: 8,
                                                     },
                                                     {
                                                         text: item?.item?.expiration_date ? formatMoment(item?.item?.expiration_date, FORMAT_MOMENT.DATE_SLASH_LONG) : '-',
-                                                        fontSize: 8.5,
+                                                        fontSize: 8,
                                                     },
                                                 ],
-                                                fontSize: 9,
+                                                fontSize: 8,
                                             },
                                         ];
                                         stackBt.push(subStack);
@@ -262,14 +262,14 @@ export const printReturnSalesPDF = async ({ data, dataLang, dataSeting, dataMate
                                                     text: [
                                                         {
                                                             text: `${label}: `,
-                                                            fontSize: 9,
+                                                            fontSize: 8,
                                                         },
                                                         {
                                                             text: value == null || value === '' ? '-' : value,
-                                                            fontSize: 9,
+                                                            fontSize: 8,
                                                         },
                                                     ],
-                                                    fontSize: 9,
+                                                    fontSize: 8,
                                                 };
                                             })
                                             .filter(Boolean);
@@ -283,7 +283,7 @@ export const printReturnSalesPDF = async ({ data, dataLang, dataSeting, dataMate
                                             {
                                                 text: `${index + 1}`,
                                                 alignment: 'center',
-                                                fontSize: 9,
+                                                fontSize: 8,
                                             },
                                             {
                                                 stack: stack,
@@ -293,32 +293,32 @@ export const printReturnSalesPDF = async ({ data, dataLang, dataSeting, dataMate
                                             },
                                             {
                                                 text: item?.item?.unit_name ? item?.item?.unit_name : '',
-                                                fontSize: 9,
+                                                fontSize: 8,
                                                 alignment: 'center',
                                             },
                                             {
                                                 text: item?.quantity ? `${formatNumber(+item?.quantity)}` : '',
                                                 alignment: 'center',
-                                                fontSize: 9,
+                                                fontSize: 8,
                                             },
                                             {
                                                 text: item?.price_after_discount ? `${formatMoney(item?.price_after_discount)}` : '',
                                                 alignment: 'center',
-                                                fontSize: 9,
+                                                fontSize: 8,
                                             },
                                             {
                                                 text: item?.tax_rate ? `${item?.tax_rate}%` : '',
                                                 alignment: 'center',
-                                                fontSize: 9,
+                                                fontSize: 8,
                                             },
                                             {
                                                 text: item?.amount ? `${formatMoney(item?.amount)}` : '',
                                                 alignment: 'right',
-                                                fontSize: 9,
+                                                fontSize: 8,
                                             },
                                             {
                                                 text: item?.note ? item?.note : '',
-                                                fontSize: 9,
+                                                fontSize: 8,
                                             },
                                         ];
                                     } else {
@@ -326,7 +326,7 @@ export const printReturnSalesPDF = async ({ data, dataLang, dataSeting, dataMate
                                             {
                                                 text: `${index + 1}`,
                                                 alignment: 'center',
-                                                fontSize: 9,
+                                                fontSize: 8,
                                             },
                                             {
                                                 stack: stack,
@@ -336,22 +336,22 @@ export const printReturnSalesPDF = async ({ data, dataLang, dataSeting, dataMate
                                             },
                                             {
                                                 text: `${item?.warehouse_name || ''} - ${item?.location_name || ''}`,
-                                                fontSize: 9,
+                                                fontSize: 8,
                                                 alignment: 'left',
                                             },
                                             {
                                                 text: item?.item?.unit_name ? item?.item?.unit_name : '',
-                                                fontSize: 9,
+                                                fontSize: 8,
                                                 alignment: 'center',
                                             },
                                             {
                                                 text: item?.quantity ? `${formatNumber(+item?.quantity)}` : '',
                                                 alignment: 'center',
-                                                fontSize: 9,
+                                                fontSize: 8,
                                             },
                                             {
                                                 text: item?.note ? item?.note : '',
-                                                fontSize: 9,
+                                                fontSize: 8,
                                             },
                                         ];
                                     }

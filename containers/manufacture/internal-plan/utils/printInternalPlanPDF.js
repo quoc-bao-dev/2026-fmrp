@@ -144,7 +144,7 @@ export const printInternalPlanPDF = async ({ data, dataLang, dataSeting }) => {
                   ? [
                     {
                       text: itemCode,
-                      fontSize: 9,
+                      fontSize: 8,
                       color: CODETEXT,
                       margin: [0, 1, 0, 0],
                     },

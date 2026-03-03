@@ -710,7 +710,7 @@ const Header = () => {
       // title: "Tiện ích",
       sub: [
         {
-          title: 'Khác',
+          title: 'Tiện ích',
           // img: "/icon/header/khac/ti.png",
           items: [
             // {

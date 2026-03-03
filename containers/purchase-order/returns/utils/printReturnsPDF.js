@@ -205,7 +205,7 @@ export const printReturnsPDF = async ({
                 ? [
                     {
                         text: productCode,
-                        fontSize: 9,
+                        fontSize: 8,
                         italics: metaLines.length > 0, // nếu có phần dưới nghiêng → code cũng nghiêng theo
                         color: CODETEXT,
                         margin: [0, 1, 0, 0],

@@ -1,6 +1,7 @@
 'use client';
 
 import apiLogin from '@/Api/apiLogin/apiLogin';
+import SupportZalo from '@/components/common/button/SupportZalo';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import LoadingButton from '@/components/UI/loading/loadingButton';
 import { optionsQuery } from '@/configs/optionsQuery';
@@ -122,7 +123,7 @@ const Register = React.memo(props => {
     { id: 2, label: 'Bước 3/3: Nhập OTP', message: 'Giờ hãy nhập OTP Fimo vừa gửi bạn nhé!' },
   ];
 
-  const {} = useSetings();
+  const { } = useSetings();
 
   const dataLang = props.dataLang;
 
@@ -251,7 +252,7 @@ const Register = React.memo(props => {
           return;
         }
         showToat('error', `${res?.message || 'Đăng nhập thất bại'}`);
-      } catch (error) {}
+      } catch (error) { }
     }
 
     if (type == 'sendOtp') {
@@ -326,7 +327,7 @@ const Register = React.memo(props => {
         }
         queryState({ sendOtp: false });
         showToat('error', res?.message);
-      } catch (error) {}
+      } catch (error) { }
     }
   };
 
@@ -456,9 +457,8 @@ const Register = React.memo(props => {
                           required: true,
                         })}
                         placeholder='Nhập họ và tên của bạn'
-                        className={`${
-                          errors.fullName ? 'border-red-500 border' : 'border-[#D0D5DD] border focus:border-[#3276FA]'
-                        } w-full  placeholder:text-[13px] text-[13px] p-2.5 outline-none  rounded`}
+                        className={`${errors.fullName ? 'border-red-500 border' : 'border-[#D0D5DD] border focus:border-[#3276FA]'
+                          } w-full  placeholder:text-[13px] text-[13px] p-2.5 outline-none  rounded`}
                       />
                       {errors.fullName && <span className='text-xs text-red-500'>Vui lòng nhập họ và tên</span>}
                     </div>
@@ -474,9 +474,8 @@ const Register = React.memo(props => {
                           required: true,
                         })}
                         placeholder='Nhập tên công ty'
-                        className={`${
-                          errors.companyName ? 'border-red-500 border' : 'border-[#D0D5DD] border focus:border-[#3276FA]'
-                        } w-full placeholder:text-[13px] text-[13px]  p-2.5 outline-none  rounded`}
+                        className={`${errors.companyName ? 'border-red-500 border' : 'border-[#D0D5DD] border focus:border-[#3276FA]'
+                          } w-full placeholder:text-[13px] text-[13px]  p-2.5 outline-none  rounded`}
                       />
                       {errors.fullName && <span className='text-xs text-red-500'>Vui lòng nhập tên công ty</span>}
                     </div>
@@ -497,9 +496,8 @@ const Register = React.memo(props => {
                             },
                           })}
                           placeholder='Nhập Email của bạn'
-                          className={`${
-                            errors.email ? 'border-red-500 border' : 'border-[#D0D5DD] border focus:border-[#3276FA]'
-                          } w-full  placeholder:text-[13px] text-[13px] p-2.5 outline-none  rounded`}
+                          className={`${errors.email ? 'border-red-500 border' : 'border-[#D0D5DD] border focus:border-[#3276FA]'
+                            } w-full  placeholder:text-[13px] text-[13px] p-2.5 outline-none  rounded`}
                         />
                         {errors.email && (
                           <span className='text-xs text-red-500' role='alert'>
@@ -534,9 +532,8 @@ const Register = React.memo(props => {
                             },
                           })}
                           placeholder='Nhập số điện thoại'
-                          className={`${
-                            errors.phone ? 'border-red-500 border' : 'border-[#D0D5DD] border focus:border-[#3276FA] '
-                          } w-full  placeholder:text-[13px] text-[13px] p-2.5 outline-none  rounded`}
+                          className={`${errors.phone ? 'border-red-500 border' : 'border-[#D0D5DD] border focus:border-[#3276FA] '
+                            } w-full  placeholder:text-[13px] text-[13px] p-2.5 outline-none  rounded`}
                         />
 
                         {errors.phone && <span className='text-xs text-red-500'>{errors.phone.message}</span>}
@@ -565,9 +562,8 @@ const Register = React.memo(props => {
                               minLength: 10,
                             })}
                             placeholder='Nhập mật khẩu'
-                            className={`${
-                              errors.password ? 'border-red-500 border' : 'border-[#D0D5DD] border focus:border-[#3276FA] '
-                            } w-full placeholder:text-[13px] text-[13px]  p-2.5 outline-none  rounded`}
+                            className={`${errors.password ? 'border-red-500 border' : 'border-[#D0D5DD] border focus:border-[#3276FA] '
+                              } w-full placeholder:text-[13px] text-[13px]  p-2.5 outline-none  rounded`}
                           />
                           <button
                             type='button'
@@ -638,9 +634,8 @@ const Register = React.memo(props => {
                           },
                         })}
                         min={0}
-                        className={`${
-                          errors.otp ? 'border-red-500 border' : 'border-[#D0D5DD] border focus:border-[#3276FA]'
-                        } w-full placeholder:text-[13px]- text-[13px]- py-3 px-4 outline-none rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                        className={`${errors.otp ? 'border-red-500 border' : 'border-[#D0D5DD] border focus:border-[#3276FA]'
+                          } w-full placeholder:text-[13px]- text-[13px]- py-3 px-4 outline-none rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
                       />
                       {errors.otp && <span className='text-xs text-red-500'>{errors.otp.message}</span>}
                     </div>
@@ -704,9 +699,8 @@ const Register = React.memo(props => {
                           )();
                         }}
                         disabled={submitResendOtp.isPending}
-                        className={`${
-                          submitResendOtp.isPending ? 'cursor-not-allowed' : 'cursor-pointer'
-                        } flex items-center gap-2 justify-center w-full py-3 text-center rounded bg-gradient-to-l from-[#0375F3] via-[#296dc1] to-[#0375F3] btn-animation hover:scale-105 text-white`}
+                        className={`${submitResendOtp.isPending ? 'cursor-not-allowed' : 'cursor-pointer'
+                          } flex items-center gap-2 justify-center w-full py-3 text-center rounded bg-gradient-to-l from-[#0375F3] via-[#296dc1] to-[#0375F3] btn-animation hover:scale-105 text-white`}
                       >
                         {submitResendOtp.isPending ? <LoadingButton /> : <p className='capitalize'>Tiếp tục</p>}
                       </button>
@@ -725,9 +719,8 @@ const Register = React.memo(props => {
                           handleSubmit(data => onSubmit(data, 'register'))();
                         }}
                         disabled={submitOtp.isPending}
-                        className={`${
-                          submitOtp.isPending ? 'cursor-not-allowed' : 'cursor-pointer'
-                        } flex items-center gap-2 justify-center w-full py-3 text-center rounded bg-gradient-to-l from-[#0375F3] via-[#296dc1] to-[#0375F3] btn-animation hover:scale-105 text-white`}
+                        className={`${submitOtp.isPending ? 'cursor-not-allowed' : 'cursor-pointer'
+                          } flex items-center gap-2 justify-center w-full py-3 text-center rounded bg-gradient-to-l from-[#0375F3] via-[#296dc1] to-[#0375F3] btn-animation hover:scale-105 text-white`}
                       >
                         {submitOtp.isPending ? (
                           <div className='flex items-center justify-center gap-2'>
@@ -752,6 +745,8 @@ const Register = React.memo(props => {
           </Customscrollbar>
         </div>
       </div>
+      <SupportZalo />
+
     </>
   );
 });
