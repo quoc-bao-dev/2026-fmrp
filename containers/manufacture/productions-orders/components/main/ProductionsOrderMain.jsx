@@ -268,7 +268,10 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
       {
         id: 'history_material_output',
         name: 'Lịch sử xuất NVL/ BTP',
-        count: 0,
+        count:
+          isStateProvider?.productionsOrders?.dataProductionOrderDetail?.data_exports?.count ??
+          isStateProvider?.productionsOrders?.dataProductionOrderDetail?.data_exports?.items?.length ??
+          0,
         type: 'materialOutputHistory',
       },
       {
@@ -281,7 +284,12 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     ];
 
     return tabs.filter(tab => !tab.hidden);
-  }, [keepStockPurchaseCount, dataProductionOrderDetail?.count_input_timesheet, checkInstall]);
+  }, [
+    keepStockPurchaseCount,
+    dataProductionOrderDetail?.count_input_timesheet,
+    isStateProvider?.productionsOrders?.dataProductionOrderDetail?.data_exports?.count,
+    checkInstall,
+  ]);
 
   const listPrintTask = useMemo(
     () => [
@@ -1765,7 +1773,11 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
               )}
               {isStateProvider?.productionsOrders?.isTabList?.type == 'keepStock' && <TabKeepStock {...shareProps} />}
               {isStateProvider?.productionsOrders?.isTabList?.type == 'materialOutputHistory' && (
-                <TabMaterialOutputHistory dataLang={dataLang} />
+                <TabMaterialOutputHistory
+                  dataLang={dataLang}
+                  items={isStateProvider?.productionsOrders?.dataProductionOrderDetail?.data_exports?.items || []}
+                  count={isStateProvider?.productionsOrders?.dataProductionOrderDetail?.data_exports?.count || 0}
+                />
               )}
               {isStateProvider?.productionsOrders?.isTabList?.type == 'pieceworkWage' && (
                 <TabPieceworkWage

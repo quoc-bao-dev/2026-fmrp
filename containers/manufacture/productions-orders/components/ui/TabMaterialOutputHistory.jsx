@@ -8,68 +8,25 @@ import formatNumberConfig from '@/utils/helpers/formatnumber';
 import useSetingServer from '@/hooks/useConfigNumber';
 import { TagColorProductNew } from '@/components/common/tag/TagStatusNew';
 
-// Mock data cho bảng Lịch sử xuất NVL/BTP
-const mockMaterialOutputHistory = [
-    {
-        id: 1,
-        item_code: 'CU99',
-        item_name: 'Đồng 99%',
-        images: null,
-        product_variation: '(NONE)',
-        unit_name: 'Kg',
-        type_products: 'materials',
-        quantity_total_quota: 22,
-        quantity_exported: 20,
-        quantity_rest: 2,
-        quantity_recovery: 0,
-    },
-    {
-        id: 2,
-        item_code: 'LOGOPC2023',
-        item_name: 'Logo Porsche 2023',
-        images: null,
-        product_variation: '(NONE)',
-        unit_name: 'Cái',
-        type_products: 'semi_products',
-        quantity_total_quota: 10,
-        quantity_exported: 8,
-        quantity_rest: 2,
-        quantity_recovery: 1,
-    },
-    {
-        id: 3,
-        item_code: 'NVL001',
-        item_name: 'Sơn phủ ngoài',
-        images: null,
-        product_variation: '(Màu đen)',
-        unit_name: 'Lọ',
-        type_products: 'materials',
-        quantity_total_quota: 30,
-        quantity_exported: 18,
-        quantity_rest: 12,
-        quantity_recovery: 3,
-    },
-];
-
-const TabMaterialOutputHistory = ({ dataLang }) => {
+const TabMaterialOutputHistory = ({ dataLang, items = [], count = 0 }) => {
     const [limit, setLimit] = useState(5);
     const [isLoadingTable, setIsLoadingTable] = useState(false);
     const dataSeting = useSetingServer();
 
     const formatNumber = (num) => formatNumberConfig(+num, dataSeting);
 
-    const data = mockMaterialOutputHistory;
-    const filteredData = data;
+    const filteredData = Array.isArray(items) ? items : [];
+    const totalCount = Number(count) > 0 ? Number(count) : filteredData.length;
 
     const visibleData = filteredData.slice(0, limit);
 
     return (
         <div className='flex flex-col h-full w-full'>
             {/* Khu vực bảng (scrollable) */}
-            <div className='flex-1 min-h-0'>
-                <div className='grid grid-cols-16 mt-2'>
+            <div className='flex-1 min-h-0 overflow-y-auto'>
+                <div className='grid grid-cols-16 mt-2 min-h-0'>
                     {/* header */}
-                    <div className='col-span-16 grid grid-cols-16 gap-2 py-3 border-b'>
+                    <div className='col-span-16 grid grid-cols-16 gap-2 py-3 border-b sticky top-0 z-10 bg-white'>
                         <h4 className='text-xs-default text-center text-[#9295A4] font-semibold col-span-1 px-1'>STT</h4>
 
                         <h4 className='text-xs-default text-start text-[#9295A4] font-semibold col-span-3 px-1'>
@@ -196,18 +153,18 @@ const TabMaterialOutputHistory = ({ dataLang }) => {
             </div>
 
             {/* Pagination luôn nằm cuối tab */}
-            {filteredData?.length > 0 && !isLoadingTable && (
+            {totalCount > 0 && !isLoadingTable && (
                 <div className='flex item justify-between mt-2'>
                     <div />
-                    {limit < filteredData.length && (
+                    {limit < totalCount && (
                         <div className='flex justify-center py-2'>
                             <button
-                                onClick={() => setLimit(filteredData.length)}
+                                onClick={() => setLimit(totalCount)}
                                 className='flex items-center gap-2 text-[#667085] 3xl:text-base xl:text-sm text-xs hover:underline'
                             >
                                 <div className='space-x-2'>
                                     <span>Xem Thêm</span>
-                                    <span>({filteredData.length - limit})</span>
+                                    <span>({Math.max(totalCount - limit, 0)})</span>
                                     <span>Nguyên Vật Liệu</span>
                                 </div>
                                 <PiCaretDownBold className='3xl:size-5 size-4' />
@@ -219,7 +176,7 @@ const TabMaterialOutputHistory = ({ dataLang }) => {
                         limit={limit}
                         sLimit={value => setLimit(value)}
                         dataLang={{ display: 'Hiển thị', on: 'trên', lsx: 'BTP' }}
-                        total={filteredData.length}
+                        total={totalCount}
                     />
                 </div>
             )}
