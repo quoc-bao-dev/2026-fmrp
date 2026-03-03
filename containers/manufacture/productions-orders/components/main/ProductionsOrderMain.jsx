@@ -62,6 +62,7 @@ import DetailProductionOrderList from '../ui/DetailProductionOrderList';
 import PlaningProductionOrder from '../ui/PlaningProductionOrder';
 import TabKeepStock from '../ui/tabKeepStock';
 import TabPieceworkWage from '../ui/TabPieceworkWage';
+import TabMaterialOutputHistory from '../ui/TabMaterialOutputHistory';
 import { listDropdownCompleteStage, listLsxStatus } from './constants/listData';
 
 const initialState = {
@@ -263,6 +264,16 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
         count: keepStockPurchaseCount,
         type: 'keepStock',
       },
+      // Lịch sử xuất NVL/ BTP
+      {
+        id: 'history_material_output',
+        name: 'Lịch sử xuất NVL/ BTP',
+        count:
+          isStateProvider?.productionsOrders?.dataProductionOrderDetail?.data_exports?.count ??
+          isStateProvider?.productionsOrders?.dataProductionOrderDetail?.data_exports?.items?.length ??
+          0,
+        type: 'materialOutputHistory',
+      },
       {
         id: '4',
         name: 'Lương Sản Lượng',
@@ -273,7 +284,12 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
     ];
 
     return tabs.filter(tab => !tab.hidden);
-  }, [keepStockPurchaseCount, dataProductionOrderDetail?.count_input_timesheet, checkInstall]);
+  }, [
+    keepStockPurchaseCount,
+    dataProductionOrderDetail?.count_input_timesheet,
+    isStateProvider?.productionsOrders?.dataProductionOrderDetail?.data_exports?.count,
+    checkInstall,
+  ]);
 
   const listPrintTask = useMemo(
     () => [
@@ -1756,6 +1772,13 @@ const ProductionsOrderMain = ({ dataLang, typeScreen }) => {
                 />
               )}
               {isStateProvider?.productionsOrders?.isTabList?.type == 'keepStock' && <TabKeepStock {...shareProps} />}
+              {isStateProvider?.productionsOrders?.isTabList?.type == 'materialOutputHistory' && (
+                <TabMaterialOutputHistory
+                  dataLang={dataLang}
+                  items={isStateProvider?.productionsOrders?.dataProductionOrderDetail?.data_exports?.items || []}
+                  count={isStateProvider?.productionsOrders?.dataProductionOrderDetail?.data_exports?.count || 0}
+                />
+              )}
               {isStateProvider?.productionsOrders?.isTabList?.type == 'pieceworkWage' && (
                 <TabPieceworkWage
                   {...shareProps}

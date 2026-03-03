@@ -25,6 +25,7 @@ import { LoginSocketProvider, useLoginSocketContext } from '@/context/socket/Log
 // [session-web] Import hàm getOrCreateTabSession từ utils
 import { getOrCreateTabSession } from '@/utils/helpers/sessionStorage';
 import MobileWarningModal from './MobileWarningModal';
+import SupportZalo from '@/components/common/button/SupportZalo';
 // [mobile-warning] Import MobileWarningModal
 
 // [login-socket] [step 2] Component con để sử dụng socket hook (bên trong Provider)
@@ -494,7 +495,7 @@ const LoginContent = React.memo(props => {
           return;
         }
         showToat('error', `${res?.message || 'Đăng nhập thất bại'}`);
-      } catch (error) {}
+      } catch (error) { }
     }
 
     if (type == 'sendOtp') {
@@ -552,7 +553,7 @@ const LoginContent = React.memo(props => {
         }
         queryState({ sendOtp: false });
         showToat('error', res?.message);
-      } catch (error) {}
+      } catch (error) { }
     }
   };
 
@@ -853,6 +854,9 @@ const LoginContent = React.memo(props => {
           </div>
         </div>
       </div>
+
+      <SupportZalo />
+
     </>
   );
 });
