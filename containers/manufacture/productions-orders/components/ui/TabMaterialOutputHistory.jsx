@@ -54,7 +54,7 @@ const TabMaterialOutputHistory = ({ dataLang, items = [], count = 0 }) => {
                         </h4>
                     </div>
 
-                    <div className='col-span-16 grid grid-cols-16 min-h-[240px]'>
+                    <div className='col-span-16 grid grid-cols-16'>
                         {isLoadingTable ? (
                             <Loading className='3xl:h-full 2xl:h-full xl:h-full h-full col-span-16' />
                         ) : filteredData && filteredData.length > 0 ? (
