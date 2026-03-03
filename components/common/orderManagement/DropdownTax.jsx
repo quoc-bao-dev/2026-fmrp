@@ -31,9 +31,9 @@ const DropdownTax = ({ taxOptions, totalTax, onChange, dataLang }) => {
                 className={`flex items-center justify-start gap-1 responsive-text-sm ${isLabel ? 'py-1 2xl:py-2' : ''}`}
               >
                 <h2 className="">{option?.label}</h2>
-                {option?.tax_rate !== '0' && option?.tax_rate !== '5' && (
+                {/* {option?.tax_rate !== '0' && option?.tax_rate !== '5' && (
                   <h2>{option?.tax_rate === '20' ? `(${option?.tax_rate}%)` : `${option?.tax_rate}%`}</h2>
-                )}
+                )} */}
               </div>
             )}
           />

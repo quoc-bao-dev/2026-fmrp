@@ -44,6 +44,7 @@ const SelectWithRadio = ({
   dataLang,
   icon,
   sSearch,
+  className,
   noDataMessage = 'Không có dữ liệu', // Prop mới: thông báo khi không có dữ liệu
 }) => {
   const router = useRouter()
@@ -79,7 +80,7 @@ const SelectWithRadio = ({
   }, 500)
 
   return (
-    <div className="flex flex-col flex-wrap items-start gap-y-2">
+    <div className={`flex flex-col flex-wrap items-start gap-y-2 ${className}`}>
       <InfoFormLabel isRequired={isRequired} label={label} />
 
       <div className="w-full flex">
