@@ -6,7 +6,7 @@ import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
 import { default as formatNumber } from '@/utils/helpers/formatnumber';
 import Image from 'next/image';
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { IoIosAlert } from 'react-icons/io';
 import { Tooltip } from 'react-tippy';
@@ -20,6 +20,7 @@ const createUniqueRowId = () => `lot-row-${Date.now()}-${Math.random().toString(
 const ProductRow = memo(({ product, index, displayIndex, handleSelectProduct, classNameButton, po_id, refreshKey, isVisible = true }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [lotRows, setLotRows] = useState([]);
+  const autoSelectedRef = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -78,13 +79,25 @@ const ProductRow = memo(({ product, index, displayIndex, handleSelectProduct, cl
   useEffect(() => {
     // Luôn cập nhật product.warehouses để đồng bộ với lotRows
     // Nếu lotRows rỗng, cập nhật warehouses thành mảng rỗng
-    product.warehouses = lotRows.length > 0 
+    product.warehouses = lotRows.length > 0
       ? lotRows.map(row => ({
-          ...row,
-          quantity_enter: row.quantity_enter ?? row.total_quantity ?? 0,
-        }))
+        ...row,
+        quantity_enter: row.quantity_enter ?? row.total_quantity ?? 0,
+      }))
       : [];
-    
+
+    // Nếu sản phẩm đã được chọn (từ parent) thì đánh dấu đã auto-select để không ép chọn lại
+    if (product.selected) {
+      autoSelectedRef.current = true;
+    }
+
+    // Mới load/được thêm kho lần đầu: auto chọn (chỉ khi có kho, không phải semi_products)
+    // Tránh trường hợp user đã tự bỏ chọn rồi mà bị auto chọn lại.
+    if (!autoSelectedRef.current && lotRows.length > 0 && !product.selected && product.type_origin !== 'semi_products') {
+      autoSelectedRef.current = true;
+      handleSelectProduct(index, true);
+    }
+
     // Tự động bỏ chọn sản phẩm nếu xóa hết lotRows (trừ semi_products)
     if (lotRows.length === 0 && product.selected && product.type_origin !== 'semi_products') {
       handleSelectProduct(index, false);
@@ -277,13 +290,6 @@ const PopupExportMaterialsTabCurrent = ({
       return acc;
     }, []);
 
-    // Ưu tiên sản phẩm có kho (warehouses) lên trên
-    filteredWithIndex.sort((a, b) => {
-      const hasWarehouseA = (a.product.warehouses?.length ?? 0) > 0;
-      const hasWarehouseB = (b.product.warehouses?.length ?? 0) > 0;
-      return Number(hasWarehouseB) - Number(hasWarehouseA);
-    });
-
     return filteredWithIndex;
   }, [products, isProductVisible]);
 
@@ -304,9 +310,9 @@ const PopupExportMaterialsTabCurrent = ({
               onClick={() => setSearchTerm('')}
               className='rounded-full bg-gray-100 hover:bg-gray-200 text-[#3A3E4C] p-1 transition'
               aria-label='Xóa tìm kiếm'
-              >
-                <CloseXIcon className='size-3' />
-              </button>
+            >
+              <CloseXIcon className='size-3' />
+            </button>
           )}
           <button className='rounded-lg bg-[#1760B9] p-1'>
             <MagnifyingGlassIcon className='size-4 text-white' />
@@ -354,10 +360,10 @@ const PopupExportMaterialsTabCurrent = ({
                                 <CheckboxDefault checked={selectAll} onChange={handleSelectAll} />
                               </Tooltip>
                             ) : (
-                              <Tooltip 
+                              <Tooltip
                                 key='hover-tooltip'
-                                title='Chọn tất cả' 
-                                position='top' 
+                                title='Chọn tất cả'
+                                position='top'
                                 arrow={true}
                                 trigger='mouseenter focus'
                               >
