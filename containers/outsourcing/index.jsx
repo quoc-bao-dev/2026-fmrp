@@ -2,7 +2,8 @@ import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew';
 import StatusCheckboxGroup from '@/components/common/checkbox/StatusCheckboxGroup';
 import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
 import LimitListDropdown from '@/components/common/dropdown/LimitListDropdown';
-import { CaretDownIcon, PlusIcon } from '@/components/icons';
+import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
+import { CaretDownIcon, MagnifyingGlassIcon, PlusIcon, PrinterIcon } from '@/components/icons';
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
 import BreadcrumbCustom from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComponent';
@@ -24,6 +25,8 @@ const OutsourcingMain = () => {
   const [sidebarStatusFilter, setSidebarStatusFilter] = useState([]);
   const [sidebarLimit, setSidebarLimit] = useState(5);
   const [activeOrderId, setActiveOrderId] = useState('PGC-26022604-1');
+  const [activeMainTab, setActiveMainTab] = useState({ id: 'info', name: 'Thông tin', type: 'info' });
+  const [tableLimit, setTableLimit] = useState(4);
 
   const stateFilterDropdown = useSelector(state => state.stateFilterDropdown);
 
@@ -107,6 +110,88 @@ const OutsourcingMain = () => {
     },
   ];
 
+  // Mock dữ liệu bảng thành phẩm gia công
+  const mockOutsourcingItems = [
+    {
+      id: 1,
+      name: 'Áo sơ mi basic 01',
+      variation: 'Màu trắng / Size M',
+      code: 'TP-000001',
+      unit: 'Chiếc',
+      qtyOutsourcing: 4,
+      qtyCompleted: 4,
+      qtyError: 0,
+      unitPrice: 400000,
+      status: 'done',
+    },
+    {
+      id: 2,
+      name: 'Áo sơ mi basic 01',
+      variation: 'Màu trắng / Size L',
+      code: 'TP-000002',
+      unit: 'Chiếc',
+      qtyOutsourcing: 4,
+      qtyCompleted: 3,
+      qtyError: 1,
+      unitPrice: 400000,
+      status: 'partial',
+    },
+    {
+      id: 3,
+      name: 'Áo sơ mi basic 01',
+      variation: 'Màu trắng / Size XL',
+      code: 'TP-000003',
+      unit: 'Chiếc',
+      qtyOutsourcing: 4,
+      qtyCompleted: 4,
+      qtyError: 0,
+      unitPrice: 400000,
+      status: 'imported',
+    },
+    {
+      id: 4,
+      name: 'Áo sơ mi basic 01',
+      variation: 'Màu trắng / Size S',
+      code: 'TP-000004',
+      unit: 'Chiếc',
+      qtyOutsourcing: 4,
+      qtyCompleted: 0,
+      qtyError: 4,
+      unitPrice: 400000,
+      status: 'not_imported',
+    },
+    {
+      id: 5,
+      name: 'Áo sơ mi basic 01',
+      variation: 'Màu trắng / Size S',
+      code: 'TP-000004',
+      unit: 'Chiếc',
+      qtyOutsourcing: 4,
+      qtyCompleted: 0,
+      qtyError: 4,
+      unitPrice: 400000,
+      status: 'not_imported',
+    },
+
+    {
+      id: 6,
+      name: 'Áo sơ mi basic 01',
+      variation: 'Màu trắng / Size S',
+      code: 'TP-000004',
+      unit: 'Chiếc',
+      qtyOutsourcing: 4,
+      qtyCompleted: 0,
+      qtyError: 4,
+      unitPrice: 400000,
+      status: 'not_imported',
+    },
+  ];
+
+  const mainTabs = [
+    { id: 'info', name: 'Thông tin', type: 'info' },
+    { id: 'history', name: 'Lịch sử xuất giao kho', type: 'history' },
+  ];
+
   const breadcrumbItems = [
     {
       label: 'Khác',
@@ -136,6 +221,40 @@ const OutsourcingMain = () => {
       : [...currentSelected, value];
 
     setSidebarStatusFilter(updatedSelected);
+  };
+
+  const formatNumber = value =>
+    value?.toLocaleString('vi-VN', {
+      maximumFractionDigits: 0,
+    });
+
+  const renderStatusBadge = status => {
+    const map = {
+      done: {
+        label: 'Hoàn thành',
+        className: 'bg-[#E3F8E8] text-[#1A7526]',
+      },
+      partial: {
+        label: 'Nhập 1 phần',
+        className: 'bg-[#FEE4E2] text-[#B42318]',
+      },
+      imported: {
+        label: 'Đã nhập',
+        className: 'bg-[#D8F3FD] text-[#076A94]',
+      },
+      not_imported: {
+        label: 'Chưa nhập',
+        className: 'bg-[#FFF4E5] text-[#C25705]',
+      },
+    };
+
+    const current = map[status] || map.not_imported;
+
+    return (
+      <span className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${current.className}`}>
+        {current.label}
+      </span>
+    );
   };
 
   // Trigger cho filter Nhà gia công
@@ -363,29 +482,12 @@ const OutsourcingMain = () => {
 
                         <div className='flex flex-col gap-0.5'>
                           <h3 className='text-[#667085] font-normal 3xl:text-base xl:text-sm text-xs'>
-                            {/* <span>Nhà gia công: </span> */}
                             <span>{item.vendorName}</span>
                           </h3>
 
                           <h3 className='text-[#667085] font-normal 3xl:text-base xl:text-sm text-xs'>
-                            {/* <span>Ngày tạo: </span> */}
                             <span>{item.createdAt}</span>
                           </h3>
-
-                          {/* <div className='flex flex-wrap items-start gap-x-1'>
-                            <span className='text-[#667085] whitespace-nowrap font-normal 3xl:text-base xl:text-sm text-xs'>
-                              Theo dõi:
-                            </span>
-                            {item.followRefs?.map((ref, refIndex) => (
-                              <span
-                                key={refIndex}
-                                className='text-[#667085] font-normal 3xl:text-base xl:text-sm text-xs'
-                              >
-                                {ref}
-                                {refIndex < item.followRefs.length - 1 && <span>,</span>}
-                              </span>
-                            ))}
-                          </div> */}
                         </div>
                       </div>
                     </div>
@@ -406,8 +508,203 @@ const OutsourcingMain = () => {
           </div>
         </div>
 
-        {/* ===== MAIN (placeholder) ===== */}
-        <div className='flex-1 min-w-0 h-full rounded-lg border border-dashed border-[#D0D5DD] bg-white/40' />
+        {/* ===== MAIN ===== */}
+        <div className='flex-1 min-w-0 h-full flex flex-col space-y-3'>
+          {/* Search + actions */}
+          <div className='flex items-center justify-between gap-3'>
+            <div className='flex items-center gap-2 flex-1 max-w-[50%]'>
+              <div className='relative w-full'>
+                <input
+                  className='w-full h-9 pl-9 pr-3 border border-[#D0D5DD] rounded-lg text-sm text-[#141522] placeholder:text-[#9295A4] focus:outline-none focus:border-[#3276FA]'
+                  placeholder='Tìm kiếm theo tên và mã sản phẩm'
+                />
+                <MagnifyingGlassIcon className='size-4 text-[#9295A4] absolute left-3 top-1/2 -translate-y-1/2' />
+              </div>
+            </div>
+
+            <div className='flex items-center gap-2'>
+              <ButtonAnimationNew
+                title='Tác vụ'
+                className='flex items-center justify-center gap-2 rounded-lg border border-[#D0D5DD] h-9 px-3 text-sm text-[#344054] bg-white'
+              />
+              <ButtonAnimationNew
+                icon={<PrinterIcon className='size-4 text-[#11315B]' />}
+                title='In phiếu gia công'
+                className='flex items-center justify-center gap-2 rounded-lg border border-[#D0D5DD] h-9 px-3 text-sm text-[#344054] bg-white'
+              />
+              <ButtonAnimationNew
+                title='Xóa'
+                className='flex items-center justify-center gap-2 rounded-lg border border-[#F04438] h-9 px-3 text-sm text-[#F04438] bg-white'
+              />
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <TabSwitcherWithUnderline
+            tabs={mainTabs}
+            activeTab={activeMainTab}
+            onChange={tab => setActiveMainTab(tab)}
+            renderLabel={tab => (
+              <h3
+                className={`${activeMainTab?.id === tab.id ? 'text-[#0375F3] scale-[1.02]' : 'text-[#9295A4] scale-[1]'
+                  } font-medium group-hover:text-[#0375F3] transition-all duration-100 ease-linear origin-left flex items-center gap-1`}
+              >
+                <span>{tab.name}</span>
+              </h3>
+            )}
+          />
+
+          {/* Table + Footer luôn dưới cùng */}
+          <div className='flex-1 min-h-0 flex flex-col'>
+            {activeMainTab?.id === 'info' ? (
+              <>
+                <div className='w-full flex-1 min-h-0'>
+                  <div className='w-full h-full overflow-x-auto'>
+                    <div className='min-w-[1100px] h-full overflow-y-auto'>
+                      <div className='grid grid-cols-17'>
+                        {/* header */}
+                        <div className='col-span-17 grid grid-cols-17 gap-2 py-3 border-b bg-white sticky top-0 z-10'>
+                          <h4 className='text-xs-default text-center text-[#9295A4] font-semibold col-span-1 px-1'>
+                            STT
+                          </h4>
+                          <h4 className='text-xs-default text-start text-[#9295A4] font-semibold col-span-3 px-1'>
+                            Thành phẩm
+                          </h4>
+                          <h4 className='text-xs-default text-start text-[#9295A4] font-semibold col-span-1 px-1'>
+                            ĐVT
+                          </h4>
+                          <h4 className='text-xs-default text-center text-[#9295A4] font-semibold block col-span-2 px-1'>
+                            SL gia công
+                          </h4>
+                          <h4 className='text-xs-default text-center text-[#9295A4] font-semibold block col-span-2 px-1'>
+                            SL hoàn thành
+                          </h4>
+                          <h4 className='text-xs-default text-center text-[#9295A4] font-semibold block col-span-2 px-1'>
+                            SL lỗi
+                          </h4>
+                          <h4 className='text-xs-default text-center text-[#9295A4] font-semibold block col-span-2 px-1'>
+                            Đơn giá
+                          </h4>
+                          <h4 className='text-xs-default text-center text-[#9295A4] font-semibold block col-span-2 px-1'>
+                            Thành tiền
+                          </h4>
+                          <h4 className='text-xs-default text-center text-[#9295A4] font-semibold block col-span-2 px-1'>
+                            Trạng thái
+                          </h4>
+                        </div>
+
+                        <div className='col-span-17 grid grid-cols-17 min-h-[240px]'>
+                          {mockOutsourcingItems && mockOutsourcingItems.length > 0 ? (
+                            mockOutsourcingItems.slice(0, tableLimit).map((item, index) => {
+                              const totalMoney = item.unitPrice * item.qtyCompleted;
+
+                              return (
+                                <div
+                                  key={item.id}
+                                  className={`${mockOutsourcingItems.slice(0, tableLimit).length - 1 !== index
+                                    ? 'border-[#F3F3F4]'
+                                    : 'border-transparent'
+                                    } border-b col-span-17 grid grid-cols-17 gap-2 items-start group hover:bg-gray-50 cursor-pointer transition-all duration-150 ease-in-out`}
+                                >
+                                  <h4 className='col-span-1 flex items-center justify-center size-full text-center text-[#141522] font-semibold text-sm-default uppercase 3xl:py-4 py-2 px-1'>
+                                    {index + 1}
+                                  </h4>
+
+                                  <h4 className='col-span-3 flex items-center justify-center size-full text-[#344054] font-normal gap-2 3xl:py-4 py-2 px-1'>
+                                    <div className='flex items-start justify-start w-full gap-2'>
+                                      <div className='size-8 min-w-8 rounded-md bg-[#F3F4F6] flex items-center justify-center text-[10px] text-[#667085]'>
+                                        IMG
+                                      </div>
+
+                                      <div className='flex flex-col 3xl:gap-1 gap-0.5'>
+                                        <p className='font-semibold text-sm-default text-[#141522] group-hover:text-[#0F4F9E]'>
+                                          {item.name}
+                                        </p>
+                                        <p className='text-[#667085] font-normal xl:text-[10px] text-[8px]'>
+                                          {item.variation}
+                                        </p>
+                                        <p className='text-[#3276FA] font-normal 3xl:text-sm xl:text-xs text-[10px]'>
+                                          {item.code}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </h4>
+
+                                  <h4 className='col-span-1 flex items-center justify-start size-full text-start text-[#141522] font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
+                                    {item.unit}
+                                  </h4>
+
+                                  <h4 className='col-span-2 flex items-center justify-center size-full text-center text-[#141522] font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
+                                    {item.qtyOutsourcing > 0 ? formatNumber(item.qtyOutsourcing) : '-'}
+                                  </h4>
+
+                                  <h4 className='col-span-2 flex items-center justify-center size-full text-[#141522] font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
+                                    {item.qtyCompleted > 0 ? formatNumber(item.qtyCompleted) : '-'}
+                                  </h4>
+
+                                  <h4 className='col-span-2 flex items-center justify-center size-full text-[#F04438] font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
+                                    {item.qtyError > 0 ? formatNumber(item.qtyError) : '-'}
+                                  </h4>
+
+                                  <h4 className='col-span-2 flex items-center justify-center size-full text-[#141522] font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
+                                    {item.unitPrice > 0 ? `${formatNumber(item.unitPrice)} đ` : '-'}
+                                  </h4>
+
+                                  <h4 className='col-span-2 flex items-center justify-center size-full text-[#141522] font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
+                                    {totalMoney > 0 ? `${formatNumber(totalMoney)} đ` : '-'}
+                                  </h4>
+
+                                  <div className='col-span-2 flex items-center justify-center size-full 3xl:py-4 py-2 px-1 truncate'>
+                                    {renderStatusBadge(item.status)}
+                                  </div>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <NoData className='mt-0 col-span-17' type='table' />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* load more + limit (luôn ở cuối, ngoài vùng scroll dọc) */}
+                {mockOutsourcingItems.length > 0 && (
+                  <div className='flex item justify-between mt-2'>
+                    <div />
+                    {tableLimit < mockOutsourcingItems.length && (
+                      <div className='flex justify-center py-2'>
+                        <button
+                          onClick={() => setTableLimit(mockOutsourcingItems.length)}
+                          className='flex items-center gap-2 text-[#667085] 3xl:text-base xl:text-sm text-xs hover:underline'
+                        >
+                          <div className='space-x-2'>
+                            <span>Xem thêm</span>
+                            <span>({mockOutsourcingItems.length - tableLimit})</span>
+                            <span>Thành phẩm</span>
+                          </div>
+                          <CaretDownIcon className='size-4' />
+                        </button>
+                      </div>
+                    )}
+
+                    <LimitListDropdown
+                      limit={tableLimit}
+                      sLimit={value => setTableLimit(value)}
+                      dataLang={{ display: 'Hiển thị', on: 'trên', lsx: 'Thành phẩm' }}
+                      total={mockOutsourcingItems.length}
+                    />
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className='flex-1 flex items-center justify-center text-sm text-[#667085]'>
+                Lịch sử xuất giao kho
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* ===== DETAIL (placeholder) ===== */}
         <div className='w-[26%] min-w-[320px] h-full rounded-lg border border-dashed border-[#D0D5DD] bg-white/40' />
