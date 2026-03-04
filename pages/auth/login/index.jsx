@@ -589,7 +589,6 @@ const LoginContent = React.memo(props => {
               <div className="scale-75 origin-bottom-left">
                 <div className='space-y-1'>
                   <p className='text-[#344054] font-medium text-[32px] capitalize'>Trợ lý sản xuất</p>
-                  <p className='text-[#344054] font-medium text-[16px] capitalize'>Trợ lý sản xuất</p>
                   <div className='space-y-1'>
                     <p className='text-[#344054] font-normal text-[16px] flex items-center'>
                       <FaQuoteLeft className='w-3 h-3 text-[#344054]' />
