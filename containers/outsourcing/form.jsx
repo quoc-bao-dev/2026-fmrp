@@ -46,6 +46,7 @@ const OutsourcingForm = () => {
   const [note, setNote] = useState('');
   const [selectedOutsourcingType, setSelectedOutsourcingType] = useState('nvl'); // Loại gia công
   const [selectedGoodsType, setSelectedGoodsType] = useState('ton-kho'); // Loại hàng gia công
+  const [totalDiscountAll, setTotalDiscountAll] = useState(0); // % chiết khấu hàng loạt
   const [totalTaxAll, setTotalTaxAll] = useState(null); // Thuế chọn hàng loạt
   const [items, setItems] = useState([]);
 
@@ -169,6 +170,13 @@ const OutsourcingForm = () => {
     setItems(prev => prev.filter(item => item.id !== id));
   };
 
+  // Đổi % chiết khấu hàng loạt cho tất cả dòng
+  const handleChangeAllDiscount = numericValue => {
+    const discount = Number(numericValue?.value || 0);
+    setTotalDiscountAll(discount);
+    setItems(prev => prev.map(row => calculateLine(row, { discount })));
+  };
+
   const handleChangeAllTax = value => {
     const tax = value
       ? {
@@ -261,17 +269,17 @@ const OutsourcingForm = () => {
     <LayoutForm
       title={id ? 'Sửa đơn gia công' : 'Thêm đơn gia công'}
       breadcrumbItems={breadcrumbItems}
-      heading={'Thông tin đơn gia công'}
+      heading={'Đơn gia công'}
       // statusExprired={statusExprired}
       // onSave={handleSubmit}
       onExit={() => router.push('/convenience/outsourcing')}
       leftContent={
         <>
           <div className='flex items-center justify-between'>
-            <h2 className='responsive-text-xl font-medium text-brand-color w-full'>Thông tin mặt hàng</h2>
+            <h2 className='responsive-text-xl font-medium text-brand-color w-full capitalize'>Thông tin mặt hàng</h2>
             <SelectSearch
               options={mockProductOptions}
-              placeholder={dataLang?.N_search_product || 'Tìm kiếm mặt hàng'}
+              placeholder={'Tìm kiếm mặt hàng hoặc LSX'}
               value={items.map(row => row.items)}
               onChange={value => {
                 handleSelectSearchChange(value);
@@ -317,7 +325,12 @@ const OutsourcingForm = () => {
                 Đơn giá
               </h4>
               <div className='col-span-3 px-2'>
-                <DropdownDiscount value={0} onChange={() => { }} dataLang={dataLang} className='w-full' />
+                <DropdownDiscount
+                  value={totalDiscountAll}
+                  onChange={handleChangeAllDiscount}
+                  dataLang={dataLang}
+                  className='w-full'
+                />
               </div>
               <h4 className='col-span-3 text-right px-2'>
                 Đơn giá sau CK
