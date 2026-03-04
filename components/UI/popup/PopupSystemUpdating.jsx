@@ -50,6 +50,8 @@ const PopupSystemUpdating = ({ open = false }) => {
     setPercentUpdate(0);
   }, [open]);
 
+  if (!open) return null;
+  
   return (
     <PopupCustom
       open={open}

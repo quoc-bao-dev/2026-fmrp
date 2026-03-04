@@ -1,12 +1,10 @@
-import { CalendarIcon, ProgressIcon } from '@/components/icons';
+import { CalendarIcon, CaretDropDownThinIcon } from '@/components/icons';
 import PopupConfim from '@/components/UI/popupConfim/popupConfim';
-import { IMAGES } from '@/constants/images';
+import LoadingThreeDotsJumping from '@/containers/botAI/components/LoadingThreeDotsJumping';
 import useToast from '@/hooks/useToast';
 import { usePauseTimer, useResumeTimer, useStartTimer } from '@/managers/api/piecework-wage/useImportOutput';
 import formatNumber from '@/utils/helpers/formatnumber';
-import { Tooltip } from 'antd';
 import moment from 'moment';
-import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Avatar from './Avatar';
 import PopupCompleteOrder from './modal/PopupCompleteOrder';
@@ -63,6 +61,7 @@ const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, i
   const [endTimerFlag, setEndTimerFlag] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showResponsiblePersonPopup, setShowResponsiblePersonPopup] = useState(false);
+  const [isWarningOpen, setIsWarningOpen] = useState(false);
   const [timesheetId, setTimesheetId] = useState(activeTimer?.id || null);
   const intervalRef = useRef(null);
 
@@ -251,16 +250,26 @@ const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, i
 
   const handleCardClick = () => {
     if (showResponsiblePersonPopup) return;
-    // Mở popup khi click vào card
-    setEndTimerFlag(0);
-    setShowCompletePopup(true);
+
+    // Kiểm tra xem có item nào có quantity_rest bằng 0 không
+    const items = po?.items || [];
+    const hasZeroQuantityRest = items.some(item => Number(item?.quantity_rest) === 0);
+
+    if (hasZeroQuantityRest) {
+      // Hiển thị popup cảnh báo nếu có quantity_rest bằng 0
+      setIsWarningOpen(true);
+    } else {
+      // Mở popup hoàn thành như bình thường
+      setEndTimerFlag(0);
+      setShowCompletePopup(true);
+    }
   };
 
   // Tổng số sản phẩm hiển thị trong card
   const items = po?.items || [];
   const totalItems = items.length || 1;
-  const visibleItemsCount = isExpanded || totalItems <= 3 ? totalItems : 3;
-  const remainingItems = totalItems > 3 ? totalItems - visibleItemsCount : 0;
+  const visibleItemsCount = isExpanded || totalItems <= 1 ? totalItems : 1;
+  const remainingItems = totalItems > 1 ? totalItems - visibleItemsCount : 0;
 
   const objects = po?.objects || [];
   const objectRefs = objects.map(obj => obj?.reference_no).filter(Boolean);
@@ -282,7 +291,7 @@ const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, i
 
   return (
     <div
-      className={`flex flex-col items-start gap-3 p-4 rounded-xl border-2 transition-colors duration-300 ${isSelectMode
+      className={`flex flex-col items-start gap-3 p-4 pb-1 rounded-xl border-2 transition-colors duration-300 ${isSelectMode
         ? isSelected
           ? 'border-[#1760B9] bg-[#EBF5FF]'
           : 'border-[#1760B9]/40 bg-[#F3F4FF] hover:bg-[#F4F8FF]'
@@ -310,17 +319,17 @@ const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, i
         />
       )}
       <div className='w-full flex items-center justify-between gap-2'>
-        <div className='py-0.5 px-2 border-l-2' style={{ borderColor }}>
-          <h4 className='responsive-text-lg font-semibold mb-1' style={{ color: borderColor }}>
+        <div className='px-2 border-l-2' style={{ borderColor }}>
+          <h4 className='responsive-text-base font-semibold' style={{ color: borderColor }}>
             {po?.reference_no || '---'}
           </h4>
-          {hasMoreOrders ? (
+          {/* {hasMoreOrders ? (
             <Tooltip title={allOrdersText} placement='top' classNames={{ root: 'order-tooltip' }}>
               {orderTextContent}
             </Tooltip>
           ) : (
             <p className='responsive-text-xs font-normal text-[#667085]'>{displayText}</p>
-          )}
+          )} */}
         </div>
         <div className='flex items-center gap-1.5'>
           <CalendarIcon className='size-3.5 text-[#667085]' />
@@ -366,6 +375,73 @@ const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, i
         is_product={po?.is_product}
         end_timer={endTimerFlag}
       />
+
+      {/* <div className='px-1 flex items-center gap-3 w-1/2'>
+        <div className='flex items-center gap-1 flex-shrink-0'>
+          <ProgressIcon className='size-4 text-[#99A1AF]' />
+          <p className='responsive-text-xs font-normal text-[#667085]'>Tiến trình</p>
+          <p className='responsive-text-xs font-medium text-blue-fmrp ml-1'>4/5</p>
+        </div>
+        <div className='relative bg-[#EEEFF0] rounded-full h-1.5 w-full overflow-hidden'>
+          <div className='absolute left-0 top-0 bg-blue-fmrp rounded-full h-full w-3/4' />
+        </div>
+      </div> */}
+      <div className='flex flex-col gap-1 w-full'>
+        {items.slice(0, visibleItemsCount).map((item, index) => (
+          <div key={index} className='flex justify-between items-center gap-2 w-full'>
+            {/* <Image
+              src={item?.images || IMAGES.noImage}
+              alt={item?.item_name || 'default'}
+              width={100}
+              height={100}
+              className='size-11 bg-[#E2E5E9] rounded-lg overflow-hidden object-cover border border-[#DDDDE2]'
+            /> */}
+            <div className='flex flex-col flex-1'>
+              <div className='flex items-center gap-2'>
+                <span className='responsive-text-xxs font-normal text-blue-fmrp'>{item?.item_code || '--'}</span>
+                <span className='responsive-text-xxs font-normal text-[#D0D5DD]'>|</span>
+                <span className='responsive-text-xxs font-normal text-blue-fmrp'>{item?.reference_no_detail || '--'}</span>
+              </div>
+              <div className='flex flex-col gap-0.5'>
+                <h4 className='responsive-text-sm font-semibold text-[#141522]'>{item?.item_name || '---'}</h4>
+                <p className='responsive-text-xxs font-normal text-[#667085]'>{item?.product_variation || '-'}</p>
+              </div>
+            </div>
+            <p className='responsive-text-xs font-bold text-[#2BB38A] flex gap-1'>
+              {
+                +item?.quantity_rest > 0
+                  ? (formatNumber(+(item?.quantity_rest ?? 0)) + '/' + (item?.unit_name || ''))
+                  : (
+                    <>
+                      <span className='mt-[3px]'>
+                        Chờ SX
+                      </span>
+                      <LoadingThreeDotsJumping
+                        classNameDot1='bg-[#2BB38A] size-[2px]'
+                        classNameDot2='bg-[#2BB38A] size-[2px]'
+                        classNameDot3='bg-[#2BB38A] size-[2px]'
+                      />
+                    </>
+                  )
+              }
+            </p>
+          </div>
+        ))}
+        {totalItems > 1 && (
+          <button
+            type='button'
+            className='flex items-center gap-1 px-1 text-left responsive-text-xxs font-normal text-[#0375F3] hover:underline'
+          // onClick={e => {
+          //   e.stopPropagation();
+          //   setIsExpanded(prev => !prev);
+          // }}
+          >
+            {`+ ${remainingItems} sản phẩm khác `}
+            <CaretDropDownThinIcon className='size-3 text-[#0375F3]' />
+          </button>
+        )}
+      </div>
+
       <Avatar group_members_assigned={po?.group_members_assigned || []} staffs_assigned={po?.staffs_assigned || []} onClick={() => setShowResponsiblePersonPopup(true)} />
       <PopupResponsiblePerson
         open={showResponsiblePersonPopup}
@@ -377,54 +453,22 @@ const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, i
         onUpdatedPo={onUpdatePo}
       />
 
-      <div className='px-1 flex items-center gap-3 w-1/2'>
-        <div className='flex items-center gap-1 flex-shrink-0'>
-          <ProgressIcon className='size-4 text-[#99A1AF]' />
-          <p className='responsive-text-xs font-normal text-[#667085]'>Tiến trình</p>
-          <p className='responsive-text-xs font-medium text-blue-fmrp ml-1'>4/5</p>
-        </div>
-        <div className='relative bg-[#EEEFF0] rounded-full h-1.5 w-full overflow-hidden'>
-          <div className='absolute left-0 top-0 bg-blue-fmrp rounded-full h-full w-3/4' />
-        </div>
-      </div>
-      <div className='flex flex-col gap-1 w-full'>
-        {items.slice(0, visibleItemsCount).map((item, index) => (
-          <div key={index} className='flex items-center gap-2 w-full'>
-            <Image
-              src={item?.images || IMAGES.noImage}
-              alt={item?.item_name || 'default'}
-              width={100}
-              height={100}
-              className='size-11 bg-[#E2E5E9] rounded-lg overflow-hidden object-cover border border-[#DDDDE2]'
-            />
-            <div className='flex flex-col flex-1'>
-              <div className='flex items-center gap-2'>
-                <span className='responsive-text-xxs font-normal text-blue-fmrp'>{item?.item_code || '--'}</span>
-                <span className='responsive-text-xxs font-normal text-[#D0D5DD]'>|</span>
-                <span className='responsive-text-xxs font-normal text-blue-fmrp'>{item?.reference_no_detail || '--'}</span>
-              </div>
-              <div className='flex flex-col gap-0.5'>
-                <h4 className='responsive-text-sm font-semibold text-[#141522]'>{item?.item_name || '---'}</h4>
-                <p className='responsive-text-xxs font-normal text-[#667085]'>
-                  SL: {formatNumber(+(item?.quantity_rest ?? 0))} {item?.unit_name || ''}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      {totalItems > 3 && (
-        <button
-          type='button'
-          className='px-1 text-left responsive-text-sm font-normal text-[#1760B9] hover:underline'
-          onClick={e => {
-            e.stopPropagation();
-            setIsExpanded(prev => !prev);
-          }}
-        >
-          {isExpanded ? 'Thu gọn' : `Xem thêm (${remainingItems})`}
-        </button>
-      )}
+      <PopupConfim
+        type='warning'
+        title='Cảnh báo'
+        subtitle='Công đoạn này chưa thể nhập liệu. Vui lòng hoàn thiện bước trước!'
+        isOpen={isWarningOpen}
+        forceConfirm
+        save={() => {
+          setIsWarningOpen(false);
+        }}
+        cancel={() => {
+          setIsWarningOpen(false);
+        }}
+        onClose={() => {
+          setIsWarningOpen(false);
+        }}
+      />
     </div>
   );
 };
