@@ -413,7 +413,7 @@ const PersonSelector = ({
                           onChange={e => setSaveAsDefault(e.target.checked)}
                           className='w-4 h-4 rounded border-[#D0D5DD] text-[#0375F3] focus:ring-[#0375F3] cursor-pointer'
                         />
-                        <span>Lưu làm mặc định cho công đoạn này</span>
+                        <span>Lưu mặc định công đoạn này</span>
                       </label>
                     )}
                     <button
