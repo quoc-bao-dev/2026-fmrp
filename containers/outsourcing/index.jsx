@@ -15,6 +15,27 @@ import Head from 'next/head';
 import React, { useMemo, useState } from 'react';
 import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import { useSelector } from 'react-redux';
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+
+const OutsourcingStatusDonutTooltip = ({ active, payload }) => {
+  if (!active || !payload || !payload.length) return null;
+  const d = payload[0]?.payload;
+  if (!d) return null;
+
+  return (
+    <div className='bg-white border border-[#E5E7EB] rounded-lg shadow-lg px-3 py-2'>
+      <div className='text-sm font-semibold text-[#101828]'>{d.label}</div>
+      <div className='mt-1 text-xs text-[#667085] flex items-center justify-between gap-6'>
+        <span>Số lượng</span>
+        <span className='font-medium text-[#101828]'>{d.count ?? 0}</span>
+      </div>
+      <div className='mt-0.5 text-xs text-[#667085] flex items-center justify-between gap-6'>
+        <span>Tỷ lệ</span>
+        <span className='font-medium text-[#101828]'>{d.value ?? 0}%</span>
+      </div>
+    </div>
+  );
+};
 
 const OutsourcingSteps = ({ statusKey }) => {
   const stepState = useMemo(() => {
@@ -74,6 +95,25 @@ const OutsourcingOrderDetail = ({ order, stats }) => {
   }
 
   const { total, completed, processing, pending, overdue } = stats || {};
+  const [activeIndex, setActiveIndex] = useState(null);
+
+  const chartData = useMemo(() => {
+    const safeTotal = Number(total ?? 0) || 0;
+    const toPercent = n => {
+      if (!safeTotal) return 0;
+      return Math.round((Number(n ?? 0) / safeTotal) * 100);
+    };
+
+    return [
+      { key: 'completed', label: 'Hoàn thành', count: completed ?? 0, value: toPercent(completed), color: '#22C55E' },
+      { key: 'processing', label: 'Đang gia công', count: processing ?? 0, value: toPercent(processing), color: '#0EA5E9' },
+      { key: 'pending', label: 'Chưa gia công', count: pending ?? 0, value: toPercent(pending), color: '#F97316' },
+      { key: 'overdue', label: 'Quá hạn', count: overdue ?? 0, value: toPercent(overdue), color: '#EF4444' },
+    ];
+  }, [total, completed, processing, pending, overdue]);
+
+  const filteredChartData = useMemo(() => chartData.filter(d => (d.value ?? 0) > 0), [chartData]);
+  const hasNoData = filteredChartData.length === 0;
 
   return (
     <div className='w-full h-full rounded-2xl border border-[#F3F4F6] bg-white shadow-sm flex flex-col overflow-hidden'>
@@ -187,16 +227,45 @@ const OutsourcingOrderDetail = ({ order, stats }) => {
             {/* Donut chart style */}
             <div className='flex-1 flex items-center justify-center'>
               <div className='relative w-[190px] h-[190px]'>
-                <div
-                  className='absolute inset-0 rounded-full'
-                  style={{
-                    background:
-                      'conic-gradient(#0EA5E9 0 30%, #FACC87 30% 55%, #22C55E 55% 85%, #FB7185 85% 100%)',
-                  }}
-                />
-                <div className='absolute inset-[22px] rounded-full bg-white shadow-inner' />
-                <div className='absolute inset-[40px] rounded-full bg-[#F9FAFB] border border-[#E5E7EB]' />
-                <div className='absolute inset-0 flex flex-col items-center justify-center'>
+                {hasNoData ? (
+                  <div className='w-full h-full rounded-full bg-[#F3F4F6] flex items-center justify-center'>
+                    <span className='text-sm text-[#667085]'>Không có dữ liệu</span>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width='100%' height='100%'>
+                    <PieChart>
+                      <Pie
+                        data={filteredChartData}
+                        dataKey='value'
+                        startAngle={90}
+                        endAngle={450}
+                        innerRadius={'65%'}
+                        outerRadius={'95%'}
+                        stroke='none'
+                        isAnimationActive={true}
+                        animationDuration={600}
+                        animationEasing='cubic-bezier(0.4, 0, 0.2, 1)'
+                        cornerRadius={8}
+                        paddingAngle={2}
+                        labelLine={false}
+                        onMouseEnter={(_, index) => setActiveIndex(index)}
+                        onMouseLeave={() => setActiveIndex(null)}
+                      >
+                        {filteredChartData.map((d, idx) => (
+                          <Cell
+                            key={d.key}
+                            fill={d.color}
+                            opacity={activeIndex === null || activeIndex === idx ? 1 : 0.35}
+                            style={{ transition: 'opacity 200ms ease-in-out', cursor: 'pointer' }}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<OutsourcingStatusDonutTooltip />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+
+                <div className='absolute inset-0 flex flex-col items-center justify-center pointer-events-none'>
                   <span className='text-[28px] font-semibold text-[#0375F3]'>{total}</span>
                 </div>
               </div>
