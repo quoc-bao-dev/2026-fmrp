@@ -3,7 +3,8 @@ import StatusCheckboxGroup from '@/components/common/checkbox/StatusCheckboxGrou
 import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
 import LimitListDropdown from '@/components/common/dropdown/LimitListDropdown';
 import TabSwitcherWithUnderline from '@/components/common/tab/TabSwitcherWithUnderline';
-import { CaretDownIcon, MagnifyingGlassIcon, PlusIcon, PrinterIcon } from '@/components/icons';
+import { CaretDownIcon, MagnifyingGlassIcon, PlusIcon, PrinterIcon, TrashIcon } from '@/components/icons';
+import UnionStepIcon from '@/components/icons/common/UnionStepIcon';
 import FunnelIcon from '@/components/icons/common/FunnelIcon';
 import BreadcrumbCustom from '@/components/UI/breadcrumb/BreadcrumbCustom';
 import DateToDateComponent from '@/components/UI/filterComponents/dateTodateComponent';
@@ -11,9 +12,193 @@ import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import NoData from '@/components/UI/noData/nodata';
 import { Container } from '@/components/UI/common/layout';
 import Head from 'next/head';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import { useSelector } from 'react-redux';
+
+const OutsourcingSteps = ({ statusKey }) => {
+  const stepState = useMemo(() => {
+    switch (statusKey) {
+      case 'created':
+        return { step1: true, step2: false, step3: false };
+      case 'exported':
+        return { step1: true, step2: true, step3: false };
+      case 'received':
+        return { step1: true, step2: true, step3: true };
+      default:
+        return { step1: false, step2: false, step3: false };
+    }
+  }, [statusKey]);
+
+  return (
+    <div className='flex items-center gap-0'>
+      <div className='relative z-[3] flex items-center justify-center min-w-[70px]'>
+        <UnionStepIcon active={stepState.step1} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
+        <span
+          className={`absolute inset-0 flex items-center justify-center font-medium text-xs whitespace-nowrap px-4 ${stepState.step1 ? 'text-white' : 'text-[#9295A4]'
+            }`}
+        >
+          Mới khởi tạo
+        </span>
+      </div>
+
+      <div className='relative z-[2] flex items-center justify-center min-w-[70px] -ml-[23px]'>
+        <UnionStepIcon active={stepState.step2} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
+        <span
+          className={`absolute inset-0 flex items-center justify-center font-medium text-xs whitespace-nowrap px-4 ml-3 ${stepState.step2 ? 'text-white' : 'text-[#9295A4]'
+            }`}
+        >
+          Xuất kho <br /> gia công
+        </span>
+      </div>
+
+      <div className='relative z-[1] flex items-center justify-center min-w-[70px] -ml-[23px]'>
+        <UnionStepIcon active={stepState.step3} className='h-11 2xl:h-[45px] w-auto flex-shrink-0' />
+        <span
+          className={`absolute inset-0 flex items-center justify-center font-medium text-xs whitespace-nowrap px-4 ${stepState.step3 ? 'text-white' : 'text-[#9295A4]'
+            }`}
+        >
+          Nhập gia công
+        </span>
+      </div>
+    </div>
+  );
+};
+
+const OutsourcingOrderDetail = ({ order, stats }) => {
+  if (!order) {
+    return (
+      <div className='w-full h-full rounded-lg border border-dashed border-[#D0D5DD] bg-white/40 flex items-center justify-center text-sm text-[#667085]'>
+        Chưa có dữ liệu đơn gia công
+      </div>
+    );
+  }
+
+  const { total, completed, processing, pending, overdue } = stats || {};
+
+  return (
+    <div className='w-full h-full rounded-2xl border border-[#E4E7EC] bg-white shadow-sm flex flex-col overflow-hidden'>
+      <div className='p-4 3xl:p-6 flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto'>
+        {/* Steps */}
+        <OutsourcingSteps statusKey={order.statusKey} />
+
+        {/* Thông tin đơn gia công */}
+        <div className='mt-4 flex flex-col gap-4'>
+          <h3 className='text-[20px] leading-6 font-medium text-[#003DA0]'>Thông Tin Đơn Gia Công</h3>
+
+          <div className='flex flex-col gap-3 text-sm text-[#344054]'>
+            <div className='flex items-center justify-between gap-4'>
+              <div className='flex flex-col gap-1'>
+                <span className='text-xs text-[#667085]'>Ngày tạo đơn</span>
+                <span className='font-medium'>{order.createdAt}</span>
+              </div>
+            </div>
+
+            <div className='flex flex-col gap-1'>
+              <span className='text-xs text-[#667085]'>Nhà gia công</span>
+              <span className='font-medium'>{order.vendorName}</span>
+            </div>
+
+            <div className='flex items-center justify-between gap-4'>
+              <div className='flex flex-col gap-1'>
+                <span className='text-xs text-[#667085]'>Loại gia công</span>
+                <span className='font-medium flex items-center gap-2'>
+                  <span className='inline-flex items-center justify-center rounded-md bg-[#EFF4FF] text-[#004EEB] px-2 py-1 text-xs'>
+                    Bán TP
+                  </span>
+                </span>
+              </div>
+
+              <div className='flex flex-col gap-1 items-end'>
+                <span className='text-xs text-[#667085]'>Công đoạn</span>
+                <button
+                  type='button'
+                  className='text-sm font-medium text-[#0F4F9E] hover:text-[#0052CC] underline-offset-2 hover:underline'
+                >
+                  May
+                </button>
+              </div>
+            </div>
+
+            <div className='flex flex-col gap-1'>
+              <span className='text-xs text-[#667085]'>Loại hàng gia công</span>
+              <div className='flex flex-wrap gap-2'>
+                {(order.followRefs || []).map(ref => (
+                  <button
+                    key={ref}
+                    type='button'
+                    className='inline-flex items-center gap-1 rounded-full bg-[#EFF4FF] text-[#004EEB] px-2 py-1 text-xs font-medium hover:bg-[#E0EAFF]'
+                  >
+                    <span className='inline-flex items-center justify-center rounded-full bg-white text-[#004EEB] px-1.5 py-0.5 text-[10px]'>
+                      LSX
+                    </span>
+                    <span className='truncate max-w-[140px]'>{ref}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Thống kê trạng thái */}
+        <div className='mt-4 flex-1 flex flex-col gap-4'>
+          <h3 className='text-[18px] leading-6 font-semibold text-[#003DA0]'>Thống Kê Trạng Thái</h3>
+
+          <div className='flex-1 flex gap-4 items-center'>
+            {/* Legend + total */}
+            <div className='flex flex-col gap-3 min-w-[140px]'>
+              <div className='flex items-baseline gap-2'>
+                <span className='text-[32px] leading-none font-semibold text-[#0375F3]'>{total}</span>
+                <span className='text-sm font-medium text-[#101828]'>Đơn gia công</span>
+              </div>
+
+              <div className='flex flex-col gap-2 text-sm'>
+                <div className='flex items-center gap-2'>
+                  <span className='w-5 h-5 rounded-md bg-[#22C55E]/10 border border-[#22C55E]' />
+                  <span className='flex-1 text-[#101828]'>Hoàn thành</span>
+                  <span className='text-[#101828]'>{completed}</span>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <span className='w-5 h-5 rounded-md bg-[#0EA5E9]/10 border border-[#0EA5E9]' />
+                  <span className='flex-1 text-[#101828]'>Đang gia công</span>
+                  <span className='text-[#101828]'>{processing}</span>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <span className='w-5 h-5 rounded-md bg-[#F97316]/10 border border-[#F97316]' />
+                  <span className='flex-1 text-[#101828]'>Chưa gia công</span>
+                  <span className='text-[#101828]'>{pending}</span>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <span className='w-5 h-5 rounded-md bg-[#EF4444]/10 border border-[#EF4444]' />
+                  <span className='flex-1 text-[#101828]'>Quá hạn</span>
+                  <span className='text-[#101828]'>{overdue}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Donut chart style */}
+            <div className='flex-1 flex items-center justify-center'>
+              <div className='relative w-[190px] h-[190px]'>
+                <div
+                  className='absolute inset-0 rounded-full'
+                  style={{
+                    background:
+                      'conic-gradient(#0EA5E9 0 30%, #FACC87 30% 55%, #22C55E 55% 85%, #FB7185 85% 100%)',
+                  }}
+                />
+                <div className='absolute inset-[22px] rounded-full bg-white shadow-inner' />
+                <div className='absolute inset-[40px] rounded-full bg-[#F9FAFB] border border-[#E5E7EB]' />
+                <div className='absolute inset-0 flex flex-col items-center justify-center'>
+                  <span className='text-[28px] font-semibold text-[#0375F3]'>{total}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const OutsourcingMain = () => {
   const [dateFilter, setDateFilter] = useState({
@@ -187,6 +372,22 @@ const OutsourcingMain = () => {
     },
   ];
 
+  const activeOrder = useMemo(
+    () => mockOutsourcingOrders.find(order => order.id === activeOrderId) || mockOutsourcingOrders[0] || null,
+    [activeOrderId, mockOutsourcingOrders]
+  );
+
+  const statusStats = useMemo(
+    () => ({
+      total: 42,
+      completed: 12,
+      processing: 12,
+      pending: 12,
+      overdue: 6,
+    }),
+    []
+  );
+
   const mainTabs = [
     { id: 'info', name: 'Thông tin', type: 'info' },
     { id: 'history', name: 'Lịch sử xuất giao kho', type: 'history' },
@@ -265,9 +466,9 @@ const OutsourcingMain = () => {
         : 'bg-white text-[#9295A4] border-[#D0D5DD] hover:text-[#0F4F9E] hover:bg-[#EBF5FF] hover:border-[#3276FA]'
         } flex items-center justify-between space-x-2 border rounded-lg h-9 px-3 group custom-transition w-full`}
     >
-      <span className='flex items-center space-x-2'>
+      <span className='flex items-center space-x-2 flex-1 min-w-0'>
         <FunnelIcon className='size-4' />
-        <span className='text-sm text-[#3A3E4C] group-hover:text-[#0F4F9E]'>
+        <span className='text-sm text-[#3A3E4C] group-hover:text-[#0F4F9E] truncate'>
           {selectedVendor ? mockVendors.find(v => v.value === selectedVendor)?.label : 'Nhà gia công'}
         </span>
       </span>
@@ -379,12 +580,12 @@ const OutsourcingMain = () => {
           {/* Tạo mới */}
           <ButtonAnimationNew
             icon={
-              <div className='size-5'>
-                <PlusIcon className='size-full text-white' />
+              <div className='size-5 flex items-center justify-center'>
+                <PlusIcon className=' text-white' />
               </div>
             }
             title='Tạo mới'
-            className='flex items-center justify-center gap-2 bg-[#0375F3] text-white rounded-lg h-9 px-3 text-sm hover:bg-[#0265D9]'
+            className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center justify-center gap-2 bg-[#0375F3] text-white rounded-lg text-sm hover:bg-[#0265D9]'
           />
         </div>
       </div>
@@ -523,18 +724,45 @@ const OutsourcingMain = () => {
             </div>
 
             <div className='flex items-center gap-2'>
+              <FilterDropdown
+                trigger={
+                  <div className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center xl:gap-4 gap-2 font-medium text-white border-[#0375F3] bg-[#0375F3] hover:bg-[#0375F3] hover:opacity-80 cursor-pointer hover:shadow-hover-button rounded-lg custom-transition'>
+                    <span className='flex items-center gap-1 xl:gap-2 min-w-0'>
+                      <span className='responsive-text-base truncate'>Tác vụ</span>
+                    </span>
+                    <CaretDownIcon className='text-white size-4 shrink-0' />
+                  </div>
+                }
+                style={{
+                  boxShadow: '0px 5px 35px 0px #00000012',
+                }}
+                className='flex flex-col !p-0 border-[#D8DAE5] rounded-lg shrink-0 w-fit'
+                classNameContainer='!w-fit'
+                dropdownId='dropdownOutsourcingTask'
+                placement='bottom-left'
+              >
+                {/* dropdown để trống theo yêu cầu */}
+                <div className='p-0' />
+              </FilterDropdown>
+
               <ButtonAnimationNew
-                title='Tác vụ'
-                className='flex items-center justify-center gap-2 rounded-lg border border-[#D0D5DD] h-9 px-3 text-sm text-[#344054] bg-white'
-              />
-              <ButtonAnimationNew
-                icon={<PrinterIcon className='size-4 text-[#11315B]' />}
+                icon={
+                  <div className='3xl:size-5 size-4'>
+                    <PrinterIcon className='size-full text-[#11315B]' />
+                  </div>
+                }
                 title='In phiếu gia công'
-                className='flex items-center justify-center gap-2 rounded-lg border border-[#D0D5DD] h-9 px-3 text-sm text-[#344054] bg-white'
+                className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#11315B] bg-white border border-[#D0D5DD] hover:bg-[#F7F8F9] hover:shadow-hover-button rounded-lg'
               />
+
               <ButtonAnimationNew
-                title='Xóa'
-                className='flex items-center justify-center gap-2 rounded-lg border border-[#F04438] h-9 px-3 text-sm text-[#F04438] bg-white'
+                icon={
+                  <div className='3xl:size-5 size-4'>
+                    <TrashIcon className='size-full' />
+                  </div>
+                }
+                title='Xoá'
+                className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#EE1E1E] border border-[#EE1E1E] hover:bg-[#FFEEF0] hover:shadow-hover-button rounded-lg'
               />
             </div>
           </div>
@@ -706,8 +934,10 @@ const OutsourcingMain = () => {
           </div>
         </div>
 
-        {/* ===== DETAIL (placeholder) ===== */}
-        <div className='w-[26%] min-w-[320px] h-full rounded-lg border border-dashed border-[#D0D5DD] bg-white/40' />
+        {/* ===== DETAIL ===== */}
+        <div className='w-[30%] min-w-[320px] h-full'>
+          <OutsourcingOrderDetail order={activeOrder} stats={statusStats} />
+        </div>
       </div>
     </div>
   );
