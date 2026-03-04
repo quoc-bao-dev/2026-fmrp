@@ -163,7 +163,7 @@ const ProcessStatusDropdown = ({ stage, filterParams }) => {
   return (
     <Popover content={dropdownContent} placement='bottomRight' trigger='click' classNames={{ root: 'process-status-dropdown' }} open={open} onOpenChange={setOpen}>
       <button className={`p-1 rounded-lg transition-all duration-300 ${open ? 'bg-[#667085]/30 text-white' : 'bg-transparent hover:bg-[#667085]/30 text-[#667085] hover:text-white'}`}>
-        <ThreeDotIcon className='size-5' />
+        <ThreeDotIcon className='size-6' />
       </button>
     </Popover>
   );
@@ -186,7 +186,7 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
   const { is_admin: role, permissions_current: auth } = useSelector(state => state.auth);
   const dataSetting = useSelector(state => state.setings);
   const isTimesheetPoEnabled = dataSetting?.is_timesheet_po === '1';
-  
+
   const showToast = useToast();
 
   const limit = 10; // Giữ nguyên limit
@@ -426,53 +426,55 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
             </h3>
             <span className='bg-[#FD2424] min-w-4 h-4 flex items-center justify-center rounded-full px-1 responsive-text-xs font-normal text-white -mt-3 -ml-1'>{stage?.items?.total_count || 0}</span>
           </div>
-          <PersonSelector
-            open={isResponsiblePersonOpen}
-            onClose={() => {
-              // Đóng popup chọn người phụ trách và thoát chế độ chọn lệnh
-              setIsResponsiblePersonOpen(false);
-              setIsSelectMode(false);
-              setSelectedProductionOrders([]);
-              setPendingSelectedPersons([]);
-            }}
-            onConfirm={handleResponsiblePersonConfirm}
-            onSelectMode={handleSelectMode}
-            onApplySelected={handleApplySelectedOrders}
-            selected={selectedResponsiblePersons}
-            selectedProductionOrdersCount={selectedProductionOrders.length}
-            isSelectMode={isSelectMode}
-            filterParams={filterParams}
-          >
-            <button
-              className={`border rounded-lg p-1 cursor-pointer transition-all duration-300 ${isResponsiblePersonOpen ? 'border-blue-fmrp bg-blue-fmrp/10' : 'border-transparent hover:border-blue-fmrp hover:bg-blue-fmrp/10'
-                }`}
-              onClick={() => {
-                // Kiểm tra quyền trước khi mở PersonSelector
-                if (!role && auth?.production_input?.is_create !== '1') {
-                  showToast('error', 'Bạn không có quyền thực hiện thao tác này');
-                  return;
-                }
-                // Thông báo cho parent: stage này đang mở PersonSelector
-                onPersonSelectorClick?.(stage.stage_id);
-                // Nếu đang ở chế độ chọn lệnh tại chính cột này, reset trạng thái chọn trước khi mở PersonSelector
-                if (isSelectMode || selectedProductionOrders.length > 0 || pendingSelectedPersons.length > 0) {
-                  setIsSelectMode(false);
-                  setSelectedProductionOrders([]);
-                  setPendingSelectedPersons([]);
-                }
-                setIsResponsiblePersonOpen(true);
+          <div className='flex items-center gap-2'>
+            <PersonSelector
+              open={isResponsiblePersonOpen}
+              onClose={() => {
+                // Đóng popup chọn người phụ trách và thoát chế độ chọn lệnh
+                setIsResponsiblePersonOpen(false);
+                setIsSelectMode(false);
+                setSelectedProductionOrders([]);
+                setPendingSelectedPersons([]);
               }}
+              onConfirm={handleResponsiblePersonConfirm}
+              onSelectMode={handleSelectMode}
+              onApplySelected={handleApplySelectedOrders}
+              selected={selectedResponsiblePersons}
+              selectedProductionOrdersCount={selectedProductionOrders.length}
+              isSelectMode={isSelectMode}
+              filterParams={filterParams}
             >
-              <UserPlus2Icon className='size-6 flex-shrink-0' />
-            </button>
-          </PersonSelector>
+              <button
+                className={`border rounded-lg p-1 cursor-pointer transition-all duration-300 ${isResponsiblePersonOpen ? 'border-blue-fmrp bg-blue-fmrp/10' : 'border-transparent hover:border-blue-fmrp hover:bg-blue-fmrp/10'
+                  }`}
+                onClick={() => {
+                  // Kiểm tra quyền trước khi mở PersonSelector
+                  if (!role && auth?.production_input?.is_create !== '1') {
+                    showToast('error', 'Bạn không có quyền thực hiện thao tác này');
+                    return;
+                  }
+                  // Thông báo cho parent: stage này đang mở PersonSelector
+                  onPersonSelectorClick?.(stage.stage_id);
+                  // Nếu đang ở chế độ chọn lệnh tại chính cột này, reset trạng thái chọn trước khi mở PersonSelector
+                  if (isSelectMode || selectedProductionOrders.length > 0 || pendingSelectedPersons.length > 0) {
+                    setIsSelectMode(false);
+                    setSelectedProductionOrders([]);
+                    setPendingSelectedPersons([]);
+                  }
+                  setIsResponsiblePersonOpen(true);
+                }}
+              >
+                <UserPlus2Icon className='size-6 flex-shrink-0' />
+              </button>
+            </PersonSelector>
+            <ProcessStatusDropdown stage={stage} filterParams={filterParams} />
+          </div>
         </div>
-        <div className='flex items-center justify-between gap-2 bg-[#FFFFFF66] border border-white rounded-[14px] p-2'>
+        {/* <div className='flex items-center justify-between gap-2 bg-[#FFFFFF66] border border-white rounded-[14px] p-2'>
           <div className='flex items-center gap-3'>
             <p className='responsive-text-base font-semibold text-[#1A7526]'>Tổng lệnh: {stage?.items?.total_count || 0}</p>
           </div>
-          <ProcessStatusDropdown stage={stage} filterParams={filterParams} />
-        </div>
+        </div> */}
       </div>
       <Customscrollbar className='flex-1 min-h-0 h-full' showOnHover={true} onScroll={handleScroll} ref={scrollContainerRef}>
         <div className='flex flex-col gap-2.5 px-3 pb-4'>
