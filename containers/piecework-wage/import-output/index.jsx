@@ -521,7 +521,7 @@ const ImportOutput = () => {
                 <SearchIcon className='size-4 text-white' />
               </div>
             </div>
-            <SelectSearchableRadio
+            {/* <SelectSearchableRadio
               placeholder='Loại sản xuất'
               showSearch={false}
               options={[
@@ -538,7 +538,7 @@ const ImportOutput = () => {
               onClear={handleProductTypeClear}
               icon={<BsLayers className='size-4 text-[#003DA0]' />}
               className='w-auto min-w-[180px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
-            />
+            /> */}
             <SelectSearchableRadio
               placeholder='Lọc nhân viên'
               label='Lọc nhân viên'
