@@ -1,7 +1,7 @@
 import apiImportOutput from '@/Api/apiPieceworkWage/import-output/apiImportOutput';
 import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
 import SelectSearchableRadio from '@/components/common/select/SelectSearchableRadio';
-import { CaretDownIcon, CloseXIcon, EqualizerIcon, FunnelIcon, SearchIcon } from '@/components/icons';
+import { CaretDownIcon, CloseXIcon, EqualizerIcon, FunnelIcon, SearchIcon, UsersIcon } from '@/components/icons';
 import { DropdownAvatar } from '@/components/layout/header';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import InfoTooltip from '@/components/UI/common/InfoTooltip';
@@ -24,6 +24,7 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import StageColumn from './components/StageColumn';
 import { useBranchList } from '@/hooks/common/useBranch';
 import { useSelector } from 'react-redux';
+import { BsLayers } from 'react-icons/bs';
 
 const ImportOutput = () => {
   const { socket } = useSocketContext();
@@ -43,6 +44,7 @@ const ImportOutput = () => {
   const [selectedPlans, setSelectedPlans] = useState([]);
   const [searchPlan, setSearchPlan] = useState('');
   const [debouncedSearchPlan] = useDebounce(searchPlan, 300);
+  const [productType, setProductType] = useState(null);
 
   // Mặc định filter theo 90 ngày gần đây
   const [dateFilter, setDateFilter] = useState({
@@ -61,6 +63,7 @@ const ImportOutput = () => {
     internal_plan_ids: Array.isArray(selectedPlans) && selectedPlans.length > 0 ? selectedPlans : null,
     search: debouncedSearchReferenceNo || '',
     ...(selectedBranch?.value ? { branch_ids: selectedBranch.value } : {}),
+    ...(productType ? { type_products: productType } : {}),
   };
 
   const { isLoading: isLoadingListImportOutput, data: listImportOutput, refetch: refetchListImportOutput } = useListImportOutput(filterParams);
@@ -223,6 +226,19 @@ const ImportOutput = () => {
   const handlePlanClear = () => {
     setSelectedPlans([]);
     setSearchPlan('');
+  };
+
+  // Xử lý khi chọn loại thành phẩm / bán thành phẩm
+  const handleProductTypeChange = value => {
+    if (!value || value === 'all') {
+      setProductType(null);
+      return;
+    }
+    setProductType(value);
+  };
+
+  const handleProductTypeClear = () => {
+    setProductType(null);
   };
 
   // Xử lý khi search công đoạn
@@ -506,6 +522,24 @@ const ImportOutput = () => {
               </div>
             </div>
             <SelectSearchableRadio
+              placeholder='Loại sản xuất'
+              showSearch={false}
+              options={[
+                {
+                  value: 'products',
+                  label: 'Thành phẩm',
+                },
+                {
+                  value: 'semi_products',
+                  label: 'Bán thành phẩm',
+                }]}
+              value={productType}
+              onChange={handleProductTypeChange}
+              onClear={handleProductTypeClear}
+              icon={<BsLayers className='size-4 text-[#003DA0]' />}
+              className='w-auto min-w-[180px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
+            />
+            <SelectSearchableRadio
               placeholder='Lọc nhân viên'
               label='Lọc nhân viên'
               searchPlaceholder='Tìm nhân viên'
@@ -514,7 +548,7 @@ const ImportOutput = () => {
               onChange={handleEmployeeChange}
               onSearch={handleEmployeeSearch}
               onClear={handleEmployeeClear}
-              icon={<FunnelIcon className='size-4 text-[#003DA0]' />}
+              icon={<UsersIcon className='size-4 text-[#003DA0]' />}
               className='w-auto min-w-[180px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
             />
             <SelectSearchableRadio
