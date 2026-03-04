@@ -16,7 +16,7 @@ const ForgotPass = () => {
     return (
         <>
             {/* ========= FORGOT PASSWORD HEADER ========= */}
-            <div className=''>
+            <div className='pt-8'>
                 <h1 className='text-[#11315B] font-medium text-3xl text-center capitalize'>Quên Mật Khẩu</h1>
             </div>
 

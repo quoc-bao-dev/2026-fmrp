@@ -25,7 +25,6 @@ import { LoginSocketProvider, useLoginSocketContext } from '@/context/socket/Log
 // [session-web] Import hàm getOrCreateTabSession từ utils
 import { getOrCreateTabSession } from '@/utils/helpers/sessionStorage';
 import MobileWarningModal from './MobileWarningModal';
-import SupportZalo from '@/components/common/button/SupportZalo';
 // [mobile-warning] Import MobileWarningModal
 
 // [login-socket] [step 2] Component con để sử dụng socket hook (bên trong Provider)
@@ -567,233 +566,14 @@ const LoginContent = React.memo(props => {
 
       <div className='bg-[#EEF1F8]'>
         <div className="bg-[url('/Logo-BG.png')] relative bg-repeat-round h-screen w-screen flex flex-col justify-center items-center overflow-hidden">
-          <div className='z-10 flex justify-center w-full space-x-20'>
-            <div className='mx-4 lg:mx-0 w-full lg:w-fit'>
-              <form onSubmit={handleSubmit(data => onSubmit(data, 'login'))} className='bg-white px-4 lg:px-16 py-8 flex flex-col gap-6 rounded-lg w-full lg:w-[600px]'>
-                <div className=''>
-                  <h1 className='text-[#11315B] font-medium text-3xl text-center capitalize'>{dataLang?.auth_login || 'auth_login'}</h1>
-                </div>
-
-                {/* [login] [step 1] Render Tabs underline để chuyển giữa Form đăng nhập và QR */}
-                <div className='w-fit'>
-                  <TabSwitcherWithUnderline tabs={tabsLogin} activeTab={activeTab} onChange={setActiveTab} />
-                </div>
-
-                {/* [login] [step 3] Kiểm tra tab đang active để render Form hoặc QR */}
-                {activeTab?.id === 'login' ? (
-                  /* [login] [step 4] Render Form đăng nhập khi tab "Đăng nhập" đang active */
-                  <div className='flex flex-col gap-6'>
-                    <div className='space-y-2'>
-                      <Input
-                        type='text'
-                        name='code'
-                        {...register('code', { required: true })}
-                        value={valueForm.code || ''}
-                        onClear={() => setValue('code', '')}
-                        placeholder='Mã công ty'
-                        error={errors.code ? { message: 'Vui lòng nhập mã công ty' } : null}
-                      />
-                      <Input
-                        type='text'
-                        name='name'
-                        {...register('name', { required: true })}
-                        value={valueForm.name || ''}
-                        onClear={() => setValue('name', '')}
-                        placeholder={dataLang?.auth_user_name || 'auth_user_name'}
-                        error={errors.name ? { message: 'Vui lòng nhập email hoặc số điện thoại' } : null}
-                      />
-                      <InputPassword
-                        name='password'
-                        {...register('password', { required: true })}
-                        value={valueForm.password || ''}
-                        onClear={() => setValue('password', '')}
-                        placeholder={dataLang?.auth_password || 'auth_password'}
-                        error={errors.password ? { message: 'Vui lòng nhập mật khẩu' } : null}
-                      />
-                      <div className='flex flex-col lg:flex-row gap-2 justify-between w-full'>
-                        <div className='flex items-center space-x-1.5'>
-                          <input
-                            type='checkbox'
-                            id='rememberMe'
-                            {...register('rememberMe', { required: false })}
-                            checked={isState.rememberMe ? true : false}
-                            onChange={() => queryState({ rememberMe: !isState.rememberMe })}
-                          />
-                          <label htmlFor='rememberMe'>{dataLang?.auth_remember_login || 'auth_remember_login'}</label>
-                        </div>
-                        <Link href='/auth/forgot-password'>
-                          <p className='text-[#3276FA] text-sm'>{dataLang?.auth_forgot_password || 'auth_forgot_password'}</p>
-                        </Link>
-                      </div>
-                    </div>
-                    <button
-                      type='submit'
-                      className='text-[#FFFFFF] font-normal text-lg py-3 w-full rounded-md bg-gradient-to-l from-[#0375f3]  via-[#296dc1] to-[#0375f3] btn-animation hover:scale-105'
-                    >
-                      {dataLang?.auth_login || 'auth_login'}
-                    </button>
-                  </div>
-                ) : (
-                  /* [login] [step 5] Render QR Code hoặc thông tin người dùng khi tab "QR" đang active */
-                  <>
-                    {(() => {
-                      // [login-socket] [step 9] Kiểm tra nếu có dữ liệu approved login thì render thông tin người dùng
-                      if (approvedLoginData && !isExpired) {
-                        /**
-                         * @type {AppApprovedLoginData}
-                         */
-                        const userData = approvedLoginData;
-                        return (
-                          <div className='w-full flex flex-col items-center justify-center gap-4 py-6'>
-                            {/* [login-socket] [step 9.1] Avatar người dùng */}
-                            <div className='w-24 h-24 rounded-full bg-gradient-to-br from-[#0375f3] to-[#296dc1] flex items-center justify-center text-white text-2xl font-semibold shadow-lg'>
-                              {userData.user_avatar ? (
-                                <img src={userData.user_avatar} alt={userData.user_full_name} className='w-full h-full rounded-full object-cover object-center' />
-                              ) : (
-                                <span>{userData.user_full_name?.charAt(0)?.toUpperCase() || 'U'}</span>
-                              )}
-                            </div>
-
-                            {/* [login-socket] [step 9.2] Tên người dùng */}
-                            <div className='text-center'>
-                              <h3 className='text-[#11315B] font-semibold text-xl'>{userData.user_full_name}</h3>
-                              <p className='text-[#667085] text-sm mt-1'>{userData.company_code}</p>
-                            </div>
-
-                            {/* [login-socket] [step 9.3] Thông tin thiết bị và địa điểm */}
-                            <div className='w-full space-y-2 bg-[#F9FAFB]- rounded-lg p-4'>
-                              <div className='flex items-center gap-2 text-sm'>
-                                <span className='text-[#667085] min-w-[100px]'>Thiết bị:</span>
-                                <span className='text-[#344054] font-medium'>{userData.app_device_name}</span>
-                              </div>
-
-                              {userData.localtion_name && (
-                                <div className='flex items-center gap-2 text-sm'>
-                                  <span className='text-[#667085] min-w-[100px]'>Địa điểm:</span>
-                                  <span className='text-[#344054] font-medium'>{userData.localtion_name}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* [login-socket] [step 9.4] Thông báo đang xử lý đăng nhập */}
-                            <div className='flex items-center gap-2 text-[#0F4F9E] text-sm'>
-                              <div className='w-2 h-2 bg-[#0F4F9E] rounded-full animate-pulse'></div>
-                              <span>Đang chờ đăng nhập...</span>
-                            </div>
-                            {!isExpired && qrTtl > 0 && <p className='text-xs text-[#667085] text-center'>Hết hạn sau {qrTtl}s</p>}
-                          </div>
-                        );
-                      }
-
-                      // [set-qr] [step 6] Nếu chưa có dữ liệu approved, hiển thị QR Code
-                      const sessionToken = createSessionData?.data?.session_token || '';
-                      const qrUrl = sessionToken;
-                      return (
-                        <div className='w-full flex flex-col items-center justify-center gap-3 py-6'>
-                          {/* [set-qr] [step 7] Hiển thị QR; khi hết hạn thì blur và chặn tương tác */}
-                          <div className='pb-4 text-center text-[#667085] text-sm font-light'>Dùng ứng dụng FMRP trên điện thoại quét QR để đăng nhập</div>
-                          <div className={`relative`}>
-                            <div className={`bg-white p-4 rounded-md shadow-sm ${isExpired || !qrUrl ? 'blur-md' : ''}`}>
-                              <QRCode value={qrUrl || 'about:blank'} size={220} bgColor='#ffffff' fgColor='#000000' level='M' />
-                            </div>
-                            {/* [set-qr] [step 8] Overlay nút reload ở giữa khi hết hạn */}
-                            {isExpired && (
-                              <div className='absolute inset-0 flex items-center justify-center'>
-                                <button
-                                  type='button'
-                                  onClick={handleReloadQR}
-                                  aria-label='Tạo lại QR'
-                                  className='p-3 rounded-full bg-[#0F4F9E] text-white shadow hover:opacity-90 flex items-center justify-center'
-                                >
-                                  <FaRedoAlt className='w-5 h-5' />
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                          {/* [set-qr] [step 9] Hiển thị đếm ngược TTL */}
-                          {!isExpired && qrTtl > 0 && <p className='text-xs text-[#667085] text-center'>Hết hạn sau {qrTtl}s</p>}
-                        </div>
-                      );
-                    })()}
-                  </>
-                )}
-
-                <div className='flex justify-center space-x-2'>
-                  <span className='font-[300] '>Bạn chưa có tài khoản?</span>
-                  <button
-                    type='button'
-                    // onClick={_HandleIsLogin.bind(this, false)}
-                    onClick={() => router.push('/auth/register')}
-                    className='text-[#5599EC]'
-                  >
-                    Đăng ký ngay
-                  </button>
-                </div>
-                <div className='text-center text-[#667085] text-sm font-light flex items-center gap-1 w-full justify-center'>
-                  <p>Power by</p>
-                  <Link href='https://fososoft.com' target='_blank' className='w-[45px] h-auto'>
-                    <Image src={'/icon/logo-green.png'} width={1280} height={1024} alt='@logo' className='object-contain w-full h-full' />
-                  </Link>
-                </div>
-              </form>
-              {/* <div className="flex items-center justify-center space-x-6">
-                                                <a href="#" className="text-[#344054] hover:text-[#0F4F9E] font-light text-sm">
-                                                    Cổng dịch vụ khách hàng
-                                                </a>
-                                                <a href="#" className="text-[#344054] hover:text-[#0F4F9E] font-light text-sm">
-                                                    User Pay
-                                                </a>
-                                                <a href="#" className="text-[#344054] hover:text-[#0F4F9E] font-light text-sm">
-                                                    FMRP Website
-                                                </a>
-                                                <Popup
-                                                    trigger={
-                                                        <button className="text-[#344054] hover:text-[#0F4F9E]">
-                                                            <IconMore />
-                                                        </button>
-                                                    }
-                                                    closeOnDocumentClick
-                                                    arrow={false}
-                                                    position="right bottom"
-                                                    on={["hover"]}
-                                                    className={`dropdown-edit `}
-                                                >
-                                                    <div className="w-auto">
-                                                        <div className="bg-white p-0.5 rounded-t w-60">
-                                                            <button className="text-sm text-[#667085] hover:text-black font-semibold hover:bg-slate-100 text-left w-full px-5 rounded py-2.5">
-                                                                Tạo phím tắt trên màn hình
-                                                            </button>
-                                                            <button className="text-sm text-[#667085] hover:text-black font-semibold hover:bg-slate-100 text-left w-full px-5 rounded py-2.5">
-                                                                Yêu cầu Tư vấn qua điện thoại
-                                                            </button>
-                                                            <button className="text-sm text-[#667085] hover:text-black font-semibold hover:bg-slate-100 text-left w-full px-5 rounded py-2.5">
-                                                                Tối ưu hóa trình duyệt
-                                                            </button>
-                                                            <button className="text-sm text-[#667085] hover:text-black font-semibold hover:bg-slate-100 text-left w-full px-5 rounded py-2.5">
-                                                                Báo cáo lỗi
-                                                            </button>
-                                                            <button className="text-sm text-[#667085] hover:text-black font-semibold hover:bg-slate-100 text-left w-full px-5 rounded py-2.5">
-                                                                Điều khiển
-                                                            </button>
-                                                            <button className="text-sm text-[#667085] hover:text-black font-semibold hover:bg-slate-100 text-left w-full px-5 rounded py-2.5">
-                                                                Liên hệ
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </Popup>
-                                                {data.map((e) => (
-                                                    <BtnLang key={e.label} {...e} />
-                                                ))}
-                                            </div> */}
-            </div>
-            <div className='space-y-4 hidden lg:block'>
-              <div className='pointer-events-none select-none'>
+          {/* ========== BACKGROUND LOGIN ========== */}
+          <div className="">
+            <div className="absolute top-4 left-4">
+              <div className="scale-75 origin-top-left">
                 <Image
                   alt=''
                   width={200}
-                  // src="/FMRP_Logo.png"
                   src='/LOGOLOGIN-1.png'
-                  // src="/LOGO_LOGIN.png"
                   height={70}
                   quality={100}
                   className='object-contain'
@@ -803,59 +583,271 @@ const LoginContent = React.memo(props => {
                   blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
                 />
               </div>
-              <div className='space-y-1'>
-                <h1 className='text-[#344054] font-medium text-[19px] capitalize'>Trợ lý sản xuất</h1>
-                <div className='space-y-1'>
-                  <p className='text-[#344054] font-normal text-xl flex items-center'>
-                    <FaQuoteLeft className='w-3 h-3 text-[#344054]' />
-                    <span className='mx-2'>Tối ưu sản xuất, tối đa năng suất, tối thiểu lãng phí</span>
-                    <FaQuoteRight className='w-3 h-3 text-[#344054]' />
-                  </p>
-                  <p className='text-[#667085] font-light text-[16px]'>
-                    Hotline:
-                    <span className='text-[#0F4F9E] font-normal ml-1'>0901.13.6968 - 0981.89.3353</span>
-                  </p>
-                  {/* <p className="text-[#667085] font-light text-[16px]">
-                                                        Tổng đài:
-                                                        <span className="text-[#0F4F9E] font-normal mx-1">028.7776.8880</span>
-                                                        (Phím 1 - BP. Tư Vấn - Phím 2 - BP. Kỹ Thuật)
-                                                    </p> */}
-                </div>
-              </div>
-              <Link href='https://zalo.me/fososoft' target='_blank'>
-                <Image
-                  alt=''
-                  src='/qr.png'
-                  width={120}
-                  height={120}
-                  quality={100}
-                  className='object-contain w-auto h-auto '
-                  loading='lazy'
-                  crossOrigin='anonymous'
-                  placeholder='blur'
-                  blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
-                />
-              </Link>
             </div>
+
+            <div className="absolute bottom-4 left-4">
+              <div className="scale-75 origin-bottom-left">
+                <div className='space-y-1'>
+                  <p className='text-[#344054] font-medium text-[32px] capitalize'>Trợ lý sản xuất</p>
+                  <p className='text-[#344054] font-medium text-[16px] capitalize'>Trợ lý sản xuất</p>
+                  <div className='space-y-1'>
+                    <p className='text-[#344054] font-normal text-[16px] flex items-center'>
+                      <FaQuoteLeft className='w-3 h-3 text-[#344054]' />
+                      <span className='mx-2'>Tối ưu sản xuất, tối đa năng suất, tối thiểu lãng phí</span>
+                      <FaQuoteRight className='w-3 h-3 text-[#344054]' />
+                    </p>
+                    <p className='text-[#667085] font-light text-[16px]'>
+                      Hotline:
+                      <span className='text-[#0F4F9E] font-normal ml-1'>0901.13.6968 - 0981.89.3353</span>
+                    </p>
+                  </div>
+                </div>
+                <Link href='https://zalo.me/fososoft' target='_blank' className="">
+                  <Image
+                    alt=''
+                    src='/qr.png'
+                    width={120}
+                    height={120}
+                    quality={100}
+                    className='object-contain w-auto h-auto mt-2'
+                    loading='lazy'
+                    crossOrigin='anonymous'
+                    placeholder='blur'
+                    blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+                  />
+                </Link>
+              </div>
+            </div>
+
+
+            <div className="absolute bottom-4 right-4 z-[100]">
+              <button
+                type='button'
+                onClick={() => window.open('https://zalo.me/fososoft', '_blank', 'noopener,noreferrer')}
+                className='flex items-center justify-center gap-2 cursor-pointer px-3 py-1.5 shadow-xl'
+                style={{
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  border: '1px solid #D7EEFF',
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M12 1.5C10.0109 1.5 8.10322 2.29018 6.6967 3.6967C5.29018 5.10322 4.5 7.01088 4.5 9V15.75H3V9C3 7.8181 3.23279 6.64778 3.68508 5.55585C4.13738 4.46392 4.80031 3.47177 5.63604 2.63604C6.47177 1.80031 7.46392 1.13738 8.55585 0.685084C9.64778 0.232792 10.8181 0 12 0C13.1819 0 14.3522 0.232792 15.4442 0.685084C16.5361 1.13738 17.5282 1.80031 18.364 2.63604C19.1997 3.47177 19.8626 4.46392 20.3149 5.55585C20.7672 6.64778 21 7.8181 21 9V15.75H19.5V9C19.5 8.01509 19.306 7.03982 18.9291 6.12987C18.5522 5.21993 17.9997 4.39314 17.3033 3.6967C16.6069 3.00026 15.7801 2.44781 14.8701 2.0709C13.9602 1.69399 12.9849 1.5 12 1.5Z" fill="#1556D9" />
+                  <path d="M16.5 12C16.5 11.6022 16.658 11.2206 16.9393 10.9393C17.2206 10.658 17.6022 10.5 18 10.5H21V16.5C21 16.8978 20.842 17.2794 20.5607 17.5607C20.2794 17.842 19.8978 18 19.5 18H18C17.6022 18 17.2206 17.842 16.9393 17.5607C16.658 17.2794 16.5 16.8978 16.5 16.5V12ZM7.5 12C7.5 11.6022 7.34196 11.2206 7.06066 10.9393C6.77936 10.658 6.39782 10.5 6 10.5H3V16.5C3 16.8978 3.15804 17.2794 3.43934 17.5607C3.72064 17.842 4.10218 18 4.5 18H6C6.39782 18 6.77936 17.842 7.06066 17.5607C7.34196 17.2794 7.5 16.8978 7.5 16.5V12Z" fill="#1556D9" />
+                  <path fillRule="evenodd" clipRule="evenodd" d="M20.25 12.75C20.4489 12.75 20.6397 12.829 20.7803 12.9697C20.921 13.1103 21 13.3011 21 13.5V18C21 18.9946 20.6049 19.9484 19.9017 20.6517C19.1984 21.3549 18.2446 21.75 17.25 21.75H12C11.8011 21.75 11.6103 21.671 11.4697 21.5303C11.329 21.3897 11.25 21.1989 11.25 21C11.25 20.8011 11.329 20.6103 11.4697 20.4697C11.6103 20.329 11.8011 20.25 12 20.25H17.25C17.8467 20.25 18.419 20.0129 18.841 19.591C19.2629 19.169 19.5 18.5967 19.5 18V13.5C19.5 13.3011 19.579 13.1103 19.7197 12.9697C19.8603 12.829 20.0511 12.75 20.25 12.75Z" fill="#1556D9" />
+                  <path d="M9.75 21C9.75 20.6022 9.90804 20.2206 10.1893 19.9393C10.4706 19.658 10.8522 19.5 11.25 19.5H12.75C13.1478 19.5 13.5294 19.658 13.8107 19.9393C14.092 20.2206 14.25 20.6022 14.25 21C14.25 21.3978 14.092 21.7794 13.8107 22.0607C13.5294 22.342 13.1478 22.5 12.75 22.5H11.25C10.8522 22.5 10.4706 22.342 10.1893 22.0607C9.90804 21.7794 9.75 21.3978 9.75 21Z" fill="#1556D9" />
+                </svg>
+
+                <p className="font-deca font-semibold text-[12px] text-[#1556D9]">Hỗ trợ</p>
+              </button>
+            </div>
+
           </div>
-          <div className='absolute -bottom-10 -right-10 pointer-events-none select-none'>
-            <Image
-              src='/bgImageLogin.png'
-              alt=''
-              width={500}
-              height={500}
-              quality={100}
-              className='object-contain w-[600px] h-auto'
-              loading='lazy'
-              crossOrigin='anonymous'
-              placeholder='blur'
-              blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
-            />
+
+
+          {/* ========== CONTENT LOGIN ========== */}
+          <div className='z-10 flex justify-center w-full space-x-20'>
+
+            {/* ========== IMAGE LOGIN ========== */}
+            <div className='space-y-4 hidden lg:block'>
+              <Image
+                src='/image-login.png'
+                alt=''
+                width={500}
+                height={500}
+                quality={100}
+                className='object-contain w-[600px] 2xl:w-[800px] h-auto'
+                loading='lazy'
+                crossOrigin='anonymous'
+                placeholder='blur'
+                blurDataURL='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+              />
+            </div>
+
+            {/* ========= FORM LOGIN ========= */}
+            <div className='mx-4 lg:mx-0 w-full lg:w-fit flex flex-col justify-center'>
+              <div className="relative">
+                <div className="absolute -top-10 -right-16">
+                  <Image src='/dashboard/rocket-boy.gif' alt='@logo' width={100} height={100} className='object-contain size-[200px]' />
+                </div>
+                <form onSubmit={handleSubmit(data => onSubmit(data, 'login'))} className='bg-white px-4 lg:px-16 py-8 flex flex-col gap-6 rounded-lg w-full lg:w-[600px]'>
+                  <div className=''>
+                    <h1 className='text-[#11315B] font-medium text-3xl text-center capitalize'>{dataLang?.auth_login || 'auth_login'}</h1>
+                  </div>
+
+                  {/* [login] [step 1] Render Tabs underline để chuyển giữa Form đăng nhập và QR */}
+                  <div className='w-fit'>
+                    <TabSwitcherWithUnderline tabs={tabsLogin} activeTab={activeTab} onChange={setActiveTab} />
+                  </div>
+
+                  {/* [login] [step 3] Kiểm tra tab đang active để render Form hoặc QR */}
+                  {activeTab?.id === 'login' ? (
+                    /* [login] [step 4] Render Form đăng nhập khi tab "Đăng nhập" đang active */
+                    <div className='flex flex-col gap-6'>
+                      <div className='space-y-2'>
+                        <Input
+                          type='text'
+                          name='code'
+                          {...register('code', { required: true })}
+                          value={valueForm.code || ''}
+                          onClear={() => setValue('code', '')}
+                          placeholder='Mã công ty'
+                          error={errors.code ? { message: 'Vui lòng nhập mã công ty' } : null}
+                        />
+                        <Input
+                          type='text'
+                          name='name'
+                          {...register('name', { required: true })}
+                          value={valueForm.name || ''}
+                          onClear={() => setValue('name', '')}
+                          placeholder={dataLang?.auth_user_name || 'auth_user_name'}
+                          error={errors.name ? { message: 'Vui lòng nhập email hoặc số điện thoại' } : null}
+                        />
+                        <InputPassword
+                          name='password'
+                          {...register('password', { required: true })}
+                          value={valueForm.password || ''}
+                          onClear={() => setValue('password', '')}
+                          placeholder={dataLang?.auth_password || 'auth_password'}
+                          error={errors.password ? { message: 'Vui lòng nhập mật khẩu' } : null}
+                        />
+                        <div className='flex flex-col lg:flex-row gap-2 justify-between w-full'>
+                          <div className='flex items-center space-x-1.5'>
+                            <input
+                              type='checkbox'
+                              id='rememberMe'
+                              {...register('rememberMe', { required: false })}
+                              checked={isState.rememberMe ? true : false}
+                              onChange={() => queryState({ rememberMe: !isState.rememberMe })}
+                            />
+                            <label htmlFor='rememberMe'>{dataLang?.auth_remember_login || 'auth_remember_login'}</label>
+                          </div>
+                          <Link href='/auth/forgot-password'>
+                            <p className='text-[#3276FA] text-sm'>{dataLang?.auth_forgot_password || 'auth_forgot_password'}</p>
+                          </Link>
+                        </div>
+                      </div>
+                      <button
+                        type='submit'
+                        className='text-[#FFFFFF] font-normal text-lg py-3 w-full rounded-md bg-gradient-to-l from-[#0375f3]  via-[#296dc1] to-[#0375f3] btn-animation hover:scale-105'
+                      >
+                        {dataLang?.auth_login || 'auth_login'}
+                      </button>
+                    </div>
+                  ) : (
+                    /* [login] [step 5] Render QR Code hoặc thông tin người dùng khi tab "QR" đang active */
+                    <>
+                      {(() => {
+                        // [login-socket] [step 9] Kiểm tra nếu có dữ liệu approved login thì render thông tin người dùng
+                        if (approvedLoginData && !isExpired) {
+                          /**
+                           * @type {AppApprovedLoginData}
+                           */
+                          const userData = approvedLoginData;
+                          return (
+                            <div className='w-full flex flex-col items-center justify-center gap-4 py-6'>
+                              {/* [login-socket] [step 9.1] Avatar người dùng */}
+                              <div className='w-24 h-24 rounded-full bg-gradient-to-br from-[#0375f3] to-[#296dc1] flex items-center justify-center text-white text-2xl font-semibold shadow-lg'>
+                                {userData.user_avatar ? (
+                                  <img src={userData.user_avatar} alt={userData.user_full_name} className='w-full h-full rounded-full object-cover object-center' />
+                                ) : (
+                                  <span>{userData.user_full_name?.charAt(0)?.toUpperCase() || 'U'}</span>
+                                )}
+                              </div>
+
+                              {/* [login-socket] [step 9.2] Tên người dùng */}
+                              <div className='text-center'>
+                                <h3 className='text-[#11315B] font-semibold text-xl'>{userData.user_full_name}</h3>
+                                <p className='text-[#667085] text-sm mt-1'>{userData.company_code}</p>
+                              </div>
+
+                              {/* [login-socket] [step 9.3] Thông tin thiết bị và địa điểm */}
+                              <div className='w-full space-y-2 bg-[#F9FAFB]- rounded-lg p-4'>
+                                <div className='flex items-center gap-2 text-sm'>
+                                  <span className='text-[#667085] min-w-[100px]'>Thiết bị:</span>
+                                  <span className='text-[#344054] font-medium'>{userData.app_device_name}</span>
+                                </div>
+
+                                {userData.localtion_name && (
+                                  <div className='flex items-center gap-2 text-sm'>
+                                    <span className='text-[#667085] min-w-[100px]'>Địa điểm:</span>
+                                    <span className='text-[#344054] font-medium'>{userData.localtion_name}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* [login-socket] [step 9.4] Thông báo đang xử lý đăng nhập */}
+                              <div className='flex items-center gap-2 text-[#0F4F9E] text-sm'>
+                                <div className='w-2 h-2 bg-[#0F4F9E] rounded-full animate-pulse'></div>
+                                <span>Đang chờ đăng nhập...</span>
+                              </div>
+                              {!isExpired && qrTtl > 0 && <p className='text-xs text-[#667085] text-center'>Hết hạn sau {qrTtl}s</p>}
+                            </div>
+                          );
+                        }
+
+                        // [set-qr] [step 6] Nếu chưa có dữ liệu approved, hiển thị QR Code
+                        const sessionToken = createSessionData?.data?.session_token || '';
+                        const qrUrl = sessionToken;
+                        return (
+                          <div className='w-full flex flex-col items-center justify-center gap-3 py-6-'>
+                            {/* [set-qr] [step 7] Hiển thị QR; khi hết hạn thì blur và chặn tương tác */}
+                            <div className='pb-4 text-center text-[#667085] text-sm font-light'>Dùng ứng dụng FMRP trên điện thoại quét QR để đăng nhập</div>
+                            <div className={`relative`}>
+                              <div className={`bg-white p-4 rounded-md shadow-sm ${isExpired || !qrUrl ? 'blur-md' : ''}`}>
+                                <QRCode value={qrUrl || 'about:blank'} size={220} bgColor='#ffffff' fgColor='#000000' level='M' />
+                              </div>
+                              {/* [set-qr] [step 8] Overlay nút reload ở giữa khi hết hạn */}
+                              {isExpired && (
+                                <div className='absolute inset-0 flex items-center justify-center'>
+                                  <button
+                                    type='button'
+                                    onClick={handleReloadQR}
+                                    aria-label='Tạo lại QR'
+                                    className='p-3 rounded-full bg-[#0F4F9E] text-white shadow hover:opacity-90 flex items-center justify-center'
+                                  >
+                                    <FaRedoAlt className='w-5 h-5' />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                            {/* [set-qr] [step 9] Hiển thị đếm ngược TTL */}
+                            {!isExpired && qrTtl > 0 && <p className='text-xs text-[#667085] text-center'>Hết hạn sau {qrTtl}s</p>}
+                          </div>
+                        );
+                      })()}
+                    </>
+                  )}
+
+                  <div className='flex justify-center space-x-2'>
+                    <span className='font-[300] '>Bạn chưa có tài khoản?</span>
+                    <button
+                      type='button'
+                      // onClick={_HandleIsLogin.bind(this, false)}
+                      onClick={() => router.push('/auth/register')}
+                      className='text-[#5599EC]'
+                    >
+                      Đăng ký ngay
+                    </button>
+                  </div>
+                  <div className='text-center text-[#667085] text-sm font-light flex items-center gap-1 w-full justify-center'>
+                    <p>Power by</p>
+                    <Link href='https://fososoft.com' target='_blank' className='w-[45px] h-auto'>
+                      <Image src={'/icon/logo-green.png'} width={1280} height={1024} alt='@logo' className='object-contain w-full h-full' />
+                    </Link>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+
           </div>
+
         </div>
       </div>
 
-      <SupportZalo />
 
     </>
   );
