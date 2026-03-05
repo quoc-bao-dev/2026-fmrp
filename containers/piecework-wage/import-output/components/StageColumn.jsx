@@ -314,19 +314,16 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
     };
   };
 
-  const handleResponsiblePersonConfirm = selected => {
+  const handleResponsiblePersonConfirm = (selected, options) => {
     setSelectedResponsiblePersons(selected);
     const payload = buildBasePayload(selected);
-    savePomStages(payload);
-  };
 
-  // Lưu người phụ trách làm mặc định cho công đoạn này (BE sẽ xử lý)
-  const handleSaveResponsibleAsDefault = selected => {
-    const payload = buildBasePayload(selected);
-    // TODO: Gọi API lưu mặc định cho stage (BE xử lý)
-    // Ví dụ:
-    // apiImportOutput.saveDefaultResponsibles(payload);
-    console.log('Lưu người phụ trách mặc định cho stage:', payload);
+    // Nếu từ PersonSelector gửi lên với flag lưu mặc định công đoạn
+    if (options?.isSaveStage) {
+      payload.is_save_stage = 1;
+    }
+
+    savePomStages(payload);
   };
 
   // Mỗi khi selectModeResetKey thay đổi (bấm PersonSelector ở StageColumn khác)
@@ -456,7 +453,6 @@ const StageColumn = ({ stage, selectModeResetKey, activePersonSelectorStageId, o
               onSelectMode={handleSelectMode}
               onApplySelected={handleApplySelectedOrders}
               onCancelSelectMode={handleCancelSelectMode}
-              onSaveAsDefault={handleSaveResponsibleAsDefault}
               selected={selectedResponsiblePersons}
               selectedProductionOrdersCount={selectedProductionOrders.length}
               isSelectMode={isSelectMode}

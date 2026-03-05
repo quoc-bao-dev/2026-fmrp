@@ -133,7 +133,7 @@ const Category = props => {
               <div className='h-[93%] space-y-2'>
                 <div className='xl:space-y-3 space-y-2'>
                   <div className='bg-slate-100 w-full rounded flex items-center justify-between xl:p-3 p-2'>
-                    <SearchComponent dataLang={dataLang} onChange={_HandleOnChangeKeySearch.bind(this)} />
+                    <SearchComponent alwaysOpen dataLang={dataLang} onChange={_HandleOnChangeKeySearch.bind(this)} />
                     <div className=''>
                       <DropdowLimit sLimit={sLimit} limit={limit} dataLang={dataLang} />
                     </div>

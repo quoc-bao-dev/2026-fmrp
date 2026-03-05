@@ -56,7 +56,7 @@ const Avatar = ({ group_members_assigned, staffs_assigned, onClick }) => {
 
   return (
     <div
-      className='flex items-center gap-2 justify-between w-fit cursor-pointer hover:opacity-80 transition-opacity'
+      className='flex items-center gap-2 justify-between w-fit cursor-pointer hover:opacity-80 transition-opacity group'
       onClick={e => {
         e.stopPropagation();
         onClick?.();
@@ -108,7 +108,7 @@ const Avatar = ({ group_members_assigned, staffs_assigned, onClick }) => {
         )}
         {!isSingle && displayAvatars.length > 0 && (
           <div
-            className='size-[30px] rounded-full overflow-hidden border-[2px] border-dashed border-gray-300 flex items-center justify-center bg-white text-gray-400 font-semibold responsive-text-sm -ml-3 z-1 cursor-pointer'
+            className='size-[30px] rounded-full overflow-hidden border-[2px] border-dashed border-gray-300 group-hover:border-blue-fmrp group-hover:text-blue-fmrp transition-colors flex items-center justify-center bg-white text-gray-400 responsive-text-base leading-[150%] -ml-3 z-1 cursor-pointer'
           >
             +
           </div>

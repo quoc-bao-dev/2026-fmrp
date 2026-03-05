@@ -407,7 +407,7 @@ const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, i
                 <p className='responsive-text-xxs font-normal text-[#667085]'>{item?.product_variation || '-'}</p>
               </div>
             </div>
-            <p className='responsive-text-xs font-bold text-[#2BB38A] flex gap-1'>
+            <div className='responsive-text-xs font-bold text-[#2BB38A] flex gap-1'>
               {
                 +item?.quantity_rest > 0
                   ? (formatNumber(+(item?.quantity_rest ?? 0)) + '/' + (item?.unit_name || ''))
@@ -424,7 +424,7 @@ const ProductionOrderCard = ({ po, stage_id, stage_name, isSelectMode = false, i
                     </>
                   )
               }
-            </p>
+            </div>
           </div>
         ))}
         {totalItems > 1 && (

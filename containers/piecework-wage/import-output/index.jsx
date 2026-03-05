@@ -63,7 +63,7 @@ const ImportOutput = () => {
     internal_plan_ids: Array.isArray(selectedPlans) && selectedPlans.length > 0 ? selectedPlans : null,
     search: debouncedSearchReferenceNo || '',
     ...(selectedBranch?.value ? { branch_ids: selectedBranch.value } : {}),
-    ...(productType ? { type_products: productType } : {}),
+    ...(productType ? { is_type: productType } : {}),
   };
 
   const { isLoading: isLoadingListImportOutput, data: listImportOutput, refetch: refetchListImportOutput } = useListImportOutput(filterParams);
@@ -403,9 +403,9 @@ const ImportOutput = () => {
               return newStages;
             }
 
-            // Nếu chưa có thì thêm mới vào cuối danh sách (thay vì đầu) để không làm ảnh hưởng đến thứ tự đã sắp xếp
-            const newStages = [...prevStages, updatedStage];
-            // Cập nhật localStorage với stage mới ở cuối
+            // Nếu chưa có thì thêm mới vào ĐẦU danh sách để stage mới hiển thị trước
+            const newStages = [updatedStage, ...prevStages];
+            // Cập nhật localStorage với stage mới ở đầu
             const newOrder = newStages.map(s => String(s.stage_id));
             localStorage.setItem(STAGE_ORDER_KEY, JSON.stringify(newOrder));
             return newStages;
@@ -485,12 +485,12 @@ const ImportOutput = () => {
         <div className='flex flex-col xl:flex-row items-center justify-between px-6'>
           <div className='flex items-center gap-2'>
             <h2 className='responsive-text-4xl font-medium text-neutral-07 capitalize'>Nhập sản lượng</h2>
-            {/* <InfoTooltip
-              content=''
+            <InfoTooltip
+              content='Lương Sản Lượng giúp bạn quản lý và tính toán lương dựa trên sản lượng sản xuất một cách chính xác và hiệu quả.'
               iconProps={{
                 className: '2xl:size-[21px] xl:size-[18px] size-[16px]',
               }}
-            /> */}
+            />
           </div>
           <div className='flex items-center gap-2'>
             {process.env.NODE_ENV === 'development' && (
@@ -521,16 +521,16 @@ const ImportOutput = () => {
                 <SearchIcon className='size-4 text-white' />
               </div>
             </div>
-            {/* <SelectSearchableRadio
+            <SelectSearchableRadio
               placeholder='Loại sản xuất'
               showSearch={false}
               options={[
                 {
-                  value: 'products',
+                  value: 1,
                   label: 'Thành phẩm',
                 },
                 {
-                  value: 'semi_products',
+                  value: 2,
                   label: 'Bán thành phẩm',
                 }]}
               value={productType}
@@ -538,7 +538,7 @@ const ImportOutput = () => {
               onClear={handleProductTypeClear}
               icon={<BsLayers className='size-4 text-[#003DA0]' />}
               className='w-auto min-w-[180px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
-            /> */}
+            />
             <SelectSearchableRadio
               placeholder='Lọc nhân viên'
               label='Lọc nhân viên'
