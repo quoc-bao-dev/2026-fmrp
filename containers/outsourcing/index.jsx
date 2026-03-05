@@ -15,7 +15,7 @@ import PopupConfim from '@/components/UI/popupConfim/popupConfim';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useMemo, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
@@ -132,7 +132,7 @@ const OutsourcingOrderDetail = ({ order, stats }) => {
 
           {/* Thông tin đơn gia công */}
           <div className='mt-4 flex flex-col gap-4'>
-            <h3 className='text-[20px] leading-6 font-medium text-[#003DA0]'>Thông Tin Đơn Gia Công</h3>
+            <h3 className='text-[18px] leading-6 font-medium text-[#003DA0]'>Thông Tin Đơn Gia Công</h3>
 
             <div className='flex flex-col gap-5 text-sm text-[#344054]'>
               <div className='flex items-center justify-between gap-4'>
@@ -201,7 +201,7 @@ const OutsourcingOrderDetail = ({ order, stats }) => {
           <div className="w-full h-[1px] flex-shrink-0 bg-[#F3F3F4]"></div>
           {/* Thống kê trạng thái */}
           <div className='mt-4 flex-1 flex flex-col gap-4'>
-            <h3 className='text-[20px] leading-6 font-medium text-[#003DA0]'>Thống Kê Trạng Thái</h3>
+            <h3 className='text-[18px] leading-6 font-medium text-[#003DA0]'>Thống Kê Trạng Thái</h3>
             <div className='flex-1 flex gap-4 items-center'>
               {/* Legend + total */}
               <div className='flex flex-col gap-3 min-w-[140px]'>
@@ -353,8 +353,52 @@ const OutsourcingMain = props => {
   const [activeMainTab, setActiveMainTab] = useState({ id: 'info', name: 'Thông tin', type: 'info' });
   const [tableLimit, setTableLimit] = useState(4);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [hasHorizontalScroll, setHasHorizontalScroll] = useState(false);
+
+  // base ref của table grid để đảm bảo sticky left tính theo cấu trúc grid hiện tại
+  const tableGridRef = useRef(null);
 
   const stateFilterDropdown = useSelector(state => state.stateFilterDropdown);
+
+  useLayoutEffect(() => {
+    const gridEl = tableGridRef.current;
+    if (!gridEl) return;
+
+    const measure = () => {
+      setGridWidth(gridEl.getBoundingClientRect().width || 0);
+    };
+
+    measure();
+    const ro = new ResizeObserver(() => measure());
+    ro.observe(gridEl);
+    return () => ro.disconnect();
+  }, []);
+
+  // Với grid-cols-17 (repeat(17, 1fr)): left% = (tổng col-span trước đó / 17) * 100
+  const [gridWidth, setGridWidth] = useState(0);
+  const leftPct = useMemo(() => {
+    const total = 17;
+    const toPctNumber = n => (n / total) * 100;
+    return {
+      product: toPctNumber(1), // sau STT (col-span-1)
+      unit: toPctNumber(1 + 3), // sau STT + Thành phẩm (1 + 3)
+    };
+  }, []);
+
+  // Convert % => px dựa trên chiều ngang thực tế của tableGridRef
+  const leftPx = useMemo(() => {
+    const toPx = pct => `${(gridWidth * pct) / 100}px`;
+    return {
+      product: toPx(leftPct.product),
+      unit: toPx(leftPct.unit),
+    };
+  }, [gridWidth, leftPct]);
+
+  const handleTableHorizontalScroll = e => {
+    const scrollEl = e?.target;
+    if (!scrollEl) return;
+    setHasHorizontalScroll(scrollEl.scrollLeft > 0);
+  };
 
   // Mock data cho nhà gia công
   const mockVendors = [
@@ -928,40 +972,46 @@ const OutsourcingMain = props => {
               <>
                 <div className='w-full flex-1 min-h-0'>
                   <div className='w-full h-full'>
-                    <Customscrollbar className=' h-full relative'>
-                      <div className='grid grid-cols-14 min-w-[1100px] '>
+                    <Customscrollbar className=' h-full relative' onScroll={handleTableHorizontalScroll}>
+                      <div ref={tableGridRef} className='grid grid-cols-17 min-w-[1100px] '>
                         {/* header */}
-                        <div className='col-span-14 grid grid-cols-14  py-3 border-b bg-white sticky top-0 z-10'>
-                          <h4 className='text-xs-default text-center text-[#9295A4] font-semibold col-span-1 px-1'>
+                        <div className='w-full col-span-17 grid grid-cols-17 border-b bg-white sticky top-0 z-20 border-t border-gray-200'>
+                          <h4 className='sticky left-0 z-10 text-sm  py-3 bg-white text-center text-[#9295A4] font-semibold col-span-1 px-1'>
                             STT
                           </h4>
-                          <h4 className=' text-xs-default text-start text-[#9295A4] font-semibold col-span-3 px-1'>
+                          <h4
+                            className='sticky z-10 text-sm py-3 bg-white text-start text-[#9295A4] font-semibold col-span-3 px-1'
+                            style={{ left: leftPx.product }}
+                          >
                             Thành phẩm
                           </h4>
-                          <h4 className='text-xs-default text-start text-[#9295A4] font-semibold col-span-1 px-1'>
+                          <h4
+                            className={`sticky z-10 text-sm py-3 bg-white text-start text-[#9295A4] font-semibold col-span-1 px-1 ${hasHorizontalScroll ? 'border-r border-gray-200' : ''}`}
+                            style={{ left: leftPx.unit }}
+                          >
                             ĐVT
                           </h4>
-                          <h4 className='text-xs-default text-center text-[#9295A4] font-semibold block col-span-1 px-1'>
+                          <h4 className='text-sm py-3 bg-white text-center text-[#9295A4] font-semibold block col-span-2 px-1'>
                             SL gia công
                           </h4>
-                          <h4 className='text-xs-default text-center text-[#9295A4] font-semibold block col-span-1 px-1 -mx-4' >
+                          <h4 className='text-sm py-3 bg-white text-center text-[#9295A4] font-semibold block col-span-2 px-1' >
                             SL hoàn thành
                           </h4>
-                          <h4 className='text-xs-default text-center text-[#9295A4] font-semibold block col-span-1 px-1'>
+                          <h4 className='text-sm py-3 bg-white text-center text-[#9295A4] font-semibold block col-span-2 px-1'>
                             SL lỗi
                           </h4>
-                          <h4 className='text-xs-default text-center text-[#9295A4] font-semibold block col-span-2 px-1'>
+                          <h4 className='text-sm py-3 bg-white text-center text-[#9295A4] font-semibold block col-span-2 px-1'>
                             Đơn giá
                           </h4>
-                          <h4 className='text-xs-default text-center text-[#9295A4] font-semibold block col-span-2 px-1'>
+                          <h4 className='text-sm py-3 bg-white text-center text-[#9295A4] font-semibold block col-span-2 px-1'>
                             Thành tiền
                           </h4>
-                          <h4 className='text-xs-default text-center text-[#9295A4] font-semibold block col-span-2 px-1'>
+                          <h4 className='text-sm py-3 bg-white text-center text-[#9295A4] font-semibold block col-span-2 px-1'>
                             Trạng thái
                           </h4>
                         </div>
 
-                        <div className='col-span-14 grid grid-cols-14 min-h-[240px]'>
+                        <div className='w-full col-span-17 grid grid-cols-17 min-h-[240px]'>
                           {mockOutsourcingItems && mockOutsourcingItems.length > 0 ? (
                             mockOutsourcingItems.slice(0, tableLimit).map((item, index) => {
                               const totalMoney = item.unitPrice * item.qtyCompleted;
@@ -972,13 +1022,16 @@ const OutsourcingMain = props => {
                                   className={`${mockOutsourcingItems.slice(0, tableLimit).length - 1 !== index
                                     ? 'border-[#F3F3F4]'
                                     : 'border-transparent'
-                                    } border-b col-span-14 grid grid-cols-14 gap-2 items-start group hover:bg-gray-50 cursor-pointer transition-all duration-150 ease-in-out`}
+                                    } border-b col-span-17 grid grid-cols-17 items-start group  cursor-pointer transition-all duration-150 ease-in-out`}
                                 >
-                                  <h4 className='col-span-1 flex items-center justify-center size-full text-center text-[#141522] font-semibold text-sm-default uppercase 3xl:py-4 py-2 px-1'>
+                                  <h4 className='sticky left-0 z-10 col-span-1 flex items-center justify-center size-full text-center text-[#141522] bg-white group-hover:bg-gray-50 font-semibold text-sm-default uppercase 3xl:py-4 py-2 px-1'>
                                     {index + 1}
                                   </h4>
 
-                                  <h4 className='col-span-3 text-[#344054] font-normal flex items-center 3xl:py-4 py-2 px-1'>
+                                  <h4
+                                    className='sticky z-10 col-span-3 text-[#344054]  bg-white group-hover:bg-gray-50 font-normal flex items-center 3xl:py-4 py-2 px-1'
+                                    style={{ left: leftPx.product }}
+                                  >
                                     <div className='flex items-start gap-2 w-full'>
                                       {/* Hình ảnh thành phẩm */}
                                       <div className='2xl:size-16 size-14 shrink-0 rounded-md bg-[#F3F4F6] overflow-hidden flex items-center justify-center'>
@@ -1016,38 +1069,41 @@ const OutsourcingMain = props => {
                                     </div>
                                   </h4>
 
-                                  <h4 className='col-span-1 flex items-center justify-start size-full text-start text-[#141522] font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
+                                  <h4
+                                    className={`sticky z-10 col-span-1 flex items-center justify-start size-full text-start text-[#141522] bg-white group-hover:bg-gray-50 font-semibold text-sm-default 3xl:py-4 py-2 px-1 ${hasHorizontalScroll ? ' border-r border-gray-200' : ''}`}
+                                    style={{ left: leftPx.unit }}
+                                  >
                                     {item.unit}
                                   </h4>
 
-                                  <h4 className='col-span-1 flex items-center justify-center size-full text-center text-[#141522] font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
+                                  <h4 className='col-span-2 flex items-center justify-center size-full text-center text-[#141522]  bg-white group-hover:bg-gray-50 font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
                                     {item.qtyOutsourcing > 0 ? formatNumber(item.qtyOutsourcing) : '-'}
                                   </h4>
 
-                                  <h4 className='col-span-1 flex items-center justify-center size-full text-[#141522] font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
+                                  <h4 className='col-span-2 flex items-center justify-center size-full text-[#141522]  bg-white group-hover:bg-gray-50 font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
                                     {item.qtyCompleted > 0 ? formatNumber(item.qtyCompleted) : '-'}
                                   </h4>
 
-                                  <h4 className='col-span-1 flex items-center justify-center size-full text-[#F04438] font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
+                                  <h4 className='col-span-2 flex items-center justify-center size-full text-[#F04438]  bg-white group-hover:bg-gray-50 font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
                                     {item.qtyError > 0 ? formatNumber(item.qtyError) : '-'}
                                   </h4>
 
-                                  <h4 className='col-span-2 flex items-center justify-center size-full text-[#141522] font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
+                                  <h4 className='col-span-2 flex items-center justify-center size-full text-[#141522]  bg-white group-hover:bg-gray-50 font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
                                     {item.unitPrice > 0 ? `${formatNumber(item.unitPrice)} đ` : '-'}
                                   </h4>
 
-                                  <h4 className='col-span-2 flex items-center justify-center size-full text-[#141522] font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
+                                  <h4 className='col-span-2 flex items-center justify-center size-full text-[#141522] bg-white group-hover:bg-gray-50 font-semibold text-sm-default 3xl:py-4 py-2 px-1'>
                                     {totalMoney > 0 ? `${formatNumber(totalMoney)} đ` : '-'}
                                   </h4>
 
-                                  <div className='col-span-2 flex items-center justify-center size-full 3xl:py-4 py-2 px-1 truncate'>
+                                  <div className='col-span-2 flex items-center justify-center size-full  bg-white group-hover:bg-gray-50 3xl:py-4 py-2 px-1 truncate'>
                                     {renderStatusBadge(item.status)}
                                   </div>
                                 </div>
                               );
                             })
                           ) : (
-                            <NoData className='mt-0 col-span-14' type='table' />
+                            <NoData className='mt-0 col-span-17' type='table' />
                           )}
                         </div>
                       </div>
@@ -1093,7 +1149,7 @@ const OutsourcingMain = props => {
         </div>
 
         {/* ===== DETAIL ===== */}
-        <div className='w-[30%] min-w-[320px] h-full'>
+        <div className='w-[440px] h-full'>
           <OutsourcingOrderDetail order={activeOrder} stats={statusStats} />
         </div>
       </div>
