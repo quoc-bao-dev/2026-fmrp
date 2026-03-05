@@ -57,9 +57,7 @@ const PersonSelector = ({
   onConfirm,
   onApplySelected,
   onCancelSelectMode,
-  onSaveAsDefault,
   selected = [],
-  data = [], // Deprecated: sẽ không dùng nữa, dữ liệu sẽ lấy từ API
   className,
   children,
   onSelectMode,
@@ -282,9 +280,11 @@ const PersonSelector = ({
       showToast('error', 'Vui lòng chọn ít nhất một người phụ trách trước khi áp dụng');
       return;
     }
-    onConfirm?.(localSelected);
-    if (saveAsDefault && typeof onSaveAsDefault === 'function') {
-      onSaveAsDefault(localSelected);
+    // Nếu chọn "Lưu mặc định công đoạn này" thì truyền flag cho onConfirm
+    if (saveAsDefault) {
+      onConfirm?.(localSelected, { isSaveStage: true });
+    } else {
+      onConfirm?.(localSelected);
     }
     onClose?.();
   };
@@ -405,7 +405,7 @@ const PersonSelector = ({
               !hideFooterActions && (
                 <div className='flex flex-col items-center justify-center gap-2 w-full z-10'>
                   <div className='w-full flex flex-col gap-1.5'>
-                    {/* {!isSelectMode && (
+                    {!isSelectMode && (
                       <label className='flex items-center gap-2 cursor-pointer text-xs text-[#667085] hover:text-[#344054] transition-colors'>
                         <input
                           type='checkbox'
@@ -415,14 +415,13 @@ const PersonSelector = ({
                         />
                         <span>Lưu mặc định công đoạn này</span>
                       </label>
-                    )} */}
+                    )}
                     <button
                       className='w-full bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
                       onClick={handleConfirmAll}
                     >
                       Áp dụng tất cả
                     </button>
-
                   </div>
                   {!isSelectMode ? (
                     <button
