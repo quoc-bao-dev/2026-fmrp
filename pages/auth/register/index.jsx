@@ -1,7 +1,6 @@
 'use client';
 
 import apiLogin from '@/Api/apiLogin/apiLogin';
-import SupportZalo from '@/components/common/button/SupportZalo';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import LoadingButton from '@/components/UI/loading/loadingButton';
 import { optionsQuery } from '@/configs/optionsQuery';
@@ -21,6 +20,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import 'sweetalert2/src/sweetalert2.scss';
+import QuickSupportButton from '../login/QuickSupportButton';
 
 const formatPhone = phone => {
   // Xoá hết dấu cách và ký tự không phải số
@@ -745,8 +745,9 @@ const Register = React.memo(props => {
           </Customscrollbar>
         </div>
       </div>
-      <SupportZalo />
-
+      <div className="absolute bottom-4 right-4 z-[100] 2xl:bottom-8 2xl:right-8">
+        <QuickSupportButton typingSpeed={100} repeatDelay={3500} />
+      </div>
     </>
   );
 });

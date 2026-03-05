@@ -37,7 +37,7 @@ const Avatar = ({ group_members_assigned, staffs_assigned, onClick }) => {
     return (
       <Tooltip title='Thêm người phụ trách' placement='top'>
         <button
-          className='cursor-pointer flex items-center justify-start w-fit p-2 rounded-lg border border-[#003DA0] hover:bg-[#EBF5FF] transition-colors'
+          className='cursor-pointer flex items-center justify-start w-fit p-1.5 rounded-lg border border-[#003DA0] hover:bg-[#EBF5FF] transition-colors'
           onClick={e => {
             e.stopPropagation();
             onClick?.();
@@ -56,7 +56,7 @@ const Avatar = ({ group_members_assigned, staffs_assigned, onClick }) => {
 
   return (
     <div
-      className='flex items-center gap-2 justify-between w-fit cursor-pointer hover:opacity-80 transition-opacity'
+      className='flex items-center gap-2 justify-between w-fit cursor-pointer hover:opacity-80 transition-opacity group'
       onClick={e => {
         e.stopPropagation();
         onClick?.();
@@ -100,11 +100,18 @@ const Avatar = ({ group_members_assigned, staffs_assigned, onClick }) => {
         {remainingCount > 0 && (
           <Tooltip title={`Còn ${remainingCount} người khác`} placement='top'>
             <div
-              className={`size-[30px] rounded-full overflow-hidden border-2 border-[#549AE8] flex items-center justify-center bg-[#549AE8] text-white font-semibold responsive-text-xs -ml-3 z-1 cursor-pointer`}
+              className='size-[30px] rounded-full overflow-hidden border-2 border-[#549AE8] flex items-center justify-center bg-[#549AE8] text-white font-semibold responsive-text-xs -ml-3 z-1 cursor-pointer'
             >
               +{remainingCount}
             </div>
           </Tooltip>
+        )}
+        {!isSingle && displayAvatars.length > 0 && (
+          <div
+            className='size-[30px] rounded-full overflow-hidden border-[2px] border-dashed border-gray-300 group-hover:border-blue-fmrp group-hover:text-blue-fmrp transition-colors flex items-center justify-center bg-white text-gray-400 responsive-text-base leading-[150%] -ml-3 z-1 cursor-pointer'
+          >
+            +
+          </div>
         )}
         {isSingle && (
           <span className='responsive-text-sm mr-1 font-medium text-[#101828] truncate max-w-[160px]' title={avatarList[0]?.name || ''}>

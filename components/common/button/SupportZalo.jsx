@@ -1,8 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { useRouter } from 'next/router';
 import PopupFeelsCustomer from '../popup/PopupFeelsCustomer';
 
+// config path để ẩn
+const HIDDEN_PATHS = [
+  '/piecework-wage/import-output',
+];
+
 const SupportZalo = () => {
+  const router = useRouter();
+
+  // Nếu path hiện tại nằm trong danh sách ẩn thì không render gì
+  if (HIDDEN_PATHS.includes(router?.pathname)) {
+    return null;
+  }
+
   const dispatch = useDispatch();
   // ========== CẤU HÌNH ==========
   // Khoảng cách từ mép trái màn hình (px) khi ở trạng thái mặc định

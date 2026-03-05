@@ -295,7 +295,7 @@ const PlaningProductionOrder = memo(
             <input
               type='text'
               placeholder='Tìm kiếm theo tên và mã nguyên vật liệu'
-              className='flex-1 border-none outline-none text-[#3A3E4C] placeholder-gray-200'
+              className='flex-1 border-none outline-none text-[#3A3E4C] placeholder-gray-400'
               value={searchMaterials}
               onChange={e => setSearchMaterials(e.target.value)}
             />

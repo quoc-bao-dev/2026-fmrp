@@ -385,13 +385,13 @@ const DetailProductionOrderList = memo(
                 );
               })}
             </FilterDropdown>
-
+            {/* 
             <ButtonAnimationNew
               icon={<ArrowCounterClockWiseIcon className='size-4' />}
               title='Tải lại'
               className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#0BAA2E] border border-[#0BAA2E] hover:bg-[#ebfff2] hover:shadow-hover-button rounded-lg'
               onClick={refreshData}
-            />
+            /> */}
             <ButtonAnimationNew
               icon={
                 <div className='3xl:size-5 size-4'>

@@ -70,12 +70,15 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
   const confirmMeasureRef = useRef(null);
   const confirmIsAddingTagRef = useRef(false);
   const [activeStep, setActiveStep] = useState({ type: null, item: null });
+  // Nếu refetch list cha ngay sau khi submit success, component có thể bị unmount (vì nằm trong dropdown/list)
+  // -> popup "tự đóng". Ta sẽ defer refetch list cha tới lúc user tự đóng popup.
+  const pendingRefetchMainTableRef = useRef(false);
 
   const formatNumber = number => {
     return formatNumberConfig(+number, dataSeting);
   };
 
-  const queryState = data => setState(prev => ({ ...prev, ...data }));
+  const queryState = useCallback(data => setState(prev => ({ ...prev, ...data })), []);
 
   const { onGetData, isLoading: isLoadingActiveStages } = useActiveStages();
   const { isLoading: isLoadingSubmit, onSubmit } = useHandingFinishedStages();
@@ -88,11 +91,55 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
 
   const { data: dataLoadOutOfStock, isLoading: isLoadingLoadOutOfStock, onGetData: onGetDataLoadOutOfStock } = useLoadOutOfStock();
 
-  function resetErrors() {
+  const resetErrors = useCallback(() => {
     setErrorNVLData({ items: [] });
     setErrorNVLDataBefore({ items: [] });
     setIsWarehouseMissing(false);
-  }
+  }, []);
+
+  const closePopup = useCallback(() => {
+    resetErrors();
+    // Giữ lại kho hiện tại khi đóng popup
+    setState(prev => ({
+      ...initialState,
+      open: false,
+      objectWareHouse: prev.objectWareHouse,
+    }));
+  }, [resetErrors]);
+
+  const handleClosePopup = useCallback(() => {
+    // Defer refetch main table tới lúc user tự đóng popup để tránh unmount popup ngay sau khi submit
+    if (pendingRefetchMainTableRef.current) {
+      try {
+        refetchMainTable?.();
+      } finally {
+        pendingRefetchMainTableRef.current = false;
+      }
+    }
+    setIsOrderCompleted(false);
+    closePopup();
+  }, [closePopup, refetchMainTable]);
+
+  // Tự chọn kho mặc định khi mở popup (ưu tiên kho theo po.warehouse_import_id nếu có,
+  // sau đó ưu tiên các cờ default thường gặp, cuối cùng fallback kho đầu tiên)
+  useEffect(() => {
+    if (!isState.open) return;
+    if (isState.objectWareHouse) return;
+
+    const warehouses = Array.isArray(data?.warehouses) ? data.warehouses : [];
+    if (!warehouses.length) return;
+
+    const poWarehouseId = data?.po?.warehouse_import_id ?? data?.po?.warehouse_id ?? null;
+    const matchedByPo =
+      poWarehouseId != null ? warehouses.find(w => `${w?.value}` === `${poWarehouseId}` || `${w?.id}` === `${poWarehouseId}`) : null;
+
+    const matchedDefault =
+      matchedByPo ||
+      warehouses.find(w => `${w?.is_default}` === '1' || `${w?.default}` === '1' || `${w?.isDefault}` === '1' || w?.isDefault === true);
+
+    queryState({ objectWareHouse: matchedDefault || warehouses[0] });
+    setIsWarehouseMissing(false);
+  }, [isState.open, data?.warehouses, data?.po, isState.objectWareHouse]);
 
   const checkItemFinalStage = isState.dataTableProducts?.data?.items?.some(e => e?.final_stage == 1);
   const showSerialColumns = checkItemFinalStage && dataProductSerial.is_enable === '1';
@@ -215,21 +262,19 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
 
     if (r?.isSuccess == 1) {
       refetch();
-      refetchMainTable();
+      pendingRefetchMainTableRef.current = true;
 
       if (r?.data?.status_manufacture == '2') {
         // Hiển thị popup hoàn thành khi đã xong công đoạn cuối
         isToast('success', 'Lệnh sản xuất đã được hoàn thành');
         setIsOrderCompleted(true);
+        // Đảm bảo không bị đóng popup sau khi xác nhận thành công
         queryState(prev => ({ ...prev, open: true }));
       } else {
-        queryState({
-          open: true,
-          dataTableProducts: null,
-          dataTableBom: null,
-          arrayMoveBom: [],
-        });
-        handleSelectStep(activeStep?.type, activeStep?.item, 'auto');
+        // Không tự đóng popup sau khi xác nhận (theo yêu cầu)
+        setIsWarehouseMissing(false);
+        // Đảm bảo không bị đóng popup sau khi xác nhận thành công
+        queryState(prev => ({ ...prev, open: true }));
       }
     } else if (r?.data?.errors || r?.data?.errors_before) {
       setErrorNVLData({
@@ -543,11 +588,21 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
 
   useEffect(() => {
     if (isState.open) {
-      queryState({ ...initialState, open: true });
+      // Reset các dữ liệu của popup nhưng vẫn giữ kho đã chọn
+      setState(prev => ({
+        ...initialState,
+        open: true,
+        objectWareHouse: prev.objectWareHouse,
+      }));
       setIsWarehouseMissing(false);
       return;
     }
-    queryState({ ...initialState });
+    // Khi đóng popup vẫn giữ lại kho hiện tại để lần sau mở lại vẫn còn
+    setState(prev => ({
+      ...initialState,
+      open: false,
+      objectWareHouse: prev.objectWareHouse,
+    }));
     setIsOrderCompleted(false);
     setIsWarehouseMissing(false);
   }, [isState.open]);
@@ -702,8 +757,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
           <PopupProductionOrderStatus
             className={'!p-6'}
             onClose={() => {
-              setIsOrderCompleted(false);
-              queryState({ open: false });
+              handleClosePopup();
             }}
           />
         </PopupCustom>
@@ -717,45 +771,45 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
               </div>
               <div className='mr-8'>
                 {/* {isProPackage ? ( */}
-                  <div className='flex gap-2'>
-                    <SelectComponent
-                      options={data?.warehouses || []}
-                      onChange={e => {
-                        setIsWarehouseMissing(false);
-                        queryState({ objectWareHouse: e });
-                      }}
-                      value={isState.objectWareHouse}
-                      isClearable={true}
-                      icon={<PiWarehouseLight color='#9295A4' className='size-4' />}
-                      closeMenuOnSelect={true}
-                      hideSelectedOptions={false}
-                      placeholder='Chọn kho hàng'
-                      styles={{
-                        control: (base, state) => ({
-                          ...base,
-                          width: '240px',
+                <div className='flex gap-2'>
+                  <SelectComponent
+                    options={data?.warehouses || []}
+                    onChange={e => {
+                      setIsWarehouseMissing(false);
+                      queryState({ objectWareHouse: e });
+                    }}
+                    value={isState.objectWareHouse}
+                    isClearable={true}
+                    icon={<PiWarehouseLight color='#9295A4' className='size-4' />}
+                    closeMenuOnSelect={true}
+                    hideSelectedOptions={false}
+                    placeholder='Chọn kho hàng'
+                    styles={{
+                      control: (base, state) => ({
+                        ...base,
+                        width: '240px',
+                        borderColor: state.isFocused ? '#0F4F9E' : isWarehouseMissing ? '#ef4444' : base.borderColor,
+                        borderRadius: '8px',
+                        '&:hover': {
                           borderColor: state.isFocused ? '#0F4F9E' : isWarehouseMissing ? '#ef4444' : base.borderColor,
-                          borderRadius: '8px',
-                          '&:hover': {
-                            borderColor: state.isFocused ? '#0F4F9E' : isWarehouseMissing ? '#ef4444' : base.borderColor,
-                          },
+                        },
 
-                        }),
-                        placeholder: base => ({
-                          ...base,
-                          color: '#cbd5e1',
-                        }),
-                      }}
-                      isSearchable={true}
-                    />
-                    <ButtonSubmit
-                      loading={isLoadingSubmit}
-                      title='Xác nhận'
-                      onClick={handleSubmit}
-                      icon={<CheckIcon className='size-4' />}
-                      className={`py-2.5 2xl:py-3 px-3 2xl:px-4 text-white rounded-lg !responsive-text-base flex items-center gap-2 bg-blue-fmrp hover:opacity-80`}
-                    />
-                  </div>
+                      }),
+                      placeholder: base => ({
+                        ...base,
+                        color: '#cbd5e1',
+                      }),
+                    }}
+                    isSearchable={true}
+                  />
+                  <ButtonSubmit
+                    loading={isLoadingSubmit}
+                    title='Xác nhận'
+                    onClick={handleSubmit}
+                    icon={<CheckIcon className='size-4' />}
+                    className={`py-2.5 2xl:py-3 px-3 2xl:px-4 text-white rounded-lg !responsive-text-base flex items-center gap-2 bg-blue-fmrp hover:opacity-80`}
+                  />
+                </div>
                 {/* ) : (
                   <PackageUpgradeButton />
                 )} */}
@@ -784,9 +838,7 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
           open={isState.open}
           classNameIconClose='size-8 bg-white hover:bg-slate-200 text-[#9295A4] hover:text-slate-800'
           onClose={() => {
-            resetErrors();
-            queryState({ open: false });
-            setIsWarehouseMissing(false);
+            handleClosePopup();
           }}
         >
           <div className='w-[90vw] xl:h-[80vh] h-[575px]'>
@@ -804,11 +856,10 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                             <li
                               key={e?.stage_id}
                               onClick={() => handleSelectStep('BTP', e, 'click')}
-                              className={`p-3 cursor-pointer ${
-                                activeStep.type == 'BTP' && activeStep?.item?.stage_id == e?.stage_id
-                                  ? 'bg-gradient-to-r from-[#0375F336] to-[#C4C4C400] border-l-4 border-[#0375F3]'
-                                  : 'hover:bg-gray-100'
-                              } ${e?.active == '1' ? 'text-blue-fmrp' : 'text-gray-500'} responsive-text-base list-none flex items-center gap-2 transition-all duration-200 ease-linear select-none`}
+                              className={`p-3 cursor-pointer ${activeStep.type == 'BTP' && activeStep?.item?.stage_id == e?.stage_id
+                                ? 'bg-gradient-to-r from-[#0375F336] to-[#C4C4C400] border-l-4 border-[#0375F3]'
+                                : 'hover:bg-gray-100'
+                                } ${e?.active == '1' ? 'text-blue-fmrp' : 'text-gray-500'} responsive-text-base list-none flex items-center gap-2 transition-all duration-200 ease-linear select-none`}
                             >
                               <div className='min-w-[16px] flex items-center justify-center'>
                                 {e?.active == '1' ? <FaCheckCircle size='16' className='text-blue-fmrp' /> : <div className='w-1 h-1 bg-gray-500 rounded-full'></div>}
@@ -833,11 +884,10 @@ const PopupConfimStage = ({ dataLang, dataRight, refetch: refetchMainTable, type
                             <li
                               key={e?.stage_id}
                               onClick={() => handleSelectStep('TP', e, 'click')}
-                              className={`p-3 cursor-pointer ${
-                                activeStep.type == 'TP' && activeStep?.item?.stage_id == e?.stage_id
-                                  ? 'bg-gradient-to-r from-[#0375F336] to-[#C4C4C400] border-l-4 border-[#0375F3]'
-                                  : 'hover:bg-gray-100 '
-                              } ${e?.active == '1' ? 'text-blue-fmrp' : 'text-gray-500'} responsive-text-base list-none flex items-center gap-2 transition-all duration-150 ease-linear select-none`}
+                              className={`p-3 cursor-pointer ${activeStep.type == 'TP' && activeStep?.item?.stage_id == e?.stage_id
+                                ? 'bg-gradient-to-r from-[#0375F336] to-[#C4C4C400] border-l-4 border-[#0375F3]'
+                                : 'hover:bg-gray-100 '
+                                } ${e?.active == '1' ? 'text-blue-fmrp' : 'text-gray-500'} responsive-text-base list-none flex items-center gap-2 transition-all duration-150 ease-linear select-none`}
                             >
                               <div className='min-w-[16px] flex items-center justify-center'>
                                 {e?.active == '1' ? <FaCheckCircle size='16' className='text-blue-fmrp' /> : <div className='w-1 h-1 bg-gray-500 rounded-full'></div>}

@@ -1,7 +1,7 @@
 import apiImportOutput from '@/Api/apiPieceworkWage/import-output/apiImportOutput';
 import FilterDropdown from '@/components/common/dropdown/FilterDropdown';
 import SelectSearchableRadio from '@/components/common/select/SelectSearchableRadio';
-import { CaretDownIcon, CloseXIcon, EqualizerIcon, FunnelIcon, SearchIcon } from '@/components/icons';
+import { CaretDownIcon, CloseXIcon, EqualizerIcon, FunnelIcon, SearchIcon, UsersIcon } from '@/components/icons';
 import { DropdownAvatar } from '@/components/layout/header';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import InfoTooltip from '@/components/UI/common/InfoTooltip';
@@ -20,9 +20,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useDebounce } from 'use-debounce';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import StageColumn from './components/StageColumn';
 import { useBranchList } from '@/hooks/common/useBranch';
 import { useSelector } from 'react-redux';
+import { BsLayers } from 'react-icons/bs';
 
 const ImportOutput = () => {
   const { socket } = useSocketContext();
@@ -42,6 +44,7 @@ const ImportOutput = () => {
   const [selectedPlans, setSelectedPlans] = useState([]);
   const [searchPlan, setSearchPlan] = useState('');
   const [debouncedSearchPlan] = useDebounce(searchPlan, 300);
+  const [productType, setProductType] = useState(null);
 
   // Mặc định filter theo 90 ngày gần đây
   const [dateFilter, setDateFilter] = useState({
@@ -60,6 +63,7 @@ const ImportOutput = () => {
     internal_plan_ids: Array.isArray(selectedPlans) && selectedPlans.length > 0 ? selectedPlans : null,
     search: debouncedSearchReferenceNo || '',
     ...(selectedBranch?.value ? { branch_ids: selectedBranch.value } : {}),
+    ...(productType ? { is_type: productType } : {}),
   };
 
   const { isLoading: isLoadingListImportOutput, data: listImportOutput, refetch: refetchListImportOutput } = useListImportOutput(filterParams);
@@ -224,6 +228,19 @@ const ImportOutput = () => {
     setSearchPlan('');
   };
 
+  // Xử lý khi chọn loại thành phẩm / bán thành phẩm
+  const handleProductTypeChange = value => {
+    if (!value || value === 'all') {
+      setProductType(null);
+      return;
+    }
+    setProductType(value);
+  };
+
+  const handleProductTypeClear = () => {
+    setProductType(null);
+  };
+
   // Xử lý khi search công đoạn
   const handleProcessSearch = searchText => {
     setSearchProcess(searchText);
@@ -239,10 +256,66 @@ const ImportOutput = () => {
   const [stages, setStages] = useState(listImportOutput?.stages || []);
   const hasStages = stages.length > 0;
 
+  // Lưu thứ tự sắp xếp vào localStorage
+  const STAGE_ORDER_KEY = 'import_output_stage_order';
+
   // Đồng bộ state stages mỗi khi dữ liệu từ API chính thay đổi (do filter, tìm kiếm, ...)
   useEffect(() => {
-    setStages(listImportOutput?.stages || []);
+    const newStages = listImportOutput?.stages || [];
+    if (newStages.length === 0) {
+      setStages([]);
+      return;
+    }
+
+    // Lấy thứ tự đã lưu từ localStorage
+    const savedOrder = localStorage.getItem(STAGE_ORDER_KEY);
+    if (savedOrder) {
+      try {
+        const orderArray = JSON.parse(savedOrder);
+        // Sắp xếp lại theo thứ tự đã lưu, giữ nguyên các stage mới không có trong order
+        const orderedStages = [...newStages].sort((a, b) => {
+          const indexA = orderArray.indexOf(String(a.stage_id));
+          const indexB = orderArray.indexOf(String(b.stage_id));
+          // Nếu cả hai đều không có trong order thì giữ nguyên thứ tự ban đầu
+          if (indexA === -1 && indexB === -1) return 0;
+          if (indexA === -1) return 1; // Đưa stage mới xuống cuối
+          if (indexB === -1) return -1; // Đưa stage mới xuống cuối
+          return indexA - indexB;
+        });
+        setStages(orderedStages);
+        // Cập nhật lại order với các stage mới
+        const newOrder = orderedStages.map(s => String(s.stage_id));
+        localStorage.setItem(STAGE_ORDER_KEY, JSON.stringify(newOrder));
+      } catch (e) {
+        // Nếu parse lỗi thì dùng thứ tự mặc định
+        setStages(newStages);
+      }
+    } else {
+      setStages(newStages);
+    }
   }, [listImportOutput]);
+
+  // Xử lý khi kéo thả để sắp xếp lại stages
+  const handleDragEnd = result => {
+    const { destination, source } = result;
+
+    // Nếu không có destination hoặc vị trí không thay đổi thì không làm gì
+    if (!destination || (destination.index === source.index)) {
+      return;
+    }
+
+    // Tạo mảng mới với thứ tự đã thay đổi
+    const newStages = Array.from(stages);
+    const [reorderedItem] = newStages.splice(source.index, 1);
+    newStages.splice(destination.index, 0, reorderedItem);
+
+    // Cập nhật state
+    setStages(newStages);
+
+    // Lưu thứ tự mới vào localStorage
+    const newOrder = newStages.map(s => String(s.stage_id));
+    localStorage.setItem(STAGE_ORDER_KEY, JSON.stringify(newOrder));
+  };
 
   // Dùng để reset chế độ chọn lệnh trên tất cả StageColumn khi mở PersonSelector ở cột khác
   const [selectModeResetKey, setSelectModeResetKey] = useState(0);
@@ -298,7 +371,11 @@ const ImportOutput = () => {
           if (stagesFromApi.length === 0) {
             setStages(prevStages => {
               if (!Array.isArray(prevStages)) return [];
-              return prevStages.filter(s => String(s.stage_id) !== String(stageIdFromSocket));
+              const filtered = prevStages.filter(s => String(s.stage_id) !== String(stageIdFromSocket));
+              // Cập nhật localStorage khi xóa stage
+              const newOrder = filtered.map(s => String(s.stage_id));
+              localStorage.setItem(STAGE_ORDER_KEY, JSON.stringify(newOrder));
+              return filtered;
             });
             return;
           }
@@ -307,21 +384,31 @@ const ImportOutput = () => {
 
           setStages(prevStages => {
             if (!Array.isArray(prevStages)) {
-              return [updatedStage];
+              const newStages = [updatedStage];
+              // Lưu thứ tự vào localStorage
+              localStorage.setItem(STAGE_ORDER_KEY, JSON.stringify([String(updatedStage.stage_id)]));
+              return newStages;
             }
 
             const targetId = String(updatedStage.stage_id);
             const existingIndex = prevStages.findIndex(s => String(s.stage_id) === targetId);
 
-            // Nếu đã tồn tại stage này thì cập nhật lại
+            // Nếu đã tồn tại stage này thì cập nhật lại tại vị trí hiện tại (giữ nguyên thứ tự)
             if (existingIndex !== -1) {
               const newStages = [...prevStages];
               newStages[existingIndex] = updatedStage;
+              // Cập nhật localStorage để giữ thứ tự
+              const newOrder = newStages.map(s => String(s.stage_id));
+              localStorage.setItem(STAGE_ORDER_KEY, JSON.stringify(newOrder));
               return newStages;
             }
 
-            // Nếu chưa có thì thêm mới vào đầu danh sách
-            return [updatedStage, ...prevStages];
+            // Nếu chưa có thì thêm mới vào ĐẦU danh sách để stage mới hiển thị trước
+            const newStages = [updatedStage, ...prevStages];
+            // Cập nhật localStorage với stage mới ở đầu
+            const newOrder = newStages.map(s => String(s.stage_id));
+            localStorage.setItem(STAGE_ORDER_KEY, JSON.stringify(newOrder));
+            return newStages;
           });
         } catch (error) {
           console.error('Error updating stage from socket production_input:', error);
@@ -398,12 +485,12 @@ const ImportOutput = () => {
         <div className='flex flex-col xl:flex-row items-center justify-between px-6'>
           <div className='flex items-center gap-2'>
             <h2 className='responsive-text-4xl font-medium text-neutral-07 capitalize'>Nhập sản lượng</h2>
-            {/* <InfoTooltip
-              content=''
+            <InfoTooltip
+              content='Lương Sản Lượng giúp bạn quản lý và tính toán lương dựa trên sản lượng sản xuất một cách chính xác và hiệu quả.'
               iconProps={{
                 className: '2xl:size-[21px] xl:size-[18px] size-[16px]',
               }}
-            /> */}
+            />
           </div>
           <div className='flex items-center gap-2'>
             {process.env.NODE_ENV === 'development' && (
@@ -435,6 +522,24 @@ const ImportOutput = () => {
               </div>
             </div>
             <SelectSearchableRadio
+              placeholder='Loại sản xuất'
+              showSearch={false}
+              options={[
+                {
+                  value: 1,
+                  label: 'Thành phẩm',
+                },
+                {
+                  value: 2,
+                  label: 'Bán thành phẩm',
+                }]}
+              value={productType}
+              onChange={handleProductTypeChange}
+              onClear={handleProductTypeClear}
+              icon={<BsLayers className='size-4 text-[#003DA0]' />}
+              className='w-auto min-w-[180px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
+            />
+            <SelectSearchableRadio
               placeholder='Lọc nhân viên'
               label='Lọc nhân viên'
               searchPlaceholder='Tìm nhân viên'
@@ -443,7 +548,7 @@ const ImportOutput = () => {
               onChange={handleEmployeeChange}
               onSearch={handleEmployeeSearch}
               onClear={handleEmployeeClear}
-              icon={<FunnelIcon className='size-4 text-[#003DA0]' />}
+              icon={<UsersIcon className='size-4 text-[#003DA0]' />}
               className='w-auto min-w-[180px] [&_.ant-select-selector]:h-10 [&_.ant-select-selector]:border-[#D0D5DD]'
             />
             <SelectSearchableRadio
@@ -546,18 +651,39 @@ const ImportOutput = () => {
             </div>
           ) : hasStages ? (
             <Customscrollbar horizontalOnly={true} showOnHover={true} className='flex-1 min-h-0 h-full overflow-y-hidden'>
-              <div className='px-6 flex gap-2 w-full h-full min-w-max overflow-y-hidden'>
-                {stages.map(stage => (
-                  <StageColumn
-                    key={stage.stage_id}
-                    stage={stage}
-                    selectModeResetKey={selectModeResetKey}
-                    activePersonSelectorStageId={activePersonSelectorStageId}
-                    onPersonSelectorClick={handlePersonSelectorClick}
-                    filterParams={filterParams}
-                  />
-                ))}
-              </div>
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId='stages' direction='horizontal'>
+                  {provided => (
+                    <div
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className='px-6 flex gap-2 w-full h-full min-w-max overflow-y-hidden'
+                    >
+                      {stages.map((stage, index) => (
+                        <Draggable key={stage.stage_id} draggableId={String(stage.stage_id)} index={index}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className={snapshot.isDragging ? 'opacity-80' : ''}
+                            >
+                              <StageColumn
+                                stage={stage}
+                                selectModeResetKey={selectModeResetKey}
+                                activePersonSelectorStageId={activePersonSelectorStageId}
+                                onPersonSelectorClick={handlePersonSelectorClick}
+                                filterParams={filterParams}
+                              />
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
             </Customscrollbar>
           ) : (
             <div className='flex flex-col gap-4 h-full w-full items-center justify-center'>

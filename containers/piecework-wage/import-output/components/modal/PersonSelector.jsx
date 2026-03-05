@@ -56,8 +56,8 @@ const PersonSelector = ({
   onClose,
   onConfirm,
   onApplySelected,
+  onCancelSelectMode,
   selected = [],
-  data = [], // Deprecated: sẽ không dùng nữa, dữ liệu sẽ lấy từ API
   className,
   children,
   onSelectMode,
@@ -80,6 +80,7 @@ const PersonSelector = ({
   const inputRef = useRef(null);
   const showToast = useToast();
   const router = useRouter();
+  const [saveAsDefault, setSaveAsDefault] = useState(false);
 
   // Gọi API lấy nhân viên và nhóm khi mở PersonSelector
   const { data: listStaffs, isLoading: isLoadingStaffs } = useLookupStaffs({ is_shift_scheduling: 1, branch_ids: [filterParams?.branch_ids] }, { enabled: open });
@@ -136,6 +137,8 @@ const PersonSelector = ({
     } else {
       // Popup đóng - update prevSelectedRef để track selected mới nhất
       prevSelectedRef.current = selected;
+      // Reset lại checkbox lưu mặc định khi đóng
+      setSaveAsDefault(false);
     }
     prevOpenRef.current = open;
   }, [open, selected]);
@@ -277,7 +280,12 @@ const PersonSelector = ({
       showToast('error', 'Vui lòng chọn ít nhất một người phụ trách trước khi áp dụng');
       return;
     }
-    onConfirm?.(localSelected);
+    // Nếu chọn "Lưu mặc định công đoạn này" thì truyền flag cho onConfirm
+    if (saveAsDefault) {
+      onConfirm?.(localSelected, { isSaveStage: true });
+    } else {
+      onConfirm?.(localSelected);
+    }
     onClose?.();
   };
 
@@ -286,10 +294,16 @@ const PersonSelector = ({
       showToast('error', 'Vui lòng chọn ít nhất một người phụ trách trước khi chọn lệnh');
       return;
     }
-    if (selectedProductionOrdersCount > 0) {
-      onApplySelected?.(localSelected);
-      onClose?.();
+    if (isSelectMode) {
+      // Đang ở chế độ chọn lệnh
+      if (selectedProductionOrdersCount > 0) {
+        onApplySelected?.(localSelected);
+        onClose?.();
+      } else {
+        showToast('error', 'Vui lòng chọn ít nhất một lệnh sản xuất để áp dụng');
+      }
     } else {
+      // Chưa vào chế độ chọn lệnh
       showToast('success', 'Vui lòng chọn các lệnh sản xuất cần áp dụng');
       onSelectMode?.(localSelected);
     }
@@ -390,20 +404,52 @@ const PersonSelector = ({
             ) : (
               !hideFooterActions && (
                 <div className='flex flex-col items-center justify-center gap-2 w-full z-10'>
-                  <button
-                    className='w-full bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
-                    onClick={handleConfirmAll}
-                  >
-                    Áp dụng tất cả
-                  </button>
-                  <button
-                    className='w-full text-blue-fmrp bg-white border border-blue-fmrp px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-blue-fmrp/20 transition-colors truncate'
-                    onClick={handleSelectModeAction}
-                  >
-                    {selectedProductionOrdersCount > 0
-                      ? `Áp dụng (${selectedProductionOrdersCount}) lệnh`
-                      : 'Tùy chọn lệnh'}
-                  </button>
+                  <div className='w-full flex flex-col gap-1.5'>
+                    {!isSelectMode && (
+                      <label className='flex items-center gap-2 cursor-pointer text-xs text-[#667085] hover:text-[#344054] transition-colors'>
+                        <input
+                          type='checkbox'
+                          checked={saveAsDefault}
+                          onChange={e => setSaveAsDefault(e.target.checked)}
+                          className='w-4 h-4 rounded border-[#D0D5DD] text-[#0375F3] focus:ring-[#0375F3] cursor-pointer'
+                        />
+                        <span>Lưu mặc định công đoạn này</span>
+                      </label>
+                    )}
+                    <button
+                      className='w-full bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
+                      onClick={handleConfirmAll}
+                    >
+                      Áp dụng tất cả
+                    </button>
+                  </div>
+                  {!isSelectMode ? (
+                    <button
+                      className='w-full text-blue-fmrp bg-white border border-blue-fmrp px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-blue-fmrp/20 transition-colors truncate'
+                      onClick={handleSelectModeAction}
+                    >
+                      Tùy chọn lệnh
+                    </button>
+                  ) : (
+                    <div className='flex items-center gap-2 w-full'>
+                      <button
+                        className='text-[#DC2626] bg-white border border-[#DC2626] px-4 py-[9px] text-sm rounded-[8px] font-medium hover:bg-[#FEE2E2] hover:border-[#DC2626] transition-colors truncate'
+                        onClick={() => {
+                          onCancelSelectMode?.();
+                        }}
+                      >
+                        Hủy
+                      </button>
+                      <button
+                        className='flex-1 bg-[#0375F3] text-white px-4 py-2.5 text-sm rounded-[8px] font-medium hover:bg-[#0375F3]/90 transition-colors truncate'
+                        onClick={handleSelectModeAction}
+                      >
+                        {selectedProductionOrdersCount > 0
+                          ? `Áp dụng (${selectedProductionOrdersCount})`
+                          : 'Tùy chọn lệnh'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )
             )}

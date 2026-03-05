@@ -35,6 +35,7 @@ const SelectSearchableRadio = ({
   mode, // 'multiple' để cho phép chọn nhiều
   avatarClassName,
   loading = false, // Trạng thái loading khi đang tìm kiếm
+  showSearch = true,
 }) => {
   const [searchValue, setSearchValue] = useState('');
   const [open, setOpen] = useState(false);
@@ -148,7 +149,7 @@ const SelectSearchableRadio = ({
               <>
                 {/* Search bar */}
                 {label && <h3 className='p-3 responsive-text-lg font-semibold'>{label}</h3>}
-                <div className='px-2 pb-2'>
+                {showSearch && <div className='px-2 pb-2'>
                   <div className='relative flex items-center'>
                     <Input
                       ref={searchInputRef}
@@ -174,7 +175,7 @@ const SelectSearchableRadio = ({
                       <MagnifyingGlassIcon className='size-4 text-white' />
                     </div>
                   </div>
-                </div>
+                </div>}
                 {/* Options list */}
                 <div className='custom-select-dropdown max-h-[300px] overflow-y-auto select-searchable-scrollbar'>
                   {loading && searchValue ? (

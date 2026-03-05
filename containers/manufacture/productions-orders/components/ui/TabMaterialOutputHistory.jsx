@@ -1,27 +1,171 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import ModalImage from 'react-modal-image';
 import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
 import LimitListDropdown from '@/components/common/dropdown/LimitListDropdown';
-import { PiCaretDownBold } from 'react-icons/pi';
+import { PiCaretDownBold, PiTable } from 'react-icons/pi';
 import formatNumberConfig from '@/utils/helpers/formatnumber';
 import useSetingServer from '@/hooks/useConfigNumber';
 import { TagColorProductNew } from '@/components/common/tag/TagStatusNew';
+import ExcelFileComponent from '@/components/common/excel/ExcelFileComponent';
+import ButtonAnimationNew from '@/components/common/button/ButtonAnimationNew';
+import { useDebounce } from 'use-debounce';
+import { CloseXIcon, MagnifyingGlassIcon } from '@/components/icons';
 
 const TabMaterialOutputHistory = ({ dataLang, items = [], count = 0 }) => {
     const [limit, setLimit] = useState(5);
     const [isLoadingTable, setIsLoadingTable] = useState(false);
+    const [searchValue, setSearchValue] = useState('');
+    const [debouncedSearchValue] = useDebounce(searchValue, 500);
     const dataSeting = useSetingServer();
 
-    const formatNumber = (num) => formatNumberConfig(+num, dataSeting);
+    const formatNumber = useCallback((num) => formatNumberConfig(+num, dataSeting), [dataSeting]);
 
-    const filteredData = Array.isArray(items) ? items : [];
-    const totalCount = Number(count) > 0 ? Number(count) : filteredData.length;
+    const onChangeSearch = e => setSearchValue(e?.target?.value ?? '');
 
-    const visibleData = filteredData.slice(0, limit);
+    const filteredData = useMemo(() => {
+        const data = Array.isArray(items) ? items : [];
+        if (!debouncedSearchValue) return data;
+
+        const keyword = debouncedSearchValue.toLowerCase();
+        return data.filter(item => {
+            const name = item?.item_name?.toLowerCase() || '';
+            const code = item?.item_code?.toLowerCase() || '';
+            const variation = item?.product_variation?.toLowerCase() || '';
+            const type = item?.type_products?.toLowerCase() || '';
+            return (
+                name.includes(keyword) ||
+                code.includes(keyword) ||
+                variation.includes(keyword) ||
+                type.includes(keyword)
+            );
+        });
+    }, [items, debouncedSearchValue]);
+
+    const totalCount = useMemo(() => {
+        // Khi search: tổng hiển thị là số item sau filter (client-side)
+        if (debouncedSearchValue) return filteredData.length;
+        // Không search: ưu tiên count server nếu có
+        return Number(count) > 0 ? Number(count) : filteredData.length;
+    }, [count, debouncedSearchValue, filteredData.length]);
+
+    const visibleData = useMemo(() => filteredData.slice(0, limit), [filteredData, limit]);
+
+    const multiDataSet = useMemo(() => ([
+        {
+            columns: [
+                {
+                    title: 'ID',
+                    width: { wch: 10 },
+                    style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } },
+                },
+                {
+                    title: 'Nguyên vật liệu',
+                    width: { wch: 40 },
+                    style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } },
+                },
+                {
+                    title: 'Biến thể',
+                    width: { wch: 40 },
+                    style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } },
+                },
+                {
+                    title: 'Mã nguyên vật liệu',
+                    width: { wch: 20 },
+                    style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } },
+                },
+                {
+                    title: 'Đơn vị tính',
+                    width: { wch: 14 },
+                    style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } },
+                },
+                {
+                    title: 'Loại',
+                    width: { wch: 22 },
+                    style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } },
+                },
+                {
+                    title: 'Kế hoạch',
+                    width: { wch: 14 },
+                    style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } },
+                },
+                {
+                    title: 'Đã xuất',
+                    width: { wch: 14 },
+                    style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } },
+                },
+                {
+                    title: 'Còn lại',
+                    width: { wch: 14 },
+                    style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } },
+                },
+                {
+                    title: 'Thu hồi',
+                    width: { wch: 14 },
+                    style: { fill: { fgColor: { rgb: 'C7DFFB' } }, font: { bold: true } },
+                },
+            ],
+            data: (filteredData || []).map(e => ([
+                { value: `${e?.item_id ?? e?.id ?? ''}`, style: { numFmt: '0' } },
+                { value: `${e?.item_name ?? ''}` },
+                { value: `${e?.product_variation ?? ''}` },
+                { value: `${e?.item_code ?? ''}` },
+                { value: `${e?.unit_name ?? ''}` },
+                { value: `${e?.type_products ?? ''}` },
+                { value: `${+e?.quantity_total_quota ? formatNumber(+e?.quantity_total_quota) : '0'}` },
+                { value: `${+e?.quantity_exported ? formatNumber(+e?.quantity_exported) : '0'}` },
+                { value: `${+e?.quantity_rest ? formatNumber(+e?.quantity_rest) : '0'}` },
+                { value: `${+e?.quantity_recovery ? formatNumber(+e?.quantity_recovery) : '0'}` },
+            ])),
+        },
+    ]), [filteredData, formatNumber]);
 
     return (
         <div className='flex flex-col h-full w-full'>
+            <div className='flex items-center justify-between gap-3 m-1'>
+                {/* Search input (same UI as PlaningProductionOrder.jsx) */}
+                <div className='flex gap-x-2 items-center w-1/3 rounded-lg border border-[#D0D5DD] px-4 py-2 focus-within:border-transparent focus-within:ring-2 focus-within:ring-blue-500'>
+                    <input
+                        type='text'
+                        placeholder={dataLang?.productions_orders_find_table || 'Tìm kiếm theo tên và mã nguyên vật liệu'}
+                        className='flex-1 border-none outline-none text-[#3A3E4C] placeholder-gray-400'
+                        value={searchValue}
+                        onChange={onChangeSearch}
+                    />
+                    {searchValue && (
+                        <button
+                            type='button'
+                            className='rounded-full bg-gray-100 hover:bg-gray-200 text-[#3A3E4C] p-1 transition'
+                            aria-label='Xóa tìm kiếm'
+                            onClick={() => setSearchValue('')}
+                        >
+                            <CloseXIcon className='size-3' />
+                        </button>
+                    )}
+                    <button type='button' className='rounded-lg bg-[#1760B9] p-1'>
+                        <MagnifyingGlassIcon className='size-4 text-white' />
+                    </button>
+                </div>
+
+                {filteredData?.length > 0 && (
+                    <ExcelFileComponent
+                        dataLang={dataLang}
+                        filename={'Lịch sử xuất kho NVL'}
+                        multiDataSet={multiDataSet}
+                        title='Lịch sử xuất kho NVL'
+                    >
+                        <ButtonAnimationNew
+                            icon={
+                                <div className='3xl:size-5 size-4'>
+                                    <PiTable className='size-full' />
+                                </div>
+                            }
+                            title='Xuất Excel'
+                            className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#0375F3] border border-[#0375F3] hover:bg-[#0375F3]/5 hover:shadow-hover-button rounded-lg'
+                        />
+                    </ExcelFileComponent>
+                )}
+            </div>
             {/* Khu vực bảng (scrollable) */}
             <div className='flex-1 min-h-0 overflow-y-auto'>
                 <div className='grid grid-cols-16 mt-2 min-h-0'>

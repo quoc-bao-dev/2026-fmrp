@@ -25,6 +25,7 @@ export const useCostCombobox = (open, id) => {
                 level: e.level,
             }))
         },
+        enabled: open,
         ...optionsQuery
     })
 

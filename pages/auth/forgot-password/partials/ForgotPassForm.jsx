@@ -61,7 +61,7 @@ const ForgotPassForm = ({ onSubmit: onSubmitProp }) => {
           if (phoneValue) sessionStorage.setItem('forgot_phone', phoneValue);
           sessionStorage.setItem('company_code', data.company_code);
           sessionStorage.setItem('company_name', data.company_name);
-        } catch (e) {}
+        } catch (e) { }
         goToOtp();
       }
       if (typeof onSubmitProp === 'function') onSubmitProp(data);
@@ -84,7 +84,7 @@ const ForgotPassForm = ({ onSubmit: onSubmitProp }) => {
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)} className='space-y-8 mt-6 lg:mt-20'>
+      <form onSubmit={handleSubmit(onSubmit)} className='space-y-4 mt-6 lg:mt-12'>
         {/* [Form Fields] */}
         <Input type='text' placeholder='Nhập số điện thoại' {...register('phone')} error={errors.phone} />
 
@@ -96,9 +96,8 @@ const ForgotPassForm = ({ onSubmit: onSubmitProp }) => {
           <button
             type='submit'
             disabled={isLoading}
-            className={`text-[#FFFFFF] font-normal text-lg py-3 w-full rounded-md bg-gradient-to-l from-[#0375f3] via-[#296dc1] to-[#0375f3] btn-animation hover:scale-105 ${
-              isLoading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`text-[#FFFFFF] font-normal text-lg py-3 w-full rounded-md bg-gradient-to-l from-[#0375f3] via-[#296dc1] to-[#0375f3] btn-animation hover:scale-105 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
           >
             {isLoading ? 'Đang xử lý...' : 'Tiếp theo'}
           </button>

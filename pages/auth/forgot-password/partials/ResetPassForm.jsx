@@ -60,13 +60,13 @@ const ResetPassForm = ({ companyCode = '', companyName = '' }) => {
     };
 
     return (
-        <form onSubmit={handleSubmit(handleSubmitForm)} className='space-y-6 mt-10'>
+        <form onSubmit={handleSubmit(handleSubmitForm)} className='space-y-6 mt-6'>
             <div className='text-center'>
                 <h1 className='text-[#11315B] font-medium text-3xl capitalize'>Đặt Lại Mật Khẩu</h1>
             </div>
 
             {(companyCode || companyName) && (
-                <div className='grid grid-cols-2 gap-8 pt-12'>
+                <div className='grid grid-cols-2 gap-8 pt-8'>
                     <div>
                         <p className='text-[#98A2B3] text-sm'>Mã công ty</p>
                         <p className='text-[#101828]  mt-1 break-all'>{companyCode || '-'}</p>
@@ -101,9 +101,8 @@ const ResetPassForm = ({ companyCode = '', companyName = '' }) => {
             <button
                 type='submit'
                 disabled={isLoading}
-                className={`text-[#FFFFFF] font-normal text-lg py-3 w-full rounded-md bg-gradient-to-l from-[#0375f3]  via-[#296dc1] to-[#0375f3] btn-animation hover:scale-105 ${
-                    isLoading ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+                className={`text-[#FFFFFF] font-normal text-lg py-3 w-full rounded-md bg-gradient-to-l from-[#0375f3]  via-[#296dc1] to-[#0375f3] btn-animation hover:scale-105 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
             >
                 {isLoading ? 'Đang xử lý...' : 'Xác nhận'}
             </button>
