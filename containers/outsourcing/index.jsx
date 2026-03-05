@@ -12,7 +12,9 @@ import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import NoData from '@/components/UI/noData/nodata';
 import { Container } from '@/components/UI/common/layout';
 import Head from 'next/head';
+import Image from 'next/image';
 import React, { useMemo, useState } from 'react';
+import PopupConfim from '@/components/UI/popupConfim/popupConfim';
 import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import { useSelector } from 'react-redux';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
@@ -105,10 +107,14 @@ const OutsourcingOrderDetail = ({ order, stats }) => {
     };
 
     return [
-      { key: 'completed', label: 'Hoàn thành', count: completed ?? 0, value: toPercent(completed), color: '#22C55E' },
-      { key: 'processing', label: 'Đang gia công', count: processing ?? 0, value: toPercent(processing), color: '#0EA5E9' },
-      { key: 'pending', label: 'Chưa gia công', count: pending ?? 0, value: toPercent(pending), color: '#F97316' },
-      { key: 'overdue', label: 'Quá hạn', count: overdue ?? 0, value: toPercent(overdue), color: '#EF4444' },
+      // Hoàn thành
+      { key: 'completed', label: 'Hoàn thành', count: completed ?? 0, value: toPercent(completed), color: '#A2DFB2' },
+      // Đang gia công
+      { key: 'processing', label: 'Đang gia công', count: processing ?? 0, value: toPercent(processing), color: '#75BDE0' },
+      // Chưa gia công
+      { key: 'pending', label: 'Chưa gia công', count: pending ?? 0, value: toPercent(pending), color: '#FEDFAE' },
+      // Quá hạn
+      { key: 'overdue', label: 'Quá hạn', count: overdue ?? 0, value: toPercent(overdue), color: '#EF8F99' },
     ];
   }, [total, completed, processing, pending, overdue]);
 
@@ -192,7 +198,7 @@ const OutsourcingOrderDetail = ({ order, stats }) => {
         <div className="w-full h-[1px] flex-shrink-0 bg-[#F3F3F4]"></div>
         {/* Thống kê trạng thái */}
         <div className='mt-4 flex-1 flex flex-col gap-4'>
-          <h3 className='text-[20px] leading-6 font-semibold text-[#003DA0]'>Thống Kê Trạng Thái</h3>
+          <h3 className='text-[20px] leading-6 font-medium text-[#003DA0]'>Thống Kê Trạng Thái</h3>
           <div className='flex-1 flex gap-4 items-center'>
             {/* Legend + total */}
             <div className='flex flex-col gap-3 min-w-[140px]'>
@@ -201,32 +207,60 @@ const OutsourcingOrderDetail = ({ order, stats }) => {
                 <span className='text-sm font-medium text-[#101828]'>Đơn gia công</span>
               </div>
               <div className='flex flex-col gap-2 text-sm'>
+                {/* Hoàn thành */}
                 <div className='flex items-center gap-2'>
-                  <span className='w-5 h-5 rounded-md bg-[#22C55E]/10 border border-[#22C55E]' />
-                  <span className='flex-1 text-[#101828]'>Hoàn thành</span>
-                  <span className='text-[#101828]'>{completed}</span>
+                  <span
+                    className='w-7 h-7 rounded-md flex items-center justify-center'
+                    style={{ backgroundColor: '#35BD4B33', borderColor: '#35BD4B33' }}
+                  >
+                    <span className='text-xs font-medium' style={{ color: '#1A7526' }}>
+                      {completed}
+                    </span>
+                  </span>
+                  <span className='flex-1 text-[#637381]'>Hoàn thành</span>
                 </div>
+                {/* Đang gia công */}
                 <div className='flex items-center gap-2'>
-                  <span className='w-5 h-5 rounded-md bg-[#0EA5E9]/10 border border-[#0EA5E9]' />
-                  <span className='flex-1 text-[#101828]'>Đang gia công</span>
-                  <span className='text-[#101828]'>{processing}</span>
+                  <span
+                    className='w-7 h-7 rounded-md flex items-center justify-center'
+                    style={{ backgroundColor: '#D8F3FD', borderColor: '#D8F3FD' }}
+                  >
+                    <span className='text-xs font-medium' style={{ color: '#14729B' }}>
+                      {processing}
+                    </span>
+                  </span>
+                  <span className='flex-1 text-[#637381]'>Đang gia công</span>
                 </div>
+                {/* Chưa gia công */}
                 <div className='flex items-center gap-2'>
-                  <span className='w-5 h-5 rounded-md bg-[#F97316]/10 border border-[#F97316]' />
-                  <span className='flex-1 text-[#101828]'>Chưa gia công</span>
-                  <span className='text-[#101828]'>{pending}</span>
+                  <span
+                    className='w-7 h-7 rounded-md flex items-center justify-center'
+                    style={{ backgroundColor: '#FFECDD', borderColor: '#FFECDD' }}
+                  >
+                    <span className='text-xs font-medium' style={{ color: '#C25705' }}>
+                      {pending}
+                    </span>
+                  </span>
+                  <span className='flex-1 text-[#637381]'>Chưa gia công</span>
                 </div>
+                {/* Quá hạn */}
                 <div className='flex items-center gap-2'>
-                  <span className='w-5 h-5 rounded-md bg-[#EF4444]/10 border border-[#EF4444]' />
-                  <span className='flex-1 text-[#101828]'>Quá hạn</span>
-                  <span className='text-[#101828]'>{overdue}</span>
+                  <span
+                    className='w-7 h-7 rounded-md flex items-center justify-center'
+                    style={{ backgroundColor: '#FDDBDA', borderColor: '#FDDBDA' }}
+                  >
+                    <span className='text-xs font-medium' style={{ color: '#C02A26' }}>
+                      {overdue}
+                    </span>
+                  </span>
+                  <span className='flex-1 text-[#637381]'>Quá hạn</span>
                 </div>
               </div>
             </div>
 
             {/* Donut chart style */}
             <div className='flex-1 flex items-center justify-center'>
-              <div className='relative w-[190px] h-[190px]'>
+              <div className='relative w-[223px] h-[223px]'>
                 {hasNoData ? (
                   <div className='w-full h-full rounded-full bg-[#F3F4F6] flex items-center justify-center'>
                     <span className='text-sm text-[#667085]'>Không có dữ liệu</span>
@@ -238,16 +272,36 @@ const OutsourcingOrderDetail = ({ order, stats }) => {
                         data={filteredChartData}
                         dataKey='value'
                         startAngle={90}
-                        endAngle={450}
-                        innerRadius={'65%'}
+                        endAngle={-270}
+                        innerRadius={'60%'}
                         outerRadius={'95%'}
                         stroke='none'
-                        isAnimationActive={true}
-                        animationDuration={600}
+                        isAnimationActive={false}
+                        animationDuration={100}
                         animationEasing='cubic-bezier(0.4, 0, 0.2, 1)'
                         cornerRadius={8}
                         paddingAngle={2}
                         labelLine={false}
+                        label={({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
+                          if (!value) return null;
+                          const RAD = Math.PI / 180;
+                          const r = (innerRadius + outerRadius) / 2;
+                          const x = cx + r * Math.cos(-midAngle * RAD);
+                          const y = cy + r * Math.sin(-midAngle * RAD);
+                          return (
+                            <text
+                              x={x}
+                              y={y}
+                              fill='#101828'
+                              textAnchor='middle'
+                              dominantBaseline='central'
+                              style={{ pointerEvents: 'none' }}
+                              className='text-[13px]'
+                            >
+                              {`${value}%`}
+                            </text>
+                          );
+                        }}
                         onMouseEnter={(_, index) => setActiveIndex(index)}
                         onMouseLeave={() => setActiveIndex(null)}
                       >
@@ -260,13 +314,18 @@ const OutsourcingOrderDetail = ({ order, stats }) => {
                           />
                         ))}
                       </Pie>
-                      <Tooltip content={<OutsourcingStatusDonutTooltip />} />
+                      <Tooltip content={<OutsourcingStatusDonutTooltip />} wrapperStyle={{ zIndex: 50 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
 
+                {/* Vòng tròn nét đứt bên trong (bán kính nhỏ hơn) */}
+                <div className='absolute inset-[54px] rounded-full border border-dashed border-[#E5E7EB] pointer-events-none' />
+
                 <div className='absolute inset-0 flex flex-col items-center justify-center pointer-events-none'>
-                  <span className='text-[28px] font-semibold text-[#0375F3]'>{total}</span>
+                  <div className="size-[95px] aspect-square bg-white rounded-full flex items-center justify-center shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]">
+                    <span className='text-[28px] font-semibold text-[#0375F3]'>{total}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -277,7 +336,7 @@ const OutsourcingOrderDetail = ({ order, stats }) => {
   );
 };
 
-const OutsourcingMain = () => {
+const OutsourcingMain = props => {
   const [dateFilter, setDateFilter] = useState({
     startDate: null,
     endDate: null,
@@ -289,6 +348,7 @@ const OutsourcingMain = () => {
   const [activeOrderId, setActiveOrderId] = useState('PGC-26022604-1');
   const [activeMainTab, setActiveMainTab] = useState({ id: 'info', name: 'Thông tin', type: 'info' });
   const [tableLimit, setTableLimit] = useState(4);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const stateFilterDropdown = useSelector(state => state.stateFilterDropdown);
 
@@ -614,24 +674,20 @@ const OutsourcingMain = () => {
             style={{
               boxShadow: '0px 20px 24px -4px #10182814, 0px 4px 4px 0px #00000040',
             }}
-            className='z-[999] flex flex-col gap-4 border-[#D8DAE5] rounded-lg min-w-[270px]'
+            className='z-[999] flex flex-col gap-4 !p-0 border-[#D8DAE5] rounded-lg min-w-[270px]'
             dropdownId='dropdownFilterVendor'
             placement='bottom-left'
           >
-            <div className='3xl:text-xl text-lg text-[#344054] font-medium px-4 pt-4 truncate min-w-[270px]'>
-              Nhà gia công
-            </div>
-            <div className='px-4 pb-4'>
-              <SelectComponentNew
-                isClearable={true}
-                value={selectedVendor ? mockVendors.find(v => v.value === selectedVendor) : null}
-                onChange={e => setSelectedVendor(e?.value || null)}
-                options={mockVendors}
-                classParent='ml-0 text-sm'
-                classNamePrefix={'outsourcingVendor'}
-                placeholder='Chọn nhà gia công'
-              />
-            </div>
+            <StatusCheckboxGroup
+              list={mockVendors.map(v => ({
+                label: v.label,
+                value: v.value,
+              }))}
+              selected={selectedVendor ? [selectedVendor] : []}
+              onChange={value => {
+                setSelectedVendor(prev => (prev === value ? null : value));
+              }}
+            />
           </FilterDropdown>
 
           {/* Trạng thái */}
@@ -646,8 +702,8 @@ const OutsourcingMain = () => {
           >
             <StatusCheckboxGroup
               list={statusList.map(item => ({
-                id: item.id,
-                value: item.value,
+                label: item.value, // text hiển thị
+                value: item.id, // giá trị filter (draft / created / ...)
               }))}
               selected={selectedStatusFilter}
               onChange={handleToggleStatus}
@@ -838,6 +894,7 @@ const OutsourcingMain = () => {
                     <TrashIcon className='size-full' />
                   </div>
                 }
+                onClick={() => setShowDeleteConfirm(true)}
                 title='Xoá'
                 className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center gap-2 xl:text-sm text-xs font-normal text-[#EE1E1E] border border-[#EE1E1E] hover:bg-[#FFEEF0] hover:shadow-hover-button rounded-lg'
               />
@@ -915,22 +972,40 @@ const OutsourcingMain = () => {
                                     {index + 1}
                                   </h4>
 
-                                  <h4 className='col-span-3 flex items-center justify-center size-full text-[#344054] font-normal gap-2 3xl:py-4 py-2 px-1'>
-                                    <div className='flex items-start justify-start w-full gap-2'>
-                                      <div className='size-8 min-w-8 rounded-md bg-[#F3F4F6] flex items-center justify-center text-[10px] text-[#667085]'>
-                                        IMG
+                                  <h4 className='col-span-3 text-[#344054] font-normal flex items-center 3xl:py-4 py-2 px-1'>
+                                    <div className='flex items-start gap-2 w-full'>
+                                      {/* Hình ảnh thành phẩm */}
+                                      <div className='2xl:size-16 size-14 shrink-0 rounded-md bg-[#F3F4F6] overflow-hidden flex items-center justify-center'>
+                                        <Image
+                                          alt={item?.name ?? 'img'}
+                                          width={200}
+                                          height={200}
+                                          src={item?.image || '/icon/default/default.png'}
+                                          className='size-full object-cover'
+                                        />
                                       </div>
 
+                                      {/* Thông tin thành phẩm */}
                                       <div className='flex flex-col 3xl:gap-1 gap-0.5'>
                                         <p className='font-semibold text-sm-default text-[#141522] group-hover:text-[#0F4F9E]'>
                                           {item.name}
                                         </p>
-                                        <p className='text-[#667085] font-normal xl:text-[10px] text-[8px]'>
-                                          {item.variation}
-                                        </p>
-                                        <p className='text-[#3276FA] font-normal 3xl:text-sm xl:text-xs text-[10px]'>
-                                          {item.code}
-                                        </p>
+                                        <div className='space-y-0.5'>
+                                          {/* Biến thể */}
+                                          <p className='text-[#667085] font-normal xl:text-[10px] text-[8px]'>
+                                            {item.variation}
+                                          </p>
+
+                                          {/* Mã thành phẩm */}
+                                          <p className='text-[#3276FA] font-normal 3xl:text-sm xl:text-xs text-[10px]'>
+                                            {item.code}
+                                          </p>
+
+                                          {/* Mã lệnh gia công */}
+                                          <p className='text-[#3276FA] font-normal 3xl:text-sm xl:text-xs text-[10px]'>
+                                            {activeOrder?.code}
+                                          </p>
+                                        </div>
                                       </div>
                                     </div>
                                   </h4>
@@ -1016,6 +1091,21 @@ const OutsourcingMain = () => {
           <OutsourcingOrderDetail order={activeOrder} stats={statusStats} />
         </div>
       </div>
+
+      {/* Modal xác nhận xoá đơn gia công - dùng PopupConfim để đồng bộ UI & quyền */}
+      <PopupConfim
+        dataLang={props.dataLang}
+        type='warning'
+        nameModel='outsourcing_orders'
+        title='Xoá đơn gia công'
+        subtitle='Bạn có chắc chắn muốn xoá đơn gia công hiện tại? Hành động này không thể hoàn tác.'
+        isOpen={showDeleteConfirm}
+        save={() => {
+          // TODO: Thay bằng logic xoá đơn gia công thực tế (gọi API xoá, refetch list, v.v.)
+          setShowDeleteConfirm(false);
+        }}
+        cancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 };
