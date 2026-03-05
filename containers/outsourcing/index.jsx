@@ -134,7 +134,7 @@ const OutsourcingOrderDetail = ({ order, stats }) => {
           <div className='mt-4 flex flex-col gap-4'>
             <h3 className='text-[20px] leading-6 font-medium text-[#003DA0]'>Thông Tin Đơn Gia Công</h3>
 
-            <div className='flex flex-col gap-3 text-sm text-[#344054]'>
+            <div className='flex flex-col gap-5 text-sm text-[#344054]'>
               <div className='flex items-center justify-between gap-4'>
 
                 <div className='flex flex-col gap-3'>
@@ -593,7 +593,7 @@ const OutsourcingMain = props => {
     const current = map[status] || map.not_imported;
 
     return (
-      <span className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${current.className}`}>
+      <span className={`inline-flex items-center justify-center rounded-[4px] px-3 py-1 text-sm ${current.className}`}>
         {current.label}
       </span>
     );
