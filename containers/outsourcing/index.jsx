@@ -18,6 +18,7 @@ import PopupConfim from '@/components/UI/popupConfim/popupConfim';
 import SelectComponentNew from '@/components/common/select/SelectComponentNew';
 import { useSelector } from 'react-redux';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import Link from 'next/link';
 
 const OutsourcingStatusDonutTooltip = ({ active, payload }) => {
   if (!active || !payload || !payload.length) return null;
@@ -711,15 +712,17 @@ const OutsourcingMain = props => {
           </FilterDropdown>
 
           {/* Tạo mới */}
-          <ButtonAnimationNew
-            icon={
-              <div className='size-5 flex items-center justify-center'>
-                <PlusIcon className=' text-white' />
-              </div>
-            }
-            title='Tạo mới'
-            className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center justify-center gap-2 bg-[#0375F3] text-white rounded-lg text-sm hover:bg-[#0265D9]'
-          />
+          <Link href={'/convenience/outsourcing/form'}>
+            <ButtonAnimationNew
+              icon={
+                <div className='size-5 flex items-center justify-center'>
+                  <PlusIcon className=' text-white' />
+                </div>
+              }
+              title='Tạo mới'
+              className='3xl:h-10 h-9 xl:px-4 px-2 flex items-center justify-center gap-2 bg-[#0375F3] text-white rounded-lg text-sm hover:bg-[#0265D9]'
+            />
+          </Link>
         </div>
       </div>
 
