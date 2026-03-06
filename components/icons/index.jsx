@@ -22,6 +22,8 @@
  * - Sử dụng className để thay đổi kích thước, màu sắc
  * - Icon được import thông qua @svgr/webpack, tự động chuyển thành React component
  */
+import TaskActionIcon from './common/TaskActionIcon';
+import TimerIcon from './common/TimerIcon';
 import AlertTriangleIcon from './source/alert-triangle.svg';
 import ApproximateEqualsIcon from './source/approximate-equals.svg';
 import ArrowBendUpRightIcon from './source/arrow-bend-up-right.svg';
@@ -50,7 +52,6 @@ import DownloadIcon from './source/download-icon.svg';
 import DropdownFilledIcon from './source/dropdown-filled-icon.svg';
 import DropdownIcon from './source/dropdown-icon.svg';
 import EditIcon from './source/edit.svg';
-import EyeIcon from './source/eye.svg';
 import EndProductionOrderIcon from './source/end-product.svg';
 import EqualizerIcon from './source/equalizer.svg';
 import ErrorAlertIcon from './source/error-alert-icon.svg';
@@ -61,6 +62,7 @@ import ExcelIcon from './source/excel.svg';
 import ExcelIcon2 from './source/excel2.svg';
 import ExportMaterialsIcon from './source/export-materials-icon-1.svg';
 import RecallMaterialsIcon from './source/export-materials-icon-2.svg';
+import EyeIcon from './source/eye.svg';
 import FileIcon from './source/file-icon.svg';
 import FunnelIcon from './source/funnel.svg';
 import IconStarIcon from './source/icon-star.svg';
@@ -95,19 +97,17 @@ import SuccessAlertIcon from './source/success-alert-icon.svg';
 import SuccessChatIcon from './source/success-chat-icon.svg';
 import TemplateChecklistIcon from './source/template-checklist-icon.svg';
 import ThreeDotIcon from './source/three-dot.svg';
-import TaskActionIcon from './common/TaskActionIcon';
-import TimerIcon from './common/TimerIcon';
 import TrashIcon from './source/trash.svg';
 import UpgradeIcon from './source/upgrade-icon.svg';
 import UserCircleIcon from './source/user-circle-icon.svg';
 import UserGroupIcon from './source/user-group.svg';
+import UserPenIcon from './source/user-pen.svg';
+import UserPlus2Icon from './source/user-plus-2.svg';
 import UserPlusIcon from './source/user-plus-icon.svg';
 import UsersIcon from './source/users.svg';
 import WarningAlertIcon from './source/warning-alert-icon.svg';
 import WarningIcon from './source/warning-icon.svg';
 import ZaloIcon from './source/zalo.svg';
-import UserPlus2Icon from './source/user-plus-2.svg';
-
 // Export tất cả các icon
 export {
   AlertTriangleIcon,
@@ -124,22 +124,14 @@ export {
   CaretDropDownThinIcon,
   ChartDonutIcon,
   ChatIcon,
-  CheckCircleIcon,
-  CheckDoubleIcon,
-  CheckCircleOutlineIcon,
-  CheckIcon,
-  ClockIcon,
-  CheckThinIcon,
-  Clock2Icon,
-  CloseXIcon,
+  CheckCircleIcon, CheckCircleOutlineIcon, CheckDoubleIcon, CheckIcon, CheckThinIcon,
+  Clock2Icon, ClockIcon, CloseXIcon,
   CompleteKHIcon,
   DocumentTemplateIcon,
   DownloadIcon,
   DropdownFilledIcon,
   DropdownIcon,
-  EditIcon,
-  EyeIcon,
-  EndProductionOrderIcon,
+  EditIcon, EndProductionOrderIcon,
   EqualizerIcon,
   ErrorAlertIcon,
   ErrorChatBotIcon,
@@ -147,8 +139,7 @@ export {
   ErrorQCIcon,
   ExcelIcon,
   ExcelIcon2,
-  ExportMaterialsIcon,
-  FileIcon,
+  ExportMaterialsIcon, EyeIcon, FileIcon,
   FunnelIcon,
   IconStarIcon,
   KanbanIcon,
@@ -165,10 +156,7 @@ export {
   PrinterIcon,
   PrinterIcon2,
   PrinterTemIcon,
-  PrintTemplateIcon,
-  RecallMaterialsIcon,
-  ProgressIcon,
-  RecallStockIcon,
+  PrintTemplateIcon, ProgressIcon, RecallMaterialsIcon, RecallStockIcon,
   RefreshIcon,
   SaleIcon,
   SaveIcon,
@@ -188,11 +176,8 @@ export {
   TrashIcon,
   UpgradeIcon,
   UserCircleIcon,
-  UserGroupIcon,
-  UserPlusIcon,
-  UserPlus2Icon,
-  UsersIcon,
-  WarningAlertIcon,
+  UserGroupIcon, UserPenIcon, UserPlus2Icon, UserPlusIcon, UsersIcon, WarningAlertIcon,
   WarningIcon,
-  ZaloIcon,
+  ZaloIcon
 };
+
