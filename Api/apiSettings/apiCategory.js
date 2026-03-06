@@ -13,5 +13,15 @@ const apiCategory = {
         return response.data
     },
 
+    async apiStageStaff(data) {
+        const response = await axiosCustom('GET', `/api_web/stage-staffs/get-list`, data);
+        return response.data
+    },
+
+    async apiDeleteStageStaff(id) {
+        const response = await axiosCustom('DELETE', `/api_web/stage-staffs/delete/${id}`);
+        return response.data
+    },
+
 }
 export default apiCategory

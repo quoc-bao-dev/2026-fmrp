@@ -5,7 +5,7 @@ import { Tooltip } from 'antd';
 import Image from 'next/image';
 import { useMemo } from 'react';
 
-const Avatar = ({ group_members_assigned, staffs_assigned, onClick }) => {
+const Avatar = ({ group_members_assigned, staffs_assigned, onClick , showOnly=false }) => {
   // Transform staffs_assigned và group_members_assigned thành format thống nhất
   const avatarList = useMemo(() => {
     const list = [];
@@ -33,7 +33,7 @@ const Avatar = ({ group_members_assigned, staffs_assigned, onClick }) => {
     return list;
   }, [staffs_assigned, group_members_assigned]);
 
-  if (avatarList.length === 0) {
+  if (!showOnly && avatarList.length === 0) {
     return (
       <Tooltip title='Thêm người phụ trách' placement='top'>
         <button
@@ -62,7 +62,7 @@ const Avatar = ({ group_members_assigned, staffs_assigned, onClick }) => {
         onClick?.();
       }}
     >
-      <div className='p-1 flex items-center gap-1 rounded-full bg-[#D6EAFE]'>
+      <div className={`p-1 flex items-center gap-1 rounded-full ${showOnly ? '' : 'bg-[#D6EAFE]'}`}>
         {displayAvatars.map((item, index) => {
           const isFirst = index === 0;
           const hasImage = item?.profile_image && item.profile_image.trim() !== '';

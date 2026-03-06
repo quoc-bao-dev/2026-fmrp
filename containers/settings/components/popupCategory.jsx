@@ -1,17 +1,17 @@
 import apiCategory from '@/Api/apiSettings/apiCategory';
+import PriceInput from '@/components/common/input/PriceInput';
+import { EditIcon } from '@/components/icons';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 import MultiValue from '@/components/UI/mutiValue/multiValue';
 import PopupCustom from '@/components/UI/popup';
 import SelectOptionLever from '@/components/UI/selectOptionLever/selectOptionLever';
 import { useBranchList } from '@/hooks/common/useBranch';
+import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
 import useToast from '@/hooks/useToast';
-import { Edit as IconEdit, InfoCircle } from 'iconsax-react';
 import { useRouter } from 'next/router';
 import React, { useEffect, useRef, useState } from 'react';
 import Select from 'react-select';
 import { useCostCombobox } from '../hooks/useCategory';
-import PriceInput from '@/components/common/input/PriceInput';
-import InfoTooltip from '@/components/UI/common/InfoTooltip';
-import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
 
 const PopupCategory = props => {
   const router = useRouter();
@@ -245,7 +245,11 @@ const PopupCategory = props => {
           'expense_add'
           }`
       }
-      button={props.data?.id ? <IconEdit /> : `${props.dataLang?.branch_popup_create_new}`}
+      button={props.data?.id ?
+        <div className='group rounded-lg w-full p-1 border border-transparent transition-all ease-in-out flex items-center gap-2 responsive-text-sm text-left cursor-pointer hover:border-[#064E3B] hover:bg-[#064E3B]/10'>
+          <EditIcon className='size-5 transition-all duration-300'/>
+        </div> :
+        `${props.dataLang?.branch_popup_create_new}`}
       onClickOpen={_ToggleModal.bind(this, true)}
       open={open}
       onClose={_ToggleModal.bind(this, false)}

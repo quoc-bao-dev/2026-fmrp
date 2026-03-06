@@ -3,6 +3,7 @@ import ContainerPagination from '@/components/UI/common/ContainerPagination/Cont
 import TitlePagination from '@/components/UI/common/ContainerPagination/TitlePagination';
 import { Customscrollbar } from '@/components/UI/common/Customscrollbar';
 import { EmptyExprired } from '@/components/UI/common/EmptyExprired';
+import InfoTooltip from '@/components/UI/common/InfoTooltip';
 import { ColumnTable, HeaderTable, RowItemTable, RowTable } from '@/components/UI/common/Table';
 import TagBranch from '@/components/UI/common/Tag/TagBranch';
 import { Container, ContainerBody } from '@/components/UI/common/layout';
@@ -11,23 +12,25 @@ import SearchComponent from '@/components/UI/filterComponents/searchComponent';
 import Loading from '@/components/UI/loading/loading';
 import NoData from '@/components/UI/noData/nodata';
 import Pagination from '@/components/UI/pagination';
+import { UserPenIcon } from '@/components/icons';
+import Avatar from '@/containers/piecework-wage/import-output-mobile/components/Avatar';
 import { useBranchList } from '@/hooks/common/useBranch';
+import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
 import { useLimitAndTotalItems } from '@/hooks/useLimitAndTotalItems';
 import usePagination from '@/hooks/usePagination';
 import useStatusExprired from '@/hooks/useStatusExprired';
 import useTab from '@/hooks/useTab';
 import formatNumber from '@/utils/helpers/formatnumber';
-import { CloseCircle, ArrowDown2 as IconDown, Minus as IconMinus, InfoCircle, TickCircle } from 'iconsax-react';
+import { CloseCircle, ArrowDown2 as IconDown, Minus as IconMinus, TickCircle } from 'iconsax-react';
 import { debounce } from 'lodash';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import PopupCategory from './components/popupCategory';
+import PopupStageStaff from './components/popupStageStaff';
 import { useCategoryList } from './hooks/useCategory';
 import { ListBtn_Setting } from './information';
-import InfoTooltip from '@/components/UI/common/InfoTooltip';
-import { useCheckModuleInstall } from '@/hooks/useCheckModuleInstall';
 
 const Category = props => {
   const dataLang = props.dataLang;
@@ -41,6 +44,8 @@ const Category = props => {
   const { paginate } = usePagination();
 
   const [keySearch, sKeySearch] = useState('');
+  const [openStageEmptyPopup, sOpenStageEmptyPopup] = useState(false);
+  const [selectedStageId, sSelectedStageId] = useState(null);
 
   const { refetch: refetchBranch } = useBranchList();
 
@@ -130,16 +135,14 @@ const Category = props => {
                   {dataLang?.expense_costs || 'expense_costs'}
                 </button>
               </div>
-              <div className='h-[93%] space-y-2'>
-                <div className='xl:space-y-3 space-y-2'>
-                  <div className='bg-slate-100 w-full rounded flex items-center justify-between xl:p-3 p-2'>
-                    <SearchComponent alwaysOpen dataLang={dataLang} onChange={_HandleOnChangeKeySearch.bind(this)} />
-                    <div className=''>
-                      <DropdowLimit sLimit={sLimit} limit={limit} dataLang={dataLang} />
-                    </div>
+              <div className='h-[93%] flex flex-col gap-2'>
+                <div className='bg-slate-100 w-full rounded flex items-center justify-between xl:p-3 p-2'>
+                  <SearchComponent alwaysOpen dataLang={dataLang} onChange={_HandleOnChangeKeySearch.bind(this)} />
+                  <div className=''>
+                    <DropdowLimit sLimit={sLimit} limit={limit} dataLang={dataLang} />
                   </div>
                 </div>
-                <Customscrollbar className='min:h-[200px] h-[72%] max:h-[500px]'>
+                <Customscrollbar className='flex-1 min-h-0 pb-10'>
                   <div className={`w-full`}>
                     <HeaderTable
                       gridCols={
@@ -161,18 +164,17 @@ const Category = props => {
                       )}
                       {router.query?.tab === 'stages' && (
                         <React.Fragment>
-                          <ColumnTable colSpan={2} textAlign={'left'}>
-                            {dataLang?.settings_category_stages_code}
+                          <ColumnTable colSpan={1.5} textAlign={'left'}>
+                            Mã công đoạn SX
                           </ColumnTable>
                           <ColumnTable colSpan={2} textAlign={'left'}>
                             {dataLang?.settings_category_stages_name}
                           </ColumnTable>
-
-                          <ColumnTable colSpan={2} textAlign={'center'}>
+                          <ColumnTable colSpan={1} textAlign={'center'} className='whitespace-nowrap'>
                             {dataLang?.settings_category_stages_status}
                           </ColumnTable>
                           {isInstallPieceworkWage && (
-                            <ColumnTable colSpan={2} textAlign={'center'}>
+                            <ColumnTable colSpan={1.5} textAlign={'center'}>
                               <p className='flex items-center justify-center gap-2'>
                                 Đơn giá
                                 <span className='text-blue-fmrp'>
@@ -186,6 +188,9 @@ const Category = props => {
                               </p>
                             </ColumnTable>
                           )}
+                          <ColumnTable colSpan={2} textAlign={'left'}>
+                            Nhân viên sản xuất
+                          </ColumnTable>
                           <ColumnTable colSpan={2} textAlign={'left'}>
                             {dataLang?.settings_category_stages_note}
                           </ColumnTable>
@@ -241,16 +246,19 @@ const Category = props => {
                               )}
                               {router.query?.tab === 'stages' && (
                                 <React.Fragment>
-                                  <RowItemTable colSpan={2}>{e?.code}</RowItemTable>
+                                  <RowItemTable colSpan={1.5}>{e?.code}</RowItemTable>
                                   <RowItemTable colSpan={2}>{e?.name}</RowItemTable>
-                                  <RowItemTable colSpan={2} className='mx-auto'>
+                                  <RowItemTable colSpan={1} className='mx-auto'>
                                     {e?.status_qc === '1' ? <TickCircle size={32} color='#0BAA2E' /> : <CloseCircle size={32} color='#EE1E1E' />}
                                   </RowItemTable>
                                   {isInstallPieceworkWage && (
-                                    <RowItemTable colSpan={2} className='flex justify-center items-end'>
+                                    <RowItemTable colSpan={1.5} className='flex justify-center items-end'>
                                       <p>{formatNumber(Number(e?.price_default) || 0, dataSetting)} / </p> <p className='text-[10px] pt-1'>đơn vị</p>
                                     </RowItemTable>
                                   )}
+                                  <RowItemTable colSpan={2}>
+                                    <Avatar staffs_assigned={e?.staffs || []} group_members_assigned={[]} showOnly={true} />
+                                  </RowItemTable>
                                   <RowItemTable colSpan={2}>{e?.note}</RowItemTable>
                                 </React.Fragment>
                               )}
@@ -268,7 +276,17 @@ const Category = props => {
                                 </RowItemTable>
                               )}
                               {router.query?.tab === 'stages' && (
-                                <RowItemTable colSpan={1} className='flex space-x-2 justify-center items-center'>
+                                <RowItemTable colSpan={1} className='flex gap-1 justify-center items-center'>
+                                  <button
+                                    type='button'
+                                    onClick={() => {
+                                      sSelectedStageId(e?.id || null);
+                                      sOpenStageEmptyPopup(true);
+                                    }}
+                                    className='w-fit group rounded-lg p-1 border border-transparent transition-all ease-in-out responsive-text-sm text-left cursor-pointer hover:border-blue-fmrp hover:bg-blue-fmrp/10'
+                                  >
+                                    <UserPenIcon className='size-5 text-blue-fmrp' />
+                                  </button>
                                   <PopupCategory onRefresh={refetch.bind(this)} className='xl:text-base text-xs ' dataLang={dataLang} data={e} />
                                   <BtnAction onRefresh={refetch.bind(this)} onRefreshGroup={() => { }} dataLang={dataLang} id={e?.id} type={router.query?.tab} />
                                 </RowItemTable>
@@ -290,6 +308,14 @@ const Category = props => {
             )}
           </ContainerBody>
         </div>
+        <PopupStageStaff
+          open={openStageEmptyPopup}
+          stageId={selectedStageId}
+          onClose={() => {
+            sOpenStageEmptyPopup(false);
+            sSelectedStageId(null);
+          }}
+        />
       </Container>
     </React.Fragment>
   );
